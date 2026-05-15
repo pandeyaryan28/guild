@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 interface TaskCardProps {
   task: Task;
   labels: TaskLabel[];
-  memberMap: Map<string, { displayName: string; username: string }>;
+  memberMap: Map<string, { fullName: string; username: string }>;
   onClick: () => void;
   onDelete: () => void;
   isDragging?: boolean;
@@ -60,10 +60,8 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
           {/* Context menu */}
           <div data-no-click>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-all">
-                  <MoreHorizontal className="h-3.5 w-3.5" />
-                </button>
+              <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-all outline-none">
+                <MoreHorizontal className="h-3.5 w-3.5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-36 border-border/40 bg-popover/90 backdrop-blur-md text-xs">
                 <DropdownMenuItem onClick={onClick}>Open</DropdownMenuItem>
@@ -89,12 +87,12 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
           <div className="flex -space-x-1.5">
             {task.assigneeIds.slice(0, 3).map((uid) => {
               const m = memberMap.get(uid);
-              const initials = (m?.displayName || m?.username || '?')[0].toUpperCase();
+              const initials = (m?.fullName || m?.username || '?')[0].toUpperCase();
               return (
                 <div
                   key={uid}
                   className="h-5 w-5 rounded-full bg-primary/30 ring-1 ring-background flex items-center justify-center text-[8px] font-bold text-primary"
-                  title={m?.displayName || m?.username}
+                  title={m?.fullName || m?.username}
                 >
                   {initials}
                 </div>

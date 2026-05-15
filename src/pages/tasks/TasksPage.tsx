@@ -27,12 +27,12 @@ export function TasksPage() {
 
   const actor: ActorInfo = React.useMemo(() => ({
     uid: user?.uid ?? '',
-    name: userProfile?.displayName || user?.displayName || 'Unknown',
+    name: userProfile?.fullName || user?.displayName || 'Unknown',
   }), [user, userProfile]);
 
   const memberMap = React.useMemo(() => {
-    const m = new Map<string, { displayName: string; username: string }>();
-    members.forEach((mem) => m.set(mem.uid, { displayName: mem.displayName || '', username: mem.username || '' }));
+    const m = new Map<string, { fullName: string; username: string }>();
+    members.forEach((mem) => m.set(mem.uid, { fullName: mem.fullName || '', username: mem.username || '' }));
     return m;
   }, [members]);
 

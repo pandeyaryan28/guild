@@ -10,7 +10,7 @@ interface KanbanColumnProps {
   status: TaskStatus;
   tasks: Task[];
   labels: TaskLabel[];
-  memberMap: Map<string, { displayName: string; username: string }>;
+  memberMap: Map<string, { fullName: string; username: string }>;
   onTaskClick: (task: Task) => void;
   onAddTask: () => void;
   onDeleteTask: (taskId: string) => void;

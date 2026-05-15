@@ -13,7 +13,7 @@ interface KanbanBoardProps {
   columns: Map<TaskStatus, Task[]>;
   allTasks: Task[];
   labels: TaskLabel[];
-  memberMap: Map<string, { displayName: string; username: string }>;
+  memberMap: Map<string, { fullName: string; username: string }>;
   orgId: string;
   actor: ActorInfo;
   onTaskClick: (task: Task) => void;

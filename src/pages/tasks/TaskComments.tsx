@@ -11,9 +11,12 @@ interface TaskCommentsProps {
   orgId: string;
   actor: ActorInfo;
   authorUsername: string;
+  /** UIDs to notify when a new comment is posted (creator + assignees minus commenter) */
+  notifyIds?: string[];
+  taskTitle?: string;
 }
 
-export function TaskComments({ taskId, orgId, actor, authorUsername }: TaskCommentsProps) {
+export function TaskComments({ taskId, orgId, actor, authorUsername, notifyIds, taskTitle }: TaskCommentsProps) {
   const comments = useTaskComments(taskId);
   const members = useOrgMembers(orgId);
   const [body, setBody] = React.useState('');
@@ -29,7 +32,7 @@ export function TaskComments({ taskId, orgId, actor, authorUsername }: TaskComme
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   const filteredMembers = members.filter((m) =>
     (m.username || '').toLowerCase().includes(mentionQuery.toLowerCase()) ||
-    (m.displayName || '').toLowerCase().includes(mentionQuery.toLowerCase()),
+    (m.fullName || '').toLowerCase().includes(mentionQuery.toLowerCase()),
   );
 
   React.useEffect(() => {
@@ -71,7 +74,14 @@ export function TaskComments({ taskId, orgId, actor, authorUsername }: TaskComme
     if (!body.trim()) return;
     setSending(true);
     try {
-      await addComment({ taskId, orgId, authorId: actor.uid, authorName: actor.name, authorUsername, body: body.trim(), mentions: extractMentions(body) });
+      await addComment({
+        taskId, orgId,
+        authorId: actor.uid, authorName: actor.name, authorUsername,
+        body: body.trim(),
+        mentions: extractMentions(body),
+        notifyIds: (notifyIds ?? []).filter((id) => id !== actor.uid),
+        taskTitle,
+      });
       setBody('');
       setShowSuggestions(false);
     } finally {
@@ -165,9 +175,9 @@ export function TaskComments({ taskId, orgId, actor, authorUsername }: TaskComme
                 className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors"
               >
                 <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center text-[8px] font-bold text-primary">
-                  {(m.displayName || m.username || '?')[0].toUpperCase()}
+                  {(m.fullName || m.username || '?')[0].toUpperCase()}
                 </div>
-                <span className="font-medium">{m.displayName}</span>
+                <span className="font-medium">{m.fullName}</span>
                 <span className="text-muted-foreground">@{m.username}</span>
               </button>
             ))}

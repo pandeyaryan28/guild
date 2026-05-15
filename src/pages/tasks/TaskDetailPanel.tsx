@@ -91,7 +91,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
     const newIds = task.assigneeIds.includes(uid)
       ? task.assigneeIds.filter((id) => id !== uid)
       : [...task.assigneeIds, uid];
-    await updateAssignees(task.id, orgId, newIds, task.assigneeIds, actor);
+    await updateAssignees(task.id, orgId, newIds, task.assigneeIds, actor, task.title);
   };
 
   const toggleLabel = async (labelId: string) => {
@@ -250,7 +250,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
               <div className="flex flex-wrap gap-1.5">
                 {task.assigneeIds.map((uid) => {
                   const m = members.find((x) => x.uid === uid);
-                  const label = m?.displayName || m?.username || uid;
+                  const label = m?.fullName || m?.username || uid;
                   return (
                     <button
                       key={uid}
@@ -281,9 +281,9 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
                           className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors"
                         >
                           <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center text-[8px] font-bold text-primary">
-                            {(m.displayName || m.username || '?')[0].toUpperCase()}
+                            {(m.fullName || m.username || '?')[0].toUpperCase()}
                           </div>
-                          <span className="font-medium">{m.displayName}</span>
+                          <span className="font-medium">{m.fullName}</span>
                           {task.assigneeIds.includes(m.uid) && <Check className="h-3 w-3 ml-auto text-primary" />}
                         </button>
                       ))}
@@ -403,7 +403,14 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
           {/* Tab content */}
           <div className="flex-1 overflow-hidden px-5 pb-5 pt-3 flex flex-col">
             {tab === 'comments' ? (
-              <TaskComments taskId={task.id} orgId={orgId} actor={actor} authorUsername={authorUsername} />
+              <TaskComments
+                taskId={task.id}
+                orgId={orgId}
+                actor={actor}
+                authorUsername={authorUsername}
+                notifyIds={[task.creatorId, ...task.assigneeIds].filter(Boolean)}
+                taskTitle={task.title}
+              />
             ) : (
               <div className="flex-1 overflow-y-auto">
                 <TaskActivityFeed activities={activities} />

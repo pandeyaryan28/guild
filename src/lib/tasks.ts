@@ -4,6 +4,7 @@ import {
   Timestamp, writeBatch, getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { createNotification } from './notifications';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -166,6 +167,7 @@ export async function updatePriority(
 export async function updateAssignees(
   taskId: string, orgId: string,
   newIds: string[], oldIds: string[], actor: ActorInfo,
+  taskTitle?: string,
 ): Promise<void> {
   await updateDoc(doc(db, 'tasks', taskId), { assigneeIds: newIds, updatedAt: serverTimestamp() });
   const added = newIds.filter((id) => !oldIds.includes(id));
@@ -174,6 +176,17 @@ export async function updateAssignees(
   if (added.length) ps.push(logActivity(taskId, orgId, actor, 'assigned', { assigneeIds: added }));
   if (removed.length) ps.push(logActivity(taskId, orgId, actor, 'unassigned', { assigneeIds: removed }));
   await Promise.all(ps);
+  // Notify newly assigned users (fire-and-forget)
+  for (const uid of added) {
+    createNotification({
+      orgId,
+      recipientId: uid,
+      type: 'task_assigned',
+      actorId: actor.uid,
+      actorName: actor.name,
+      data: { taskId, taskTitle: taskTitle ?? 'a task' },
+    }).catch(console.error);
+  }
 }
 
 export async function updateDueDate(
@@ -206,10 +219,30 @@ export async function addComment(params: {
   taskId: string; orgId: string; authorId: string;
   authorName: string; authorUsername: string;
   body: string; mentions: string[];
+  /** UIDs to notify of the new comment (e.g. task creator + assignees) */
+  notifyIds?: string[];
+  taskTitle?: string;
 }): Promise<string> {
   const ref = doc(collection(db, 'taskComments'));
   await setDoc(ref, { id: ref.id, ...params, createdAt: serverTimestamp() });
   await logActivity(params.taskId, params.orgId, { uid: params.authorId, name: params.authorName }, 'commented', { preview: params.body.slice(0, 80) });
+  // Notify task stakeholders (fire-and-forget)
+  const toNotify = new Set([...(params.notifyIds ?? []), ...params.mentions]);
+  for (const uid of toNotify) {
+    const type = params.mentions.includes(uid) ? 'mention' : 'task_commented';
+    createNotification({
+      orgId: params.orgId,
+      recipientId: uid,
+      type,
+      actorId: params.authorId,
+      actorName: params.authorName,
+      data: {
+        taskId: params.taskId,
+        taskTitle: params.taskTitle,
+        commentPreview: params.body.slice(0, 100),
+      },
+    }).catch(console.error);
+  }
   return ref.id;
 }
 

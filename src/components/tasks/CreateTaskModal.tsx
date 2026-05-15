@@ -183,9 +183,9 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
                       )}
                     >
                       <div className="h-4 w-4 rounded-full bg-primary/30 flex items-center justify-center text-[8px] font-bold text-primary">
-                        {(m.displayName || m.username || '?')[0].toUpperCase()}
+                        {(m.fullName || m.username || '?')[0].toUpperCase()}
                       </div>
-                      {m.displayName || m.username}
+                      {m.fullName || m.username}
                     </button>
                   ))}
                 </div>

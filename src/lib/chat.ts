@@ -4,6 +4,7 @@ import {
   serverTimestamp, Timestamp, writeBatch,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { createNotification } from './notifications';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -185,6 +186,17 @@ export async function sendChannelMessage(params: {
     lastMessageAt: serverTimestamp(),
     lastMessagePreview: params.body.slice(0, 100),
   });
+  // Notify mentioned users
+  for (const uid of params.mentions) {
+    createNotification({
+      orgId: params.orgId,
+      recipientId: uid,
+      type: 'mention',
+      actorId: params.senderId,
+      actorName: params.senderName,
+      data: { channelId: params.channelId, messagePreview: params.body.slice(0, 100) },
+    }).catch(console.error);
+  }
   return id;
 }
 
@@ -205,6 +217,30 @@ export async function sendDMMessage(params: {
     lastMessageAt: serverTimestamp(),
     lastSenderId: params.senderId,
   });
+  // Notify the other DM participant
+  const [uid1, uid2] = params.dmId.split('_');
+  const recipientId = uid1 === params.senderId ? uid2 : uid1;
+  if (recipientId) {
+    createNotification({
+      orgId: params.orgId,
+      recipientId,
+      type: 'dm_received',
+      actorId: params.senderId,
+      actorName: params.senderName,
+      data: { dmId: params.dmId, messagePreview: params.body.slice(0, 100) },
+    }).catch(console.error);
+  }
+  // Notify @mentions in DM
+  for (const uid of params.mentions) {
+    createNotification({
+      orgId: params.orgId,
+      recipientId: uid,
+      type: 'mention',
+      actorId: params.senderId,
+      actorName: params.senderName,
+      data: { dmId: params.dmId, messagePreview: params.body.slice(0, 100) },
+    }).catch(console.error);
+  }
   return id;
 }
 
