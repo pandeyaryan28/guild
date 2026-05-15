@@ -19,6 +19,9 @@ import { useState } from 'react';
 import { Layout } from './components/Layout';
 import { DashboardHome } from './components/DashboardHome';
 
+// Chat
+import { ChatLayout } from './pages/chat/ChatLayout';
+
 function DashboardApp() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -50,6 +53,32 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <DashboardApp />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Chat routes — fully independent layout */}
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatLayout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat/c/:channelId"
+            element={
+              <ProtectedRoute>
+                <ChatLayout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat/dm/:dmId"
+            element={
+              <ProtectedRoute>
+                <ChatLayout />
               </ProtectedRoute>
             }
           />

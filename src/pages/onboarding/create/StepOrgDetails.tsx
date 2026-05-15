@@ -5,6 +5,7 @@ import { Building2, Loader2, CheckCircle2, XCircle, ChevronRight } from 'lucide-
 import { StepHeader } from '../../../components/onboarding/StepHeader';
 import { FormField, TextInput, SelectInput, OnboardingCard } from '../../../components/onboarding/FormComponents';
 import { checkOrgSlugUnique, createOrganization, createInviteLink } from '../../../lib/firestore';
+import { seedDefaultChannels } from '../../../lib/chat';
 import { isValidSlug, slugify } from '../../../lib/validation';
 import { useAuth } from '../../../hooks/useAuth';
 import type { OnboardingData } from '../OnboardingRoot';
@@ -87,6 +88,9 @@ export function StepOrgDetails({ data, updateData }: Props) {
         ownerId: user.uid,
       });
       const inviteToken = await createInviteLink(orgId, user.uid);
+
+      // Seed default channels for the new org (only on creation, never on join)
+      await seedDefaultChannels(orgId, user.uid);
 
       updateData({ orgName: name, orgSlug: slug, orgIndustry: industry, orgSize: size, orgId, inviteToken });
       navigate('/onboarding/create/profile');

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { onAuthStateChanged } from '../lib/auth';
+import { onAuthStateChanged, signOut } from '../lib/auth';
 import { getUserById, getOnboardingState, type UserProfile, type OnboardingState } from '../lib/firestore';
 import { type User } from 'firebase/auth';
 
@@ -8,6 +8,7 @@ interface AuthContextValue {
   userProfile: UserProfile | null;
   onboarding: OnboardingState | null;
   loading: boolean;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = React.createContext<AuthContextValue>({
@@ -15,6 +16,7 @@ const AuthContext = React.createContext<AuthContextValue>({
   userProfile: null,
   onboarding: null,
   loading: true,
+  logout: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -51,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, onboarding, loading }}>
+    <AuthContext.Provider value={{ user, userProfile, onboarding, loading, logout: signOut }}>
       {children}
     </AuthContext.Provider>
   );
