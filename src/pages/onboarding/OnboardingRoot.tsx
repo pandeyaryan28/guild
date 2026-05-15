@@ -1,0 +1,89 @@
+import * as React from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '../../hooks/useAuth';
+import { setOnboardingState } from '../../lib/firestore';
+import { StepChoose } from './StepChoose';
+import { StepOrgDetails } from './create/StepOrgDetails';
+import { StepOwnerProfile } from './create/StepOwnerProfile';
+import { StepJoinOrg } from './join/StepJoinOrg';
+import { StepMemberProfile } from './join/StepMemberProfile';
+import { StepComplete } from './StepComplete';
+import { Loader2 } from 'lucide-react';
+
+export type OnboardingPath = 'create' | 'join' | null;
+
+export interface OnboardingData {
+  path: OnboardingPath;
+  // Create org
+  orgName?: string;
+  orgSlug?: string;
+  orgIndustry?: string;
+  orgSize?: string;
+  orgId?: string;
+  inviteToken?: string;
+  // Join org
+  joinOrgId?: string;
+  joinOrgName?: string;
+}
+
+export const STEP_LABELS: Record<string, { create: string; join: string }> = {
+  '1': { create: 'Choose path', join: 'Choose path' },
+  '2': { create: 'Organization', join: 'Find Organization' },
+  '3': { create: 'Your Profile', join: 'Your Profile' },
+  '4': { create: 'Complete', join: 'Complete' },
+};
+
+export function OnboardingRoot() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  const [data, setData] = React.useState<OnboardingData>({ path: null });
+
+  const updateData = (patch: Partial<OnboardingData>) => {
+    setData((prev) => ({ ...prev, ...patch }));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <div className="dark min-h-screen w-full bg-background relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-[-15%] left-[-5%] w-[55%] h-[55%] bg-primary/6 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[-15%] right-[-5%] w-[45%] h-[45%] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute inset-0 bg-dashboard-grid pointer-events-none opacity-40" />
+
+      {/* Top brand bar */}
+      <div className="relative z-10 flex items-center gap-3 px-8 py-6">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground shadow-lg shadow-primary/30">
+          G
+        </div>
+        <span className="text-base font-bold text-foreground tracking-tight">Guild</span>
+        <span className="ml-2 text-xs font-medium text-muted-foreground">— Setup</span>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] px-6 pb-10">
+        <Routes>
+          <Route path="/" element={<StepChoose data={data} updateData={updateData} />} />
+          <Route path="/create/org" element={<StepOrgDetails data={data} updateData={updateData} />} />
+          <Route path="/create/profile" element={<StepOwnerProfile data={data} updateData={updateData} />} />
+          <Route path="/join/find" element={<StepJoinOrg data={data} updateData={updateData} />} />
+          <Route path="/join/profile" element={<StepMemberProfile data={data} updateData={updateData} />} />
+          <Route path="/complete" element={<StepComplete />} />
+          <Route path="*" element={<Navigate to="/onboarding" replace />} />
+        </Routes>
+      </div>
+    </div>
+  );
+}

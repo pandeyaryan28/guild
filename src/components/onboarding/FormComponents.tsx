@@ -1,0 +1,88 @@
+import * as React from 'react';
+import { cn } from '@/lib/utils';
+
+interface FormFieldProps {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+  hint?: string;
+}
+
+export function FormField({ label, error, children, hint }: FormFieldProps) {
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        {label}
+      </label>
+      {children}
+      {hint && !error && <p className="text-[11px] text-muted-foreground/70">{hint}</p>}
+      {error && <p className="text-[11px] text-destructive font-medium">{error}</p>}
+    </div>
+  );
+}
+
+interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  icon?: React.ElementType;
+  suffix?: React.ReactNode;
+  isValid?: boolean;
+  isChecking?: boolean;
+}
+
+export function TextInput({ icon: Icon, suffix, isValid, isChecking, className, ...props }: TextInputProps) {
+  return (
+    <div className="relative group">
+      {Icon && (
+        <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 transition-colors group-focus-within:text-primary" />
+      )}
+      <input
+        {...props}
+        className={cn(
+          'w-full h-11 rounded-xl border bg-muted/20 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all',
+          Icon ? 'pl-11' : 'pl-4',
+          suffix ? 'pr-10' : 'pr-4',
+          isValid === true && 'border-emerald-500/50 bg-emerald-500/5',
+          isValid === false && 'border-destructive/50 bg-destructive/5',
+          isValid === undefined && 'border-border/40',
+          className
+        )}
+      />
+      {suffix && (
+        <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+          {suffix}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface SelectInputProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  placeholder?: string;
+}
+
+export function SelectInput({ placeholder, children, className, ...props }: SelectInputProps) {
+  return (
+    <select
+      {...props}
+      className={cn(
+        'w-full h-11 rounded-xl border border-border/40 bg-muted/20 px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all appearance-none',
+        className
+      )}
+    >
+      {placeholder && (
+        <option value="" disabled className="bg-card text-muted-foreground">
+          {placeholder}
+        </option>
+      )}
+      {children}
+    </select>
+  );
+}
+
+// Placeholder - will be replaced by actual component
+export function OnboardingCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl p-8 shadow-2xl shadow-black/30">
+      {children}
+    </div>
+  );
+}
