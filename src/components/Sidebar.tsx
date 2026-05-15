@@ -1,4 +1,5 @@
 import * as React from "react";
+import { NavLink } from "react-router-dom";
 import { 
   ChevronDown, 
   Hash, 
@@ -101,8 +102,12 @@ export function Sidebar() {
 
       <ScrollArea className="flex-1 px-3">
         <nav className="space-y-1 py-4">
-          <NavItem icon={LayoutDashboard} label="Dashboard" active />
-          <NavItem icon={MessageSquare} label="Chat" badge="8" />
+          <NavLink to="/">
+            {({ isActive }) => <NavItem icon={LayoutDashboard} label="Dashboard" active={isActive} />}
+          </NavLink>
+          <NavLink to="/chat">
+            {({ isActive }) => <NavItem icon={MessageSquare} label="Chat" active={isActive} badge="8" />}
+          </NavLink>
           
           {/* Channels Section */}
           <div className="mt-4">
@@ -125,7 +130,9 @@ export function Sidebar() {
           </div>
 
           <div className="mt-4 flex flex-col gap-1">
-            <NavItem icon={CheckSquare} label="Tasks" />
+            <NavLink to="/tasks">
+              {({ isActive }) => <NavItem icon={CheckSquare} label="Tasks" active={isActive} />}
+            </NavLink>
             <NavItem icon={Layers} label="Requests" />
             <NavItem icon={FileText} label="Files" />
             <NavItem icon={Calendar} label="Calendar" />

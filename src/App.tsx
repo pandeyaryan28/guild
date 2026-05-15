@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -15,21 +16,23 @@ import { SignupPage } from './pages/SignupPage';
 import { OnboardingRoot } from './pages/onboarding/OnboardingRoot';
 
 // Dashboard (existing)
-import { useState } from 'react';
 import { Layout } from './components/Layout';
 import { DashboardHome } from './components/DashboardHome';
 
 // Chat
 import { ChatLayout } from './pages/chat/ChatLayout';
 
-function DashboardApp() {
+// Tasks
+import { TasksPage } from './pages/tasks/TasksPage';
+
+function DashboardApp({ children }: { children?: React.ReactNode }) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
   return (
     <div className={theme}>
       <Layout toggleTheme={toggleTheme} currentTheme={theme}>
-        <DashboardHome />
+        {children ?? <DashboardHome />}
       </Layout>
     </div>
   );
@@ -79,6 +82,18 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ChatLayout />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Tasks */}
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute>
+                <DashboardApp>
+                  <TasksPage />
+                </DashboardApp>
               </ProtectedRoute>
             }
           />
