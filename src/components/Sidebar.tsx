@@ -1,0 +1,176 @@
+import * as React from "react";
+import { 
+  ChevronDown, 
+  Hash, 
+  LayoutDashboard, 
+  MessageSquare, 
+  Layers, 
+  CheckSquare, 
+  FileText, 
+  Calendar, 
+  Users, 
+  BarChart3, 
+  Bell, 
+  Settings, 
+  Plus,
+  Terminal,
+  LogOut,
+  Sparkles
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+
+interface NavItemProps {
+  icon: React.ElementType;
+  label: string;
+  badge?: string | number;
+  active?: boolean;
+}
+
+const NavItem = ({ icon: Icon, label, badge, active }: NavItemProps) => (
+  <button
+    className={cn(
+      "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
+      active 
+        ? "bg-accent/50 text-accent-foreground shadow-sm" 
+        : "text-muted-foreground hover:bg-accent/30 hover:text-foreground"
+    )}
+  >
+    <div className="flex items-center gap-3">
+      <Icon className="h-4 w-4" />
+      <span>{label}</span>
+    </div>
+    {badge && (
+      <Badge variant="secondary" className="h-5 min-w-[20px] justify-center px-1 text-[10px] bg-accent/50 border-none text-foreground">
+        {badge}
+      </Badge>
+    )}
+  </button>
+);
+
+const ChannelItem = ({ label }: { label: string }) => (
+  <button className="group flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-accent/20 hover:text-foreground">
+    <Hash className="h-3 w-3 transition-colors group-hover:text-primary" />
+    <span>{label}</span>
+  </button>
+);
+
+export function Sidebar() {
+  const [isChannelsOpen, setIsChannelsOpen] = React.useState(true);
+
+  return (
+    <div className="flex h-full w-[260px] flex-col border-r border-border/40 bg-sidebar transition-colors duration-300">
+      {/* Header/Workspace Switcher */}
+      <div className="p-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost" }), "h-10 w-full justify-between gap-2 px-2 hover:bg-accent/30 flex items-center justify-between gap-2")}>
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-[10px] font-bold text-primary-foreground shadow-lg shadow-primary/20">
+                  G
+                </div>
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-sm font-semibold text-foreground">Acme Corp</span>
+                  <span className="text-[10px] text-muted-foreground text-left">Premium Plan</span>
+                </div>
+              </div>
+              <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[200px] border-border/40 bg-popover/90 backdrop-blur-md">
+            <DropdownMenuItem className="gap-2">
+              <div className="h-5 w-5 rounded bg-muted" /> Acme Corp
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2">
+              <div className="h-5 w-5 rounded bg-muted" /> Guild Beta
+            </DropdownMenuItem>
+            <Separator className="my-1 bg-border/40" />
+            <DropdownMenuItem className="gap-2">
+              <Plus className="h-4 w-4" /> Create Workspace
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <ScrollArea className="flex-1 px-3">
+        <nav className="space-y-1 py-4">
+          <NavItem icon={LayoutDashboard} label="Dashboard" active />
+          <NavItem icon={MessageSquare} label="Chat" badge="8" />
+          
+          {/* Channels Section */}
+          <div className="mt-4">
+            <button 
+              onClick={() => setIsChannelsOpen(!isChannelsOpen)}
+              className="flex w-full items-center justify-between px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <span>Channels</span>
+              <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", !isChannelsOpen && "-rotate-90")} />
+            </button>
+            {isChannelsOpen && (
+              <div className="mt-1 space-y-0.5 ml-1">
+                <ChannelItem label="general" />
+                <ChannelItem label="operations" />
+                <ChannelItem label="product" />
+                <ChannelItem label="marketing" />
+                <ChannelItem label="announcements" />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-col gap-1">
+            <NavItem icon={CheckSquare} label="Tasks" />
+            <NavItem icon={Layers} label="Requests" />
+            <NavItem icon={FileText} label="Files" />
+            <NavItem icon={Calendar} label="Calendar" />
+            <NavItem icon={Users} label="People" />
+            <NavItem icon={BarChart3} label="Reports" />
+          </div>
+        </nav>
+      </ScrollArea>
+
+      {/* Bottom Sidebar */}
+      <div className="p-4 space-y-4">
+        {/* Upgrade Card */}
+        <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-primary/5 p-4 transition-all hover:bg-primary/10">
+          <div className="relative z-10">
+            <p className="text-xs font-semibold text-foreground">Guild Pro</p>
+            <p className="mt-1 text-[10px] text-muted-foreground leading-relaxed">Unlock advanced ops and team controls.</p>
+            <Button size="sm" className="mt-3 h-7 w-full rounded-md text-[10px] font-bold">
+              Upgrade Now
+            </Button>
+          </div>
+          <Sparkles className="absolute -right-2 -top-2 h-12 w-12 text-primary/10" />
+        </div>
+
+        <div className="space-y-1">
+          <NavItem icon={Bell} label="Notifications" badge="3" />
+          <NavItem icon={Settings} label="Settings" />
+        </div>
+
+        <Separator className="bg-border/20" />
+        
+        <div className="flex items-center justify-between px-2 py-1">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <span className="text-[10px] font-medium text-muted-foreground">Guild v1.0.0</span>
+          </div>
+          <div className="flex items-center gap-2">
+             <button className="text-muted-foreground hover:text-foreground transition-colors">
+               <Terminal className="h-3 w-3" />
+             </button>
+             <button className="text-muted-foreground hover:text-foreground transition-colors">
+               <LogOut className="h-3 w-3" />
+             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
