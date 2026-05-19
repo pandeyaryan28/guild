@@ -5,6 +5,29 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./button": "./src/components/button.tsx",
+    "./badge": "./src/components/badge.tsx",
+    "./avatar": "./src/components/avatar.tsx",
+    "./card": "./src/components/card.tsx",
+    "./tabs": "./src/components/tabs.tsx",
+    "./input": "./src/components/input.tsx",
+    "./dropdown-menu": "./src/components/dropdown-menu.tsx",
+    "./popover": "./src/components/popover.tsx",
+    "./sheet": "./src/components/sheet.tsx",
+    "./tooltip": "./src/components/tooltip.tsx",
+    "./scroll-area": "./src/components/scroll-area.tsx",
+    "./separator": "./src/components/separator.tsx",
+    "./calendar": "./src/components/calendar.tsx"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "dependencies": {
+    "@guild/utils": "*",
+    "@base-ui/react": "*",
+    "class-variance-authority": "*",
+    "lucide-react": "*"
   }
 }

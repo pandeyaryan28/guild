@@ -5,6 +5,22 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./app": "./src/firebase.ts",
+    "./auth": "./src/auth.ts",
+    "./firestore": "./src/firestore.ts",
+    "./notifications": "./src/notifications.ts",
+    "./tasks": "./src/tasks.ts",
+    "./chat": "./src/chat.ts",
+    "./storage": "./src/storage.ts",
+    "./search": "./src/search.ts",
+    "./themes": "./src/themes.ts",
+    "./validation": "./src/validation.ts"
+  },
+  "peerDependencies": {
+    "firebase": ">=11"
+  },
+  "dependencies": {
+    "@guild/types": "*"
   }
 }
