@@ -1,6 +1,7 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Plus, ChevronDown, ChevronRight, LayoutList, Sun, CalendarDays, CheckCircle2, FolderOpen, Target } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, LayoutList, Sun, CalendarDays, CheckCircle2, FolderOpen, Target, ArrowLeft } from 'lucide-react';
 import { useProjects } from '../../hooks/useProjects';
 import { useGoals } from '../../hooks/useGoals';
 import { createProject } from '../../lib/projects';
@@ -72,6 +73,7 @@ function SectionHeader({ label, collapsed, onToggle }: { label: string; collapse
 }
 
 export function TasksNav({ orgId, actor, activeView, onViewChange, actorName }: TasksNavProps) {
+  const navigate = useNavigate();
   const { projects } = useProjects(orgId);
   const { goals } = useGoals(orgId);
   const [projectsCollapsed, setProjectsCollapsed] = React.useState(false);
@@ -238,9 +240,18 @@ export function TasksNav({ orgId, actor, activeView, onViewChange, actorName }: 
         </div>
       </nav>
 
-      {/* Footer: user info */}
-      <div className="flex-shrink-0 px-4 py-3 border-t border-border-default">
-        <p className="text-xs text-text-muted truncate">{actorName}</p>
+      {/* Footer */}
+      <div className="flex-shrink-0 border-t border-border-default">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 w-full px-4 py-3 text-xs text-text-muted hover:text-foreground hover:bg-accent/30 transition-colors group"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <span>Back to Dashboard</span>
+        </button>
+        <div className="px-4 pb-3">
+          <p className="text-xs text-text-muted truncate">{actorName}</p>
+        </div>
       </div>
     </div>
   );
