@@ -17,11 +17,10 @@ import {
   Plus,
   Terminal,
   LogOut,
-  Sparkles,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
@@ -341,22 +340,6 @@ export function Sidebar() {
 
         {/* ── Bottom Section ──────────────────────────────────────────────── */}
         <div className={cn("shrink-0 border-t border-border/20", collapsed ? "px-2 py-3 space-y-1" : "p-4 space-y-3")}>
-          {/* Upgrade card — hidden when collapsed */}
-          {!collapsed && (
-            <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-all cursor-pointer">
-              <div className="relative z-10">
-                <p className="text-xs font-semibold text-foreground">Guild Pro</p>
-                <p className="mt-1 text-[10px] text-muted-foreground leading-relaxed">
-                  Unlock advanced ops and team controls.
-                </p>
-                <Button size="sm" className="mt-3 h-7 w-full rounded-md text-[10px] font-bold">
-                  Upgrade Now
-                </Button>
-              </div>
-              <Sparkles className="absolute -right-2 -top-2 h-12 w-12 text-primary/10" />
-            </div>
-          )}
-
           {/* Notifications + Settings */}
           <div className={cn("space-y-0.5", collapsed && "flex flex-col items-center gap-0.5")}>
             <NavItem
