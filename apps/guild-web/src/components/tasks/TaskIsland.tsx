@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { type Task, type ActorInfo } from '../../lib/tasks';
 import { TaskListRow } from '../../pages/tasks/TaskListRow';
-import { InlineTaskInput } from '../../pages/tasks/InlineTaskInput';
+import { CreateTaskPopup } from './CreateTaskPopup';
 import { useOrgMembers } from '../../hooks/useChat';
 
 export type TaskGroupType = 'past' | 'today' | 'tomorrow' | 'upcoming' | 'nodate' | 'completed';
@@ -44,7 +44,7 @@ export function TaskIsland({
   showCompleted = false,
 }: TaskIslandProps) {
   const members = useOrgMembers(orgId);
-  const [inlineAddActive, setInlineAddActive] = React.useState(false);
+  const [popupOpen, setPopupOpen] = React.useState(false);
 
   // Build member map uid → display name
   const memberMap = React.useMemo(() => {
@@ -106,7 +106,7 @@ export function TaskIsland({
     });
 
     const result: TaskGroup[] = [];
-    
+
     if (showCompleted) {
       if (completed.length > 0) {
         result.push({ id: 'completed', label: 'Completed', tasks: completed });
@@ -123,6 +123,15 @@ export function TaskIsland({
     return result;
   }, [rootTasks, showCompleted]);
 
+  const groupAccentMap: Record<TaskGroupType, string> = {
+    past: 'text-red-400',
+    today: 'text-primary',
+    tomorrow: 'text-orange-400',
+    upcoming: 'text-violet-400',
+    nodate: 'text-text-muted',
+    completed: 'text-emerald-400',
+  };
+
   return (
     <div className="w-full flex justify-center pt-8 pb-32 px-4 overflow-y-auto h-full">
       <div className="w-full max-w-[800px] bg-bg-primary border border-border-default rounded-[24px] shadow-sm p-6 sm:p-8 flex flex-col h-max min-h-[300px]">
@@ -133,31 +142,24 @@ export function TaskIsland({
           </div>
         )}
 
-        {/* Add Task Trigger */}
+        {/* Add Task Button */}
         {!showCompleted && (
           <div className="mb-6">
-            {!inlineAddActive ? (
-              <button
-                onClick={() => setInlineAddActive(true)}
-                className="flex items-center gap-3 px-2 py-2 text-primary hover:bg-primary/5 rounded-xl transition-colors w-full text-left"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="text-sm font-medium">Add a task</span>
-              </button>
-            ) : (
-              <div className="px-2">
-                <InlineTaskInput
-                  orgId={orgId}
-                  actor={actor}
-                  defaultProjectId={defaultProjectId}
-                  defaultGoalId={defaultGoalId}
-                  defaultStatus="todo"
-                  onCreated={() => {}}
-                  onCancel={() => setInlineAddActive(false)}
-                  autoFocus
-                />
+            <button
+              onClick={() => setPopupOpen(true)}
+              className={cn(
+                'group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all w-full text-left',
+                'border border-dashed border-border-default',
+                'hover:border-primary/40 hover:bg-primary/5',
+              )}
+            >
+              <div className="h-5 w-5 rounded-full border-2 border-dashed border-current flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <Plus className="h-3 w-3" />
               </div>
-            )}
+              <span className="text-sm font-medium text-text-muted group-hover:text-primary transition-colors">
+                Add a task
+              </span>
+            </button>
           </div>
         )}
 
@@ -174,9 +176,18 @@ export function TaskIsland({
         {/* Empty State */}
         {!loading && groups.length === 0 && (
           <div className="flex-1 flex items-center justify-center py-12">
-            <div className="text-center space-y-2">
-              <div className="text-4xl opacity-20 select-none">✓</div>
+            <div className="text-center space-y-3">
+              <div className="text-5xl opacity-15 select-none">✓</div>
               <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+              {!showCompleted && (
+                <button
+                  onClick={() => setPopupOpen(true)}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add your first task
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -185,11 +196,15 @@ export function TaskIsland({
         {!loading && groups.length > 0 && (
           <div className="space-y-8">
             {groups.map((group) => (
-              <div key={group.id} className="space-y-3">
-                <h3 className="text-xs font-semibold text-text-muted px-2">
-                  {group.label}
-                </h3>
-                <div className="space-y-1">
+              <div key={group.id} className="space-y-1">
+                <div className="flex items-center gap-2 px-2 mb-2">
+                  <h3 className={cn('text-[11px] font-semibold uppercase tracking-wider', groupAccentMap[group.id])}>
+                    {group.label}
+                  </h3>
+                  <div className="flex-1 h-px bg-border-default opacity-40" />
+                  <span className="text-[10px] text-text-muted">{group.tasks.length}</span>
+                </div>
+                <div className="space-y-0.5">
                   {group.tasks.map((task) => (
                     <TaskListRow
                       key={task.id}
@@ -209,6 +224,17 @@ export function TaskIsland({
           </div>
         )}
       </div>
+
+      {/* Create Task Popup */}
+      <CreateTaskPopup
+        open={popupOpen}
+        onClose={() => setPopupOpen(false)}
+        orgId={orgId}
+        actor={actor}
+        defaultStatus="todo"
+        defaultProjectId={defaultProjectId}
+        defaultGoalId={defaultGoalId}
+      />
     </div>
   );
 }
