@@ -25,14 +25,14 @@ function ChatSidebar() {
   const orgId = userProfile?.organizationId;
 
   const { channels, memberships, hasUnread, loading } = useChannels(orgId);
-  const dmThreads = useDMs(orgId);
+  const { threads: dmThreads, hasUnreadDM } = useDMs(orgId);
   const members = useOrgMembers(orgId);
 
   const [orgName, setOrgName] = React.useState('');
   const [showChannelModal, setShowChannelModal] = React.useState(false);
   const [showDMModal, setShowDMModal] = React.useState(false);
-  const [channelsOpen, setChannelsOpen] = React.useState(true);
-  const [dmsOpen, setDmsOpen] = React.useState(true);
+  const [channelsOpen, setChannelsOpen] = React.useState(false);
+  const [dmsOpen, setDmsOpen] = React.useState(false);
   const { themeId, setTheme } = useTheme();
   const isLight = themeId === 'light';
   const toggleTheme = () => setTheme(isLight ? 'midnight' : 'light');
@@ -119,9 +119,12 @@ function ChatSidebar() {
                 </button>
               </button>
 
-              {channelsOpen && !loading && channels.map((ch) => {
+              {!loading && channels.map((ch) => {
                 const isActive = currentPath === `/chat/c/${ch.id}`;
                 const unread = hasUnread(ch);
+                
+                if (!channelsOpen && !isActive && !unread) return null;
+
                 return (
                   <NavLink
                     key={ch.id}
@@ -148,7 +151,7 @@ function ChatSidebar() {
                 );
               })}
 
-              {channelsOpen && loading && (
+              {loading && (
                 <div className="flex items-center gap-2 px-3 py-2">
                   <Loader2 className="h-3 w-3 animate-spin text-text-muted" />
                   <span className="text-[10px] text-text-muted">Loading…</span>
@@ -180,17 +183,25 @@ function ChatSidebar() {
                 </button>
               </button>
 
-              {dmsOpen && dmThreads.map((thread) => {
+              {dmThreads.map((thread) => {
                 const isActive = currentPath === `/chat/dm/${thread.id}`;
+                const unread = hasUnreadDM(thread);
                 const dmInitials = getDMInitials(thread.participants);
                 const dmName = getDMName(thread.participants);
+                
+                if (!dmsOpen && !isActive && !unread) return null;
+
                 return (
                   <NavLink
                     key={thread.id}
                     to={`/chat/dm/${thread.id}`}
                     className={cn(
                       'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-all',
-                      isActive ? 'bg-primary/10 text-foreground font-semibold' : 'text-muted-foreground hover:bg-bg-tertiary hover:text-foreground',
+                      isActive 
+                        ? 'bg-primary/10 text-foreground font-semibold' 
+                        : unread
+                        ? 'text-foreground font-semibold hover:bg-bg-tertiary'
+                        : 'text-muted-foreground hover:bg-bg-tertiary hover:text-foreground',
                     )}
                   >
                     <div className="relative h-6 w-6 shrink-0">
@@ -200,11 +211,17 @@ function ChatSidebar() {
                       <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-1.5 ring-sidebar" />
                     </div>
                     <span className="flex-1 truncate">{dmName}</span>
+                    {unread && !isActive && (
+                      <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                    )}
+                    {isActive && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                    )}
                   </NavLink>
                 );
               })}
 
-              {dmsOpen && dmThreads.length === 0 && (
+              {dmThreads.length === 0 && (
                 <p className="px-3 py-2 text-[10px] text-text-muted">No conversations yet</p>
               )}
             </div>

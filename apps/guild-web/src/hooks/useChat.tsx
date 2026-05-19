@@ -73,13 +73,27 @@ export function useMessages(channelId: string | null, dmId: string | null) {
 export function useDMs(orgId: string | undefined) {
   const { user } = useAuth();
   const [threads, setThreads] = React.useState<DirectMessageThread[]>([]);
+  const [dmReads, setDmReads] = React.useState<Map<string, Timestamp>>(new Map());
 
   React.useEffect(() => {
     if (!orgId || !user) return;
-    return listenToUserDMs(user.uid, orgId, setThreads);
+    return listenToUserDMs(user.uid, orgId, (newThreads, newReads) => {
+      setThreads(newThreads);
+      setDmReads(newReads);
+    });
   }, [orgId, user?.uid]);
 
-  return threads;
+  const hasUnreadDM = React.useCallback(
+    (thread: DirectMessageThread) => {
+      if (!thread.lastMessageAt) return false;
+      const lastRead = dmReads.get(thread.id);
+      if (!lastRead) return thread.lastSenderId !== user?.uid;
+      return thread.lastMessageAt.toMillis() > lastRead.toMillis() && thread.lastSenderId !== user?.uid;
+    },
+    [dmReads, user?.uid],
+  );
+
+  return { threads, hasUnreadDM };
 }
 
 // ─── useOrgMembers ────────────────────────────────────────────────────────────

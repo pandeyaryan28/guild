@@ -259,17 +259,42 @@ export function listenToDMMessages(
 export function listenToUserDMs(
   userId: string,
   orgId: string,
-  cb: (threads: DirectMessageThread[]) => void,
+  cb: (threads: DirectMessageThread[], dmReads: Map<string, Timestamp>) => void,
 ): () => void {
-  return onSnapshot(
+  let threads: DirectMessageThread[] = [];
+  let dmReads = new Map<string, Timestamp>();
+
+  const unsubThreads = onSnapshot(
     query(
       collection(db, 'directMessages'),
       where('orgId', '==', orgId),
       where('participants', 'array-contains', userId),
       orderBy('lastMessageAt', 'desc'),
     ),
-    (snap) => cb(snap.docs.map((d) => d.data() as DirectMessageThread)),
+    (snap) => {
+      threads = snap.docs.map((d) => d.data() as DirectMessageThread);
+      cb(threads, dmReads);
+    },
   );
+
+  const unsubReads = onSnapshot(
+    query(
+      collection(db, 'dmReadState'),
+      where('userId', '==', userId),
+    ),
+    (snap) => {
+      dmReads = new Map<string, Timestamp>();
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        if (data.lastRead && data.dmId) {
+          dmReads.set(data.dmId, data.lastRead);
+        }
+      });
+      cb(threads, dmReads);
+    },
+  );
+
+  return () => { unsubThreads(); unsubReads(); };
 }
 
 export type { Channel, ChannelMember, Message, DirectMessageThread };
