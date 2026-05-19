@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { 
   ChevronDown, 
   Hash, 
@@ -16,7 +16,8 @@ import {
   Plus,
   Terminal,
   LogOut,
-  Sparkles
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -29,6 +30,10 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from '../hooks/useAuth';
+import { useChannels } from '../hooks/useChat';
+import { useNotifications } from '../hooks/useNotifications';
+import { getOrgById } from '../lib/firestore';
 
 interface NavItemProps {
   icon: React.ElementType;
@@ -50,7 +55,7 @@ const NavItem = ({ icon: Icon, label, badge, active }: NavItemProps) => (
       <Icon className="h-4 w-4" />
       <span>{label}</span>
     </div>
-    {badge && (
+    {badge !== undefined && (
       <Badge variant="secondary" className="h-5 min-w-[20px] justify-center px-1 text-[10px] bg-accent/50 border-none text-foreground">
         {badge}
       </Badge>
@@ -58,15 +63,32 @@ const NavItem = ({ icon: Icon, label, badge, active }: NavItemProps) => (
   </button>
 );
 
-const ChannelItem = ({ label }: { label: string }) => (
-  <button className="group flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-accent/20 hover:text-foreground">
-    <Hash className="h-3 w-3 transition-colors group-hover:text-primary" />
-    <span>{label}</span>
-  </button>
-);
-
 export function Sidebar() {
+  const navigate = useNavigate();
+  const { userProfile, logout } = useAuth();
+  const orgId = userProfile?.organizationId;
+
+  const { channels, hasUnread, loading: channelsLoading } = useChannels(orgId);
+  const { unreadCount } = useNotifications(orgId);
+
   const [isChannelsOpen, setIsChannelsOpen] = React.useState(true);
+  const [orgName, setOrgName] = React.useState<string>('');
+
+  // Fetch org name
+  React.useEffect(() => {
+    if (!orgId) return;
+    getOrgById(orgId).then((org) => { if (org) setOrgName(org.name); });
+  }, [orgId]);
+
+  const orgInitial = (orgName || 'G')[0].toUpperCase();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  // Total unread channels count
+  const unreadChannels = channels.filter((ch) => hasUnread(ch)).length;
 
   return (
     <div className="flex h-full w-[260px] flex-col border-r border-border/40 bg-sidebar transition-colors duration-300">
@@ -76,10 +98,12 @@ export function Sidebar() {
           <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost" }), "h-10 w-full justify-between gap-2 px-2 hover:bg-accent/30 flex items-center justify-between gap-2")}>
               <div className="flex items-center gap-2.5 overflow-hidden">
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-[10px] font-bold text-primary-foreground shadow-lg shadow-primary/20">
-                  G
+                  {orgInitial}
                 </div>
                 <div className="flex flex-col items-start leading-none">
-                  <span className="text-sm font-semibold text-foreground">Acme Corp</span>
+                  <span className="text-sm font-semibold text-foreground truncate max-w-[140px]">
+                    {orgName || 'Loading…'}
+                  </span>
                   <span className="text-[10px] text-muted-foreground text-left">Premium Plan</span>
                 </div>
               </div>
@@ -87,13 +111,11 @@ export function Sidebar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-[200px] border-border/40 bg-popover/90 backdrop-blur-md">
             <DropdownMenuItem className="gap-2">
-              <div className="h-5 w-5 rounded bg-muted" /> Acme Corp
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2">
-              <div className="h-5 w-5 rounded bg-muted" /> Guild Beta
+              <div className="h-5 w-5 rounded bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">{orgInitial}</div>
+              {orgName}
             </DropdownMenuItem>
             <Separator className="my-1 bg-border/40" />
-            <DropdownMenuItem className="gap-2">
+            <DropdownMenuItem className="gap-2 text-muted-foreground" disabled>
               <Plus className="h-4 w-4" /> Create Workspace
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -102,11 +124,18 @@ export function Sidebar() {
 
       <ScrollArea className="flex-1 px-3">
         <nav className="space-y-1 py-4">
-          <NavLink to="/">
+          <NavLink to="/" end>
             {({ isActive }) => <NavItem icon={LayoutDashboard} label="Dashboard" active={isActive} />}
           </NavLink>
           <NavLink to="/chat">
-            {({ isActive }) => <NavItem icon={MessageSquare} label="Chat" active={isActive} badge="8" />}
+            {({ isActive }) => (
+              <NavItem
+                icon={MessageSquare}
+                label="Chat"
+                active={isActive}
+                badge={unreadChannels > 0 ? unreadChannels : undefined}
+              />
+            )}
           </NavLink>
           
           {/* Channels Section */}
@@ -120,11 +149,38 @@ export function Sidebar() {
             </button>
             {isChannelsOpen && (
               <div className="mt-1 space-y-0.5 ml-1">
-                <ChannelItem label="general" />
-                <ChannelItem label="operations" />
-                <ChannelItem label="product" />
-                <ChannelItem label="marketing" />
-                <ChannelItem label="announcements" />
+                {channelsLoading ? (
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <Loader2 className="h-3 w-3 animate-spin text-muted-foreground/30" />
+                    <span className="text-[10px] text-muted-foreground/30">Loading…</span>
+                  </div>
+                ) : channels.length === 0 ? (
+                  <p className="px-3 py-2 text-[10px] text-muted-foreground/40">No channels yet</p>
+                ) : (
+                  channels.map((ch) => {
+                    const unread = hasUnread(ch);
+                    return (
+                      <NavLink
+                        key={ch.id}
+                        to={`/chat/c/${ch.id}`}
+                        className={({ isActive }) => cn(
+                          "group flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                          isActive
+                            ? "bg-accent/50 text-foreground"
+                            : unread
+                            ? "text-foreground font-semibold hover:bg-accent/20"
+                            : "text-muted-foreground hover:bg-accent/20 hover:text-foreground"
+                        )}
+                      >
+                        <Hash className="h-3 w-3 transition-colors group-hover:text-primary" />
+                        <span className="flex-1">{ch.name}</span>
+                        {unread && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        )}
+                      </NavLink>
+                    );
+                  })
+                )}
               </div>
             )}
           </div>
@@ -157,7 +213,7 @@ export function Sidebar() {
         </div>
 
         <div className="space-y-1">
-          <NavItem icon={Bell} label="Notifications" badge="3" />
+          <NavItem icon={Bell} label="Notifications" badge={unreadCount > 0 ? unreadCount : undefined} />
           <NavItem icon={Settings} label="Settings" />
         </div>
 
@@ -172,7 +228,11 @@ export function Sidebar() {
              <button className="text-muted-foreground hover:text-foreground transition-colors">
                <Terminal className="h-3 w-3" />
              </button>
-             <button className="text-muted-foreground hover:text-foreground transition-colors">
+             <button
+               onClick={handleLogout}
+               className="text-muted-foreground hover:text-destructive transition-colors"
+               title="Sign out"
+             >
                <LogOut className="h-3 w-3" />
              </button>
           </div>

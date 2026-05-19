@@ -1,13 +1,14 @@
+import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   CheckCircle2, 
   Clock, 
   MessageSquare, 
   Users, 
-  ArrowUpRight,
   MoreHorizontal,
   Plus,
   Filter,
-  Search
+  Loader2,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { 
@@ -21,8 +22,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from '../hooks/useAuth';
+import { useTasks } from '../hooks/useTasks';
+import { useChannels, useOrgMembers } from '../hooks/useChat';
+import { useNotifications } from '../hooks/useNotifications';
+import { type Task } from '../lib/tasks';
 
-const MetricCard = ({ title, value, subtitle, icon: Icon, color, delay }: any) => (
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+const MetricCard = ({ title, value, subtitle, icon: Icon, color, delay, loading }: any) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -39,7 +47,11 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, color, delay }: any) =
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">{title}</p>
         </div>
         <div>
-          <h3 className="text-3xl font-bold tracking-tight text-foreground">{value}</h3>
+          {loading ? (
+            <div className="h-8 w-12 rounded bg-muted/40 animate-pulse" />
+          ) : (
+            <h3 className="text-3xl font-bold tracking-tight text-foreground">{value}</h3>
+          )}
           <p className="text-xs text-muted-foreground mt-1 font-medium">{subtitle}</p>
         </div>
         <div className="h-1 w-full bg-muted/20 rounded-full overflow-hidden">
@@ -50,54 +62,121 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, color, delay }: any) =
   </motion.div>
 );
 
-const TaskItem = ({ title, status, priority, user, date }: any) => (
-  <div className="group flex items-center justify-between py-4 border-b border-border/20 last:border-0 hover:bg-muted/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer">
-    <div className="flex items-center gap-4">
-      <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center group-hover:border-primary transition-colors">
-        <div className="h-2 w-2 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-      </div>
-      <div>
-        <h4 className="text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">{title}</h4>
-        <div className="flex items-center gap-2 mt-1">
-          <Badge variant="outline" className="h-4 text-[9px] px-1.5 font-bold uppercase tracking-wider bg-muted/10 border-border/40 text-muted-foreground">
-            {priority}
-          </Badge>
-          <span className="text-[10px] text-muted-foreground">{date}</span>
-        </div>
-      </div>
-    </div>
-    <div className="flex items-center gap-3">
-      <Avatar className="h-6 w-6 border border-border/40">
-        <AvatarImage src={`https://i.pravatar.cc/100?u=${user}`} />
-        <AvatarFallback className="text-[8px] bg-zinc-800">{user[0]}</AvatarFallback>
-      </Avatar>
-      <MoreHorizontal className="h-4 w-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-    </div>
-  </div>
-);
+const PRIORITY_COLORS: Record<string, string> = {
+  urgent: 'text-red-400 border-red-400/30',
+  high:   'text-orange-400 border-orange-400/30',
+  medium: 'text-amber-400 border-amber-400/30',
+  low:    'text-blue-400 border-blue-400/30',
+  none:   'text-muted-foreground border-border/40',
+};
 
-const ApprovalItem = ({ title, requester, amount, status }: any) => (
-  <div className="group flex items-center justify-between py-4 border-b border-border/20 last:border-0 hover:bg-muted/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer">
-     <div className="flex items-center gap-4">
-        <div className="h-10 w-10 rounded-xl bg-muted/20 flex items-center justify-center border border-border/40 group-hover:bg-primary/10 transition-colors">
-          <Clock className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+const TaskItem = ({ task, memberMap }: { task: Task; memberMap: Map<string, { fullName: string }> }) => {
+  const firstAssignee = task.assigneeIds[0];
+  const assigneeName = firstAssignee ? (memberMap.get(firstAssignee)?.fullName ?? 'Unknown') : '—';
+  const dueStr = task.dueDate ? task.dueDate.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'No due date';
+  const priorityClass = PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.none;
+
+  return (
+    <div className="group flex items-center justify-between py-4 border-b border-border/20 last:border-0 hover:bg-muted/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer">
+      <div className="flex items-center gap-4">
+        <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center group-hover:border-primary transition-colors">
+          <div className="h-2 w-2 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
         <div>
-          <h4 className="text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">{title}</h4>
-          <p className="text-[10px] text-muted-foreground font-medium">Requested by {requester}</p>
+          <h4 className="text-[13px] font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">{task.title}</h4>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant="outline" className={`h-4 text-[9px] px-1.5 font-bold uppercase tracking-wider bg-muted/10 ${priorityClass}`}>
+              {task.priority}
+            </Badge>
+            <span className="text-[10px] text-muted-foreground">{dueStr}</span>
+          </div>
         </div>
-     </div>
-     <div className="text-right">
-       <span className="text-xs font-bold text-foreground">{amount}</span>
-       <div className="flex items-center gap-1.5 justify-end mt-1">
-         <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-         <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-tighter">Pending</span>
-       </div>
-     </div>
-  </div>
-);
+      </div>
+      <div className="flex items-center gap-3">
+        <Avatar className="h-6 w-6 border border-border/40">
+          <AvatarImage src={`https://i.pravatar.cc/100?u=${firstAssignee}`} />
+          <AvatarFallback className="text-[8px] bg-zinc-800">{assigneeName[0] ?? '?'}</AvatarFallback>
+        </Avatar>
+        <MoreHorizontal className="h-4 w-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+    </div>
+  );
+};
+
+// ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export function DashboardHome() {
+  const navigate = useNavigate();
+  const { userProfile } = useAuth();
+  const orgId = userProfile?.organizationId;
+
+  const { tasks, loading: tasksLoading } = useTasks(orgId);
+  const { channels, hasUnread } = useChannels(orgId);
+  const members = useOrgMembers(orgId);
+  const { unreadCount, loading: notifsLoading } = useNotifications(orgId);
+
+  const memberMap = React.useMemo(() => {
+    const m = new Map<string, { fullName: string }>();
+    members.forEach((mem) => m.set(mem.uid, { fullName: mem.fullName || '' }));
+    return m;
+  }, [members]);
+
+  // Task metrics
+  const myTasks = React.useMemo(() => {
+    if (!userProfile?.uid) return [];
+    return tasks.filter((t) => t.assigneeIds.includes(userProfile.uid) && t.status !== 'done');
+  }, [tasks, userProfile?.uid]);
+
+  const todayTasks = React.useMemo(() => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return myTasks.filter((t) => t.dueDate && t.dueDate.toDate() <= today);
+  }, [myTasks]);
+
+  const inProgressTasks = React.useMemo(() => myTasks.filter((t) => t.status === 'in_progress'), [myTasks]);
+  const todoTasks      = React.useMemo(() => myTasks.filter((t) => t.status === 'todo'),        [myTasks]);
+
+  const [taskTab, setTaskTab] = React.useState<'all' | 'today' | 'progress'>('all');
+
+  const displayedTasks = React.useMemo(() => {
+    const base = taskTab === 'today'    ? todayTasks
+               : taskTab === 'progress' ? inProgressTasks
+               : myTasks;
+    return base.slice(0, 5);
+  }, [taskTab, myTasks, todayTasks, inProgressTasks]);
+
+  // Greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const displayName = userProfile?.fullName?.split(' ')[0] ?? 'there';
+
+  // Org name
+  const [orgName, setOrgName] = React.useState('your organization');
+  React.useEffect(() => {
+    if (!orgId) return;
+    import('../lib/firestore').then(({ getOrgById }) =>
+      getOrgById(orgId).then((org) => { if (org) setOrgName(org.name); })
+    );
+  }, [orgId]);
+
+  // Channels with unread badge — take top 4 with most recent activity
+  const recentChannels = React.useMemo(() => {
+    return [...channels]
+      .sort((a, b) => (b.lastMessageAt?.toMillis() ?? 0) - (a.lastMessageAt?.toMillis() ?? 0))
+      .slice(0, 4);
+  }, [channels]);
+
+  function relTime(ts: any): string {
+    if (!ts?.toDate) return '';
+    const diff = Date.now() - ts.toDate().getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+
   return (
     <div className="space-y-10 p-10 pb-20">
       {/* Hero */}
@@ -108,7 +187,7 @@ export function DashboardHome() {
             animate={{ opacity: 1, x: 0 }}
             className="text-4xl font-bold tracking-tight text-foreground transition-all duration-700"
           >
-            Good morning, Arjun <span className="inline-block animate-bounce-subtle">👋</span>
+            {greeting}, {displayName} <span className="inline-block animate-bounce-subtle">👋</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, x: -20 }}
@@ -116,15 +195,18 @@ export function DashboardHome() {
             transition={{ delay: 0.1 }}
             className="text-muted-foreground text-sm font-medium"
           >
-            Here's what is happening in Acme Corp today.
+            Here's what is happening in {orgName} today.
           </motion.p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="h-10 bg-muted/20 border-border/40 text-xs font-bold gap-2">
             <Filter className="h-3.5 w-3.5" /> Filter
           </Button>
-          <Button className="h-10 shadow-lg shadow-primary/20 text-xs font-bold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-none">
-             <Plus className="h-4 w-4" /> New Request
+          <Button
+            className="h-10 shadow-lg shadow-primary/20 text-xs font-bold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-none"
+            onClick={() => navigate('/tasks')}
+          >
+            <Plus className="h-4 w-4" /> New Task
           </Button>
         </div>
       </section>
@@ -133,35 +215,39 @@ export function DashboardHome() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard 
           title="My Tasks" 
-          value="12" 
-          subtitle="Due this week" 
+          value={myTasks.length} 
+          subtitle={`${todayTasks.length} due today`}
           icon={CheckCircle2} 
           color="bg-indigo-500" 
           delay={0.2}
+          loading={tasksLoading}
         />
         <MetricCard 
-          title="Approvals" 
-          value="5" 
-          subtitle="Waiting for you" 
+          title="In Progress" 
+          value={inProgressTasks.length}
+          subtitle="Active right now"
           icon={Clock} 
           color="bg-amber-500" 
           delay={0.3}
+          loading={tasksLoading}
         />
         <MetricCard 
-          title="Team Updates" 
-          value="23" 
-          subtitle="New updates" 
+          title="Team Members" 
+          value={members.length}
+          subtitle="In your workspace"
           icon={Users} 
           color="bg-emerald-500" 
           delay={0.4}
+          loading={false}
         />
         <MetricCard 
           title="Unread" 
-          value="8" 
-          subtitle="Across channels" 
+          value={notifsLoading ? '—' : unreadCount}
+          subtitle="Notifications pending"
           icon={MessageSquare} 
           color="bg-blue-500" 
           delay={0.5}
+          loading={notifsLoading}
         />
       </div>
 
@@ -172,112 +258,152 @@ export function DashboardHome() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
               <CardTitle className="text-lg font-bold text-foreground">My Tasks</CardTitle>
-              <CardDescription className="text-xs font-medium">Focused tasks for today</CardDescription>
+              <CardDescription className="text-xs font-medium">Tasks assigned to you</CardDescription>
             </div>
-            <Button variant="ghost" size="sm" className="h-8 text-[11px] font-bold text-primary hover:bg-primary/5">
+            <Button
+              variant="ghost" size="sm"
+              className="h-8 text-[11px] font-bold text-primary hover:bg-primary/5"
+              onClick={() => navigate('/tasks')}
+            >
               View All
             </Button>
           </CardHeader>
           <CardContent>
-             <Tabs defaultValue="all" className="w-full">
-                <TabsList className="bg-muted/20 border border-border/40 h-8 p-1 mb-4">
-                  <TabsTrigger value="all" className="text-[10px] font-bold px-4 h-6">ALL (12)</TabsTrigger>
-                  <TabsTrigger value="today" className="text-[10px] font-bold px-4 h-6">DUE TODAY (3)</TabsTrigger>
-                  <TabsTrigger value="progress" className="text-[10px] font-bold px-4 h-6">IN PROGRESS (5)</TabsTrigger>
-                </TabsList>
-                <div className="mt-4">
-                  <TaskItem title="Update product roadmap" priority="High" user="Sarah" date="May 21" />
-                  <TaskItem title="Design landing page for feature X" priority="Medium" user="Leo" date="May 22" />
-                  <TaskItem title="Fix auth flow bug" priority="High" user="Elena" date="May 22" />
-                  <TaskItem title="Prepare monthly OPS report" priority="Low" user="Arjun" date="May 24" />
-                </div>
-                <Button variant="ghost" className="w-full mt-4 h-10 border-dashed border border-border/40 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-all">
-                  <Plus className="h-3.5 w-3.5 mr-2" /> Add new task
-                </Button>
-             </Tabs>
+            <Tabs value={taskTab} onValueChange={(v) => setTaskTab(v as any)} className="w-full">
+              <TabsList className="bg-muted/20 border border-border/40 h-8 p-1 mb-4">
+                <TabsTrigger value="all"      className="text-[10px] font-bold px-4 h-6">ALL ({myTasks.length})</TabsTrigger>
+                <TabsTrigger value="today"    className="text-[10px] font-bold px-4 h-6">DUE TODAY ({todayTasks.length})</TabsTrigger>
+                <TabsTrigger value="progress" className="text-[10px] font-bold px-4 h-6">IN PROGRESS ({inProgressTasks.length})</TabsTrigger>
+              </TabsList>
+              <div className="mt-4">
+                {tasksLoading ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/40" />
+                  </div>
+                ) : displayedTasks.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                    <CheckCircle2 className="h-8 w-8 text-muted-foreground/20 mb-2" />
+                    <p className="text-xs text-muted-foreground">No tasks here 🎉</p>
+                  </div>
+                ) : (
+                  displayedTasks.map((task) => (
+                    <TaskItem key={task.id} task={task} memberMap={memberMap} />
+                  ))
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                className="w-full mt-4 h-10 border-dashed border border-border/40 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-all"
+                onClick={() => navigate('/tasks')}
+              >
+                <Plus className="h-3.5 w-3.5 mr-2" /> Add new task
+              </Button>
+            </Tabs>
           </CardContent>
         </Card>
 
-        {/* Pending Approvals */}
+        {/* Team Members Panel */}
         <Card className="border-border/40 bg-card/40 backdrop-blur-sm shadow-xl shadow-black/5">
-           <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
-              <CardTitle className="text-lg font-bold text-foreground">Pending Approvals</CardTitle>
-              <CardDescription className="text-xs font-medium">Requests needing your signature</CardDescription>
+              <CardTitle className="text-lg font-bold text-foreground">Team Members</CardTitle>
+              <CardDescription className="text-xs font-medium">Everyone in {orgName}</CardDescription>
             </div>
-             <Button variant="ghost" size="sm" className="h-8 text-[11px] font-bold text-primary hover:bg-primary/5">
-              View All
-            </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1">
-              <ApprovalItem title="MacBook Pro M3 - Budget" requester="Rohan" amount="₹2,45,000" status="pending" />
-              <ApprovalItem title="Q2 Marketing Assets" requester="Neha" amount="₹1,20,000" status="pending" />
-              <ApprovalItem title="Figma Annual Subscription" requester="Design Team" amount="₹45,000" status="pending" />
-              <ApprovalItem title="Offsite Event Logistics" requester="Kavya" amount="₹85,000" status="pending" />
-            </div>
-            <div className="mt-6 p-4 rounded-xl border border-dashed border-border/40 bg-muted/5 flex items-center justify-center">
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">More in progress</p>
-                <div className="flex -space-x-2">
-                   {[1,2,3,4].map(i => (
-                     <Avatar key={i} className="h-6 w-6 border-2 border-zinc-950">
-                       <AvatarImage src={`https://i.pravatar.cc/100?u=user${i}`} />
-                       <AvatarFallback className="text-[8px]">{i}</AvatarFallback>
-                     </Avatar>
-                   ))}
-                </div>
+            {members.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <Users className="h-8 w-8 text-muted-foreground/20 mb-2" />
+                <p className="text-xs text-muted-foreground">No team members yet.</p>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-1">
+                {members.slice(0, 6).map((member) => {
+                  const initials = member.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() ?? '?';
+                  return (
+                    <div key={member.uid} className="group flex items-center justify-between py-3 border-b border-border/20 last:border-0 hover:bg-muted/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8 border border-border/40">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">{member.fullName}</p>
+                          <p className="text-[10px] text-muted-foreground">@{member.username} · {member.designation || member.role}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="h-4 text-[9px] px-1.5 capitalize bg-muted/10 border-border/40 text-muted-foreground">
+                        {member.role}
+                      </Badge>
+                    </div>
+                  );
+                })}
+                {members.length > 6 && (
+                  <p className="text-center text-[10px] text-muted-foreground pt-2">+{members.length - 6} more</p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Recent Conversations */}
-        <Card className="border-border/40 bg-card/40 bg-dashboard-grid backdrop-blur-sm shadow-xl shadow-black/5 xl:col-span-2">
-           <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <Card className="border-border/40 bg-card/40 backdrop-blur-sm shadow-xl shadow-black/5 xl:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
-              <CardTitle className="text-lg font-bold text-foreground">Recent Conversations</CardTitle>
-              <CardDescription className="text-xs font-medium">Late-breaking discussions across channels</CardDescription>
+              <CardTitle className="text-lg font-bold text-foreground">Recent Channels</CardTitle>
+              <CardDescription className="text-xs font-medium">Latest activity across channels</CardDescription>
             </div>
-             <Button variant="ghost" size="sm" className="h-8 text-[11px] font-bold text-primary hover:bg-primary/5">
+            <Button
+              variant="ghost" size="sm"
+              className="h-8 text-[11px] font-bold text-primary hover:bg-primary/5"
+              onClick={() => navigate('/chat')}
+            >
               Open Chat
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1">
-               {[
-                 { channel: 'product', user: 'Leo', msg: 'The new wireframes are looking solid. I think we can proceed with the high fidelity designs next week.', time: '12m ago', unread: 2 },
-                 { channel: 'operations', user: 'Neha', msg: 'Budget approved for the MacBook Pro. Rohan can go ahead and place the order today.', time: '45m ago', unread: 0 },
-                 { channel: 'general', user: 'Sarah', msg: 'Dont forget about the offsite meeting tomorrow at 10 AM! We need everyone to be present.', time: '2h ago', unread: 1 },
-                 { channel: 'marketing', user: 'Marcus', msg: 'The campaign analytics are finally in. We saw a 30% increase in lead generation this week.', time: '5h ago', unread: 0 }
-               ].map((chat, i) => (
-                 <div key={i} className="group relative flex items-center justify-between py-5 border-b border-border/20 last:border-0 hover:bg-muted/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer">
-                    <div className="flex items-start gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-muted/20 flex items-center justify-center border border-border/40 shrink-0">
-                         <Badge variant="outline" className="h-6 w-6 p-0 border-none bg-transparent">
-                           <MessageSquare className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                         </Badge>
-                      </div>
-                      <div className="space-y-1 overflow-hidden">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-foreground">#{chat.channel}</span>
-                          <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
-                          <span className="text-[10px] text-muted-foreground font-medium">{chat.user}</span>
+            {recentChannels.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <MessageSquare className="h-8 w-8 text-muted-foreground/20 mb-2" />
+                <p className="text-xs text-muted-foreground">No channels yet. Go to Chat to get started.</p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {recentChannels.map((ch, i) => {
+                  const unread = hasUnread(ch);
+                  return (
+                    <div
+                      key={ch.id}
+                      onClick={() => navigate(`/chat/c/${ch.id}`)}
+                      className="group relative flex items-center justify-between py-5 border-b border-border/20 last:border-0 hover:bg-muted/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="h-10 w-10 rounded-xl bg-muted/20 flex items-center justify-center border border-border/40 shrink-0">
+                          <MessageSquare className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">{chat.msg}</p>
+                        <div className="space-y-1 overflow-hidden">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-foreground">#{ch.name}</span>
+                            <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                            <span className="text-[10px] text-muted-foreground font-medium">{ch.memberCount} members</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">
+                            {ch.lastMessagePreview ?? ch.description ?? 'No messages yet'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <span className="text-[10px] text-muted-foreground/60">
+                          {ch.lastMessageAt ? relTime(ch.lastMessageAt) : ''}
+                        </span>
+                        {unread && (
+                          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                        )}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
-                      <span className="text-[10px] text-muted-foreground/60">{chat.time}</span>
-                      {chat.unread > 0 && (
-                        <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center animate-pulse">
-                          <span className="text-[9px] font-bold text-primary-foreground">{chat.unread}</span>
-                        </div>
-                      )}
-                    </div>
-                 </div>
-               ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
