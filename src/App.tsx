@@ -26,6 +26,7 @@ import { ChatLayout } from './pages/chat/ChatLayout';
 // Tasks
 import { TasksPage } from './pages/tasks/TasksPage';
 import { RequestsPage } from './pages/requests/RequestsPage';
+import { PeoplePage } from './pages/people/PeoplePage';
 
 function DashboardApp({ children }: { children?: React.ReactNode }) {
   return (
@@ -103,6 +104,18 @@ export default function App() {
               <ProtectedRoute>
                 <DashboardApp>
                   <RequestsPage />
+                </DashboardApp>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* People */}
+          <Route
+            path="/people"
+            element={
+              <ProtectedRoute>
+                <DashboardApp>
+                  <PeoplePage />
                 </DashboardApp>
               </ProtectedRoute>
             }

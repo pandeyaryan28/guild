@@ -203,7 +203,9 @@ export function Sidebar() {
             </NavLink>
             <NavItem icon={FileText} label="Files" />
             <NavItem icon={Calendar} label="Calendar" />
-            <NavItem icon={Users} label="People" />
+            <NavLink to="/people">
+              {({ isActive }) => <NavItem icon={Users} label="People" active={isActive} />}
+            </NavLink>
             <NavItem icon={BarChart3} label="Reports" />
           </div>
         </nav>
