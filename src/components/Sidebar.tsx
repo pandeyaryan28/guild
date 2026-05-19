@@ -137,7 +137,7 @@ export function Sidebar() {
     <TooltipProvider delay={100}>
       <div
         className={cn(
-          "relative flex h-full flex-col border-r border-border/40 bg-sidebar transition-all duration-300 ease-in-out overflow-hidden",
+          "group/sidebar relative flex h-full flex-col border-r border-border/40 bg-sidebar transition-all duration-300 ease-in-out",
           collapsed ? "w-[60px]" : "w-[260px]"
         )}
       >
@@ -146,13 +146,13 @@ export function Sidebar() {
           onClick={() => setCollapsed((v) => !v)}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "absolute top-3 z-20 flex h-5 w-5 items-center justify-center rounded-full border border-border/50 bg-sidebar shadow-sm text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-all duration-200",
-            collapsed ? "right-2" : "right-3"
+            "absolute top-6 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border/60 bg-background shadow-sm text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border transition-all duration-300",
+            collapsed ? "-right-3" : "-right-3 opacity-0 group-hover/sidebar:opacity-100"
           )}
         >
           <ChevronLeft
             className={cn(
-              "h-3 w-3 transition-transform duration-300",
+              "h-3.5 w-3.5 transition-transform duration-300",
               collapsed && "rotate-180"
             )}
           />
@@ -329,7 +329,6 @@ export function Sidebar() {
                 />
               )}
             </NavLink>
-            <NavItem icon={FileText} label="Files" collapsed={collapsed} />
             <NavItem icon={Calendar} label="Calendar" collapsed={collapsed} />
             <NavLink to="/people">
               {({ isActive }) => (
