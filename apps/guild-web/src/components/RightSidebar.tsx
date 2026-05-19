@@ -7,8 +7,9 @@ import {
   TrendingUp,
   UserPlus,
   ArrowUpRight,
-  Upload,
   Loader2,
+  PanelRightClose,
+  PanelRightOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,6 +17,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from '../hooks/useAuth';
 import { useOrgMembers } from '../hooks/useChat';
 import { useTasks } from '../hooks/useTasks';
+import { useRightSidebar } from '../hooks/useRightSidebar';
 import { type Task } from '../lib/tasks';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -51,11 +53,32 @@ function relTime(ts: any): string {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+// ─── Collapsed sliver shown when sidebar is hidden ────────────────────────────
+
+export function RightSidebarToggle() {
+  const { collapsed, toggle } = useRightSidebar();
+
+  if (!collapsed) return null;
+
+  return (
+    <div className="hidden lg:flex fixed right-0 top-1/2 -translate-y-1/2 z-40">
+      <button
+        onClick={toggle}
+        title="Expand panel"
+        className="flex items-center justify-center w-6 h-14 bg-surface border border-r-0 border-border-default rounded-l-lg text-text-muted hover:text-foreground hover:bg-accent/40 transition-all shadow-sm"
+      >
+        <PanelRightOpen className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
 // ─── RightSidebar ─────────────────────────────────────────────────────────────
 
 export function RightSidebar() {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
+  const { toggle } = useRightSidebar();
   const orgId = userProfile?.organizationId;
 
   const members = useOrgMembers(orgId);
@@ -90,7 +113,19 @@ export function RightSidebar() {
   };
 
   return (
-    <aside className="flex h-full w-[300px] flex-col border-l border-border-default bg-surface transition-colors duration-300">
+    <aside className="flex h-full w-[300px] flex-col border-l border-border-default bg-surface transition-colors duration-300 flex-shrink-0">
+      {/* Header with collapse button */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-default flex-shrink-0">
+        <span className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Panel</span>
+        <button
+          onClick={toggle}
+          title="Collapse panel"
+          className="p-1.5 rounded-md text-text-muted hover:text-foreground hover:bg-accent/40 transition-all"
+        >
+          <PanelRightClose className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
       <ScrollArea className="flex-1">
         <div className="p-6 space-y-8">
           {/* Online Team Members */}
@@ -131,10 +166,10 @@ export function RightSidebar() {
               <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">Quick Actions</h3>
             </div>
             <div className="grid grid-cols-1 gap-2">
-              <QuickAction icon={Plus}         label="Create Task"       onClick={() => navigate('/tasks')} />
-              <QuickAction icon={ArrowUpRight} label="New Request"       onClick={() => navigate('/tasks')} />
+              <QuickAction icon={Plus}          label="Create Task"      onClick={() => navigate('/tasks')} />
+              <QuickAction icon={ArrowUpRight}  label="New Request"      onClick={() => navigate('/tasks')} />
               <QuickAction icon={MessageSquare} label="Send Message"     onClick={() => navigate('/chat')} />
-              <QuickAction icon={UserPlus}     label="Invite Teammate"   onClick={() => {}} />
+              <QuickAction icon={UserPlus}      label="Invite Teammate"  onClick={() => {}} />
             </div>
           </section>
 

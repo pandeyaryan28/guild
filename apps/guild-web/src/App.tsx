@@ -7,6 +7,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
+import { RightSidebarProvider } from './hooks/useRightSidebar';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Auth pages
@@ -45,6 +46,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
+      <RightSidebarProvider>
       <AuthProvider>
         <Routes>
           {/* Public auth routes */}
@@ -159,6 +161,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
+      </RightSidebarProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
