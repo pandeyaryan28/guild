@@ -83,16 +83,16 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
   return (
     <div className="flex flex-1 min-w-0 flex-col bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border/30 bg-card/20 backdrop-blur-sm px-5 py-3.5 shrink-0">
+      <div className="flex items-center gap-3 border-b border-border-default bg-surface backdrop-blur-sm px-5 py-3.5 shrink-0">
         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
           <Icon className="h-4 w-4 text-primary/70" />
         </div>
         <div className="min-w-0">
           <h1 className="text-sm font-bold text-foreground">{headerTitle}</h1>
-          {headerSub && <p className="text-[11px] text-muted-foreground/50 truncate">{headerSub}</p>}
+          {headerSub && <p className="text-[11px] text-text-muted truncate">{headerSub}</p>}
         </div>
         {channelId && channel && (
-          <div className="ml-auto flex items-center gap-1.5 text-muted-foreground/40">
+          <div className="ml-auto flex items-center gap-1.5 text-text-muted">
             <Users className="h-3.5 w-3.5" />
             <span className="text-[11px]">{channel.memberCount}</span>
           </div>

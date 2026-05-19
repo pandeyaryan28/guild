@@ -75,7 +75,7 @@ function MemberCard({ member, isSelf }: { member: UserProfile; isSelf: boolean }
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.18 }}
-      className="group relative rounded-2xl border border-border/40 bg-card/50 p-5 flex flex-col gap-4 hover:bg-card/80 hover:border-border/70 hover:shadow-xl hover:shadow-black/10 transition-all duration-200 cursor-default"
+      className="group relative rounded-2xl border border-border-default bg-surface p-5 flex flex-col gap-4 hover:bg-surface hover:border-border-default hover:shadow-xl hover:shadow-black/10 transition-all duration-200 cursor-default"
     >
       {/* Self indicator */}
       {isSelf && (
@@ -114,22 +114,22 @@ function MemberCard({ member, isSelf }: { member: UserProfile; isSelf: boolean }
       <div className="space-y-2">
         {member.designation && (
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Briefcase className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+            <Briefcase className="h-3 w-3 shrink-0 text-text-muted" />
             <span className="truncate">{member.designation}</span>
           </div>
         )}
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <Mail className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+          <Mail className="h-3 w-3 shrink-0 text-text-muted" />
           <span className="truncate">{member.email}</span>
         </div>
         {member.employeeId && (
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Hash className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+            <Hash className="h-3 w-3 shrink-0 text-text-muted" />
             <span>ID: {member.employeeId}</span>
           </div>
         )}
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <Calendar className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+          <Calendar className="h-3 w-3 shrink-0 text-text-muted" />
           <span>Joined {timeAgo(member.createdAt)}</span>
         </div>
       </div>
@@ -194,7 +194,7 @@ export function PeoplePage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="px-8 pt-8 pb-6 border-b border-border/20 shrink-0">
+      <div className="px-8 pt-8 pb-6 border-b border-border-default shrink-0">
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
@@ -209,9 +209,9 @@ export function PeoplePage() {
           {/* Search & Actions */}
           <div className="flex items-center gap-3">
             <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
               <input
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-border/50 bg-background/50 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-border-default bg-bg-primary text-sm text-foreground placeholder:text-text-muted outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
                 placeholder="Search name, role, ID…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -232,7 +232,7 @@ export function PeoplePage() {
 
         {/* Role Filter Tabs */}
         <div className="flex items-center gap-1 mt-5">
-          <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground/40 mr-1" />
+          <SlidersHorizontal className="h-3.5 w-3.5 text-text-muted mr-1" />
           {([
             { id: 'all', label: 'All' },
             { id: 'owner', label: 'Owners' },
@@ -245,12 +245,12 @@ export function PeoplePage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all
                 ${roleFilter === id
                   ? 'bg-primary/15 text-primary border border-primary/20'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/20 border border-transparent'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-bg-tertiary border border-transparent'
                 }`}
             >
               {label}
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold
-                ${roleFilter === id ? 'bg-primary text-primary-foreground' : 'bg-muted/40 text-muted-foreground'}`}>
+                ${roleFilter === id ? 'bg-primary text-primary-foreground' : 'bg-bg-tertiary text-muted-foreground'}`}>
                 {counts[id]}
               </span>
             </button>
@@ -262,7 +262,7 @@ export function PeoplePage() {
       <div className="flex-1 overflow-y-auto px-8 py-6">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <Users className="h-12 w-12 text-muted-foreground/15 mb-4" />
+            <Users className="h-12 w-12 text-text-muted mb-4" />
             <p className="text-base font-semibold text-foreground">No members found</p>
             <p className="text-sm text-muted-foreground mt-1">
               {search ? `No results for "${search}"` : 'No members match the selected filter.'}

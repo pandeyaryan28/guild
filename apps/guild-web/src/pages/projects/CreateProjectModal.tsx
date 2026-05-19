@@ -75,9 +75,9 @@ export function CreateProjectModal({ open, onClose, orgId }: CreateProjectModalP
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg mx-4 rounded-xl border border-border/50 bg-card shadow-2xl">
+      <div className="relative z-10 w-full max-w-lg mx-4 rounded-xl border border-border-default bg-card shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-border/30">
+        <div className="flex items-center justify-between p-5 border-b border-border-default">
           <h2 className="text-sm font-semibold text-foreground">New Project</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-4 w-4" />
@@ -93,7 +93,7 @@ export function CreateProjectModal({ open, onClose, orgId }: CreateProjectModalP
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Project name…"
-                className="w-full bg-transparent text-base font-medium text-foreground placeholder:text-muted-foreground/50 outline-none"
+                className="w-full bg-transparent text-base font-medium text-foreground placeholder:text-text-muted outline-none"
               />
             </div>
 
@@ -103,7 +103,7 @@ export function CreateProjectModal({ open, onClose, orgId }: CreateProjectModalP
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add a description…"
               rows={3}
-              className="w-full resize-none rounded-lg border border-border/30 bg-background/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 transition-colors"
+              className="w-full resize-none rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-foreground placeholder:text-text-muted outline-none focus:border-primary/50 transition-colors"
             />
 
             {/* Dates */}
@@ -114,7 +114,7 @@ export function CreateProjectModal({ open, onClose, orgId }: CreateProjectModalP
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full rounded-lg border border-border/30 bg-background/50 px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
+                  className="w-full rounded-lg border border-border-default bg-bg-primary px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
               <div>
@@ -123,7 +123,7 @@ export function CreateProjectModal({ open, onClose, orgId }: CreateProjectModalP
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full rounded-lg border border-border/30 bg-background/50 px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
+                  className="w-full rounded-lg border border-border-default bg-bg-primary px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -144,7 +144,7 @@ export function CreateProjectModal({ open, onClose, orgId }: CreateProjectModalP
                         className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-all ${
                           selected
                             ? 'bg-primary/20 border-primary/50 text-primary'
-                            : 'border-border/30 text-muted-foreground hover:text-foreground'
+                            : 'border-border-default text-muted-foreground hover:text-foreground'
                         } ${isOwner ? 'opacity-70 cursor-not-allowed' : ''}`}
                       >
                         <div className="h-4 w-4 rounded-full bg-primary/30 flex items-center justify-center text-[8px] font-bold text-primary">
@@ -161,7 +161,7 @@ export function CreateProjectModal({ open, onClose, orgId }: CreateProjectModalP
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-2 p-4 border-t border-border/30">
+          <div className="flex items-center justify-end gap-2 p-4 border-t border-border-default">
             <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
             <Button type="submit" size="sm" disabled={!name.trim() || saving}>
               {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />Creating…</> : 'Create Project'}

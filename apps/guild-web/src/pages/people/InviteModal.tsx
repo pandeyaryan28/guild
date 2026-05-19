@@ -55,16 +55,16 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-bg-primary backdrop-blur-sm"
           />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="w-full max-w-md bg-card border border-border/50 rounded-3xl shadow-2xl overflow-hidden pointer-events-auto"
+              className="w-full max-w-md bg-card border border-border-default rounded-3xl shadow-2xl overflow-hidden pointer-events-auto"
             >
-              <div className="p-6 border-b border-border/10 flex items-center justify-between">
+              <div className="p-6 border-b border-border-default flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
                     <UserPlus className="h-5 w-5" />
@@ -76,7 +76,7 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+                  className="p-2 rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -115,7 +115,7 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                       <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
                         Shareable Link
                       </label>
-                      <div className="flex items-center gap-2 p-1.5 rounded-xl border border-border/50 bg-background">
+                      <div className="flex items-center gap-2 p-1.5 rounded-xl border border-border-default bg-background">
                         <input
                           readOnly
                           value={inviteLink}

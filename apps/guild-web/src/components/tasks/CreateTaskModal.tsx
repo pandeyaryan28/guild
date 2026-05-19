@@ -85,9 +85,9 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg mx-4 rounded-xl border border-border/50 bg-card shadow-2xl">
+      <div className="relative z-10 w-full max-w-lg mx-4 rounded-xl border border-border-default bg-card shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-border/30">
+        <div className="flex items-center justify-between p-5 border-b border-border-default">
           <h2 className="text-sm font-semibold text-foreground">Create Task</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-4 w-4" />
@@ -103,7 +103,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Task title…"
-                className="w-full bg-transparent text-base font-medium text-foreground placeholder:text-muted-foreground/50 outline-none"
+                className="w-full bg-transparent text-base font-medium text-foreground placeholder:text-text-muted outline-none"
               />
             </div>
 
@@ -113,7 +113,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add a description…"
               rows={3}
-              className="w-full resize-none rounded-lg border border-border/30 bg-background/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 transition-colors"
+              className="w-full resize-none rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-foreground placeholder:text-text-muted outline-none focus:border-primary/50 transition-colors"
             />
 
             {/* Meta row */}
@@ -130,7 +130,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
                         'px-2 py-0.5 rounded text-[11px] font-medium border transition-all',
                         status === s
                           ? 'border-transparent text-foreground'
-                          : 'border-border/30 text-muted-foreground hover:text-foreground',
+                          : 'border-border-default text-muted-foreground hover:text-foreground',
                       )}
                       style={status === s ? { backgroundColor: `${STATUS_CONFIG[s].dot}25`, borderColor: `${STATUS_CONFIG[s].dot}60`, color: STATUS_CONFIG[s].dot } : {}}
                     >
@@ -150,7 +150,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
                       onClick={() => setPriority(p)}
                       className={cn(
                         'px-2 py-0.5 rounded text-[11px] font-medium border transition-all',
-                        priority === p ? 'border-transparent' : 'border-border/30 text-muted-foreground hover:text-foreground',
+                        priority === p ? 'border-transparent' : 'border-border-default text-muted-foreground hover:text-foreground',
                       )}
                       style={priority === p ? { backgroundColor: `${PRIORITY_CONFIG[p].color}25`, borderColor: `${PRIORITY_CONFIG[p].color}60`, color: PRIORITY_CONFIG[p].color } : {}}
                     >
@@ -168,7 +168,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="rounded-lg border border-border/30 bg-background/50 px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
+                className="rounded-lg border border-border-default bg-bg-primary px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
               />
             </div>
 
@@ -185,7 +185,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
                         'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-all',
                         assigneeIds.includes(m.uid)
                           ? 'bg-primary/20 border-primary/50 text-primary'
-                          : 'border-border/30 text-muted-foreground hover:text-foreground',
+                          : 'border-border-default text-muted-foreground hover:text-foreground',
                       )}
                     >
                       <div className="h-4 w-4 rounded-full bg-primary/30 flex items-center justify-center text-[8px] font-bold text-primary">
@@ -210,7 +210,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
                 <button
                   type="button"
                   onClick={() => setShowNewLabel(!showNewLabel)}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] text-muted-foreground border border-dashed border-border/40 hover:text-foreground hover:border-border/70 transition-colors"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] text-muted-foreground border border-dashed border-border-default hover:text-foreground hover:border-border-default transition-colors"
                 >
                   <Plus className="h-2.5 w-2.5" /> New
                 </button>
@@ -222,7 +222,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
                     onChange={(e) => setNewLabelName(e.target.value)}
                     placeholder="Label name"
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateLabel(); } }}
-                    className="flex-1 rounded border border-border/30 bg-background/50 px-2 py-1 text-xs text-foreground outline-none"
+                    className="flex-1 rounded border border-border-default bg-bg-primary px-2 py-1 text-xs text-foreground outline-none"
                   />
                   <div className="flex gap-1">
                     {LABEL_COLORS.map((c) => (
@@ -241,7 +241,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-2 p-4 border-t border-border/30">
+          <div className="flex items-center justify-end gap-2 p-4 border-t border-border-default">
             <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
             <Button type="submit" size="sm" disabled={!title.trim() || saving}>
               {saving ? 'Creating…' : 'Create Task'}

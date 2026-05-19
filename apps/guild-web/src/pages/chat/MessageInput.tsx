@@ -97,7 +97,7 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
         />
       )}
 
-      <div className="flex items-end gap-3 rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl px-4 py-3 shadow-xl shadow-black/20 focus-within:border-primary/40 transition-colors">
+      <div className="flex items-end gap-3 rounded-2xl border border-border-default bg-surface backdrop-blur-xl px-4 py-3 shadow-xl shadow-black/20 focus-within:border-primary/40 transition-colors">
         <textarea
           ref={textareaRef}
           value={body}
@@ -107,7 +107,7 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
           disabled={sending || disabled}
           maxLength={2000}
           rows={1}
-          className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none disabled:opacity-50 leading-relaxed scrollbar-hide"
+          className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-text-muted focus:outline-none disabled:opacity-50 leading-relaxed scrollbar-hide"
           style={{ minHeight: '24px', maxHeight: '160px' }}
         />
         <button
@@ -117,7 +117,7 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
             'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all',
             body.trim() && !sending
               ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90'
-              : 'bg-muted/30 text-muted-foreground/40 cursor-not-allowed',
+              : 'bg-bg-tertiary text-text-muted cursor-not-allowed',
           )}
         >
           {sending ? (
@@ -128,7 +128,7 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
         </button>
       </div>
 
-      <p className="mt-1.5 px-1 text-[10px] text-muted-foreground/40">
+      <p className="mt-1.5 px-1 text-[10px] text-text-muted">
         <kbd className="font-mono">Enter</kbd> to send · <kbd className="font-mono">Shift+Enter</kbd> for new line · <kbd className="font-mono">@</kbd> to mention
       </p>
     </div>

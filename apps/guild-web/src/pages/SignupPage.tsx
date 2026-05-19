@@ -112,7 +112,7 @@ export function SignupPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl p-8 shadow-2xl shadow-black/30">
+        <div className="rounded-2xl border border-border-default bg-surface backdrop-blur-xl p-8 shadow-2xl shadow-black/30">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Create your account</h1>
             <p className="text-sm text-muted-foreground mt-1.5 font-medium">
@@ -125,14 +125,14 @@ export function SignupPage() {
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email</label>
               <div className="relative group">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 transition-colors group-focus-within:text-primary" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors group-focus-within:text-primary" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); }}
                   placeholder="you@company.com"
                   required
-                  className="w-full h-11 rounded-xl border border-border/40 bg-muted/20 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all"
+                  className="w-full h-11 rounded-xl border border-border-default bg-bg-tertiary pl-11 pr-4 text-sm text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all"
                 />
               </div>
               {errors.email && <p className="text-xs text-destructive font-medium">{errors.email}</p>}
@@ -142,16 +142,16 @@ export function SignupPage() {
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Password</label>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 transition-colors group-focus-within:text-primary" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors group-focus-within:text-primary" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: '' })); }}
                   placeholder="Min 8 chars, letters + numbers"
                   required
-                  className="w-full h-11 rounded-xl border border-border/40 bg-muted/20 pl-11 pr-12 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all"
+                  className="w-full h-11 rounded-xl border border-border-default bg-bg-tertiary pl-11 pr-12 text-sm text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all"
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-muted-foreground transition-colors">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -162,16 +162,16 @@ export function SignupPage() {
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Confirm Password</label>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 transition-colors group-focus-within:text-primary" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors group-focus-within:text-primary" />
                 <input
                   type={showConfirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => { setConfirmPassword(e.target.value); setErrors(p => ({ ...p, confirmPassword: '' })); }}
                   placeholder="Repeat your password"
                   required
-                  className="w-full h-11 rounded-xl border border-border/40 bg-muted/20 pl-11 pr-12 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all"
+                  className="w-full h-11 rounded-xl border border-border-default bg-bg-tertiary pl-11 pr-12 text-sm text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all"
                 />
-                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-muted-foreground transition-colors">
                   {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -207,7 +207,7 @@ export function SignupPage() {
             
             <div className="relative mt-6 mb-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border/40"></div>
+                <div className="w-full border-t border-border-default"></div>
               </div>
               <div className="relative flex justify-center text-xs">
                 <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
@@ -218,7 +218,7 @@ export function SignupPage() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isSubmitting}
-              className="w-full h-11 rounded-xl bg-muted/20 hover:bg-muted/30 border border-border/40 disabled:opacity-60 disabled:cursor-not-allowed text-foreground text-sm font-semibold transition-all flex items-center justify-center gap-2"
+              className="w-full h-11 rounded-xl bg-bg-tertiary hover:bg-bg-tertiary border border-border-default disabled:opacity-60 disabled:cursor-not-allowed text-foreground text-sm font-semibold transition-all flex items-center justify-center gap-2"
             >
               <svg className="h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                 <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>

@@ -125,12 +125,12 @@ export function TasksPage() {
       main={
         <div className="flex flex-col h-full overflow-hidden">
           {/* Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 px-6 py-4 border-b border-border/20">
+          <div className="flex-shrink-0 flex items-center gap-3 px-6 py-4 border-b border-border-default">
             <ViewIcon view={activeView} />
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-semibold text-foreground leading-tight">{title}</h1>
               {subtitle && (
-                <p className="text-xs text-muted-foreground/60 mt-0.5">{subtitle}</p>
+                <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>
               )}
             </div>
             {/* Task count */}

@@ -41,7 +41,7 @@ export function StepChoose({ data, updateData }: Props) {
           className={`group relative flex flex-col items-start gap-4 rounded-2xl border p-6 text-left transition-all duration-200 ${
             selected === 'create'
               ? 'border-primary/60 bg-primary/10 shadow-lg shadow-primary/10'
-              : 'border-border/40 bg-card/50 hover:border-primary/30 hover:bg-card/70'
+              : 'border-border-default bg-surface hover:border-primary/30 hover:bg-surface'
           }`}
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 border border-primary/20 group-hover:bg-primary/20 transition-colors">
@@ -53,7 +53,7 @@ export function StepChoose({ data, updateData }: Props) {
               Set up a new workspace for your team
             </p>
           </div>
-          <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30 group-hover:text-primary/50 group-hover:translate-x-1 transition-all" />
+          <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted group-hover:text-primary/50 group-hover:translate-x-1 transition-all" />
         </motion.button>
 
         <motion.button
@@ -63,7 +63,7 @@ export function StepChoose({ data, updateData }: Props) {
           className={`group relative flex flex-col items-start gap-4 rounded-2xl border p-6 text-left transition-all duration-200 ${
             selected === 'join'
               ? 'border-primary/60 bg-primary/10 shadow-lg shadow-primary/10'
-              : 'border-border/40 bg-card/50 hover:border-primary/30 hover:bg-card/70'
+              : 'border-border-default bg-surface hover:border-primary/30 hover:bg-surface'
           }`}
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 border border-primary/20 group-hover:bg-primary/20 transition-colors">
@@ -75,7 +75,7 @@ export function StepChoose({ data, updateData }: Props) {
               Join a team via org username or invite link
             </p>
           </div>
-          <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30 group-hover:text-primary/50 group-hover:translate-x-1 transition-all" />
+          <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted group-hover:text-primary/50 group-hover:translate-x-1 transition-all" />
         </motion.button>
       </div>
     </div>

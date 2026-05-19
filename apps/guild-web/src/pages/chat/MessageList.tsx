@@ -43,7 +43,7 @@ export function MessageList({ messages, currentUserId, members }: MessageListPro
       <div className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-5 w-5 animate-spin text-primary/60" />
-          <p className="text-xs text-muted-foreground/60">Loading messages…</p>
+          <p className="text-xs text-text-muted">Loading messages…</p>
         </div>
       </div>
     );
@@ -56,7 +56,7 @@ export function MessageList({ messages, currentUserId, members }: MessageListPro
           💬
         </div>
         <p className="text-sm font-semibold text-foreground">No messages yet</p>
-        <p className="text-xs text-muted-foreground/60">Be the first to say something!</p>
+        <p className="text-xs text-text-muted">Be the first to say something!</p>
       </div>
     );
   }
@@ -96,7 +96,7 @@ export function MessageList({ messages, currentUserId, members }: MessageListPro
         item.type === 'divider' ? (
           <div key={`divider-${i}`} className="flex items-center gap-3 px-4 py-3">
             <div className="flex-1 h-px bg-border/20" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">
               {item.label}
             </span>
             <div className="flex-1 h-px bg-border/20" />

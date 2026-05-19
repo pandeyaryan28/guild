@@ -147,7 +147,7 @@ export function TaskComments({ taskId, orgId, actor, authorUsername, notifyIds, 
                       onChange={(e) => setEditBody(e.target.value)}
                       rows={2}
                       autoFocus
-                      className="w-full resize-none rounded-lg border border-border/40 bg-background/50 px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50"
+                      className="w-full resize-none rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50"
                     />
                     <div className="flex gap-2">
                       <button onClick={saveEdit} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80"><Check className="h-3 w-3" />Save</button>
@@ -165,9 +165,9 @@ export function TaskComments({ taskId, orgId, actor, authorUsername, notifyIds, 
       </div>
 
       {/* Input */}
-      <div className="relative mt-3 pt-3 border-t border-border/30">
+      <div className="relative mt-3 pt-3 border-t border-border-default">
         {showSuggestions && filteredMembers.length > 0 && (
-          <div className="absolute bottom-full mb-1 left-0 right-0 rounded-lg border border-border/40 bg-popover/95 backdrop-blur shadow-xl overflow-hidden z-10">
+          <div className="absolute bottom-full mb-1 left-0 right-0 rounded-lg border border-border-default bg-popover/95 backdrop-blur shadow-xl overflow-hidden z-10">
             {filteredMembers.slice(0, 5).map((m) => (
               <button
                 key={m.uid}
@@ -191,7 +191,7 @@ export function TaskComments({ taskId, orgId, actor, authorUsername, notifyIds, 
             onKeyDown={handleKeyDown}
             placeholder="Add a comment… (@ to mention)"
             rows={1}
-            className="flex-1 resize-none rounded-lg border border-border/30 bg-background/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 transition-colors max-h-32"
+            className="flex-1 resize-none rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-foreground placeholder:text-text-muted outline-none focus:border-primary/50 transition-colors max-h-32"
             style={{ overflowY: body.split('\n').length > 3 ? 'auto' : 'hidden' }}
           />
           <button
@@ -202,7 +202,7 @@ export function TaskComments({ taskId, orgId, actor, authorUsername, notifyIds, 
             <Send className="h-3.5 w-3.5" />
           </button>
         </div>
-        <p className="mt-1.5 text-[10px] text-muted-foreground/50">Enter to send · Shift+Enter for newline</p>
+        <p className="mt-1.5 text-[10px] text-text-muted">Enter to send · Shift+Enter for newline</p>
       </div>
     </div>
   );

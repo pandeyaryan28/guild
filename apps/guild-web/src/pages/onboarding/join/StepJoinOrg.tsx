@@ -111,7 +111,7 @@ export function StepJoinOrg({ data, updateData }: Props) {
 
       <OnboardingCard>
         {/* Method toggle */}
-        <div className="flex rounded-xl border border-border/40 bg-muted/10 p-1 mb-6">
+        <div className="flex rounded-xl border border-border-default bg-bg-tertiary p-1 mb-6">
           <button
             onClick={() => { setMethod('slug'); setOrg(null); setError(''); }}
             className={cn(
@@ -140,20 +140,20 @@ export function StepJoinOrg({ data, updateData }: Props) {
             <FormField label="Organization Username">
               <div className="flex gap-2">
                 <div className="relative group flex-1">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground/60">guild.app/</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-text-muted">guild.app/</span>
                   <input
                     value={slugInput}
                     onChange={(e) => { setSlugInput(e.target.value); setOrg(null); setError(''); }}
                     onKeyDown={(e) => e.key === 'Enter' && searchBySlug()}
                     placeholder="acme-corp"
-                    className="w-full h-11 rounded-xl border border-border/40 bg-muted/20 pl-[72px] pr-4 text-sm font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all"
+                    className="w-full h-11 rounded-xl border border-border-default bg-bg-tertiary pl-[72px] pr-4 text-sm font-mono text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={searchBySlug}
                   disabled={isSearching || !slugInput}
-                  className="h-11 px-4 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/50 text-sm font-bold text-foreground transition-all disabled:opacity-40 flex items-center gap-2"
+                  className="h-11 px-4 rounded-xl bg-bg-tertiary border border-border-default hover:bg-bg-tertiary text-sm font-bold text-foreground transition-all disabled:opacity-40 flex items-center gap-2"
                 >
                   {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </button>
@@ -173,7 +173,7 @@ export function StepJoinOrg({ data, updateData }: Props) {
                   type="button"
                   onClick={searchByInvite}
                   disabled={isSearching || !inviteInput}
-                  className="h-11 px-4 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/50 text-sm font-bold text-foreground transition-all disabled:opacity-40 flex items-center gap-2"
+                  className="h-11 px-4 rounded-xl bg-bg-tertiary border border-border-default hover:bg-bg-tertiary text-sm font-bold text-foreground transition-all disabled:opacity-40 flex items-center gap-2"
                 >
                   {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </button>

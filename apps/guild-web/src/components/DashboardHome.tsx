@@ -40,7 +40,7 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, color, delay, loading 
     whileHover={{ y: -4 }}
     className="group"
   >
-    <Card className="overflow-hidden border-border/40 bg-card/40 transition-all hover:bg-card/60 hover:shadow-2xl hover:shadow-primary/5">
+    <Card className="overflow-hidden border-border-default bg-surface transition-all hover:bg-surface hover:shadow-2xl hover:shadow-primary/5">
       <CardContent className="p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className={`p-2.5 rounded-xl bg-opacity-10 ${color} shadow-inner`}>
@@ -50,13 +50,13 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, color, delay, loading 
         </div>
         <div>
           {loading ? (
-            <div className="h-8 w-12 rounded bg-muted/40 animate-pulse" />
+            <div className="h-8 w-12 rounded bg-bg-tertiary animate-pulse" />
           ) : (
             <h3 className="text-3xl font-bold tracking-tight text-foreground">{value}</h3>
           )}
           <p className="text-xs text-muted-foreground mt-1 font-medium">{subtitle}</p>
         </div>
-        <div className="h-1 w-full bg-muted/20 rounded-full overflow-hidden">
+        <div className="h-1 w-full bg-bg-tertiary rounded-full overflow-hidden">
           <div className={`h-full ${color} opacity-60 w-1/3`} />
         </div>
       </CardContent>
@@ -69,7 +69,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   high:   'text-orange-400 border-orange-400/30',
   medium: 'text-amber-400 border-amber-400/30',
   low:    'text-blue-400 border-blue-400/30',
-  none:   'text-muted-foreground border-border/40',
+  none:   'text-muted-foreground border-border-default',
 };
 
 const TaskItem = ({ task, memberMap }: { task: Task; memberMap: Map<string, { fullName: string }> }) => {
@@ -79,7 +79,7 @@ const TaskItem = ({ task, memberMap }: { task: Task; memberMap: Map<string, { fu
   const priorityClass = PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.none;
 
   return (
-    <div className="group flex items-center justify-between py-4 border-b border-border/20 last:border-0 hover:bg-muted/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer">
+    <div className="group flex items-center justify-between py-4 border-b border-border-default last:border-0 hover:bg-bg-tertiary px-4 -mx-4 rounded-xl transition-all cursor-pointer">
       <div className="flex items-center gap-4">
         <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center group-hover:border-primary transition-colors">
           <div className="h-2 w-2 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -87,7 +87,7 @@ const TaskItem = ({ task, memberMap }: { task: Task; memberMap: Map<string, { fu
         <div>
           <h4 className="text-[13px] font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">{task.title}</h4>
           <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className={`h-4 text-[9px] px-1.5 font-bold uppercase tracking-wider bg-muted/10 ${priorityClass}`}>
+            <Badge variant="outline" className={`h-4 text-[9px] px-1.5 font-bold uppercase tracking-wider bg-bg-tertiary ${priorityClass}`}>
               {task.priority}
             </Badge>
             <span className="text-[10px] text-muted-foreground">{dueStr}</span>
@@ -95,11 +95,11 @@ const TaskItem = ({ task, memberMap }: { task: Task; memberMap: Map<string, { fu
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <Avatar className="h-6 w-6 border border-border/40">
+        <Avatar className="h-6 w-6 border border-border-default">
           <AvatarImage src={`https://i.pravatar.cc/100?u=${firstAssignee}`} />
           <AvatarFallback className="text-[8px] bg-zinc-800">{assigneeName[0] ?? '?'}</AvatarFallback>
         </Avatar>
-        <MoreHorizontal className="h-4 w-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <MoreHorizontal className="h-4 w-4 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     </div>
   );
@@ -246,7 +246,7 @@ export function DashboardHome() {
           </motion.p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="h-10 bg-muted/20 border-border/40 text-xs font-bold gap-2">
+          <Button variant="outline" className="h-10 bg-bg-tertiary border-border-default text-xs font-bold gap-2">
             <Filter className="h-3.5 w-3.5" /> Filter
           </Button>
           <Button
@@ -332,7 +332,7 @@ export function DashboardHome() {
       {/* Grid Content */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* Tasks Section */}
-        <Card className="border-border/40 bg-card/40 backdrop-blur-sm shadow-xl shadow-black/5 xl:col-span-1">
+        <Card className="border-border-default bg-surface backdrop-blur-sm shadow-xl shadow-black/5 xl:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
               <CardTitle className="text-lg font-bold text-foreground">My Tasks</CardTitle>
@@ -348,7 +348,7 @@ export function DashboardHome() {
           </CardHeader>
           <CardContent>
             <Tabs value={taskTab} onValueChange={(v) => setTaskTab(v as any)} className="w-full">
-              <TabsList className="bg-muted/20 border border-border/40 h-8 p-1 mb-4">
+              <TabsList className="bg-bg-tertiary border border-border-default h-8 p-1 mb-4">
                 <TabsTrigger value="all"      className="text-[10px] font-bold px-4 h-6">ALL ({myTasks.length})</TabsTrigger>
                 <TabsTrigger value="today"    className="text-[10px] font-bold px-4 h-6">DUE TODAY ({todayTasks.length})</TabsTrigger>
                 <TabsTrigger value="progress" className="text-[10px] font-bold px-4 h-6">IN PROGRESS ({inProgressTasks.length})</TabsTrigger>
@@ -356,11 +356,11 @@ export function DashboardHome() {
               <div className="mt-4">
                 {tasksLoading ? (
                   <div className="flex items-center justify-center py-10">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/40" />
+                    <Loader2 className="h-5 w-5 animate-spin text-text-muted" />
                   </div>
                 ) : displayedTasks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 text-center">
-                    <CheckCircle2 className="h-8 w-8 text-muted-foreground/20 mb-2" />
+                    <CheckCircle2 className="h-8 w-8 text-text-muted mb-2" />
                     <p className="text-xs text-muted-foreground">No tasks here 🎉</p>
                   </div>
                 ) : (
@@ -371,7 +371,7 @@ export function DashboardHome() {
               </div>
               <Button
                 variant="ghost"
-                className="w-full mt-4 h-10 border-dashed border border-border/40 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-all"
+                className="w-full mt-4 h-10 border-dashed border border-border-default text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-all"
                 onClick={() => navigate('/tasks')}
               >
                 <Plus className="h-3.5 w-3.5 mr-2" /> Add new task
@@ -381,7 +381,7 @@ export function DashboardHome() {
         </Card>
 
         {/* Team Members Panel */}
-        <Card className="border-border/40 bg-card/40 backdrop-blur-sm shadow-xl shadow-black/5">
+        <Card className="border-border-default bg-surface backdrop-blur-sm shadow-xl shadow-black/5">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
               <CardTitle className="text-lg font-bold text-foreground">Team Members</CardTitle>
@@ -391,7 +391,7 @@ export function DashboardHome() {
           <CardContent>
             {members.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <Users className="h-8 w-8 text-muted-foreground/20 mb-2" />
+                <Users className="h-8 w-8 text-text-muted mb-2" />
                 <p className="text-xs text-muted-foreground">No team members yet.</p>
               </div>
             ) : (
@@ -399,9 +399,9 @@ export function DashboardHome() {
                 {members.slice(0, 6).map((member) => {
                   const initials = member.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() ?? '?';
                   return (
-                    <div key={member.uid} className="group flex items-center justify-between py-3 border-b border-border/20 last:border-0 hover:bg-muted/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer">
+                    <div key={member.uid} className="group flex items-center justify-between py-3 border-b border-border-default last:border-0 hover:bg-bg-tertiary px-4 -mx-4 rounded-xl transition-all cursor-pointer">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8 border border-border/40">
+                        <Avatar className="h-8 w-8 border border-border-default">
                           <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback>
                         </Avatar>
                         <div>
@@ -409,7 +409,7 @@ export function DashboardHome() {
                           <p className="text-[10px] text-muted-foreground">@{member.username} · {member.designation || member.role}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="h-4 text-[9px] px-1.5 capitalize bg-muted/10 border-border/40 text-muted-foreground">
+                      <Badge variant="outline" className="h-4 text-[9px] px-1.5 capitalize bg-bg-tertiary border-border-default text-muted-foreground">
                         {member.role}
                       </Badge>
                     </div>
@@ -424,7 +424,7 @@ export function DashboardHome() {
         </Card>
 
         {/* Recent Conversations */}
-        <Card className="border-border/40 bg-card/40 backdrop-blur-sm shadow-xl shadow-black/5 xl:col-span-2">
+        <Card className="border-border-default bg-surface backdrop-blur-sm shadow-xl shadow-black/5 xl:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
               <CardTitle className="text-lg font-bold text-foreground">Recent Channels</CardTitle>
@@ -441,7 +441,7 @@ export function DashboardHome() {
           <CardContent>
             {recentChannels.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <MessageSquare className="h-8 w-8 text-muted-foreground/20 mb-2" />
+                <MessageSquare className="h-8 w-8 text-text-muted mb-2" />
                 <p className="text-xs text-muted-foreground">No channels yet. Go to Chat to get started.</p>
               </div>
             ) : (
@@ -452,10 +452,10 @@ export function DashboardHome() {
                     <div
                       key={ch.id}
                       onClick={() => navigate(`/chat/c/${ch.id}`)}
-                      className="group relative flex items-center justify-between py-5 border-b border-border/20 last:border-0 hover:bg-muted/5 px-4 -mx-4 rounded-xl transition-all cursor-pointer"
+                      className="group relative flex items-center justify-between py-5 border-b border-border-default last:border-0 hover:bg-bg-tertiary px-4 -mx-4 rounded-xl transition-all cursor-pointer"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-muted/20 flex items-center justify-center border border-border/40 shrink-0">
+                        <div className="h-10 w-10 rounded-xl bg-bg-tertiary flex items-center justify-center border border-border-default shrink-0">
                           <MessageSquare className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
                         <div className="space-y-1 overflow-hidden">
@@ -470,7 +470,7 @@ export function DashboardHome() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
-                        <span className="text-[10px] text-muted-foreground/60">
+                        <span className="text-[10px] text-text-muted">
                           {ch.lastMessageAt ? relTime(ch.lastMessageAt) : ''}
                         </span>
                         {unread && (

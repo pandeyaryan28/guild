@@ -27,7 +27,7 @@ export function KanbanColumn({ status, tasks, labels, memberMap, onTaskClick, on
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: config.dot }} />
           <span className="text-xs font-semibold text-foreground">{config.label}</span>
-          <span className="text-[10px] text-muted-foreground bg-muted/40 rounded px-1.5 py-0.5 font-medium">
+          <span className="text-[10px] text-muted-foreground bg-bg-tertiary rounded px-1.5 py-0.5 font-medium">
             {tasks.length}
           </span>
         </div>
@@ -47,7 +47,7 @@ export function KanbanColumn({ status, tasks, labels, memberMap, onTaskClick, on
           'flex-1 min-h-[60px] space-y-2 rounded-xl p-2 transition-all duration-200',
           isOver
             ? 'bg-primary/5 ring-1 ring-primary/30'
-            : 'bg-background/20',
+            : 'bg-bg-primary',
         )}
       >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
@@ -64,8 +64,8 @@ export function KanbanColumn({ status, tasks, labels, memberMap, onTaskClick, on
         </SortableContext>
 
         {tasks.length === 0 && !isOver && (
-          <div className="flex items-center justify-center h-16 rounded-lg border border-dashed border-border/20">
-            <span className="text-[11px] text-muted-foreground/40">Drop here</span>
+          <div className="flex items-center justify-center h-16 rounded-lg border border-dashed border-border-default">
+            <span className="text-[11px] text-text-muted">Drop here</span>
           </div>
         )}
       </div>

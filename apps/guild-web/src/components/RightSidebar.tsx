@@ -31,12 +31,12 @@ const QuickAction = ({
 }) => (
   <Button
     variant="outline"
-    className="h-10 justify-start gap-2.5 bg-muted/10 border-border/40 hover:bg-muted/30 hover:border-primary/30 transition-all text-xs group"
+    className="h-10 justify-start gap-2.5 bg-bg-tertiary border-border-default hover:bg-bg-tertiary hover:border-primary/30 transition-all text-xs group"
     onClick={onClick}
   >
     <Icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
     <span className="text-foreground font-medium">{label}</span>
-    <ArrowRight className="ml-auto h-3 w-3 text-muted-foreground/30 group-hover:text-primary/50 group-hover:translate-x-0.5 transition-all" />
+    <ArrowRight className="ml-auto h-3 w-3 text-text-muted group-hover:text-primary/50 group-hover:translate-x-0.5 transition-all" />
   </Button>
 );
 
@@ -90,24 +90,24 @@ export function RightSidebar() {
   };
 
   return (
-    <aside className="flex h-full w-[300px] flex-col border-l border-border/40 bg-card/20 transition-colors duration-300">
+    <aside className="flex h-full w-[300px] flex-col border-l border-border-default bg-surface transition-colors duration-300">
       <ScrollArea className="flex-1">
         <div className="p-6 space-y-8">
           {/* Online Team Members */}
           <section>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">Team Online</h3>
-              <TrendingUp className="h-3 w-3 text-muted-foreground/50" />
+              <TrendingUp className="h-3 w-3 text-text-muted" />
             </div>
             {members.length === 0 ? (
-              <p className="text-[10px] text-muted-foreground/40 px-1">No team members yet.</p>
+              <p className="text-[10px] text-text-muted px-1">No team members yet.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {members.slice(0, 8).map((member) => {
                   const initials = member.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() ?? '?';
                   return (
                     <div key={member.uid} className="relative group cursor-pointer" title={member.fullName}>
-                      <Avatar className="h-8 w-8 border-2 border-border/40 group-hover:border-primary transition-colors">
+                      <Avatar className="h-8 w-8 border-2 border-border-default group-hover:border-primary transition-colors">
                         <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
                           {initials}
                         </AvatarFallback>
@@ -117,7 +117,7 @@ export function RightSidebar() {
                   );
                 })}
                 {members.length > 8 && (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/30 border-2 border-border/40 text-[9px] font-bold text-muted-foreground">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-tertiary border-2 border-border-default text-[9px] font-bold text-muted-foreground">
                     +{members.length - 8}
                   </div>
                 )}
@@ -142,24 +142,24 @@ export function RightSidebar() {
           <section>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">Recent Activity</h3>
-              <TrendingUp className="h-3 w-3 text-muted-foreground/50" />
+              <TrendingUp className="h-3 w-3 text-text-muted" />
             </div>
             {tasksLoading ? (
               <div className="flex items-center gap-2 py-4">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/30" />
-                <span className="text-[10px] text-muted-foreground/30">Loading activity…</span>
+                <Loader2 className="h-4 w-4 animate-spin text-text-muted" />
+                <span className="text-[10px] text-text-muted">Loading activity…</span>
               </div>
             ) : recentActivity.length === 0 ? (
-              <p className="text-[10px] text-muted-foreground/40 px-1">No recent activity yet.</p>
+              <p className="text-[10px] text-text-muted px-1">No recent activity yet.</p>
             ) : (
               <div className="space-y-1">
                 {recentActivity.map(({ task, actor }) => (
                   <div
                     key={task.id}
-                    className="flex items-start gap-3 py-3 border-b border-border/20 last:border-0 hover:bg-muted/10 transition-colors px-2 rounded-lg -mx-2 cursor-pointer group"
+                    className="flex items-start gap-3 py-3 border-b border-border-default last:border-0 hover:bg-bg-tertiary transition-colors px-2 rounded-lg -mx-2 cursor-pointer group"
                     onClick={() => navigate(`/tasks?task=${task.id}`)}
                   >
-                    <Avatar className="h-6 w-6 border border-border/40 shrink-0">
+                    <Avatar className="h-6 w-6 border border-border-default shrink-0">
                       <AvatarFallback className="text-[10px] bg-zinc-800">{getMemberInitials(actor)}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col gap-0.5 overflow-hidden">
@@ -170,7 +170,7 @@ export function RightSidebar() {
                         {STATUS_LABEL[task.status] ?? 'updated'}{' '}
                         <span className="text-foreground line-clamp-1">"{task.title}"</span>
                       </p>
-                      <span className="text-[9px] text-muted-foreground/60">{relTime(task.updatedAt)}</span>
+                      <span className="text-[9px] text-text-muted">{relTime(task.updatedAt)}</span>
                     </div>
                   </div>
                 ))}

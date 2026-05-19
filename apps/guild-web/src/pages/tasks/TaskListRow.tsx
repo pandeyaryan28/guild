@@ -44,7 +44,7 @@ function DueBadge({ dueDate }: { dueDate: { toDate: () => Date } | null | undefi
       'text-[10px] font-medium px-1.5 py-0.5 rounded',
       isOverdue ? 'bg-red-500/15 text-red-400' :
       isToday ? 'bg-amber-500/15 text-amber-400' :
-      'text-muted-foreground/60',
+      'text-text-muted',
     )}>
       {label}
     </span>
@@ -93,7 +93,7 @@ export function TaskListRow({
         {hasSubtasks ? (
           <button
             onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-            className="flex-shrink-0 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            className="flex-shrink-0 text-text-muted hover:text-muted-foreground transition-colors"
           >
             {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
           </button>
@@ -108,7 +108,7 @@ export function TaskListRow({
             'flex-shrink-0 h-4.5 w-4.5 rounded-full border-2 flex items-center justify-center transition-all duration-200',
             isDone
               ? 'bg-primary border-primary'
-              : 'border-border/50 hover:border-primary/60 hover:bg-primary/5',
+              : 'border-border-default hover:border-primary/60 hover:bg-primary/5',
             completing && 'opacity-60 scale-90',
           )}
           title={isDone ? 'Mark incomplete' : 'Mark complete'}
@@ -123,7 +123,7 @@ export function TaskListRow({
         {/* Title */}
         <span className={cn(
           'flex-1 text-sm truncate transition-colors',
-          isDone ? 'line-through text-muted-foreground/50' : isSelected ? 'text-primary font-medium' : 'text-foreground',
+          isDone ? 'line-through text-text-muted' : isSelected ? 'text-primary font-medium' : 'text-foreground',
         )}>
           {task.title}
         </span>
@@ -174,7 +174,7 @@ export function TaskListRow({
 
           {/* Subtask count */}
           {hasSubtasks && (
-            <span className="text-[10px] text-muted-foreground/50">
+            <span className="text-[10px] text-text-muted">
               {subtasks.filter((s) => s.status === 'done').length}/{subtasks.length}
             </span>
           )}

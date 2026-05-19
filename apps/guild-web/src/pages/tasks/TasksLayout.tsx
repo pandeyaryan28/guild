@@ -17,7 +17,7 @@ export function TasksLayout({ nav, main, panel, panelOpen }: TasksLayoutProps) {
   return (
     <div className="tasks-layout flex h-screen w-full overflow-hidden bg-background">
       {/* Left nav */}
-      <aside className="tasks-layout__nav flex-shrink-0 w-[260px] flex flex-col border-r border-border/30 bg-sidebar overflow-hidden">
+      <aside className="tasks-layout__nav flex-shrink-0 w-[260px] flex flex-col border-r border-border-default bg-sidebar overflow-hidden">
         {nav}
       </aside>
 
@@ -29,7 +29,7 @@ export function TasksLayout({ nav, main, panel, panelOpen }: TasksLayoutProps) {
       {/* Detail panel — slides in from the right without overlay */}
       <div
         className={cn(
-          'tasks-layout__panel flex-shrink-0 border-l border-border/30 bg-card overflow-hidden transition-[width] duration-300 ease-in-out',
+          'tasks-layout__panel flex-shrink-0 border-l border-border-default bg-card overflow-hidden transition-[width] duration-300 ease-in-out',
           panelOpen ? 'w-[420px]' : 'w-0',
         )}
         style={{ minWidth: panelOpen ? 420 : 0 }}

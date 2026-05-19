@@ -46,7 +46,7 @@ function NavItem({
           : 'text-muted-foreground hover:text-foreground hover:bg-accent/40',
       )}
     >
-      <span className={cn('flex-shrink-0', active ? 'text-primary' : 'text-muted-foreground/60 group-hover:text-foreground/60')}>
+      <span className={cn('flex-shrink-0', active ? 'text-primary' : 'text-text-muted group-hover:text-foreground/60')}>
         {icon}
       </span>
       <span className="flex-1 truncate">{label}</span>
@@ -63,7 +63,7 @@ function SectionHeader({ label, collapsed, onToggle }: { label: string; collapse
   return (
     <button
       onClick={onToggle}
-      className="flex items-center gap-1.5 w-full px-3 py-1.5 text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+      className="flex items-center gap-1.5 w-full px-3 py-1.5 text-[10px] uppercase tracking-widest font-semibold text-text-muted hover:text-muted-foreground transition-colors"
     >
       {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
       {label}
@@ -110,7 +110,7 @@ export function TasksNav({ orgId, actor, activeView, onViewChange, actorName }: 
   return (
     <div className="flex flex-col h-full select-none">
       {/* App title / logo area */}
-      <div className="flex items-center gap-2.5 px-4 py-4 border-b border-border/20 flex-shrink-0">
+      <div className="flex items-center gap-2.5 px-4 py-4 border-b border-border-default flex-shrink-0">
         <div className="h-7 w-7 rounded-lg bg-primary/20 flex items-center justify-center">
           <LayoutList className="h-4 w-4 text-primary" />
         </div>
@@ -176,13 +176,13 @@ export function TasksNav({ orgId, actor, activeView, onViewChange, actorName }: 
                       if (e.key === 'Enter') handleCreateProject();
                       if (e.key === 'Escape') { setNewProjectName(''); setCreatingProject(false); }
                     }}
-                    className="w-full bg-accent/30 rounded-md px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-primary/40 border border-primary/20"
+                    className="w-full bg-accent/30 rounded-md px-2 py-1 text-sm text-foreground placeholder:text-text-muted outline-none focus:ring-1 focus:ring-primary/40 border border-primary/20"
                   />
                 </div>
               ) : (
                 <button
                   onClick={() => setCreatingProject(true)}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg text-xs text-text-muted hover:text-muted-foreground transition-colors"
                 >
                   <Plus className="h-3 w-3" />
                   New project
@@ -221,13 +221,13 @@ export function TasksNav({ orgId, actor, activeView, onViewChange, actorName }: 
                       if (e.key === 'Enter') handleCreateGoal();
                       if (e.key === 'Escape') { setNewGoalName(''); setCreatingGoal(false); }
                     }}
-                    className="w-full bg-accent/30 rounded-md px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-primary/40 border border-primary/20"
+                    className="w-full bg-accent/30 rounded-md px-2 py-1 text-sm text-foreground placeholder:text-text-muted outline-none focus:ring-1 focus:ring-primary/40 border border-primary/20"
                   />
                 </div>
               ) : (
                 <button
                   onClick={() => setCreatingGoal(true)}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg text-xs text-text-muted hover:text-muted-foreground transition-colors"
                 >
                   <Plus className="h-3 w-3" />
                   New goal
@@ -239,8 +239,8 @@ export function TasksNav({ orgId, actor, activeView, onViewChange, actorName }: 
       </nav>
 
       {/* Footer: user info */}
-      <div className="flex-shrink-0 px-4 py-3 border-t border-border/20">
-        <p className="text-xs text-muted-foreground/50 truncate">{actorName}</p>
+      <div className="flex-shrink-0 px-4 py-3 border-t border-border-default">
+        <p className="text-xs text-text-muted truncate">{actorName}</p>
       </div>
     </div>
   );

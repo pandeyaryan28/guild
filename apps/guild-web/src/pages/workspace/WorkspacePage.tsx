@@ -92,9 +92,9 @@ function Section({
   const [collapsed, setCollapsed] = React.useState(false);
 
   return (
-    <div className="rounded-2xl border border-border/30 bg-card/30 overflow-hidden">
+    <div className="rounded-2xl border border-border-default bg-surface overflow-hidden">
       {/* Section header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 bg-card/20">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-default bg-surface">
         <button
           onClick={() => setCollapsed((c) => !c)}
           className="flex items-center gap-2.5 group"
@@ -103,12 +103,12 @@ function Section({
             <Icon className={cn('h-3.5 w-3.5', iconColor)} />
           </div>
           <span className="text-[13px] font-semibold text-foreground">{title}</span>
-          <span className="text-[11px] font-medium text-muted-foreground/60 bg-muted/40 rounded-full px-1.5 py-0.5 leading-none">
+          <span className="text-[11px] font-medium text-text-muted bg-bg-tertiary rounded-full px-1.5 py-0.5 leading-none">
             {loading ? '…' : count}
           </span>
           <ChevronRight
             className={cn(
-              'h-3.5 w-3.5 text-muted-foreground/40 transition-transform duration-200',
+              'h-3.5 w-3.5 text-text-muted transition-transform duration-200',
               !collapsed && 'rotate-90',
             )}
           />
@@ -141,7 +141,7 @@ function Section({
             <div className="p-4">
               {loading ? (
                 <div className="flex justify-center py-8">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/30" />
+                  <Loader2 className="h-4 w-4 animate-spin text-text-muted" />
                 </div>
               ) : count === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-8">
@@ -193,8 +193,8 @@ function ProjectRow({ project }: { project: Project }) {
       variants={itemVariants}
       onClick={() => navigate(`/projects/${project.id}`)}
       className={cn(
-        'group flex items-center gap-3 rounded-xl border border-border/30 bg-card/60 px-4 py-3',
-        'hover:border-primary/30 hover:bg-card/90 transition-all duration-150 cursor-pointer',
+        'group flex items-center gap-3 rounded-xl border border-border-default bg-surface px-4 py-3',
+        'hover:border-primary/30 hover:bg-surface transition-all duration-150 cursor-pointer',
       )}
     >
       <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: cfg.dot }} />
@@ -202,7 +202,7 @@ function ProjectRow({ project }: { project: Project }) {
         {project.name}
       </span>
       {project.description && (
-        <span className="hidden sm:block text-[11px] text-muted-foreground/50 truncate max-w-[200px]">
+        <span className="hidden sm:block text-[11px] text-text-muted truncate max-w-[200px]">
           {project.description}
         </span>
       )}
@@ -224,12 +224,12 @@ function ProjectRow({ project }: { project: Project }) {
           )}
         </div>
         {due && (
-          <span className={cn('text-[10px] font-medium flex items-center gap-0.5', isOverdue ? 'text-red-400' : 'text-muted-foreground/50')}>
+          <span className={cn('text-[10px] font-medium flex items-center gap-0.5', isOverdue ? 'text-red-400' : 'text-text-muted')}>
             <Calendar className="h-2.5 w-2.5" />
             {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         )}
-        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
+        <ChevronRight className="h-3.5 w-3.5 text-text-muted group-hover:text-primary/50 transition-colors" />
       </div>
     </motion.div>
   );
@@ -254,8 +254,8 @@ function GoalRow({ goal }: { goal: Goal }) {
       variants={itemVariants}
       onClick={() => navigate(`/goals/${goal.id}`)}
       className={cn(
-        'group flex items-center gap-3 rounded-xl border border-border/30 bg-card/60 px-4 py-3',
-        'hover:border-violet-500/30 hover:bg-card/90 transition-all duration-150 cursor-pointer',
+        'group flex items-center gap-3 rounded-xl border border-border-default bg-surface px-4 py-3',
+        'hover:border-violet-500/30 hover:bg-surface transition-all duration-150 cursor-pointer',
       )}
     >
       <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: cfg.dot }} />
@@ -263,18 +263,18 @@ function GoalRow({ goal }: { goal: Goal }) {
         {goal.title}
       </span>
       {goal.description && (
-        <span className="hidden sm:block text-[11px] text-muted-foreground/50 truncate max-w-[200px]">
+        <span className="hidden sm:block text-[11px] text-text-muted truncate max-w-[200px]">
           {goal.description}
         </span>
       )}
       <div className="flex items-center gap-3 flex-shrink-0">
         {due && (
-          <span className={cn('text-[10px] font-medium flex items-center gap-0.5', isOverdue ? 'text-red-400' : 'text-muted-foreground/50')}>
+          <span className={cn('text-[10px] font-medium flex items-center gap-0.5', isOverdue ? 'text-red-400' : 'text-text-muted')}>
             <Calendar className="h-2.5 w-2.5" />
             {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         )}
-        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-violet-400/50 transition-colors" />
+        <ChevronRight className="h-3.5 w-3.5 text-text-muted group-hover:text-violet-400/50 transition-colors" />
       </div>
     </motion.div>
   );
@@ -315,10 +315,10 @@ function TasksSection({
               <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: cfg.color }}>
                 {cfg.label}
               </span>
-              <span className="text-[10px] text-muted-foreground/50 font-medium">({group.length})</span>
+              <span className="text-[10px] text-text-muted font-medium">({group.length})</span>
               <ChevronRight
                 className={cn(
-                  'h-3 w-3 text-muted-foreground/30 ml-auto transition-transform duration-150',
+                  'h-3 w-3 text-text-muted ml-auto transition-transform duration-150',
                   !isCollapsed && 'rotate-90',
                 )}
               />
@@ -461,7 +461,7 @@ export function WorkspacePage() {
       <div className={cn('flex flex-col flex-1 min-w-0 overflow-hidden transition-all duration-200')}>
 
         {/* ── Page header ── */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/30 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-default flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-violet-500/20">
               <LayoutGrid className="h-3.5 w-3.5 text-primary" />
@@ -492,7 +492,7 @@ export function WorkspacePage() {
             ].map(({ icon: Icon, label, count, loading, color, bg }) => (
               <div
                 key={label}
-                className="flex items-center gap-3 rounded-xl border border-border/30 bg-card/40 px-4 py-3"
+                className="flex items-center gap-3 rounded-xl border border-border-default bg-surface px-4 py-3"
               >
                 <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg flex-shrink-0', bg)}>
                   <Icon className={cn('h-3.5 w-3.5', color)} />

@@ -133,15 +133,15 @@ export function TaskListView({
             >
               <span className={cn(
                 'text-xs font-semibold uppercase tracking-wider transition-colors',
-                key === 'done' ? 'text-muted-foreground/40' : 'text-muted-foreground/70',
+                key === 'done' ? 'text-text-muted' : 'text-text-muted',
               )}>
                 {label}
               </span>
-              <span className="text-[10px] text-muted-foreground/40 font-medium">
+              <span className="text-[10px] text-text-muted font-medium">
                 {groupTasks.length}
               </span>
               <div className="flex-1 h-px bg-border/20" />
-              <span className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors">
+              <span className="text-text-muted group-hover:text-text-muted transition-colors">
                 {collapsed
                   ? <svg className="h-3 w-3" fill="none" viewBox="0 0 12 12"><path d="M4 5l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
                   : <svg className="h-3 w-3" fill="none" viewBox="0 0 12 12"><path d="M4 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>

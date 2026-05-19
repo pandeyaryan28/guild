@@ -83,7 +83,7 @@ function ResultRow({
     >
       <div className={cn(
         'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md',
-        active ? 'bg-primary/20 text-primary' : 'bg-muted/60 text-muted-foreground',
+        active ? 'bg-primary/20 text-primary' : 'bg-bg-tertiary text-muted-foreground',
       )}>
         <Icon className="h-3.5 w-3.5" />
       </div>
@@ -101,13 +101,13 @@ function ResultRow({
         <span className={cn(
           'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium capitalize',
           STATUS_CONFIG[item.meta as keyof typeof STATUS_CONFIG]?.color ?? 'text-muted-foreground',
-          'bg-muted/50',
+          'bg-bg-tertiary',
         )}>
           {STATUS_CONFIG[item.meta as keyof typeof STATUS_CONFIG]?.label ?? item.meta}
         </span>
       )}
       {item.meta && item.type === 'person' && (
-        <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-medium capitalize text-muted-foreground">
+        <span className="shrink-0 rounded-full bg-bg-tertiary px-2 py-0.5 text-[10px] font-medium capitalize text-muted-foreground">
           {item.meta}
         </span>
       )}
@@ -136,7 +136,7 @@ function Section({
   return (
     <div className="mb-2">
       <div className="mb-1 flex items-center gap-2 px-3 py-1">
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
           {TYPE_LABEL[type] ?? type}
         </span>
       </div>
@@ -291,17 +291,17 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -12 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="fixed left-1/2 top-[12vh] z-50 w-full max-w-2xl -translate-x-1/2 overflow-hidden rounded-2xl border border-border/50 bg-background/95 shadow-2xl backdrop-blur-2xl"
+            className="fixed left-1/2 top-[12vh] z-50 w-full max-w-2xl -translate-x-1/2 overflow-hidden rounded-2xl border border-border-default bg-bg-primary shadow-2xl backdrop-blur-2xl"
           >
             {/* Search input */}
-            <div className="flex items-center gap-3 border-b border-border/40 px-4 py-3.5">
+            <div className="flex items-center gap-3 border-b border-border-default px-4 py-3.5">
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search tasks, channels, people, messages…"
-                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none"
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-text-muted outline-none"
               />
               {query && (
                 <button
@@ -312,8 +312,8 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                 </button>
               )}
               {!query && (
-                <div className="flex items-center gap-1 rounded-md border border-border/40 bg-muted/30 px-2 py-1">
-                  <span className="text-[10px] text-muted-foreground/60">ESC</span>
+                <div className="flex items-center gap-1 rounded-md border border-border-default bg-bg-tertiary px-2 py-1">
+                  <span className="text-[10px] text-text-muted">ESC</span>
                 </div>
               )}
             </div>
@@ -322,11 +322,11 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             <div className="max-h-[60vh] overflow-y-auto p-2 scrollbar-hide">
               {!debouncedQuery && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-border/40 bg-muted/30">
-                    <Search className="h-5 w-5 text-muted-foreground/50" />
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-border-default bg-bg-tertiary">
+                    <Search className="h-5 w-5 text-text-muted" />
                   </div>
                   <p className="text-sm font-medium text-muted-foreground">Start typing to search</p>
-                  <p className="mt-1 text-xs text-muted-foreground/50">Tasks, channels, people, and messages</p>
+                  <p className="mt-1 text-xs text-text-muted">Tasks, channels, people, and messages</p>
                 </div>
               )}
 
@@ -349,22 +349,22 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               {showEmpty && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <p className="text-sm font-medium text-muted-foreground">No results for "{debouncedQuery}"</p>
-                  <p className="mt-1 text-xs text-muted-foreground/50">Try a different search term</p>
+                  <p className="mt-1 text-xs text-text-muted">Try a different search term</p>
                 </div>
               )}
             </div>
 
             {/* Footer hint */}
-            <div className="flex items-center gap-4 border-t border-border/30 bg-muted/10 px-4 py-2.5">
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/50">
+            <div className="flex items-center gap-4 border-t border-border-default bg-bg-tertiary px-4 py-2.5">
+              <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
                 <CornerDownLeft className="h-3 w-3" />
                 <span>to select</span>
               </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/50">
+              <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
                 <ArrowUpDown className="h-3 w-3" />
                 <span>to navigate</span>
               </div>
-              <div className="ml-auto text-[11px] text-muted-foreground/40">
+              <div className="ml-auto text-[11px] text-text-muted">
                 {flatItems.length > 0 && `${flatItems.length} result${flatItems.length !== 1 ? 's' : ''}`}
               </div>
             </div>

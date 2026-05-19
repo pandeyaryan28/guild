@@ -40,7 +40,7 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
       {...listeners}
       className={cn(
         'group relative rounded-xl border bg-card transition-all duration-150 cursor-grab active:cursor-grabbing',
-        'border-border/40 hover:border-border/70 hover:bg-card/80',
+        'border-border-default hover:border-border-default hover:bg-surface',
         isSortableDragging && 'opacity-40 border-primary/40',
         isDragging && 'shadow-2xl shadow-black/40 rotate-1 scale-105',
       )}
@@ -63,7 +63,7 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
               <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-all outline-none">
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36 border-border/40 bg-popover/90 backdrop-blur-md text-xs">
+              <DropdownMenuContent align="end" className="w-36 border-border-default bg-popover/90 backdrop-blur-md text-xs">
                 <DropdownMenuItem onClick={onClick}>Open</DropdownMenuItem>
                 <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400">Delete</DropdownMenuItem>
               </DropdownMenuContent>

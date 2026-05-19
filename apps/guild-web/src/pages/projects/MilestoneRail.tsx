@@ -39,7 +39,7 @@ export function MilestoneRail({ projectId, orgId, milestones }: MilestoneRailPro
   const progress = milestones.length > 0 ? (completedCount / milestones.length) * 100 : 0;
 
   return (
-    <div className="rounded-xl border border-border/30 bg-background/30 p-4">
+    <div className="rounded-xl border border-border-default bg-bg-primary p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export function MilestoneRail({ projectId, orgId, milestones }: MilestoneRailPro
               'group flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium border transition-all flex-shrink-0',
               m.completed
                 ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                : 'border-border/40 bg-background/50 text-muted-foreground hover:text-foreground',
+                : 'border-border-default bg-bg-primary text-muted-foreground hover:text-foreground',
             )}
           >
             <button onClick={() => handleToggle(m)} className="flex-shrink-0">
@@ -90,7 +90,7 @@ export function MilestoneRail({ projectId, orgId, milestones }: MilestoneRailPro
             </button>
             <span className={cn(m.completed && 'line-through opacity-70')}>{m.title}</span>
             {m.dueDate && (
-              <span className="text-[9px] text-muted-foreground/60 ml-1">
+              <span className="text-[9px] text-text-muted ml-1">
                 {m.dueDate.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
             )}
@@ -115,7 +115,7 @@ export function MilestoneRail({ projectId, orgId, milestones }: MilestoneRailPro
                 if (e.key === 'Escape') { setAdding(false); setNewTitle(''); }
               }}
               placeholder="Milestone name…"
-              className="bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/40 outline-none w-36"
+              className="bg-transparent text-[11px] text-foreground placeholder:text-text-muted outline-none w-36"
             />
             <button
               onClick={handleAdd}
@@ -137,7 +137,7 @@ export function MilestoneRail({ projectId, orgId, milestones }: MilestoneRailPro
         {milestones.length === 0 && !adding && (
           <button
             onClick={() => setAdding(true)}
-            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] text-muted-foreground/50 border border-dashed border-border/30 hover:border-border/60 hover:text-muted-foreground transition-all"
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] text-text-muted border border-dashed border-border-default hover:border-border-default hover:text-muted-foreground transition-all"
           >
             <Plus className="h-3 w-3" />
             Add first milestone

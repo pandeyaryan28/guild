@@ -13,7 +13,7 @@ export function LabelBadge({ label, className, onRemove }: LabelBadgeProps) {
     <span
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium',
-        'border border-white/10 bg-white/5',
+        'border border-border-subtle bg-white/5',
         className,
       )}
       style={{ borderColor: `${label.color}40`, backgroundColor: `${label.color}18`, color: label.color }}

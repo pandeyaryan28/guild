@@ -130,17 +130,17 @@ export function StepOrgDetails({ data, updateData }: Props) {
             hint="This is your organization's unique URL identifier."
           >
             <div className="relative group">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground/60">guild.app/</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-text-muted">guild.app/</span>
               <input
                 value={slug}
                 onChange={(e) => { setSlug(e.target.value.toLowerCase()); setSlugAvailable(null); }}
                 placeholder="acme-corp"
-                className={`w-full h-11 rounded-xl border bg-muted/20 pl-[72px] pr-10 text-sm font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all ${
-                  slugStatus === true ? 'border-emerald-500/50' : slugStatus === false ? 'border-destructive/50' : 'border-border/40'
+                className={`w-full h-11 rounded-xl border bg-bg-tertiary pl-[72px] pr-10 text-sm font-mono text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all ${
+                  slugStatus === true ? 'border-emerald-500/50' : slugStatus === false ? 'border-destructive/50' : 'border-border-default'
                 }`}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                {checkingSlug && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />}
+                {checkingSlug && <Loader2 className="h-4 w-4 animate-spin text-text-muted" />}
                 {!checkingSlug && slugStatus === true && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
                 {!checkingSlug && slugStatus === false && <XCircle className="h-4 w-4 text-destructive" />}
               </div>

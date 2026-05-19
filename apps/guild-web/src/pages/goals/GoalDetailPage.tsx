@@ -26,7 +26,7 @@ function VerticalStatusSection({
   const config = STATUS_CONFIG[status];
 
   return (
-    <div className="rounded-xl border border-border/30 bg-background/20 overflow-hidden">
+    <div className="rounded-xl border border-border-default bg-bg-primary overflow-hidden">
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="w-full flex items-center gap-2.5 px-4 py-3 hover:bg-accent/10 transition-colors"
@@ -37,8 +37,8 @@ function VerticalStatusSection({
         </span>
         <span className="text-[10px] text-muted-foreground font-medium">{tasks.length}</span>
         {collapsed
-          ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
-          : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/60" />
+          ? <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
+          : <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
         }
       </button>
       <AnimatePresence>
@@ -60,12 +60,12 @@ function VerticalStatusSection({
               </SortableContext>
               {tasks.length === 0 && (
                 <div className="flex items-center justify-center py-4">
-                  <p className="text-[11px] text-muted-foreground/40 italic">No tasks</p>
+                  <p className="text-[11px] text-text-muted italic">No tasks</p>
                 </div>
               )}
               <button
                 onClick={(e) => { e.stopPropagation(); onAddTask(); }}
-                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent/20 transition-all w-full"
+                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] text-text-muted hover:text-muted-foreground hover:bg-accent/20 transition-all w-full"
               >
                 <Plus className="h-3 w-3" />
                 Add task
@@ -121,7 +121,7 @@ export function GoalDetailPage() {
   if (goalLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/40" />
+        <Loader2 className="h-5 w-5 animate-spin text-text-muted" />
       </div>
     );
   }
@@ -141,7 +141,7 @@ export function GoalDetailPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-border-default flex-shrink-0">
         <button onClick={() => navigate('/goals')} className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-4 w-4" />
         </button>

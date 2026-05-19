@@ -32,20 +32,20 @@ export function Navbar({ onSearchOpen }: NavbarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border/40 bg-background/20 px-6 backdrop-blur-md">
+      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border-default bg-bg-primary px-6 backdrop-blur-md">
         <div className="flex items-center gap-4">
           {/* Search trigger */}
           <button
             onClick={onSearchOpen}
-            className="group relative flex h-9 w-64 md:w-96 items-center gap-3 rounded-full border border-border/40 bg-muted/30 px-4 text-left transition-all hover:bg-muted/50 hover:ring-1 hover:ring-primary/20"
+            className="group relative flex h-9 w-64 md:w-96 items-center gap-3 rounded-full border border-border-default bg-bg-tertiary px-4 text-left transition-all hover:bg-bg-tertiary hover:ring-1 hover:ring-primary/20"
           >
             <Search className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
-            <span className="flex-1 truncate text-xs text-muted-foreground/60">
+            <span className="flex-1 truncate text-xs text-text-muted">
               Search tasks, chat, people…
             </span>
             <div className="flex items-center gap-0.5 pointer-events-none">
-              <Command className="h-3 w-3 text-muted-foreground/40" />
-              <span className="text-[10px] font-medium text-muted-foreground/40">K</span>
+              <Command className="h-3 w-3 text-text-muted" />
+              <span className="text-[10px] font-medium text-text-muted">K</span>
             </div>
           </button>
         </div>
@@ -115,7 +115,7 @@ export function Navbar({ onSearchOpen }: NavbarProps) {
           </Button>
 
           {/* User avatar */}
-          <div className="ml-2 flex items-center gap-2 pl-2 border-l border-border/40 cursor-pointer group">
+          <div className="ml-2 flex items-center gap-2 pl-2 border-l border-border-default cursor-pointer group">
             <div className="flex flex-col items-end mr-1">
               <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">
                 {displayName}
@@ -124,7 +124,7 @@ export function Navbar({ onSearchOpen }: NavbarProps) {
                 {userProfile?.role ?? 'member'}
               </span>
             </div>
-            <Avatar className="h-8 w-8 border border-border/40 shadow-sm transition-transform group-hover:scale-105 active:scale-95">
+            <Avatar className="h-8 w-8 border border-border-default shadow-sm transition-transform group-hover:scale-105 active:scale-95">
               <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
                 {initials}
               </AvatarFallback>

@@ -54,8 +54,8 @@ export function CreateGoalModal({ open, onClose, orgId }: CreateGoalModalProps) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md mx-4 rounded-xl border border-border/50 bg-card shadow-2xl">
-        <div className="flex items-center justify-between p-5 border-b border-border/30">
+      <div className="relative z-10 w-full max-w-md mx-4 rounded-xl border border-border-default bg-card shadow-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-border-default">
           <h2 className="text-sm font-semibold text-foreground">New Goal</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-4 w-4" />
@@ -69,14 +69,14 @@ export function CreateGoalModal({ open, onClose, orgId }: CreateGoalModalProps) 
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Goal title…"
-              className="w-full bg-transparent text-base font-medium text-foreground placeholder:text-muted-foreground/50 outline-none"
+              className="w-full bg-transparent text-base font-medium text-foreground placeholder:text-text-muted outline-none"
             />
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What outcome does this goal represent?"
               rows={3}
-              className="w-full resize-none rounded-lg border border-border/30 bg-background/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-violet-500/50 transition-colors"
+              className="w-full resize-none rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-foreground placeholder:text-text-muted outline-none focus:border-violet-500/50 transition-colors"
             />
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Target Date</p>
@@ -84,12 +84,12 @@ export function CreateGoalModal({ open, onClose, orgId }: CreateGoalModalProps) 
                 type="date"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
-                className="w-full rounded-lg border border-border/30 bg-background/50 px-3 py-1.5 text-sm text-foreground outline-none focus:border-violet-500/50 transition-colors"
+                className="w-full rounded-lg border border-border-default bg-bg-primary px-3 py-1.5 text-sm text-foreground outline-none focus:border-violet-500/50 transition-colors"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 p-4 border-t border-border/30">
+          <div className="flex items-center justify-end gap-2 p-4 border-t border-border-default">
             <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
             <Button
               type="submit"

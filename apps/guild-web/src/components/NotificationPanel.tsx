@@ -134,11 +134,11 @@ function NotifRow({
           {meta?.label(n) ?? `Notification from ${n.actorName}`}
         </p>
         {(n.data.messagePreview || n.data.commentPreview) && (
-          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground/60">
+          <p className="mt-0.5 line-clamp-1 text-xs text-text-muted">
             "{n.data.messagePreview ?? n.data.commentPreview}"
           </p>
         )}
-        <p className="mt-1 text-[10px] text-muted-foreground/40">{relativeTime(n.createdAt)}</p>
+        <p className="mt-1 text-[10px] text-text-muted">{relativeTime(n.createdAt)}</p>
       </div>
 
       {/* Unread dot */}
@@ -202,10 +202,10 @@ export function NotificationPanel({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: -6 }}
           transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-          className="absolute right-0 top-full z-50 mt-2 w-[380px] origin-top-right overflow-hidden rounded-xl border border-border/50 bg-background/95 shadow-2xl backdrop-blur-2xl"
+          className="absolute right-0 top-full z-50 mt-2 w-[380px] origin-top-right overflow-hidden rounded-xl border border-border-default bg-bg-primary shadow-2xl backdrop-blur-2xl"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border/30 px-4 py-3">
+          <div className="flex items-center justify-between border-b border-border-default px-4 py-3">
             <div className="flex items-center gap-2">
               <Bell className="h-4 w-4 text-foreground" />
               <span className="text-sm font-semibold text-foreground">Notifications</span>
@@ -242,18 +242,18 @@ export function NotificationPanel({
           <div className="max-h-[480px] overflow-y-auto scrollbar-hide">
             {groups.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-border/40 bg-muted/30">
-                  <BellOff className="h-5 w-5 text-muted-foreground/40" />
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-border-default bg-bg-tertiary">
+                  <BellOff className="h-5 w-5 text-text-muted" />
                 </div>
                 <p className="text-sm font-medium text-muted-foreground">All caught up!</p>
-                <p className="mt-1 text-xs text-muted-foreground/50">No new notifications</p>
+                <p className="mt-1 text-xs text-text-muted">No new notifications</p>
               </div>
             ) : (
               <div className="p-2">
                 {groups.map(({ label, items }) => (
                   <div key={label} className="mb-3">
                     <div className="mb-1 px-3 py-1">
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
                         {label}
                       </span>
                     </div>

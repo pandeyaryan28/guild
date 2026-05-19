@@ -110,10 +110,10 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto w-full max-w-2xl rounded-2xl border border-border/40 bg-card shadow-2xl shadow-black/50 overflow-hidden"
+          className="pointer-events-auto w-full max-w-2xl rounded-2xl border border-border-default bg-card shadow-2xl shadow-black/50 overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border/30 px-6 py-5">
+          <div className="flex items-center justify-between border-b border-border-default px-6 py-5">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
                 <Palette className="h-4.5 w-4.5 text-primary" />
@@ -125,7 +125,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
             </div>
             <button
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/20 hover:text-foreground transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -134,7 +134,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
           <div className="flex gap-0 divide-x divide-border/30">
             {/* Left — Theme Swatches */}
             <div className="flex-1 p-6">
-              <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Themes</p>
+              <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">Themes</p>
               <div className="grid grid-cols-2 gap-3">
                 {THEMES.map((theme) => {
                   const isActive = themeId === theme.id;
@@ -151,7 +151,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                         'relative flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all',
                         isActive
                           ? 'border-primary/60 bg-primary/8 shadow-lg shadow-primary/10'
-                          : 'border-border/30 bg-muted/5 hover:border-border/60 hover:bg-muted/10',
+                          : 'border-border-default bg-bg-tertiary hover:border-border-default hover:bg-bg-tertiary',
                       )}
                     >
                       {/* Color swatch */}
@@ -180,7 +180,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                         <p className={cn('text-xs font-semibold', isActive ? 'text-foreground' : 'text-foreground/80')}>
                           {theme.name}
                         </p>
-                        <p className="text-[10px] text-muted-foreground/60 leading-tight mt-0.5 line-clamp-1">
+                        <p className="text-[10px] text-text-muted leading-tight mt-0.5 line-clamp-1">
                           {theme.description}
                         </p>
                       </div>
@@ -192,13 +192,13 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
 
             {/* Right — Live Preview */}
             <div className="w-[260px] shrink-0 p-6 flex flex-col gap-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Preview</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Preview</p>
               <motion.div
                 key={previewId}
                 initial={{ opacity: 0.6, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
-                className="flex-1 rounded-xl border border-border/30 overflow-hidden"
+                className="flex-1 rounded-xl border border-border-default overflow-hidden"
                 style={{ minHeight: '220px' }}
               >
                 <ThemePreview themeId={previewId} />

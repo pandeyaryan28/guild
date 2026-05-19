@@ -82,8 +82,8 @@ export function InlineTaskInput({
         className={cn(
           'pointer-events-auto relative rounded-xl border transition-all duration-200 overflow-hidden',
           active
-            ? 'border-primary/30 bg-card/95 shadow-lg shadow-black/10 backdrop-blur-sm ring-1 ring-primary/10'
-            : 'border-border/30 bg-card/80 backdrop-blur-sm hover:border-border/60 hover:bg-card/90 shadow-sm cursor-text',
+            ? 'border-primary/30 bg-surface shadow-lg shadow-black/10 backdrop-blur-sm ring-1 ring-primary/10'
+            : 'border-border-default bg-surface backdrop-blur-sm hover:border-border-default hover:bg-surface shadow-sm cursor-text',
         )}
         onClick={!active ? activate : undefined}
       >
@@ -91,9 +91,9 @@ export function InlineTaskInput({
           {/* Plus icon */}
           <div className={cn(
             'flex-shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors',
-            active ? 'border-primary/50 bg-primary/10' : 'border-border/40',
+            active ? 'border-primary/50 bg-primary/10' : 'border-border-default',
           )}>
-            <Plus className={cn('h-2.5 w-2.5 transition-colors', active ? 'text-primary' : 'text-muted-foreground/40')} />
+            <Plus className={cn('h-2.5 w-2.5 transition-colors', active ? 'text-primary' : 'text-text-muted')} />
           </div>
 
           {/* Input */}
@@ -109,14 +109,14 @@ export function InlineTaskInput({
             className={cn(
               'flex-1 bg-transparent text-sm outline-none placeholder:transition-colors',
               active
-                ? 'text-foreground placeholder:text-muted-foreground/40'
-                : 'text-muted-foreground/50 placeholder:text-muted-foreground/40 cursor-text',
+                ? 'text-foreground placeholder:text-text-muted'
+                : 'text-text-muted placeholder:text-text-muted cursor-text',
             )}
           />
 
           {/* Hint text */}
           {active && title.trim() && (
-            <span className="flex-shrink-0 text-[10px] text-muted-foreground/40 select-none">
+            <span className="flex-shrink-0 text-[10px] text-text-muted select-none">
               Enter to save · Esc to cancel
             </span>
           )}

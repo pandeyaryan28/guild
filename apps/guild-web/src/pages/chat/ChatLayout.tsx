@@ -70,15 +70,15 @@ function ChatSidebar() {
 
   return (
     <>
-      <aside className="flex h-full w-[248px] shrink-0 flex-col border-r border-border/40 bg-sidebar">
+      <aside className="flex h-full w-[248px] shrink-0 flex-col border-r border-border-default bg-sidebar">
         {/* Org Header */}
-        <div className="flex items-center gap-2.5 border-b border-border/20 px-4 py-4">
+        <div className="flex items-center gap-2.5 border-b border-border-default px-4 py-4">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/30">
             <span className="text-[10px] font-black text-primary-foreground">G</span>
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-foreground truncate">{orgName || 'Guild'}</p>
-            <p className="text-[10px] text-muted-foreground/50">Workspace</p>
+            <p className="text-[10px] text-text-muted">Workspace</p>
           </div>
         </div>
 
@@ -87,7 +87,7 @@ function ChatSidebar() {
             {/* Back to Dashboard */}
             <button
               onClick={() => navigate('/')}
-              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs text-muted-foreground hover:bg-muted/15 hover:text-foreground transition-colors group"
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors group"
             >
               <LayoutDashboard className="h-3.5 w-3.5" />
               <span>Back to Dashboard</span>
@@ -102,16 +102,16 @@ function ChatSidebar() {
                 className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left"
               >
                 {channelsOpen ? (
-                  <ChevronDown className="h-3 w-3 text-muted-foreground/40" />
+                  <ChevronDown className="h-3 w-3 text-text-muted" />
                 ) : (
-                  <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
+                  <ChevronRight className="h-3 w-3 text-text-muted" />
                 )}
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 flex-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted flex-1">
                   Channels
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowChannelModal(true); }}
-                  className="flex h-5 w-5 items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-muted/20 hover:text-foreground transition-colors"
+                  className="flex h-5 w-5 items-center justify-center rounded-lg text-text-muted hover:bg-bg-tertiary hover:text-foreground transition-colors"
                 >
                   <Plus className="h-3 w-3" />
                 </button>
@@ -130,11 +130,11 @@ function ChatSidebar() {
                       isActive
                         ? 'bg-primary/10 text-foreground font-semibold'
                         : unread
-                        ? 'text-foreground font-semibold hover:bg-muted/10'
-                        : 'text-muted-foreground hover:bg-muted/10 hover:text-foreground',
+                        ? 'text-foreground font-semibold hover:bg-bg-tertiary'
+                        : 'text-muted-foreground hover:bg-bg-tertiary hover:text-foreground',
                     )}
                   >
-                    <Hash className={cn('h-3.5 w-3.5 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground/40')} />
+                    <Hash className={cn('h-3.5 w-3.5 shrink-0', isActive ? 'text-primary' : 'text-text-muted')} />
                     <span className="flex-1 truncate">{ch.name}</span>
                     {unread && !isActive && (
                       <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
@@ -148,8 +148,8 @@ function ChatSidebar() {
 
               {channelsOpen && loading && (
                 <div className="flex items-center gap-2 px-3 py-2">
-                  <Loader2 className="h-3 w-3 animate-spin text-muted-foreground/30" />
-                  <span className="text-[10px] text-muted-foreground/30">Loading…</span>
+                  <Loader2 className="h-3 w-3 animate-spin text-text-muted" />
+                  <span className="text-[10px] text-text-muted">Loading…</span>
                 </div>
               )}
             </div>
@@ -163,16 +163,16 @@ function ChatSidebar() {
                 className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left"
               >
                 {dmsOpen ? (
-                  <ChevronDown className="h-3 w-3 text-muted-foreground/40" />
+                  <ChevronDown className="h-3 w-3 text-text-muted" />
                 ) : (
-                  <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
+                  <ChevronRight className="h-3 w-3 text-text-muted" />
                 )}
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 flex-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted flex-1">
                   Direct Messages
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowDMModal(true); }}
-                  className="flex h-5 w-5 items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-muted/20 hover:text-foreground transition-colors"
+                  className="flex h-5 w-5 items-center justify-center rounded-lg text-text-muted hover:bg-bg-tertiary hover:text-foreground transition-colors"
                 >
                   <Plus className="h-3 w-3" />
                 </button>
@@ -188,7 +188,7 @@ function ChatSidebar() {
                     to={`/chat/dm/${thread.id}`}
                     className={cn(
                       'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-all',
-                      isActive ? 'bg-primary/10 text-foreground font-semibold' : 'text-muted-foreground hover:bg-muted/10 hover:text-foreground',
+                      isActive ? 'bg-primary/10 text-foreground font-semibold' : 'text-muted-foreground hover:bg-bg-tertiary hover:text-foreground',
                     )}
                   >
                     <div className="relative h-6 w-6 shrink-0">
@@ -203,31 +203,31 @@ function ChatSidebar() {
               })}
 
               {dmsOpen && dmThreads.length === 0 && (
-                <p className="px-3 py-2 text-[10px] text-muted-foreground/30">No conversations yet</p>
+                <p className="px-3 py-2 text-[10px] text-text-muted">No conversations yet</p>
               )}
             </div>
           </div>
         </ScrollArea>
 
         {/* User Footer */}
-        <div className="flex items-center gap-2.5 border-t border-border/20 px-4 py-3">
+        <div className="flex items-center gap-2.5 border-t border-border-default px-4 py-3">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-[10px] font-bold text-primary border border-primary/15 shrink-0">
             {initials}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-foreground truncate">{userProfile?.fullName}</p>
-            <p className="text-[10px] text-muted-foreground/40 truncate">@{userProfile?.username}</p>
+            <p className="text-[10px] text-text-muted truncate">@{userProfile?.username}</p>
           </div>
           <button
             onClick={() => setThemeOpen(true)}
             title="Change theme"
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-muted/20 hover:text-primary transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-bg-tertiary hover:text-primary transition-colors"
           >
             <Palette className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={logout}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-muted/20 hover:text-destructive transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-bg-tertiary hover:text-destructive transition-colors"
           >
             <LogOut className="h-3.5 w-3.5" />
           </button>
@@ -290,7 +290,7 @@ export function ChatLayout() {
             </div>
             <div>
               <p className="text-sm font-bold text-foreground">Select a channel or message</p>
-              <p className="mt-1 text-xs text-muted-foreground/50">Choose from the left sidebar to start chatting</p>
+              <p className="mt-1 text-xs text-text-muted">Choose from the left sidebar to start chatting</p>
             </div>
           </div>
         )}

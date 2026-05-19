@@ -79,7 +79,7 @@ export function JoinInvitePage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-card border border-border/50 rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden"
+        className="w-full max-w-md bg-card border border-border-default rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden"
       >
         {/* Decorative background element */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-primary/5 blur-3xl -z-10 rounded-full" />

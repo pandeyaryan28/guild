@@ -19,8 +19,8 @@ export function ScopedTaskRow({ task }: ScopedTaskRowProps) {
   return (
     <div
       className={cn(
-        'group flex items-center gap-3 rounded-lg border border-border/30 bg-card/50 px-3 py-2.5',
-        'hover:border-border/60 hover:bg-card/80 transition-all duration-150 cursor-pointer',
+        'group flex items-center gap-3 rounded-lg border border-border-default bg-surface px-3 py-2.5',
+        'hover:border-border-default hover:bg-surface transition-all duration-150 cursor-pointer',
       )}
     >
       {/* Priority dot */}
@@ -53,7 +53,7 @@ export function ScopedTaskRow({ task }: ScopedTaskRowProps) {
       {due && (
         <span className={cn(
           'flex items-center gap-0.5 text-[10px] font-medium flex-shrink-0',
-          isOverdue ? 'text-red-400' : 'text-muted-foreground/60',
+          isOverdue ? 'text-red-400' : 'text-text-muted',
         )}>
           <Calendar className="h-2.5 w-2.5" />
           {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

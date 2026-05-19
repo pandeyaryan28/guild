@@ -127,13 +127,13 @@ export function StepOwnerProfile({ data, updateData }: Props) {
             </div>
             <p className="text-[11px] text-muted-foreground mb-3">Share this link with your team — expires in 24 hours.</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 text-[10px] font-mono text-foreground bg-muted/30 rounded-lg px-3 py-2 truncate border border-border/40">
+              <code className="flex-1 text-[10px] font-mono text-foreground bg-bg-tertiary rounded-lg px-3 py-2 truncate border border-border-default">
                 {inviteUrl}
               </code>
               <button
                 type="button"
                 onClick={copyInviteLink}
-                className="flex-shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/40 text-xs font-bold text-foreground transition-colors"
+                className="flex-shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border-default bg-bg-tertiary hover:bg-bg-tertiary text-xs font-bold text-foreground transition-colors"
               >
                 {copiedInvite ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                 {copiedInvite ? 'Copied!' : 'Copy'}
@@ -197,7 +197,7 @@ export function StepOwnerProfile({ data, updateData }: Props) {
               isValid={usernameStatus === true ? true : usernameStatus === false ? false : undefined}
               suffix={
                 checkingUsername ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />
+                  <Loader2 className="h-4 w-4 animate-spin text-text-muted" />
                 ) : usernameStatus === true ? (
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 ) : usernameStatus === false ? (

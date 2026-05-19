@@ -154,7 +154,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-start gap-3 px-5 py-4 border-b border-border/20 flex-shrink-0">
+      <div className="flex items-start gap-3 px-5 py-4 border-b border-border-default flex-shrink-0">
         <div className="flex-1 min-w-0">
           {editingTitle ? (
             <input
@@ -183,7 +183,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto">
         {/* Meta */}
-        <div className="px-5 py-4 space-y-3 border-b border-border/20">
+        <div className="px-5 py-4 space-y-3 border-b border-border-default">
           {/* Status + Priority */}
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
@@ -199,7 +199,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
                   <ChevronDown className="h-3 w-3 opacity-60" />
                 </button>
                 {statusOpen && (
-                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border/40 bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[140px]">
+                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border-default bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[140px]">
                     {STATUSES.map((s) => (
                       <button
                         key={s}
@@ -221,7 +221,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
               <div className="relative">
                 <button
                   onClick={() => setPriorityOpen(!priorityOpen)}
-                  className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium border border-border/30 transition-all hover:bg-accent/20"
+                  className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium border border-border-default transition-all hover:bg-accent/20"
                   style={{ color: priority.color }}
                 >
                   <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: priority.color }} />
@@ -229,7 +229,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
                   <ChevronDown className="h-3 w-3 opacity-60" />
                 </button>
                 {priorityOpen && (
-                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border/40 bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[130px]">
+                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border-default bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[130px]">
                     {(Object.entries(PRIORITY_CONFIG) as [TaskPriority, typeof PRIORITY_CONFIG[TaskPriority]][]).map(([p, cfg]) => (
                       <button
                         key={p}
@@ -289,12 +289,12 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
               <div className="relative">
                 <button
                   onClick={() => setAssigneeOpen(!assigneeOpen)}
-                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border border-dashed border-border/40 text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors"
+                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border border-dashed border-border-default text-muted-foreground hover:text-foreground hover:border-border-default transition-colors"
                 >
                   <Plus className="h-2.5 w-2.5" /> Assign
                 </button>
                 {assigneeOpen && (
-                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border/40 bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[180px] max-h-48 overflow-y-auto">
+                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border-default bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[180px] max-h-48 overflow-y-auto">
                     {members.map((m) => (
                       <button
                         key={m.uid}
@@ -324,12 +324,12 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
               <div className="relative">
                 <button
                   onClick={() => setLabelOpen(!labelOpen)}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border border-dashed border-border/40 text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border border-dashed border-border-default text-muted-foreground hover:text-foreground hover:border-border-default transition-colors"
                 >
                   <Plus className="h-2.5 w-2.5" /> Label
                 </button>
                 {labelOpen && (
-                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border/40 bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[200px] max-h-64 overflow-y-auto">
+                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border-default bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[200px] max-h-64 overflow-y-auto">
                     {labels.map((l) => (
                       <button
                         key={l.id}
@@ -341,7 +341,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
                         {task.labelIds.includes(l.id) && <Check className="h-3 w-3 ml-auto text-primary" />}
                       </button>
                     ))}
-                    <div className="border-t border-border/30 p-2">
+                    <div className="border-t border-border-default p-2">
                       {showNewLabel ? (
                         <div className="space-y-1.5">
                           <input
@@ -350,7 +350,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
                             placeholder="Label name"
                             autoFocus
                             onKeyDown={(e) => { if (e.key === 'Enter') handleCreateLabel(); }}
-                            className="w-full rounded border border-border/30 bg-background/50 px-2 py-1 text-xs text-foreground outline-none"
+                            className="w-full rounded border border-border-default bg-bg-primary px-2 py-1 text-xs text-foreground outline-none"
                           />
                           <div className="flex gap-1 flex-wrap">
                             {LABEL_COLORS.map((c) => (
@@ -378,7 +378,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
         </div>
 
         {/* Description */}
-        <div className="px-5 py-4 border-b border-border/20">
+        <div className="px-5 py-4 border-b border-border-default">
           <div className="flex items-center gap-2 mb-2">
             <AlignLeft className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-xs font-medium text-muted-foreground">Description</span>
@@ -390,14 +390,14 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
               onChange={(e) => setEditDesc(e.target.value)}
               onBlur={saveDesc}
               rows={4}
-              className="w-full resize-none rounded-lg border border-primary/30 bg-background/50 px-3 py-2 text-sm text-foreground outline-none"
+              className="w-full resize-none rounded-lg border border-primary/30 bg-bg-primary px-3 py-2 text-sm text-foreground outline-none"
             />
           ) : (
             <div
               onClick={() => setEditingDesc(true)}
               className={cn(
                 'min-h-[40px] rounded-lg px-3 py-2 text-sm cursor-text transition-colors hover:bg-accent/20',
-                task.description ? 'text-foreground/80' : 'text-muted-foreground/40 italic',
+                task.description ? 'text-foreground/80' : 'text-text-muted italic',
               )}
             >
               {task.description || 'Click to add a description…'}
@@ -406,13 +406,13 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
         </div>
 
         {/* Subtasks */}
-        <div className="px-5 py-4 border-b border-border/20">
+        <div className="px-5 py-4 border-b border-border-default">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <ListTodo className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-xs font-medium text-muted-foreground">Subtasks</span>
               {subtasks.length > 0 && (
-                <span className="text-[10px] text-muted-foreground/50">
+                <span className="text-[10px] text-text-muted">
                   {subtasks.filter((s) => s.status === 'done').length}/{subtasks.length}
                 </span>
               )}
@@ -435,7 +435,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
                     onClick={() => handleToggleSubtask(sub)}
                     className={cn(
                       'flex-shrink-0 h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all',
-                      isDone ? 'bg-primary border-primary' : 'border-border/50 hover:border-primary/60',
+                      isDone ? 'bg-primary border-primary' : 'border-border-default hover:border-primary/60',
                     )}
                   >
                     {isDone && (
@@ -444,7 +444,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
                       </svg>
                     )}
                   </button>
-                  <span className={cn('flex-1 text-xs', isDone ? 'line-through text-muted-foreground/50' : 'text-foreground/80')}>
+                  <span className={cn('flex-1 text-xs', isDone ? 'line-through text-text-muted' : 'text-foreground/80')}>
                     {sub.title}
                   </span>
                 </div>
@@ -453,7 +453,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
 
             {addingSubtask && (
               <div className="flex items-center gap-2 py-1">
-                <div className="flex-shrink-0 h-4 w-4 rounded-full border-2 border-border/30" />
+                <div className="flex-shrink-0 h-4 w-4 rounded-full border-2 border-border-default" />
                 <input
                   ref={subtaskInputRef}
                   value={newSubtaskTitle}
@@ -464,19 +464,19 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
                     if (e.key === 'Escape') { setNewSubtaskTitle(''); setAddingSubtask(false); }
                   }}
                   onBlur={() => { if (!newSubtaskTitle.trim()) setAddingSubtask(false); }}
-                  className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 outline-none border-b border-primary/30 pb-0.5"
+                  className="flex-1 bg-transparent text-xs text-foreground placeholder:text-text-muted outline-none border-b border-primary/30 pb-0.5"
                 />
               </div>
             )}
 
             {subtasks.length === 0 && !addingSubtask && (
-              <p className="text-xs text-muted-foreground/30 italic">No subtasks yet</p>
+              <p className="text-xs text-text-muted italic">No subtasks yet</p>
             )}
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border/20 flex-shrink-0">
+        <div className="flex border-b border-border-default flex-shrink-0">
           {(['comments', 'activity'] as PanelTab[]).map((t) => (
             <button
               key={t}

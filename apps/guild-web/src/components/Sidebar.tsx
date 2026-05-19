@@ -139,7 +139,7 @@ export function Sidebar() {
     <TooltipProvider delay={100}>
       <div
         className={cn(
-          "group/sidebar relative flex h-full flex-col border-r border-border/40 bg-sidebar transition-all duration-300 ease-in-out",
+          "group/sidebar relative flex h-full flex-col border-r border-border-default bg-sidebar transition-all duration-300 ease-in-out",
           collapsed ? "w-[60px]" : "w-[260px]"
         )}
       >
@@ -148,7 +148,7 @@ export function Sidebar() {
           onClick={() => setCollapsed((v) => !v)}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "absolute top-6 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border/60 bg-background shadow-sm text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border transition-all duration-300",
+            "absolute top-6 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border-default bg-background shadow-sm text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border transition-all duration-300",
             collapsed ? "-right-3" : "-right-3 opacity-0 group-hover/sidebar:opacity-100"
           )}
         >
@@ -198,7 +198,7 @@ export function Sidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="w-[200px] border-border/40 bg-popover/90 backdrop-blur-md"
+                className="w-[200px] border-border-default bg-popover/90 backdrop-blur-md"
               >
                 <DropdownMenuItem className="gap-2">
                   <div className="h-5 w-5 rounded bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
@@ -256,11 +256,11 @@ export function Sidebar() {
                   <div className="mt-1 space-y-0.5 ml-1">
                     {channelsLoading ? (
                       <div className="flex items-center gap-2 px-3 py-2">
-                        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground/30" />
-                        <span className="text-[10px] text-muted-foreground/30">Loading…</span>
+                        <Loader2 className="h-3 w-3 animate-spin text-text-muted" />
+                        <span className="text-[10px] text-text-muted">Loading…</span>
                       </div>
                     ) : channels.length === 0 ? (
-                      <p className="px-3 py-2 text-[10px] text-muted-foreground/40">No channels yet</p>
+                      <p className="px-3 py-2 text-[10px] text-text-muted">No channels yet</p>
                     ) : (
                       channels.map((ch) => {
                         const unread = hasUnread(ch);
@@ -342,7 +342,7 @@ export function Sidebar() {
         </div>
 
         {/* ── Bottom Section ──────────────────────────────────────────────── */}
-        <div className={cn("shrink-0 border-t border-border/20", collapsed ? "px-2 py-3 space-y-1" : "p-4 space-y-3")}>
+        <div className={cn("shrink-0 border-t border-border-default", collapsed ? "px-2 py-3 space-y-1" : "p-4 space-y-3")}>
           {/* Notifications + Settings */}
           <div className={cn("space-y-0.5", collapsed && "flex flex-col items-center gap-0.5")}>
             <NavItem

@@ -28,8 +28,8 @@ function ProjectCard({ project }: { project: Project }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'group relative rounded-xl border border-border/40 bg-card p-5 cursor-pointer',
-        'hover:border-primary/40 hover:bg-card/80 transition-all duration-200',
+        'group relative rounded-xl border border-border-default bg-card p-5 cursor-pointer',
+        'hover:border-primary/40 hover:bg-surface transition-all duration-200',
         'hover:shadow-lg hover:shadow-black/20',
       )}
       onClick={() => navigate(`/projects/${project.id}`)}
@@ -73,7 +73,7 @@ function ProjectCard({ project }: { project: Project }) {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/20">
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border-default">
         <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users className="h-3 w-3" />
@@ -137,7 +137,7 @@ export function ProjectsPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border-default flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
             <FolderKanban className="h-4 w-4 text-primary" />
@@ -159,7 +159,7 @@ export function ProjectsPage() {
       <div className="flex-1 overflow-y-auto p-6">
         {loading ? (
           <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/40" />
+            <Loader2 className="h-5 w-5 animate-spin text-text-muted" />
           </div>
         ) : active.length === 0 && archived.length === 0 ? (
           <EmptyState onNew={() => setCreateOpen(true)} />

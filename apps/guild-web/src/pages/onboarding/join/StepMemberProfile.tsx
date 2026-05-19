@@ -163,7 +163,7 @@ export function StepMemberProfile({ data, updateData }: Props) {
               isValid={usernameStatus === true ? true : usernameStatus === false ? false : undefined}
               suffix={
                 checkingUsername ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />
+                  <Loader2 className="h-4 w-4 animate-spin text-text-muted" />
                 ) : usernameStatus === true ? (
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 ) : usernameStatus === false ? (
