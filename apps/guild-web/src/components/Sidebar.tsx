@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   ChevronDown,
   ChevronLeft,
@@ -109,6 +109,7 @@ const NavItem = ({ icon: Icon, label, badge, active, collapsed }: NavItemProps) 
 
 export function Sidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { userProfile, logout } = useAuth();
   const orgId = userProfile?.organizationId;
 
@@ -117,7 +118,7 @@ export function Sidebar() {
   const { pendingCount: requestsPending } = useRequests(orgId);
 
   const [collapsed, setCollapsed] = React.useState(false);
-  const [isChannelsOpen, setIsChannelsOpen] = React.useState(true);
+  const [isChannelsOpen, setIsChannelsOpen] = React.useState(false);
   const [orgName, setOrgName] = React.useState<string>("");
 
   // Fetch org name
@@ -252,19 +253,22 @@ export function Sidebar() {
                     )}
                   />
                 </button>
-                {isChannelsOpen && (
-                  <div className="mt-1 space-y-0.5 ml-1">
-                    {channelsLoading ? (
-                      <div className="flex items-center gap-2 px-3 py-2">
-                        <Loader2 className="h-3 w-3 animate-spin text-text-muted" />
-                        <span className="text-[10px] text-text-muted">Loading…</span>
-                      </div>
-                    ) : channels.length === 0 ? (
-                      <p className="px-3 py-2 text-[10px] text-text-muted">No channels yet</p>
-                    ) : (
-                      channels.map((ch) => {
-                        const unread = hasUnread(ch);
-                        return (
+                <div className="mt-1 space-y-0.5 ml-1">
+                  {channelsLoading ? (
+                    <div className="flex items-center gap-2 px-3 py-2">
+                      <Loader2 className="h-3 w-3 animate-spin text-text-muted" />
+                      <span className="text-[10px] text-text-muted">Loading…</span>
+                    </div>
+                  ) : channels.length === 0 ? (
+                    <p className="px-3 py-2 text-[10px] text-text-muted">No channels yet</p>
+                  ) : (
+                    channels.map((ch) => {
+                      const unread = hasUnread(ch);
+                      const isActive = location.pathname === `/chat/c/${ch.id}`;
+                      
+                      if (!isChannelsOpen && !isActive && !unread) return null;
+
+                      return (
                           <NavLink
                             key={ch.id}
                             to={`/chat/c/${ch.id}`}
@@ -289,7 +293,6 @@ export function Sidebar() {
                       })
                     )}
                   </div>
-                )}
               </div>
             )}
 
