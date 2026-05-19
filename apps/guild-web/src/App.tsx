@@ -30,9 +30,8 @@ import { RequestsPage } from './pages/requests/RequestsPage';
 import { PeoplePage } from './pages/people/PeoplePage';
 
 // Execution OS
-import { ProjectsPage } from './pages/projects/ProjectsPage';
+import { WorkspacePage } from './pages/workspace/WorkspacePage';
 import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
-import { GoalsPage } from './pages/goals/GoalsPage';
 import { GoalDetailPage } from './pages/goals/GoalDetailPage';
 
 function DashboardApp({ children }: { children?: React.ReactNode }) {
@@ -104,17 +103,19 @@ export default function App() {
             }
           />
 
-          {/* Projects */}
+          {/* Workspace (Projects + Goals + Tasks unified) */}
           <Route
-            path="/projects"
+            path="/workspace"
             element={
               <ProtectedRoute>
                 <DashboardApp>
-                  <ProjectsPage />
+                  <WorkspacePage />
                 </DashboardApp>
               </ProtectedRoute>
             }
           />
+
+          {/* Project detail */}
           <Route
             path="/projects/:projectId"
             element={
@@ -126,17 +127,7 @@ export default function App() {
             }
           />
 
-          {/* Goals */}
-          <Route
-            path="/goals"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <GoalsPage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
+          {/* Goal detail */}
           <Route
             path="/goals/:goalId"
             element={

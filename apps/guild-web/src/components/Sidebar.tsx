@@ -20,6 +20,7 @@ import {
   Loader2,
   FolderKanban,
   Target,
+  LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -319,14 +320,9 @@ export function Sidebar() {
                 <NavItem icon={CheckSquare} label="Tasks" active={isActive} collapsed={collapsed} />
               )}
             </NavLink>
-            <NavLink to="/projects">
+            <NavLink to="/workspace">
               {({ isActive }) => (
-                <NavItem icon={FolderKanban} label="Projects" active={isActive} collapsed={collapsed} />
-              )}
-            </NavLink>
-            <NavLink to="/goals">
-              {({ isActive }) => (
-                <NavItem icon={Target} label="Goals" active={isActive} collapsed={collapsed} />
+                <NavItem icon={LayoutGrid} label="Workspace" active={isActive} collapsed={collapsed} />
               )}
             </NavLink>
             <NavLink to="/requests">
