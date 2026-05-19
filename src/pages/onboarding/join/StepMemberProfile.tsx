@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Briefcase, Hash, Calendar, AtSign, Loader2, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
 import { FormField, TextInput, OnboardingCard } from '../../../components/onboarding/FormComponents';
-import { createUser, addOrgMember, checkUsernameUnique, setOnboardingState } from '../../../lib/firestore';
+import { createUser, addOrgMember, checkUsernameUnique, setOnboardingState, markInviteUsed } from '../../../lib/firestore';
 import { isValidUsername, isValidEmployeeId, isValidAge } from '../../../lib/validation';
 import { useAuth } from '../../../hooks/useAuth';
 import type { OnboardingData } from '../OnboardingRoot';
@@ -75,6 +75,9 @@ export function StepMemberProfile({ data, updateData }: Props) {
       });
 
       await addOrgMember(data.joinOrgId, user.uid, 'member');
+      if (data.inviteToken) {
+        await markInviteUsed(data.inviteToken);
+      }
       await setOnboardingState(user.uid, { step: 3, path: 'join' });
 
       navigate('/onboarding/complete');

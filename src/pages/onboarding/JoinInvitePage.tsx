@@ -43,12 +43,18 @@ export function JoinInvitePage() {
   }, [token]);
 
   const handleAccept = async () => {
-    if (!user || !userProfile || !token || !org) return;
+    if (!user || !token || !org) return;
     
     setIsAccepting(true);
     setError(null);
     try {
-      await acceptInvite(userProfile.uid, token, org.id);
+      if (!userProfile) {
+        // User hasn't completed onboarding yet. Send them to onboarding to complete profile.
+        navigate(`/onboarding?token=${token}`, { replace: true });
+        return;
+      }
+
+      await acceptInvite(user.uid, token, org.id);
       setSuccess(true);
       setTimeout(() => {
         navigate('/', { replace: true });
