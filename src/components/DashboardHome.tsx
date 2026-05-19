@@ -26,6 +26,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useTasks } from '../hooks/useTasks';
 import { useChannels, useOrgMembers } from '../hooks/useChat';
 import { useNotifications } from '../hooks/useNotifications';
+import { useRequests } from '../hooks/useRequests';
+import { updateRequestStatus, REQUEST_TYPE_ICONS, REQUEST_TYPE_LABELS, type OrgRequest } from '../lib/requests';
 import { type Task } from '../lib/tasks';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -103,6 +105,49 @@ const TaskItem = ({ task, memberMap }: { task: Task; memberMap: Map<string, { fu
   );
 };
 
+// ─── Pending Request Card (for dashboard) ─────────────────────────────────────
+
+const PendingRequestCard = ({
+  req, currentUid, currentName, orgId,
+}: { req: OrgRequest; currentUid: string; currentName: string; orgId: string }) => {
+  const [acting, setActing] = React.useState(false);
+
+  async function act(status: 'approved' | 'rejected') {
+    setActing(true);
+    await updateRequestStatus(req.id, orgId, status, currentUid, currentName, req.creatorId, req.title);
+    setActing(false);
+  }
+
+  return (
+    <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-4 space-y-2.5 hover:bg-amber-400/8 transition-colors">
+      <div className="flex items-center gap-2">
+        <span className="text-xl">{REQUEST_TYPE_ICONS[req.type]}</span>
+        <div className="overflow-hidden">
+          <p className="text-sm font-semibold text-foreground truncate">{req.title}</p>
+          <p className="text-[10px] text-muted-foreground">{REQUEST_TYPE_LABELS[req.type]} · from {req.creatorName}</p>
+        </div>
+      </div>
+      <p className="text-[11px] text-muted-foreground line-clamp-1 leading-relaxed">{req.description}</p>
+      <div className="flex gap-2 pt-1">
+        <button
+          disabled={acting}
+          onClick={() => act('approved')}
+          className="flex-1 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-400 text-[11px] font-bold hover:bg-emerald-500/25 transition-colors disabled:opacity-50"
+        >
+          {acting ? '…' : '✓ Approve'}
+        </button>
+        <button
+          disabled={acting}
+          onClick={() => act('rejected')}
+          className="flex-1 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-[11px] font-bold hover:bg-red-500/20 transition-colors disabled:opacity-50"
+        >
+          ✕ Reject
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export function DashboardHome() {
@@ -114,6 +159,8 @@ export function DashboardHome() {
   const { channels, hasUnread } = useChannels(orgId);
   const members = useOrgMembers(orgId);
   const { unreadCount, loading: notifsLoading } = useNotifications(orgId);
+  const { received: receivedRequests } = useRequests(orgId);
+  const pendingRequests = receivedRequests.filter((r) => r.status === 'pending').slice(0, 3);
 
   const memberMap = React.useMemo(() => {
     const m = new Map<string, { fullName: string }>();
@@ -250,6 +297,37 @@ export function DashboardHome() {
           loading={notifsLoading}
         />
       </div>
+
+      {/* Pending Approvals — only shown when there are requests */}
+      {pendingRequests.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-base font-bold text-foreground">Pending Approvals</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Requests waiting for your action</p>
+            </div>
+            <button onClick={() => navigate('/requests')}
+              className="text-xs font-semibold text-primary hover:underline">
+              View all →
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {pendingRequests.map((req) => (
+              <PendingRequestCard
+                key={req.id}
+                req={req}
+                currentUid={userProfile!.uid}
+                currentName={userProfile!.fullName}
+                orgId={orgId!}
+              />
+            ))}
+          </div>
+        </motion.section>
+      )}
 
       {/* Grid Content */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">

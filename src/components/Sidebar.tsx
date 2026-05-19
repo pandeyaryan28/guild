@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from '../hooks/useAuth';
 import { useChannels } from '../hooks/useChat';
 import { useNotifications } from '../hooks/useNotifications';
+import { useRequests } from '../hooks/useRequests';
 import { getOrgById } from '../lib/firestore';
 
 interface NavItemProps {
@@ -70,6 +71,7 @@ export function Sidebar() {
 
   const { channels, hasUnread, loading: channelsLoading } = useChannels(orgId);
   const { unreadCount } = useNotifications(orgId);
+  const { pendingCount: requestsPending } = useRequests(orgId);
 
   const [isChannelsOpen, setIsChannelsOpen] = React.useState(true);
   const [orgName, setOrgName] = React.useState<string>('');
@@ -189,7 +191,16 @@ export function Sidebar() {
             <NavLink to="/tasks">
               {({ isActive }) => <NavItem icon={CheckSquare} label="Tasks" active={isActive} />}
             </NavLink>
-            <NavItem icon={Layers} label="Requests" />
+            <NavLink to="/requests">
+              {({ isActive }) => (
+                <NavItem
+                  icon={Layers}
+                  label="Requests"
+                  active={isActive}
+                  badge={requestsPending > 0 ? requestsPending : undefined}
+                />
+              )}
+            </NavLink>
             <NavItem icon={FileText} label="Files" />
             <NavItem icon={Calendar} label="Calendar" />
             <NavItem icon={Users} label="People" />
