@@ -1,9 +1,9 @@
 import * as React from 'react';
 import {
   Hash, Plus, MessageSquare, ChevronDown, ChevronRight,
-  LayoutDashboard, Settings, LogOut, Loader2, Users,
+  LayoutDashboard, Palette, LogOut, Loader2, Users,
 } from 'lucide-react';
-import { useNavigate, useParams, Outlet, NavLink, useLocation } from 'react-router-dom';
+import { useNavigate, useParams, NavLink, useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/useAuth';
@@ -14,6 +14,7 @@ import { NewDMModal } from '../../components/chat/NewDMModal';
 import { MemberPanel } from './MemberPanel';
 import { MessageArea } from './MessageArea';
 import { type UserProfile, getOrgById } from '../../lib/firestore';
+import { ThemePickerModal } from '../../components/ThemePickerModal';
 
 // ─── Chat Sidebar ──────────────────────────────────────────────────────────────
 
@@ -32,6 +33,7 @@ function ChatSidebar() {
   const [showDMModal, setShowDMModal] = React.useState(false);
   const [channelsOpen, setChannelsOpen] = React.useState(true);
   const [dmsOpen, setDmsOpen] = React.useState(true);
+  const [themeOpen, setThemeOpen] = React.useState(false);
 
   // Fetch org name
   React.useEffect(() => {
@@ -217,6 +219,13 @@ function ChatSidebar() {
             <p className="text-[10px] text-muted-foreground/40 truncate">@{userProfile?.username}</p>
           </div>
           <button
+            onClick={() => setThemeOpen(true)}
+            title="Change theme"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-muted/20 hover:text-primary transition-colors"
+          >
+            <Palette className="h-3.5 w-3.5" />
+          </button>
+          <button
             onClick={logout}
             className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-muted/20 hover:text-destructive transition-colors"
           >
@@ -231,6 +240,7 @@ function ChatSidebar() {
       {showDMModal && orgId && (
         <NewDMModal orgId={orgId} members={members} onClose={() => setShowDMModal(false)} onDMCreated={handleDMCreated} />
       )}
+      {themeOpen && <ThemePickerModal onClose={() => setThemeOpen(false)} />}
     </>
   );
 }

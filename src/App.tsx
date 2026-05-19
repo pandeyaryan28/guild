@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
+import { ThemeProvider } from './hooks/useTheme';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Auth pages
@@ -26,21 +27,17 @@ import { ChatLayout } from './pages/chat/ChatLayout';
 import { TasksPage } from './pages/tasks/TasksPage';
 
 function DashboardApp({ children }: { children?: React.ReactNode }) {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
-
   return (
-    <div className={theme}>
-      <Layout toggleTheme={toggleTheme} currentTheme={theme}>
-        {children ?? <DashboardHome />}
-      </Layout>
-    </div>
+    <Layout>
+      {children ?? <DashboardHome />}
+    </Layout>
   );
 }
 
 export default function App() {
   return (
     <BrowserRouter>
+      <ThemeProvider>
       <AuthProvider>
         <Routes>
           {/* Public auth routes */}
@@ -105,6 +102,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

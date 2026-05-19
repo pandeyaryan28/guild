@@ -6,11 +6,9 @@ import { GlobalSearch } from './GlobalSearch';
 
 interface LayoutProps {
   children: React.ReactNode;
-  toggleTheme: () => void;
-  currentTheme: 'dark' | 'light';
 }
 
-export function Layout({ children, toggleTheme, currentTheme }: LayoutProps) {
+export function Layout({ children }: LayoutProps) {
   const [searchOpen, setSearchOpen] = React.useState(false);
 
   // Global Cmd+K / Ctrl+K shortcut
@@ -34,13 +32,9 @@ export function Layout({ children, toggleTheme, currentTheme }: LayoutProps) {
       <div className="flex flex-1 flex-col overflow-hidden relative">
         {/* Glow Background Effects */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/3 rounded-full blur-[100px] pointer-events-none" />
 
-        <Navbar
-          toggleTheme={toggleTheme}
-          currentTheme={currentTheme}
-          onSearchOpen={() => setSearchOpen(true)}
-        />
+        <Navbar onSearchOpen={() => setSearchOpen(true)} />
 
         {/* Scrollable Dashboard Area */}
         <div className="flex flex-1 overflow-hidden">
@@ -55,7 +49,7 @@ export function Layout({ children, toggleTheme, currentTheme }: LayoutProps) {
         </div>
       </div>
 
-      {/* Global Search overlay — rendered outside scroll containers */}
+      {/* Global Search overlay */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
