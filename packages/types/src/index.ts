@@ -279,7 +279,9 @@ export type ThemeId =
   | 'cobalt'
   | 'slate'
   | 'rose-gold'
-  | 'forest';
+  | 'forest'
+  | 'light';
+
 
 export interface AppTheme {
   id: ThemeId;

@@ -49,7 +49,16 @@ export const THEMES: AppTheme[] = [
     bgSwatch: '#080E0B',
     htmlClass: 'dark theme-forest',
   },
+  {
+    id: 'light',
+    name: 'Light',
+    description: 'Clean white canvas with indigo accent',
+    swatch: '#6366F1',
+    bgSwatch: '#F8F9FC',
+    htmlClass: 'theme-light',
+  },
 ];
+
 
 
 export const DEFAULT_THEME_ID: ThemeId = 'midnight';
