@@ -144,34 +144,26 @@ export function TasksPage() {
             )}
           </div>
 
-          {/* Task list + floating input */}
-          <div className="flex-1 min-h-0 relative">
-            <TaskListView
+          {/* Task Island Container */}
+          <div className="flex-1 min-h-0 bg-accent/10 relative">
+            <TaskIsland
+              title={title}
               tasks={viewTasks}
               loading={loading}
               orgId={orgId}
               actor={actor}
               selectedTask={selectedTask}
               onSelectTask={handleSelectTask}
-              groupBy={activeView.type === 'completed' ? 'none' : 'status'}
+              defaultProjectId={defaultProjectId}
+              defaultGoalId={defaultGoalId}
+              showCompleted={activeView.type === 'completed'}
               emptyMessage={
                 activeView.type === 'today' ? 'Nothing due today 🎉' :
                 activeView.type === 'upcoming' ? 'No upcoming tasks' :
                 activeView.type === 'completed' ? 'No completed tasks yet' :
-                'No tasks yet — add one below'
+                'No tasks yet'
               }
             />
-
-            {/* Floating inline add-task input */}
-            {activeView.type !== 'completed' && (
-              <InlineTaskInput
-                orgId={orgId}
-                actor={actor}
-                defaultProjectId={defaultProjectId}
-                defaultGoalId={defaultGoalId}
-                defaultStatus="todo"
-              />
-            )}
           </div>
         </div>
       }

@@ -10,8 +10,10 @@ interface InlineTaskInputProps {
   defaultProjectId?: string | null;
   defaultGoalId?: string | null;
   placeholder?: string;
+  autoFocus?: boolean;
   /** Called after a task is successfully created */
   onCreated?: () => void;
+  onCancel?: () => void;
 }
 
 /**
@@ -27,12 +29,20 @@ export function InlineTaskInput({
   defaultProjectId = null,
   defaultGoalId = null,
   placeholder = 'Add a task',
+  autoFocus = false,
   onCreated,
+  onCancel,
 }: InlineTaskInputProps) {
-  const [active, setActive] = React.useState(false);
+  const [active, setActive] = React.useState(autoFocus);
   const [title, setTitle] = React.useState('');
   const [saving, setSaving] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (autoFocus && active) {
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }, [autoFocus, active]);
 
   const activate = () => {
     setActive(true);
@@ -42,6 +52,7 @@ export function InlineTaskInput({
   const collapse = () => {
     setActive(false);
     setTitle('');
+    onCancel?.();
   };
 
   const save = async () => {

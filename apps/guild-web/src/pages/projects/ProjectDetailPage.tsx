@@ -11,105 +11,10 @@ import { useProject } from '../../hooks/useProjects';
 import { useMilestones } from '../../hooks/useMilestones';
 import { useTasks } from '../../hooks/useTasks';
 import { MilestoneRail } from './MilestoneRail';
-import { ScopedTaskRow } from '../../components/tasks/ScopedTaskRow';
 import { TaskDetailPanel } from '../tasks/TaskDetailPanel';
 import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
-import { STATUS_CONFIG, STATUSES, moveTask, type Task, type TaskStatus } from '../../lib/tasks';
-import {
-  DndContext,
-  DragEndEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragOverlay,
-} from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-
-const STATUS_ORDER = STATUSES;
-
-function VerticalStatusSection({
-  status,
-  tasks,
-  orgId,
-  onTaskClick,
-  onAddTask,
-  projectId,
-}: {
-  status: TaskStatus;
-  tasks: Task[];
-  orgId: string;
-  onTaskClick: (t: Task) => void;
-  onAddTask: () => void;
-  projectId: string;
-}) {
-  const [collapsed, setCollapsed] = React.useState(false);
-  const config = STATUS_CONFIG[status];
-
-  return (
-    <div className="rounded-xl border border-border-default bg-bg-primary overflow-hidden">
-      {/* Section header */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center gap-2.5 px-4 py-3 hover:bg-accent/10 transition-colors"
-      >
-        <span
-          className="h-2 w-2 rounded-full flex-shrink-0"
-          style={{ backgroundColor: config.dot }}
-        />
-        <span className="text-[11px] font-bold uppercase tracking-wider flex-1 text-left" style={{ color: config.dot }}>
-          {config.label}
-        </span>
-        <span className="text-[10px] text-muted-foreground font-medium">
-          {tasks.length}
-        </span>
-        {collapsed
-          ? <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
-          : <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
-        }
-      </button>
-
-      <AnimatePresence>
-        {!collapsed && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.18, ease: 'easeInOut' }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3 space-y-1.5">
-              <SortableContext
-                items={tasks.map((t) => t.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {tasks.map((task) => (
-                  <div key={task.id} className="cursor-pointer" onClick={() => onTaskClick(task)}>
-                    <ScopedTaskRow task={task} />
-                  </div>
-                ))}
-              </SortableContext>
-
-              {tasks.length === 0 && (
-                <div className="flex items-center justify-center py-4">
-                  <p className="text-[11px] text-text-muted italic">No tasks</p>
-                </div>
-              )}
-
-              {/* Add task row */}
-              <button
-                onClick={(e) => { e.stopPropagation(); onAddTask(); }}
-                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] text-text-muted hover:text-muted-foreground hover:bg-accent/20 transition-all w-full"
-              >
-                <Plus className="h-3 w-3" />
-                Add task
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+import { type Task } from '../../lib/tasks';
+import { TaskIsland } from '../../components/tasks/TaskIsland';
 
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -123,11 +28,6 @@ export function ProjectDetailPage() {
 
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [createOpen, setCreateOpen] = React.useState(false);
-  const [activeId, setActiveId] = React.useState<string | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-  );
 
   const actor = React.useMemo(
     () => ({ uid: user?.uid ?? '', name: userProfile?.fullName || user?.displayName || 'Unknown' }),
@@ -139,18 +39,6 @@ export function ProjectDetailPage() {
     for (const col of columns.values()) all.push(...col);
     return all;
   }, [columns]);
-
-  const activeTask = activeId ? allTasks.find((t) => t.id === activeId) ?? null : null;
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    setActiveId(null);
-    const { active, over } = event;
-    if (!over || !orgId) return;
-    const task = allTasks.find((t) => t.id === active.id);
-    const targetStatus = over.id as TaskStatus;
-    if (!task || task.status === targetStatus) return;
-    await moveTask(task.id, orgId, targetStatus, task.orderIndex, task.status, actor);
-  };
 
   if (!orgId) return null;
 
@@ -206,34 +94,16 @@ export function ProjectDetailPage() {
           <MilestoneRail projectId={projectId} orgId={orgId} milestones={milestones} />
         )}
 
-        {/* Vertical Kanban — status sections */}
-        <DndContext
-          sensors={sensors}
-          onDragStart={({ active }) => setActiveId(active.id as string)}
-          onDragEnd={handleDragEnd}
-          onDragCancel={() => setActiveId(null)}
-        >
-          <div className="space-y-2">
-            {STATUS_ORDER.map((status) => {
-              const tasks = columns.get(status) ?? [];
-              return (
-                <VerticalStatusSection
-                  key={status}
-                  status={status}
-                  tasks={tasks}
-                  orgId={orgId}
-                  onTaskClick={setSelectedTask}
-                  onAddTask={() => setCreateOpen(true)}
-                  projectId={projectId ?? ''}
-                />
-              );
-            })}
-          </div>
-
-          <DragOverlay>
-            {activeTask && <ScopedTaskRow task={activeTask} />}
-          </DragOverlay>
-        </DndContext>
+        {/* Task Island UI */}
+        <TaskIsland
+          tasks={allTasks}
+          loading={projectLoading}
+          orgId={orgId}
+          actor={actor}
+          selectedTask={selectedTask}
+          onSelectTask={setSelectedTask}
+          defaultProjectId={projectId}
+        />
       </div>
 
       {/* Task detail panel */}
