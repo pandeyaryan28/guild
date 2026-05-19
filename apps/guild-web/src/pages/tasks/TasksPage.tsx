@@ -8,7 +8,7 @@ import { useProjects } from '../../hooks/useProjects';
 import { useGoals } from '../../hooks/useGoals';
 import { TasksLayout } from './TasksLayout';
 import { TasksNav, type NavView } from './TasksNav';
-import { TaskListView } from './TaskListView';
+import { TaskIsland } from '../../components/tasks/TaskIsland';
 import { InlineTaskInput } from './InlineTaskInput';
 import { TaskDetailPanel } from './TaskDetailPanel';
 import type { Task } from '../../lib/tasks';
