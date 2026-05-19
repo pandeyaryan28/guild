@@ -2,12 +2,13 @@ import * as React from 'react';
 import { motion } from 'motion/react';
 import {
   Search, Crown, ShieldCheck, User, Mail,
-  Briefcase, Hash, Calendar, Users, SlidersHorizontal,
+  Briefcase, Hash, Calendar, Users, SlidersHorizontal, UserPlus
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useOrgMembers } from '../../hooks/useChat';
 import { type UserProfile, type UserRole } from '../../lib/firestore';
 import { getOrgById } from '../../lib/firestore';
+import { InviteModal } from './InviteModal';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -147,6 +148,9 @@ export function PeoplePage() {
   const [orgName, setOrgName] = React.useState('');
   const [search, setSearch] = React.useState('');
   const [roleFilter, setRoleFilter] = React.useState<FilterRole>('all');
+  const [isInviteModalOpen, setIsInviteModalOpen] = React.useState(false);
+
+  const canInvite = userProfile?.role === 'owner' || userProfile?.role === 'admin';
 
   React.useEffect(() => {
     if (!orgId) return;
@@ -202,15 +206,27 @@ export function PeoplePage() {
             </p>
           </div>
 
-          {/* Search */}
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
-            <input
-              className="w-full pl-9 pr-3 py-2 rounded-xl border border-border/50 bg-background/50 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
-              placeholder="Search name, role, ID…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          {/* Search & Actions */}
+          <div className="flex items-center gap-3">
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+              <input
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-border/50 bg-background/50 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                placeholder="Search name, role, ID…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            
+            {canInvite && (
+              <button
+                onClick={() => setIsInviteModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
+              >
+                <UserPlus className="h-4 w-4" />
+                Invite
+              </button>
+            )}
           </div>
         </div>
 
@@ -264,6 +280,15 @@ export function PeoplePage() {
           </div>
         )}
       </div>
+      {/* Invite Modal */}
+      {orgId && userProfile && (
+        <InviteModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          orgId={orgId}
+          userId={userProfile.uid}
+        />
+      )}
     </div>
   );
 }

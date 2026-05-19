@@ -212,3 +212,21 @@ export async function validateInviteToken(
 export async function markInviteUsed(token: string): Promise<void> {
   await setDoc(doc(db, 'inviteLinks', token), { used: true }, { merge: true });
 }
+
+export async function acceptInvite(uid: string, token: string, orgId: string): Promise<void> {
+  // Update the user profile to be part of the organization
+  await setDoc(
+    doc(db, 'users', uid),
+    { organizationId: orgId, role: 'member' },
+    { merge: true }
+  );
+  
+  // Add member record
+  await addOrgMember(orgId, uid, 'member');
+
+  // Mark token as used
+  await markInviteUsed(token);
+
+  // Mark onboarding as completed and clear path
+  await setOnboardingState(uid, { completed: true, path: null, step: 4 });
+}

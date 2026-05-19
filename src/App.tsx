@@ -15,6 +15,7 @@ import { SignupPage } from './pages/SignupPage';
 
 // Onboarding
 import { OnboardingRoot } from './pages/onboarding/OnboardingRoot';
+import { JoinInvitePage } from './pages/onboarding/JoinInvitePage';
 
 // Dashboard (existing)
 import { Layout } from './components/Layout';
@@ -118,11 +119,9 @@ export default function App() {
                   <PeoplePage />
                 </DashboardApp>
               </ProtectedRoute>
-            }
-          />
-
           {/* Invite join redirect */}
           <Route path="/join" element={<Navigate to="/onboarding/join/find" replace />} />
+          <Route path="/join/:token" element={<JoinInvitePage />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
