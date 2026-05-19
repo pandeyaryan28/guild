@@ -431,3 +431,12 @@
     border-color 350ms cubic-bezier(0.4, 0, 0.2, 1),
     color 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
