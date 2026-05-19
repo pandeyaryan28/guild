@@ -119,6 +119,9 @@ export default function App() {
                   <PeoplePage />
                 </DashboardApp>
               </ProtectedRoute>
+            }
+          />
+
           {/* Invite join redirect */}
           <Route path="/join" element={<Navigate to="/onboarding/join/find" replace />} />
           <Route path="/join/:token" element={<JoinInvitePage />} />
