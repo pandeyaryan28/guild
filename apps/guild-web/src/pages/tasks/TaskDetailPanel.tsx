@@ -1,20 +1,20 @@
 import * as React from 'react';
-import { X, Calendar, AlignLeft, Users, Tag, ChevronDown, Plus, Check, ListTodo } from 'lucide-react';
+import { X, Calendar, AlignLeft, ChevronDown, Plus, Check, ListTodo, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   updateTask, updatePriority, updateAssignees, updateDueDate, updateLabels,
-  createTask, createLabel, moveTask, deleteTask,
+  createTask, createLabel, moveTask,
   STATUSES, STATUS_CONFIG, PRIORITY_CONFIG, LABEL_COLORS,
-  type Task, type TaskLabel, type TaskStatus, type TaskPriority, type ActorInfo,
+  type Task, type TaskStatus, type TaskPriority, type ActorInfo,
 } from '../../lib/tasks';
-import { useTaskComments, useTaskActivities, useTaskLabels } from '../../hooks/useTasks';
+import { useTaskActivities, useTaskLabels } from '../../hooks/useTasks';
 import { useTasks } from '../../hooks/useTasks';
 import { useOrgMembers } from '../../hooks/useChat';
 import { LabelBadge } from '../../components/tasks/LabelBadge';
 import { TaskComments } from './TaskComments';
 import { TaskActivityFeed } from './TaskActivity';
 
-interface TaskDetailPanelProps {
+interface Props {
   task: Task | null;
   onClose: () => void;
   orgId: string;
@@ -24,38 +24,79 @@ interface TaskDetailPanelProps {
 
 type PanelTab = 'comments' | 'activity';
 
-export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }: TaskDetailPanelProps) {
+// ── tiny hook: close a floating panel when clicking outside ──────────────────
+function useClickOutside(ref: React.RefObject<HTMLElement | null>, onClose: () => void, enabled: boolean) {
+  React.useEffect(() => {
+    if (!enabled) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener('mousedown', handler, true);
+    return () => document.removeEventListener('mousedown', handler, true);
+  }, [ref, onClose, enabled]);
+}
+
+// ── reusable dropdown wrapper ────────────────────────────────────────────────
+function Dropdown({ trigger, children, open, onClose }: {
+  trigger: React.ReactNode;
+  children: React.ReactNode;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  useClickOutside(ref, onClose, open);
+  return (
+    <div ref={ref} className="relative">
+      {trigger}
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 z-30 rounded-xl border border-border-default bg-popover shadow-2xl overflow-hidden min-w-[160px] animate-in fade-in slide-in-from-top-1 duration-150">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── property row ─────────────────────────────────────────────────────────────
+function PropRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3 py-2.5 group">
+      <span className="w-20 flex-shrink-0 text-[11px] font-medium text-text-muted pt-0.5 uppercase tracking-wide">
+        {label}
+      </span>
+      <div className="flex-1 min-w-0 flex flex-wrap gap-1.5">{children}</div>
+    </div>
+  );
+}
+
+export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }: Props) {
   const activities = useTaskActivities(task?.id ?? null);
   const labels = useTaskLabels(orgId);
   const members = useOrgMembers(orgId);
   const { tasks: allTasks } = useTasks(orgId);
   const [tab, setTab] = React.useState<PanelTab>('comments');
 
-  // Subtasks
   const subtasks = allTasks.filter((t) => t.parentTaskId === task?.id);
   const [newSubtaskTitle, setNewSubtaskTitle] = React.useState('');
   const [addingSubtask, setAddingSubtask] = React.useState(false);
   const subtaskInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Inline edit states
   const [editTitle, setEditTitle] = React.useState('');
   const [editingTitle, setEditingTitle] = React.useState(false);
   const [editDesc, setEditDesc] = React.useState('');
   const [editingDesc, setEditingDesc] = React.useState(false);
 
-  // Dropdown open states
   const [statusOpen, setStatusOpen] = React.useState(false);
   const [priorityOpen, setPriorityOpen] = React.useState(false);
   const [assigneeOpen, setAssigneeOpen] = React.useState(false);
   const [labelOpen, setLabelOpen] = React.useState(false);
 
-  // New label
   const [newLabelName, setNewLabelName] = React.useState('');
   const [newLabelColor, setNewLabelColor] = React.useState(LABEL_COLORS[5]);
   const [showNewLabel, setShowNewLabel] = React.useState(false);
 
   React.useEffect(() => {
-    if (task) { setEditTitle(task.title); setEditDesc(task.description); }
+    if (task) { setEditTitle(task.title); setEditDesc(task.description ?? ''); }
   }, [task?.id]);
 
   React.useEffect(() => {
@@ -64,61 +105,61 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
 
   React.useEffect(() => {
     if (!task) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
   }, [task, onClose]);
 
   if (!task) return null;
 
   const taskLabels = labels.filter((l) => task.labelIds.includes(l.id));
+  const due = task.dueDate?.toDate?.();
+  const dueDateInput = due ? due.toISOString().split('T')[0] : '';
+  const isOverdue = due && due < new Date() && task.status !== 'done';
+  const status = STATUS_CONFIG[task.status];
+  const priority = PRIORITY_CONFIG[task.priority];
 
   const saveTitle = async () => {
-    if (editTitle.trim() && editTitle !== task.title) {
+    if (editTitle.trim() && editTitle !== task.title)
       await updateTask(task.id, orgId, { title: editTitle.trim() }, actor);
-    }
     setEditingTitle(false);
   };
 
   const saveDesc = async () => {
-    if (editDesc !== task.description) {
+    if (editDesc !== (task.description ?? ''))
       await updateTask(task.id, orgId, { description: editDesc }, actor);
-    }
     setEditingDesc(false);
   };
 
-  const handleStatusChange = async (newStatus: TaskStatus) => {
+  const handleStatusChange = async (s: TaskStatus) => {
     setStatusOpen(false);
-    if (newStatus === task.status) return;
-    await moveTask(task.id, orgId, newStatus, task.orderIndex, task.status, actor);
+    if (s !== task.status) await moveTask(task.id, orgId, s, task.orderIndex, task.status, actor);
   };
 
   const handlePriorityChange = async (p: TaskPriority) => {
     setPriorityOpen(false);
-    if (p === task.priority) return;
-    await updatePriority(task.id, orgId, p, task.priority, actor);
+    if (p !== task.priority) await updatePriority(task.id, orgId, p, task.priority, actor);
   };
 
   const toggleAssignee = async (uid: string) => {
-    const newIds = task.assigneeIds.includes(uid)
+    const next = task.assigneeIds.includes(uid)
       ? task.assigneeIds.filter((id) => id !== uid)
       : [...task.assigneeIds, uid];
-    await updateAssignees(task.id, orgId, newIds, task.assigneeIds, actor, task.title);
+    await updateAssignees(task.id, orgId, next, task.assigneeIds, actor, task.title);
   };
 
   const toggleLabel = async (labelId: string) => {
-    const newIds = task.labelIds.includes(labelId)
+    const next = task.labelIds.includes(labelId)
       ? task.labelIds.filter((id) => id !== labelId)
       : [...task.labelIds, labelId];
-    await updateLabels(task.id, orgId, newIds, task.labelIds, actor);
+    await updateLabels(task.id, orgId, next, task.labelIds, actor);
   };
 
   const handleCreateLabel = async () => {
     if (!newLabelName.trim()) return;
     const id = await createLabel(orgId, newLabelName.trim(), newLabelColor);
     await updateLabels(task.id, orgId, [...task.labelIds, id], task.labelIds, actor);
-    setNewLabelName('');
-    setShowNewLabel(false);
+    setNewLabelName(''); setShowNewLabel(false);
   };
 
   const handleDueDateChange = async (val: string) => {
@@ -126,281 +167,255 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
   };
 
   const handleCreateSubtask = async () => {
-    const trimmed = newSubtaskTitle.trim();
-    if (!trimmed) { setAddingSubtask(false); return; }
+    const t = newSubtaskTitle.trim();
+    if (!t) { setAddingSubtask(false); return; }
     await createTask({
-      orgId, title: trimmed, description: '', status: 'todo', priority: 'none',
+      orgId, title: t, description: '', status: 'todo', priority: 'none',
       assigneeIds: [], labelIds: [], dueDate: null, actor,
       projectId: task.projectId ?? null, goalId: task.goalId ?? null,
       parentTaskId: task.id,
     });
     setNewSubtaskTitle('');
-    // keep adding mode on for rapid entry
     subtaskInputRef.current?.focus();
   };
 
   const handleToggleSubtask = async (sub: Task) => {
-    const newStatus: TaskStatus = sub.status === 'done' ? 'todo' : 'done';
-    await moveTask(sub.id, orgId, newStatus, sub.orderIndex, sub.status, actor);
+    const s: TaskStatus = sub.status === 'done' ? 'todo' : 'done';
+    await moveTask(sub.id, orgId, s, sub.orderIndex, sub.status, actor);
   };
 
-  const due = task.dueDate?.toDate?.();
-  const dueDateInput = due ? due.toISOString().split('T')[0] : '';
-  const isOverdue = due && due < new Date();
-
-  const status = STATUS_CONFIG[task.status];
-  const priority = PRIORITY_CONFIG[task.priority];
-
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Header */}
-      <div className="flex items-start gap-3 px-5 py-4 border-b border-border-default flex-shrink-0">
-        <div className="flex-1 min-w-0">
-          {editingTitle ? (
-            <input
-              autoFocus
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              onBlur={saveTitle}
-              onKeyDown={(e) => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setEditTitle(task.title); setEditingTitle(false); } }}
-              className="w-full bg-transparent text-base font-semibold text-foreground outline-none border-b border-primary/50 pb-0.5"
-            />
-          ) : (
-            <h2
-              onClick={() => setEditingTitle(true)}
-              className="text-base font-semibold text-foreground cursor-text hover:text-primary transition-colors leading-snug"
-              title="Click to edit"
-            >
-              {task.title}
-            </h2>
-          )}
+    <div className="flex flex-col h-full overflow-hidden" onClick={() => { setStatusOpen(false); setPriorityOpen(false); setAssigneeOpen(false); setLabelOpen(false); }}>
+
+      {/* ── Header ── */}
+      <div className="flex-shrink-0 px-5 pt-5 pb-4 border-b border-border-default">
+        {/* Status chip + close */}
+        <div className="flex items-center justify-between mb-3">
+          <Dropdown
+            open={statusOpen}
+            onClose={() => setStatusOpen(false)}
+            trigger={
+              <button
+                onClick={(e) => { e.stopPropagation(); setStatusOpen(!statusOpen); }}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold border transition-all hover:opacity-80"
+                style={{ borderColor: `${status.dot}50`, color: status.dot, backgroundColor: `${status.dot}18` }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: status.dot }} />
+                {status.label}
+                <ChevronDown className="h-3 w-3 opacity-60" />
+              </button>
+            }
+          >
+            {STATUSES.map((s) => (
+              <button key={s} onClick={(e) => { e.stopPropagation(); handleStatusChange(s); }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: STATUS_CONFIG[s].dot }} />
+                <span style={{ color: STATUS_CONFIG[s].dot }}>{STATUS_CONFIG[s].label}</span>
+                {task.status === s && <Check className="h-3 w-3 ml-auto text-primary" />}
+              </button>
+            ))}
+          </Dropdown>
+
+          <button onClick={onClose}
+            className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors">
+            <X className="h-4 w-4" />
+          </button>
         </div>
-        <button onClick={onClose} className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors mt-0.5 hover:bg-accent/40 rounded-md p-1">
-          <X className="h-4 w-4" />
-        </button>
+
+        {/* Title */}
+        {editingTitle ? (
+          <input autoFocus value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            onBlur={saveTitle}
+            onKeyDown={(e) => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setEditTitle(task.title); setEditingTitle(false); } }}
+            className="w-full bg-transparent text-[17px] font-semibold text-foreground outline-none border-b-2 border-primary/40 pb-0.5 leading-snug"
+          />
+        ) : (
+          <h2 onClick={() => setEditingTitle(true)}
+            className="text-[17px] font-semibold text-foreground cursor-text hover:text-primary/90 transition-colors leading-snug">
+            {task.title}
+          </h2>
+        )}
       </div>
 
-      {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Meta */}
-        <div className="px-5 py-4 space-y-3 border-b border-border-default">
-          {/* Status + Priority */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground w-14">Status</span>
-              <div className="relative">
-                <button
-                  onClick={() => setStatusOpen(!statusOpen)}
-                  className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium border transition-all hover:bg-accent/20"
-                  style={{ borderColor: `${status.dot}50`, color: status.dot, backgroundColor: `${status.dot}15` }}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: status.dot }} />
-                  {status.label}
-                  <ChevronDown className="h-3 w-3 opacity-60" />
-                </button>
-                {statusOpen && (
-                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border-default bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[140px]">
-                    {STATUSES.map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => handleStatusChange(s)}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors"
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: STATUS_CONFIG[s].dot }} />
-                        <span style={{ color: STATUS_CONFIG[s].dot }}>{STATUS_CONFIG[s].label}</span>
-                        {task.status === s && <Check className="h-3 w-3 ml-auto text-primary" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+      {/* ── Scrollable body ── */}
+      <div className="flex-1 overflow-y-auto min-h-0">
 
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground w-14">Priority</span>
-              <div className="relative">
+        {/* Properties block */}
+        <div className="px-5 py-2 border-b border-border-default divide-y divide-border-default/50">
+
+          {/* Priority */}
+          <PropRow label="Priority">
+            <Dropdown
+              open={priorityOpen}
+              onClose={() => setPriorityOpen(false)}
+              trigger={
                 <button
-                  onClick={() => setPriorityOpen(!priorityOpen)}
-                  className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium border border-border-default transition-all hover:bg-accent/20"
+                  onClick={(e) => { e.stopPropagation(); setPriorityOpen(!priorityOpen); }}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium border border-border-default hover:bg-accent/30 transition-colors"
                   style={{ color: priority.color }}
                 >
                   <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: priority.color }} />
                   {priority.label}
-                  <ChevronDown className="h-3 w-3 opacity-60" />
+                  <ChevronDown className="h-3 w-3 opacity-50" />
                 </button>
-                {priorityOpen && (
-                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border-default bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[130px]">
-                    {(Object.entries(PRIORITY_CONFIG) as [TaskPriority, typeof PRIORITY_CONFIG[TaskPriority]][]).map(([p, cfg]) => (
-                      <button
-                        key={p}
-                        onClick={() => handlePriorityChange(p)}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors"
-                        style={{ color: cfg.color }}
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: cfg.color }} />
-                        {cfg.label}
-                        {task.priority === p && <Check className="h-3 w-3 ml-auto text-primary" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+              }
+            >
+              {(Object.entries(PRIORITY_CONFIG) as [TaskPriority, (typeof PRIORITY_CONFIG)[TaskPriority]][]).map(([p, cfg]) => (
+                <button key={p} onClick={(e) => { e.stopPropagation(); handlePriorityChange(p); }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors"
+                  style={{ color: cfg.color }}>
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: cfg.color }} />
+                  {cfg.label}
+                  {task.priority === p && <Check className="h-3 w-3 ml-auto text-primary" />}
+                </button>
+              ))}
+            </Dropdown>
+          </PropRow>
 
-          {/* Due Date */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground w-14">Due</span>
-            <div className="flex items-center gap-1.5">
-              <Calendar className={cn('h-3 w-3', isOverdue ? 'text-red-400' : 'text-muted-foreground')} />
-              <input
-                type="date"
-                defaultValue={dueDateInput}
-                onBlur={(e) => handleDueDateChange(e.target.value)}
-                className={cn(
-                  'bg-transparent text-xs outline-none cursor-pointer',
-                  isOverdue ? 'text-red-400' : 'text-foreground',
-                )}
-              />
-            </div>
-          </div>
+          {/* Due date */}
+          <PropRow label="Due date">
+            <label className={cn(
+              'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium border cursor-pointer transition-colors hover:bg-accent/30',
+              isOverdue ? 'border-red-400/40 text-red-400 bg-red-400/10' : 'border-border-default text-foreground/70',
+            )}>
+              <Calendar className="h-3 w-3" />
+              {due
+                ? due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: due.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })
+                : <span className="text-text-muted">Add date</span>}
+              <input type="date" defaultValue={dueDateInput}
+                onChange={(e) => handleDueDateChange(e.target.value)}
+                className="absolute opacity-0 w-0 h-0" />
+            </label>
+            {due && (
+              <button onClick={() => handleDueDateChange('')}
+                className="inline-flex items-center justify-center h-6 w-6 rounded-md text-text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors text-xs">
+                ×
+              </button>
+            )}
+          </PropRow>
 
           {/* Assignees */}
-          <div className="flex items-start gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground w-14 mt-1">Assignees</span>
-            <div className="flex flex-wrap gap-1.5">
-              {task.assigneeIds.map((uid) => {
-                const m = members.find((x) => x.uid === uid);
-                const label = m?.fullName || m?.username || uid;
-                return (
-                  <button
-                    key={uid}
-                    onClick={() => toggleAssignee(uid)}
-                    className="flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] bg-primary/15 border border-primary/30 text-primary font-medium hover:bg-red-500/15 hover:border-red-400/30 hover:text-red-400 transition-colors"
-                    title="Click to remove"
-                  >
-                    <div className="h-3.5 w-3.5 rounded-full bg-primary/30 flex items-center justify-center text-[7px] font-bold">
-                      {label[0].toUpperCase()}
-                    </div>
-                    {label}
-                  </button>
-                );
-              })}
-              <div className="relative">
-                <button
-                  onClick={() => setAssigneeOpen(!assigneeOpen)}
-                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border border-dashed border-border-default text-muted-foreground hover:text-foreground hover:border-border-default transition-colors"
-                >
-                  <Plus className="h-2.5 w-2.5" /> Assign
-                </button>
-                {assigneeOpen && (
-                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border-default bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[180px] max-h-48 overflow-y-auto">
-                    {members.map((m) => (
-                      <button
-                        key={m.uid}
-                        onClick={() => toggleAssignee(m.uid)}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors"
-                      >
-                        <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center text-[8px] font-bold text-primary">
-                          {(m.fullName || m.username || '?')[0].toUpperCase()}
-                        </div>
-                        <span className="font-medium">{m.fullName}</span>
-                        {task.assigneeIds.includes(m.uid) && <Check className="h-3 w-3 ml-auto text-primary" />}
-                      </button>
-                    ))}
+          <PropRow label="Assignees">
+            {task.assigneeIds.map((uid) => {
+              const m = members.find((x) => x.uid === uid);
+              const name = m?.fullName || m?.username || uid;
+              return (
+                <button key={uid} onClick={() => toggleAssignee(uid)} title="Click to remove"
+                  className="inline-flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 text-[11px] font-medium bg-primary/12 border border-primary/25 text-primary hover:bg-red-500/12 hover:border-red-400/30 hover:text-red-400 transition-all">
+                  <div className="h-4 w-4 rounded-full bg-primary/30 flex items-center justify-center text-[8px] font-bold flex-shrink-0">
+                    {name[0].toUpperCase()}
                   </div>
+                  {name}
+                </button>
+              );
+            })}
+            <Dropdown
+              open={assigneeOpen}
+              onClose={() => setAssigneeOpen(false)}
+              trigger={
+                <button onClick={(e) => { e.stopPropagation(); setAssigneeOpen(!assigneeOpen); }}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] border border-dashed border-border-default text-text-muted hover:border-primary/40 hover:text-primary transition-colors">
+                  <Plus className="h-3 w-3" /> Assign
+                </button>
+              }
+            >
+              <div className="max-h-52 overflow-y-auto py-1">
+                {members.length === 0 && (
+                  <p className="px-3 py-2 text-xs text-text-muted">No members</p>
                 )}
+                {members.map((m) => {
+                  const name = m.fullName || m.username || m.uid;
+                  const selected = task.assigneeIds.includes(m.uid);
+                  return (
+                    <button key={m.uid} onClick={(e) => { e.stopPropagation(); toggleAssignee(m.uid); }}
+                      className={cn('flex items-center gap-2.5 w-full px-3 py-2 text-xs transition-colors text-left',
+                        selected ? 'bg-primary/10 text-primary' : 'text-foreground/80 hover:bg-accent/40')}>
+                      <div className={cn('h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0',
+                        selected ? 'bg-primary text-primary-foreground' : 'bg-accent text-muted-foreground')}>
+                        {name[0].toUpperCase()}
+                      </div>
+                      <span className="flex-1 font-medium truncate">{name}</span>
+                      {selected && <Check className="h-3 w-3 flex-shrink-0" />}
+                    </button>
+                  );
+                })}
               </div>
-            </div>
-          </div>
+            </Dropdown>
+          </PropRow>
 
           {/* Labels */}
-          <div className="flex items-start gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground w-14 mt-0.5">Labels</span>
-            <div className="flex flex-wrap gap-1.5">
-              {taskLabels.map((l) => (
-                <LabelBadge key={l.id} label={l} onRemove={() => toggleLabel(l.id)} />
-              ))}
-              <div className="relative">
-                <button
-                  onClick={() => setLabelOpen(!labelOpen)}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border border-dashed border-border-default text-muted-foreground hover:text-foreground hover:border-border-default transition-colors"
-                >
-                  <Plus className="h-2.5 w-2.5" /> Label
+          <PropRow label="Labels">
+            {taskLabels.map((l) => (
+              <LabelBadge key={l.id} label={l} onRemove={() => toggleLabel(l.id)} />
+            ))}
+            <Dropdown
+              open={labelOpen}
+              onClose={() => { setLabelOpen(false); setShowNewLabel(false); setNewLabelName(''); }}
+              trigger={
+                <button onClick={(e) => { e.stopPropagation(); setLabelOpen(!labelOpen); }}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] border border-dashed border-border-default text-text-muted hover:border-primary/40 hover:text-primary transition-colors">
+                  <Plus className="h-3 w-3" /> Label
                 </button>
-                {labelOpen && (
-                  <div className="absolute top-full mt-1 left-0 z-10 rounded-lg border border-border-default bg-popover/95 backdrop-blur shadow-xl overflow-hidden min-w-[200px] max-h-64 overflow-y-auto">
-                    {labels.map((l) => (
-                      <button
-                        key={l.id}
-                        onClick={() => toggleLabel(l.id)}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors"
-                      >
-                        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: l.color }} />
-                        <span style={{ color: l.color }}>{l.name}</span>
-                        {task.labelIds.includes(l.id) && <Check className="h-3 w-3 ml-auto text-primary" />}
-                      </button>
-                    ))}
-                    <div className="border-t border-border-default p-2">
-                      {showNewLabel ? (
-                        <div className="space-y-1.5">
-                          <input
-                            value={newLabelName}
-                            onChange={(e) => setNewLabelName(e.target.value)}
-                            placeholder="Label name"
-                            autoFocus
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleCreateLabel(); }}
-                            className="w-full rounded border border-border-default bg-bg-primary px-2 py-1 text-xs text-foreground outline-none"
-                          />
-                          <div className="flex gap-1 flex-wrap">
-                            {LABEL_COLORS.map((c) => (
-                              <button key={c} type="button" onClick={() => setNewLabelColor(c)}
-                                className="h-4 w-4 rounded-full transition-transform hover:scale-110"
-                                style={{ backgroundColor: c, outline: newLabelColor === c ? `2px solid ${c}` : 'none', outlineOffset: '1px' }}
-                              />
-                            ))}
-                          </div>
-                          <button onClick={handleCreateLabel} className="w-full rounded bg-primary text-primary-foreground text-xs py-1 hover:bg-primary/90 transition-colors">
-                            Create Label
-                          </button>
-                        </div>
-                      ) : (
-                        <button onClick={() => setShowNewLabel(true)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground w-full">
-                          <Plus className="h-3 w-3" /> New label
-                        </button>
-                      )}
+              }
+            >
+              <div className="max-h-56 overflow-y-auto py-1">
+                {labels.map((l) => (
+                  <button key={l.id} onClick={(e) => { e.stopPropagation(); toggleLabel(l.id); }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors">
+                    <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: l.color }} />
+                    <span style={{ color: l.color }} className="flex-1 text-left">{l.name}</span>
+                    {task.labelIds.includes(l.id) && <Check className="h-3 w-3 text-primary" />}
+                  </button>
+                ))}
+              </div>
+              <div className="border-t border-border-default p-2">
+                {showNewLabel ? (
+                  <div className="space-y-2">
+                    <input value={newLabelName} autoFocus
+                      onChange={(e) => setNewLabelName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleCreateLabel(); e.stopPropagation(); }}
+                      placeholder="Label name"
+                      className="w-full rounded-lg border border-border-default bg-bg-primary px-2 py-1.5 text-xs text-foreground outline-none focus:border-primary/50" />
+                    <div className="flex gap-1 flex-wrap">
+                      {LABEL_COLORS.map((c) => (
+                        <button key={c} type="button" onClick={(e) => { e.stopPropagation(); setNewLabelColor(c); }}
+                          className="h-4 w-4 rounded-full transition-transform hover:scale-110"
+                          style={{ backgroundColor: c, outline: newLabelColor === c ? `2px solid ${c}` : 'none', outlineOffset: '2px' }} />
+                      ))}
                     </div>
+                    <button onClick={(e) => { e.stopPropagation(); handleCreateLabel(); }}
+                      className="w-full rounded-lg bg-primary text-primary-foreground text-xs py-1.5 hover:bg-primary/90 transition-colors font-medium">
+                      Create
+                    </button>
                   </div>
+                ) : (
+                  <button onClick={(e) => { e.stopPropagation(); setShowNewLabel(true); }}
+                    className="flex items-center gap-1.5 text-xs text-text-muted hover:text-foreground w-full py-0.5">
+                    <Plus className="h-3 w-3" /> New label
+                  </button>
                 )}
               </div>
-            </div>
-          </div>
+            </Dropdown>
+          </PropRow>
         </div>
 
         {/* Description */}
         <div className="px-5 py-4 border-b border-border-default">
           <div className="flex items-center gap-2 mb-2">
-            <AlignLeft className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground">Description</span>
+            <AlignLeft className="h-3.5 w-3.5 text-text-muted" />
+            <span className="text-xs font-medium text-text-muted">Description</span>
           </div>
           {editingDesc ? (
-            <textarea
-              autoFocus
-              value={editDesc}
+            <textarea autoFocus value={editDesc} rows={4}
               onChange={(e) => setEditDesc(e.target.value)}
               onBlur={saveDesc}
-              rows={4}
-              className="w-full resize-none rounded-lg border border-primary/30 bg-bg-primary px-3 py-2 text-sm text-foreground outline-none"
-            />
+              className="w-full resize-none rounded-xl border border-primary/30 bg-accent/20 px-3 py-2 text-sm text-foreground outline-none leading-relaxed" />
           ) : (
-            <div
-              onClick={() => setEditingDesc(true)}
-              className={cn(
-                'min-h-[40px] rounded-lg px-3 py-2 text-sm cursor-text transition-colors hover:bg-accent/20',
-                task.description ? 'text-foreground/80' : 'text-text-muted italic',
-              )}
-            >
-              {task.description || 'Click to add a description…'}
+            <div onClick={() => setEditingDesc(true)}
+              className={cn('min-h-[36px] rounded-xl px-3 py-2 text-sm cursor-text transition-colors hover:bg-accent/20',
+                task.description ? 'text-foreground/80' : 'text-text-muted italic')}>
+              {task.description || 'Add a description…'}
             </div>
           )}
         </div>
@@ -409,42 +424,35 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
         <div className="px-5 py-4 border-b border-border-default">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <ListTodo className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs font-medium text-muted-foreground">Subtasks</span>
+              <ListTodo className="h-3.5 w-3.5 text-text-muted" />
+              <span className="text-xs font-medium text-text-muted">Subtasks</span>
               {subtasks.length > 0 && (
                 <span className="text-[10px] text-text-muted">
                   {subtasks.filter((s) => s.status === 'done').length}/{subtasks.length}
                 </span>
               )}
             </div>
-            <button
-              onClick={() => setAddingSubtask(true)}
-              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
-            >
-              <Plus className="h-3 w-3" />
-              Add
+            <button onClick={() => setAddingSubtask(true)}
+              className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-primary transition-colors">
+              <Plus className="h-3 w-3" /> Add
             </button>
           </div>
 
           <div className="space-y-1">
             {subtasks.map((sub) => {
-              const isDone = sub.status === 'done';
+              const done = sub.status === 'done';
               return (
-                <div key={sub.id} className="flex items-center gap-2 py-1 group">
-                  <button
-                    onClick={() => handleToggleSubtask(sub)}
-                    className={cn(
-                      'flex-shrink-0 h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all',
-                      isDone ? 'bg-primary border-primary' : 'border-border-default hover:border-primary/60',
-                    )}
-                  >
-                    {isDone && (
+                <div key={sub.id} className="flex items-center gap-2.5 py-1 group rounded-lg hover:bg-accent/20 px-1 transition-colors">
+                  <button onClick={() => handleToggleSubtask(sub)}
+                    className={cn('flex-shrink-0 h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all',
+                      done ? 'bg-primary border-primary' : 'border-border-default hover:border-primary/60')}>
+                    {done && (
                       <svg className="h-2.5 w-2.5 text-primary-foreground" fill="none" viewBox="0 0 12 12">
                         <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
                   </button>
-                  <span className={cn('flex-1 text-xs', isDone ? 'line-through text-text-muted' : 'text-foreground/80')}>
+                  <span className={cn('flex-1 text-xs', done ? 'line-through text-text-muted' : 'text-foreground/80')}>
                     {sub.title}
                   </span>
                 </div>
@@ -452,11 +460,9 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
             })}
 
             {addingSubtask && (
-              <div className="flex items-center gap-2 py-1">
-                <div className="flex-shrink-0 h-4 w-4 rounded-full border-2 border-border-default" />
-                <input
-                  ref={subtaskInputRef}
-                  value={newSubtaskTitle}
+              <div className="flex items-center gap-2.5 py-1 px-1">
+                <div className="flex-shrink-0 h-4 w-4 rounded-full border-2 border-dashed border-border-default" />
+                <input ref={subtaskInputRef} value={newSubtaskTitle}
                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
                   placeholder="Subtask title…"
                   onKeyDown={(e) => {
@@ -464,48 +470,36 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
                     if (e.key === 'Escape') { setNewSubtaskTitle(''); setAddingSubtask(false); }
                   }}
                   onBlur={() => { if (!newSubtaskTitle.trim()) setAddingSubtask(false); }}
-                  className="flex-1 bg-transparent text-xs text-foreground placeholder:text-text-muted outline-none border-b border-primary/30 pb-0.5"
-                />
+                  className="flex-1 bg-transparent text-xs text-foreground placeholder:text-text-muted outline-none border-b border-primary/30 pb-0.5" />
               </div>
             )}
 
             {subtasks.length === 0 && !addingSubtask && (
-              <p className="text-xs text-text-muted italic">No subtasks yet</p>
+              <p className="text-xs text-text-muted italic px-1">No subtasks yet</p>
             )}
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border-default flex-shrink-0">
+        <div className="flex px-5 border-b border-border-default">
           {(['comments', 'activity'] as PanelTab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={cn(
-                'flex-1 py-2.5 text-xs font-medium capitalize transition-colors',
-                tab === t ? 'text-foreground border-b-2 border-primary -mb-px' : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
+            <button key={t} onClick={() => setTab(t)}
+              className={cn('py-3 px-1 mr-5 text-xs font-medium capitalize border-b-2 transition-colors',
+                tab === t ? 'text-foreground border-primary' : 'text-text-muted border-transparent hover:text-foreground')}>
               {t}
             </button>
           ))}
         </div>
 
         {/* Tab content */}
-        <div className="px-5 pb-5 pt-3 flex flex-col" style={{ minHeight: 200 }}>
+        <div className="px-5 pb-5 pt-3">
           {tab === 'comments' ? (
-            <TaskComments
-              taskId={task.id}
-              orgId={orgId}
-              actor={actor}
+            <TaskComments taskId={task.id} orgId={orgId} actor={actor}
               authorUsername={authorUsername}
               notifyIds={[task.creatorId, ...task.assigneeIds].filter(Boolean)}
-              taskTitle={task.title}
-            />
+              taskTitle={task.title} />
           ) : (
-            <div className="overflow-y-auto">
-              <TaskActivityFeed activities={activities} />
-            </div>
+            <TaskActivityFeed activities={activities} />
           )}
         </div>
       </div>
