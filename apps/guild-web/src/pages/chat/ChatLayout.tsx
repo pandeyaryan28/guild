@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {
   Hash, Plus, MessageSquare, ChevronDown, ChevronRight,
-  LayoutDashboard, Palette, LogOut, Loader2, Users,
+  LayoutDashboard, Palette, LogOut, Loader2, Users, Moon, Sun
 } from 'lucide-react';
 import { useNavigate, useParams, NavLink, useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,7 +14,7 @@ import { NewDMModal } from '../../components/chat/NewDMModal';
 import { MemberPanel } from './MemberPanel';
 import { MessageArea } from './MessageArea';
 import { type UserProfile, getOrgById } from '../../lib/firestore';
-import { ThemePickerModal } from '../../components/ThemePickerModal';
+import { useTheme } from '../../hooks/useTheme';
 
 // ─── Chat Sidebar ──────────────────────────────────────────────────────────────
 
@@ -33,7 +33,9 @@ function ChatSidebar() {
   const [showDMModal, setShowDMModal] = React.useState(false);
   const [channelsOpen, setChannelsOpen] = React.useState(true);
   const [dmsOpen, setDmsOpen] = React.useState(true);
-  const [themeOpen, setThemeOpen] = React.useState(false);
+  const { themeId, setTheme } = useTheme();
+  const isLight = themeId === 'light';
+  const toggleTheme = () => setTheme(isLight ? 'midnight' : 'light');
 
   // Fetch org name
   React.useEffect(() => {
@@ -219,11 +221,11 @@ function ChatSidebar() {
             <p className="text-[10px] text-text-muted truncate">@{userProfile?.username}</p>
           </div>
           <button
-            onClick={() => setThemeOpen(true)}
-            title="Change theme"
+            onClick={toggleTheme}
+            title={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-bg-tertiary hover:text-primary transition-colors"
           >
-            <Palette className="h-3.5 w-3.5" />
+            {isLight ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
           </button>
           <button
             onClick={logout}
@@ -240,7 +242,6 @@ function ChatSidebar() {
       {showDMModal && orgId && (
         <NewDMModal orgId={orgId} members={members} onClose={() => setShowDMModal(false)} onDMCreated={handleDMCreated} />
       )}
-      {themeOpen && <ThemePickerModal onClose={() => setThemeOpen(false)} />}
     </>
   );
 }

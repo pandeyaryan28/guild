@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {
-  Bell, HelpCircle, Command, Plus, Palette, Search,
+  Bell, HelpCircle, Command, Plus, Search, Moon, Sun,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { NotificationPanel } from './NotificationPanel';
-import { ThemePickerModal } from './ThemePickerModal';
+import { useTheme } from '../hooks/useTheme';
 
 interface NavbarProps {
   onSearchOpen: () => void;
@@ -20,7 +20,10 @@ export function Navbar({ onSearchOpen }: NavbarProps) {
 
   const { notifications, unreadCount, markRead, markAllAsRead } = useNotifications(orgId);
   const [notifOpen, setNotifOpen] = React.useState(false);
-  const [themeOpen, setThemeOpen] = React.useState(false);
+  const { themeId, setTheme } = useTheme();
+
+  const isLight = themeId === 'light';
+  const toggleTheme = () => setTheme(isLight ? 'midnight' : 'light');
 
   const displayName = userProfile?.fullName ?? 'User';
   const initials = displayName
@@ -103,15 +106,15 @@ export function Navbar({ onSearchOpen }: NavbarProps) {
             <HelpCircle className="h-4 w-4" />
           </Button>
 
-          {/* Theme Picker Button */}
+          {/* Theme Toggle Button */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setThemeOpen(true)}
-            title="Change theme"
+            onClick={toggleTheme}
+            title={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             className="h-9 w-9 rounded-full text-muted-foreground hover:bg-accent/40 hover:text-primary transition-colors"
           >
-            <Palette className="h-4 w-4" />
+            {isLight ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
 
           {/* User avatar */}
@@ -133,7 +136,6 @@ export function Navbar({ onSearchOpen }: NavbarProps) {
         </div>
       </header>
 
-      {themeOpen && <ThemePickerModal onClose={() => setThemeOpen(false)} />}
     </>
   );
 }
