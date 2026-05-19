@@ -1,8 +1,39 @@
+# Dependencies
 node_modules/
-build/
+**/node_modules/
+
+# Build outputs
 dist/
-coverage/
+**/dist/
+build/
+**/build/
+
+# Environment variables (never commit real .env)
+.env
+**/.env
+!**/.env.example
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite
+.vite/
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Logs
 *.log
-.env*
-!.env.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
