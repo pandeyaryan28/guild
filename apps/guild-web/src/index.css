@@ -332,13 +332,20 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  html {
+    @apply font-sans;
+    /*
+     * Root font-size bump. All rem-based Tailwind sizes scale with this.
+     * 16 → 17px means text-sm (0.875rem) goes 14px → 14.875px, etc.
+     * We also override named utility classes below for a cleaner control.
+     */
+    font-size: 16.5px;
+  }
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     letter-spacing: -0.01em;
-  }
-  html {
-    @apply font-sans;
+    font-size: 0.9375rem; /* ~15.5px at 16.5px root */
   }
   /* Selection color follows theme primary */
   ::selection {
@@ -346,6 +353,27 @@
     color: var(--foreground);
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FONT-SIZE BUMP OVERRIDES
+   Hard-coded px values in Tailwind arbitrary classes (text-[10px] etc.) don't
+   scale with the root font-size. We override the most common ones here so
+   they read comfortably across the whole app.
+───────────────────────────────────────────────────────────────────────────── */
+/* Named Tailwind text sizes — add ~1px per step */
+.text-xs   { font-size: 0.8125rem; }   /* 13.4px  (was 12px) */
+.text-sm   { font-size: 0.9375rem; }   /* 15.5px  (was 14px) */
+.text-base { font-size: 1.0625rem; }   /* 17.5px  (was 16px) */
+
+/* Arbitrary hard-coded sizes used throughout the app */
+.text-\[10px\]  { font-size: 12px; }
+.text-\[11px\]  { font-size: 13px; }
+.text-\[12px\]  { font-size: 13.5px; }
+.text-\[13px\]  { font-size: 14.5px; }
+.text-\[7px\]   { font-size: 9px; }
+.text-\[8px\]   { font-size: 10px; }
+.text-\[9px\]   { font-size: 11px; }
+
 
 /* ─────────────────────────────────────────────────────────────────────────────
    UTILITIES
