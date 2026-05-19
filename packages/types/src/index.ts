@@ -85,6 +85,52 @@ export interface Notification {
   createdAt: Timestamp;
 }
 
+// ─── Projects ─────────────────────────────────────────────────────────────────
+
+export type ProjectStatus = 'active' | 'paused' | 'completed' | 'archived';
+
+export interface Project {
+  id: string;
+  orgId: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  memberIds: string[];
+  status: ProjectStatus;
+  startDate: Timestamp | null;
+  dueDate: Timestamp | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ─── Goals ────────────────────────────────────────────────────────────────────
+
+export type GoalStatus = 'active' | 'completed' | 'cancelled';
+
+export interface Goal {
+  id: string;
+  orgId: string;
+  title: string;
+  description: string;
+  ownerId: string;
+  status: GoalStatus;
+  targetDate: Timestamp | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ─── Milestones ───────────────────────────────────────────────────────────────
+
+export interface Milestone {
+  id: string;
+  projectId: string;
+  orgId: string;
+  title: string;
+  dueDate: Timestamp | null;
+  completed: boolean;
+  createdAt: Timestamp;
+}
+
 // ─── Tasks ────────────────────────────────────────────────────────────────────
 
 export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
@@ -115,6 +161,10 @@ export interface Task {
   orderIndex: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  // Execution OS — optional relational fields (backward compatible)
+  projectId?: string | null;
+  goalId?: string | null;
+  parentTaskId?: string | null;
 }
 
 export interface TaskComment {

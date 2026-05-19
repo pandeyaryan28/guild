@@ -24,10 +24,16 @@ import { DashboardHome } from './components/DashboardHome';
 // Chat
 import { ChatLayout } from './pages/chat/ChatLayout';
 
-// Tasks
+// Tasks & Work
 import { TasksPage } from './pages/tasks/TasksPage';
 import { RequestsPage } from './pages/requests/RequestsPage';
 import { PeoplePage } from './pages/people/PeoplePage';
+
+// Execution OS
+import { ProjectsPage } from './pages/projects/ProjectsPage';
+import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
+import { GoalsPage } from './pages/goals/GoalsPage';
+import { GoalDetailPage } from './pages/goals/GoalDetailPage';
 
 function DashboardApp({ children }: { children?: React.ReactNode }) {
   return (
@@ -93,6 +99,50 @@ export default function App() {
               <ProtectedRoute>
                 <DashboardApp>
                   <TasksPage />
+                </DashboardApp>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Projects */}
+          <Route
+            path="/projects"
+            element={
+              <ProtectedRoute>
+                <DashboardApp>
+                  <ProjectsPage />
+                </DashboardApp>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects/:projectId"
+            element={
+              <ProtectedRoute>
+                <DashboardApp>
+                  <ProjectDetailPage />
+                </DashboardApp>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Goals */}
+          <Route
+            path="/goals"
+            element={
+              <ProtectedRoute>
+                <DashboardApp>
+                  <GoalsPage />
+                </DashboardApp>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/goals/:goalId"
+            element={
+              <ProtectedRoute>
+                <DashboardApp>
+                  <GoalDetailPage />
                 </DashboardApp>
               </ProtectedRoute>
             }

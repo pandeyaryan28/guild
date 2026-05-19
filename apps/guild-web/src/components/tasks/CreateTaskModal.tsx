@@ -17,10 +17,13 @@ interface CreateTaskModalProps {
   orgId: string;
   defaultStatus?: TaskStatus;
   actor: ActorInfo;
-  labels: TaskLabel[];
+  labels?: TaskLabel[];
+  // Execution OS — optional scope defaults
+  defaultProjectId?: string;
+  defaultGoalId?: string;
 }
 
-export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', actor, labels }: CreateTaskModalProps) {
+export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', actor, labels = [], defaultProjectId, defaultGoalId }: CreateTaskModalProps) {
   const members = useOrgMembers(orgId);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -56,6 +59,9 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
         assigneeIds, labelIds,
         dueDate: dueDate ? new Date(dueDate) : null,
         actor,
+        // Scope fields — null if not provided
+        projectId: defaultProjectId ?? null,
+        goalId: defaultGoalId ?? null,
       });
       onClose();
     } finally {

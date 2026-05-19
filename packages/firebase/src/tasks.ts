@@ -69,6 +69,10 @@ export async function createTask(params: {
   status?: TaskStatus; priority?: TaskPriority;
   assigneeIds?: string[]; labelIds?: string[];
   dueDate?: Date | null; actor: ActorInfo;
+  // Execution OS — optional scope fields
+  projectId?: string | null;
+  goalId?: string | null;
+  parentTaskId?: string | null;
 }): Promise<string> {
   const ref = doc(collection(db, 'tasks'));
   const status = params.status ?? 'todo';
@@ -82,6 +86,10 @@ export async function createTask(params: {
     labelIds: params.labelIds ?? [],
     dueDate: params.dueDate ? Timestamp.fromDate(params.dueDate) : null,
     orderIndex, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    // Scope fields — null means unscoped (backward compatible)
+    projectId: params.projectId ?? null,
+    goalId: params.goalId ?? null,
+    parentTaskId: params.parentTaskId ?? null,
   });
   await logActivity(ref.id, params.orgId, params.actor, 'created', { title: params.title });
   return ref.id;
@@ -215,11 +223,39 @@ export async function createLabel(orgId: string, name: string, color: string): P
 
 // ─── Listeners ────────────────────────────────────────────────────────────────
 
-export function listenToTasks(orgId: string, cb: (tasks: Task[]) => void): () => void {
-  return onSnapshot(
-    query(collection(db, 'tasks'), where('orgId', '==', orgId), orderBy('createdAt', 'asc')),
-    (snap) => cb(snap.docs.map((d) => d.data() as Task)),
-  );
+export type TaskScopeFilter =
+  | { projectId: string; goalId?: never }
+  | { goalId: string; projectId?: never }
+  | Record<string, never>;
+
+export function listenToTasks(
+  orgId: string,
+  cb: (tasks: Task[]) => void,
+  scope?: TaskScopeFilter,
+): () => void {
+  let q;
+  if (scope && 'projectId' in scope && scope.projectId) {
+    q = query(
+      collection(db, 'tasks'),
+      where('orgId', '==', orgId),
+      where('projectId', '==', scope.projectId),
+      orderBy('createdAt', 'asc'),
+    );
+  } else if (scope && 'goalId' in scope && scope.goalId) {
+    q = query(
+      collection(db, 'tasks'),
+      where('orgId', '==', orgId),
+      where('goalId', '==', scope.goalId),
+      orderBy('createdAt', 'asc'),
+    );
+  } else {
+    q = query(
+      collection(db, 'tasks'),
+      where('orgId', '==', orgId),
+      orderBy('createdAt', 'asc'),
+    );
+  }
+  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => d.data() as Task)));
 }
 
 export function listenToComments(taskId: string, cb: (comments: TaskComment[]) => void): () => void {
@@ -247,3 +283,4 @@ export type {
   Task, TaskStatus, TaskPriority, TaskComment,
   TaskActivity, TaskLabel, ActivityType, ActorInfo,
 };
+

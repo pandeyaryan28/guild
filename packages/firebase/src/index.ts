@@ -11,3 +11,5 @@ export * from './storage';
 export * from './search';
 export * from './themes';
 export * from './validation';
+export * from './projects';
+export * from './goals';
