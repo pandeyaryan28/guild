@@ -30,7 +30,6 @@ import { RequestsPage } from './pages/requests/RequestsPage';
 import { PeoplePage } from './pages/people/PeoplePage';
 
 // Execution OS
-import { WorkspacePage } from './pages/workspace/WorkspacePage';
 import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
 import { GoalDetailPage } from './pages/goals/GoalDetailPage';
 
@@ -91,29 +90,18 @@ export default function App() {
             }
           />
 
-          {/* Tasks */}
+          {/* Tasks — standalone full-page layout (like /chat) */}
           <Route
             path="/tasks"
             element={
               <ProtectedRoute>
-                <DashboardApp>
-                  <TasksPage />
-                </DashboardApp>
+                <TasksPage />
               </ProtectedRoute>
             }
           />
 
-          {/* Workspace (Projects + Goals + Tasks unified) */}
-          <Route
-            path="/workspace"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <WorkspacePage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
+          {/* Workspace → redirect to /tasks (merged) */}
+          <Route path="/workspace" element={<Navigate to="/tasks" replace />} />
 
           {/* Project detail */}
           <Route

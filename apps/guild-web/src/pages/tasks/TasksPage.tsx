@@ -1,138 +1,189 @@
 import * as React from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Plus, CheckSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useTasks, useTaskLabels } from '../../hooks/useTasks';
+import { Navigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { FolderOpen, Target, LayoutList, Sun, CalendarDays, CheckCircle2, Settings } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useOrgMembers } from '../../hooks/useChat';
-import { KanbanBoard } from './KanbanBoard';
+import { useTasks } from '../../hooks/useTasks';
+import { useProjects } from '../../hooks/useProjects';
+import { useGoals } from '../../hooks/useGoals';
+import { TasksLayout } from './TasksLayout';
+import { TasksNav, type NavView } from './TasksNav';
+import { TaskListView } from './TaskListView';
+import { InlineTaskInput } from './InlineTaskInput';
 import { TaskDetailPanel } from './TaskDetailPanel';
-import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
-import { type Task, type TaskStatus, type ActorInfo } from '../../lib/tasks';
+import type { Task } from '../../lib/tasks';
+
+function getViewTitle(view: NavView, projects: { id: string; name: string }[], goals: { id: string; title: string }[]): { title: string; subtitle?: string } {
+  switch (view.type) {
+    case 'all': return { title: 'My Tasks', subtitle: 'All your tasks' };
+    case 'today': return { title: 'Today', subtitle: 'Due today' };
+    case 'upcoming': return { title: 'Upcoming', subtitle: 'Due in the next 7 days' };
+    case 'completed': return { title: 'Completed', subtitle: 'Done tasks' };
+    case 'project': {
+      const p = projects.find((x) => x.id === view.id);
+      return { title: p?.name ?? 'Project', subtitle: 'Project tasks' };
+    }
+    case 'goal': {
+      const g = goals.find((x) => x.id === view.id);
+      return { title: g?.title ?? 'Goal', subtitle: 'Goal tasks' };
+    }
+  }
+}
+
+function filterTasksForView(tasks: Task[], view: NavView): Task[] {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(todayStart.getTime() + 86400000);
+  const upcomingEnd = new Date(todayStart.getTime() + 7 * 86400000);
+
+  switch (view.type) {
+    case 'all':
+      return tasks.filter((t) => t.status !== 'done');
+    case 'today': {
+      return tasks.filter((t) => {
+        if (t.status === 'done') return false;
+        const due = t.dueDate?.toDate?.();
+        return due && due >= todayStart && due < todayEnd;
+      });
+    }
+    case 'upcoming': {
+      return tasks.filter((t) => {
+        if (t.status === 'done') return false;
+        const due = t.dueDate?.toDate?.();
+        return due && due >= todayEnd && due < upcomingEnd;
+      });
+    }
+    case 'completed':
+      return tasks.filter((t) => t.status === 'done');
+    case 'project':
+      return tasks.filter((t) => t.projectId === view.id);
+    case 'goal':
+      return tasks.filter((t) => t.goalId === view.id);
+  }
+}
+
+function ViewIcon({ view }: { view: NavView }) {
+  const cls = 'h-4 w-4 text-muted-foreground';
+  switch (view.type) {
+    case 'all': return <LayoutList className={cls} />;
+    case 'today': return <Sun className={cls} />;
+    case 'upcoming': return <CalendarDays className={cls} />;
+    case 'completed': return <CheckCircle2 className={cls} />;
+    case 'project': return <FolderOpen className={cls} />;
+    case 'goal': return <Target className={cls} />;
+  }
+}
 
 export function TasksPage() {
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
-  const { tasks, columns, loading } = useTasks(orgId);
-  const labels = useTaskLabels(orgId);
-  const members = useOrgMembers(orgId);
+  const [activeView, setActiveView] = React.useState<NavView>({ type: 'all' });
+  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const openTaskId = searchParams.get('task');
+  const { projects } = useProjects(orgId);
+  const { goals } = useGoals(orgId);
 
-  const [createOpen, setCreateOpen] = React.useState(false);
-  const [createStatus, setCreateStatus] = React.useState<TaskStatus>('todo');
+  // Always load all org tasks (the hook is inexpensive and we filter client-side)
+  const { tasks, loading } = useTasks(orgId);
 
-  const openTask = tasks.find((t) => t.id === openTaskId) ?? null;
-
-  const actor: ActorInfo = React.useMemo(() => ({
+  const actor = React.useMemo(() => ({
     uid: user?.uid ?? '',
     name: userProfile?.fullName || user?.displayName || 'Unknown',
   }), [user, userProfile]);
+  const actorName = userProfile?.fullName || user?.displayName || user?.email || 'Me';
 
-  const memberMap = React.useMemo(() => {
-    const m = new Map<string, { fullName: string; username: string }>();
-    members.forEach((mem) => m.set(mem.uid, { fullName: mem.fullName || '', username: mem.username || '' }));
-    return m;
-  }, [members]);
+  if (!user || !orgId) return <Navigate to="/login" replace />;
 
-  const handleTaskClick = (task: Task) => {
-    setSearchParams({ task: task.id });
+  const viewTasks = filterTasksForView(tasks, activeView);
+  const { title, subtitle } = getViewTitle(activeView, projects, goals);
+
+  // Scope defaults for InlineTaskInput
+  const defaultProjectId = activeView.type === 'project' ? activeView.id : null;
+  const defaultGoalId = activeView.type === 'goal' ? activeView.id : null;
+
+  const handleViewChange = (view: NavView) => {
+    setActiveView(view);
+    setSelectedTask(null);
   };
 
-  const handleClosePanel = () => {
-    setSearchParams({});
+  const handleSelectTask = (task: Task) => {
+    setSelectedTask((prev) => (prev?.id === task.id ? null : task));
   };
-
-  const handleAddTask = (status: TaskStatus) => {
-    setCreateStatus(status);
-    setCreateOpen(true);
-  };
-
-  if (!orgId) {
-    return (
-      <div className="flex h-full items-center justify-center text-muted-foreground">
-        No organization found.
-      </div>
-    );
-  }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Page Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border/30 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-            <CheckSquare className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-sm font-semibold text-foreground">Tasks</h1>
-            <p className="text-[11px] text-muted-foreground">
-              {loading ? 'Loading…' : `${tasks.length} task${tasks.length !== 1 ? 's' : ''}`}
-            </p>
-          </div>
-        </div>
-        <Button
-          size="sm"
-          onClick={() => { setCreateStatus('todo'); setCreateOpen(true); }}
-          className="h-8 gap-1.5 text-xs"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          New Task
-        </Button>
-      </div>
-
-      {/* Kanban */}
-      <div className="flex-1 overflow-hidden p-6">
-        {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="flex gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="w-[280px] space-y-2">
-                  <div className="h-5 w-24 rounded bg-muted/40 animate-pulse" />
-                  <div className="space-y-2">
-                    {Array.from({ length: i + 1 }).map((_, j) => (
-                      <div key={j} className="h-20 rounded-xl bg-muted/20 animate-pulse" />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <KanbanBoard
-            columns={columns}
-            allTasks={tasks}
-            labels={labels}
-            memberMap={memberMap}
-            orgId={orgId}
-            actor={actor}
-            onTaskClick={handleTaskClick}
-            onAddTask={handleAddTask}
-          />
-        )}
-      </div>
-
-      {/* Task Detail Panel */}
-      {openTask && (
-        <TaskDetailPanel
-          task={openTask}
-          onClose={handleClosePanel}
+    <TasksLayout
+      panelOpen={!!selectedTask}
+      nav={
+        <TasksNav
           orgId={orgId}
           actor={actor}
-          authorUsername={userProfile?.username || user?.displayName || 'user'}
+          activeView={activeView}
+          onViewChange={handleViewChange}
+          actorName={actorName}
         />
-      )}
+      }
+      main={
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Header */}
+          <div className="flex-shrink-0 flex items-center gap-3 px-6 py-4 border-b border-border/20">
+            <ViewIcon view={activeView} />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-semibold text-foreground leading-tight">{title}</h1>
+              {subtitle && (
+                <p className="text-xs text-muted-foreground/60 mt-0.5">{subtitle}</p>
+              )}
+            </div>
+            {/* Task count */}
+            {!loading && (
+              <span className={cn(
+                'flex-shrink-0 text-xs font-medium rounded-full px-2.5 py-1',
+                'bg-muted text-muted-foreground',
+              )}>
+                {viewTasks.filter((t) => !t.parentTaskId).length}
+              </span>
+            )}
+          </div>
 
-      {/* Create Modal */}
-      <CreateTaskModal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        orgId={orgId}
-        defaultStatus={createStatus}
-        actor={actor}
-        labels={labels}
-      />
-    </div>
+          {/* Task list + floating input */}
+          <div className="flex-1 min-h-0 relative">
+            <TaskListView
+              tasks={viewTasks}
+              loading={loading}
+              orgId={orgId}
+              actor={actor}
+              selectedTask={selectedTask}
+              onSelectTask={handleSelectTask}
+              groupBy={activeView.type === 'completed' ? 'none' : 'status'}
+              emptyMessage={
+                activeView.type === 'today' ? 'Nothing due today 🎉' :
+                activeView.type === 'upcoming' ? 'No upcoming tasks' :
+                activeView.type === 'completed' ? 'No completed tasks yet' :
+                'No tasks yet — add one below'
+              }
+            />
+
+            {/* Floating inline add-task input */}
+            {activeView.type !== 'completed' && (
+              <InlineTaskInput
+                orgId={orgId}
+                actor={actor}
+                defaultProjectId={defaultProjectId}
+                defaultGoalId={defaultGoalId}
+                defaultStatus="todo"
+              />
+            )}
+          </div>
+        </div>
+      }
+      panel={
+        <TaskDetailPanel
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          orgId={orgId}
+          actor={actor}
+          authorUsername={actorName}
+        />
+      }
+    />
   );
 }

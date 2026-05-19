@@ -320,11 +320,6 @@ export function Sidebar() {
                 <NavItem icon={CheckSquare} label="Tasks" active={isActive} collapsed={collapsed} />
               )}
             </NavLink>
-            <NavLink to="/workspace">
-              {({ isActive }) => (
-                <NavItem icon={LayoutGrid} label="Workspace" active={isActive} collapsed={collapsed} />
-              )}
-            </NavLink>
             <NavLink to="/requests">
               {({ isActive }) => (
                 <NavItem

@@ -25,7 +25,10 @@ function activityText(a: TaskActivity): string {
     case 'created': return 'created this task';
     case 'status_changed':
       return `moved from ${STATUS_CONFIG[a.payload.from as keyof typeof STATUS_CONFIG]?.label ?? a.payload.from} → ${STATUS_CONFIG[a.payload.to as keyof typeof STATUS_CONFIG]?.label ?? a.payload.to}`;
-    case 'assigned': return `assigned ${a.payload.assigneeIds?.length > 1 ? `${a.payload.assigneeIds.length} members` : 'a member'}`;
+    case 'assigned': {
+      const ids = a.payload.assigneeIds as string[] | undefined;
+      return `assigned ${(ids?.length ?? 0) > 1 ? `${ids!.length} members` : 'a member'}`;
+    }
     case 'unassigned': return 'removed an assignee';
     case 'priority_changed':
       return `changed priority: ${PRIORITY_CONFIG[a.payload.from as keyof typeof PRIORITY_CONFIG]?.label ?? a.payload.from} → ${PRIORITY_CONFIG[a.payload.to as keyof typeof PRIORITY_CONFIG]?.label ?? a.payload.to}`;
@@ -33,8 +36,10 @@ function activityText(a: TaskActivity): string {
     case 'commented': return `commented: "${a.payload.preview}"`;
     case 'label_added': return 'added a label';
     case 'label_removed': return 'removed a label';
-    case 'due_date_set':
-      return a.payload.dueDate ? `set due date to ${new Date(a.payload.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'removed due date';
+    case 'due_date_set': {
+      const dd = a.payload.dueDate as string | null | undefined;
+      return dd ? `set due date to ${new Date(dd).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'removed due date';
+    }
     default: return 'made a change';
   }
 }
