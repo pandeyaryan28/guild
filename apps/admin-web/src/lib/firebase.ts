@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // Admin-web Firebase initializer — reads VITE_ env vars, same Firebase project as guild-web
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';

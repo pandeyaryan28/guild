@@ -9,12 +9,14 @@ import { getStorage } from 'firebase/storage';
 // We detect which prefix is available at runtime.
 function env(key: string): string {
   // Vite
-  if (typeof import.meta !== 'undefined' && (import.meta as Record<string, unknown>).env) {
-    const viteEnv = (import.meta as Record<string, Record<string, string>>).env;
+  const meta = import.meta as unknown as any;
+  if (typeof import.meta !== 'undefined' && meta.env) {
+    const viteEnv = meta.env;
     return viteEnv[`VITE_${key}`] ?? viteEnv[`NEXT_PUBLIC_${key}`] ?? '';
   }
   // Node / Next.js SSR
-  return process.env[`NEXT_PUBLIC_${key}`] ?? process.env[`VITE_${key}`] ?? '';
+  const proc = (globalThis as any).process;
+  return proc?.env?.[`NEXT_PUBLIC_${key}`] ?? proc?.env?.[`VITE_${key}`] ?? '';
 }
 
 const firebaseConfig = {

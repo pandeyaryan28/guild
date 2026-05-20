@@ -82,9 +82,9 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
           : `💡 **Usage**: \`/task <task title> [@user1 @user2...]\` (omitting mentions assigns to ${dmPartnerName || 'your partner'})`;
         
         if (channelId) {
-          await sendChannelMessage({ ...base, body: usageText });
+          await sendChannelMessage({ ...base, body: usageText, channelId });
         } else if (dmId) {
-          await sendDMMessage({ ...base, body: usageText });
+          await sendDMMessage({ ...base, body: usageText, dmId });
         }
         return;
       }
@@ -126,17 +126,17 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
 
         // Send the original message body as typed
         if (channelId) {
-          await sendChannelMessage({ ...base, body });
+          await sendChannelMessage({ ...base, body, channelId });
         } else if (dmId) {
-          await sendDMMessage({ ...base, body });
+          await sendDMMessage({ ...base, body, dmId });
         }
       } catch (err) {
         console.error('Failed to create task via /task command:', err);
         const errorBody = `❌ Failed to create task: "${taskTitle}". Please try again.`;
         if (channelId) {
-          await sendChannelMessage({ ...base, body: errorBody });
+          await sendChannelMessage({ ...base, body: errorBody, channelId });
         } else if (dmId) {
-          await sendDMMessage({ ...base, body: errorBody });
+          await sendDMMessage({ ...base, body: errorBody, dmId });
         }
       }
       return;
