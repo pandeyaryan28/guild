@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
-import { Pencil, Trash2, Check, X } from 'lucide-react';
+import { Pencil, Trash2, Check, X, CheckSquare, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Message } from '../../lib/chat';
 import { editMessage, deleteMessage } from '../../lib/chat';
@@ -57,6 +57,105 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
     .slice(0, 2)
     .toUpperCase();
 
+  const isTaskCommand = message.body.trim().startsWith('/task') && !message.deleted;
+
+  const renderMessageContent = () => {
+    if (editing) {
+      return (
+        <div className="mt-1">
+          <textarea
+            value={editBody}
+            onChange={(e) => setEditBody(e.target.value)}
+            autoFocus
+            rows={2}
+            className="w-full resize-none rounded-lg border border-primary/30 bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleEdit(); }
+              if (e.key === 'Escape') { setEditing(false); setEditBody(message.body); }
+            }}
+          />
+          <div className="flex gap-2 mt-1.5">
+            <button onClick={handleEdit} disabled={saving} className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10 text-xs text-primary font-medium hover:bg-primary/20 transition-colors">
+              <Check className="h-3 w-3" /> Save
+            </button>
+            <button onClick={() => { setEditing(false); setEditBody(message.body); }} className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-bg-tertiary text-xs text-muted-foreground font-medium hover:bg-bg-tertiary transition-colors">
+              <X className="h-3 w-3" /> Cancel
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (isTaskCommand) {
+      const args = message.body.trim().slice(5).trim();
+      const taskTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
+      const rawMentions = message.body.match(/@\w+/g) || [];
+      const isDM = window.location.pathname.includes('/chat/dm/');
+
+      let assigneeNames = '';
+      let isMultiAssignee = false;
+
+      if (rawMentions.length > 0) {
+        const usernames = rawMentions.map(m => m.slice(1)); // strip '@'
+        const assignedMembers = members.filter(m => usernames.includes(m.username));
+        assigneeNames = assignedMembers.map(m => m.fullName).join(', ') || rawMentions.join(', ');
+        isMultiAssignee = rawMentions.length > 1;
+      } else {
+        if (isDM) {
+          const otherMember = members.find(m => m.uid !== message.senderId);
+          assigneeNames = otherMember ? otherMember.fullName : 'Partner';
+        } else {
+          assigneeNames = 'All channel members';
+          isMultiAssignee = true;
+        }
+      }
+
+      return (
+        <div className="mt-1.5 max-w-lg rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4 shadow-md shadow-primary/5 backdrop-blur-sm transition-all hover:bg-primary/12 group-hover:border-primary/30">
+          <div className="flex items-center justify-between gap-4 mb-2.5">
+            <div className="flex items-center gap-2 text-primary animate-pulse">
+              <CheckSquare className="h-4 w-4 shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/95">Task Created</span>
+            </div>
+            <span className="rounded-full border border-zinc-500/20 bg-zinc-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-zinc-400">
+              Todo
+            </span>
+          </div>
+
+          <div className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 text-sm font-semibold text-foreground leading-relaxed shadow-inner">
+            {taskTitle}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
+            <div className="flex items-center gap-1.5">
+              {isMultiAssignee ? (
+                <Users className="h-3.5 w-3.5 text-primary/70 shrink-0" />
+              ) : (
+                <User className="h-3.5 w-3.5 text-primary/70 shrink-0" />
+              )}
+              <span>
+                Assignee: <strong className="text-foreground/90 font-semibold">{assigneeNames}</strong>
+              </span>
+            </div>
+            <div className="h-3 w-px bg-border/25 hidden sm:block" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px]">Created by {message.senderName}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <p className={cn('text-sm leading-relaxed', message.deleted && 'italic text-text-muted')}>
+        {parseMentions(message.body)}
+        {message.editedAt && !message.deleted && (
+          <span className="ml-1.5 text-[10px] text-text-muted">(edited)</span>
+        )}
+      </p>
+    );
+  };
+
   return (
     <div
       className={cn('group relative flex gap-3 px-4 py-0.5 hover:bg-white/[0.02] transition-colors rounded-lg', isGrouped ? 'mt-0' : 'mt-3')}
@@ -84,36 +183,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
           </div>
         )}
 
-        {editing ? (
-          <div className="mt-1">
-            <textarea
-              value={editBody}
-              onChange={(e) => setEditBody(e.target.value)}
-              autoFocus
-              rows={2}
-              className="w-full resize-none rounded-lg border border-primary/30 bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleEdit(); }
-                if (e.key === 'Escape') { setEditing(false); setEditBody(message.body); }
-              }}
-            />
-            <div className="flex gap-2 mt-1.5">
-              <button onClick={handleEdit} disabled={saving} className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10 text-xs text-primary font-medium hover:bg-primary/20 transition-colors">
-                <Check className="h-3 w-3" /> Save
-              </button>
-              <button onClick={() => { setEditing(false); setEditBody(message.body); }} className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-bg-tertiary text-xs text-muted-foreground font-medium hover:bg-bg-tertiary transition-colors">
-                <X className="h-3 w-3" /> Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <p className={cn('text-sm leading-relaxed', message.deleted && 'italic text-text-muted')}>
-            {parseMentions(message.body)}
-            {message.editedAt && !message.deleted && (
-              <span className="ml-1.5 text-[10px] text-text-muted">(edited)</span>
-            )}
-          </p>
-        )}
+        {renderMessageContent()}
       </div>
 
       {/* Action bar */}
