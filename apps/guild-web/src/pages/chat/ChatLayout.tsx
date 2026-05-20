@@ -99,9 +99,12 @@ function ChatSidebar() {
 
             {/* Channels Section */}
             <div className="space-y-0.5">
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setChannelsOpen((o) => !o)}
-                className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setChannelsOpen((o) => !o); } }}
+                className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left cursor-pointer select-none outline-none"
               >
                 {channelsOpen ? (
                   <ChevronDown className="h-3 w-3 text-text-muted" />
@@ -117,7 +120,7 @@ function ChatSidebar() {
                 >
                   <Plus className="h-3 w-3" />
                 </button>
-              </button>
+              </div>
 
               {!loading && channels.map((ch) => {
                 const isActive = currentPath === `/chat/c/${ch.id}`;
@@ -163,9 +166,12 @@ function ChatSidebar() {
 
             {/* Direct Messages Section */}
             <div className="space-y-0.5">
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setDmsOpen((o) => !o)}
-                className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDmsOpen((o) => !o); } }}
+                className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left cursor-pointer select-none outline-none"
               >
                 {dmsOpen ? (
                   <ChevronDown className="h-3 w-3 text-text-muted" />
@@ -181,7 +187,7 @@ function ChatSidebar() {
                 >
                   <Plus className="h-3 w-3" />
                 </button>
-              </button>
+              </div>
 
               {dmThreads.map((thread) => {
                 const isActive = currentPath === `/chat/dm/${thread.id}`;
