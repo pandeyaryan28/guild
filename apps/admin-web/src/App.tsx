@@ -60,12 +60,16 @@ function AuthorizedApp({ profile }: { profile: ReturnType<typeof useAdminAuth> &
   const data = useAdminData();
   return (
     <AdminLayout profile={profile.profile}>
-      {() => (
+      {(activeSection) => (
         <DashboardPage
+          activeSection={activeSection}
           orgs={data.orgs}
           users={data.users}
           tasks={data.tasks}
           channels={data.channels}
+          teams={data.teams}
+          goals={data.goals}
+          activities={data.activities}
           loading={data.loading}
           error={data.error}
           refresh={data.refresh}
