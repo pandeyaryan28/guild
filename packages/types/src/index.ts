@@ -25,6 +25,13 @@ export interface UserProfile {
   themeId?: ThemeId;
   managerId?: string | null;
   isManager?: boolean;
+  focusStatus?: FocusStatus;
+}
+
+export interface FocusStatus {
+  text: string;
+  emoji?: string;
+  updatedAt: Timestamp;
 }
 
 // ─── Organization ─────────────────────────────────────────────────────────────
