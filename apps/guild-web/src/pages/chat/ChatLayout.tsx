@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/useAuth';
 import { useChannels, useDMs, useOrgMembers } from '../../hooks/useChat';
-import { getOrCreateDM, markChannelRead, type Channel } from '../../lib/chat';
+import { getOrCreateDM, markChannelRead, markDMRead, type Channel } from '../../lib/chat';
 import { CreateChannelModal } from '../../components/chat/CreateChannelModal';
 import { NewDMModal } from '../../components/chat/NewDMModal';
 import { MemberPanel } from './MemberPanel';
@@ -201,6 +201,7 @@ function ChatSidebar() {
                   <NavLink
                     key={thread.id}
                     to={`/chat/dm/${thread.id}`}
+                    onClick={() => markDMRead(thread.id, user!.uid)}
                     className={cn(
                       'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-all',
                       isActive 
