@@ -9,6 +9,7 @@ import {
   Plus,
   Filter,
   Loader2,
+  Check,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { 
@@ -28,7 +29,7 @@ import { useChannels, useOrgMembers } from '../hooks/useChat';
 import { useNotifications } from '../hooks/useNotifications';
 import { useRequests } from '../hooks/useRequests';
 import { updateRequestStatus, REQUEST_TYPE_ICONS, REQUEST_TYPE_LABELS, type OrgRequest } from '../lib/requests';
-import { type Task } from '../lib/tasks';
+import { type Task, moveTask } from '../lib/tasks';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -72,18 +73,51 @@ const PRIORITY_COLORS: Record<string, string> = {
   none:   'text-muted-foreground border-border-default',
 };
 
-const TaskItem = ({ task, memberMap }: { task: Task; memberMap: Map<string, { fullName: string }> }) => {
+const TaskItem = ({ 
+  task, 
+  memberMap,
+  orgId,
+  actor,
+}: { 
+  task: Task; 
+  memberMap: Map<string, { fullName: string }>;
+  orgId: string | undefined;
+  actor: { uid: string; name: string };
+}) => {
+  const [completing, setCompleting] = React.useState(false);
   const firstAssignee = task.assigneeIds[0];
   const assigneeName = firstAssignee ? (memberMap.get(firstAssignee)?.fullName ?? 'Unknown') : '—';
   const dueStr = task.dueDate ? task.dueDate.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'No due date';
   const priorityClass = PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.none;
 
+  const handleComplete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (completing || !orgId) return;
+    setCompleting(true);
+    try {
+      const newStatus = task.creatorId !== actor.uid ? 'review' : 'done';
+      await moveTask(task.id, orgId, newStatus, task.orderIndex, task.status, actor);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCompleting(false);
+    }
+  };
+
   return (
     <div className="group flex items-center justify-between py-4 border-b border-border-default last:border-0 hover:bg-bg-tertiary px-4 -mx-4 rounded-xl transition-all cursor-pointer">
       <div className="flex items-center gap-4">
-        <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center group-hover:border-primary transition-colors">
-          <div className="h-2 w-2 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
+        <button
+          onClick={handleComplete}
+          disabled={completing}
+          className="h-5 w-5 rounded-full border border-border-default/80 flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-all relative shrink-0 disabled:opacity-50"
+        >
+          {completing ? (
+            <Loader2 className="h-3 w-3 animate-spin text-primary" />
+          ) : (
+            <Check className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+          )}
+        </button>
         <div>
           <h4 className="text-[13px] font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">{task.title}</h4>
           <div className="flex items-center gap-2 mt-1">
@@ -168,10 +202,15 @@ export function DashboardHome() {
     return m;
   }, [members]);
 
+  const actor = React.useMemo(() => ({
+    uid: userProfile?.uid ?? '',
+    name: userProfile?.fullName || 'Unknown',
+  }), [userProfile]);
+
   // Task metrics
   const myTasks = React.useMemo(() => {
     if (!userProfile?.uid) return [];
-    return tasks.filter((t) => t.assigneeIds.includes(userProfile.uid) && t.status !== 'done');
+    return tasks.filter((t) => t.assigneeIds.includes(userProfile.uid) && t.status !== 'done' && t.status !== 'review');
   }, [tasks, userProfile?.uid]);
 
   const todayTasks = React.useMemo(() => {
@@ -365,7 +404,7 @@ export function DashboardHome() {
                   </div>
                 ) : (
                   displayedTasks.map((task) => (
-                    <TaskItem key={task.id} task={task} memberMap={memberMap} />
+                    <TaskItem key={task.id} task={task} memberMap={memberMap} orgId={orgId} actor={actor} />
                   ))
                 )}
               </div>

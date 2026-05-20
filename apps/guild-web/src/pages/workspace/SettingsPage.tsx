@@ -4,8 +4,10 @@ import {
   User, Bell, Paintbrush, Users, Link2, Building2, CreditCard,
   Check, Loader2, ShieldAlert, Trash2, Crown, ShieldCheck,
   UserCheck, UserMinus, Copy, CheckSquare, AlertCircle, Info, RefreshCw,
-  Plus
+  Plus, Workflow
 } from 'lucide-react';
+import { createTeam, updateTeam, deleteTeam } from '../../lib/teams';
+import { useTeams } from '../../hooks/useTeams';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { THEMES } from '../../lib/themes';
@@ -94,6 +96,7 @@ export function SettingsPage() {
       { id: 'notifications', label: 'Notifications', icon: Bell, allowed: ['member', 'admin', 'owner'] },
       { id: 'appearance', label: 'Appearance', icon: Paintbrush, allowed: ['member', 'admin', 'owner'] },
       { id: 'members', label: 'Workspace Members', icon: Users, allowed: ['admin', 'owner'] },
+      { id: 'teams', label: 'Teams & Org', icon: Workflow, allowed: ['admin', 'owner'] },
       { id: 'invites', label: 'Invite Links', icon: Link2, allowed: ['admin', 'owner'] },
       { id: 'workspace', label: 'Workspace Info', icon: Building2, allowed: ['owner'] },
       { id: 'billing', label: 'Billing & Plan', icon: CreditCard, allowed: ['owner'] },
@@ -184,6 +187,12 @@ export function SettingsPage() {
                     profile={localProfile}
                     inviteLinks={inviteLinks}
                     loading={invitesLoading}
+                    members={members}
+                  />
+                )}
+                {activeTab === 'teams' && localProfile && (
+                  <TeamsSettingsView
+                    profile={localProfile}
                     members={members}
                   />
                 )}
@@ -1183,6 +1192,549 @@ function BillingSettingsView({ org }: { org: Organization }) {
           />
         </button>
       </div>
+    </div>
+  );
+}
+
+// ─── TAB VIEW: TEAMS & ORG MANAGEMENT ─────────────────────────────────────────
+interface TeamsSettingsViewProps {
+  profile: UserProfile;
+  members: UserProfile[];
+}
+
+function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
+  const orgId = profile.organizationId;
+  const { teams, loading: teamsLoading } = useTeams(orgId);
+  const [subTab, setSubTab] = React.useState<'teams' | 'hierarchy'>('teams');
+
+  // For Creating a Team
+  const [isCreating, setIsCreating] = React.useState(false);
+  const [teamName, setTeamName] = React.useState('');
+  const [teamDesc, setTeamDesc] = React.useState('');
+  const [teamManager, setTeamManager] = React.useState('');
+  const [teamMembers, setTeamMembers] = React.useState<string[]>([]);
+  const [createSaving, setCreateSaving] = React.useState(false);
+  const [createError, setCreateError] = React.useState<string | null>(null);
+
+  // For Editing a Team
+  const [editingTeamId, setEditingTeamId] = React.useState<string | null>(null);
+  const [editName, setEditName] = React.useState('');
+  const [editDesc, setEditDesc] = React.useState('');
+  const [editManager, setEditManager] = React.useState('');
+  const [editMembers, setEditMembers] = React.useState<string[]>([]);
+  const [editSaving, setEditSaving] = React.useState(false);
+  const [editError, setEditError] = React.useState<string | null>(null);
+
+  // For Line Reporting updates
+  const [updatingUserId, setUpdatingUserId] = React.useState<string | null>(null);
+  const [hierarchyError, setHierarchyError] = React.useState<string | null>(null);
+
+  const handleCreateTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!teamName.trim()) {
+      setCreateError('Team name is required');
+      return;
+    }
+    if (!teamManager) {
+      setCreateError('Please assign a Team Lead');
+      return;
+    }
+    setCreateSaving(true);
+    setCreateError(null);
+    try {
+      await createTeam({
+        orgId,
+        name: teamName.trim(),
+        description: teamDesc.trim(),
+        managerId: teamManager,
+        memberIds: teamMembers,
+      });
+      // Reset
+      setTeamName('');
+      setTeamDesc('');
+      setTeamManager('');
+      setTeamMembers([]);
+      setIsCreating(false);
+    } catch (err: any) {
+      setCreateError(err.message || 'Failed to create team');
+    } finally {
+      setCreateSaving(false);
+    }
+  };
+
+  const handleUpdateTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTeamId) return;
+    if (!editName.trim()) {
+      setEditError('Team name is required');
+      return;
+    }
+    if (!editManager) {
+      setEditError('Please assign a Team Lead');
+      return;
+    }
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      await updateTeam(editingTeamId, {
+        name: editName.trim(),
+        description: editDesc.trim(),
+        managerId: editManager,
+        memberIds: editMembers,
+      });
+      setEditingTeamId(null);
+    } catch (err: any) {
+      setEditError(err.message || 'Failed to update team');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleDeleteTeam = async (teamId: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete the team "${name}"?`)) return;
+    try {
+      await deleteTeam(teamId);
+    } catch (err) {
+      console.error('Failed to delete team', err);
+    }
+  };
+
+  const handleManagerToggle = async (userId: string, currentVal: boolean) => {
+    setUpdatingUserId(userId);
+    setHierarchyError(null);
+    try {
+      await updateUserProfile(userId, { isManager: !currentVal });
+    } catch (err: any) {
+      setHierarchyError(err.message || 'Failed to update manager designation');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleLineManagerChange = async (userId: string, managerId: string) => {
+    setUpdatingUserId(userId);
+    setHierarchyError(null);
+    try {
+      const value = managerId === 'none' ? null : managerId;
+      await updateUserProfile(userId, { managerId: value });
+    } catch (err: any) {
+      setHierarchyError(err.message || 'Failed to update line manager');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleMemberCheckboxChange = (userId: string, isChecked: boolean, isEdit: boolean) => {
+    if (isEdit) {
+      if (isChecked) {
+        setEditMembers((prev) => [...prev, userId]);
+      } else {
+        setEditMembers((prev) => prev.filter((id) => id !== userId));
+      }
+    } else {
+      if (isChecked) {
+        setTeamMembers((prev) => [...prev, userId]);
+      } else {
+        setTeamMembers((prev) => prev.filter((id) => id !== userId));
+      }
+    }
+  };
+
+  return (
+    <div className="bg-surface border border-border-default/60 rounded-3xl p-6 shadow-sm space-y-6">
+      {/* Title */}
+      <div>
+        <h2 className="text-lg font-bold text-foreground">Teams & Org Management</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Configure line reporting (managers & reports) and create functional teams/squads.
+        </p>
+      </div>
+
+      {/* Internal Sub-Tabs */}
+      <div className="flex gap-2 p-1 bg-bg-primary rounded-xl border border-border-default/50 self-start w-fit">
+        <button
+          onClick={() => setSubTab('teams')}
+          className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            subTab === 'teams'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Functional Teams
+        </button>
+        <button
+          onClick={() => setSubTab('hierarchy')}
+          className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            subTab === 'hierarchy'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Reporting Lines & Hierarchy
+        </button>
+      </div>
+
+      {/* TAB 1: FUNCTIONAL TEAMS */}
+      {subTab === 'teams' && (
+        <div className="space-y-6">
+          {/* Create Team Overlay/Form */}
+          {isCreating ? (
+            <form onSubmit={handleCreateTeam} className="p-5 border border-primary/20 bg-primary/5 rounded-2xl space-y-4">
+              <h3 className="text-sm font-bold text-primary flex items-center gap-1.5">
+                <Plus className="h-4 w-4" /> Create Functional Team
+              </h3>
+              
+              {createError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{createError}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Team Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={teamName}
+                    onChange={(e) => setTeamName(e.target.value)}
+                    placeholder="e.g. Growth Squad"
+                    className="w-full px-3.5 py-2 rounded-xl border border-border-default bg-bg-primary text-sm text-foreground outline-none focus:border-primary/50"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Team Lead / Manager</label>
+                  <select
+                    required
+                    value={teamManager}
+                    onChange={(e) => setTeamManager(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-border-default bg-bg-primary text-sm text-foreground outline-none focus:border-primary/50"
+                  >
+                    <option value="">-- Select Team Lead --</option>
+                    {members.map((m) => (
+                      <option key={m.uid} value={m.uid}>
+                        {m.fullName} ({m.designation || 'Member'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Description</label>
+                <input
+                  type="text"
+                  value={teamDesc}
+                  onChange={(e) => setTeamDesc(e.target.value)}
+                  placeholder="e.g. Responsible for user acquisition, conversion rate optimization..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-border-default bg-bg-primary text-sm text-foreground outline-none focus:border-primary/50"
+                />
+              </div>
+
+              {/* Members Selection List */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assign Members</label>
+                <div className="border border-border-default rounded-xl p-3 max-h-40 overflow-y-auto bg-bg-primary grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {members.map((m) => (
+                    <label key={m.uid} className="flex items-center gap-2 px-2 py-1 hover:bg-accent/10 rounded-lg cursor-pointer text-xs">
+                      <input
+                        type="checkbox"
+                        checked={teamMembers.includes(m.uid)}
+                        onChange={(e) => handleMemberCheckboxChange(m.uid, e.target.checked, false)}
+                        className="rounded border-border-default text-primary focus:ring-primary/20"
+                      />
+                      <span className="truncate text-foreground font-medium">{m.fullName}</span>
+                      <span className="text-[10px] text-muted-foreground">@{m.username}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCreating(false)}
+                  className="px-4 py-2 border border-border-default bg-bg-primary hover:bg-accent/20 rounded-xl text-xs font-semibold text-foreground"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createSaving}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-semibold hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {createSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                  Create Team
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              onClick={() => setIsCreating(true)}
+              className="flex items-center justify-center gap-2 w-full p-4 border border-dashed border-border-default hover:border-primary/40 hover:bg-primary/5 rounded-2xl text-xs font-bold text-muted-foreground hover:text-primary transition-all duration-200"
+            >
+              <Plus className="h-4 w-4" /> Add Functional Team
+            </button>
+          )}
+
+          {/* Teams Grid */}
+          {teamsLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : teams.length === 0 ? (
+            <div className="text-center py-12 border border-dashed border-border-default rounded-2xl">
+              <Users className="h-8 w-8 mx-auto text-text-muted opacity-50 mb-2" />
+              <h4 className="text-sm font-semibold text-foreground">No Teams Defined</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">Create your first functional squad above.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {teams.map((t) => {
+                const isEditing = editingTeamId === t.id;
+                const lead = members.find((m) => m.uid === t.managerId);
+                const assignedCount = t.memberIds?.length ?? 0;
+
+                if (isEditing) {
+                  return (
+                    <form
+                      key={t.id}
+                      onSubmit={handleUpdateTeam}
+                      className="p-5 border border-primary bg-primary/5 rounded-2xl space-y-4 col-span-1 md:col-span-2"
+                    >
+                      <h3 className="text-sm font-bold text-primary">Edit Functional Team: {t.name}</h3>
+
+                      {editError && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          <span>{editError}</span>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Team Name</label>
+                          <input
+                            type="text"
+                            required
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            placeholder="e.g. Growth Squad"
+                            className="w-full px-3.5 py-2 rounded-xl border border-border-default bg-bg-primary text-sm text-foreground outline-none focus:border-primary/50"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Team Lead / Manager</label>
+                          <select
+                            required
+                            value={editManager}
+                            onChange={(e) => setEditManager(e.target.value)}
+                            className="w-full px-3.5 py-2 rounded-xl border border-border-default bg-bg-primary text-sm text-foreground outline-none focus:border-primary/50"
+                          >
+                            <option value="">-- Select Team Lead --</option>
+                            {members.map((m) => (
+                              <option key={m.uid} value={m.uid}>
+                                {m.fullName} ({m.designation || 'Member'})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Description</label>
+                        <input
+                          type="text"
+                          value={editDesc}
+                          onChange={(e) => setEditDesc(e.target.value)}
+                          placeholder="Team description..."
+                          className="w-full px-3.5 py-2 rounded-xl border border-border-default bg-bg-primary text-sm text-foreground outline-none focus:border-primary/50"
+                        />
+                      </div>
+
+                      {/* Members Selection List */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assign Members</label>
+                        <div className="border border-border-default rounded-xl p-3 max-h-40 overflow-y-auto bg-bg-primary grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {members.map((m) => (
+                            <label key={m.uid} className="flex items-center gap-2 px-2 py-1 hover:bg-accent/10 rounded-lg cursor-pointer text-xs">
+                              <input
+                                type="checkbox"
+                                checked={editMembers.includes(m.uid)}
+                                onChange={(e) => handleMemberCheckboxChange(m.uid, e.target.checked, true)}
+                                className="rounded border-border-default text-primary focus:ring-primary/20"
+                              />
+                              <span className="truncate text-foreground font-medium">{m.fullName}</span>
+                              <span className="text-[10px] text-muted-foreground">@{m.username}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingTeamId(null)}
+                          className="px-4 py-2 border border-border-default bg-bg-primary hover:bg-accent/20 rounded-xl text-xs font-semibold text-foreground"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={editSaving}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-semibold hover:bg-primary/90 disabled:opacity-50"
+                        >
+                          {editSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                          Save Changes
+                        </button>
+                      </div>
+                    </form>
+                  );
+                }
+
+                return (
+                  <div
+                    key={t.id}
+                    className="p-5 border border-border-default/60 bg-bg-primary rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex justify-between items-start gap-4 mb-2">
+                        <h4 className="font-bold text-sm text-foreground truncate">{t.name}</h4>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => {
+                              setEditingTeamId(t.id);
+                              setEditName(t.name);
+                              setEditDesc(t.description || '');
+                              setEditManager(t.managerId);
+                              setEditMembers(t.memberIds || []);
+                              setEditError(null);
+                            }}
+                            className="px-2 py-1 text-[10px] font-semibold border border-border-default rounded-lg hover:bg-accent/10 text-foreground transition-all"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTeam(t.id, t.name)}
+                            className="p-1 hover:bg-red-500/10 text-text-muted hover:text-red-500 rounded-lg transition-all"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {t.description && (
+                        <p className="text-xs text-muted-foreground mb-4 line-clamp-2">{t.description}</p>
+                      )}
+
+                      <div className="space-y-1.5 border-t border-border-default/50 pt-3 mt-3">
+                        <div className="flex justify-between items-center text-[11px]">
+                          <span className="text-muted-foreground font-medium">Team Lead:</span>
+                          <span className="text-foreground font-semibold">{lead?.fullName ?? 'Unassigned'}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[11px]">
+                          <span className="text-muted-foreground font-medium">Members Count:</span>
+                          <span className="text-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-md">{assignedCount}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 2: REPORTING LINES & HIERARCHY */}
+      {subTab === 'hierarchy' && (
+        <div className="space-y-6">
+          {hierarchyError && (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{hierarchyError}</span>
+            </div>
+          )}
+
+          <div className="border border-border-default rounded-2xl overflow-hidden bg-bg-primary">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-border-default bg-surface/50 text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                  <th className="px-4 py-3">Member</th>
+                  <th className="px-4 py-3">Designation</th>
+                  <th className="px-4 py-3">Manager Privilege</th>
+                  <th className="px-4 py-3">Direct Line Manager</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-default/50">
+                {members.map((m) => {
+                  const isProcessing = updatingUserId === m.uid;
+                  
+                  // Filter out this member to prevent circular reports
+                  const potentialManagers = members.filter((pm) => pm.uid !== m.uid);
+
+                  return (
+                    <tr key={m.uid} className="hover:bg-accent/5 transition-colors">
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-primary/10 text-primary font-bold text-xs shrink-0">
+                            {m.fullName ? m.fullName[0].toUpperCase() : '?'}
+                          </div>
+                          <div className="overflow-hidden">
+                            <p className="text-sm font-semibold text-foreground truncate leading-tight">
+                              {m.fullName}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">@{m.username}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 text-xs text-foreground font-medium">
+                        {m.designation || 'Teammate'}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        {isProcessing ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleManagerToggle(m.uid, !!m.isManager)}
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${
+                              m.isManager
+                                ? 'bg-primary/10 text-primary border-primary/20'
+                                : 'bg-muted text-muted-foreground border-transparent hover:bg-accent/20'
+                            }`}
+                          >
+                            {m.isManager ? 'Is Manager' : 'Standard Member'}
+                          </button>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        {isProcessing ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        ) : (
+                          <select
+                            value={m.managerId || 'none'}
+                            onChange={(e) => handleLineManagerChange(m.uid, e.target.value)}
+                            className="bg-bg-primary border border-border-default text-xs text-foreground rounded-lg px-2 py-1 outline-none focus:border-primary/50 transition-all max-w-[180px] truncate"
+                          >
+                            <option value="none">No Manager</option>
+                            {potentialManagers.map((pm) => (
+                              <option key={pm.uid} value={pm.uid}>
+                                {pm.fullName}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

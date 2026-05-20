@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Plus, ChevronDown, ChevronRight, LayoutList, Sun, CalendarDays, CheckCircle2, FolderOpen, Target, ArrowLeft, Send, Eye } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, LayoutList, Sun, CalendarDays, CheckCircle2, FolderOpen, Target, ArrowLeft, Send, Eye, Users } from 'lucide-react';
 import { useProjects } from '../../hooks/useProjects';
 import { useGoals } from '../../hooks/useGoals';
+import { useAuth } from '../../hooks/useAuth';
+import { useTeams } from '../../hooks/useTeams';
 import { createProject } from '../../lib/projects';
 import { createGoal } from '../../lib/goals';
 import type { ActorInfo } from '../../lib/tasks';
@@ -15,6 +17,7 @@ export type NavView =
   | { type: 'completed' }
   | { type: 'assigned' }
   | { type: 'review' }
+  | { type: 'team' }
   | { type: 'project'; id: string }
   | { type: 'goal'; id: string };
 
@@ -76,8 +79,16 @@ function SectionHeader({ label, collapsed, onToggle }: { label: string; collapse
 
 export function TasksNav({ orgId, actor, activeView, onViewChange, actorName }: TasksNavProps) {
   const navigate = useNavigate();
+  const { userProfile } = useAuth();
+  const { teams } = useTeams(orgId);
   const { projects } = useProjects(orgId);
   const { goals } = useGoals(orgId);
+
+  const isManager =
+    userProfile?.isManager ||
+    userProfile?.role === 'owner' ||
+    (userProfile?.uid ? teams.some((t) => t.managerId === userProfile.uid) : false);
+
   const [projectsCollapsed, setProjectsCollapsed] = React.useState(false);
   const [goalsCollapsed, setGoalsCollapsed] = React.useState(false);
   const [creatingProject, setCreatingProject] = React.useState(false);
@@ -161,6 +172,14 @@ export function TasksNav({ orgId, actor, activeView, onViewChange, actorName }: 
             active={isActive({ type: 'completed' })}
             onClick={() => onViewChange({ type: 'completed' })}
           />
+          {isManager && (
+            <NavItem
+              icon={<Users className="h-3.5 w-3.5" />}
+              label="Team Tasks"
+              active={isActive({ type: 'team' })}
+              onClick={() => onViewChange({ type: 'team' })}
+            />
+          )}
         </div>
 
         {/* Divider */}

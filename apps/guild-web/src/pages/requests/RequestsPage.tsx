@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useRequests } from '../../hooks/useRequests';
 import { useOrgMembers } from '../../hooks/useChat';
+import { useTeams, type Team } from '../../hooks/useTeams';
 import {
   createRequest, updateRequestStatus,
   REQUEST_TYPE_LABELS, REQUEST_TYPE_ICONS,
@@ -53,16 +54,37 @@ function timeAgo(ts: any) {
 // ─── Create Request Modal ─────────────────────────────────────────────────────
 
 function CreateRequestModal({
-  orgId, members, currentUser, onClose,
+  orgId, members, teams, currentUser, onClose,
 }: {
   orgId: string;
   members: UserProfile[];
+  teams: Team[];
   currentUser: UserProfile;
   onClose: () => void;
 }) {
   const [search, setSearch] = React.useState('');
   const [selectedMember, setSelectedMember] = React.useState<UserProfile | null>(null);
   const [type, setType] = React.useState<RequestType>('sick_leave');
+
+  // Pre-populate approver with direct line manager or team manager
+  React.useEffect(() => {
+    if (currentUser.managerId) {
+      const directMgr = members.find((m) => m.uid === currentUser.managerId);
+      if (directMgr) {
+        setSelectedMember(directMgr);
+        return;
+      }
+    }
+
+    // Fallback: Find a team where current user is a member
+    const myTeam = teams.find((t) => t.memberIds.includes(currentUser.uid));
+    if (myTeam) {
+      const teamMgr = members.find((m) => m.uid === myTeam.managerId);
+      if (teamMgr) {
+        setSelectedMember(teamMgr);
+      }
+    }
+  }, [currentUser.managerId, currentUser.uid, members, teams]);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [startDate, setStartDate] = React.useState('');
@@ -363,6 +385,7 @@ export function RequestsPage() {
   const orgId = userProfile?.organizationId;
   const { sent, received, pendingCount, loading } = useRequests(orgId);
   const members = useOrgMembers(orgId);
+  const { teams } = useTeams(orgId);
   const [tab, setTab] = React.useState<'inbox' | 'sent'>('inbox');
   const [modalOpen, setModalOpen] = React.useState(false);
 
@@ -480,6 +503,7 @@ export function RequestsPage() {
           <CreateRequestModal
             orgId={orgId}
             members={members}
+            teams={teams}
             currentUser={userProfile}
             onClose={() => setModalOpen(false)}
           />

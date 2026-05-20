@@ -1,11 +1,13 @@
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FolderOpen, Target, LayoutList, Sun, CalendarDays, CheckCircle2, Settings, Send, Eye } from 'lucide-react';
+import { FolderOpen, Target, LayoutList, Sun, CalendarDays, CheckCircle2, Settings, Send, Eye, Users } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTasks } from '../../hooks/useTasks';
 import { useProjects } from '../../hooks/useProjects';
 import { useGoals } from '../../hooks/useGoals';
+import { useOrgMembers } from '../../hooks/useChat';
+import { useTeams } from '../../hooks/useTeams';
 import { TasksLayout } from './TasksLayout';
 import { TasksNav, type NavView } from './TasksNav';
 import { TaskIsland } from '../../components/tasks/TaskIsland';
@@ -21,6 +23,7 @@ function getViewTitle(view: NavView, projects: { id: string; name: string }[], g
     case 'completed': return { title: 'Completed', subtitle: 'Done tasks' };
     case 'assigned': return { title: 'Assigned to Others', subtitle: 'Tasks you assigned to others' };
     case 'review': return { title: 'In Review', subtitle: 'Tasks waiting for your review' };
+    case 'team': return { title: 'Team Tasks', subtitle: 'Overview of active tasks assigned to your team members' };
     case 'project': {
       const p = projects.find((x) => x.id === view.id);
       return { title: p?.name ?? 'Project', subtitle: 'Project tasks' };
@@ -32,7 +35,7 @@ function getViewTitle(view: NavView, projects: { id: string; name: string }[], g
   }
 }
 
-function filterTasksForView(tasks: Task[], view: NavView, myUid: string): Task[] {
+function filterTasksForView(tasks: Task[], view: NavView, myUid: string, teamMemberIds: string[] = []): Task[] {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const todayEnd = new Date(todayStart.getTime() + 86400000);
@@ -63,6 +66,8 @@ function filterTasksForView(tasks: Task[], view: NavView, myUid: string): Task[]
       return tasks.filter((t) => t.creatorId === myUid && t.assigneeIds.some(id => id !== myUid) && t.status !== 'done' && t.status !== 'review');
     case 'review':
       return tasks.filter((t) => t.creatorId === myUid && t.status === 'review');
+    case 'team':
+      return tasks.filter((t) => t.assigneeIds.some((id) => teamMemberIds.includes(id)));
     case 'project':
       return tasks.filter((t) => t.projectId === view.id);
     case 'goal':
@@ -79,6 +84,7 @@ function ViewIcon({ view }: { view: NavView }) {
     case 'completed': return <CheckCircle2 className={cls} />;
     case 'assigned': return <Send className={cls} />;
     case 'review': return <Eye className={cls} />;
+    case 'team': return <Users className={cls} />;
     case 'project': return <FolderOpen className={cls} />;
     case 'goal': return <Target className={cls} />;
   }
@@ -96,6 +102,28 @@ export function TasksPage() {
   // Always load all org tasks (the hook is inexpensive and we filter client-side)
   const { tasks, loading } = useTasks(orgId);
 
+  const members = useOrgMembers(orgId);
+  const { teams } = useTeams(orgId);
+
+  const teamMemberIds = React.useMemo(() => {
+    if (!user) return [];
+    const directReportIds = members
+      .filter((m) => m.managerId === user.uid)
+      .map((m) => m.uid);
+
+    const managedTeamMemberIds = teams
+      .filter((t) => t.managerId === user.uid)
+      .flatMap((t) => t.memberIds);
+
+    const allIds = new Set([...directReportIds, ...managedTeamMemberIds]);
+    allIds.delete(user.uid);
+    return Array.from(allIds);
+  }, [members, teams, user]);
+
+  const teamMemberProfiles = React.useMemo(() => {
+    return members.filter((m) => teamMemberIds.includes(m.uid));
+  }, [members, teamMemberIds]);
+
   const actor = React.useMemo(() => ({
     uid: user?.uid ?? '',
     name: userProfile?.fullName || user?.displayName || 'Unknown',
@@ -104,7 +132,7 @@ export function TasksPage() {
 
   if (!user || !orgId) return <Navigate to="/login" replace />;
 
-  const viewTasks = filterTasksForView(tasks, activeView, user?.uid ?? '');
+  const viewTasks = filterTasksForView(tasks, activeView, user?.uid ?? '', teamMemberIds);
   const { title, subtitle } = getViewTitle(activeView, projects, goals);
 
   // Scope defaults for InlineTaskInput
@@ -141,6 +169,18 @@ export function TasksPage() {
               <h1 className="text-lg font-semibold text-foreground leading-tight">{title}</h1>
               {subtitle && (
                 <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>
+              )}
+              {activeView.type === 'team' && teamMemberProfiles.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {teamMemberProfiles.map((m) => (
+                    <span
+                      key={m.uid}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20"
+                    >
+                      {m.fullName}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
             {/* Task count */}

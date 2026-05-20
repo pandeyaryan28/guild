@@ -13,3 +13,4 @@ export * from './themes';
 export * from './validation';
 export * from './projects';
 export * from './goals';
+export * from './teams';

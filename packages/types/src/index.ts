@@ -23,6 +23,8 @@ export interface UserProfile {
     channelInvite: boolean;
   };
   themeId?: ThemeId;
+  managerId?: string | null;
+  isManager?: boolean;
 }
 
 // ─── Organization ─────────────────────────────────────────────────────────────
@@ -43,6 +45,20 @@ export interface OrganizationMember {
   userId: string;
   role: UserRole;
   joinedAt: Timestamp;
+}
+
+// ─── Teams ────────────────────────────────────────────────────────────────────
+
+export interface Team {
+  id: string;
+  orgId: string;
+  name: string;
+  description: string;
+  managerId: string; // The UID of the manager/team lead
+  memberIds: string[]; // List of UIDs of assigned team members
+  channelId?: string | null; // Linked team chat channel if any
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 // ─── Onboarding ───────────────────────────────────────────────────────────────
