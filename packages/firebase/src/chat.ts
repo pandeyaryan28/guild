@@ -172,10 +172,29 @@ export async function deleteMessage(messageId: string): Promise<void> {
 
 // ─── Read State ───────────────────────────────────────────────────────────────
 
-export async function markChannelRead(channelId: string, userId: string): Promise<void> {
+export async function markChannelRead(channelId: string, userId: string, orgId?: string): Promise<void> {
+  const data: Record<string, any> = {
+    channelId,
+    userId,
+    lastRead: serverTimestamp(),
+  };
+
+  if (orgId) {
+    data.orgId = orgId;
+  } else {
+    try {
+      const chSnap = await getDoc(doc(db, 'channels', channelId));
+      if (chSnap.exists()) {
+        data.orgId = chSnap.data().orgId;
+      }
+    } catch (e) {
+      console.error('Failed to fetch channel orgId in markChannelRead:', e);
+    }
+  }
+
   await setDoc(
     doc(db, 'channelMembers', `${channelId}_${userId}`),
-    { lastRead: serverTimestamp() },
+    data,
     { merge: true },
   );
 }

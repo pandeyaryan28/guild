@@ -53,10 +53,10 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
 
   // Mark as read when opened or when new messages arrive
   React.useEffect(() => {
-    if (!currentUser) return;
-    if (channelId) markChannelRead(channelId, currentUser.uid);
+    if (!currentUser || !orgId) return;
+    if (channelId) markChannelRead(channelId, currentUser.uid, orgId);
     if (dmId) markDMRead(dmId, currentUser.uid);
-  }, [channelId, dmId, currentUser?.uid, messages?.length]);
+  }, [channelId, dmId, currentUser?.uid, messages?.length, orgId]);
 
   const handleSend = async (body: string, mentions: string[]) => {
     if (!currentUser || !orgId) return;

@@ -132,7 +132,7 @@ function ChatSidebar() {
                   <NavLink
                     key={ch.id}
                     to={`/chat/c/${ch.id}`}
-                    onClick={() => markChannelRead(ch.id, user!.uid)}
+                    onClick={() => markChannelRead(ch.id, user!.uid, orgId)}
                     className={cn(
                       'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-all',
                       isActive
