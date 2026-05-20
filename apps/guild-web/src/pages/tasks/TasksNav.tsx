@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Plus, ChevronDown, ChevronRight, LayoutList, Sun, CalendarDays, CheckCircle2, FolderOpen, Target, ArrowLeft } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, LayoutList, Sun, CalendarDays, CheckCircle2, FolderOpen, Target, ArrowLeft, Send, Eye } from 'lucide-react';
 import { useProjects } from '../../hooks/useProjects';
 import { useGoals } from '../../hooks/useGoals';
 import { createProject } from '../../lib/projects';
@@ -13,6 +13,8 @@ export type NavView =
   | { type: 'today' }
   | { type: 'upcoming' }
   | { type: 'completed' }
+  | { type: 'assigned' }
+  | { type: 'review' }
   | { type: 'project'; id: string }
   | { type: 'goal'; id: string };
 
@@ -140,6 +142,18 @@ export function TasksNav({ orgId, actor, activeView, onViewChange, actorName }: 
             label="Upcoming"
             active={isActive({ type: 'upcoming' })}
             onClick={() => onViewChange({ type: 'upcoming' })}
+          />
+          <NavItem
+            icon={<Send className="h-3.5 w-3.5" />}
+            label="Assigned to Others"
+            active={isActive({ type: 'assigned' })}
+            onClick={() => onViewChange({ type: 'assigned' })}
+          />
+          <NavItem
+            icon={<Eye className="h-3.5 w-3.5" />}
+            label="In Review"
+            active={isActive({ type: 'review' })}
+            onClick={() => onViewChange({ type: 'review' })}
           />
           <NavItem
             icon={<CheckCircle2 className="h-3.5 w-3.5" />}

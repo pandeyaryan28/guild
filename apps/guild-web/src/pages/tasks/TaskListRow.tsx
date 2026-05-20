@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { ChevronRight, ChevronDown, Trash2 } from 'lucide-react';
-import { moveTask, STATUS_CONFIG, PRIORITY_CONFIG, type Task, type ActorInfo } from '../../lib/tasks';
+import { moveTask, STATUS_CONFIG, PRIORITY_CONFIG, type Task, type ActorInfo, type TaskStatus } from '../../lib/tasks';
 
 interface TaskListRowProps {
   task: Task;
@@ -65,6 +65,7 @@ export function TaskListRow({
   const [expanded, setExpanded] = React.useState(false);
   const [completing, setCompleting] = React.useState(false);
   const isDone = task.status === 'done';
+  const isReview = task.status === 'review';
   const hasSubtasks = subtasks.length > 0;
   const priority = PRIORITY_CONFIG[task.priority];
   const statusCfg = STATUS_CONFIG[task.status];
@@ -73,7 +74,18 @@ export function TaskListRow({
     e.stopPropagation();
     if (completing) return;
     setCompleting(true);
-    const newStatus = isDone ? 'todo' : 'done';
+    
+    let newStatus: TaskStatus;
+    if (isDone || isReview) {
+      newStatus = 'todo';
+    } else {
+      if (task.creatorId !== actor.uid) {
+        newStatus = 'review';
+      } else {
+        newStatus = 'done';
+      }
+    }
+    
     await moveTask(task.id, orgId, newStatus, task.orderIndex, task.status, actor);
     setCompleting(false);
   };
@@ -108,14 +120,21 @@ export function TaskListRow({
             'flex-shrink-0 h-5 w-5 mt-0.5 rounded-full border-[1.5px] flex items-center justify-center transition-all duration-200',
             isDone
               ? 'bg-primary border-primary'
-              : 'border-muted-foreground/40 hover:border-primary/60 hover:bg-primary/5',
+              : isReview
+                ? 'bg-amber-500 border-amber-500'
+                : 'border-muted-foreground/40 hover:border-primary/60 hover:bg-primary/5',
             completing && 'opacity-60 scale-90',
           )}
-          title={isDone ? 'Mark incomplete' : 'Mark complete'}
+          title={isDone ? 'Mark incomplete' : isReview ? 'In review - Mark incomplete' : 'Mark complete'}
         >
           {isDone && (
             <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 12 12">
               <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+          {isReview && (
+            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 12 12">
+              <path d="M6 2v4l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           )}
         </button>
@@ -125,7 +144,7 @@ export function TaskListRow({
           {/* Title */}
           <span className={cn(
             'text-[14px] leading-tight transition-colors break-words',
-            isDone ? 'line-through text-text-muted' : isSelected ? 'text-primary font-medium' : 'text-foreground/90',
+            isDone ? 'line-through text-text-muted' : isReview ? 'text-foreground/70 italic' : isSelected ? 'text-primary font-medium' : 'text-foreground/90',
           )}>
             {task.title}
           </span>

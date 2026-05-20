@@ -45,7 +45,13 @@ export function KanbanBoard({ columns, allTasks, labels, memberMap, orgId, actor
     // Determine target status
     const overId = over.id as string;
     const isColumn = STATUSES.includes(overId as TaskStatus);
-    const targetStatus: TaskStatus = isColumn ? (overId as TaskStatus) : (findTask(overId)?.status ?? activeTask.status);
+    let targetStatus: TaskStatus = isColumn ? (overId as TaskStatus) : (findTask(overId)?.status ?? activeTask.status);
+
+    // Intercept drops to done for non-creators
+    if (targetStatus === 'done' && activeTask.creatorId !== actor.uid) {
+      targetStatus = 'review';
+    }
+
     const targetColTasks = columns.get(targetStatus) ?? [];
 
     let newOrderIndex: number;

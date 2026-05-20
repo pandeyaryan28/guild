@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FolderOpen, Target, LayoutList, Sun, CalendarDays, CheckCircle2, Settings } from 'lucide-react';
+import { FolderOpen, Target, LayoutList, Sun, CalendarDays, CheckCircle2, Settings, Send, Eye } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTasks } from '../../hooks/useTasks';
 import { useProjects } from '../../hooks/useProjects';
@@ -19,6 +19,8 @@ function getViewTitle(view: NavView, projects: { id: string; name: string }[], g
     case 'today': return { title: 'Today', subtitle: 'Due today' };
     case 'upcoming': return { title: 'Upcoming', subtitle: 'Due in the next 7 days' };
     case 'completed': return { title: 'Completed', subtitle: 'Done tasks' };
+    case 'assigned': return { title: 'Assigned to Others', subtitle: 'Tasks you assigned to others' };
+    case 'review': return { title: 'In Review', subtitle: 'Tasks waiting for your review' };
     case 'project': {
       const p = projects.find((x) => x.id === view.id);
       return { title: p?.name ?? 'Project', subtitle: 'Project tasks' };
@@ -30,7 +32,7 @@ function getViewTitle(view: NavView, projects: { id: string; name: string }[], g
   }
 }
 
-function filterTasksForView(tasks: Task[], view: NavView): Task[] {
+function filterTasksForView(tasks: Task[], view: NavView, myUid: string): Task[] {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const todayEnd = new Date(todayStart.getTime() + 86400000);
@@ -38,23 +40,29 @@ function filterTasksForView(tasks: Task[], view: NavView): Task[] {
 
   switch (view.type) {
     case 'all':
-      return tasks.filter((t) => t.status !== 'done');
+      return tasks.filter((t) => t.assigneeIds.includes(myUid) && t.status !== 'done' && t.status !== 'review');
     case 'today': {
       return tasks.filter((t) => {
-        if (t.status === 'done') return false;
+        if (t.status === 'done' || t.status === 'review') return false;
+        if (!t.assigneeIds.includes(myUid)) return false;
         const due = t.dueDate?.toDate?.();
         return due && due >= todayStart && due < todayEnd;
       });
     }
     case 'upcoming': {
       return tasks.filter((t) => {
-        if (t.status === 'done') return false;
+        if (t.status === 'done' || t.status === 'review') return false;
+        if (!t.assigneeIds.includes(myUid)) return false;
         const due = t.dueDate?.toDate?.();
         return due && due >= todayEnd && due < upcomingEnd;
       });
     }
     case 'completed':
-      return tasks.filter((t) => t.status === 'done');
+      return tasks.filter((t) => t.status === 'done' && t.assigneeIds.includes(myUid));
+    case 'assigned':
+      return tasks.filter((t) => t.creatorId === myUid && t.assigneeIds.some(id => id !== myUid) && t.status !== 'done' && t.status !== 'review');
+    case 'review':
+      return tasks.filter((t) => t.creatorId === myUid && t.status === 'review');
     case 'project':
       return tasks.filter((t) => t.projectId === view.id);
     case 'goal':
@@ -69,6 +77,8 @@ function ViewIcon({ view }: { view: NavView }) {
     case 'today': return <Sun className={cls} />;
     case 'upcoming': return <CalendarDays className={cls} />;
     case 'completed': return <CheckCircle2 className={cls} />;
+    case 'assigned': return <Send className={cls} />;
+    case 'review': return <Eye className={cls} />;
     case 'project': return <FolderOpen className={cls} />;
     case 'goal': return <Target className={cls} />;
   }
@@ -94,7 +104,7 @@ export function TasksPage() {
 
   if (!user || !orgId) return <Navigate to="/login" replace />;
 
-  const viewTasks = filterTasksForView(tasks, activeView);
+  const viewTasks = filterTasksForView(tasks, activeView, user?.uid ?? '');
   const { title, subtitle } = getViewTitle(activeView, projects, goals);
 
   // Scope defaults for InlineTaskInput
@@ -161,6 +171,8 @@ export function TasksPage() {
                 activeView.type === 'today' ? 'Nothing due today 🎉' :
                 activeView.type === 'upcoming' ? 'No upcoming tasks' :
                 activeView.type === 'completed' ? 'No completed tasks yet' :
+                activeView.type === 'assigned' ? 'You haven\'t assigned any tasks to others' :
+                activeView.type === 'review' ? 'No tasks pending your review' :
                 'No tasks yet'
               }
             />

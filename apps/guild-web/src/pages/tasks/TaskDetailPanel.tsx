@@ -3,7 +3,7 @@ import { X, Calendar, AlignLeft, ChevronDown, Plus, Check, ListTodo, Clock } fro
 import { cn } from '@/lib/utils';
 import {
   updateTask, updatePriority, updateAssignees, updateDueDate, updateLabels,
-  createTask, createLabel, moveTask,
+  createTask, createLabel, moveTask, addComment,
   STATUSES, STATUS_CONFIG, PRIORITY_CONFIG, LABEL_COLORS,
   type Task, type TaskStatus, type TaskPriority, type ActorInfo,
 } from '../../lib/tasks';
@@ -81,6 +81,60 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
   const [addingSubtask, setAddingSubtask] = React.useState(false);
   const subtaskInputRef = React.useRef<HTMLInputElement>(null);
 
+  const [rejectComment, setRejectComment] = React.useState('');
+  const [showRejectForm, setShowRejectForm] = React.useState(false);
+  const [submittingReview, setSubmittingReview] = React.useState(false);
+
+  const handleApprove = async () => {
+    if (!task || submittingReview) return;
+    setSubmittingReview(true);
+    try {
+      await moveTask(task.id, orgId, 'done', task.orderIndex, task.status, actor);
+      await addComment({
+        taskId: task.id,
+        orgId,
+        authorId: actor.uid,
+        authorName: actor.name,
+        authorUsername,
+        body: 'Approved! Task is marked as Done.',
+        mentions: [],
+        notifyIds: task.assigneeIds.filter((id) => id !== actor.uid),
+        taskTitle: task.title,
+      });
+      onClose();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!task || !rejectComment.trim() || submittingReview) return;
+    setSubmittingReview(true);
+    try {
+      await addComment({
+        taskId: task.id,
+        orgId,
+        authorId: actor.uid,
+        authorName: actor.name,
+        authorUsername,
+        body: `🔄 Re-opened: ${rejectComment.trim()}`,
+        mentions: [],
+        notifyIds: task.assigneeIds.filter((id) => id !== actor.uid),
+        taskTitle: task.title,
+      });
+      await moveTask(task.id, orgId, 'todo', task.orderIndex, task.status, actor);
+      setRejectComment('');
+      setShowRejectForm(false);
+      onClose();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const [editTitle, setEditTitle] = React.useState('');
   const [editingTitle, setEditingTitle] = React.useState(false);
   const [editDesc, setEditDesc] = React.useState('');
@@ -133,7 +187,13 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
 
   const handleStatusChange = async (s: TaskStatus) => {
     setStatusOpen(false);
-    if (s !== task.status) await moveTask(task.id, orgId, s, task.orderIndex, task.status, actor);
+    if (s !== task.status) {
+      let finalStatus = s;
+      if (s === 'done' && task.creatorId !== actor.uid) {
+        finalStatus = 'review';
+      }
+      await moveTask(task.id, orgId, finalStatus, task.orderIndex, task.status, actor);
+    }
   };
 
   const handlePriorityChange = async (p: TaskPriority) => {
@@ -240,6 +300,69 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
 
       {/* ── Scrollable body ── */}
       <div className="flex-1 overflow-y-auto min-h-0">
+
+        {/* Review Banner */}
+        {task.status === 'review' && task.creatorId === actor.uid && (
+          <div className="mx-5 mt-4 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex flex-col gap-3">
+            <div className="flex items-start gap-2.5">
+              <Clock className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <h4 className="text-xs font-semibold text-amber-400">Task Pending Review</h4>
+                <p className="text-[11px] text-text-muted mt-0.5">
+                  The assignee has completed this task. Review their work and approve it or request changes.
+                </p>
+              </div>
+            </div>
+
+            {!showRejectForm ? (
+              <div className="flex gap-2.5 mt-1">
+                <button
+                  onClick={handleApprove}
+                  disabled={submittingReview}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold py-2 px-3 transition-colors shadow-sm"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  Approve & Done
+                </button>
+                <button
+                  onClick={() => setShowRejectForm(true)}
+                  disabled={submittingReview}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-500/20 hover:bg-red-500/10 disabled:opacity-50 text-red-400 text-xs font-semibold py-2 px-3 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Request Changes
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                <textarea
+                  value={rejectComment}
+                  onChange={(e) => setRejectComment(e.target.value)}
+                  placeholder="Explain what needs to be changed..."
+                  rows={2}
+                  className="w-full resize-none rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-primary/50"
+                  autoFocus
+                />
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => { setShowRejectForm(false); setRejectComment(''); }}
+                    disabled={submittingReview}
+                    className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-[11px] font-semibold text-text-muted hover:text-foreground transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleReject}
+                    disabled={!rejectComment.trim() || submittingReview}
+                    className="inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 text-[11px] font-semibold py-1.5 px-3 transition-colors"
+                  >
+                    Resend Task
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Properties block */}
         <div className="px-5 py-2 border-b border-border-default divide-y divide-border-default/50">
