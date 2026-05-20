@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
@@ -9,10 +10,8 @@ import { getStorage } from 'firebase/storage';
 // We detect which prefix is available at runtime.
 function env(key: string): string {
   // Vite
-  const meta = import.meta as unknown as any;
-  if (typeof import.meta !== 'undefined' && meta.env) {
-    const viteEnv = meta.env;
-    return viteEnv[`VITE_${key}`] ?? viteEnv[`NEXT_PUBLIC_${key}`] ?? '';
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    return import.meta.env[`VITE_${key}`] ?? import.meta.env[`NEXT_PUBLIC_${key}`] ?? '';
   }
   // Node / Next.js SSR
   const proc = (globalThis as any).process;
