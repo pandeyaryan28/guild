@@ -35,6 +35,9 @@ import { SettingsPage } from './pages/workspace/SettingsPage';
 import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
 import { GoalDetailPage } from './pages/goals/GoalDetailPage';
 
+// Reports
+import { ReportsPage } from './pages/reports/ReportsPage';
+
 function DashboardApp({ children }: { children?: React.ReactNode }) {
   return (
     <Layout>
@@ -161,6 +164,18 @@ export default function App() {
               <ProtectedRoute>
                 <DashboardApp>
                   <SettingsPage />
+                </DashboardApp>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Reports */}
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <DashboardApp>
+                  <ReportsPage />
                 </DashboardApp>
               </ProtectedRoute>
             }

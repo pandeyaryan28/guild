@@ -149,6 +149,7 @@ export interface Goal {
   targetDate: Timestamp | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  completedAt?: Timestamp | null;
 }
 
 // ─── Milestones ───────────────────────────────────────────────────────────────
@@ -193,6 +194,7 @@ export interface Task {
   orderIndex: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  completedAt?: Timestamp | null;
   // Execution OS — optional relational fields (backward compatible)
   projectId?: string | null;
   goalId?: string | null;
@@ -322,4 +324,62 @@ export interface AppTheme {
   swatch: string;
   bgSwatch: string;
   htmlClass: string;
+}
+
+// ─── Reports ──────────────────────────────────────────────────────────────────
+
+export type ReportDatePreset = '7d' | '30d' | '90d' | 'custom';
+
+export interface ReportFilters {
+  datePreset: ReportDatePreset;
+  customFrom?: Date | null;
+  customTo?: Date | null;
+  status: 'all' | TaskStatus;
+  priority: 'all' | TaskPriority;
+}
+
+export interface KpiMetric {
+  label: string;
+  value: number | string;
+  sub?: string;
+  trend?: 'up' | 'down' | 'neutral';
+}
+
+export interface MemberContribution {
+  userId: string;
+  name: string;
+  assigned: number;
+  completed: number;
+  overdue: number;
+  completionPct: number;
+}
+
+export interface MyReportData {
+  assigned: number;
+  completed: number;
+  inProgress: number;
+  overdue: number;
+  completionRate: number;
+  goalsTotal: number;
+  goalsCompleted: number;
+  goalsActive: number;
+}
+
+export interface TeamReportData {
+  totalTasks: number;
+  completedTasks: number;
+  inProgressTasks: number;
+  overdueTasks: number;
+  totalGoals: number;
+  completedGoals: number;
+  members: MemberContribution[];
+}
+
+export interface ProjectReportData {
+  totalTasks: number;
+  completedTasks: number;
+  inProgressTasks: number;
+  overdueTasks: number;
+  completionRate: number;
+  memberIds: string[];
 }

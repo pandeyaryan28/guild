@@ -109,8 +109,15 @@ export async function moveTask(
   newStatus: TaskStatus, newOrderIndex: number, oldStatus: TaskStatus,
   actor: ActorInfo,
 ): Promise<void> {
+  const completedAtPatch =
+    newStatus === 'done'
+      ? { completedAt: serverTimestamp() }
+      : oldStatus === 'done'
+      ? { completedAt: null }
+      : {};
   await updateDoc(doc(db, 'tasks', taskId), {
     status: newStatus, orderIndex: newOrderIndex, updatedAt: serverTimestamp(),
+    ...completedAtPatch,
   });
   if (newStatus !== oldStatus) {
     await logActivity(taskId, orgId, actor, 'status_changed', { from: oldStatus, to: newStatus });

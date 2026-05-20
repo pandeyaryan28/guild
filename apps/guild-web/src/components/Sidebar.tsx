@@ -340,7 +340,11 @@ export function Sidebar() {
                 <NavItem icon={Users} label="People" active={isActive} collapsed={collapsed} />
               )}
             </NavLink>
-            <NavItem icon={BarChart3} label="Reports" collapsed={collapsed} />
+            <NavLink to="/reports">
+              {({ isActive }) => (
+                <NavItem icon={BarChart3} label="Reports" active={isActive} collapsed={collapsed} />
+              )}
+            </NavLink>
           </nav>
         </div>
 

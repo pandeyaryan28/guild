@@ -18,7 +18,8 @@
     "./validation": "./src/validation.ts",
     "./projects": "./src/projects.ts",
     "./goals": "./src/goals.ts",
-    "./teams": "./src/teams.ts"
+    "./teams": "./src/teams.ts",
+    "./reports": "./src/reports.ts"
   },
   "peerDependencies": {
     "firebase": ">=11"

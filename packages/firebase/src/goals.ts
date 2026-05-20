@@ -34,8 +34,15 @@ export async function updateGoal(
   goalId: string,
   patch: Partial<Pick<Goal, 'title' | 'description' | 'status' | 'targetDate'>>,
 ): Promise<void> {
+  const completedAtPatch =
+    patch.status === 'completed'
+      ? { completedAt: serverTimestamp() }
+      : patch.status !== undefined
+      ? { completedAt: null }
+      : {};
   await updateDoc(doc(db, 'goals', goalId), {
     ...patch,
+    ...completedAtPatch,
     updatedAt: serverTimestamp(),
   });
 }
