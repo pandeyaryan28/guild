@@ -29,6 +29,7 @@ import { ChatLayout } from './pages/chat/ChatLayout';
 import { TasksPage } from './pages/tasks/TasksPage';
 import { RequestsPage } from './pages/requests/RequestsPage';
 import { PeoplePage } from './pages/people/PeoplePage';
+import { SettingsPage } from './pages/workspace/SettingsPage';
 
 // Execution OS
 import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
@@ -148,6 +149,18 @@ export default function App() {
               <ProtectedRoute>
                 <DashboardApp>
                   <PeoplePage />
+                </DashboardApp>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Settings */}
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <DashboardApp>
+                  <SettingsPage />
                 </DashboardApp>
               </ProtectedRoute>
             }

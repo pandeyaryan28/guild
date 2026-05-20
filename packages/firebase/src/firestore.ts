@@ -9,6 +9,8 @@ import {
   where,
   serverTimestamp,
   Timestamp,
+  updateDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { generateInviteToken } from './validation';
@@ -187,6 +189,61 @@ export async function acceptInvite(uid: string, token: string, orgId: string): P
 
   // Mark onboarding as completed and clear path
   await setOnboardingState(uid, { completed: true, path: null, step: 4 });
+}
+
+// ─── Settings / Role Operations ──────────────────────────────────────────────
+
+export async function updateUserProfile(
+  uid: string,
+  data: Partial<Omit<UserProfile, 'uid' | 'createdAt'>>
+): Promise<void> {
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, data);
+}
+
+export async function updateUserRole(
+  uid: string,
+  role: UserRole
+): Promise<void> {
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, { role });
+}
+
+export async function removeUserFromOrg(
+  uid: string
+): Promise<void> {
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, { organizationId: '', role: 'member' });
+}
+
+export async function updateOrganizationDetails(
+  orgId: string,
+  data: Partial<Omit<Organization, 'id' | 'createdAt'>>
+): Promise<void> {
+  const orgRef = doc(db, 'organizations', orgId);
+  await updateDoc(orgRef, data);
+}
+
+export async function deleteOrganization(
+  orgId: string
+): Promise<void> {
+  await deleteDoc(doc(db, 'organizations', orgId));
+}
+
+export async function revokeInviteLink(
+  token: string
+): Promise<void> {
+  await deleteDoc(doc(db, 'inviteLinks', token));
+}
+
+export async function transferOrgOwnership(
+  orgId: string,
+  currentOwnerId: string,
+  newOwnerId: string
+): Promise<void> {
+  await updateDoc(doc(db, 'users', newOwnerId), { role: 'owner' });
+  await updateDoc(doc(db, 'users', currentOwnerId), { role: 'admin' });
+  await updateDoc(doc(db, 'organizations', orgId), { ownerId: newOwnerId });
 }
 
 // Re-export types

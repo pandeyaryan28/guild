@@ -354,7 +354,11 @@ export function Sidebar() {
               badge={unreadCount > 0 ? unreadCount : undefined}
               collapsed={collapsed}
             />
-            <NavItem icon={Settings} label="Settings" collapsed={collapsed} />
+            <NavLink to="/settings">
+              {({ isActive }) => (
+                <NavItem icon={Settings} label="Settings" active={isActive} collapsed={collapsed} />
+              )}
+            </NavLink>
           </div>
 
           {!collapsed && <Separator className="bg-border/20" />}

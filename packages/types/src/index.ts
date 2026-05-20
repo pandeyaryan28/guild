@@ -15,6 +15,14 @@ export interface UserProfile {
   organizationId: string;
   role: UserRole;
   createdAt: Timestamp;
+  notificationSettings?: {
+    dm: boolean;
+    mention: boolean;
+    taskAssigned: boolean;
+    taskCommented: boolean;
+    channelInvite: boolean;
+  };
+  themeId?: ThemeId;
 }
 
 // ─── Organization ─────────────────────────────────────────────────────────────
@@ -26,6 +34,7 @@ export interface Organization {
   industry: string;
   companySize: string;
   ownerId: string;
+  billingPlan?: 'free' | 'premium' | 'enterprise';
   createdAt: Timestamp;
 }
 
