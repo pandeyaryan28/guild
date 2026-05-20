@@ -113,9 +113,9 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
       return (
         <div className="mt-1.5 max-w-lg rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4 shadow-md shadow-primary/5 backdrop-blur-sm transition-all hover:bg-primary/12 group-hover:border-primary/30">
           <div className="flex items-center justify-between gap-4 mb-2.5">
-            <div className="flex items-center gap-2 text-primary animate-pulse">
+            <div className="flex items-center gap-2 text-primary">
               <CheckSquare className="h-4 w-4 shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/95">Task Created</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/95">Task</span>
             </div>
             <span className="rounded-full border border-zinc-500/20 bg-zinc-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-zinc-400">
               Todo
@@ -124,23 +124,6 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
 
           <div className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 text-sm font-semibold text-foreground leading-relaxed shadow-inner">
             {taskTitle}
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
-            <div className="flex items-center gap-1.5">
-              {isMultiAssignee ? (
-                <Users className="h-3.5 w-3.5 text-primary/70 shrink-0" />
-              ) : (
-                <User className="h-3.5 w-3.5 text-primary/70 shrink-0" />
-              )}
-              <span>
-                Assignee: <strong className="text-foreground/90 font-semibold">{assigneeNames}</strong>
-              </span>
-            </div>
-            <div className="h-3 w-px bg-border/25 hidden sm:block" />
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px]">Created by {message.senderName}</span>
-            </div>
           </div>
         </div>
       );
