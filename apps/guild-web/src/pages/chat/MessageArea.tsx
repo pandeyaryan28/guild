@@ -124,12 +124,11 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
           },
         });
 
-        // Send a clean confirmation message
-        const confirmationBody = `📋 Created Task: "${taskTitle}"`;
+        // Send the original message body as typed
         if (channelId) {
-          await sendChannelMessage({ ...base, body: confirmationBody });
+          await sendChannelMessage({ ...base, body });
         } else if (dmId) {
-          await sendDMMessage({ ...base, body: confirmationBody });
+          await sendDMMessage({ ...base, body });
         }
       } catch (err) {
         console.error('Failed to create task via /task command:', err);
