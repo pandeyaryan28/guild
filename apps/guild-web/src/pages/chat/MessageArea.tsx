@@ -7,8 +7,9 @@ import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { type UserProfile } from '../../lib/firestore';
 import { db } from '../../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { type Channel } from '../../lib/chat';
+import { createTask } from '../../lib/tasks';
 
 interface MessageAreaProps {
   channelId: string | null;
@@ -67,6 +68,81 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
       body,
       mentions,
     };
+
+    const trimmed = body.trim();
+    if (trimmed.startsWith('/task')) {
+      const commandArgs = trimmed.slice(5).trim();
+      
+      // Clean task title by removing @username patterns
+      let taskTitle = commandArgs.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
+
+      if (!taskTitle) {
+        const usageText = channelId
+          ? `💡 **Usage**: \`/task <task title> [@user1 @user2...]\``
+          : `💡 **Usage**: \`/task <task title> [@user1 @user2...]\` (omitting mentions assigns to ${dmPartnerName || 'your partner'})`;
+        
+        if (channelId) {
+          await sendChannelMessage({ ...base, body: usageText });
+        } else if (dmId) {
+          await sendDMMessage({ ...base, body: usageText });
+        }
+        return;
+      }
+
+      try {
+        let assigneeIds: string[] = [];
+
+        if (mentions.length > 0) {
+          assigneeIds = mentions;
+        } else {
+          if (dmId) {
+            const parts = dmId.split('_');
+            const otherId = parts.find((p) => p !== currentUser.uid) ?? '';
+            assigneeIds = [otherId];
+          } else if (channelId) {
+            // Fetch all members of the channel
+            const snap = await getDocs(
+              query(collection(db, 'channelMembers'), where('channelId', '==', channelId))
+            );
+            assigneeIds = snap.docs.map((d) => d.data().userId as string);
+          }
+        }
+
+        // Create the task
+        await createTask({
+          orgId,
+          title: taskTitle,
+          description: channelId 
+            ? `Assigned via channel discussion by ${base.senderName}.`
+            : `Assigned via Direct Message chat by ${base.senderName}.`,
+          status: 'todo',
+          priority: 'none',
+          assigneeIds,
+          actor: {
+            uid: currentUser.uid,
+            name: base.senderName,
+          },
+        });
+
+        // Send a clean confirmation message
+        const confirmationBody = `📋 Created Task: "${taskTitle}"`;
+        if (channelId) {
+          await sendChannelMessage({ ...base, body: confirmationBody });
+        } else if (dmId) {
+          await sendDMMessage({ ...base, body: confirmationBody });
+        }
+      } catch (err) {
+        console.error('Failed to create task via /task command:', err);
+        const errorBody = `❌ Failed to create task: "${taskTitle}". Please try again.`;
+        if (channelId) {
+          await sendChannelMessage({ ...base, body: errorBody });
+        } else if (dmId) {
+          await sendDMMessage({ ...base, body: errorBody });
+        }
+      }
+      return;
+    }
+
     if (channelId) {
       await sendChannelMessage({ ...base, channelId });
     } else if (dmId) {
