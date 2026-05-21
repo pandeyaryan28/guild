@@ -1,8 +1,171 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // --- Helpers ---
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserOrgId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId;
+    }
+
+    function isOrgMember(orgId) {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserOrgId() == orgId;
+    }
+
+    // Default Deny
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
+    }
+
+    // --- Users & Onboarding ---
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      // Allow user creation by themselves
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Allow updates but block changing organizationId or role
+      allow update: if isAuthenticated() &&
+                    request.auth.uid == userId &&
+                    (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['organizationId', 'role']));
+    }
+
+    match /usernames/{username} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() &&
+                  (request.resource == null || request.resource.data.uid == request.auth.uid) &&
+                  (resource == null || resource.data.uid == request.auth.uid);
+    }
+
+    match /orgSlugs/{slug} {
+      allow read: if isAuthenticated();
+      // Allow creation during onboarding if orgId matches the new org
+      allow create: if isAuthenticated() && exists(/databases/$(database)/documents/organizations/$(request.resource.data.orgId));
+      allow update, delete: if isAuthenticated() && exists(/databases/$(database)/documents/organizations/$(resource.data.orgId)) && isOrgMember(resource.data.orgId);
+    }
+
+    match /onboardingState/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // --- Organization ---
+    match /organizations/{orgId} {
+      allow read: if isAuthenticated();
+      // Allow creation
+      allow create: if isAuthenticated();
+      // Only allow update/delete if they are members (ideally should check role == owner/admin, but we'll stick to member for MVP to prevent random user modification)
+      allow update, delete: if isOrgMember(orgId);
+    }
+
+    match /organizationMembers/{memberId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      // Restrict update/delete to org members
+      allow update, delete: if isOrgMember(resource.data.orgId);
+    }
+
+    match /inviteLinks/{token} {
+      allow read: if isAuthenticated();
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isAuthenticated() && resource.data.used == false && request.resource.data.used == true; // allow accepting invites
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+
+    // --- Core Tenant (Org) Data ---
+    // All collections with 'orgId' field
+
+    match /channels/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /channelMembers/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /messages/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /directMessages/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /dmReadState/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /notifications/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /projects/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /projects/{projectId}/milestones/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /goals/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /tasks/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /taskComments/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /taskActivities/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /taskLabels/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /teams/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
+    match /requests/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
     }
   }
 }
