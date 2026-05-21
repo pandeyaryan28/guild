@@ -114,16 +114,20 @@ export async function sendChannelMessage(params: {
   const msgRef = doc(collection(db, 'messages'));
   const id = msgRef.id;
   await setDoc(msgRef, { id, ...params, createdAt: serverTimestamp(), deleted: false });
-  await updateDoc(doc(db, 'channels', params.channelId), {
-    lastMessageAt: serverTimestamp(),
-    lastMessagePreview: params.body.slice(0, 100),
-  });
+  try {
+    await updateDoc(doc(db, 'channels', params.channelId), {
+      lastMessageAt: serverTimestamp(),
+      lastMessagePreview: params.body.slice(0, 100),
+    });
+  } catch (e) {
+    console.error('Failed to update channel last message info');
+  }
   for (const uid of params.mentions) {
     createNotification({
       orgId: params.orgId, recipientId: uid, type: 'mention',
       actorId: params.senderId, actorName: params.senderName,
       data: { channelId: params.channelId, messagePreview: params.body.slice(0, 100) },
-    }).catch(console.error);
+    }).catch(() => console.error('Failed to create notification for mention'));
   }
   return id;
 }
@@ -148,14 +152,14 @@ export async function sendDMMessage(params: {
       orgId: params.orgId, recipientId, type: 'dm_received',
       actorId: params.senderId, actorName: params.senderName,
       data: { dmId: params.dmId, messagePreview: params.body.slice(0, 100) },
-    }).catch(console.error);
+    }).catch(() => console.error('Failed to create notification for dm_received'));
   }
   for (const uid of params.mentions) {
     createNotification({
       orgId: params.orgId, recipientId: uid, type: 'mention',
       actorId: params.senderId, actorName: params.senderName,
       data: { dmId: params.dmId, messagePreview: params.body.slice(0, 100) },
-    }).catch(console.error);
+    }).catch(() => console.error('Failed to create notification for mention'));
   }
   return id;
 }
@@ -188,7 +192,7 @@ export async function markChannelRead(channelId: string, userId: string, orgId?:
         data.orgId = chSnap.data().orgId;
       }
     } catch (e) {
-      console.error('Failed to fetch channel orgId in markChannelRead:', e);
+      console.error('Failed to fetch channel orgId in markChannelRead');
     }
   }
 

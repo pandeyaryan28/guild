@@ -150,7 +150,7 @@ export async function updateAssignees(
       orgId, recipientId: uid, type: 'task_assigned',
       actorId: actor.uid, actorName: actor.name,
       data: { taskId, taskTitle: taskTitle ?? 'a task' },
-    }).catch(console.error);
+    }).catch(() => console.error('Failed to create notification for task_assigned'));
   }
 }
 
@@ -207,7 +207,7 @@ export async function addComment(params: {
         taskTitle: params.taskTitle,
         commentPreview: params.body.slice(0, 100),
       },
-    }).catch(console.error);
+    }).catch(() => console.error('Failed to create notification for mention'));
   }
   return ref.id;
 }
