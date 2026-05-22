@@ -99,7 +99,6 @@ export function SettingsPage() {
       { id: 'teams', label: 'Teams & Org', icon: Workflow, allowed: ['admin', 'owner'] },
       { id: 'invites', label: 'Invite Links', icon: Link2, allowed: ['admin', 'owner'] },
       { id: 'workspace', label: 'Workspace Info', icon: Building2, allowed: ['owner'] },
-      { id: 'billing', label: 'Billing & Plan', icon: CreditCard, allowed: ['owner'] },
     ];
     return list.filter((t) => t.allowed.includes(role));
   }, [role]);
@@ -202,9 +201,6 @@ export function SettingsPage() {
                     profile={localProfile}
                     logout={logout}
                   />
-                )}
-                {activeTab === 'billing' && localOrg && localProfile && (
-                  <BillingSettingsView org={localOrg} />
                 )}
               </motion.div>
             </AnimatePresence>
@@ -1076,121 +1072,6 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
             </button>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── TAB VIEW: BILLING & PLANS ───────────────────────────────────────────────
-function BillingSettingsView({ org }: { org: Organization }) {
-  const [loading, setLoading] = React.useState(false);
-  const [autoRenew, setAutoRenew] = React.useState(true);
-
-  const plan = org.billingPlan || 'premium';
-
-  const handleUpgrade = async (tier: 'free' | 'premium' | 'enterprise') => {
-    setLoading(true);
-    try {
-      await updateOrganizationDetails(org.id, { billingPlan: tier });
-    } catch (err) {
-      console.error('Failed to update organization billing plan');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="bg-surface border border-border-default/60 rounded-3xl p-6 shadow-sm space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-foreground">Billing & Plan</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">View your current subscription tier, renew cycles, and plan details.</p>
-      </div>
-
-      {/* Plan Card Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Free Plan */}
-        <div className={`p-5 rounded-2xl border flex flex-col justify-between text-left transition-all duration-200
-          ${plan === 'free' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border-default bg-bg-primary'}`}>
-          <div>
-            <span className="text-xs uppercase font-bold text-muted-foreground">Standard</span>
-            <h3 className="text-lg font-extrabold text-foreground mt-1">Free Tier</h3>
-            <p className="text-xs text-muted-foreground mt-1">Basic tasks and messaging for smaller startups.</p>
-            <div className="text-2xl font-black text-foreground mt-4">$0 <span className="text-xs font-medium text-muted-foreground">/mo</span></div>
-          </div>
-          {plan === 'free' ? (
-            <span className="w-full text-center py-2 rounded-xl bg-primary/10 border border-primary/20 text-xs font-bold text-primary mt-6">Active Plan</span>
-          ) : (
-            <button
-              onClick={() => handleUpgrade('free')}
-              disabled={loading}
-              className="w-full text-center py-2 rounded-xl border border-border-default hover:bg-accent/20 text-xs font-semibold text-foreground mt-6 transition-all"
-            >
-              Downgrade
-            </button>
-          )}
-        </div>
-
-        {/* Premium Plan */}
-        <div className={`p-5 rounded-2xl border flex flex-col justify-between text-left transition-all duration-200 relative overflow-hidden
-          ${plan === 'premium' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border-default bg-bg-primary'}`}>
-          <div className="absolute top-2.5 right-2.5 text-[9px] font-bold uppercase bg-primary text-primary-foreground px-2 py-0.5 rounded-full">POPULAR</div>
-          <div>
-            <span className="text-xs uppercase font-bold text-primary">Advanced</span>
-            <h3 className="text-lg font-extrabold text-foreground mt-1">Premium Plan</h3>
-            <p className="text-xs text-muted-foreground mt-1">Unlimited project planning, channels, and visual themes.</p>
-            <div className="text-2xl font-black text-foreground mt-4">$29 <span className="text-xs font-medium text-muted-foreground">/mo</span></div>
-          </div>
-          {plan === 'premium' ? (
-            <span className="w-full text-center py-2 rounded-xl bg-primary/10 border border-primary/20 text-xs font-bold text-primary mt-6">Active Plan</span>
-          ) : (
-            <button
-              onClick={() => handleUpgrade('premium')}
-              disabled={loading}
-              className="w-full text-center py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-semibold mt-6 transition-all"
-            >
-              Select Plan
-            </button>
-          )}
-        </div>
-
-        {/* Enterprise Plan */}
-        <div className={`p-5 rounded-2xl border flex flex-col justify-between text-left transition-all duration-200
-          ${plan === 'enterprise' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border-default bg-bg-primary'}`}>
-          <div>
-            <span className="text-xs uppercase font-bold text-purple-400">Scale</span>
-            <h3 className="text-lg font-extrabold text-foreground mt-1">Enterprise</h3>
-            <p className="text-xs text-muted-foreground mt-1">Dedicated customer support, custom databases, and workspace limits removal.</p>
-            <div className="text-2xl font-black text-foreground mt-4">$99 <span className="text-xs font-medium text-muted-foreground">/mo</span></div>
-          </div>
-          {plan === 'enterprise' ? (
-            <span className="w-full text-center py-2 rounded-xl bg-primary/10 border border-primary/20 text-xs font-bold text-primary mt-6">Active Plan</span>
-          ) : (
-            <button
-              onClick={() => handleUpgrade('enterprise')}
-              disabled={loading}
-              className="w-full text-center py-2 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/20 text-purple-400 text-xs font-semibold mt-6 transition-all"
-            >
-              Upgrade Tier
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="border-t border-border-default/45 pt-4 flex items-center justify-between gap-6">
-        <div>
-          <span className="text-sm font-semibold text-foreground">Auto-Renew Subscription</span>
-          <p className="text-xs text-muted-foreground mt-0.5">Toggle whether your payment card will be automatically charged next cycle.</p>
-        </div>
-        <button
-          onClick={() => setAutoRenew(!autoRenew)}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none
-            ${autoRenew ? 'bg-primary' : 'bg-bg-tertiary'}`}
-        >
-          <span
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
-              ${autoRenew ? 'translate-x-5' : 'translate-x-0'}`}
-          />
-        </button>
       </div>
     </div>
   );
