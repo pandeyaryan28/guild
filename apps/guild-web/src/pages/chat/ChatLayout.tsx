@@ -70,9 +70,15 @@ function ChatSidebar() {
     return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const { channelId, dmId } = useParams<{ channelId: string; dmId: string }>();
+  const hasContent = !!channelId || !!dmId;
+
   return (
     <>
-      <aside className="flex h-full w-[248px] shrink-0 flex-col border-r border-border-default bg-sidebar">
+      <aside className={cn(
+        "flex h-full flex-col border-r border-border-default bg-sidebar shrink-0 transition-all duration-300",
+        hasContent ? "hidden md:flex w-[248px]" : "w-full md:w-[248px]"
+      )}>
         {/* Org Header */}
         <div className="flex items-center gap-2.5 border-b border-border-default px-4 py-4">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/30">
@@ -309,7 +315,7 @@ export function ChatLayout() {
             />
           </>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+          <div className="hidden md:flex flex-1 flex-col items-center justify-center gap-4 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
               <MessageSquare className="h-7 w-7 text-primary/60" />
             </div>

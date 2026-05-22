@@ -291,7 +291,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -12 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="fixed left-1/2 top-[12vh] z-50 w-full max-w-2xl -translate-x-1/2 overflow-hidden rounded-2xl border border-border-default bg-bg-primary shadow-2xl backdrop-blur-2xl"
+            className="fixed left-1/2 top-[12vh] z-50 w-[calc(100%-2rem)] sm:w-full sm:max-w-2xl -translate-x-1/2 overflow-hidden rounded-2xl border border-border-default bg-bg-primary shadow-2xl backdrop-blur-2xl"
           >
             {/* Search input */}
             <div className="flex items-center gap-3 border-b border-border-default px-4 py-3.5">

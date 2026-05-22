@@ -12,7 +12,7 @@ interface MemberPanelProps {
 
 export function MemberPanel({ members, currentUserId, onStartDM }: MemberPanelProps) {
   return (
-    <aside className="flex h-full w-[260px] shrink-0 flex-col border-l border-border-default bg-surface">
+    <aside className="hidden xl:flex h-full w-[260px] shrink-0 flex-col border-l border-border-default bg-surface">
       <div className="flex items-center gap-2 border-b border-border-default px-4 py-4">
         <Users className="h-3.5 w-3.5 text-text-muted" />
         <span className="text-xs font-bold uppercase tracking-widest text-text-muted">

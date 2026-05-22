@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Hash, MessageSquare, Users } from 'lucide-react';
+import { Hash, MessageSquare, Users, ChevronLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useChannels } from '../../hooks/useChat';
 import { useMessages } from '../../hooks/useChat';
 import { sendChannelMessage, sendDMMessage, markChannelRead, markDMRead } from '../../lib/chat';
@@ -21,6 +22,7 @@ interface MessageAreaProps {
 }
 
 export function MessageArea({ channelId, dmId, orgId, currentUser, profile, members }: MessageAreaProps) {
+  const navigate = useNavigate();
   const messages = useMessages(channelId, dmId);
   const { channels } = useChannels(orgId);
   const [dmPartnerName, setDmPartnerName] = React.useState('');
@@ -159,6 +161,14 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
     <div className="flex flex-1 min-w-0 flex-col bg-background">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-border-default bg-surface backdrop-blur-sm px-5 py-3.5 shrink-0">
+        <button
+          onClick={() => navigate('/chat')}
+          className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent/40 hover:text-foreground shrink-0 transition-colors"
+          title="Back to Channels"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+
         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
           <Icon className="h-4 w-4 text-primary/70" />
         </div>

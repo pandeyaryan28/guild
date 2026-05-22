@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FolderOpen, Target, LayoutList, Sun, CalendarDays, CheckCircle2, Settings, Send, Eye, Users } from 'lucide-react';
+import { FolderOpen, Target, LayoutList, Sun, CalendarDays, CheckCircle2, Settings, Send, Eye, Users, Menu } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTasks } from '../../hooks/useTasks';
 import { useProjects } from '../../hooks/useProjects';
@@ -95,6 +95,7 @@ export function TasksPage() {
   const orgId = userProfile?.organizationId;
   const [activeView, setActiveView] = React.useState<NavView>({ type: 'all' });
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 
   const { projects } = useProjects(orgId);
   const { goals } = useGoals(orgId);
@@ -142,6 +143,7 @@ export function TasksPage() {
   const handleViewChange = (view: NavView) => {
     setActiveView(view);
     setSelectedTask(null);
+    setMobileNavOpen(false);
   };
 
   const handleSelectTask = (task: Task) => {
@@ -151,6 +153,8 @@ export function TasksPage() {
   return (
     <TasksLayout
       panelOpen={!!selectedTask}
+      mobileNavOpen={mobileNavOpen}
+      onMobileNavClose={() => setMobileNavOpen(false)}
       nav={
         <TasksNav
           orgId={orgId}
@@ -163,7 +167,14 @@ export function TasksPage() {
       main={
         <div className="flex flex-col h-full overflow-hidden">
           {/* Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 px-6 py-4 border-b border-border-default">
+          <div className="flex-shrink-0 flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-border-default">
+            <button
+              onClick={() => setMobileNavOpen(true)}
+              className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent/40 hover:text-foreground shrink-0 transition-colors"
+              title="Open Menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
             <ViewIcon view={activeView} />
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-semibold text-foreground leading-tight">{title}</h1>

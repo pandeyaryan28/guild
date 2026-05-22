@@ -474,7 +474,7 @@ export function DashboardHome() {
   }
 
   return (
-    <div className="space-y-10 p-10 pb-20">
+    <div className="space-y-6 sm:space-y-10 p-4 sm:p-6 md:p-10 pb-20">
       {/* Hero & Focus Input */}
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border-default/45 pb-6">
         <div className="space-y-3">
