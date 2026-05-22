@@ -318,9 +318,9 @@ export function Sidebar() {
             </div>
 
             {/* Secondary nav */}
-            <NavLink to="/tasks">
+            <NavLink to="/workspace">
               {({ isActive }) => (
-                <NavItem icon={CheckSquare} label="Tasks" active={isActive} collapsed={collapsed} />
+                <NavItem icon={LayoutGrid} label="Workspace" active={isActive} collapsed={collapsed} />
               )}
             </NavLink>
             <NavLink to="/requests">

@@ -26,7 +26,7 @@ import { DashboardHome } from './components/DashboardHome';
 import { ChatLayout } from './pages/chat/ChatLayout';
 
 // Tasks & Work
-import { TasksPage } from './pages/tasks/TasksPage';
+import { WorkspacePage } from './pages/workspace/WorkspacePage';
 import { RequestsPage } from './pages/requests/RequestsPage';
 import { PeoplePage } from './pages/people/PeoplePage';
 import { SettingsPage } from './pages/workspace/SettingsPage';
@@ -97,18 +97,18 @@ export default function App() {
             }
           />
 
-          {/* Tasks — standalone full-page layout (like /chat) */}
+          {/* Workspace — standalone full-page layout (like /chat) */}
           <Route
-            path="/tasks"
+            path="/workspace"
             element={
               <ProtectedRoute>
-                <TasksPage />
+                <WorkspacePage />
               </ProtectedRoute>
             }
           />
 
-          {/* Workspace → redirect to /tasks (merged) */}
-          <Route path="/workspace" element={<Navigate to="/tasks" replace />} />
+          {/* Tasks → redirect to /workspace */}
+          <Route path="/tasks" element={<Navigate to="/workspace" replace />} />
 
           {/* Project detail */}
           <Route
