@@ -119,7 +119,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
         authorId: actor.uid,
         authorName: actor.name,
         authorUsername,
-        body: `🔄 Re-opened: ${rejectComment.trim()}`,
+        body: `Re-opened: ${rejectComment.trim()}`,
         mentions: [],
         notifyIds: task.assigneeIds.filter((id) => id !== actor.uid),
         taskTitle: task.title,

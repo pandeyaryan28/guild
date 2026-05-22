@@ -219,7 +219,7 @@ export function TasksPage() {
               defaultGoalId={defaultGoalId}
               showCompleted={activeView.type === 'completed'}
               emptyMessage={
-                activeView.type === 'today' ? 'Nothing due today 🎉' :
+                activeView.type === 'today' ? 'Nothing due today' :
                 activeView.type === 'upcoming' ? 'No upcoming tasks' :
                 activeView.type === 'completed' ? 'No completed tasks yet' :
                 activeView.type === 'assigned' ? 'You haven\'t assigned any tasks to others' :

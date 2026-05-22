@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { X, Calendar, Clock, User, AlignLeft, ChevronRight } from 'lucide-react';
+import { X, Calendar, Clock, User, AlignLeft, ChevronRight, Sun, Sunset } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   createTask,
@@ -258,7 +258,7 @@ export function CreateTaskPopup({
                   : 'border-border-default text-muted-foreground hover:border-primary/30 hover:text-foreground',
               )}
             >
-              <span className="text-[10px]">☀️</span>
+              <Sun className="h-3.5 w-3.5 shrink-0" />
               Today
             </button>
 
@@ -272,7 +272,7 @@ export function CreateTaskPopup({
                   : 'border-border-default text-muted-foreground hover:border-orange-400/30 hover:text-foreground',
               )}
             >
-              <span className="text-[10px]">🌅</span>
+              <Sunset className="h-3.5 w-3.5 shrink-0" />
               Tomorrow
             </button>
 

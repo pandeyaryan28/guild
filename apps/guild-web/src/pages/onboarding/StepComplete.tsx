@@ -42,7 +42,7 @@ export function StepComplete() {
         transition={{ delay: 0.3 }}
       >
         <h1 className="text-3xl font-bold text-foreground tracking-tight mb-3">
-          You're all set! 🎉
+          You're all set!
         </h1>
         <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto font-medium">
           Your Guild workspace is ready. Let's get your team operational.

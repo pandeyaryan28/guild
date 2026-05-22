@@ -80,8 +80,8 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
 
       if (!taskTitle) {
         const usageText = channelId
-          ? `💡 **Usage**: \`/task <task title> [@user1 @user2...]\``
-          : `💡 **Usage**: \`/task <task title> [@user1 @user2...]\` (omitting mentions assigns to ${dmPartnerName || 'your partner'})`;
+          ? `**Usage**: \`/task <task title> [@user1 @user2...]\``
+          : `**Usage**: \`/task <task title> [@user1 @user2...]\` (omitting mentions assigns to ${dmPartnerName || 'your partner'})`;
         
         if (channelId) {
           await sendChannelMessage({ ...base, body: usageText, channelId });
@@ -134,7 +134,7 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
         }
       } catch (err) {
         console.error('Failed to create task via /task command:', err);
-        const errorBody = `❌ Failed to create task: "${taskTitle}". Please try again.`;
+        const errorBody = `**Error**: Failed to create task: "${taskTitle}". Please try again.`;
         if (channelId) {
           await sendChannelMessage({ ...base, body: errorBody, channelId });
         } else if (dmId) {

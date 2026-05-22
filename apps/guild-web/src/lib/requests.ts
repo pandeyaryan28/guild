@@ -48,12 +48,12 @@ export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
 };
 
 export const REQUEST_TYPE_ICONS: Record<RequestType, string> = {
-  sick_leave:     '🤒',
-  work_from_home: '🏠',
-  time_off:       '🌴',
-  equipment:      '💻',
-  expense:        '💸',
-  other:          '📋',
+  sick_leave:     'Stethoscope',
+  work_from_home: 'Home',
+  time_off:       'Calendar',
+  equipment:      'Laptop',
+  expense:        'Receipt',
+  other:          'ClipboardList',
 };
 
 // ─── Write ────────────────────────────────────────────────────────────────────

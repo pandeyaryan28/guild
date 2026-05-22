@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { type Message } from '../../lib/chat';
 import { MessageBubble } from './MessageBubble';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageSquare } from 'lucide-react';
 
 interface MessageListProps {
   messages: Message[] | null;
@@ -52,8 +52,8 @@ export function MessageList({ messages, currentUserId, members }: MessageListPro
   if (messages.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-2xl">
-          💬
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5 border border-primary/10 text-primary shadow-sm">
+          <MessageSquare className="h-6 w-6" />
         </div>
         <p className="text-sm font-semibold text-foreground">No messages yet</p>
         <p className="text-xs text-text-muted">Be the first to say something!</p>

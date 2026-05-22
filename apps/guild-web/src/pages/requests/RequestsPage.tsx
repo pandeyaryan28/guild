@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Plus, Search, CheckCircle2, XCircle, Clock,
   ChevronDown, X, Loader2, FileText, Calendar,
+  Stethoscope, Home, Laptop, Receipt, ClipboardList,
+  Inbox, Send,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useRequests } from '../../hooks/useRequests';
@@ -16,6 +18,20 @@ import {
 import { type UserProfile } from '../../lib/firestore';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const RequestIconMap: Record<string, typeof ClipboardList> = {
+  Stethoscope,
+  Home,
+  Calendar,
+  Laptop,
+  Receipt,
+  ClipboardList,
+};
+
+function RequestIcon({ name, className = "h-4 w-4" }: { name: string; className?: string }) {
+  const Icon = RequestIconMap[name] || ClipboardList;
+  return <Icon className={className} />;
+}
 
 function statusColor(s: RequestStatus) {
   if (s === 'approved') return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
@@ -209,10 +225,12 @@ function CreateRequestModal({
                 <button
                   key={k} type="button"
                   onClick={() => setType(k)}
-                  className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border text-center transition-all text-xs font-medium
+                  className={`flex flex-col items-center gap-2 px-2 py-3 rounded-xl border text-center transition-all text-[11px] font-semibold
                     ${type === k ? 'border-primary/60 bg-primary/10 text-primary' : 'border-border-default bg-bg-tertiary text-muted-foreground hover:bg-bg-tertiary'}`}
                 >
-                  <span className="text-lg leading-none">{REQUEST_TYPE_ICONS[k]}</span>
+                  <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${type === k ? 'bg-primary/20 text-primary' : 'bg-muted/50 text-muted-foreground'}`}>
+                    <RequestIcon name={REQUEST_TYPE_ICONS[k]} className="h-4 w-4" />
+                  </div>
                   {label}
                 </button>
               ))}
@@ -308,7 +326,9 @@ function RequestCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="text-2xl leading-none mt-0.5">{REQUEST_TYPE_ICONS[req.type]}</span>
+          <div className="p-2 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0">
+            <RequestIcon name={REQUEST_TYPE_ICONS[req.type]} className="h-4 w-4" />
+          </div>
           <div>
             <p className="text-sm font-semibold text-foreground leading-tight">{req.title}</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">{REQUEST_TYPE_LABELS[req.type]}</p>
@@ -452,7 +472,7 @@ export function RequestsPage() {
           <>
             {pendingReceived.length === 0 && historicReceived.length === 0 && (
               <EmptyState
-                emoji="📥"
+                icon={Inbox}
                 title="No requests yet"
                 subtitle="When someone sends you a request for approval, it'll appear here."
               />
@@ -482,7 +502,7 @@ export function RequestsPage() {
           <>
             {sent.length === 0 ? (
               <EmptyState
-                emoji="📤"
+                icon={Send}
                 title="No requests sent"
                 subtitle="Submit your first request using the 'New Request' button above."
               />
@@ -513,10 +533,12 @@ export function RequestsPage() {
   );
 }
 
-function EmptyState({ emoji, title, subtitle }: { emoji: string; title: string; subtitle: string }) {
+function EmptyState({ icon: Icon, title, subtitle }: { icon: React.ComponentType<{ className?: string }>; title: string; subtitle: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <span className="text-5xl mb-4">{emoji}</span>
+      <div className="h-14 w-14 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4 text-primary/80 shadow-sm animate-pulse-subtle">
+        <Icon className="h-6 w-6" />
+      </div>
       <p className="text-base font-semibold text-foreground">{title}</p>
       <p className="text-sm text-muted-foreground mt-1 max-w-xs">{subtitle}</p>
     </div>

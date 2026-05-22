@@ -1,2 +1,7 @@
-// Shim: re-exports from @guild/firebase
-export * from '@guild/firebase/themes';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export * from './customThemes';
+export type { ThemeId, AppTheme } from '@guild/types';

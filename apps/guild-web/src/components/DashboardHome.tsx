@@ -19,6 +19,12 @@ import {
   HelpCircle,
   ThumbsUp,
   RotateCcw,
+  Stethoscope,
+  Home,
+  Calendar,
+  Laptop,
+  Receipt,
+  ClipboardList,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -44,6 +50,20 @@ import { type Task, moveTask } from '../lib/tasks';
 import { updateUserProfile, type UserProfile } from '../lib/firestore';
 import { Timestamp } from 'firebase/firestore';
 import { MemberProfileDrawer, avatarInitials, avatarHue } from './MemberProfileDrawer';
+
+const RequestIconMap: Record<string, typeof ClipboardList> = {
+  Stethoscope,
+  Home,
+  Calendar,
+  Laptop,
+  Receipt,
+  ClipboardList,
+};
+
+function RequestIcon({ name, className = "h-4 w-4" }: { name: string; className?: string }) {
+  const Icon = RequestIconMap[name] || ClipboardList;
+  return <Icon className={className} />;
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -176,7 +196,9 @@ const PendingRequestCard = ({
   return (
     <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-4 space-y-2.5 hover:bg-amber-400/8 transition-colors">
       <div className="flex items-center gap-2">
-        <span className="text-xl">{REQUEST_TYPE_ICONS[req.type]}</span>
+        <div className="p-1.5 rounded-lg bg-amber-400/10 border border-amber-400/20 text-amber-500 shrink-0">
+          <RequestIcon name={REQUEST_TYPE_ICONS[req.type]} className="h-4 w-4" />
+        </div>
         <div className="overflow-hidden">
           <p className="text-sm font-semibold text-foreground truncate">{req.title}</p>
           <p className="text-[10px] text-muted-foreground">{REQUEST_TYPE_LABELS[req.type]} · from {req.creatorName}</p>
@@ -484,7 +506,7 @@ export function DashboardHome() {
               animate={{ opacity: 1, x: 0 }}
               className="text-4xl font-bold tracking-tight text-foreground"
             >
-              {greeting}, {displayName} <span className="inline-block animate-bounce-subtle">👋</span>
+              {greeting}, {displayName}
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, x: -20 }}
@@ -504,7 +526,7 @@ export function DashboardHome() {
             className="flex flex-wrap items-center gap-3"
           >
             <div className="relative flex items-center gap-2 p-2 px-3 rounded-xl border border-border-default/60 bg-bg-tertiary w-full sm:w-[380px] group transition-all focus-within:border-primary/50 shadow-inner">
-              <span className="text-base select-none">🎯</span>
+              <Target className="h-4 w-4 text-primary shrink-0 animate-pulse-subtle" />
               <input
                 type="text"
                 placeholder="What is your focus today?..."
@@ -715,7 +737,7 @@ export function DashboardHome() {
                 ) : displayedTasks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 text-center">
                     <CheckCircle2 className="h-8 w-8 text-text-muted mb-2" />
-                    <p className="text-xs text-muted-foreground">No tasks here 🎉</p>
+                    <p className="text-xs text-muted-foreground">No tasks here</p>
                   </div>
                 ) : (
                   displayedTasks.map((task) => (
@@ -807,7 +829,7 @@ export function DashboardHome() {
                           {/* Focus text */}
                           {hasFocus ? (
                             <p className="text-[11px] text-foreground font-semibold mt-1 flex items-center gap-1">
-                              <span className="shrink-0 text-xs">🎯</span>
+                              <Target className="h-3 w-3 text-primary shrink-0" />
                               <span className="line-clamp-1 italic">{member.focusStatus!.text}</span>
                             </p>
                           ) : (

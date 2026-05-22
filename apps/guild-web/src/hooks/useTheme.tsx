@@ -1,42 +1,59 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import * as React from 'react';
-import { type ThemeId, DEFAULT_THEME_ID, getTheme } from '../lib/themes';
+import { type ThemeId, THEMES, getTheme, type PremiumTheme } from '../lib/themes';
 
-const STORAGE_KEY = 'guild-theme';
+const STORAGE_KEY = 'guild-theme-v2';
 
-interface ThemeContextValue {
+interface ThemeContextType {
   themeId: ThemeId;
   setTheme: (id: ThemeId) => void;
+  currentTheme: PremiumTheme;
+  themes: PremiumTheme[];
 }
 
-const ThemeContext = React.createContext<ThemeContextValue>({
-  themeId: DEFAULT_THEME_ID,
-  setTheme: () => {},
-});
-
-function applyTheme(id: ThemeId) {
-  const theme = getTheme(id);
-  // Remove all theme classes, keep other classes
-  const html = document.documentElement;
-  html.className = html.className
-    .replace(/\btheme-\S+\b/g, '')
-    .replace(/\bdark\b/g, '')
-    .replace(/\slight\b/g, '')
-    .trim();
-  // Add new theme classes
-  theme.htmlClass.split(' ').forEach((cls) => {
-    if (cls) html.classList.add(cls);
-  });
-}
+const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeId, setThemeId] = React.useState<ThemeId>(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as ThemeId | null;
-    return stored ?? DEFAULT_THEME_ID;
+    return stored ?? 'midnight';
   });
 
-  // Apply on mount and whenever themeId changes
+  // Apply theme colors dynamically when selection changes
   React.useEffect(() => {
-    applyTheme(themeId);
+    const theme = getTheme(themeId);
+    const html = document.documentElement;
+
+    // 1. Toggle dark class
+    if (theme.dark) {
+      html.classList.add('dark');
+    } else {
+      html.classList.remove('dark');
+    }
+
+    // 2. Set dynamic theme custom properties from scratch
+    // Clear legacy inline properties
+    html.removeAttribute('style');
+
+    // Apply color tokens directly to CSS custom properties
+    Object.entries(theme.variables).forEach(([property, color]) => {
+      html.style.setProperty(property, color);
+    });
+
+    // 3. Keep theme className sync
+    html.className = html.className
+      .replace(/\btheme-\S+\b/g, '')
+      .trim();
+    
+    theme.htmlClass.split(' ').forEach((cls) => {
+      if (cls && cls !== 'dark') {
+        html.classList.add(cls);
+      }
+    });
   }, [themeId]);
 
   const setTheme = React.useCallback((id: ThemeId) => {
@@ -44,13 +61,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, id);
   }, []);
 
+  const currentTheme = React.useMemo(() => getTheme(themeId), [themeId]);
+
+  const contextValue = React.useMemo(() => ({
+    themeId,
+    setTheme,
+    currentTheme,
+    themes: THEMES
+  }), [themeId, setTheme, currentTheme]);
+
   return (
-    <ThemeContext.Provider value={{ themeId, setTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
 export function useTheme() {
-  return React.useContext(ThemeContext);
+  const context = React.useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
 }
