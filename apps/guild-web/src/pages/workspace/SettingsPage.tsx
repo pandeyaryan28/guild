@@ -41,7 +41,7 @@ function useInviteLinks(orgId: string | undefined) {
       setLinks(snap.docs.map((d) => d.data() as InviteLink));
       setLoading(false);
     }, (err) => {
-      console.error(err);
+      console.error('Failed to fetch invite links');
       setLoading(false);
     });
     return unsub;
@@ -447,7 +447,7 @@ function NotificationSettingsView({ profile }: { profile: UserProfile }) {
         notificationSettings: nextSettings,
       });
     } catch (err) {
-      console.error('Failed to update notification settings', err);
+      console.error('Failed to update notification settings');
     } finally {
       setSaving(null);
     }
@@ -517,7 +517,7 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
     try {
       await updateUserProfile(profile.uid, { themeId: id as any });
     } catch (err) {
-      console.error(err);
+      console.error('Failed to update user profile theme');
     }
   };
 
@@ -788,7 +788,7 @@ function InviteLinksSettingsView({ profile, inviteLinks, loading, members }: Inv
     try {
       await revokeInviteLink(token);
     } catch (err) {
-      console.error('Failed to revoke invite link', err);
+      console.error('Failed to revoke invite link');
     } finally {
       setRevoking(null);
     }
@@ -968,7 +968,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
       await logout();
       window.location.href = '/signup';
     } catch (err) {
-      console.error('Failed to delete organization', err);
+      console.error('Failed to delete organization');
       alert('Failed to delete workspace.');
       setDeleting(false);
     }
@@ -1093,7 +1093,7 @@ function BillingSettingsView({ org }: { org: Organization }) {
     try {
       await updateOrganizationDetails(org.id, { billingPlan: tier });
     } catch (err) {
-      console.error(err);
+      console.error('Failed to update organization billing plan');
     } finally {
       setLoading(false);
     }
@@ -1295,7 +1295,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
     try {
       await deleteTeam(teamId);
     } catch (err) {
-      console.error('Failed to delete team', err);
+      console.error('Failed to delete team');
     }
   };
 

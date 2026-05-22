@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { UserProfile, Task, Goal, Team, Organization } from '@guild/types';
 import { HealthBadge } from './HealthBadge';
 import { Shield, Sparkles, CheckCircle2, AlertTriangle, Target, Star } from 'lucide-react';
@@ -24,69 +24,73 @@ export function PeopleWorkloadTable({
   roleFilter,
   orgFilter,
 }: PeopleWorkloadTableProps) {
-  const orgMap = Object.fromEntries(orgs.map(o => [o.id, o.name]));
-  const userMap = Object.fromEntries(users.map(u => [u.uid, u.fullName || u.username]));
+  const orgMap = useMemo(() => Object.fromEntries(orgs.map(o => [o.id, o.name])), [orgs]);
 
-  // Calculate workloads
-  const usersWithWorkload = users.map(user => {
-    // 1. Associated Team
-    const userTeam = teams.find(t => t.memberIds.includes(user.uid) || t.managerId === user.uid);
-    
-    // 2. Manager
-    let managerName = '—';
-    if (user.managerId && userMap[user.managerId]) {
-      managerName = userMap[user.managerId];
-    } else if (userTeam && userTeam.managerId !== user.uid && userMap[userTeam.managerId]) {
-      managerName = userMap[userTeam.managerId];
-    }
+  const usersWithWorkload = useMemo(() => {
+    const userMap = Object.fromEntries(users.map(u => [u.uid, u.fullName || u.username]));
 
-    // 3. Tasks
-    const userTasks = tasks.filter(t => t.assigneeIds?.includes(user.uid));
-    const completedTasks = userTasks.filter(t => t.status === 'done').length;
-    const overdueTasks = userTasks.filter(t => {
-      if (t.status === 'done' || !t.dueDate) return false;
-      try {
-        return t.dueDate.toDate() < new Date();
-      } catch {
-        return false;
+    return users.map(user => {
+      // 1. Associated Team
+      const userTeam = teams.find(t => t.memberIds.includes(user.uid) || t.managerId === user.uid);
+
+      // 2. Manager
+      let managerName = '—';
+      if (user.managerId && userMap[user.managerId]) {
+        managerName = userMap[user.managerId];
+      } else if (userTeam && userTeam.managerId !== user.uid && userMap[userTeam.managerId]) {
+        managerName = userMap[userTeam.managerId];
       }
-    }).length;
 
-    // 4. Goals
-    const userGoals = goals.filter(g => g.ownerId === user.uid);
-    const completedGoals = userGoals.filter(g => g.status === 'completed').length;
+      // 3. Tasks
+      const userTasks = tasks.filter(t => t.assigneeIds?.includes(user.uid));
+      const completedTasks = userTasks.filter(t => t.status === 'done').length;
+      const overdueTasks = userTasks.filter(t => {
+        if (t.status === 'done' || !t.dueDate) return false;
+        try {
+          return t.dueDate.toDate() < new Date();
+        } catch {
+          return false;
+        }
+      }).length;
 
-    // 5. Completion %
-    const totalItems = userTasks.length + userGoals.length;
-    const completedItems = completedTasks + completedGoals;
-    const completionPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+      // 4. Goals
+      const userGoals = goals.filter(g => g.ownerId === user.uid);
+      const completedGoals = userGoals.filter(g => g.status === 'completed').length;
 
-    return {
-      ...user,
-      teamName: userTeam ? userTeam.name : '—',
-      managerName,
-      totalTasks: userTasks.length,
-      completedTasks,
-      overdueTasks,
-      totalGoals: userGoals.length,
-      completedGoals,
-      completionPct,
-      totalItems,
-    };
-  });
+      // 5. Completion %
+      const totalItems = userTasks.length + userGoals.length;
+      const completedItems = completedTasks + completedGoals;
+      const completionPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+      return {
+        ...user,
+        teamName: userTeam ? userTeam.name : '—',
+        managerName,
+        totalTasks: userTasks.length,
+        completedTasks,
+        overdueTasks,
+        totalGoals: userGoals.length,
+        completedGoals,
+        completionPct,
+        totalItems,
+      };
+    });
+  }, [users, tasks, goals, teams, orgs]);
 
   // Filter users
-  const filteredUsers = usersWithWorkload.filter(u => {
-    const matchesSearch =
-      u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.designation.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
-    const matchesOrg = orgFilter === 'all' || u.organizationId === orgFilter;
+  const filteredUsers = useMemo(() => {
+    return usersWithWorkload.filter(u => {
+      const matchesSearch =
+        u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.designation.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesSearch && matchesRole && matchesOrg;
-  });
+      const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+      const matchesOrg = orgFilter === 'all' || u.organizationId === orgFilter;
+
+      return matchesSearch && matchesRole && matchesOrg;
+    });
+  }, [usersWithWorkload, searchQuery, roleFilter, orgFilter]);
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-[--border] bg-black/10">
