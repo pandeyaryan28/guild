@@ -25,6 +25,12 @@ import {
   Sliders,
   Play,
   RotateCcw,
+  Zap,
+  Eye,
+  Send,
+  Clock,
+  Check,
+  X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -35,6 +41,7 @@ import { useProjects } from '../../hooks/useProjects';
 import { useGoals } from '../../hooks/useGoals';
 import { useTasks } from '../../hooks/useTasks';
 import { useOrgMembers } from '../../hooks/useChat';
+import { useTeams } from '../../hooks/useTeams';
 
 import { CreateProjectModal } from '../projects/CreateProjectModal';
 import { CreateGoalModal } from '../goals/CreateGoalModal';
@@ -50,6 +57,7 @@ import {
   STATUS_CONFIG,
   STATUSES,
   PRIORITY_CONFIG,
+  addComment,
 } from '../../lib/tasks';
 import type { Task, TaskStatus, TaskPriority, ActorInfo } from '../../lib/tasks';
 import type { Project } from '../../lib/projects';
@@ -150,6 +158,7 @@ export function WorkspacePage() {
 
   // ─── States ────────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = React.useState<'focus' | 'kanban' | 'table'>('focus');
+  const [activeScope, setActiveScope] = React.useState<'my' | 'assigned' | 'review' | 'team' | 'all_active' | 'all'>('my');
   const [quickInput, setQuickInput] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -170,6 +179,7 @@ export function WorkspacePage() {
   const { projects, loading: projectsLoading } = useProjects(orgId);
   const { goals, loading: goalsLoading } = useGoals(orgId);
   const { tasks, loading: tasksLoading } = useTasks(orgId);
+  const { teams } = useTeams(orgId);
   const members = useOrgMembers(orgId);
 
   // Sidebar detail panel
@@ -189,6 +199,50 @@ export function WorkspacePage() {
     });
     return map;
   }, [members]);
+
+  // Team tracking for managers
+  const teamMemberIds = React.useMemo(() => {
+    if (!user) return [];
+    const directReportIds = members
+      .filter((m) => m.managerId === user.uid)
+      .map((m) => m.uid);
+
+    const managedTeamMemberIds = teams
+      .filter((t) => t.managerId === user.uid)
+      .flatMap((t) => t.memberIds);
+
+    const allIds = new Set([...directReportIds, ...managedTeamMemberIds]);
+    allIds.delete(user.uid);
+    return Array.from(allIds);
+  }, [members, teams, user]);
+
+  const isManager = React.useMemo(() => {
+    return (
+      userProfile?.isManager ||
+      userProfile?.role === 'owner' ||
+      (user?.uid ? teams.some((t) => t.managerId === user.uid) : false)
+    );
+  }, [userProfile, teams, user]);
+
+  // Global Scoped Tasks
+  const scopedTasks = React.useMemo(() => {
+    const myUid = user?.uid ?? '';
+    switch (activeScope) {
+      case 'my':
+        return tasks.filter((t) => t.assigneeIds.includes(myUid));
+      case 'assigned':
+        return tasks.filter((t) => t.creatorId === myUid && t.assigneeIds.some(id => id !== myUid));
+      case 'review':
+        return tasks.filter((t) => t.creatorId === myUid && t.status === 'review');
+      case 'team':
+        return tasks.filter((t) => t.assigneeIds.some((id) => teamMemberIds.includes(id)));
+      case 'all_active':
+        return tasks.filter((t) => t.status !== 'done');
+      case 'all':
+      default:
+        return tasks;
+    }
+  }, [tasks, activeScope, user, teamMemberIds]);
 
   // Tag parsing preview as the user types
   const parsedPreview = React.useMemo(() => {
@@ -238,10 +292,57 @@ export function WorkspacePage() {
     }
   };
 
-  // Toggle complete (todo <-> done)
+  // Toggle complete (todo <-> done/review)
   const handleToggleComplete = async (task: Task) => {
-    const targetStatus: TaskStatus = task.status === 'done' ? 'todo' : 'done';
+    let targetStatus: TaskStatus;
+    if (task.status === 'done' || task.status === 'review') {
+      targetStatus = 'todo';
+    } else {
+      targetStatus = task.creatorId !== actor.uid ? 'review' : 'done';
+    }
     await handleStatusChange(task, targetStatus);
+  };
+
+  // Inline approval flow
+  const handleApproveTask = async (task: Task) => {
+    if (!orgId) return;
+    try {
+      await moveTask(task.id, orgId, 'done', task.orderIndex || 0, task.status, actor);
+      await addComment({
+        taskId: task.id,
+        orgId,
+        authorId: actor.uid,
+        authorName: actor.name,
+        authorUsername: userProfile?.username || actor.name,
+        body: 'Approved! Task is marked as Done.',
+        mentions: [],
+        notifyIds: task.assigneeIds.filter((id) => id !== actor.uid),
+        taskTitle: task.title,
+      });
+    } catch (err) {
+      console.error('Failed to approve task', err);
+    }
+  };
+
+  // Inline revision request flow
+  const handleRequestChanges = async (task: Task, commentText: string = 'Changes requested.') => {
+    if (!orgId) return;
+    try {
+      await addComment({
+        taskId: task.id,
+        orgId,
+        authorId: actor.uid,
+        authorName: actor.name,
+        authorUsername: userProfile?.username || actor.name,
+        body: `Re-opened: ${commentText}`,
+        mentions: [],
+        notifyIds: task.assigneeIds.filter((id) => id !== actor.uid),
+        taskTitle: task.title,
+      });
+      await moveTask(task.id, orgId, 'todo', task.orderIndex || 0, task.status, actor);
+    } catch (err) {
+      console.error('Failed to request changes', err);
+    }
   };
 
   // Status cycling for easy Kanban clicks
@@ -250,7 +351,12 @@ export function WorkspacePage() {
     let nextIdx = direction === 'forward' ? idx + 1 : idx - 1;
     if (nextIdx >= STATUSES.length) nextIdx = 0;
     if (nextIdx < 0) nextIdx = STATUSES.length - 1;
-    await handleStatusChange(task, STATUSES[nextIdx]);
+    
+    let targetStatus = STATUSES[nextIdx];
+    if (targetStatus === 'done' && task.creatorId !== actor.uid) {
+      targetStatus = 'review';
+    }
+    await handleStatusChange(task, targetStatus);
   };
 
   // Inline delete task
@@ -266,12 +372,12 @@ export function WorkspacePage() {
 
   // Total Task Calculations
   const stats = React.useMemo(() => {
-    const active = tasks.filter((t) => !t.parentTaskId);
+    const active = scopedTasks.filter((t) => !t.parentTaskId);
     const completed = active.filter((t) => t.status === 'done').length;
     const rate = active.length > 0 ? Math.round((completed / active.length) * 100) : 0;
     const focusCapacity = active.filter((t) => ['high', 'urgent'].includes(t.priority) && t.status !== 'done').length;
     return { total: active.length, completed, rate, focusCapacity };
-  }, [tasks]);
+  }, [scopedTasks]);
 
   if (!orgId) {
     return (
@@ -282,7 +388,7 @@ export function WorkspacePage() {
   }
 
   // ─── Filtered Tasks lists ──────────────────────────────────────────────────
-  const rootTasks = tasks.filter((t) => !t.parentTaskId);
+  const rootTasks = scopedTasks.filter((t) => !t.parentTaskId);
 
   return (
     <div className="flex h-full overflow-hidden bg-background">
@@ -290,37 +396,41 @@ export function WorkspacePage() {
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative">
         
         {/* ─── Control Header ─── */}
-        <div className="flex-shrink-0 border-b border-border-default bg-surface/50 backdrop-blur-md px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex-shrink-0 border-b border-border-default bg-surface/30 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20 shadow-[0_0_15px_rgba(var(--primary),0.1)] border border-primary/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/30 border border-border/10">
               <LayoutGrid className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold text-foreground tracking-tight leading-tight">Workspace OS</h1>
-              <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Cockpit Execution · Visual Sprint · Data Analytics</p>
+              <h1 className="text-sm font-bold text-foreground tracking-tight leading-tight">Workspace OS</h1>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Cockpit Execution · Visual Sprint · Data Analytics</p>
             </div>
           </div>
 
           {/* View Tab Selector */}
-          <div className="flex bg-accent/20 p-1 rounded-xl border border-border/10 w-fit self-start md:self-auto shadow-inner">
+          <div className="flex bg-accent/25 p-1 rounded-xl border border-border/10 w-fit self-start md:self-auto shadow-inner">
             {[
-              { id: 'focus', label: '⚡ Focus Flow' },
-              { id: 'kanban', label: '📋 Omni Kanban' },
-              { id: 'table', label: '🔍 Command Control' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={cn(
-                  'px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all duration-200 relative',
-                  activeTab === tab.id
-                    ? 'bg-surface text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
+              { id: 'focus', label: 'Focus Flow', icon: Zap },
+              { id: 'kanban', label: 'Omni Kanban', icon: FolderKanban },
+              { id: 'table', label: 'Command Control', icon: SlidersHorizontal },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all duration-200 relative',
+                    activeTab === tab.id
+                      ? 'bg-surface text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Action Hub */}
@@ -351,6 +461,50 @@ export function WorkspacePage() {
               <Plus className="h-3.5 w-3.5 mr-1" />
               Add Task
             </Button>
+          </div>
+        </div>
+
+        {/* ─── Global Scope Selector Bar ─── */}
+        <div className="flex-shrink-0 border-b border-border-default bg-surface/10 px-6 py-2 flex flex-wrap items-center justify-between gap-3 text-[11px]">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {[
+              { id: 'my', label: 'My Tasks', icon: CheckSquare },
+              { id: 'assigned', label: 'Assigned to Others', icon: Send },
+              { id: 'review', label: 'Awaiting Review', icon: Eye, count: tasks.filter(t => t.creatorId === user?.uid && t.status === 'review').length },
+              isManager && { id: 'team', label: 'Team Tasks', icon: Users },
+              { id: 'all_active', label: 'All Active', icon: ListTodo },
+              { id: 'all', label: 'All Workspace', icon: LayoutGrid },
+            ].filter(Boolean).map((scope: any) => {
+              const Icon = scope.icon;
+              const active = activeScope === scope.id;
+              return (
+                <button
+                  key={scope.id}
+                  onClick={() => setActiveScope(scope.id)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold tracking-tight transition-all duration-200',
+                    active
+                      ? 'bg-primary/15 text-primary border border-primary/20'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/20'
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{scope.label}</span>
+                  {scope.count !== undefined && scope.count > 0 && (
+                    <span className={cn(
+                      'px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none',
+                      active ? 'bg-primary/25 text-primary' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                    )}>
+                      {scope.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          
+          <div className="text-[9px] font-bold text-text-muted uppercase tracking-widest">
+            Scope: {activeScope.replace('_', ' ')}
           </div>
         </div>
 
@@ -521,13 +675,13 @@ export function WorkspacePage() {
                     className="grid grid-cols-1 lg:grid-cols-3 gap-6"
                   >
                     {/* Focus Bucket A: Critical Focus (High/Urgent Priority) */}
-                    <div className="rounded-2xl border border-red-500/20 bg-red-950/5 shadow-lg flex flex-col h-fit">
-                      <div className="px-5 py-4 border-b border-red-500/20 flex items-center justify-between">
+                    <div className="rounded-2xl border border-red-500/15 bg-surface/40 shadow-sm flex flex-col h-fit">
+                      <div className="px-5 py-4 border-b border-red-500/10 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-2 rounded-full bg-red-500 animate-ping" />
-                          <h2 className="text-xs font-bold uppercase tracking-wider text-red-400">⚡ Critical Focus</h2>
+                          <h2 className="text-xs font-bold uppercase tracking-wider text-red-400">Critical Focus</h2>
                         </div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/25">
                           {rootTasks.filter((t) => ['high', 'urgent'].includes(t.priority) && t.status !== 'done').length}
                         </span>
                       </div>
@@ -552,13 +706,13 @@ export function WorkspacePage() {
                     </div>
 
                     {/* Focus Bucket B: Scheduled Actions (Due dates) */}
-                    <div className="rounded-2xl border border-violet-500/20 bg-violet-950/5 shadow-lg flex flex-col h-fit">
-                      <div className="px-5 py-4 border-b border-violet-500/20 flex items-center justify-between">
+                    <div className="rounded-2xl border border-violet-500/15 bg-surface/40 shadow-sm flex flex-col h-fit">
+                      <div className="px-5 py-4 border-b border-violet-500/10 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-3.5 w-3.5 text-violet-400" />
-                          <h2 className="text-xs font-bold uppercase tracking-wider text-violet-400">📅 Scheduled Actions</h2>
+                          <h2 className="text-xs font-bold uppercase tracking-wider text-violet-400">Scheduled Actions</h2>
                         </div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/25">
                           {rootTasks.filter((t) => t.dueDate && t.status !== 'done' && !['high', 'urgent'].includes(t.priority)).length}
                         </span>
                       </div>
@@ -583,11 +737,11 @@ export function WorkspacePage() {
                     </div>
 
                     {/* Focus Bucket C: Quick Capture / Unscheduled Backlog */}
-                    <div className="rounded-2xl border border-border-default bg-surface/50 shadow-lg flex flex-col h-fit">
+                    <div className="rounded-2xl border border-border-default bg-surface/40 shadow-sm flex flex-col h-fit">
                       <div className="px-5 py-4 border-b border-border-default flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <CheckSquare className="h-3.5 w-3.5 text-muted-foreground" />
-                          <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">📥 Unscheduled Backlog</h2>
+                          <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Unscheduled Backlog</h2>
                         </div>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/20">
                           {rootTasks.filter((t) => !t.dueDate && t.status !== 'done' && !['high', 'urgent'].includes(t.priority)).length}
@@ -646,9 +800,16 @@ export function WorkspacePage() {
                           <div className="flex-1 p-3 space-y-3 overflow-y-auto">
                             {colsTasks.length === 0 ? (
                               <div className="flex flex-col items-center justify-center py-16 text-center">
-                                <span className="text-2xl opacity-15">✓</span>
+                                <span className="text-2xl opacity-15 text-muted-foreground">✓</span>
                                 <p className="text-[10px] text-text-muted mt-1">Status holds no active tasks</p>
                               </div>
+                            ) : status === 'done' ? (
+                              <DoneTasksLane
+                                tasks={colsTasks}
+                                onSelect={(taskId) => setSearchParams({ task: taskId })}
+                                onDelete={(taskId) => handleDeleteTask(taskId)}
+                                onToggle={(task) => handleToggleComplete(task)}
+                              />
                             ) : (
                               colsTasks.map((task) => (
                                 <KanbanCard
@@ -663,6 +824,9 @@ export function WorkspacePage() {
                                   onSelect={() => setSearchParams({ task: task.id })}
                                   onDelete={() => handleDeleteTask(task.id)}
                                   subStats={getSubtaskStats(task.id)}
+                                  actor={actor}
+                                  onApprove={() => handleApproveTask(task)}
+                                  onReject={(comment) => handleRequestChanges(task, comment)}
                                 />
                               ))
                             )}
@@ -829,21 +993,23 @@ export function WorkspacePage() {
                                     className="hover:bg-accent/15 transition-colors cursor-pointer group"
                                   >
                                     <td className="px-5 py-3.5" onClick={() => setSearchParams({ task: task.id })}>
-                                      <div className="flex items-center gap-3">
+                                      <div className="flex items-start gap-3">
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleToggleComplete(task);
                                           }}
-                                          className="text-text-muted hover:text-primary transition-transform active:scale-95"
+                                          className="text-text-muted hover:text-primary transition-transform active:scale-95 mt-0.5"
                                         >
                                           {task.status === 'done' ? (
                                             <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                                          ) : task.status === 'review' ? (
+                                            <Clock className="h-4 w-4 text-amber-500 animate-pulse" />
                                           ) : (
                                             <Circle className="h-4 w-4 text-zinc-400" />
                                           )}
                                         </button>
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                           <p className={cn(
                                             'font-semibold text-foreground truncate max-w-[280px]',
                                             task.status === 'done' && 'line-through text-muted-foreground font-medium'
@@ -854,6 +1020,34 @@ export function WorkspacePage() {
                                             <p className="text-[10px] text-text-muted mt-0.5">
                                               Checklist: {getSubtaskStats(task.id)!.completed} / {getSubtaskStats(task.id)!.total}
                                             </p>
+                                          )}
+                                          {task.status === 'review' && task.creatorId === actor.uid && (
+                                            <div 
+                                              onClick={(e) => e.stopPropagation()}
+                                              className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px]"
+                                            >
+                                              <span className="text-amber-500 font-bold uppercase tracking-wider text-[8px] flex items-center gap-1">
+                                                <Clock className="h-2.5 w-2.5 shrink-0" />
+                                                <span>Awaiting Review:</span>
+                                              </span>
+                                              <button
+                                                onClick={() => handleApproveTask(task)}
+                                                className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors border border-emerald-500/20 bg-emerald-500/5 px-1.5 py-0.5 rounded active:scale-95"
+                                              >
+                                                Approve
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  const reason = window.prompt('Enter reason for requesting changes:', 'Changes requested.');
+                                                  if (reason !== null) {
+                                                    handleRequestChanges(task, reason);
+                                                  }
+                                                }}
+                                                className="text-amber-400 hover:text-amber-300 font-bold transition-colors border border-amber-500/20 bg-amber-500/5 px-1.5 py-0.5 rounded active:scale-95"
+                                              >
+                                                Request Changes
+                                              </button>
+                                            </div>
                                           )}
                                         </div>
                                       </div>
@@ -915,8 +1109,9 @@ export function WorkspacePage() {
                                           </span>
                                         )}
                                         {matchedGoal && (
-                                          <span className="text-[9px] font-bold text-violet-400 truncate max-w-[150px]">
-                                            🎯 {matchedGoal.title}
+                                          <span className="text-[9px] font-bold text-violet-400 truncate max-w-[150px] flex items-center gap-1">
+                                            <Target className="h-2.5 w-2.5 text-violet-400 shrink-0" />
+                                            <span>{matchedGoal.title}</span>
                                           </span>
                                         )}
                                         {!matchedProj && !matchedGoal && (
@@ -1087,8 +1282,9 @@ function FocusTaskCard({
 
         {/* Goal Scope Badge */}
         {matchedGoal && (
-          <span className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 text-[9px] font-bold leading-none truncate max-w-[110px]">
-            🎯 {matchedGoal.title}
+          <span className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 text-[9px] font-bold leading-none flex items-center gap-1 truncate max-w-[110px]">
+            <Target className="h-2.5 w-2.5 text-violet-400 shrink-0" />
+            <span>{matchedGoal.title}</span>
           </span>
         )}
 
@@ -1114,6 +1310,9 @@ interface KanbanCardProps {
   onSelect: () => void;
   onDelete: () => void;
   subStats: { completed: number; total: number } | null;
+  actor: ActorInfo;
+  onApprove: () => void;
+  onReject: (comment: string) => void;
 }
 
 function KanbanCard({
@@ -1127,10 +1326,17 @@ function KanbanCard({
   onSelect,
   onDelete,
   subStats,
+  actor,
+  onApprove,
+  onReject,
 }: KanbanCardProps) {
   const matchedProj = projects.find((p) => p.id === task.projectId);
   const matchedGoal = goals.find((g) => g.id === task.goalId);
   const due = task.dueDate?.toDate?.();
+
+  const isReviewer = task.status === 'review' && task.creatorId === actor.uid;
+  const [isRejecting, setIsRejecting] = React.useState(false);
+  const [rejectComment, setRejectComment] = React.useState('');
 
   return (
     <div
@@ -1151,6 +1357,8 @@ function KanbanCard({
         >
           {task.status === 'done' ? (
             <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400" />
+          ) : task.status === 'review' ? (
+            <Clock className="h-4.5 w-4.5 text-amber-500 animate-pulse" />
           ) : (
             <Circle className="h-4.5 w-4.5 text-zinc-400" />
           )}
@@ -1194,8 +1402,9 @@ function KanbanCard({
         )}
 
         {matchedGoal && (
-          <span className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 text-[8px] font-bold leading-none truncate max-w-[90px]">
-            🎯 {matchedGoal.title}
+          <span className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 text-[8px] font-bold leading-none flex items-center gap-0.5 truncate max-w-[90px]">
+            <Target className="h-2.5 w-2.5 text-violet-400 shrink-0" />
+            <span>{matchedGoal.title}</span>
           </span>
         )}
 
@@ -1205,6 +1414,76 @@ function KanbanCard({
           </span>
         )}
       </div>
+
+      {/* Inline Review control panel */}
+      {isReviewer && (
+        <div 
+          onClick={(e) => e.stopPropagation()} 
+          className="border border-amber-500/20 bg-amber-500/5 rounded-xl p-2.5 flex flex-col gap-2 mt-1 text-[11px]"
+        >
+          <div className="flex items-center gap-1.5 text-amber-500 font-bold uppercase tracking-wider text-[9px]">
+            <Clock className="h-3 w-3 animate-pulse" />
+            <span>Awaiting Your Review</span>
+          </div>
+          
+          {!isRejecting ? (
+            <div className="flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onApprove();
+                }}
+                className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition-colors flex items-center justify-center gap-1 active:scale-[0.98]"
+              >
+                <Check className="h-3 w-3" />
+                <span>Approve</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsRejecting(true);
+                }}
+                className="flex-1 py-1.5 px-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 font-bold hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-1 active:scale-[0.98]"
+              >
+                <X className="h-3 w-3" />
+                <span>Reject</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <input
+                type="text"
+                placeholder="Why request changes?..."
+                value={rejectComment}
+                onChange={(e) => setRejectComment(e.target.value)}
+                className="w-full bg-accent/20 border border-border/10 rounded-lg px-2 py-1 text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-amber-500/40"
+              />
+              <div className="flex gap-1.5 justify-end">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsRejecting(false);
+                  }}
+                  className="py-1 px-2 rounded bg-accent/30 text-text-muted hover:text-foreground font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReject(rejectComment || 'Changes requested.');
+                    setIsRejecting(false);
+                    setRejectComment('');
+                  }}
+                  className="py-1 px-2.5 rounded bg-amber-500 text-black font-bold hover:bg-amber-600 transition-colors"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Kanban action toolbar */}
       <div className="flex items-center justify-between border-t border-border/10 pt-2.5 mt-1">
@@ -1249,6 +1528,78 @@ function KanbanCard({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface DoneTasksLaneProps {
+  tasks: Task[];
+  onSelect: (taskId: string) => void;
+  onDelete: (taskId: string) => void;
+  onToggle: (task: Task) => void;
+}
+
+function DoneTasksLane({ tasks, onSelect, onDelete, onToggle }: DoneTasksLaneProps) {
+  const [isExpanded, setIsExpanded] = React.useState(false);
+
+  return (
+    <div className="space-y-3">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full py-2.5 px-3 rounded-xl border border-border-default bg-surface/50 hover:bg-accent/15 transition-all text-xs font-bold text-muted-foreground flex items-center justify-between shadow-sm active:scale-[0.98]"
+      >
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+          <span>{isExpanded ? 'Hide Completed Tasks' : 'Show Completed Tasks'}</span>
+        </div>
+        <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-black leading-none border border-emerald-500/25">
+          {tasks.length}
+        </span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden space-y-1.5 pt-1"
+          >
+            {tasks.map((task) => (
+              <div
+                key={task.id}
+                onClick={() => onSelect(task.id)}
+                className="group flex items-center justify-between py-2 px-2.5 rounded-lg bg-surface/40 hover:bg-accent/10 border border-transparent hover:border-border-default transition-all cursor-pointer text-xs"
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggle(task);
+                    }}
+                    className="shrink-0 text-emerald-400 hover:text-muted-foreground transition-colors"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                  </button>
+                  <span className="font-medium text-muted-foreground line-through truncate flex-1">
+                    {task.title}
+                  </span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(task.id);
+                  }}
+                  className="p-1 rounded text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                  title="Delete"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
