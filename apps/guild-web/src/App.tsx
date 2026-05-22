@@ -30,6 +30,7 @@ import { TasksPage } from './pages/tasks/TasksPage';
 import { RequestsPage } from './pages/requests/RequestsPage';
 import { PeoplePage } from './pages/people/PeoplePage';
 import { SettingsPage } from './pages/workspace/SettingsPage';
+import { CalendarPage } from './pages/calendar/CalendarPage';
 
 // Execution OS
 import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
@@ -176,6 +177,18 @@ export default function App() {
               <ProtectedRoute>
                 <DashboardApp>
                   <ReportsPage />
+                </DashboardApp>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Calendar */}
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <DashboardApp>
+                  <CalendarPage />
                 </DashboardApp>
               </ProtectedRoute>
             }

@@ -21,9 +21,10 @@ interface CreateTaskModalProps {
   // Execution OS — optional scope defaults
   defaultProjectId?: string;
   defaultGoalId?: string;
+  defaultDueDate?: string;
 }
 
-export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', actor, labels = [], defaultProjectId, defaultGoalId }: CreateTaskModalProps) {
+export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', actor, labels = [], defaultProjectId, defaultGoalId, defaultDueDate }: CreateTaskModalProps) {
   const members = useOrgMembers(orgId);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -31,7 +32,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
   const [priority, setPriority] = React.useState<TaskPriority>('none');
   const [assigneeIds, setAssigneeIds] = React.useState<string[]>([]);
   const [labelIds, setLabelIds] = React.useState<string[]>([]);
-  const [dueDate, setDueDate] = React.useState('');
+  const [dueDate, setDueDate] = React.useState(defaultDueDate || '');
   const [saving, setSaving] = React.useState(false);
   // New label creation
   const [newLabelName, setNewLabelName] = React.useState('');
@@ -39,8 +40,8 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
   const [showNewLabel, setShowNewLabel] = React.useState(false);
 
   React.useEffect(() => {
-    if (open) { setStatus(defaultStatus); setTitle(''); setDescription(''); setAssigneeIds([]); setLabelIds([]); setDueDate(''); setPriority('none'); }
-  }, [open, defaultStatus]);
+    if (open) { setStatus(defaultStatus); setTitle(''); setDescription(''); setAssigneeIds([]); setLabelIds([]); setDueDate(defaultDueDate || ''); setPriority('none'); }
+  }, [open, defaultStatus, defaultDueDate]);
 
   React.useEffect(() => {
     if (!open) return;

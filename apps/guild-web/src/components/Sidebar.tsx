@@ -334,7 +334,11 @@ export function Sidebar() {
                 />
               )}
             </NavLink>
-            <NavItem icon={Calendar} label="Calendar" collapsed={collapsed} />
+            <NavLink to="/calendar">
+              {({ isActive }) => (
+                <NavItem icon={Calendar} label="Calendar" active={isActive} collapsed={collapsed} />
+              )}
+            </NavLink>
             <NavLink to="/people">
               {({ isActive }) => (
                 <NavItem icon={Users} label="People" active={isActive} collapsed={collapsed} />
