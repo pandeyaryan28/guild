@@ -10,6 +10,8 @@ export interface KpiCardData {
   icon?: React.ElementType;
   accent?: 'emerald' | 'blue' | 'amber' | 'red' | 'violet' | 'default';
   trend?: 'up' | 'down' | 'neutral';
+  onClick?: () => void;
+  active?: boolean;
 }
 
 const ACCENT_STYLES: Record<string, { bg: string; text: string; ring: string }> = {
@@ -32,7 +34,16 @@ function KpiCard({ card, delay }: { card: KpiCardData; delay: number }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.3 }}
-      className="relative rounded-xl border border-border-default bg-card p-5 hover:border-primary/30 hover:bg-surface transition-all duration-200 hover:shadow-lg hover:shadow-black/10 group"
+      onClick={card.onClick}
+      className={cn(
+        "relative rounded-xl border p-5 transition-all duration-200 group text-left",
+        card.onClick 
+          ? "cursor-pointer hover:border-primary/40 hover:bg-surface hover:shadow-lg hover:shadow-black/10" 
+          : "border-border-default bg-card hover:border-primary/30 hover:bg-surface hover:shadow-lg hover:shadow-black/10",
+        card.active 
+          ? "ring-2 ring-primary border-primary bg-surface/50 shadow-md shadow-primary/5" 
+          : ""
+      )}
     >
       <div className="flex items-start justify-between mb-3">
         {Icon && (

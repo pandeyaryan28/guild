@@ -12,14 +12,20 @@ import { StatusDistribution } from './StatusDistribution';
 import { ActivityTable } from './ActivityTable';
 import type { ReportFiltersState } from './types';
 import type { UserProfile } from '../../lib/firestore';
+import { useTasks } from '../../hooks/useTasks';
+import { ReportTasksList } from './ReportTasksList';
+import type { Task } from '../../lib/tasks';
 
 interface Props {
   orgId: string;
   userId: string;
   filters: ReportFiltersState;
+  onSelectTask: (task: Task) => void;
 }
 
-export function ProjectReportTab({ orgId, userId, filters }: Props) {
+type KpiType = 'assigned' | 'completed' | 'in_progress' | 'overdue';
+
+export function ProjectReportTab({ orgId, userId, filters, onSelectTask }: Props) {
   const { projects, loading: projLoading } = useProjects(orgId);
   const [selectedProjectId, setSelectedProjectId] = React.useState<string>('');
   const [data, setData] = React.useState<{
@@ -30,6 +36,10 @@ export function ProjectReportTab({ orgId, userId, filters }: Props) {
   const [activities, setActivities] = React.useState<RecentActivityItem[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [actLoading, setActLoading] = React.useState(false);
+  const [selectedKpi, setSelectedKpi] = React.useState<KpiType | null>(null);
+
+  // Load real-time tasks to display list matching KPI selection
+  const { tasks: allOrgTasks } = useTasks(orgId);
 
   // Projects the user owns or is a member of
   const myProjects = projects.filter(
@@ -44,6 +54,54 @@ export function ProjectReportTab({ orgId, userId, filters }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myProjects.length]);
 
+  const projectTasks = React.useMemo(() => {
+    if (!selectedProjectId) return [];
+    return allOrgTasks.filter((t) => t.projectId === selectedProjectId);
+  }, [allOrgTasks, selectedProjectId]);
+
+  const filteredTasks = React.useMemo(() => {
+    const to = new Date();
+    const from = new Date();
+    if (filters.datePreset === '7d') from.setDate(from.getDate() - 7);
+    else if (filters.datePreset === '30d') from.setDate(from.getDate() - 30);
+    else if (filters.datePreset === '90d') from.setDate(from.getDate() - 90);
+    else {
+      from.setTime(filters.customFrom ? filters.customFrom.getTime() : 0);
+      to.setTime(filters.customTo ? filters.customTo.getTime() : to.getTime());
+    }
+
+    return projectTasks.filter((t) => {
+      if (filters.priority !== 'all' && t.priority !== filters.priority) return false;
+      if (filters.status !== 'all' && t.status !== filters.status) return false;
+      
+      const updated = t.updatedAt?.toDate?.() ?? new Date(0);
+      const created = t.createdAt?.toDate?.() ?? new Date(0);
+      return (updated >= from && updated <= to) || (created >= from && created <= to);
+    });
+  }, [projectTasks, filters]);
+
+  const displayedTasks = React.useMemo(() => {
+    if (!selectedKpi) return [];
+    if (selectedKpi === 'assigned') return filteredTasks;
+    if (selectedKpi === 'completed') return filteredTasks.filter((t) => t.status === 'done');
+    if (selectedKpi === 'in_progress') return filteredTasks.filter((t) => t.status === 'in_progress');
+    if (selectedKpi === 'overdue') {
+      return projectTasks.filter((t) => {
+        if (!t.dueDate || t.status === 'done') return false;
+        return t.dueDate.toDate() < new Date();
+      });
+    }
+    return [];
+  }, [selectedKpi, filteredTasks, projectTasks]);
+
+  const listTitle = React.useMemo(() => {
+    if (selectedKpi === 'assigned') return 'Total Project Tasks';
+    if (selectedKpi === 'completed') return 'Completed Project Tasks';
+    if (selectedKpi === 'in_progress') return 'In Progress Project Tasks';
+    if (selectedKpi === 'overdue') return 'Overdue Project Tasks';
+    return '';
+  }, [selectedKpi]);
+
   // Fetch project report data when project or filters change
   React.useEffect(() => {
     if (!selectedProjectId) return;
@@ -55,6 +113,7 @@ export function ProjectReportTab({ orgId, userId, filters }: Props) {
       status: filters.status,
       priority: filters.priority,
     }).then((d) => { setData(d); setLoading(false); }).catch(() => setLoading(false));
+    setSelectedKpi(null); // Reset card selection on project change
   }, [orgId, selectedProjectId, filters.datePreset, filters.customFrom, filters.customTo, filters.status, filters.priority]);
 
   // Resolve member profiles from task assignees
@@ -94,10 +153,38 @@ export function ProjectReportTab({ orgId, userId, filters }: Props) {
 
   const kpis: KpiCardData[] = data
     ? [
-        { label: 'Total Tasks', value: data.totalTasks, icon: CheckSquare, accent: 'blue' },
-        { label: 'Completed', value: data.completedTasks, icon: CheckSquare, accent: 'emerald' },
-        { label: 'In Progress', value: data.inProgressTasks, icon: Clock, accent: 'violet' },
-        { label: 'Overdue', value: data.overdueTasks, icon: AlertTriangle, accent: 'red' },
+        { 
+          label: 'Total Tasks', 
+          value: data.totalTasks, 
+          icon: CheckSquare, 
+          accent: 'blue',
+          onClick: () => setSelectedKpi(selectedKpi === 'assigned' ? null : 'assigned'),
+          active: selectedKpi === 'assigned'
+        },
+        { 
+          label: 'Completed', 
+          value: data.completedTasks, 
+          icon: CheckSquare, 
+          accent: 'emerald',
+          onClick: () => setSelectedKpi(selectedKpi === 'completed' ? null : 'completed'),
+          active: selectedKpi === 'completed'
+        },
+        { 
+          label: 'In Progress', 
+          value: data.inProgressTasks, 
+          icon: Clock, 
+          accent: 'violet',
+          onClick: () => setSelectedKpi(selectedKpi === 'in_progress' ? null : 'in_progress'),
+          active: selectedKpi === 'in_progress'
+        },
+        { 
+          label: 'Overdue', 
+          value: data.overdueTasks, 
+          icon: AlertTriangle, 
+          accent: 'red',
+          onClick: () => setSelectedKpi(selectedKpi === 'overdue' ? null : 'overdue'),
+          active: selectedKpi === 'overdue'
+        },
         { label: 'Completion Rate', value: `${data.completionRate}%`, icon: TrendingUp, accent: 'emerald' },
       ]
     : [];
@@ -143,6 +230,15 @@ export function ProjectReportTab({ orgId, userId, filters }: Props) {
       ) : data ? (
         <>
           <KpiCards cards={kpis} />
+
+          {selectedKpi && (
+            <ReportTasksList
+              tasks={displayedTasks}
+              title={listTitle}
+              onSelectTask={onSelectTask}
+              orgId={orgId}
+            />
+          )}
 
           {/* Members involved */}
           {memberProfiles.length > 0 && (

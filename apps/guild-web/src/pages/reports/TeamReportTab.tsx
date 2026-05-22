@@ -12,14 +12,20 @@ import { ActivityTable } from './ActivityTable';
 import type { ReportFiltersState } from './types';
 import type { UserProfile } from '../../lib/firestore';
 import type { Team } from '@guild/types';
+import { useTasks } from '../../hooks/useTasks';
+import { ReportTasksList } from './ReportTasksList';
+import type { Task } from '../../lib/tasks';
 
 interface Props {
   orgId: string;
   managerId: string;
   filters: ReportFiltersState;
+  onSelectTask: (task: Task) => void;
 }
 
-export function TeamReportTab({ orgId, managerId, filters }: Props) {
+type KpiType = 'assigned' | 'completed' | 'in_progress' | 'overdue';
+
+export function TeamReportTab({ orgId, managerId, filters, onSelectTask }: Props) {
   const [teams, setTeams] = React.useState<Team[]>([]);
   const [memberProfiles, setMemberProfiles] = React.useState<UserProfile[]>([]);
   const [data, setData] = React.useState<{
@@ -29,6 +35,10 @@ export function TeamReportTab({ orgId, managerId, filters }: Props) {
   const [activities, setActivities] = React.useState<RecentActivityItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [actLoading, setActLoading] = React.useState(true);
+  const [selectedKpi, setSelectedKpi] = React.useState<KpiType | null>(null);
+
+  // Load real-time tasks to display list matching KPI selection
+  const { tasks: allOrgTasks } = useTasks(orgId);
 
   // Listen to managed teams
   React.useEffect(() => {
@@ -48,6 +58,58 @@ export function TeamReportTab({ orgId, managerId, filters }: Props) {
       .catch(console.error);
   }, [teams]);
 
+  const memberIds = React.useMemo(() => {
+    return memberProfiles.map((m) => m.uid);
+  }, [memberProfiles]);
+
+  const teamTasks = React.useMemo(() => {
+    if (memberIds.length === 0) return [];
+    return allOrgTasks.filter((t) => t.assigneeIds.some((id) => memberIds.includes(id)));
+  }, [allOrgTasks, memberIds]);
+
+  const filteredTasks = React.useMemo(() => {
+    const to = new Date();
+    const from = new Date();
+    if (filters.datePreset === '7d') from.setDate(from.getDate() - 7);
+    else if (filters.datePreset === '30d') from.setDate(from.getDate() - 30);
+    else if (filters.datePreset === '90d') from.setDate(from.getDate() - 90);
+    else {
+      from.setTime(filters.customFrom ? filters.customFrom.getTime() : 0);
+      to.setTime(filters.customTo ? filters.customTo.getTime() : to.getTime());
+    }
+
+    return teamTasks.filter((t) => {
+      if (filters.priority !== 'all' && t.priority !== filters.priority) return false;
+      if (filters.status !== 'all' && t.status !== filters.status) return false;
+      
+      const updated = t.updatedAt?.toDate?.() ?? new Date(0);
+      const created = t.createdAt?.toDate?.() ?? new Date(0);
+      return (updated >= from && updated <= to) || (created >= from && created <= to);
+    });
+  }, [teamTasks, filters]);
+
+  const displayedTasks = React.useMemo(() => {
+    if (!selectedKpi) return [];
+    if (selectedKpi === 'assigned') return filteredTasks;
+    if (selectedKpi === 'completed') return filteredTasks.filter((t) => t.status === 'done');
+    if (selectedKpi === 'in_progress') return filteredTasks.filter((t) => t.status === 'in_progress');
+    if (selectedKpi === 'overdue') {
+      return teamTasks.filter((t) => {
+        if (!t.dueDate || t.status === 'done') return false;
+        return t.dueDate.toDate() < new Date();
+      });
+    }
+    return [];
+  }, [selectedKpi, filteredTasks, teamTasks]);
+
+  const listTitle = React.useMemo(() => {
+    if (selectedKpi === 'assigned') return 'Total Team Tasks';
+    if (selectedKpi === 'completed') return 'Completed Team Tasks';
+    if (selectedKpi === 'in_progress') return 'In Progress Team Tasks';
+    if (selectedKpi === 'overdue') return 'Overdue Team Tasks';
+    return '';
+  }, [selectedKpi]);
+
   // Fetch report data when member profiles are ready
   React.useEffect(() => {
     if (memberProfiles.length === 0) { setLoading(false); return; }
@@ -63,6 +125,7 @@ export function TeamReportTab({ orgId, managerId, filters }: Props) {
       },
       memberProfiles,
     ).then((d) => { setData(d); setLoading(false); }).catch(() => setLoading(false));
+    setSelectedKpi(null); // Reset selection when filters or profiles change
   }, [orgId, managerId, memberProfiles, filters.datePreset, filters.customFrom, filters.customTo, filters.status, filters.priority]);
 
   // Fetch recent team activity
@@ -95,10 +158,38 @@ export function TeamReportTab({ orgId, managerId, filters }: Props) {
   if (!data) return null;
 
   const kpis: KpiCardData[] = [
-    { label: 'Total Tasks', value: data.totalTasks, icon: CheckSquare, accent: 'blue' },
-    { label: 'Completed', value: data.completedTasks, icon: CheckSquare, accent: 'emerald' },
-    { label: 'In Progress', value: data.inProgressTasks, icon: Clock, accent: 'violet' },
-    { label: 'Overdue', value: data.overdueTasks, icon: AlertTriangle, accent: 'red' },
+    { 
+      label: 'Total Tasks', 
+      value: data.totalTasks, 
+      icon: CheckSquare, 
+      accent: 'blue',
+      onClick: () => setSelectedKpi(selectedKpi === 'assigned' ? null : 'assigned'),
+      active: selectedKpi === 'assigned'
+    },
+    { 
+      label: 'Completed', 
+      value: data.completedTasks, 
+      icon: CheckSquare, 
+      accent: 'emerald',
+      onClick: () => setSelectedKpi(selectedKpi === 'completed' ? null : 'completed'),
+      active: selectedKpi === 'completed'
+    },
+    { 
+      label: 'In Progress', 
+      value: data.inProgressTasks, 
+      icon: Clock, 
+      accent: 'violet',
+      onClick: () => setSelectedKpi(selectedKpi === 'in_progress' ? null : 'in_progress'),
+      active: selectedKpi === 'in_progress'
+    },
+    { 
+      label: 'Overdue', 
+      value: data.overdueTasks, 
+      icon: AlertTriangle, 
+      accent: 'red',
+      onClick: () => setSelectedKpi(selectedKpi === 'overdue' ? null : 'overdue'),
+      active: selectedKpi === 'overdue'
+    },
     { label: 'Team Goals', value: data.totalGoals, icon: Target, accent: 'default' },
     { label: 'Goals Done', value: data.completedGoals, icon: Target, accent: 'emerald' },
   ];
@@ -117,6 +208,16 @@ export function TeamReportTab({ orgId, managerId, filters }: Props) {
   return (
     <div className="space-y-6">
       <KpiCards cards={kpis} />
+
+      {selectedKpi && (
+        <ReportTasksList
+          tasks={displayedTasks}
+          title={listTitle}
+          onSelectTask={onSelectTask}
+          orgId={orgId}
+        />
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <StatusDistribution data={statusData} title="Team Task Status" />
         <div className="lg:col-span-2">
