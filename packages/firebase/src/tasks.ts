@@ -1,7 +1,7 @@
 import {
   collection, doc, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot, serverTimestamp,
-  Timestamp, writeBatch, getDocs,
+  Timestamp, writeBatch, getDocs, getDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notifications';
@@ -62,6 +62,30 @@ async function getNextOrderIndex(orgId: string, status: TaskStatus): Promise<num
   return ((snap.docs[0].data() as Task).orderIndex ?? 1000) + 1000;
 }
 
+export async function syncGoalProgress(goalId: string): Promise<void> {
+  const tasksSnap = await getDocs(
+    query(
+      collection(db, 'tasks'),
+      where('goalId', '==', goalId)
+    )
+  );
+  if (tasksSnap.empty) {
+    await updateDoc(doc(db, 'goals', goalId), {
+      progressRollup: 0,
+      updatedAt: serverTimestamp(),
+    });
+    return;
+  }
+  const allTasks = tasksSnap.docs.map((d) => d.data() as Task);
+  const doneTasks = allTasks.filter((t) => t.status === 'done');
+  const progressPercent = Math.round((doneTasks.length / allTasks.length) * 100);
+
+  await updateDoc(doc(db, 'goals', goalId), {
+    progressRollup: progressPercent,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 // ─── Task CRUD ────────────────────────────────────────────────────────────────
 
 export async function createTask(params: {
@@ -92,6 +116,9 @@ export async function createTask(params: {
     parentTaskId: params.parentTaskId ?? null,
   });
   await logActivity(ref.id, params.orgId, params.actor, 'created', { title: params.title });
+  if (params.goalId) {
+    await syncGoalProgress(params.goalId);
+  }
   return ref.id;
 }
 
@@ -109,6 +136,9 @@ export async function moveTask(
   newStatus: TaskStatus, newOrderIndex: number, oldStatus: TaskStatus,
   actor: ActorInfo,
 ): Promise<void> {
+  const taskDoc = await getDoc(doc(db, 'tasks', taskId));
+  const taskData = taskDoc.exists() ? (taskDoc.data() as Task) : null;
+
   const completedAtPatch =
     newStatus === 'done'
       ? { completedAt: serverTimestamp() }
@@ -121,6 +151,10 @@ export async function moveTask(
   });
   if (newStatus !== oldStatus) {
     await logActivity(taskId, orgId, actor, 'status_changed', { from: oldStatus, to: newStatus });
+  }
+
+  if (taskData?.goalId) {
+    await syncGoalProgress(taskData.goalId);
   }
 }
 
@@ -177,7 +211,14 @@ export async function updateLabels(
 }
 
 export async function deleteTask(taskId: string): Promise<void> {
+  const taskDoc = await getDoc(doc(db, 'tasks', taskId));
+  const taskData = taskDoc.exists() ? (taskDoc.data() as Task) : null;
+
   await deleteDoc(doc(db, 'tasks', taskId));
+
+  if (taskData?.goalId) {
+    await syncGoalProgress(taskData.goalId);
+  }
 }
 
 // ─── Comments ─────────────────────────────────────────────────────────────────

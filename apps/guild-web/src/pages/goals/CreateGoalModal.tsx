@@ -15,10 +15,18 @@ export function CreateGoalModal({ open, onClose, orgId }: CreateGoalModalProps) 
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [targetDate, setTargetDate] = React.useState('');
+  const [horizon, setHorizon] = React.useState<'short_term' | 'long_term'>('short_term');
+  const [recurrence, setRecurrence] = React.useState<'none' | 'daily' | 'weekly' | 'monthly'>('none');
   const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
-    if (open) { setTitle(''); setDescription(''); setTargetDate(''); }
+    if (open) {
+      setTitle('');
+      setDescription('');
+      setTargetDate('');
+      setHorizon('short_term');
+      setRecurrence('none');
+    }
   }, [open]);
 
   React.useEffect(() => {
@@ -42,6 +50,8 @@ export function CreateGoalModal({ open, onClose, orgId }: CreateGoalModalProps) 
           uid: user.uid,
           name: userProfile?.fullName || user.displayName || 'Unknown',
         },
+        horizon,
+        recurrence,
       });
       onClose();
     } finally {
@@ -78,6 +88,34 @@ export function CreateGoalModal({ open, onClose, orgId }: CreateGoalModalProps) 
               rows={3}
               className="w-full resize-none rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-foreground placeholder:text-text-muted outline-none focus:border-violet-500/50 transition-colors"
             />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Horizon</p>
+                <select
+                  value={horizon}
+                  onChange={(e) => setHorizon(e.target.value as any)}
+                  className="w-full rounded-lg border border-border-default bg-bg-primary px-3 py-1.5 text-sm text-foreground outline-none focus:border-violet-500/50 transition-colors"
+                >
+                  <option value="short_term">Short Term</option>
+                  <option value="long_term">Long Term</option>
+                </select>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Recurrence</p>
+                <select
+                  value={recurrence}
+                  onChange={(e) => setRecurrence(e.target.value as any)}
+                  className="w-full rounded-lg border border-border-default bg-bg-primary px-3 py-1.5 text-sm text-foreground outline-none focus:border-violet-500/50 transition-colors"
+                >
+                  <option value="none">One-time</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+            </div>
+
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Target Date</p>
               <input

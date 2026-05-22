@@ -138,6 +138,16 @@ export interface Project {
 // ─── Goals ────────────────────────────────────────────────────────────────────
 
 export type GoalStatus = 'active' | 'completed' | 'cancelled';
+export type GoalHorizon = 'short_term' | 'long_term';
+export type GoalRecurrence = 'none' | 'daily' | 'weekly' | 'monthly';
+
+export interface GoalCycleRecord {
+  cycleStart: Timestamp;
+  cycleEnd: Timestamp;
+  status: 'completed' | 'incomplete';
+  completedTasksCount: number;
+  totalTasksCount: number;
+}
 
 export interface Goal {
   id: string;
@@ -150,6 +160,14 @@ export interface Goal {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   completedAt?: Timestamp | null;
+
+  // Chronology features
+  horizon: GoalHorizon;
+  recurrence: GoalRecurrence;
+  currentCycleStart?: Timestamp | null;
+  completedCyclesCount?: number;
+  progressRollup?: number;
+  cycleHistory?: GoalCycleRecord[];
 }
 
 // ─── Milestones ───────────────────────────────────────────────────────────────

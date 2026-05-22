@@ -25,6 +25,8 @@ import {
   Laptop,
   Receipt,
   ClipboardList,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -45,11 +47,16 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useRequests } from '../hooks/useRequests';
 import { useTeams } from '../hooks/useTeams';
 import { useProjects } from '../hooks/useProjects';
+import { useGoals } from '../hooks/useGoals';
 import { updateRequestStatus, REQUEST_TYPE_ICONS, REQUEST_TYPE_LABELS, type OrgRequest } from '../lib/requests';
-import { type Task, moveTask } from '../lib/tasks';
+import { type Task, moveTask, createTask } from '../lib/tasks';
+import { updateGoal, type Goal } from '../lib/goals';
 import { updateUserProfile, type UserProfile } from '../lib/firestore';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { MemberProfileDrawer, avatarInitials, avatarHue } from './MemberProfileDrawer';
+import type { GoalHorizon, GoalRecurrence, GoalCycleRecord } from '@guild/types';
+import { cn } from '@/lib/utils';
 
 const RequestIconMap: Record<string, typeof ClipboardList> = {
   Stethoscope,
@@ -110,6 +117,338 @@ const PRIORITY_COLORS: Record<string, string> = {
   medium: 'text-amber-400 border-amber-400/30 bg-amber-400/5',
   low:    'text-blue-400 border-blue-400/30 bg-blue-400/5',
   none:   'text-muted-foreground border-border-default bg-bg-tertiary',
+};
+
+// ─── Chronology Streaks & Cycles Helpers ─────────────────────────────────────
+
+function calculateStreak(goal: Goal): number {
+  if (!goal.cycleHistory || goal.cycleHistory.length === 0) return 0;
+  // Sort in descending order to count backwards from the most recent cycle
+  const history = [...goal.cycleHistory].sort((a, b) => b.cycleEnd.toDate().getTime() - a.cycleEnd.toDate().getTime());
+  
+  let streak = 0;
+  for (const record of history) {
+    if (record.status === 'completed') {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function isCycleExpired(recurrence: GoalRecurrence, currentCycleStart: Timestamp | null | undefined): boolean {
+  if (!currentCycleStart || recurrence === 'none') return false;
+  const startDate = currentCycleStart.toDate();
+  const now = new Date();
+  
+  if (recurrence === 'daily') {
+    return startDate.getDate() !== now.getDate() ||
+           startDate.getMonth() !== now.getMonth() ||
+           startDate.getFullYear() !== now.getFullYear();
+  }
+  if (recurrence === 'weekly') {
+    const currentMonday = new Date(now);
+    const day = currentMonday.getDay();
+    const diff = currentMonday.getDate() - day + (day === 0 ? -6 : 1);
+    currentMonday.setDate(diff);
+    currentMonday.setHours(0, 0, 0, 0);
+    
+    return startDate < currentMonday;
+  }
+  if (recurrence === 'monthly') {
+    return startDate.getMonth() !== now.getMonth() ||
+           startDate.getFullYear() !== now.getFullYear();
+  }
+  return false;
+}
+
+// ─── Chronology Board Subcomponents ──────────────────────────────────────────
+
+interface SupportingGoalTaskItemProps {
+  task: Task;
+  orgId: string | undefined;
+  actor: { uid: string; name: string };
+  memberMap: Map<string, { fullName: string }>;
+}
+
+const SupportingGoalTaskItem = ({ task, orgId, actor, memberMap }: SupportingGoalTaskItemProps) => {
+  const [updating, setUpdating] = React.useState(false);
+  const priorityClass = PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.none;
+  const assigneeId = task.assigneeIds[0];
+  const assigneeName = assigneeId ? (memberMap.get(assigneeId)?.fullName ?? 'Unknown') : '';
+
+  const handleToggleComplete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!orgId || updating) return;
+    setUpdating(true);
+    try {
+      const nextStatus = task.status === 'done' ? 'todo' : 'done';
+      await moveTask(task.id, orgId, nextStatus, task.orderIndex, task.status, actor);
+    } catch (err) {
+      console.error('Failed to toggle task completion:', err);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-border-default/30 last:border-0 hover:bg-bg-tertiary/40 px-3 rounded-lg transition-all group/task">
+      <div className="flex items-center gap-3 min-w-0">
+        <button
+          onClick={handleToggleComplete}
+          disabled={updating}
+          className={cn(
+            "h-4 w-4 rounded border flex items-center justify-center transition-all relative shrink-0 disabled:opacity-50",
+            task.status === 'done' 
+              ? "border-emerald-500 bg-emerald-500/10 text-emerald-400" 
+              : "border-border-default/80 hover:border-primary hover:bg-primary/5 text-transparent"
+          )}
+        >
+          {updating ? (
+            <Loader2 className="h-2.5 w-2.5 animate-spin text-primary" />
+          ) : task.status === 'done' ? (
+            <Check className="h-2.5 w-2.5 stroke-[3px]" />
+          ) : (
+            <Check className="h-2.5 w-2.5 opacity-0 group-hover/task:opacity-100 group-hover/task:text-primary transition-opacity" />
+          )}
+        </button>
+        <span className={cn(
+          "text-[12px] font-medium text-foreground transition-all line-clamp-1",
+          task.status === 'done' && "line-through text-muted-foreground opacity-60"
+        )}>
+          {task.title}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0">
+        {task.priority !== 'none' && (
+          <Badge variant="outline" className={cn("h-4 text-[8px] px-1.5 font-bold uppercase tracking-wider", priorityClass)}>
+            {task.priority}
+          </Badge>
+        )}
+        {assigneeName && (
+          <div
+            title={assigneeName}
+            className="h-5 w-5 rounded-md flex items-center justify-center text-[7px] font-bold text-white shadow"
+            style={{ background: `hsl(${avatarHue(assigneeId || '')} 60% 45%)` }}
+          >
+            {avatarInitials(assigneeName)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+interface GoalDashboardCardProps {
+  goal: Goal;
+  supportingTasks: Task[];
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  inlineTaskTitle: string;
+  onInlineTaskTitleChange: (val: string) => void;
+  onAddInlineTask: () => void;
+  orgId: string | undefined;
+  actor: { uid: string; name: string };
+  memberMap: Map<string, { fullName: string }>;
+}
+
+const GoalDashboardCard = ({
+  goal,
+  supportingTasks,
+  isExpanded,
+  onToggleExpand,
+  inlineTaskTitle,
+  onInlineTaskTitleChange,
+  onAddInlineTask,
+  orgId,
+  actor,
+  memberMap,
+}: GoalDashboardCardProps) => {
+  const streak = React.useMemo(() => calculateStreak(goal), [goal]);
+  
+  const isVision = goal.horizon === 'long_term';
+  const horizonLabel = isVision ? 'Vision' : 'Milestone';
+  const horizonClass = isVision 
+    ? 'text-violet-400 border-violet-500/20 bg-violet-500/5' 
+    : 'text-sky-400 border-sky-500/20 bg-sky-500/5';
+
+  const recurrenceLabel = goal.recurrence && goal.recurrence !== 'none'
+    ? goal.recurrence.charAt(0).toUpperCase() + goal.recurrence.slice(1)
+    : null;
+
+  const recurrenceClass = goal.recurrence === 'daily'
+    ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5'
+    : goal.recurrence === 'weekly'
+    ? 'text-amber-400 border-amber-500/20 bg-amber-500/5'
+    : 'text-rose-400 border-rose-500/20 bg-rose-500/5';
+
+  const historyDots = React.useMemo(() => {
+    const dots: ('completed' | 'incomplete' | 'empty')[] = [];
+    const history = goal.cycleHistory || [];
+    const recentHistory = [...history]
+      .sort((a, b) => a.cycleEnd.toDate().getTime() - b.cycleEnd.toDate().getTime())
+      .slice(-5);
+    
+    const emptyCount = 5 - recentHistory.length;
+    for (let i = 0; i < emptyCount; i++) {
+      dots.push('empty');
+    }
+    for (const h of recentHistory) {
+      dots.push(h.status);
+    }
+    return dots;
+  }, [goal.cycleHistory]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onAddInlineTask();
+    }
+  };
+
+  return (
+    <div 
+      className={cn(
+        "rounded-xl border border-border-default/60 bg-surface/50 backdrop-blur-md p-4 transition-all duration-300",
+        "hover:border-primary/45 hover:shadow-xl hover:shadow-primary/5",
+        isExpanded && "border-primary/30 shadow-lg shadow-black/10 bg-surface/80"
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1.5 flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className={cn('px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border', horizonClass)}>
+              {horizonLabel}
+            </span>
+            {recurrenceLabel && (
+              <span className={cn('px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border', recurrenceClass)}>
+                {recurrenceLabel}
+              </span>
+            )}
+            {goal.recurrence !== 'none' && streak > 0 && (
+              <span className="text-[10px] font-bold text-amber-400 flex items-center gap-0.5 animate-pulse-subtle">
+                ⚡ {streak} streak
+              </span>
+            )}
+          </div>
+
+          <h4 
+            onClick={onToggleExpand}
+            className="text-[13px] font-bold text-foreground hover:text-primary transition-colors cursor-pointer leading-snug line-clamp-2"
+          >
+            {goal.title}
+          </h4>
+
+          {goal.description && (
+            <p className="text-[11px] text-muted-foreground line-clamp-1 leading-relaxed">
+              {goal.description}
+            </p>
+          )}
+        </div>
+
+        <button 
+          onClick={onToggleExpand}
+          className="h-7 w-7 rounded-lg hover:bg-bg-tertiary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
+        >
+          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </button>
+      </div>
+
+      {goal.recurrence !== 'none' && (
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">CYCLE HISTORY</span>
+          <div className="flex items-center gap-1.5">
+            {historyDots.map((status, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  "h-2 w-2 rounded-full border shadow-inner transition-all duration-300",
+                  status === 'completed' && "bg-emerald-500 border-emerald-400/40 shadow-emerald-500/20 glow-sm",
+                  status === 'incomplete' && "bg-red-500 border-red-400/40 shadow-red-500/20",
+                  status === 'empty' && "bg-transparent border-border-default/50"
+                )}
+                title={
+                  status === 'completed' 
+                    ? "Completed Cycle" 
+                    : status === 'incomplete' 
+                    ? "Incomplete Cycle" 
+                    : "Upcoming Cycle"
+                }
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4">
+        <div className="flex items-center justify-between text-[9px] text-muted-foreground mb-1 font-semibold">
+          <span>COMPLETION RATE</span>
+          <span className="font-bold text-foreground">{goal.progressRollup ?? 0}%</span>
+        </div>
+        <div className="h-1.5 w-full bg-bg-tertiary rounded-full overflow-hidden shadow-inner">
+          <div 
+            className={cn(
+              "h-full rounded-full transition-all duration-500 ease-out shadow-sm",
+              isVision ? "bg-gradient-to-r from-violet-500 to-indigo-500 shadow-violet-500/30" : "bg-gradient-to-r from-sky-500 to-blue-500 shadow-sky-500/30"
+            )}
+            style={{ width: `${goal.progressRollup ?? 0}%` }}
+          />
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden mt-4 pt-3 border-t border-border-default/45 space-y-3"
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">SUPPORTING TASKS</p>
+              {supportingTasks.length === 0 ? (
+                <p className="text-[11px] text-muted-foreground italic py-1">No active supporting tasks. Add one below!</p>
+              ) : (
+                <div className="space-y-1 bg-bg-primary/30 p-1.5 rounded-lg border border-border-default/20">
+                  {supportingTasks.map((t) => (
+                    <SupportingGoalTaskItem
+                      key={t.id}
+                      task={t}
+                      orgId={orgId}
+                      actor={actor}
+                      memberMap={memberMap}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Add a supporting task..."
+                value={inlineTaskTitle}
+                onChange={(e) => onInlineTaskTitleChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="flex-1 rounded-lg border border-border-default bg-bg-primary px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-all shadow-inner"
+              />
+              <Button
+                size="sm"
+                disabled={!inlineTaskTitle.trim()}
+                onClick={onAddInlineTask}
+                className="h-8 text-xs bg-primary hover:bg-primary/90 text-white border-none shadow-sm"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 };
 
 const TaskItem = ({ 
@@ -233,6 +572,9 @@ export function DashboardHome() {
   const orgId = userProfile?.organizationId;
 
   const { tasks, loading: tasksLoading } = useTasks(orgId);
+  const { goals, loading: goalsLoading } = useGoals(orgId);
+  const [expandedGoalId, setExpandedGoalId] = React.useState<string | null>(null);
+  const [inlineTaskTitles, setInlineTaskTitles] = React.useState<Record<string, string>>({});
   const { channels, hasUnread } = useChannels(orgId);
   const { teams } = useTeams(orgId);
   const { projects } = useProjects(orgId);
@@ -296,6 +638,89 @@ export function DashboardHome() {
       setSavingFocus(false);
     }
   };
+
+  const handleAddInlineTask = async (goalId: string) => {
+    const title = inlineTaskTitles[goalId]?.trim();
+    if (!title || !orgId) return;
+    try {
+      await createTask({
+        orgId,
+        title,
+        status: 'todo',
+        goalId,
+        actor,
+      });
+      setInlineTaskTitles(prev => ({ ...prev, [goalId]: '' }));
+    } catch (err) {
+      console.error('Failed to create inline task:', err);
+    }
+  };
+
+  // Background Auto-Reset Engine
+  React.useEffect(() => {
+    const checkAndResetCycles = async () => {
+      if (!goals || goals.length === 0 || !orgId || tasksLoading) return;
+      
+      for (const goal of goals) {
+        if (goal.recurrence === 'none' || goal.status !== 'active') continue;
+        
+        if (isCycleExpired(goal.recurrence, goal.currentCycleStart)) {
+          try {
+            const supportingTasks = tasks.filter(t => t.goalId === goal.id);
+            const completedTasksCount = supportingTasks.filter(t => t.status === 'done').length;
+            const totalTasksCount = supportingTasks.length;
+            const cycleStatus = (goal.progressRollup ?? 0) >= 100 ? 'completed' : 'incomplete';
+            
+            const record: GoalCycleRecord = {
+              cycleStart: goal.currentCycleStart || Timestamp.now(),
+              cycleEnd: Timestamp.now(),
+              status: cycleStatus,
+              completedTasksCount,
+              totalTasksCount,
+            };
+            
+            const newHistory = [...(goal.cycleHistory || []), record];
+            const completedIncrement = cycleStatus === 'completed' ? 1 : 0;
+            
+            console.log(`Resetting goal cycle for "${goal.title}"`, record);
+            
+            await updateGoal(goal.id, {
+              currentCycleStart: Timestamp.now(),
+              completedCyclesCount: (goal.completedCyclesCount || 0) + completedIncrement,
+              progressRollup: 0,
+              cycleHistory: newHistory,
+            });
+            
+            for (const task of supportingTasks) {
+              await updateDoc(doc(db, 'tasks', task.id), {
+                status: 'todo',
+                completedAt: null,
+                updatedAt: serverTimestamp(),
+              });
+            }
+          } catch (err) {
+            console.error('Error resetting goal cycle:', err);
+          }
+        }
+      }
+    };
+    checkAndResetCycles();
+  }, [goals, tasks, orgId, actor, tasksLoading]);
+
+  const visionGoals = React.useMemo(() => 
+    goals.filter(g => g.horizon === 'long_term' && g.recurrence === 'none' && g.status === 'active'),
+    [goals]
+  );
+
+  const milestoneGoals = React.useMemo(() => 
+    goals.filter(g => g.horizon === 'short_term' && g.recurrence === 'none' && g.status === 'active'),
+    [goals]
+  );
+
+  const routineGoals = React.useMemo(() => 
+    goals.filter(g => g.recurrence !== 'none' && g.status === 'active'),
+    [goals]
+  );
 
   // Determine user's squad teammates
   const mySquads = React.useMemo(() => {
@@ -703,6 +1128,146 @@ export function DashboardHome() {
           </div>
         )}
       </div>
+
+      {/* My Focus Objectives & Routines Board */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" /> My Focus Objectives & Routines
+            </h2>
+            <p className="text-xs text-muted-foreground font-medium">Align your daily actions with high-level vision and recurring schedules</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Vision (Long-term) Column */}
+          <div className="rounded-2xl border border-border-default/50 bg-surface/20 backdrop-blur-md p-5 space-y-4 shadow-xl shadow-black/5 flex flex-col">
+            <div className="flex items-center justify-between border-b border-border-default/30 pb-3 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-violet-400 glow-sm" />
+                <h3 className="text-sm font-bold text-foreground tracking-wide uppercase">VISION</h3>
+              </div>
+              <span className="text-[10px] font-bold text-muted-foreground bg-bg-tertiary px-2 py-0.5 rounded-full border border-border-default/40">
+                {visionGoals.length} ACTIVE
+              </span>
+            </div>
+            <div className="space-y-3 overflow-y-auto max-h-[420px] pr-1 flex-1">
+              {goalsLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-5 w-5 animate-spin text-text-muted" />
+                </div>
+              ) : visionGoals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-border-default/55 rounded-xl bg-bg-tertiary/20">
+                  <Sparkles className="h-6 w-6 text-text-muted mb-2 opacity-50" />
+                  <p className="text-xs text-muted-foreground font-medium">No long-term visions</p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5 max-w-[150px]">Define a core purpose or major multi-month goal.</p>
+                </div>
+              ) : (
+                visionGoals.map((goal) => (
+                  <GoalDashboardCard
+                    key={goal.id}
+                    goal={goal}
+                    supportingTasks={tasks.filter(t => t.goalId === goal.id)}
+                    isExpanded={expandedGoalId === goal.id}
+                    onToggleExpand={() => setExpandedGoalId(expandedGoalId === goal.id ? null : goal.id)}
+                    inlineTaskTitle={inlineTaskTitles[goal.id] || ''}
+                    onInlineTaskTitleChange={(val) => setInlineTaskTitles(prev => ({ ...prev, [goal.id]: val }))}
+                    onAddInlineTask={() => handleAddInlineTask(goal.id)}
+                    orgId={orgId}
+                    actor={actor}
+                    memberMap={memberMap}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Milestones (Short-term) Column */}
+          <div className="rounded-2xl border border-border-default/50 bg-surface/20 backdrop-blur-md p-5 space-y-4 shadow-xl shadow-black/5 flex flex-col">
+            <div className="flex items-center justify-between border-b border-border-default/30 pb-3 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-sky-400 glow-sm" />
+                <h3 className="text-sm font-bold text-foreground tracking-wide uppercase">MILESTONES</h3>
+              </div>
+              <span className="text-[10px] font-bold text-muted-foreground bg-bg-tertiary px-2 py-0.5 rounded-full border border-border-default/40">
+                {milestoneGoals.length} ACTIVE
+              </span>
+            </div>
+            <div className="space-y-3 overflow-y-auto max-h-[420px] pr-1 flex-1">
+              {goalsLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-5 w-5 animate-spin text-text-muted" />
+                </div>
+              ) : milestoneGoals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-border-default/55 rounded-xl bg-bg-tertiary/20">
+                  <Target className="h-6 w-6 text-text-muted mb-2 opacity-50" />
+                  <p className="text-xs text-muted-foreground font-medium">No short-term milestones</p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5 max-w-[150px]">Define immediate high-priority objectives to strive for.</p>
+                </div>
+              ) : (
+                milestoneGoals.map((goal) => (
+                  <GoalDashboardCard
+                    key={goal.id}
+                    goal={goal}
+                    supportingTasks={tasks.filter(t => t.goalId === goal.id)}
+                    isExpanded={expandedGoalId === goal.id}
+                    onToggleExpand={() => setExpandedGoalId(expandedGoalId === goal.id ? null : goal.id)}
+                    inlineTaskTitle={inlineTaskTitles[goal.id] || ''}
+                    onInlineTaskTitleChange={(val) => setInlineTaskTitles(prev => ({ ...prev, [goal.id]: val }))}
+                    onAddInlineTask={() => handleAddInlineTask(goal.id)}
+                    orgId={orgId}
+                    actor={actor}
+                    memberMap={memberMap}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Routines Column */}
+          <div className="rounded-2xl border border-border-default/50 bg-surface/20 backdrop-blur-md p-5 space-y-4 shadow-xl shadow-black/5 flex flex-col">
+            <div className="flex items-center justify-between border-b border-border-default/30 pb-3 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-emerald-400 glow-sm" />
+                <h3 className="text-sm font-bold text-foreground tracking-wide uppercase">ROUTINES</h3>
+              </div>
+              <span className="text-[10px] font-bold text-muted-foreground bg-bg-tertiary px-2 py-0.5 rounded-full border border-border-default/40">
+                {routineGoals.length} ACTIVE
+              </span>
+            </div>
+            <div className="space-y-3 overflow-y-auto max-h-[420px] pr-1 flex-1">
+              {goalsLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-5 w-5 animate-spin text-text-muted" />
+                </div>
+              ) : routineGoals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-border-default/55 rounded-xl bg-bg-tertiary/20">
+                  <Calendar className="h-6 w-6 text-text-muted mb-2 opacity-50" />
+                  <p className="text-xs text-muted-foreground font-medium">No active routines</p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5 max-w-[150px]">Create daily, weekly, or monthly recurring goals to track streaks.</p>
+                </div>
+              ) : (
+                routineGoals.map((goal) => (
+                  <GoalDashboardCard
+                    key={goal.id}
+                    goal={goal}
+                    supportingTasks={tasks.filter(t => t.goalId === goal.id)}
+                    isExpanded={expandedGoalId === goal.id}
+                    onToggleExpand={() => setExpandedGoalId(expandedGoalId === goal.id ? null : goal.id)}
+                    inlineTaskTitle={inlineTaskTitles[goal.id] || ''}
+                    onInlineTaskTitleChange={(val) => setInlineTaskTitles(prev => ({ ...prev, [goal.id]: val }))}
+                    onAddInlineTask={() => handleAddInlineTask(goal.id)}
+                    orgId={orgId}
+                    actor={actor}
+                    memberMap={memberMap}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Grid Content */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">

@@ -22,6 +22,21 @@ function GoalCard({ goal }: { goal: Goal }) {
   const now = new Date();
   const isOverdue = due && due < now && goal.status === 'active';
 
+  const horizonLabel = goal.horizon === 'long_term' ? 'Vision' : 'Milestone';
+  const horizonClass = goal.horizon === 'long_term' 
+    ? 'text-violet-400 border-violet-500/20 bg-violet-500/5' 
+    : 'text-sky-400 border-sky-500/20 bg-sky-500/5';
+
+  const recurrenceLabel = goal.recurrence && goal.recurrence !== 'none'
+    ? goal.recurrence.charAt(0).toUpperCase() + goal.recurrence.slice(1)
+    : null;
+
+  const recurrenceClass = goal.recurrence === 'daily'
+    ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5'
+    : goal.recurrence === 'weekly'
+    ? 'text-amber-400 border-amber-500/20 bg-amber-500/5'
+    : 'text-rose-400 border-rose-500/20 bg-rose-500/5';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -56,9 +71,35 @@ function GoalCard({ goal }: { goal: Goal }) {
       </h3>
 
       {goal.description && (
-        <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+        <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed mb-3">
           {goal.description}
         </p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+        <span className={cn('px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border', horizonClass)}>
+          {horizonLabel}
+        </span>
+        {recurrenceLabel && (
+          <span className={cn('px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border', recurrenceClass)}>
+            {recurrenceLabel}
+          </span>
+        )}
+      </div>
+
+      {goal.progressRollup !== undefined && (
+        <div className="mt-4 pt-3 border-t border-border-default/50">
+          <div className="flex items-center justify-between text-[9px] text-muted-foreground mb-1 font-semibold">
+            <span>COMPLETION RATE</span>
+            <span className="font-bold text-foreground">{goal.progressRollup}%</span>
+          </div>
+          <div className="h-1 w-full bg-bg-tertiary rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-violet-500 rounded-full transition-all duration-300" 
+              style={{ width: `${goal.progressRollup}%` }}
+            />
+          </div>
+        </div>
       )}
 
       <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-violet-400 text-xs">

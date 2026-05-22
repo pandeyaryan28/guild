@@ -4,7 +4,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Goal, GoalStatus, ActorInfo } from '@guild/types';
+import type { Goal, GoalStatus, GoalHorizon, GoalRecurrence, ActorInfo } from '@guild/types';
 
 // ─── Goals ────────────────────────────────────────────────────────────────────
 
@@ -14,8 +14,12 @@ export async function createGoal(params: {
   description?: string;
   targetDate?: Date | null;
   actor: ActorInfo;
+  horizon?: GoalHorizon;
+  recurrence?: GoalRecurrence;
 }): Promise<string> {
   const ref = doc(collection(db, 'goals'));
+  const horizon = params.horizon ?? 'short_term';
+  const recurrence = params.recurrence ?? 'none';
   await setDoc(ref, {
     id: ref.id,
     orgId: params.orgId,
@@ -26,13 +30,21 @@ export async function createGoal(params: {
     targetDate: params.targetDate ? Timestamp.fromDate(params.targetDate) : null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+
+    // Chronology features
+    horizon,
+    recurrence,
+    currentCycleStart: recurrence !== 'none' ? serverTimestamp() : null,
+    completedCyclesCount: 0,
+    progressRollup: 0,
+    cycleHistory: [],
   });
   return ref.id;
 }
 
 export async function updateGoal(
   goalId: string,
-  patch: Partial<Pick<Goal, 'title' | 'description' | 'status' | 'targetDate'>>,
+  patch: Partial<Omit<Goal, 'id' | 'orgId' | 'createdAt'>>,
 ): Promise<void> {
   const completedAtPatch =
     patch.status === 'completed'
