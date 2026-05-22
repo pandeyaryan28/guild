@@ -1,13 +1,14 @@
 import * as React from 'react';
-import { X, Calendar, AlignLeft, ChevronDown, Plus, Check, ListTodo, Clock } from 'lucide-react';
+import { X, Calendar, AlignLeft, ChevronDown, Plus, Check, ListTodo, Clock, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   updateTask, updatePriority, updateAssignees, updateDueDate, updateLabels,
-  createTask, createLabel, moveTask, addComment,
+  createTask, createLabel, moveTask, addComment, deleteTask,
   STATUSES, STATUS_CONFIG, PRIORITY_CONFIG, LABEL_COLORS,
   type Task, type TaskStatus, type TaskPriority, type ActorInfo,
 } from '../../lib/tasks';
 import { useTaskActivities, useTaskLabels } from '../../hooks/useTasks';
+import { useAuth } from '../../hooks/useAuth';
 import { useTasks } from '../../hooks/useTasks';
 import { useOrgMembers } from '../../hooks/useChat';
 import { LabelBadge } from '../../components/tasks/LabelBadge';
@@ -70,6 +71,10 @@ function PropRow({ label, children }: { label: string; children: React.ReactNode
 }
 
 export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }: Props) {
+  const { userProfile } = useAuth();
+  const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
+  const canDelete = userProfile?.role === 'owner' || userProfile?.role === 'admin';
+
   const activities = useTaskActivities(task?.id ?? null);
   const labels = useTaskLabels(orgId);
   const members = useOrgMembers(orgId);
@@ -150,7 +155,11 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
   const [showNewLabel, setShowNewLabel] = React.useState(false);
 
   React.useEffect(() => {
-    if (task) { setEditTitle(task.title); setEditDesc(task.description ?? ''); }
+    if (task) {
+      setEditTitle(task.title);
+      setEditDesc(task.description ?? '');
+      setShowConfirmDelete(false);
+    }
   }, [task?.id]);
 
   React.useEffect(() => {
@@ -226,6 +235,16 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
     await updateDueDate(task.id, orgId, val ? new Date(val) : null, actor);
   };
 
+  const handleDeleteTask = async () => {
+    if (!task) return;
+    try {
+      await deleteTask(task.id);
+      onClose();
+    } catch (err) {
+      console.error('Failed to delete task', err);
+    }
+  };
+
   const handleCreateSubtask = async () => {
     const t = newSubtaskTitle.trim();
     if (!t) { setAddingSubtask(false); return; }
@@ -276,10 +295,40 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
             ))}
           </Dropdown>
 
-          <button onClick={onClose}
-            className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors">
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            {showConfirmDelete ? (
+              <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-1 duration-150">
+                <span className="text-[10px] font-semibold text-red-500 uppercase tracking-wide">Delete?</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDeleteTask(); }}
+                  className="rounded px-2 py-0.5 text-[10px] font-bold bg-red-600 hover:bg-red-500 text-white transition-colors"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowConfirmDelete(false); }}
+                  className="rounded px-2 py-0.5 text-[10px] font-medium border border-border-default text-foreground hover:bg-accent/20 transition-colors"
+                >
+                  No
+                </button>
+              </div>
+            ) : (
+              canDelete && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowConfirmDelete(true); }}
+                  title="Delete Task"
+                  className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors animate-in fade-in duration-200"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )
+            )}
+
+            <button onClick={onClose}
+              className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Title */}
