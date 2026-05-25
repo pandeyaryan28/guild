@@ -47,7 +47,7 @@ export function ReportsPage() {
 
   return (
     <div className="flex h-full overflow-hidden w-full">
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-y-auto">
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-4 border-b border-border-default flex-shrink-0">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
@@ -68,7 +68,7 @@ export function ReportsPage() {
         <ReportFiltersBar filters={filters} onChange={setFilters} />
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="p-6">
           {activeScope === 'my' && (
             <MyReportTab orgId={orgId} userId={userId} filters={filters} onSelectTask={setSelectedTask} />
           )}
