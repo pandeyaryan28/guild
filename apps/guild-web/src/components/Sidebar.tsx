@@ -21,6 +21,8 @@ import {
   FolderKanban,
   Target,
   LayoutGrid,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -153,75 +155,80 @@ export function Sidebar() {
         <div className="absolute top-1/4 -left-12 h-36 w-36 rounded-full bg-primary/4 blur-[65px] pointer-events-none" />
         <div className="absolute bottom-1/4 -right-12 h-44 w-44 rounded-full bg-primary/5 blur-[85px] pointer-events-none" />
 
-        {/* ── Collapse Toggle ─────────────────────────────────────────────── */}
-        <button
-          onClick={() => setCollapsed((v) => !v)}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={cn(
-            "absolute top-6 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border-default/40 bg-background shadow-lg shadow-black/20 text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border transition-all duration-300 cursor-pointer",
-            collapsed ? "-right-3" : "-right-3 opacity-0 group-hover/sidebar:opacity-100"
-          )}
-        >
-          <ChevronLeft
-            className={cn(
-              "h-3.5 w-3.5 transition-transform duration-300",
-              collapsed && "rotate-180"
-            )}
-          />
-        </button>
-
         {/* ── Header / Workspace ──────────────────────────────────────────── */}
-        <div className={cn("shrink-0 pt-2 z-10", collapsed ? "px-2.5 pb-2" : "px-4 pb-2 pt-3")}>
+        <div className={cn("shrink-0 pt-2.5 z-10", collapsed ? "px-2.5 pb-2" : "px-4 pb-2 pt-3")}>
           {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <div className="flex h-9 w-9 mx-auto items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-[11px] font-black text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer select-none">
-                    {orgInitial}
-                  </div>
-                }
-              />
-              <TooltipContent side="right" className="font-semibold border border-border-default/50 bg-surface backdrop-blur-md">
-                {orgName || "Organization"}
-              </TooltipContent>
-            </Tooltip>
+            <div className="flex flex-col items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <div className="flex h-9 w-9 mx-auto items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-[11px] font-black text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer select-none">
+                      {orgInitial}
+                    </div>
+                  }
+                />
+                <TooltipContent side="right" className="font-semibold border border-border-default/50 bg-surface backdrop-blur-md">
+                  {orgName || "Organization"}
+                </TooltipContent>
+              </Tooltip>
+              
+              <button
+                onClick={() => setCollapsed(false)}
+                title="Expand sidebar"
+                className="h-9 w-9 flex items-center justify-center rounded-xl bg-white/[0.02] border border-white/5 hover:border-primary/25 hover:bg-white/[0.04] text-text-muted hover:text-foreground transition-all duration-300 shadow-md cursor-pointer outline-none"
+              >
+                <PanelLeftOpen className="h-4 w-4" />
+              </button>
+            </div>
           ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className={cn(
-                  buttonVariants({ variant: "ghost" }),
-                  "h-11 w-full justify-between gap-2 px-3.5 hover:bg-white/[0.04] border border-white/5 hover:border-primary/25 rounded-xl shadow-lg shadow-black/10 flex items-center transition-all duration-300 select-none outline-none cursor-pointer"
-                )}
+            <div className="flex items-center gap-2 w-full">
+              <div className="flex-1 min-w-0">
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className={cn(
+                      buttonVariants({ variant: "ghost" }),
+                      "h-11 w-full justify-between gap-2 px-3 hover:bg-white/[0.04] border border-white/5 hover:border-primary/25 rounded-xl shadow-lg shadow-black/10 flex items-center transition-all duration-300 select-none outline-none cursor-pointer"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-[10px] font-black text-primary-foreground shadow-lg shadow-primary/30">
+                        {orgInitial}
+                      </div>
+                      <div className="flex flex-col items-start leading-none overflow-hidden text-left">
+                        <span className="text-xs font-extrabold text-foreground truncate max-w-[110px]">
+                          {orgName || "Loading…"}
+                        </span>
+                        <span className="text-[9px] font-bold text-text-muted mt-0.5 tracking-wider uppercase">Premium</span>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-muted transition-transform duration-300" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    className="w-[200px] border-border-default/40 bg-surface/90 backdrop-blur-xl"
+                  >
+                    <DropdownMenuItem className="gap-2 font-semibold">
+                      <div className="h-5 w-5 rounded bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                        {orgInitial}
+                      </div>
+                      {orgName}
+                    </DropdownMenuItem>
+                    <Separator className="my-1 bg-border/40" />
+                    <DropdownMenuItem className="gap-2 text-text-muted font-medium" disabled>
+                      <Plus className="h-4 w-4" /> Create Workspace
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <button
+                onClick={() => setCollapsed(true)}
+                title="Collapse sidebar"
+                className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-white/[0.02] border border-white/5 hover:border-primary/25 hover:bg-white/[0.04] text-text-muted hover:text-foreground transition-all duration-300 shadow-lg shadow-black/10 cursor-pointer outline-none"
               >
-                <div className="flex items-center gap-2.5 overflow-hidden">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-[10px] font-black text-primary-foreground shadow-lg shadow-primary/30">
-                    {orgInitial}
-                  </div>
-                  <div className="flex flex-col items-start leading-none overflow-hidden text-left">
-                    <span className="text-xs font-extrabold text-foreground truncate max-w-[130px]">
-                      {orgName || "Loading…"}
-                    </span>
-                    <span className="text-[9px] font-bold text-text-muted mt-0.5 tracking-wider uppercase">Premium</span>
-                  </div>
-                </div>
-                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-muted transition-transform duration-300" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="w-[200px] border-border-default/40 bg-surface/90 backdrop-blur-xl"
-              >
-                <DropdownMenuItem className="gap-2 font-semibold">
-                  <div className="h-5 w-5 rounded bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
-                    {orgInitial}
-                  </div>
-                  {orgName}
-                </DropdownMenuItem>
-                <Separator className="my-1 bg-border/40" />
-                <DropdownMenuItem className="gap-2 text-text-muted font-medium" disabled>
-                  <Plus className="h-4 w-4" /> Create Workspace
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
+            </div>
           )}
         </div>
 
