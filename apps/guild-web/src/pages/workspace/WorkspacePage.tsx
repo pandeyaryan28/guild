@@ -386,7 +386,7 @@ export function WorkspacePage() {
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative">
         
         {/* ─── Ultra-Minimalist Top Header ─── */}
-        <div className="flex-shrink-0 border-b border-border/40 bg-background/50 backdrop-blur px-6 py-3.5 flex items-center justify-between gap-4">
+        <div className="flex-shrink-0 border-b border-border dark:border-border-strong/80 bg-background/75 dark:bg-background/50 backdrop-blur px-6 py-3.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {/* Elegant Back to Dashboard CTA */}
             <button
@@ -468,7 +468,7 @@ export function WorkspacePage() {
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 flex flex-col">
             
             {/* Minimalist Command capture bar */}
-            <div className="rounded-xl border border-border/40 bg-surface/30 backdrop-blur p-3.5 shadow-sm relative group">
+            <div className="rounded-xl border border-border dark:border-border-strong/80 bg-surface/80 dark:bg-surface/50 backdrop-blur p-3.5 shadow-sm relative group">
               <form onSubmit={handleQuickCaptureSubmit} className="relative flex items-center gap-2.5">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent/40 border border-border/10">
                   <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -501,7 +501,7 @@ export function WorkspacePage() {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="pt-2.5 mt-2.5 border-t border-border/10 flex flex-wrap gap-1.5 items-center text-[10px]">
+                    <div className="pt-2.5 mt-2.5 border-t border-border/60 dark:border-border-strong/50 flex flex-wrap gap-1.5 items-center text-[10px]">
                       <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mr-1">Parsed:</span>
                       {parsedPreview.title && (
                         <span className="px-1.5 py-0.5 rounded bg-accent/30 text-foreground font-semibold">
@@ -545,7 +545,7 @@ export function WorkspacePage() {
             </div>
 
             {/* Inline Filter Command Center Panel */}
-            <div className="rounded-xl border border-border/40 bg-surface/10 p-2.5 flex flex-wrap items-center gap-2">
+            <div className="rounded-xl border border-border dark:border-border-strong/80 bg-surface/70 dark:bg-surface/40 p-2.5 flex flex-wrap items-center gap-2">
               
               {/* Search box */}
               <div className="relative flex-1 min-w-[160px]">
@@ -654,7 +654,7 @@ export function WorkspacePage() {
                       className="space-y-6"
                     >
                       {filteredTasks.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border/40 rounded-xl bg-surface/5">
+                        <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border/80 dark:border-border-strong/60 rounded-xl bg-surface/15 dark:bg-surface/10">
                           <CheckCircle2 className="h-7 w-7 text-muted-foreground/30" />
                           <p className="text-xs font-semibold text-muted-foreground mt-2">No tasks match your filters</p>
                           {hasActiveFilters && (
@@ -686,7 +686,7 @@ export function WorkspacePage() {
                               </div>
 
                               {/* Task List Section Body */}
-                              <div className="border border-border/40 rounded-xl bg-surface/20 divide-y divide-border/20 overflow-hidden shadow-sm">
+                              <div className="border border-border dark:border-border-strong/75 rounded-xl bg-surface/75 dark:bg-surface/50 divide-y divide-border/40 dark:divide-border-strong/55 overflow-hidden shadow-sm">
                                 {status === 'done' ? (
                                   <DoneTasksLane
                                     tasks={statusTasks}
@@ -734,9 +734,9 @@ export function WorkspacePage() {
                         const cfg = STATUS_CONFIG[status];
 
                         return (
-                          <div key={status} className="rounded-xl border border-border/40 bg-surface/10 flex flex-col max-h-[700px] shadow-sm">
+                          <div key={status} className="rounded-xl border border-border dark:border-border-strong/75 bg-surface/75 dark:bg-surface/45 flex flex-col max-h-[700px] shadow-sm">
                             {/* Column Header */}
-                            <div className="px-3.5 py-2.5 border-b border-border/40 flex items-center justify-between select-none">
+                            <div className="px-3.5 py-2.5 border-b border-border/60 dark:border-b-border-strong/70 flex items-center justify-between select-none">
                               <div className="flex items-center gap-1.5">
                                 <span
                                   className="h-1.5 w-1.5 rounded-full shrink-0"
@@ -796,10 +796,10 @@ export function WorkspacePage() {
           </div>
 
           {/* ─── Elegant Right Split Sidebar (Desktop only) ─── */}
-          <div className="hidden xl:flex flex-col w-[260px] shrink-0 border-l border-border/40 bg-surface/5 p-5 gap-6 overflow-y-auto">
+          <div className="hidden xl:flex flex-col w-[260px] shrink-0 border-l border-border dark:border-border-strong bg-surface/35 dark:bg-surface/15 p-5 gap-6 overflow-y-auto">
             
             {/* Core Metrics */}
-            <div className="space-y-2.5 bg-accent/15 border border-border/10 rounded-xl p-3.5 shadow-sm">
+            <div className="space-y-2.5 bg-accent/15 border border-border/40 dark:border-border-strong/60 rounded-xl p-3.5 shadow-sm">
               <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 <span>Execution Status</span>
                 <span className="text-foreground">{stats.rate}%</span>
@@ -859,7 +859,7 @@ export function WorkspacePage() {
                     <div
                       key={goal.id}
                       onClick={() => navigate(`/goals/${goal.id}`)}
-                      className="p-2 rounded-lg bg-surface/20 border border-border/10 hover:border-violet-500/20 hover:bg-violet-500/5 transition-all cursor-pointer group"
+                      className="p-2 rounded-lg bg-surface/40 dark:bg-surface/20 border border-border/40 dark:border-border-strong/50 hover:border-violet-500/20 hover:bg-violet-500/5 transition-all cursor-pointer group"
                     >
                       <p className="text-[11px] font-semibold text-foreground group-hover:text-violet-400 transition-colors truncate">
                         {goal.title}
@@ -889,7 +889,7 @@ export function WorkspacePage() {
                     <div
                       key={proj.id}
                       onClick={() => navigate(`/projects/${proj.id}`)}
-                      className="p-2 rounded-lg bg-surface/20 border border-border/10 hover:border-primary/20 hover:bg-primary/5 transition-all cursor-pointer group"
+                      className="p-2 rounded-lg bg-surface/40 dark:bg-surface/20 border border-border/40 dark:border-border-strong/50 hover:border-primary/20 hover:bg-primary/5 transition-all cursor-pointer group"
                     >
                       <p className="text-[11px] font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                         {proj.name}
@@ -993,7 +993,7 @@ function TaskRow({
   }, [task.assigneeIds, memberMap]);
 
   return (
-    <div className="flex flex-col bg-surface/10 hover:bg-accent/5 transition-all">
+    <div className="flex flex-col bg-surface/30 dark:bg-surface/10 hover:bg-accent/5 transition-all">
       <div 
         onClick={onSelect}
         className={cn(
@@ -1220,7 +1220,7 @@ function KanbanCard({
     <div
       onClick={onSelect}
       className={cn(
-        "rounded-xl border border-border/40 bg-surface p-3 flex flex-col gap-2.5",
+        "rounded-xl border border-border dark:border-border-strong/70 bg-surface/90 dark:bg-surface/65 p-3 flex flex-col gap-2.5",
         "hover:border-primary/20 hover:shadow transition-all duration-200 cursor-pointer relative group"
       )}
     >
@@ -1366,7 +1366,7 @@ function KanbanCard({
       )}
 
       {/* Kanban bottom panel */}
-      <div className="flex items-center justify-between border-t border-border/10 pt-2 mt-1">
+      <div className="flex items-center justify-between border-t border-border/40 dark:border-border-strong/50 pt-2 mt-1">
         <div className="flex items-center gap-1.5">
           <button
             onClick={(e) => {
@@ -1431,7 +1431,7 @@ function DoneTasksLane({ tasks, onSelect, onDelete, onToggle }: DoneTasksLanePro
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   return (
-    <div className="w-full divide-y divide-border/20">
+    <div className="w-full divide-y divide-border/40 dark:divide-border-strong/50">
       <button
         onClick={(e) => {
           e.stopPropagation();
