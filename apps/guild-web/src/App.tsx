@@ -18,14 +18,14 @@ import { OnboardingRoot } from './pages/onboarding/OnboardingRoot';
 import { JoinInvitePage } from './pages/onboarding/JoinInvitePage';
 
 // Dashboard (existing)
-import { Layout } from './components/Layout';
-import { DashboardHome } from './components/DashboardHome';
+import { RedesignLayout } from './components/redesign/Layout';
+import { DashboardControl } from './components/redesign/DashboardControl';
 
 // Chat
 import { ChatLayout } from './pages/chat/ChatLayout';
 
 // Tasks & Work
-import { WorkspacePage } from './pages/workspace/WorkspacePage';
+import { TaskCanvas } from './components/redesign/TaskCanvas';
 import { RequestsPage } from './pages/requests/RequestsPage';
 import { PeoplePage } from './pages/people/PeoplePage';
 import { SettingsPage } from './pages/workspace/SettingsPage';
@@ -40,9 +40,9 @@ import { ReportsPage } from './pages/reports/ReportsPage';
 
 function DashboardApp({ children }: { children?: React.ReactNode }) {
   return (
-    <Layout>
-      {children ?? <DashboardHome />}
-    </Layout>
+    <RedesignLayout>
+      {children ?? <DashboardControl />}
+    </RedesignLayout>
   );
 }
 
@@ -100,7 +100,9 @@ export default function App() {
             path="/workspace"
             element={
               <ProtectedRoute>
-                <WorkspacePage />
+                <RedesignLayout>
+                  <TaskCanvas />
+                </RedesignLayout>
               </ProtectedRoute>
             }
           />
