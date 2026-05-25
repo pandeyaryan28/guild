@@ -150,10 +150,9 @@
   html {
     @apply font-sans;
     /*
-     * Custom font-size adjustment for widescreen spatial optimization.
-     * 15px gives the layout maximum space to breathe.
+     * Root font size optimized to 17px for balanced width proportions.
      */
-    font-size: 15px;
+    font-size: 17px;
   }
   body {
     @apply bg-background text-foreground antialiased;

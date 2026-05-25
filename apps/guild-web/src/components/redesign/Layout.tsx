@@ -47,10 +47,10 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
       <NavDock />
 
       {/* 3. Main Workspace Container */}
-      <div className="flex-1 flex flex-col min-w-0 pl-[80px] pr-4 py-4 lg:pl-[96px] lg:pr-6 lg:py-5 z-10 overflow-hidden relative h-screen">
+      <div className="flex-1 flex flex-col min-w-0 pl-4 pr-4 pt-4 pb-24 md:pl-[96px] md:pr-6 md:py-5 z-10 overflow-hidden relative h-screen">
         
         {/* Top Spatial Control Nav */}
-        <header className="flex h-14 w-full items-center justify-between gap-4 mb-6 z-30 shrink-0">
+        <header className="flex h-10 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0">
           {/* Logo & Section Title */}
           <div className="flex items-center gap-3">
             <span 

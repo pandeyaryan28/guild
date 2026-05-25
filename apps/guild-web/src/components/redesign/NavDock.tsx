@@ -16,6 +16,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../hooks/useNotifications';
 import { AnimatePresence, motion } from 'motion/react';
+import { cn } from '@/lib/utils';
 
 export function NavDock() {
   const navigate = useNavigate();
@@ -31,9 +32,9 @@ export function NavDock() {
     { path: '/workspace', label: 'Tasks', icon: CheckSquare },
     { path: '/requests', label: 'Requests', icon: FileCheck },
     { path: '/people', label: 'People', icon: Users },
-    { path: '/calendar', label: 'Calendar', icon: Calendar },
-    { path: '/reports', label: 'Reports', icon: BarChart3 },
-    { path: '/settings', label: 'Settings', icon: Settings },
+    { path: '/calendar', label: 'Calendar', icon: Calendar, className: 'hidden md:flex' },
+    { path: '/reports', label: 'Reports', icon: BarChart3, className: 'hidden md:flex' },
+    { path: '/settings', label: 'Settings', icon: Settings, className: 'hidden md:flex' },
   ];
 
   const currentPath = location.pathname;
@@ -44,9 +45,9 @@ export function NavDock() {
 
   return (
     <div className="aether-dock-wrapper select-none">
-      <div className="aether-dock aether-glass flex flex-col items-center gap-3">
-        {/* User Profile Bubble at the Top */}
-        <div className="relative group cursor-pointer mb-2">
+      <div className="aether-dock aether-glass flex flex-row md:flex-col items-center gap-2 md:gap-3">
+        {/* User Profile Bubble - Hidden on mobile bottom tab bar */}
+        <div className="relative group cursor-pointer mb-2 hidden md:block">
           <div 
             onClick={() => navigate('/settings')}
             className="w-10 h-10 rounded-full bg-indigo-500/10 border-2 border-white/20 dark:border-white/5 flex items-center justify-center font-bold text-xs text-white hover:scale-105 active:scale-95 transition-all shadow-md"
@@ -61,7 +62,7 @@ export function NavDock() {
           </div>
         </div>
 
-        <div className="w-8 h-[1px] bg-white/10 mb-2" />
+        <div className="w-8 h-[1px] bg-white/10 mb-2 hidden md:block" />
 
         {/* Core Nav Items */}
         {navItems.map((item) => {
@@ -72,7 +73,7 @@ export function NavDock() {
             <div
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`aether-dock-item ${isActive ? 'active' : ''}`}
+              className={cn(`aether-dock-item ${isActive ? 'active' : ''}`, item.className)}
             >
               <ActiveIcon className="w-5 h-5" />
               
@@ -91,10 +92,10 @@ export function NavDock() {
           );
         })}
 
-        <div className="w-8 h-[1px] bg-white/10 my-2" />
+        <div className="w-8 h-[1px] bg-white/10 my-2 hidden md:block" />
 
-        {/* Theme Toggler Palette Icon */}
-        <div className="relative">
+        {/* Theme Toggler Palette Icon - Hidden on mobile */}
+        <div className="relative hidden md:block">
           <button
             onClick={() => setShowThemePicker(!showThemePicker)}
             className={`aether-dock-item hover:scale-110 transition-all ${showThemePicker ? 'text-primary' : ''}`}
@@ -137,10 +138,10 @@ export function NavDock() {
           </AnimatePresence>
         </div>
 
-        {/* Exit/Logout Action */}
+        {/* Exit/Logout Action - Hidden on mobile */}
         <div 
           onClick={logout}
-          className="aether-dock-item text-red-400/80 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
+          className="aether-dock-item text-red-400/80 hover:text-red-400 hover:bg-red-500/10 cursor-pointer hidden md:block"
         >
           <LogOut className="w-5 h-5" />
           <div className="aether-dock-item-tooltip">Log Out</div>

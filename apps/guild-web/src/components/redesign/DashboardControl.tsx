@@ -317,31 +317,28 @@ export function DashboardControl() {
   const arcOffset = arcCircumference - (sprintPercentage / 100) * arcCircumference;
 
   return (
-    <div className="space-y-8 animate-fluid-pop">
+    <div className="space-y-4 animate-fluid-pop">
       {/* 1. Header Focus Intention Banner */}
-      <header className="aether-glass p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden group">
+      <header className="aether-glass py-3 px-5 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden group">
         {/* Glow effect on hover */}
         <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none group-hover:scale-125 transition-transform duration-700" />
         
-        <div className="space-y-2 z-10">
-          <span className="text-[10px] font-black tracking-widest text-primary uppercase">
-            Workspace Hub
+        <div className="space-y-0.5 z-10">
+          <span className="text-[9px] font-black tracking-widest text-primary uppercase">
+            Workspace Control
           </span>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gradient bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground">
+          <h1 className="text-xl md:text-2xl font-black tracking-tight text-gradient bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground">
             {greeting}, {displayName}
           </h1>
-          <p className="text-xs text-muted-foreground font-medium">
-            Let's sync operations and drive team value today.
-          </p>
         </div>
 
         {/* Dynamic Focus Syncer */}
-        <div className="flex-1 max-w-md aether-glass bg-white/5 dark:bg-black/10 px-4 py-3 flex items-center gap-3 border border-white/5 z-10">
-          <div className="p-2 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">
-            <Target className="w-4 h-4" />
+        <div className="flex-1 max-w-sm aether-glass bg-white/3 dark:bg-black/5 px-3.5 py-1.5 flex items-center gap-2.5 border border-white/5 z-10" style={{ borderRadius: '14px' }}>
+          <div className="p-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">
+            <Target className="w-3.5 h-3.5" />
           </div>
           <div className="flex-1">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">Declare Focus Intent</span>
+            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider block leading-none">Declare Focus Intent</span>
             <input 
               type="text" 
               placeholder="What are you working on today?"
@@ -350,7 +347,7 @@ export function DashboardControl() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSaveFocus();
               }}
-              className="bg-transparent border-none w-full p-0 text-xs font-semibold placeholder:text-muted-foreground/60 text-foreground focus:ring-0 focus:outline-none mt-0.5"
+              className="bg-transparent border-none w-full p-0 text-[11px] font-semibold placeholder:text-muted-foreground/60 text-foreground focus:ring-0 focus:outline-none mt-0.5"
             />
           </div>
           
@@ -362,9 +359,9 @@ export function DashboardControl() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 onClick={handleSaveFocus}
                 disabled={savingFocus}
-                className="px-3 py-1.5 rounded-lg bg-primary text-white text-[10px] font-bold shadow-md hover:scale-105 active:scale-95 transition-all shrink-0 cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-primary text-white text-[9px] font-bold shadow-md hover:scale-105 active:scale-95 transition-all shrink-0 cursor-pointer"
               >
-                {savingFocus ? 'Syncing...' : 'Sync'}
+                {savingFocus ? '...' : 'Sync'}
               </motion.button>
             )}
           </AnimatePresence>
@@ -372,18 +369,16 @@ export function DashboardControl() {
       </header>
 
       {/* 2. Teammate Presence Halo Orbit */}
-      <section className="aether-glass p-5 flex flex-col gap-4 relative">
-        <div className="flex items-center justify-between border-b border-white/5 pb-3">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-primary" />
-            <span className="text-xs font-bold text-foreground">Teammate Orbit</span>
-          </div>
-          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-            {displayedTeammates.length} Co-Present
+      <section className="aether-glass py-2 px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative">
+        <div className="flex items-center gap-2 select-none shrink-0">
+          <Users className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[11px] font-bold text-foreground">Orbit Presence</span>
+          <span className="px-1.5 py-0.2 rounded bg-white/5 font-mono text-[9px] text-muted-foreground leading-none">
+            {displayedTeammates.length}
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 max-w-full overflow-x-auto scrollbar-hide pr-1">
           {displayedTeammates.map((member) => {
             const hasFocus = !!member.focusStatus?.text;
             const isOnline = hasFocus; // simple heuristic
@@ -395,14 +390,14 @@ export function DashboardControl() {
                 key={member.uid}
                 onMouseEnter={() => setHoveredTeammate(member)}
                 onMouseLeave={() => setHoveredTeammate(null)}
-                className="relative cursor-pointer"
+                className="relative cursor-pointer shrink-0"
               >
                 <div 
-                  className={cn("teammate-halo w-11 h-11 flex items-center justify-center text-xs font-black text-white hover:scale-105 transition-all", haloClass)}
+                  className={cn("teammate-halo w-8 h-8 flex items-center justify-center text-[9px] font-black text-white hover:scale-105 transition-all", haloClass)}
                   style={{ 
                     background: `hsl(${avatarHue(member.uid)} 60% 45%)`,
                     color: '#ffffff',
-                    border: '3px solid var(--aether-glass-bg)'
+                    border: '2px solid var(--aether-glass-bg)'
                   }}
                 >
                   {initials}
@@ -410,19 +405,19 @@ export function DashboardControl() {
 
                 {/* Floating focus hover popup card */}
                 {hoveredTeammate?.uid === member.uid && (
-                  <div className="absolute bottom-14 left-1/2 -translate-x-1/2 aether-glass p-3 min-w-[200px] z-50 text-left pointer-events-none animate-fluid-pop shadow-2xl">
-                    <span className="text-[10px] font-bold text-foreground block">{member.fullName}</span>
-                    <span className="text-[9px] text-muted-foreground capitalize block mt-0.5">{member.role || 'Member'}</span>
-                    <div className="w-full h-[1px] bg-white/5 my-1.5" />
+                  <div className="absolute bottom-10 left-1/2 -translate-x-1/2 aether-glass p-2.5 min-w-[180px] z-50 text-left pointer-events-none animate-fluid-pop shadow-2xl">
+                    <span className="text-[10px] font-bold text-foreground block leading-tight">{member.fullName}</span>
+                    <span className="text-[8px] text-muted-foreground capitalize block mt-0.5">{member.role || 'Member'}</span>
+                    <div className="w-full h-[1px] bg-white/5 my-1" />
                     {hasFocus ? (
-                      <div className="flex items-start gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0 mt-1 animate-pulse" />
-                        <span className="text-[10px] font-medium text-foreground italic leading-normal">
+                      <div className="flex items-start gap-1">
+                        <span className="h-1 w-1 rounded-full bg-emerald-400 shrink-0 mt-1 animate-pulse" />
+                        <span className="text-[9px] font-medium text-foreground italic leading-tight">
                           "{member.focusStatus!.text}"
                         </span>
                       </div>
                     ) : (
-                      <span className="text-[9px] text-muted-foreground italic">No active focus intent</span>
+                      <span className="text-[8px] text-muted-foreground italic">No active focus</span>
                     )}
                   </div>
                 )}
