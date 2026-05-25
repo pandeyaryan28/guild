@@ -352,7 +352,10 @@ function RequestCard({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-white/5 bg-white/2 p-4 space-y-2.5 hover:bg-white/5 hover:border-white/10 hover:shadow-md hover:scale-[1.01] transition-all duration-300 relative overflow-hidden"
+      className="rounded-2xl border bg-white/2 p-4 space-y-2.5 hover:bg-white/5 hover:shadow-md hover:scale-[1.005] transition-all duration-300 relative overflow-hidden"
+      style={{
+        borderColor: 'oklch(from var(--accent) l c h / 18%)',
+      }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5 min-w-0">
@@ -543,10 +546,10 @@ export function RequestsPage() {
             )}
             {pendingReceived.length > 0 && (
               <div className="space-y-3">
-                <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">
+                <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider max-w-3xl mx-auto">
                   Pending Your Action — {pendingReceived.length}
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="max-w-3xl mx-auto space-y-3">
                   {pendingReceived.map((r) => (
                     <RequestCard key={r.id} req={r} isSent={false} currentUser={userProfile} orgId={orgId} />
                   ))}
@@ -555,10 +558,10 @@ export function RequestsPage() {
             )}
             {historicReceived.length > 0 && (
               <div className="space-y-3">
-                <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mt-4">
+                <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mt-4 max-w-3xl mx-auto">
                   Reviewed
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="max-w-3xl mx-auto space-y-3">
                   {historicReceived.map((r) => (
                     <RequestCard key={r.id} req={r} isSent={false} currentUser={userProfile} orgId={orgId} />
                   ))}
@@ -576,7 +579,7 @@ export function RequestsPage() {
               />
             ) : (
               <div className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="max-w-3xl mx-auto space-y-3">
                   {sent.map((r) => (
                     <RequestCard key={r.id} req={r} isSent currentUser={userProfile} orgId={orgId} />
                   ))}
