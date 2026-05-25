@@ -52,36 +52,41 @@ interface NavItemProps {
   badge?: string | number;
   active?: boolean;
   collapsed?: boolean;
+  onClick?: () => void;
 }
 
 // ─── NavItem ─────────────────────────────────────────────────────────────────
 
-const NavItem = ({ icon: Icon, label, badge, active, collapsed }: NavItemProps) => {
+const NavItem = ({ icon: Icon, label, badge, active, collapsed, onClick }: NavItemProps) => {
   const inner = (
     <button
+      onClick={onClick}
       className={cn(
-        "flex w-full items-center rounded-lg text-sm font-medium transition-all duration-150 relative group",
-        collapsed ? "justify-center px-0 py-2.5" : "justify-between px-3 py-2",
+        "flex w-full items-center rounded-xl text-xs font-semibold transition-all duration-300 ease-out relative group select-none",
+        collapsed ? "justify-center px-0 py-2.5 h-9" : "justify-between px-3.5 py-2.5 h-10",
         active
-          ? "bg-primary/15 text-primary shadow-sm"
-          : "text-muted-foreground hover:bg-accent/30 hover:text-foreground"
+          ? "bg-gradient-to-r from-primary/12 via-primary/3 to-transparent text-foreground border-l-2 border-primary shadow-[0_0_12px_rgba(var(--accent),0.05)]"
+          : "text-muted-foreground hover:bg-white/[0.03] hover:text-foreground hover:translate-x-0.5 border-l-2 border-transparent"
       )}
     >
       <div className={cn("flex items-center", collapsed ? "" : "gap-3")}>
-        <Icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
-        {!collapsed && <span className="truncate">{label}</span>}
+        <Icon className={cn(
+          "h-4 w-4 shrink-0 transition-transform duration-300",
+          active ? "text-primary" : "text-text-muted group-hover:text-foreground group-hover:scale-105"
+        )} />
+        {!collapsed && <span className="truncate tracking-wide">{label}</span>}
       </div>
       {!collapsed && badge !== undefined && (
         <Badge
           variant="secondary"
-          className="h-5 min-w-[20px] justify-center px-1 text-[10px] bg-primary/20 border-none text-primary font-bold"
+          className="h-5 min-w-[20px] justify-center px-1 text-[9px] bg-primary/15 border border-primary/20 text-primary font-bold shadow-[0_0_8px_rgba(var(--accent),0.15)] rounded-lg"
         >
           {badge}
         </Badge>
       )}
       {/* Badge dot in collapsed mode */}
       {collapsed && badge !== undefined && (
-        <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
+        <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_var(--accent)]" />
       )}
     </button>
   );
@@ -90,10 +95,10 @@ const NavItem = ({ icon: Icon, label, badge, active, collapsed }: NavItemProps) 
     return (
       <Tooltip>
         <TooltipTrigger render={inner} />
-        <TooltipContent side="right" className="font-medium flex items-center gap-1.5">
+        <TooltipContent side="right" className="font-semibold flex items-center gap-1.5 border border-border-default/50 bg-surface backdrop-blur-md">
           {label}
           {badge !== undefined && (
-            <span className="bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+            <span className="bg-primary text-primary-foreground text-[8px] font-bold px-1.5 py-0.5 rounded-full">
               {badge}
             </span>
           )}
@@ -140,16 +145,20 @@ export function Sidebar() {
     <TooltipProvider delay={100}>
       <div
         className={cn(
-          "group/sidebar relative flex h-full flex-col border-r border-border-default bg-sidebar transition-all duration-300 ease-in-out",
-          collapsed ? "w-[60px]" : "w-[260px]"
+          "group/sidebar relative flex h-full flex-col border-r border-border-default/35 bg-surface/10 backdrop-blur-3xl transition-all duration-300 ease-in-out overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.3)]",
+          collapsed ? "w-[64px]" : "w-[260px]"
         )}
       >
+        {/* Ambient mesh background glows */}
+        <div className="absolute top-1/4 -left-12 h-36 w-36 rounded-full bg-primary/4 blur-[65px] pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-12 h-44 w-44 rounded-full bg-primary/5 blur-[85px] pointer-events-none" />
+
         {/* ── Collapse Toggle ─────────────────────────────────────────────── */}
         <button
           onClick={() => setCollapsed((v) => !v)}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "absolute top-6 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border-default bg-background shadow-sm text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border transition-all duration-300",
+            "absolute top-6 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border-default/40 bg-background shadow-lg shadow-black/20 text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border transition-all duration-300 cursor-pointer",
             collapsed ? "-right-3" : "-right-3 opacity-0 group-hover/sidebar:opacity-100"
           )}
         >
@@ -162,17 +171,17 @@ export function Sidebar() {
         </button>
 
         {/* ── Header / Workspace ──────────────────────────────────────────── */}
-        <div className={cn("shrink-0 pt-2", collapsed ? "px-2 pb-2" : "px-4 pb-2 pt-3")}>
+        <div className={cn("shrink-0 pt-2 z-10", collapsed ? "px-2.5 pb-2" : "px-4 pb-2 pt-3")}>
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <div className="flex h-9 w-9 mx-auto items-center justify-center rounded-lg bg-primary text-[11px] font-bold text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer select-none">
+                  <div className="flex h-9 w-9 mx-auto items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-[11px] font-black text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer select-none">
                     {orgInitial}
                   </div>
                 }
               />
-              <TooltipContent side="right" className="font-semibold">
+              <TooltipContent side="right" className="font-semibold border border-border-default/50 bg-surface backdrop-blur-md">
                 {orgName || "Organization"}
               </TooltipContent>
             </Tooltip>
@@ -181,34 +190,34 @@ export function Sidebar() {
               <DropdownMenuTrigger
                 className={cn(
                   buttonVariants({ variant: "ghost" }),
-                  "h-10 w-full justify-between gap-2 px-2 hover:bg-accent/30 flex items-center"
+                  "h-11 w-full justify-between gap-2 px-3.5 hover:bg-white/[0.04] border border-white/5 hover:border-primary/25 rounded-xl shadow-lg shadow-black/10 flex items-center transition-all duration-300 select-none outline-none cursor-pointer"
                 )}
               >
                 <div className="flex items-center gap-2.5 overflow-hidden">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-[10px] font-bold text-primary-foreground shadow-lg shadow-primary/20">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-[10px] font-black text-primary-foreground shadow-lg shadow-primary/30">
                     {orgInitial}
                   </div>
-                  <div className="flex flex-col items-start leading-none overflow-hidden">
-                    <span className="text-sm font-semibold text-foreground truncate max-w-[140px]">
+                  <div className="flex flex-col items-start leading-none overflow-hidden text-left">
+                    <span className="text-xs font-extrabold text-foreground truncate max-w-[130px]">
                       {orgName || "Loading…"}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">Premium Plan</span>
+                    <span className="text-[9px] font-bold text-text-muted mt-0.5 tracking-wider uppercase">Premium</span>
                   </div>
                 </div>
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-muted transition-transform duration-300" />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="w-[200px] border-border-default bg-popover/90 backdrop-blur-md"
+                className="w-[200px] border-border-default/40 bg-surface/90 backdrop-blur-xl"
               >
-                <DropdownMenuItem className="gap-2">
+                <DropdownMenuItem className="gap-2 font-semibold">
                   <div className="h-5 w-5 rounded bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
                     {orgInitial}
                   </div>
                   {orgName}
                 </DropdownMenuItem>
                 <Separator className="my-1 bg-border/40" />
-                <DropdownMenuItem className="gap-2 text-muted-foreground" disabled>
+                <DropdownMenuItem className="gap-2 text-text-muted font-medium" disabled>
                   <Plus className="h-4 w-4" /> Create Workspace
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -217,10 +226,15 @@ export function Sidebar() {
         </div>
 
         {/* ── Scrollable Nav ──────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-h-0">
-          <nav className={cn("py-2 space-y-0.5", collapsed ? "px-2" : "px-3")}>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-h-0 z-10">
+          <nav className={cn("py-2.5 space-y-1", collapsed ? "px-2" : "px-3")}>
 
-            {/* Primary nav */}
+            {/* CATEGORY: MAIN HUB */}
+            {!collapsed && (
+              <p className="text-[8px] font-extrabold uppercase tracking-widest text-text-muted/40 px-3.5 pt-2.5 pb-1 select-none">
+                Main Hub
+              </p>
+            )}
             <NavLink to="/" end>
               {({ isActive }) => (
                 <NavItem icon={LayoutDashboard} label="Dashboard" active={isActive} collapsed={collapsed} />
@@ -240,10 +254,10 @@ export function Sidebar() {
 
             {/* Channels section — hidden when collapsed */}
             {!collapsed && (
-              <div className="mt-3">
+              <div className="mt-2.5">
                 <button
                   onClick={() => setIsChannelsOpen((v) => !v)}
-                  className="flex w-full items-center justify-between px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground rounded-md hover:bg-accent/20"
+                  className="flex w-full items-center justify-between px-3.5 py-1.5 text-[9px] font-extrabold uppercase tracking-wider text-text-muted/50 transition-colors hover:text-foreground rounded-lg hover:bg-white/[0.02]"
                 >
                   <span>Channels</span>
                   <ChevronDown
@@ -253,14 +267,14 @@ export function Sidebar() {
                     )}
                   />
                 </button>
-                <div className="mt-1 space-y-0.5 ml-1">
+                <div className="mt-0.5 space-y-0.5 ml-1">
                   {channelsLoading ? (
-                    <div className="flex items-center gap-2 px-3 py-2">
+                    <div className="flex items-center gap-2 px-3.5 py-2">
                       <Loader2 className="h-3 w-3 animate-spin text-text-muted" />
-                      <span className="text-[10px] text-text-muted">Loading…</span>
+                      <span className="text-[9px] text-text-muted">Loading…</span>
                     </div>
                   ) : channels.length === 0 ? (
-                    <p className="px-3 py-2 text-[10px] text-text-muted">No channels yet</p>
+                    <p className="px-3.5 py-2 text-[9px] text-text-muted font-medium">No channels yet</p>
                   ) : (
                     channels.map((ch) => {
                       const unread = hasUnread(ch);
@@ -269,55 +283,55 @@ export function Sidebar() {
                       if (!isChannelsOpen && !isActive && !unread) return null;
 
                       return (
-                          <NavLink
-                            key={ch.id}
-                            to={`/chat/c/${ch.id}`}
-                            className={({ isActive }) =>
-                              cn(
-                                "group flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
-                                isActive
-                                  ? "bg-accent/50 text-foreground"
-                                  : unread
-                                  ? "text-foreground font-semibold hover:bg-accent/20"
-                                  : "text-muted-foreground hover:bg-accent/20 hover:text-foreground"
-                              )
-                            }
-                          >
-                            <Hash className="h-3 w-3 shrink-0 group-hover:text-primary transition-colors" />
-                            <span className="flex-1 truncate">{ch.name}</span>
-                            {unread && (
-                              <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                            )}
-                          </NavLink>
-                        );
-                      })
-                    )}
-                  </div>
+                        <NavLink
+                          key={ch.id}
+                          to={`/chat/c/${ch.id}`}
+                          className={({ isActive }) =>
+                            cn(
+                              "group flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all border-l-2 border-transparent select-none",
+                              isActive
+                                ? "bg-accent/40 text-foreground font-bold"
+                                : unread
+                                ? "text-foreground font-bold hover:bg-white/[0.02]"
+                                : "text-muted-foreground hover:bg-white/[0.02] hover:text-foreground"
+                            )
+                          }
+                        >
+                          <Hash className="h-3 w-3 shrink-0 group-hover:text-primary transition-colors text-text-muted" />
+                          <span className="flex-1 truncate tracking-wide">{ch.name}</span>
+                          {unread && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                          )}
+                        </NavLink>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             )}
 
-            {/* Collapsed: single icon for chat channels */}
+            {/* Collapsed: single indicator for chat channels */}
             {collapsed && unreadChannels > 0 && (
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <div className="flex justify-center py-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_var(--accent)]" />
                     </div>
                   }
                 />
-                <TooltipContent side="right">
+                <TooltipContent side="right" className="border border-border-default/50 bg-surface backdrop-blur-md">
                   {unreadChannels} unread channel{unreadChannels > 1 ? "s" : ""}
                 </TooltipContent>
               </Tooltip>
             )}
 
-            {/* Divider */}
-            <div className={cn("my-2", collapsed ? "px-1" : "")}>
-              <Separator className="bg-border/20" />
-            </div>
-
-            {/* Secondary nav */}
+            {/* CATEGORY: PRODUCTIVITY */}
+            {!collapsed && (
+              <p className="text-[8px] font-extrabold uppercase tracking-widest text-text-muted/40 px-3.5 pt-4 pb-1 select-none">
+                Productivity
+              </p>
+            )}
             <NavLink to="/workspace">
               {({ isActive }) => (
                 <NavItem icon={LayoutGrid} label="Workspace" active={isActive} collapsed={collapsed} />
@@ -339,6 +353,13 @@ export function Sidebar() {
                 <NavItem icon={Calendar} label="Calendar" active={isActive} collapsed={collapsed} />
               )}
             </NavLink>
+
+            {/* CATEGORY: DIRECTORY & DATA */}
+            {!collapsed && (
+              <p className="text-[8px] font-extrabold uppercase tracking-widest text-text-muted/40 px-3.5 pt-4 pb-1 select-none">
+                Directory & Data
+              </p>
+            )}
             <NavLink to="/people">
               {({ isActive }) => (
                 <NavItem icon={Users} label="People" active={isActive} collapsed={collapsed} />
@@ -352,8 +373,13 @@ export function Sidebar() {
           </nav>
         </div>
 
-        {/* ── Bottom Section ──────────────────────────────────────────────── */}
-        <div className={cn("shrink-0 border-t border-border-default", collapsed ? "px-2 py-3 space-y-1" : "p-4 space-y-3")}>
+        {/* ── Bottom Section (Cockpit Tray) ────────────────────────────────── */}
+        <div className={cn(
+          "shrink-0 z-10",
+          collapsed 
+            ? "px-2 py-3 space-y-1.5 border-t border-border-default/35" 
+            : "p-3 border-t border-border-default/20 bg-white/[0.01] dark:bg-black/10 backdrop-blur-md rounded-2xl m-2.5 shadow-xl shadow-black/10 border border-white/5 space-y-2"
+        )}>
           {/* Notifications + Settings */}
           <div className={cn("space-y-0.5", collapsed && "flex flex-col items-center gap-0.5")}>
             <NavItem
@@ -369,7 +395,7 @@ export function Sidebar() {
             </NavLink>
           </div>
 
-          {!collapsed && <Separator className="bg-border/20" />}
+          {!collapsed && <Separator className="bg-border/25" />}
 
           {/* Footer row */}
           <div
@@ -380,33 +406,33 @@ export function Sidebar() {
           >
             {!collapsed && (
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                <span className="text-[10px] font-medium text-muted-foreground">Guild v1.0.0</span>
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.55)]" />
+                <span className="text-[10px] font-bold text-text-muted">Guild v1.0.0</span>
               </div>
             )}
             <div className={cn("flex items-center gap-2", collapsed && "flex-col")}>
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <button className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-accent/30">
+                    <button className="text-text-muted hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-white/[0.04] outline-none border border-transparent hover:border-white/5 cursor-pointer">
                       <Terminal className="h-3.5 w-3.5" />
                     </button>
                   }
                 />
-                {collapsed && <TooltipContent side="right">Console</TooltipContent>}
+                {collapsed && <TooltipContent side="right" className="border border-border-default/50 bg-surface backdrop-blur-md">Console</TooltipContent>}
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <button
                       onClick={handleLogout}
-                      className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded-md hover:bg-destructive/10"
+                      className="text-text-muted hover:text-destructive transition-colors p-1.5 rounded-lg hover:bg-destructive/10 outline-none border border-transparent hover:border-destructive/10 cursor-pointer"
                     >
                       <LogOut className="h-3.5 w-3.5" />
                     </button>
                   }
                 />
-                {collapsed && <TooltipContent side="right">Sign out</TooltipContent>}
+                {collapsed && <TooltipContent side="right" className="border border-border-default/50 bg-surface backdrop-blur-md">Sign out</TooltipContent>}
               </Tooltip>
             </div>
           </div>
