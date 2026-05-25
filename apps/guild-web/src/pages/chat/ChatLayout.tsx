@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {
   Hash, Plus, MessageSquare, ChevronDown, ChevronRight,
-  LayoutDashboard, Palette, LogOut, Loader2, Users, Moon, Sun
+  LayoutDashboard, Palette, LogOut, Loader2, Users, Moon, Sun,
+  Lock, Megaphone
 } from 'lucide-react';
 import { useNavigate, useParams, NavLink, useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -134,6 +135,8 @@ function ChatSidebar() {
                 
                 if (!channelsOpen && !isActive && !unread) return null;
 
+                const IconComponent = ch.isPrivate ? Lock : Hash;
+
                 return (
                   <NavLink
                     key={ch.id}
@@ -148,8 +151,13 @@ function ChatSidebar() {
                         : 'text-muted-foreground hover:bg-bg-tertiary hover:text-foreground',
                     )}
                   >
-                    <Hash className={cn('h-3.5 w-3.5 shrink-0', isActive ? 'text-primary' : 'text-text-muted')} />
+                    <IconComponent className={cn('h-3.5 w-3.5 shrink-0', isActive ? 'text-primary' : 'text-text-muted')} />
                     <span className="flex-1 truncate">{ch.name}</span>
+                    {ch.isRestricted && (
+                      <span title="Announcements Only" className="shrink-0 flex items-center">
+                        <Megaphone className="h-3 w-3 text-text-muted opacity-60" />
+                      </span>
+                    )}
                     {unread && !isActive && (
                       <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
                     )}

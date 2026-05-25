@@ -268,6 +268,8 @@ export interface Channel {
   memberCount: number;
   lastMessageAt?: Timestamp;
   lastMessagePreview?: string;
+  isPrivate?: boolean;
+  isRestricted?: boolean;
 }
 
 export interface ChannelMember {

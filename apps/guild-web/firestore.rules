@@ -78,20 +78,41 @@ service cloud.firestore {
     // All collections with 'orgId' field
 
     match /channels/{docId} {
-      allow read: if isOrgMember(resource.data.orgId);
+      allow read: if isOrgMember(resource.data.orgId) && (
+        !resource.data.keys().hasAny(['isPrivate']) ||
+        resource.data.isPrivate == false ||
+        exists(/databases/$(database)/documents/channelMembers/$(docId)_$(request.auth.uid))
+      );
       allow create: if isOrgMember(request.resource.data.orgId);
-      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
-      allow delete: if isOrgMember(resource.data.orgId);
+      allow update, delete: if isOrgMember(resource.data.orgId) && (
+        resource.data.createdBy == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['owner', 'admin']
+      );
     }
     match /channelMembers/{docId} {
       allow read: if isOrgMember(resource.data.orgId);
       allow create: if isOrgMember(request.resource.data.orgId);
-      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
-      allow delete: if isOrgMember(resource.data.orgId);
+      allow update, delete: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
     }
     match /messages/{docId} {
-      allow read: if isOrgMember(resource.data.orgId);
-      allow create: if isOrgMember(request.resource.data.orgId);
+      allow read: if isOrgMember(resource.data.orgId) && (
+        !resource.data.keys().hasAny(['channelId']) ||
+        !get(/databases/$(database)/documents/channels/$(resource.data.channelId)).data.keys().hasAny(['isPrivate']) ||
+        get(/databases/$(database)/documents/channels/$(resource.data.channelId)).data.isPrivate == false ||
+        exists(/databases/$(database)/documents/channelMembers/$(resource.data.channelId)_$(request.auth.uid))
+      );
+      allow create: if isOrgMember(request.resource.data.orgId) && (
+        !request.resource.data.keys().hasAny(['channelId']) ||
+        !get(/databases/$(database)/documents/channels/$(request.resource.data.channelId)).data.keys().hasAny(['isRestricted']) ||
+        get(/databases/$(database)/documents/channels/$(request.resource.data.channelId)).data.isRestricted == false ||
+        get(/databases/$(database)/documents/channels/$(request.resource.data.channelId)).data.createdBy == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['owner', 'admin']
+      ) && (
+        !request.resource.data.keys().hasAny(['channelId']) ||
+        !get(/databases/$(database)/documents/channels/$(request.resource.data.channelId)).data.keys().hasAny(['isPrivate']) ||
+        get(/databases/$(database)/documents/channels/$(request.resource.data.channelId)).data.isPrivate == false ||
+        exists(/databases/$(database)/documents/channelMembers/$(request.resource.data.channelId)_$(request.auth.uid))
+      );
       allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
       allow delete: if isOrgMember(resource.data.orgId);
     }

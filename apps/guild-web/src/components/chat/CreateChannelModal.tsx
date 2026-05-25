@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { X, Hash, Loader2 } from 'lucide-react';
+import { X, Hash, Loader2, Lock, Megaphone } from 'lucide-react';
 import { createChannel } from '../../lib/chat';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,8 @@ export function CreateChannelModal({ orgId, onClose, onCreated }: CreateChannelM
   const { user } = useAuth();
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
+  const [isPrivate, setIsPrivate] = React.useState(false);
+  const [isRestricted, setIsRestricted] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
 
@@ -24,7 +26,7 @@ export function CreateChannelModal({ orgId, onClose, onCreated }: CreateChannelM
     setLoading(true);
     setError('');
     try {
-      const id = await createChannel(orgId, name, description, user.uid);
+      const id = await createChannel(orgId, name, description, user.uid, { isPrivate, isRestricted });
       onCreated(id);
     } catch (e: any) {
       setError(e.message || 'Failed to create channel');
@@ -79,6 +81,59 @@ export function CreateChannelModal({ orgId, onClose, onCreated }: CreateChannelM
               rows={2}
               className="w-full resize-none rounded-xl border border-border-default bg-bg-tertiary px-3 py-2.5 text-sm text-foreground placeholder:text-text-muted focus:outline-none focus:border-primary/40 transition-colors"
             />
+          </div>
+
+          {/* Toggles for Privacy and Restrictions */}
+          <div className="grid grid-cols-1 gap-2.5 pt-1">
+            {/* Private Toggle */}
+            <div className="flex items-center justify-between rounded-xl border border-border-default bg-bg-tertiary px-4 py-2.5">
+              <div className="flex items-center gap-2.5">
+                <Lock className="h-4 w-4 text-text-muted shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-foreground">Private Channel</p>
+                  <p className="text-[10px] text-text-muted">Only invited members can view or join</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPrivate(!isPrivate)}
+                className={cn(
+                  "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                  isPrivate ? "bg-primary border-primary" : "bg-black/25 border-border-default"
+                )}
+              >
+                <span
+                  className={cn(
+                    "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                    isPrivate ? "translate-x-4" : "translate-x-0"
+                  )}
+                />
+              </button>
+            </div>
+
+            {/* Announcement Toggle */}
+            <div className="flex items-center justify-between rounded-xl border border-border-default bg-bg-tertiary px-4 py-2.5">
+              <div className="flex items-center gap-2.5">
+                <Megaphone className="h-4 w-4 text-text-muted shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-foreground">Restrict Posting</p>
+                  <p className="text-[10px] text-text-muted">Only administrators can send messages</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsRestricted(!isRestricted)}
+                className={cn(
+                  "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                  isRestricted ? "bg-primary border-primary" : "bg-black/25 border-border-default"
+                )}
+              >
+                <span
+                  className={cn(
+                    "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                    isRestricted ? "translate-x-4" : "translate-x-0"
+                  )}
+                />
+              </button>
+            </div>
           </div>
 
           {error && <p className="text-xs text-destructive">{error}</p>}

@@ -1,7 +1,7 @@
 import {
   collection, doc, setDoc, addDoc, updateDoc,
   getDoc, query, where, orderBy, onSnapshot,
-  serverTimestamp, Timestamp, writeBatch,
+  serverTimestamp, Timestamp, writeBatch, deleteDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notifications';
@@ -30,6 +30,7 @@ export async function seedDefaultChannels(orgId: string, creatorUid: string): Pr
     batch.set(channelRef, {
       id: channelId, orgId, name: ch.name, description: ch.description,
       createdBy: creatorUid, createdAt: serverTimestamp(), memberCount: 1,
+      isPrivate: false, isRestricted: false,
     });
 
     batch.set(doc(db, 'channelMembers', `${channelId}_${creatorUid}`), {
@@ -45,6 +46,7 @@ export async function seedDefaultChannels(orgId: string, creatorUid: string): Pr
 
 export async function createChannel(
   orgId: string, name: string, description: string, creatorUid: string,
+  options?: { isPrivate?: boolean; isRestricted?: boolean },
 ): Promise<string> {
   const channelRef = doc(collection(db, 'channels'));
   const channelId = channelRef.id;
@@ -53,6 +55,8 @@ export async function createChannel(
   await setDoc(channelRef, {
     id: channelId, orgId, name: slug, description,
     createdBy: creatorUid, createdAt: serverTimestamp(), memberCount: 1,
+    isPrivate: options?.isPrivate ?? false,
+    isRestricted: options?.isRestricted ?? false,
   });
 
   await joinChannel(channelId, creatorUid, orgId);
@@ -214,16 +218,51 @@ export function listenToChannels(
   userId: string,
   cb: (channels: Channel[], memberships: Set<string>, lastReads: Map<string, Timestamp>) => void,
 ): () => void {
-  let channels: Channel[] = [];
+  let publicChannels: Channel[] = [];
+  let privateChannelsMap = new Map<string, Channel>();
   let memberships = new Set<string>();
   let lastReads = new Map<string, Timestamp>();
 
+  const privateListeners = new Map<string, () => void>();
+
+  const triggerCallback = () => {
+    const allChannelsMap = new Map<string, Channel>();
+    publicChannels.forEach(c => allChannelsMap.set(c.id, c));
+    privateChannelsMap.forEach((c, id) => {
+      if (memberships.has(id)) {
+        allChannelsMap.set(id, c);
+      }
+    });
+
+    const merged = Array.from(allChannelsMap.values()).sort((a, b) => {
+      const aTime = a.createdAt?.toMillis() || 0;
+      const bTime = b.createdAt?.toMillis() || 0;
+      return aTime - bTime;
+    });
+
+    cb(merged, memberships, lastReads);
+  };
+
   const unsubCh = onSnapshot(
-    query(collection(db, 'channels'), where('orgId', '==', orgId), orderBy('createdAt', 'asc')),
+    query(
+      collection(db, 'channels'),
+      where('orgId', '==', orgId),
+      where('isPrivate', '==', false),
+    ),
     (snap) => {
-      channels = snap.docs.map((d) => d.data() as Channel);
-      cb(channels, memberships, lastReads);
+      publicChannels = snap.docs.map((d) => d.data() as Channel);
+      publicChannels.forEach(c => {
+        if (privateListeners.has(c.id)) {
+          privateListeners.get(c.id)?.();
+          privateListeners.delete(c.id);
+          privateChannelsMap.delete(c.id);
+        }
+      });
+      triggerCallback();
     },
+    (err) => {
+      console.error('Error listening to public channels:', err);
+    }
   );
 
   const unsubMem = onSnapshot(
@@ -233,18 +272,58 @@ export function listenToChannels(
       where('userId', '==', userId),
     ),
     (snap) => {
-      memberships = new Set<string>();
-      lastReads = new Map<string, Timestamp>();
+      const newMemberships = new Set<string>();
+      const newLastReads = new Map<string, Timestamp>();
+      
       snap.docs.forEach((d) => {
         const m = d.data() as ChannelMember;
-        memberships.add(m.channelId);
-        if (m.lastRead) lastReads.set(m.channelId, m.lastRead);
+        newMemberships.add(m.channelId);
+        if (m.lastRead) newLastReads.set(m.channelId, m.lastRead);
       });
-      cb(channels, memberships, lastReads);
+
+      memberships = newMemberships;
+      lastReads = newLastReads;
+
+      const publicIds = new Set(publicChannels.map(c => c.id));
+      
+      memberships.forEach((id) => {
+        if (!publicIds.has(id) && !privateListeners.has(id)) {
+          const unsubPrivate = onSnapshot(
+            doc(db, 'channels', id),
+            (docSnap) => {
+              if (docSnap.exists()) {
+                privateChannelsMap.set(id, docSnap.data() as Channel);
+                triggerCallback();
+              }
+            },
+            (err) => {
+              console.error(`Error listening to private channel ${id}:`, err);
+            }
+          );
+          privateListeners.set(id, unsubPrivate);
+        }
+      });
+
+      privateListeners.forEach((unsubPrivate, id) => {
+        if (!memberships.has(id) || publicIds.has(id)) {
+          unsubPrivate();
+          privateListeners.delete(id);
+          privateChannelsMap.delete(id);
+        }
+      });
+
+      triggerCallback();
     },
+    (err) => {
+      console.error('Error listening to memberships:', err);
+    }
   );
 
-  return () => { unsubCh(); unsubMem(); };
+  return () => {
+    unsubCh();
+    unsubMem();
+    privateListeners.forEach(unsub => unsub());
+  };
 }
 
 export function listenToMessages(
@@ -314,6 +393,76 @@ export function listenToUserDMs(
   );
 
   return () => { unsubThreads(); unsubReads(); };
+}
+
+export async function updateChannelSettings(
+  channelId: string,
+  data: { name?: string; description?: string; isRestricted?: boolean; isPrivate?: boolean }
+): Promise<void> {
+  const channelRef = doc(db, 'channels', channelId);
+  const updates: Record<string, any> = {};
+  if (data.name !== undefined) {
+    updates.name = data.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  }
+  if (data.description !== undefined) updates.description = data.description;
+  if (data.isRestricted !== undefined) updates.isRestricted = data.isRestricted;
+  if (data.isPrivate !== undefined) updates.isPrivate = data.isPrivate;
+
+  await updateDoc(channelRef, updates);
+}
+
+export async function addChannelMembers(
+  channelId: string,
+  orgId: string,
+  memberIds: string[],
+  inviterId: string,
+  inviterName: string
+): Promise<void> {
+  const batch = writeBatch(db);
+
+  for (const uid of memberIds) {
+    const memberRef = doc(db, 'channelMembers', `${channelId}_${uid}`);
+    batch.set(
+      memberRef,
+      { channelId, userId: uid, orgId, joinedAt: serverTimestamp(), lastRead: serverTimestamp() },
+      { merge: true }
+    );
+
+    // Send a notification
+    createNotification({
+      orgId,
+      recipientId: uid,
+      type: 'channel_invite',
+      actorId: inviterId,
+      actorName: inviterName,
+      data: { channelId },
+    }).catch((e) => console.error('Failed to create channel_invite notification:', e));
+  }
+
+  const snap = await getDoc(doc(db, 'channels', channelId));
+  if (snap.exists()) {
+    batch.update(doc(db, 'channels', channelId), {
+      memberCount: (snap.data().memberCount || 0) + memberIds.length,
+    });
+  }
+
+  await batch.commit();
+}
+
+export async function removeChannelMember(channelId: string, userId: string): Promise<void> {
+  const batch = writeBatch(db);
+  batch.delete(doc(db, 'channelMembers', `${channelId}_${userId}`));
+  const snap = await getDoc(doc(db, 'channels', channelId));
+  if (snap.exists()) {
+    batch.update(doc(db, 'channels', channelId), {
+      memberCount: Math.max(0, (snap.data().memberCount || 1) - 1),
+    });
+  }
+  await batch.commit();
+}
+
+export async function deleteChannel(channelId: string): Promise<void> {
+  await deleteDoc(doc(db, 'channels', channelId));
 }
 
 export type { Channel, ChannelMember, Message, DirectMessageThread };

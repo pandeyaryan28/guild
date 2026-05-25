@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Hash, MessageSquare, Users, ChevronLeft } from 'lucide-react';
+import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useChannels } from '../../hooks/useChat';
 import { useMessages } from '../../hooks/useChat';
@@ -11,6 +11,8 @@ import { db } from '../../lib/firebase';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { type Channel } from '../../lib/chat';
 import { createTask } from '../../lib/tasks';
+import { InviteChannelMembersModal } from '../../components/chat/InviteChannelMembersModal';
+import { ChannelSettingsModal } from '../../components/chat/ChannelSettingsModal';
 
 interface MessageAreaProps {
   channelId: string | null;
@@ -27,6 +29,8 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
   const { channels } = useChannels(orgId);
   const [dmPartnerName, setDmPartnerName] = React.useState('');
   const [channel, setChannel] = React.useState<Channel | null>(null);
+  const [showInviteModal, setShowInviteModal] = React.useState(false);
+  const [showSettingsModal, setShowSettingsModal] = React.useState(false);
 
   // Find channel info
   React.useEffect(() => {
@@ -37,6 +41,17 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
       setChannel(null);
     }
   }, [channelId, channels]);
+
+  const canPost = React.useMemo(() => {
+    if (!channelId || !channel) return true;
+    if (!channel.isRestricted) return true;
+    if (!currentUser) return false;
+    return (
+      channel.createdBy === currentUser.uid ||
+      profile?.role === 'owner' ||
+      profile?.role === 'admin'
+    );
+  }, [channelId, channel, currentUser, profile]);
 
   // Find DM partner name
   React.useEffect(() => {
@@ -151,14 +166,23 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
     }
   };
 
-  const headerTitle = channelId ? `#\u200B${channel?.name ?? '…'}` : dmPartnerName || '…';
+  const headerTitle = channelId ? `${channel?.isPrivate ? '' : '#'}\u200B${channel?.name ?? '…'}` : dmPartnerName || '…';
   const headerSub = channelId
     ? channel?.description ?? ''
     : `Direct message`;
-  const Icon = channelId ? Hash : MessageSquare;
+  const Icon = channelId ? (channel?.isPrivate ? Lock : Hash) : MessageSquare;
+
+  const isChannelAdmin = React.useMemo(() => {
+    if (!channel || !currentUser) return false;
+    return (
+      channel.createdBy === currentUser.uid ||
+      profile?.role === 'owner' ||
+      profile?.role === 'admin'
+    );
+  }, [channel, currentUser, profile]);
 
   return (
-    <div className="flex flex-1 min-w-0 flex-col bg-background">
+    <div className="flex flex-1 min-w-0 flex-col bg-background relative">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-border-default bg-surface backdrop-blur-sm px-5 py-3.5 shrink-0">
         <button
@@ -173,13 +197,35 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
           <Icon className="h-4 w-4 text-primary/70" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-sm font-bold text-foreground">{headerTitle}</h1>
+          <h1 className="text-sm font-bold text-foreground flex items-center gap-1">{headerTitle}</h1>
           {headerSub && <p className="text-[11px] text-text-muted truncate">{headerSub}</p>}
         </div>
         {channelId && channel && (
-          <div className="ml-auto flex items-center gap-1.5 text-text-muted">
-            <Users className="h-3.5 w-3.5" />
-            <span className="text-[11px]">{channel.memberCount}</span>
+          <div className="ml-auto flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-text-muted">
+              <Users className="h-3.5 w-3.5" />
+              <span className="text-[11px]">{channel.memberCount}</span>
+            </div>
+
+            {/* Invite Button */}
+            <button
+              onClick={() => setShowInviteModal(true)}
+              title="Add members"
+              className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors shrink-0"
+            >
+              <UserPlus className="h-4 w-4" />
+            </button>
+
+            {/* Settings Gear Button */}
+            {isChannelAdmin && (
+              <button
+                onClick={() => setShowSettingsModal(true)}
+                title="Channel settings"
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors shrink-0"
+              >
+                <Settings className="h-4 w-4" />
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -194,10 +240,38 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
       {/* Input */}
       <MessageInput
         onSend={handleSend}
-        placeholder={channelId ? `Message #${channel?.name ?? '…'}` : `Message ${dmPartnerName || '…'}`}
+        placeholder={
+          !canPost
+            ? 'Only administrators can send messages in this channel'
+            : channelId
+            ? `Message #${channel?.name ?? '…'}`
+            : `Message ${dmPartnerName || '…'}`
+        }
         members={members}
-        disabled={!currentUser || !orgId}
+        disabled={!currentUser || !orgId || !canPost}
       />
+
+      {/* Modals */}
+      {showInviteModal && channelId && orgId && (
+        <InviteChannelMembersModal
+          channelId={channelId}
+          orgId={orgId}
+          currentUser={currentUser}
+          onClose={() => setShowInviteModal(false)}
+        />
+      )}
+
+      {showSettingsModal && channel && orgId && (
+        <ChannelSettingsModal
+          channel={channel}
+          orgId={orgId}
+          currentUserProfile={profile}
+          onClose={() => setShowSettingsModal(false)}
+          onUpdated={() => {
+            // Merged listener will handle updating channels in real-time, but this triggers a quick state redraw
+          }}
+        />
+      )}
     </div>
   );
 }
