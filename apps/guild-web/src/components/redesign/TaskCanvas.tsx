@@ -23,7 +23,8 @@ import {
   ChevronDown,
   Activity,
   UserCheck,
-  ArrowRight
+  ArrowRight,
+  Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -340,6 +341,16 @@ export function TaskCanvas() {
     return { total: active.length, completed, rate };
   }, [scopedTasks]);
 
+  const counts = React.useMemo(() => {
+    const myUid = user?.uid ?? '';
+    const my = tasks.filter((t) => !t.parentTaskId && t.assigneeIds.includes(myUid)).length;
+    const assigned = tasks.filter((t) => !t.parentTaskId && t.creatorId === myUid && t.assigneeIds.some(id => id !== myUid)).length;
+    const review = tasks.filter((t) => !t.parentTaskId && t.creatorId === myUid && t.status === 'review').length;
+    const team = tasks.filter((t) => !t.parentTaskId && t.assigneeIds.some((id) => teamMemberIds.includes(id))).length;
+    const all = tasks.filter((t) => !t.parentTaskId).length;
+    return { my, assigned, review, team, all };
+  }, [tasks, user, teamMemberIds]);
+
   const hasActiveFilters = searchQuery || filterProject !== 'all' || filterGoal !== 'all' || filterPriority !== 'all' || filterStatus !== 'all';
 
   const resetFilters = () => {
@@ -366,7 +377,7 @@ export function TaskCanvas() {
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
               Back
             </button>
-            <h1 className="text-2xl font-black text-gradient bg-gradient-to-r from-foreground to-muted-foreground">Workspace Cockpit</h1>
+            <h1 className="text-2xl font-black text-gradient bg-gradient-to-r from-foreground to-muted-foreground">Workspace</h1>
           </div>
 
           <div className="flex items-center gap-3">
@@ -419,6 +430,74 @@ export function TaskCanvas() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Executive Scope Switcher Deck */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-row lg:flex-wrap [&>*]:lg:flex-1 gap-3 mb-5 select-none">
+          {[
+            { id: 'my', label: 'My Tasks', icon: UserCheck, count: counts.my },
+            { id: 'assigned', label: 'Assigned By Me', icon: Send, count: counts.assigned },
+            { id: 'review', label: 'Needs Review', icon: Clock, count: counts.review },
+            ...(isManager ? [{ id: 'team', label: 'Teammates', icon: Users, count: counts.team }] : []),
+            { id: 'all', label: 'Workspace Pool', icon: FolderKanban, count: counts.all },
+          ].map((scope) => {
+            const Icon = scope.icon;
+            const isActive = activeScope === scope.id;
+            return (
+              <button
+                key={scope.id}
+                onClick={() => setActiveScope(scope.id as any)}
+                className="aether-glass p-3 border rounded-xl flex items-center justify-between gap-3 text-left transition-all hover:bg-white/[0.04] cursor-pointer"
+                style={
+                  isActive
+                    ? {
+                        borderColor: 'var(--accent)',
+                        boxShadow: '0 0 15px oklch(from var(--accent) l c h / 12%)',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                      }
+                    : {
+                        borderColor: 'rgba(255, 255, 255, 0.06)',
+                      }
+                }
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                    style={{
+                      background: isActive
+                        ? 'oklch(from var(--accent) l c h / 15%)'
+                        : 'rgba(255, 255, 255, 0.03)',
+                      color: isActive ? 'var(--accent)' : 'rgba(255, 255, 255, 0.6)',
+                    }}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span
+                    className="text-xs font-bold truncate transition-colors"
+                    style={{ color: isActive ? 'var(--accent)' : 'rgba(255, 255, 255, 0.8)' }}
+                  >
+                    {scope.label}
+                  </span>
+                </div>
+                <span
+                  className="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold tracking-wider shrink-0 transition-colors"
+                  style={
+                    isActive
+                      ? {
+                          background: 'var(--accent)',
+                          color: '#ffffff',
+                        }
+                      : {
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          color: 'rgba(255, 255, 255, 0.6)',
+                        }
+                  }
+                >
+                  {scope.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Natural Language Capture Panel */}
@@ -505,21 +584,6 @@ export function TaskCanvas() {
 
           <div className="relative">
             <select
-              value={activeScope}
-              onChange={(e) => setActiveScope(e.target.value as any)}
-              className="appearance-none bg-white/5 border border-white/5 rounded-xl pl-3 pr-8 py-2 text-xs font-bold text-foreground outline-none cursor-pointer hover:bg-white/10 transition-colors"
-            >
-              <option value="my">My Tasks</option>
-              <option value="assigned">Assigned</option>
-              <option value="review">Reviews</option>
-              {isManager && <option value="team">Team Tasks</option>}
-              <option value="all">All Workspace</option>
-            </select>
-            <ChevronDown className="w-3 h-3 text-muted-foreground absolute right-3 top-3.5 pointer-events-none" />
-          </div>
-
-          <div className="relative">
-            <select
               value={filterProject}
               onChange={(e) => setFilterProject(e.target.value)}
               className="appearance-none bg-white/5 border border-white/5 rounded-xl pl-3 pr-8 py-2 text-xs font-bold text-foreground outline-none cursor-pointer hover:bg-white/10 transition-colors"
@@ -594,16 +658,17 @@ export function TaskCanvas() {
                             </span>
                           </div>
 
-                          <div className="aether-glass overflow-hidden divide-y divide-white/5">
+                          <div className="space-y-2.5">
                             {statusTasks.map((task) => {
                               const proj = projects.find(p => p.id === task.projectId);
                               const initials = task.assigneeIds.length > 0 ? memberMap[task.assigneeIds[0]]?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : null;
+                              const canApprove = task.status === 'review' && task.creatorId === actor.uid;
                               
                               return (
                                 <div 
                                   key={task.id}
                                   onClick={() => setSearchParams({ task: task.id })}
-                                  className="group px-4 py-3 flex items-center justify-between gap-4 bg-white/2 hover:bg-white/5 cursor-pointer transition-all"
+                                  className="group px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-white/[0.08] hover:border-[oklch(from_var(--accent)_l_c_h_/_25%)] bg-white/[0.02] hover:bg-white/[0.04] transition-all cursor-pointer relative shadow-sm hover:shadow-md hover:shadow-primary/2"
                                 >
                                   <div className="flex items-center gap-3 min-w-0">
                                     <button
@@ -627,19 +692,53 @@ export function TaskCanvas() {
                                         {task.title}
                                       </span>
                                       {proj && (
-                                        <span className="px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[9px] font-bold">
+                                        <span 
+                                          className="px-2 py-0.5 rounded-lg border text-[9px] font-bold"
+                                          style={{
+                                            color: 'var(--accent)',
+                                            borderColor: 'oklch(from var(--accent) l c h / 20%)',
+                                            background: 'oklch(from var(--accent) l c h / 8%)'
+                                          }}
+                                        >
                                           #{proj.name}
                                         </span>
                                       )}
                                     </div>
                                   </div>
 
-                                  <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex items-center gap-3 shrink-0 ml-7 sm:ml-0" onClick={(e) => e.stopPropagation()}>
+                                    {canApprove && (
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          onClick={() => handleApproveTask(task)}
+                                          className="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-white rounded-lg border transition-all cursor-pointer shadow-sm"
+                                          style={{
+                                            background: 'var(--accent)',
+                                            borderColor: 'oklch(from var(--accent) l c h / 45%)',
+                                          }}
+                                        >
+                                          Approve
+                                        </button>
+                                        <button
+                                          onClick={async () => {
+                                            const reason = window.prompt('Enter reason for requesting changes (optional):');
+                                            if (reason !== null) {
+                                              await handleRequestChanges(task, reason || undefined);
+                                            }
+                                          }}
+                                          className="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider border border-red-500/30 hover:border-red-500 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-white rounded-lg transition-all cursor-pointer"
+                                        >
+                                          Reject
+                                        </button>
+                                      </div>
+                                    )}
+
                                     {initials && (
                                       <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[9px] font-black text-emerald-400 flex items-center justify-center">
                                         {initials}
                                       </div>
                                     )}
+                                    
                                     <button 
                                       onClick={() => handleDeleteTask(task.id)}
                                       className="text-muted-foreground/30 hover:text-red-400 p-1 rounded hover:bg-white/5 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
@@ -666,8 +765,8 @@ export function TaskCanvas() {
                     const cfg = STATUS_CONFIG[status];
 
                     return (
-                      <div key={status} className="aether-glass flex flex-col max-h-[600px] border border-white/5 bg-white/2 dark:bg-black/5">
-                        <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                      <div key={status} className="backdrop-blur-md bg-white/[0.01] dark:bg-black/[0.05] flex flex-col max-h-[600px] border border-white/[0.06] rounded-2xl shadow-sm">
+                        <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: cfg.dot }} />
                             <span className="text-[10px] font-black uppercase tracking-widest text-foreground">{cfg.label}</span>
@@ -684,16 +783,24 @@ export function TaskCanvas() {
                             colTasks.map((task) => {
                               const proj = projects.find(p => p.id === task.projectId);
                               const initials = task.assigneeIds.length > 0 ? memberMap[task.assigneeIds[0]]?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : null;
+                              const canApprove = task.status === 'review' && task.creatorId === actor.uid;
+                              const subtaskStats = getSubtaskStats(task.id);
+                              
+                              const priorityColors: Record<string, string> = {
+                                urgent: 'border-l-4 border-l-red-500/75',
+                                high: 'border-l-4 border-l-orange-500/75',
+                                medium: 'border-l-4 border-l-amber-500/75',
+                                low: 'border-l-4 border-l-indigo-500/75',
+                              };
+                              const priorityClass = priorityColors[task.priority] || 'border border-white/[0.08]';
                               
                               return (
                                 <div
                                   key={task.id}
                                   onClick={() => setSearchParams({ task: task.id })}
-                                  className={cn("task-glass-card aether-glass bg-white/3 dark:bg-black/10 border border-white/5 p-4 space-y-3 cursor-pointer hover:border-white/10 hover:scale-[1.01] transition-all", 
-                                    task.priority === 'urgent' && 'priority-urgent',
-                                    task.priority === 'high' && 'priority-high',
-                                    task.priority === 'medium' && 'priority-medium',
-                                    task.priority === 'low' && 'priority-low'
+                                  className={cn(
+                                    "task-glass-card aether-glass bg-white/[0.02] dark:bg-black/10 border border-white/[0.08] hover:border-[oklch(from_var(--accent)_l_c_h_/_30%)] p-4 space-y-3 cursor-pointer hover:scale-[1.02] transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-primary/2", 
+                                    priorityClass
                                   )}
                                 >
                                   <div className="flex items-start justify-between gap-3">
@@ -704,16 +811,41 @@ export function TaskCanvas() {
                                     <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
                                       <button 
                                         onClick={() => cycleStatus(task, 'forward')}
-                                        className="text-muted-foreground/40 hover:text-foreground text-[10px] p-0.5 cursor-pointer"
+                                        className="text-muted-foreground/45 hover:text-foreground text-[10px] p-0.5 cursor-pointer hover:bg-white/5 rounded transition-all"
                                       >
-                                        <ArrowRight className="w-3 h-3" />
+                                        <ArrowRight className="w-3.5 h-3.5" />
                                       </button>
                                     </div>
                                   </div>
 
-                                  <div className="flex justify-between items-center gap-2 pt-1 border-t border-white/2 shrink-0">
+                                  {subtaskStats && (
+                                    <div className="space-y-1">
+                                      <div className="flex justify-between text-[9px] text-muted-foreground font-bold">
+                                        <span>Subtasks</span>
+                                        <span>{subtaskStats.completed}/{subtaskStats.total}</span>
+                                      </div>
+                                      <div className="w-full bg-white/5 rounded-full h-1 overflow-hidden">
+                                        <div 
+                                          className="h-full rounded-full transition-all duration-300" 
+                                          style={{ 
+                                            width: `${(subtaskStats.completed / subtaskStats.total) * 100}%`,
+                                            background: 'var(--accent)'
+                                          }} 
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="flex justify-between items-center gap-2 pt-1 border-t border-white/5 shrink-0">
                                     {proj ? (
-                                      <span className="text-[8px] font-bold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">
+                                      <span 
+                                        className="text-[8px] font-bold px-1.5 py-0.5 rounded border"
+                                        style={{
+                                          color: 'var(--accent)',
+                                          borderColor: 'oklch(from var(--accent) l c h / 20%)',
+                                          background: 'oklch(from var(--accent) l c h / 8%)'
+                                        }}
+                                      >
                                         #{proj.name.slice(0, 10)}
                                       </span>
                                     ) : (
@@ -726,6 +858,32 @@ export function TaskCanvas() {
                                       </div>
                                     )}
                                   </div>
+
+                                  {canApprove && (
+                                    <div className="pt-2 border-t border-white/5 flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                      <button
+                                        onClick={() => handleApproveTask(task)}
+                                        className="px-2 py-1 text-[8px] font-black uppercase tracking-widest text-white rounded border transition-all cursor-pointer"
+                                        style={{
+                                          background: 'var(--accent)',
+                                          borderColor: 'oklch(from var(--accent) l c h / 45%)',
+                                        }}
+                                      >
+                                        Approve
+                                      </button>
+                                      <button
+                                        onClick={async () => {
+                                          const reason = window.prompt('Enter reason for requesting changes (optional):');
+                                          if (reason !== null) {
+                                            await handleRequestChanges(task, reason || undefined);
+                                          }
+                                        }}
+                                        className="px-2 py-1 text-[8px] font-black uppercase tracking-widest border border-red-500/30 hover:border-red-500 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-white rounded transition-all cursor-pointer"
+                                      >
+                                        Reject
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })
@@ -746,13 +904,19 @@ export function TaskCanvas() {
       {/* 2. Side Widgets Column (Desktop only) */}
       <div className="hidden xl:flex flex-col w-[260px] shrink-0 gap-6 overflow-y-auto border-l border-white/5 pl-6 aether-scroll select-none">
         {/* Core metrics widget */}
-        <div className="aether-glass p-5 border border-white/5 space-y-4 bg-white/2">
+        <div className="aether-glass p-5 border border-white/[0.08] hover:border-[oklch(from_var(--accent)_l_c_h_/_30%)] space-y-4 bg-white/[0.02] transition-all rounded-2xl shadow-md shadow-primary/2">
           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
             <span>Execution Completion</span>
-            <span className="text-primary">{stats.rate}%</span>
+            <span style={{ color: 'var(--accent)' }} className="font-extrabold">{stats.rate}%</span>
           </div>
           <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-            <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${stats.rate}%` }} />
+            <div 
+              className="h-full rounded-full transition-all duration-500" 
+              style={{ 
+                width: `${stats.rate}%`,
+                background: `linear-gradient(90deg, var(--accent) 0%, oklch(from var(--accent) calc(l + 0.1) c h) 100%)`
+              }} 
+            />
           </div>
           <div className="flex justify-between text-[9px] text-muted-foreground font-bold">
             <span>{stats.completed} Done</span>
@@ -776,7 +940,7 @@ export function TaskCanvas() {
                 <div
                   key={goal.id}
                   onClick={() => navigate(`/goals/${goal.id}`)}
-                  className="aether-glass p-3 bg-white/2 hover:bg-white/5 cursor-pointer transition-all border border-white/5 group"
+                  className="p-3 bg-white/[0.02] hover:bg-white/[0.04] cursor-pointer hover:scale-[1.02] active:scale-[0.99] transition-all border border-white/[0.08] hover:border-[oklch(from_var(--accent)_l_c_h_/_25%)] rounded-xl group"
                 >
                   <span className="text-xs font-bold text-foreground group-hover:text-violet-400 transition-colors block truncate">{goal.title}</span>
                   <span className="text-[9px] text-muted-foreground block truncate mt-0.5">{goal.description || 'Sprint target objective'}</span>
@@ -789,7 +953,7 @@ export function TaskCanvas() {
         {/* Active Projects list */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            <FolderKanban className="w-3.5 h-3.5 text-primary" />
+            <FolderKanban className="w-3.5 h-3.5 text-primary" style={{ color: 'var(--accent)' }} />
             <span>Active Roadmaps</span>
           </div>
           <div className="space-y-2">
@@ -802,9 +966,9 @@ export function TaskCanvas() {
                 <div
                   key={proj.id}
                   onClick={() => navigate(`/projects/${proj.id}`)}
-                  className="aether-glass p-3 bg-white/2 hover:bg-white/5 cursor-pointer transition-all border border-white/5 group"
+                  className="p-3 bg-white/[0.02] hover:bg-white/[0.04] cursor-pointer hover:scale-[1.02] active:scale-[0.99] transition-all border border-white/[0.08] hover:border-[oklch(from_var(--accent)_l_c_h_/_25%)] rounded-xl group"
                 >
-                  <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors block truncate">{proj.name}</span>
+                  <span className="text-xs font-bold text-foreground group-hover:text-[var(--accent)] transition-colors block truncate">{proj.name}</span>
                   <span className="text-[9px] text-muted-foreground block truncate mt-0.5">{proj.description || 'Active operational tract'}</span>
                 </div>
               ))
