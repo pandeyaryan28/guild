@@ -7,7 +7,12 @@ import {
   Target, 
   Workflow, 
   ThumbsUp, 
-  RotateCcw 
+  RotateCcw,
+  Sparkles,
+  ArrowRight,
+  TrendingUp,
+  Users,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from '../hooks/useAuth';
@@ -68,10 +73,10 @@ function isCycleExpired(recurrence: GoalRecurrence, currentCycleStart: Timestamp
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
-  urgent: 'text-red-400 border-red-400/20 bg-red-400/5',
-  high:   'text-orange-400 border-orange-400/20 bg-orange-400/5',
-  medium: 'text-amber-400 border-amber-400/20 bg-amber-400/5',
-  low:    'text-blue-400 border-blue-400/20 bg-blue-400/5',
+  urgent: 'text-red-400 border-red-500/30 bg-red-500/5',
+  high:   'text-orange-400 border-orange-500/30 bg-orange-500/5',
+  medium: 'text-amber-400 border-amber-500/30 bg-amber-500/5',
+  low:    'text-blue-400 border-blue-500/30 bg-blue-500/5',
   none:   'text-muted-foreground border-border-default bg-bg-tertiary',
 };
 
@@ -405,47 +410,75 @@ export function DashboardHome() {
     done: 'completed',
   };
 
+  // Sprint Velocity radial setup
+  const sprintRingRadius = 20;
+  const sprintRingCircumference = 2 * Math.PI * sprintRingRadius;
+  const sprintRingStrokeDashoffset = sprintRingCircumference - (sprintPercentage / 100) * sprintRingCircumference;
+
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12 md:py-16 space-y-12">
-      {/* Sleek Typography Header */}
-      <header className="space-y-6">
-        <div className="space-y-1.5">
+    <div className="relative max-w-5xl mx-auto px-6 py-12 md:py-16 space-y-12 overflow-visible">
+      {/* Visual Ambient Glows */}
+      <div className="absolute top-[5%] left-[-15%] w-[450px] h-[450px] bg-primary/10 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-[20%] right-[-10%] w-[380px] h-[380px] bg-violet-600/5 rounded-full blur-[130px] pointer-events-none" />
+
+      {/* Visually Stunning Header */}
+      <header className="relative space-y-8 z-10">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-primary/20 bg-primary/5 text-primary">
+            Workspace Hub
+          </div>
           <motion.h1 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl font-semibold tracking-tight text-foreground"
+            className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground"
           >
             {greeting}, {displayName}
           </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="text-xs text-muted-foreground font-medium"
-          >
-            Workspace metrics: {myTasks.length} active tasks &bull; {unreadCount} pending items &bull; {sprintPercentage}% sprint progress
-          </motion.p>
+          
+          {/* Custom Metric Pills */}
+          <div className="flex flex-wrap items-center gap-2.5 pt-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-border-default/45 bg-surface/40 backdrop-blur-md text-muted-foreground shadow-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+              {myTasks.length} Active Tasks
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-border-default/45 bg-surface/40 backdrop-blur-md text-muted-foreground shadow-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+              {unreadCount} Action Items
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-border-default/45 bg-surface/40 backdrop-blur-md text-muted-foreground shadow-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              {sprintPercentage}% Sprint Progress
+            </div>
+          </div>
         </div>
 
-        {/* Typographic Daily Focus Bar */}
+        {/* Breathtaking Glass Focus Container */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="relative max-w-lg focus-within:ring-0 group transition-all"
+          className="relative max-w-2xl bg-surface/20 backdrop-blur-2xl border border-border-default/50 rounded-2xl p-5 shadow-2xl overflow-hidden group"
         >
-          <div className="flex items-center gap-3 py-1.5 border-b border-border-default/45 focus-within:border-primary/60 transition-all">
-            <Target className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors shrink-0" />
-            <input
-              type="text"
-              placeholder="Set your focus for today..."
-              value={focusInput}
-              onChange={(e) => setFocusInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveFocus();
-              }}
-              className="flex-1 bg-transparent border-none text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0 p-0 font-medium"
-            />
+          {/* Inner glass accent shine */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+          
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0 shadow-inner group-focus-within:bg-primary/25 transition-all">
+              <Target className="h-4.5 w-4.5 shrink-0" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">Focus Intent</p>
+              <input
+                type="text"
+                placeholder="Declare your focus for today..."
+                value={focusInput}
+                onChange={(e) => setFocusInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveFocus();
+                }}
+                className="w-full bg-transparent border-none text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0 p-0 font-medium mt-0.5"
+              />
+            </div>
             <AnimatePresence>
               {focusInput !== (userProfile?.focusStatus?.text || '') && (
                 <motion.button
@@ -454,9 +487,9 @@ export function DashboardHome() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   onClick={handleSaveFocus}
                   disabled={savingFocus}
-                  className="px-2.5 py-1 rounded bg-foreground text-background text-[10px] font-semibold hover:bg-foreground/90 transition-colors disabled:opacity-50 shrink-0"
+                  className="px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-bold hover:bg-foreground/90 transition-all shadow-md shrink-0 active:scale-95"
                 >
-                  {savingFocus ? 'Saving' : 'Set Focus'}
+                  {savingFocus ? 'Saving' : 'Sync Focus'}
                 </motion.button>
               )}
             </AnimatePresence>
@@ -467,38 +500,71 @@ export function DashboardHome() {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="text-[10px] text-emerald-400 font-semibold absolute mt-1.5 left-0"
+              className="text-[10px] text-emerald-400 font-semibold mt-3"
             >
-              Focus synced with your squad
+              Your active focus has been synced to the squad timeline.
             </motion.p>
           )}
         </motion.div>
       </header>
 
-      {/* Two-Column Clean Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-12 md:gap-16">
+      {/* Two-Column Premium Glass Layout */}
+      <div className="relative grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-12 z-10">
         
-        {/* Left Column: My Day (Execution Focus) */}
-        <section className="md:col-span-3 space-y-10">
+        {/* Left Column: My Day (Execution Hub - 3/5) */}
+        <section className="md:col-span-3 space-y-8">
           
-          {/* Today's Tasks */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-border-default/30 pb-2">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">My Core Focus</h2>
-              <span className="text-[10px] text-muted-foreground font-mono">{coreTasks.length} tasks</span>
+          {/* Glassmorphic Core Focus Card */}
+          <div className="backdrop-blur-2xl bg-surface/30 border border-border-default/40 rounded-3xl p-6 shadow-xl space-y-6 hover:bg-surface/35 hover:shadow-2xl hover:border-border-default transition-all duration-300">
+            
+            <div className="flex items-center justify-between border-b border-border-default/20 pb-4">
+              <div className="space-y-1">
+                <h2 className="text-sm font-bold text-foreground">Core Execution Focus</h2>
+                <p className="text-[11px] text-muted-foreground">Your high-priority tasks and sprint velocity progress</p>
+              </div>
+              
+              {/* Glowing Radial Sprint Progress Gauge */}
+              <div className="relative h-12 w-12 flex items-center justify-center shrink-0">
+                <svg className="h-full w-full transform -rotate-90">
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r={sprintRingRadius}
+                    className="stroke-border-default/30"
+                    strokeWidth="3.5"
+                    fill="transparent"
+                  />
+                  <motion.circle
+                    cx="24"
+                    cy="24"
+                    r={sprintRingRadius}
+                    className="stroke-emerald-400"
+                    strokeWidth="3.5"
+                    fill="transparent"
+                    strokeDasharray={sprintRingCircumference}
+                    initial={{ strokeDashoffset: sprintRingCircumference }}
+                    animate={{ strokeDashoffset: sprintRingStrokeDashoffset }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute text-[9px] font-bold text-foreground">{sprintPercentage}%</div>
+              </div>
             </div>
 
             {tasksLoading ? (
-              <div className="flex items-center gap-2 py-4">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Loading tasks...</span>
+              <div className="flex items-center gap-3 py-6 justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-xs text-muted-foreground font-medium">Assembling checklist...</span>
               </div>
             ) : coreTasks.length === 0 ? (
-              <div className="py-8 text-center border border-dashed border-border-default/40 rounded-xl">
-                <p className="text-xs text-muted-foreground">Clear canvas. No high-priority tasks left.</p>
+              <div className="py-12 text-center border border-dashed border-border-default/30 rounded-2xl bg-bg-tertiary/10">
+                <Check className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
+                <p className="text-xs font-semibold text-foreground">Zero Friction Day</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">All high-priority tasks are completely cleared.</p>
               </div>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {coreTasks.map((task) => {
                   const priorityClass = PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.none;
                   const isCompleting = completingTaskId === task.id;
@@ -506,13 +572,13 @@ export function DashboardHome() {
                   return (
                     <div 
                       key={task.id}
-                      className="group flex items-center justify-between py-3 border-b border-border-default/20 last:border-0 hover:border-primary/20 transition-all"
+                      className="group flex items-center justify-between py-3.5 border-b border-border-default/15 last:border-0 hover:border-primary/20 transition-all"
                     >
-                      <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="flex items-center gap-4 min-w-0">
                         <button
                           onClick={() => handleToggleComplete(task)}
                           disabled={isCompleting}
-                          className="h-4 w-4 rounded-full border border-border-default flex items-center justify-center hover:border-primary hover:bg-primary/5 transition-all shrink-0 disabled:opacity-50"
+                          className="h-4.5 w-4.5 rounded-full border border-border-default flex items-center justify-center hover:border-primary hover:bg-primary/5 transition-all shrink-0 disabled:opacity-50 cursor-pointer"
                         >
                           {isCompleting ? (
                             <Loader2 className="h-2.5 w-2.5 animate-spin text-primary" />
@@ -520,19 +586,19 @@ export function DashboardHome() {
                             <Check className="h-2.5 w-2.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                           )}
                         </button>
-                        <span className="text-sm font-medium text-foreground/95 truncate">
+                        <span className="text-sm font-semibold text-foreground/90 truncate group-hover:text-foreground transition-colors">
                           {task.title}
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-3 shrink-0">
                         {task.priority !== 'none' && (
-                          <span className={cn("text-[9px] px-1.5 py-0.5 rounded border font-semibold uppercase tracking-wider", priorityClass)}>
+                          <span className={cn("text-[8px] px-2 py-0.5 rounded border font-bold uppercase tracking-wider", priorityClass)}>
                             {task.priority}
                           </span>
                         )}
                         <span className="text-[10px] text-muted-foreground/60 font-mono">
-                          {task.dueDate ? task.dueDate.toDate().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : 'No Date'}
+                          {task.dueDate ? task.dueDate.toDate().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : 'Inbox'}
                         </span>
                       </div>
                     </div>
@@ -540,46 +606,51 @@ export function DashboardHome() {
                 })}
               </div>
             )}
+
+            {/* Quick Task Creator Nested in Dashboard Card */}
+            <form onSubmit={handleCreateQuickTask} className="flex gap-2 pt-2">
+              <input
+                type="text"
+                placeholder="Insert new task due today..."
+                value={quickTaskTitle}
+                onChange={(e) => setQuickTaskTitle(e.target.value)}
+                className="flex-1 bg-surface/30 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-medium shadow-inner"
+              />
+              <button
+                type="submit"
+                disabled={!quickTaskTitle.trim() || creatingQuickTask}
+                className="px-4 rounded-xl bg-foreground text-background text-xs font-bold hover:bg-foreground/95 transition-all flex items-center justify-center disabled:opacity-55 active:scale-95 shadow-md"
+              >
+                {creatingQuickTask ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-4 w-4" />}
+              </button>
+            </form>
           </div>
 
-          {/* Quick Task Creator */}
-          <form onSubmit={handleCreateQuickTask} className="flex gap-2 pt-2">
-            <input
-              type="text"
-              placeholder="Quick add task..."
-              value={quickTaskTitle}
-              onChange={(e) => setQuickTaskTitle(e.target.value)}
-              className="flex-1 bg-bg-tertiary/30 border border-border-default/50 rounded-lg px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-medium"
-            />
-            <button
-              type="submit"
-              disabled={!quickTaskTitle.trim() || creatingQuickTask}
-              className="px-3 rounded-lg bg-foreground text-background text-xs font-semibold hover:bg-foreground/95 transition-all flex items-center justify-center disabled:opacity-55"
-            >
-              {creatingQuickTask ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-            </button>
-          </form>
-
-          {/* Strategic Projects Summary */}
+          {/* Strategic Milestone Project Tracker Card */}
           {activeProject && (
-            <div className="space-y-4 pt-4">
-              <div className="flex items-center justify-between border-b border-border-default/30 pb-2">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Strategic Horizon</h2>
+            <div className="backdrop-blur-2xl bg-surface/30 border border-border-default/40 rounded-3xl p-6 shadow-xl hover:bg-surface/35 hover:shadow-2xl hover:border-border-default transition-all duration-300">
+              <div className="flex items-center justify-between border-b border-border-default/20 pb-4">
+                <div className="space-y-1">
+                  <h2 className="text-sm font-bold text-foreground">Active Milestone Track</h2>
+                  <p className="text-[11px] text-muted-foreground">High-level strategic updates from your assigned roadmap</p>
+                </div>
                 <span 
                   onClick={() => navigate('/projects')}
-                  className="text-[10px] text-primary font-semibold cursor-pointer hover:underline"
+                  className="text-[10px] text-primary font-bold uppercase tracking-wider cursor-pointer hover:underline"
                 >
-                  All Projects
+                  Roadmaps
                 </span>
               </div>
               
-              <div className="space-y-3 p-4 rounded-xl border border-border-default/45 bg-bg-tertiary/10">
+              <div className="space-y-4 pt-4">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <div className="flex items-center gap-2">
-                    <Workflow className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="font-semibold text-foreground">{activeProject.name}</span>
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                      <Workflow className="h-4 w-4" />
+                    </div>
+                    <span className="font-bold text-foreground text-[13px]">{activeProject.name}</span>
                   </div>
-                  <span className="text-muted-foreground text-[10px]">Active Project</span>
+                  <span className="text-[10px] text-muted-foreground bg-bg-tertiary px-2 py-0.5 rounded border border-border-default">Active Roadmap</span>
                 </div>
                 
                 {(() => {
@@ -589,15 +660,15 @@ export function DashboardHome() {
                   
                   return (
                     <div className="space-y-2">
-                      <div className="h-1 w-full bg-bg-tertiary rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-bg-tertiary/40 rounded-full overflow-hidden shadow-inner">
                         <div 
-                          className="h-full bg-foreground rounded-full transition-all duration-500 ease-out"
+                          className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full shadow-[0_0_8px_rgba(139,92,246,0.3)] transition-all duration-700 ease-out"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
                       <div className="flex justify-between items-center text-[10px] text-muted-foreground/80 font-mono">
-                        <span>{completedProjTasks.length} of {projTasks.length} tasks completed</span>
-                        <span>{percentage}% Done</span>
+                        <span>{completedProjTasks.length} of {projTasks.length} milestones complete</span>
+                        <span className="font-bold text-foreground">{percentage}% complete</span>
                       </div>
                     </div>
                   );
@@ -608,19 +679,23 @@ export function DashboardHome() {
 
         </section>
 
-        {/* Right Column: The Pulse (Ambient connection) */}
-        <section className="md:col-span-2 space-y-10">
+        {/* Right Column: The Pulse (Ambient connection - 2/5) */}
+        <section className="md:col-span-2 space-y-8">
           
-          {/* Ambient Team Presence */}
-          <div className="space-y-4">
-            <div className="border-b border-border-default/30 pb-2">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Squad Co-Presence</h2>
+          {/* Ambient Team Presence Card */}
+          <div className="backdrop-blur-2xl bg-surface/30 border border-border-default/40 rounded-3xl p-6 shadow-xl hover:bg-surface/35 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between border-b border-border-default/20 pb-4 mb-4">
+              <div className="space-y-1">
+                <h2 className="text-sm font-bold text-foreground">Squad Co-Presence</h2>
+                <p className="text-[11px] text-muted-foreground">Teammate live status indicators</p>
+              </div>
+              <Users className="h-4 w-4 text-muted-foreground" />
             </div>
             
             {displayedTeammates.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-2 italic">Solo mode. No other teammates in this space.</p>
+              <p className="text-xs text-muted-foreground py-2 italic text-center">Solo mode. Invite teammates to connect.</p>
             ) : (
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap gap-3">
                 {displayedTeammates.map((member) => {
                   const hasFocus = !!member.focusStatus?.text;
                   const isOnline = hasFocus;
@@ -634,18 +709,18 @@ export function DashboardHome() {
                         if (targetProfileAccess) setSelectedMember(member);
                       }}
                       className={cn(
-                        "relative flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm border border-border-default/60 hover:border-primary/50 transition-all",
+                        "relative flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white shadow-md border-2 border-surface hover:scale-105 active:scale-95 transition-all cursor-pointer",
                         targetProfileAccess ? "cursor-pointer" : "cursor-default"
                       )}
-                      style={{ background: `hsl(${avatarHue(member.uid)} 60% 45%)` }}
+                      style={{ background: `hsl(${avatarHue(member.uid)} 65% 45%)` }}
                       title={`${member.fullName} ${hasFocus ? `· Focus: ${member.focusStatus!.text}` : ''}`}
                     >
                       {initials}
-                      {/* Ambient Indicator */}
-                      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-surface border border-surface flex items-center justify-center">
+                      {/* Premium breathing green status light */}
+                      <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-surface border-2 border-surface flex items-center justify-center shadow-md">
                         <span className={cn(
                           "h-1.5 w-1.5 rounded-full",
-                          isOnline ? "bg-emerald-500" : "bg-zinc-500"
+                          isOnline ? "bg-emerald-400 shadow-[0_0_6px_#10b981] animate-pulse" : "bg-zinc-500"
                         )} />
                       </span>
                     </div>
@@ -655,27 +730,33 @@ export function DashboardHome() {
             )}
           </div>
 
-          {/* Pending Approvals / Reviews Stream */}
+          {/* Pending Approvals / Reviews Stream (Managers & Approvers) */}
           {(pendingRequests.length > 0 || (isManager && reviewTasksForTeam.length > 0)) && (
-            <div className="space-y-4">
-              <div className="border-b border-border-default/30 pb-2">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pending Action</h2>
+            <div className="backdrop-blur-2xl bg-surface/30 border border-border-default/40 rounded-3xl p-6 shadow-xl space-y-4 hover:bg-surface/35 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center justify-between border-b border-border-default/20 pb-4">
+                <div className="space-y-1">
+                  <h2 className="text-sm font-bold text-foreground">Inbox Approvals</h2>
+                  <p className="text-[11px] text-muted-foreground">Items requiring your active sign-off</p>
+                </div>
+                <div className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[9px] font-bold">
+                  {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0)} Pending
+                </div>
               </div>
               
               <div className="space-y-3">
                 {/* Requests */}
                 {pendingRequests.map((req) => (
-                  <div key={req.id} className="p-3 border border-border-default/45 rounded-lg bg-bg-tertiary/10 space-y-2">
-                    <div className="overflow-hidden">
+                  <div key={req.id} className="p-4 border border-border-default rounded-2xl bg-bg-tertiary/10 space-y-3 hover:border-primary/20 transition-all shadow-sm">
+                    <div>
                       <p className="text-xs font-bold text-foreground truncate">{req.title}</p>
-                      <p className="text-[10px] text-muted-foreground/80 font-medium">Request from {req.creatorName}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Submitted by {req.creatorName}</p>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={async () => {
                           await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
                         }}
-                        className="flex-1 py-1 rounded bg-bg-tertiary hover:bg-bg-tertiary/80 text-[10px] font-bold text-foreground transition-all"
+                        className="flex-1 py-1.5 rounded-lg bg-foreground text-background text-[10px] font-bold hover:bg-foreground/90 transition-all shadow-md active:scale-95 cursor-pointer"
                       >
                         Approve
                       </button>
@@ -683,7 +764,7 @@ export function DashboardHome() {
                         onClick={async () => {
                           await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
                         }}
-                        className="flex-1 py-1 rounded border border-border-default/45 hover:bg-bg-tertiary/10 text-[10px] font-bold text-muted-foreground transition-all"
+                        className="flex-1 py-1.5 rounded-lg border border-border-default hover:bg-bg-tertiary/10 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
                       >
                         Reject
                       </button>
@@ -695,21 +776,21 @@ export function DashboardHome() {
                 {isManager && reviewTasksForTeam.map((task) => {
                   const assigneeName = task.assigneeIds.map(id => memberMap.get(id)?.fullName).filter(Boolean).join(', ');
                   return (
-                    <div key={task.id} className="p-3 border border-border-default/45 rounded-lg bg-bg-tertiary/10 space-y-2">
-                      <div className="overflow-hidden">
+                    <div key={task.id} className="p-4 border border-border-default rounded-2xl bg-bg-tertiary/10 space-y-3 hover:border-primary/20 transition-all shadow-sm">
+                      <div>
                         <p className="text-xs font-bold text-foreground line-clamp-1">{task.title}</p>
-                        <p className="text-[10px] text-muted-foreground/80 font-medium">Review task for {assigneeName}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Task review for {assigneeName}</p>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleReviewAction(task, 'approve')}
-                          className="flex-1 py-1 rounded bg-bg-tertiary hover:bg-bg-tertiary/80 text-[10px] font-bold text-foreground transition-all"
+                          className="flex-1 py-1.5 rounded-lg bg-foreground text-background text-[10px] font-bold hover:bg-foreground/90 transition-all shadow-md active:scale-95 cursor-pointer"
                         >
                           Approve
                         </button>
                         <button
                           onClick={() => handleReviewAction(task, 'reject')}
-                          className="flex-1 py-1 rounded border border-border-default/45 hover:bg-bg-tertiary/10 text-[10px] font-bold text-muted-foreground transition-all"
+                          className="flex-1 py-1.5 rounded-lg border border-border-default hover:bg-bg-tertiary/10 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
                         >
                           Needs Changes
                         </button>
@@ -721,36 +802,46 @@ export function DashboardHome() {
             </div>
           )}
 
-          {/* Ambient Recent Activity Log */}
-          <div className="space-y-4">
-            <div className="border-b border-border-default/30 pb-2">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Ambient Activity</h2>
+          {/* Ambient Timeline Card */}
+          <div className="backdrop-blur-2xl bg-surface/30 border border-border-default/40 rounded-3xl p-6 shadow-xl hover:bg-surface/35 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between border-b border-border-default/20 pb-4 mb-4">
+              <div className="space-y-1">
+                <h2 className="text-sm font-bold text-foreground">Ambient Activity</h2>
+                <p className="text-[11px] text-muted-foreground">Chronological updates from the team</p>
+              </div>
+              <Clock className="h-4 w-4 text-muted-foreground" />
             </div>
             
             {recentActivity.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">No recent updates.</p>
+              <p className="text-xs text-muted-foreground italic text-center py-4">No recent activity.</p>
             ) : (
-              <div className="space-y-3.5">
+              <div className="relative pl-3 space-y-6">
+                {/* Custom timeline bar */}
+                <div className="absolute left-1.5 top-2 bottom-2 w-[1px] bg-border-default/30" />
+                
                 {recentActivity.map(({ task, actor }) => (
                   <div 
                     key={task.id}
                     onClick={() => navigate(`/tasks?task=${task.id}`)}
-                    className="flex gap-3 text-xs leading-relaxed group cursor-pointer"
+                    className="relative flex gap-3 text-xs leading-relaxed group cursor-pointer"
                   >
-                    <div className="h-5 w-5 rounded bg-bg-tertiary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground group-hover:border-primary/30 transition-colors shrink-0">
+                    {/* Glowing timeline dot */}
+                    <div className="absolute -left-[14.5px] top-1.5 h-2 w-2 rounded-full border border-surface bg-border-default/80 group-hover:bg-primary group-hover:shadow-[0_0_4px_#3b82f6] transition-all" />
+                    
+                    <div className="h-6 w-6 rounded bg-gradient-to-br from-bg-tertiary to-surface border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground group-hover:border-primary/20 transition-all shrink-0">
                       {getMemberInitials(actor)}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-muted-foreground/90 font-medium">
-                        <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                      <p className="text-muted-foreground/95 font-medium">
+                        <span className="font-bold text-foreground group-hover:text-primary transition-colors">
                           {getMemberName(actor)}
                         </span>{' '}
                         {STATUS_LABEL_MUTED[task.status] || 'updated'}{' '}
-                        <span className="text-foreground font-semibold truncate max-w-[130px] inline-block align-bottom">
+                        <span className="text-foreground font-semibold truncate max-w-[120px] inline-block align-bottom">
                           "{task.title}"
                         </span>
                       </p>
-                      <span className="text-[10px] text-muted-foreground/60 font-mono block mt-0.5">
+                      <span className="text-[10px] text-muted-foreground/50 font-mono block mt-0.5">
                         {relTime(task.updatedAt)}
                       </span>
                     </div>
