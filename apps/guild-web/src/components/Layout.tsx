@@ -2,9 +2,7 @@ import * as React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
-import { RightSidebar, RightSidebarToggle } from './RightSidebar';
 import { GlobalSearch } from './GlobalSearch';
-import { useRightSidebar } from '../hooks/useRightSidebar';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -14,7 +12,6 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
-  const { collapsed } = useRightSidebar();
   const location = useLocation();
 
   // Close mobile sidebar on route change
@@ -67,25 +64,11 @@ export function Layout({ children }: LayoutProps) {
           <main className="flex-1 overflow-y-auto scrollbar-hide">
             {children}
           </main>
-
-          {/* Right Sidebar — animated collapse, hidden on small screens */}
-          <div
-            className={cn(
-              'hidden lg:flex flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out',
-              collapsed ? 'w-0' : 'w-[300px]',
-            )}
-            style={{ minWidth: collapsed ? 0 : 300 }}
-          >
-            <RightSidebar />
-          </div>
         </div>
       </div>
 
       {/* Global Search overlay */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-
-      {/* Collapsed re-open handle */}
-      <RightSidebarToggle />
     </div>
   );
 }
