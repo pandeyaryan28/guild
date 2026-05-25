@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus } from 'lucide-react';
+import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useChannels } from '../../hooks/useChat';
 import { useMessages } from '../../hooks/useChat';
@@ -21,9 +21,20 @@ interface MessageAreaProps {
   currentUser: { uid: string; displayName: string } | null;
   profile: any;
   members: UserProfile[];
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }
 
-export function MessageArea({ channelId, dmId, orgId, currentUser, profile, members }: MessageAreaProps) {
+export function MessageArea({ 
+  channelId, 
+  dmId, 
+  orgId, 
+  currentUser, 
+  profile, 
+  members,
+  isSidebarCollapsed = false,
+  onToggleSidebar
+}: MessageAreaProps) {
   const navigate = useNavigate();
   const messages = useMessages(channelId, dmId);
   const { channels } = useChannels(orgId);
@@ -192,6 +203,21 @@ export function MessageArea({ channelId, dmId, orgId, currentUser, profile, memb
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
+
+        {/* Desktop Sidebar Toggle Button */}
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="hidden md:flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent/40 hover:text-foreground shrink-0 transition-colors"
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isSidebarCollapsed ? (
+              <PanelLeftOpen className="h-4.5 w-4.5 text-primary" />
+            ) : (
+              <PanelLeftClose className="h-4.5 w-4.5" />
+            )}
+          </button>
+        )}
 
         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
           <Icon className="h-4 w-4 text-primary/70" />

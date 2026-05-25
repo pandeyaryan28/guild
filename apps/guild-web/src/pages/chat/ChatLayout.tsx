@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {
   Hash, Plus, MessageSquare, ChevronDown, ChevronRight,
-  Loader2, Users, Lock, Megaphone, HelpCircle
+  Loader2, Users, Lock, Megaphone, HelpCircle,
+  PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { useNavigate, useParams, NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -15,8 +16,13 @@ import { MessageArea } from './MessageArea';
 import { type UserProfile, getOrgById } from '../../lib/firestore';
 import { RedesignLayout } from '../../components/redesign/Layout';
 
+interface RedesignChatSidebarProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+}
+
 // Beautiful Glassmorphic Left Chat Directory Pane
-function RedesignChatSidebar() {
+function RedesignChatSidebar({ isCollapsed, onToggle }: RedesignChatSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userProfile } = useAuth();
@@ -61,7 +67,10 @@ function RedesignChatSidebar() {
   };
 
   return (
-    <aside className="flex h-full w-[240px] shrink-0 flex-col aether-glass bg-white/2 border border-white/5 overflow-hidden">
+    <aside className={cn(
+      "flex h-full flex-col aether-glass bg-white/2 border border-white/5 overflow-hidden transition-all duration-300 ease-in-out shrink-0",
+      isCollapsed ? "w-0 opacity-0 border-0 p-0 pointer-events-none" : "w-[240px] opacity-100"
+    )}>
       {/* Workspace Branding Header */}
       <div className="flex items-center gap-2.5 border-b border-white/5 px-4 py-4 select-none">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/30">
@@ -71,6 +80,13 @@ function RedesignChatSidebar() {
           <span className="text-xs font-bold text-foreground block truncate">{orgName || 'Guild'}</span>
           <span className="text-[9px] text-muted-foreground font-semibold block mt-0.5">Workspace</span>
         </div>
+        <button
+          onClick={onToggle}
+          className="hidden md:flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all cursor-pointer shrink-0"
+          title="Collapse Sidebar"
+        >
+          <PanelLeftClose className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* Directory Scroll area */}
@@ -226,6 +242,7 @@ export function ChatLayout() {
   const orgId = userProfile?.organizationId;
   const members = useOrgMembers(orgId);
   const navigate = useNavigate();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
 
   const handleStartDM = async (member: UserProfile) => {
     if (!user || !orgId) return;
@@ -237,9 +254,15 @@ export function ChatLayout() {
 
   return (
     <RedesignLayout>
-      <div className="flex h-full w-full overflow-hidden gap-6 animate-fluid-pop">
+      <div className={cn(
+        "flex h-full w-full overflow-hidden animate-fluid-pop transition-all duration-300 ease-in-out",
+        isSidebarCollapsed ? "gap-0" : "gap-6"
+      )}>
         {/* Spatial left sidebar nested within Chat */}
-        <RedesignChatSidebar />
+        <RedesignChatSidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
 
         {/* Message Thread Workspace */}
         <div className="flex-1 flex min-w-0 aether-glass bg-white/2 border border-white/5 overflow-hidden">
@@ -252,6 +275,8 @@ export function ChatLayout() {
                 currentUser={user ? { uid: user.uid, displayName: user.displayName ?? '' } : null}
                 profile={userProfile}
                 members={members}
+                isSidebarCollapsed={isSidebarCollapsed}
+                onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
               />
               <div className="border-l border-white/5">
                 <MemberPanel
@@ -262,7 +287,16 @@ export function ChatLayout() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20">
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20 relative">
+              {isSidebarCollapsed && (
+                <button
+                  onClick={() => setIsSidebarCollapsed(false)}
+                  className="absolute left-6 top-6 flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+                  title="Expand Sidebar"
+                >
+                  <PanelLeftOpen className="h-4.5 w-4.5 text-primary" />
+                </button>
+              )}
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/25 shadow-inner text-primary">
                 <MessageSquare className="w-6 h-6" />
               </div>
