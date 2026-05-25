@@ -437,15 +437,15 @@ export function DashboardHome() {
           
           {/* Custom Metric Pills */}
           <div className="flex flex-wrap items-center gap-2.5 pt-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-border-default/45 bg-surface/40 backdrop-blur-md text-muted-foreground shadow-sm">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-border-default bg-surface/70 dark:bg-surface/50 backdrop-blur-md text-muted-foreground shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
               {myTasks.length} Active Tasks
             </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-border-default/45 bg-surface/40 backdrop-blur-md text-muted-foreground shadow-sm">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-border-default bg-surface/70 dark:bg-surface/50 backdrop-blur-md text-muted-foreground shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
               {unreadCount} Action Items
             </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-border-default/45 bg-surface/40 backdrop-blur-md text-muted-foreground shadow-sm">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-border-default bg-surface/70 dark:bg-surface/50 backdrop-blur-md text-muted-foreground shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               {sprintPercentage}% Sprint Progress
             </div>
@@ -457,7 +457,7 @@ export function DashboardHome() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="relative max-w-2xl bg-surface/20 backdrop-blur-2xl border border-border-default/50 rounded-2xl p-5 shadow-2xl overflow-hidden group"
+          className="relative max-w-2xl bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl border border-border-default dark:border-border-strong rounded-2xl p-5 shadow-2xl overflow-hidden group"
         >
           {/* Inner glass accent shine */}
           <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
@@ -515,7 +515,7 @@ export function DashboardHome() {
         <section className="md:col-span-3 space-y-8">
           
           {/* Glassmorphic Core Focus Card */}
-          <div className="backdrop-blur-2xl bg-surface/30 border border-border-default/40 rounded-3xl p-6 shadow-xl space-y-6 hover:bg-surface/35 hover:shadow-2xl hover:border-border-default transition-all duration-300">
+          <div className="backdrop-blur-2xl bg-surface/80 dark:bg-surface/50 border border-border-default dark:border-border-strong/75 rounded-3xl p-6 shadow-xl space-y-6 hover:shadow-2xl hover:border-primary/20 dark:hover:border-primary/45 transition-all duration-300">
             
             <div className="flex items-center justify-between border-b border-border-default/20 pb-4">
               <div className="space-y-1">
@@ -628,7 +628,7 @@ export function DashboardHome() {
 
           {/* Strategic Milestone Project Tracker Card */}
           {activeProject && (
-            <div className="backdrop-blur-2xl bg-surface/30 border border-border-default/40 rounded-3xl p-6 shadow-xl hover:bg-surface/35 hover:shadow-2xl hover:border-border-default transition-all duration-300">
+            <div className="backdrop-blur-2xl bg-surface/80 dark:bg-surface/50 border border-border-default dark:border-border-strong/75 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:border-primary/20 dark:hover:border-primary/45 transition-all duration-300">
               <div className="flex items-center justify-between border-b border-border-default/20 pb-4">
                 <div className="space-y-1">
                   <h2 className="text-sm font-bold text-foreground">Active Milestone Track</h2>
@@ -683,7 +683,7 @@ export function DashboardHome() {
         <section className="md:col-span-2 space-y-8">
           
           {/* Ambient Team Presence Card */}
-          <div className="backdrop-blur-2xl bg-surface/30 border border-border-default/40 rounded-3xl p-6 shadow-xl hover:bg-surface/35 hover:shadow-2xl transition-all duration-300">
+          <div className="backdrop-blur-2xl bg-surface/80 dark:bg-surface/50 border border-border-default dark:border-border-strong/75 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:border-primary/20 dark:hover:border-primary/45 transition-all duration-300">
             <div className="flex items-center justify-between border-b border-border-default/20 pb-4 mb-4">
               <div className="space-y-1">
                 <h2 className="text-sm font-bold text-foreground">Squad Co-Presence</h2>
@@ -732,7 +732,7 @@ export function DashboardHome() {
 
           {/* Pending Approvals / Reviews Stream (Managers & Approvers) */}
           {(pendingRequests.length > 0 || (isManager && reviewTasksForTeam.length > 0)) && (
-            <div className="backdrop-blur-2xl bg-surface/30 border border-border-default/40 rounded-3xl p-6 shadow-xl space-y-4 hover:bg-surface/35 hover:shadow-2xl transition-all duration-300">
+            <div className="backdrop-blur-2xl bg-surface/80 dark:bg-surface/50 border border-border-default dark:border-border-strong/75 rounded-3xl p-6 shadow-xl space-y-4 hover:shadow-2xl hover:border-primary/20 dark:hover:border-primary/45 transition-all duration-300">
               <div className="flex items-center justify-between border-b border-border-default/20 pb-4">
                 <div className="space-y-1">
                   <h2 className="text-sm font-bold text-foreground">Inbox Approvals</h2>
@@ -803,7 +803,7 @@ export function DashboardHome() {
           )}
 
           {/* Ambient Timeline Card */}
-          <div className="backdrop-blur-2xl bg-surface/30 border border-border-default/40 rounded-3xl p-6 shadow-xl hover:bg-surface/35 hover:shadow-2xl transition-all duration-300">
+          <div className="backdrop-blur-2xl bg-surface/80 dark:bg-surface/50 border border-border-default dark:border-border-strong/75 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:border-primary/20 dark:hover:border-primary/45 transition-all duration-300">
             <div className="flex items-center justify-between border-b border-border-default/20 pb-4 mb-4">
               <div className="space-y-1">
                 <h2 className="text-sm font-bold text-foreground">Ambient Activity</h2>
