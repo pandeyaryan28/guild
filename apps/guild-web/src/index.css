@@ -150,10 +150,10 @@
   html {
     @apply font-sans;
     /*
-     * Root font-size bump. All rem-based Tailwind sizes scale with this.
-     * 16 → 18px makes everything slightly larger and easier to read.
+     * Custom font-size adjustment for widescreen spatial optimization.
+     * 15px gives the layout maximum space to breathe.
      */
-    font-size: 18px;
+    font-size: 15px;
   }
   body {
     @apply bg-background text-foreground antialiased;
