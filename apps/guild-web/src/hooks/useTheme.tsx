@@ -13,6 +13,8 @@ interface ThemeContextType {
   setTheme: (id: ThemeId) => void;
   currentTheme: PremiumTheme;
   themes: PremiumTheme[];
+  mode: 'light' | 'dark';
+  toggleMode: () => void;
 }
 
 const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
@@ -23,13 +25,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return stored ?? 'midnight';
   });
 
+  const [mode, setMode] = React.useState<'light' | 'dark'>(() => {
+    const stored = localStorage.getItem('guild-mode') as 'light' | 'dark' | null;
+    return stored ?? 'dark';
+  });
+
   // Apply theme colors dynamically when selection changes
   React.useEffect(() => {
-    const theme = getTheme(themeId);
+    const effectiveThemeId = themeId === 'light' ? 'midnight' : themeId;
+    const theme = getTheme(effectiveThemeId);
     const html = document.documentElement;
 
     // 1. Toggle dark class
-    if (theme.dark) {
+    if (mode === 'dark') {
       html.classList.add('dark');
     } else {
       html.classList.remove('dark');
@@ -39,8 +47,34 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Clear legacy inline properties
     html.removeAttribute('style');
 
+    const variables = { ...theme.variables };
+
+    // Apply clean Light Mode overrides while preserving accent color contrast
+    if (mode === 'light') {
+      variables['--bg-primary'] = '#fcfcfd';
+      variables['--bg-secondary'] = '#f4f4f6';
+      variables['--bg-tertiary'] = '#eaeaf0';
+      variables['--surface'] = '#ffffff';
+      variables['--surface-elevated'] = '#ffffff';
+      variables['--surface-hover'] = '#f8f8fa';
+      variables['--text-primary'] = '#09090b';
+      variables['--text-secondary'] = '#27272a';
+      variables['--text-muted'] = '#71717a';
+      variables['--text-disabled'] = '#a1a1aa';
+      variables['--border-default'] = '#e4e4e7';
+      variables['--border-strong'] = '#cbd5e1';
+      variables['--border-subtle'] = '#f4f4f5';
+
+      // Accessibility pale accent color color-contrast enhancement
+      if (effectiveThemeId === 'rose-gold') {
+        variables['--accent'] = '#db2777'; // rich deep rose
+      } else if (effectiveThemeId === 'slate') {
+        variables['--accent'] = '#18181b'; // dark graphite
+      }
+    }
+
     // Apply color tokens directly to CSS custom properties
-    Object.entries(theme.variables).forEach(([property, color]) => {
+    Object.entries(variables).forEach(([property, color]) => {
       html.style.setProperty(property, color);
     });
 
@@ -49,16 +83,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       .replace(/\btheme-\S+\b/g, '')
       .trim();
     
-    theme.htmlClass.split(' ').forEach((cls) => {
-      if (cls && cls !== 'dark') {
-        html.classList.add(cls);
-      }
-    });
-  }, [themeId]);
+    html.classList.add(`theme-${effectiveThemeId}`);
+  }, [themeId, mode]);
 
   const setTheme = React.useCallback((id: ThemeId) => {
-    setThemeId(id);
-    localStorage.setItem(STORAGE_KEY, id);
+    if (id === 'light') {
+      setThemeId('midnight');
+      setMode('light');
+      localStorage.setItem('guild-mode', 'light');
+      localStorage.setItem(STORAGE_KEY, 'midnight');
+    } else {
+      setThemeId(id);
+      localStorage.setItem(STORAGE_KEY, id);
+    }
+  }, []);
+
+  const toggleMode = React.useCallback(() => {
+    setMode((prev) => {
+      const next = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('guild-mode', next);
+      return next;
+    });
   }, []);
 
   const currentTheme = React.useMemo(() => getTheme(themeId), [themeId]);
@@ -67,8 +112,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     themeId,
     setTheme,
     currentTheme,
-    themes: THEMES
-  }), [themeId, setTheme, currentTheme]);
+    themes: THEMES,
+    mode,
+    toggleMode
+  }), [themeId, setTheme, currentTheme, mode, toggleMode]);
 
   return (
     <ThemeContext.Provider value={contextValue}>

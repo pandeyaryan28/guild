@@ -18,13 +18,13 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
   const [notifOpen, setNotifOpen] = React.useState(false);
   const location = useLocation();
   const { userProfile } = useAuth();
-  const { themeId, setTheme } = useTheme();
+  const { mode, toggleMode } = useTheme();
   
   const orgId = userProfile?.organizationId;
   const { notifications, unreadCount, markRead, markAllAsRead } = useNotifications(orgId);
 
-  const isLight = themeId === 'light';
-  const toggleTheme = () => setTheme(isLight ? 'midnight' : 'light');
+  const isLight = mode === 'light';
+  const toggleTheme = toggleMode;
 
   // Command + K Search Bind
   React.useEffect(() => {

@@ -117,7 +117,7 @@ export function NavDock() {
                   Canvas Themes
                 </div>
                 <div className="grid grid-cols-4 gap-2 pt-1">
-                  {themes.map((t) => (
+                  {themes.filter(t => t.id !== 'light').map((t) => (
                     <button
                       key={t.id}
                       onClick={() => setTheme(t.id)}

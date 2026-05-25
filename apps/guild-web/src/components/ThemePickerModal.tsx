@@ -10,22 +10,25 @@ interface ThemePickerModalProps {
 }
 
 // Tiny preview pane — shows a miniature representation of the theme
-function ThemePreview({ themeId }: { themeId: ThemeId }) {
+function ThemePreview({ themeId, isLight }: { themeId: ThemeId; isLight: boolean }) {
   const theme = THEMES.find((t) => t.id === themeId)!;
+  const bg = isLight ? '#fcfcfd' : theme.bgSwatch;
+  const border = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+  
   return (
     <div
       className="relative h-full w-full overflow-hidden rounded-xl"
-      style={{ background: theme.bgSwatch }}
+      style={{ background: bg }}
     >
       {/* Fake sidebar */}
       <div
         className="absolute left-0 top-0 h-full w-[28%] flex flex-col gap-1.5 p-2"
-        style={{ background: `${theme.bgSwatch}cc`, borderRight: '1px solid rgba(255,255,255,0.06)' }}
+        style={{ background: isLight ? '#f4f4f6' : `${theme.bgSwatch}cc`, borderRight: `1px solid ${border}` }}
       >
         {/* Org pill */}
         <div className="flex items-center gap-1 mb-1">
           <div className="h-3 w-3 rounded-md" style={{ background: theme.swatch }} />
-          <div className="h-1.5 w-10 rounded-full bg-white/15" />
+          <div className="h-1.5 w-10 rounded-full bg-white/15" style={isLight ? { background: 'rgba(0,0,0,0.08)' } : {}} />
         </div>
         {/* Nav items */}
         {[true, false, false, false].map((active, i) => (
@@ -36,33 +39,33 @@ function ThemePreview({ themeId }: { themeId: ThemeId }) {
           >
             <div
               className="h-2 w-2 rounded-sm"
-              style={{ background: active ? theme.swatch : 'rgba(255,255,255,0.12)' }}
+              style={{ background: active ? theme.swatch : isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.12)' }}
             />
-            <div className="h-1 w-8 rounded-full" style={{ background: active ? theme.swatch + '99' : 'rgba(255,255,255,0.10)' }} />
+            <div className="h-1 w-8 rounded-full" style={{ background: active ? theme.swatch + '99' : isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.10)' }} />
           </div>
         ))}
       </div>
       {/* Fake message area */}
       <div className="absolute left-[28%] right-0 top-0 bottom-0 flex flex-col p-2 gap-1.5">
         {/* Header */}
-        <div className="flex items-center gap-1 pb-1" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-1 pb-1" style={{ borderBottom: `1px solid ${border}` }}>
           <div className="h-3 w-3 rounded-lg" style={{ background: `${theme.swatch}33` }} />
-          <div className="h-1.5 w-14 rounded-full bg-white/20" />
+          <div className="h-1.5 w-14 rounded-full" style={{ background: isLight ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.20)' }} />
         </div>
         {/* Messages */}
         <div className="flex items-start gap-1">
           <div className="h-4 w-4 shrink-0 rounded-full" style={{ background: `${theme.swatch}40` }} />
           <div className="flex flex-col gap-0.5">
-            <div className="h-1.5 w-16 rounded-full bg-white/30" />
-            <div className="h-4 w-24 rounded-lg bg-white/[0.07]" />
+            <div className="h-1.5 w-16 rounded-full" style={{ background: isLight ? 'rgba(0,0,0,0.30)' : 'rgba(255,255,255,0.30)' }} />
+            <div className="h-4 w-24 rounded-lg" style={isLight ? { background: 'rgba(0,0,0,0.04)' } : { background: 'rgba(255,255,255,0.07)' }} />
           </div>
         </div>
         <div className="flex items-start gap-1">
           <div className="h-4 w-4 shrink-0 rounded-full" style={{ background: `${theme.swatch}40` }} />
           <div className="flex flex-col gap-0.5">
-            <div className="h-1.5 w-12 rounded-full bg-white/30" />
-            <div className="h-4 w-20 rounded-lg bg-white/[0.07]" />
-            <div className="h-3 w-16 rounded-lg bg-white/[0.05]" />
+            <div className="h-1.5 w-12 rounded-full" style={{ background: isLight ? 'rgba(0,0,0,0.30)' : 'rgba(255,255,255,0.30)' }} />
+            <div className="h-4 w-20 rounded-lg" style={isLight ? { background: 'rgba(0,0,0,0.04)' } : { background: 'rgba(255,255,255,0.07)' }} />
+            <div className="h-3 w-16 rounded-lg" style={isLight ? { background: 'rgba(0,0,0,0.03)' } : { background: 'rgba(255,255,255,0.05)' }} />
           </div>
         </div>
         {/* Own message bubble */}
@@ -72,9 +75,9 @@ function ThemePreview({ themeId }: { themeId: ThemeId }) {
         {/* Input bar */}
         <div
           className="flex items-center gap-1 rounded-xl px-2 py-1 mt-0.5"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+          style={{ background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.05)', border: `1px solid ${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}` }}
         >
-          <div className="flex-1 h-1 rounded-full bg-white/10" />
+          <div className="flex-1 h-1 rounded-full bg-white/10" style={isLight ? { background: 'rgba(0,0,0,0.08)' } : {}} />
           <div className="h-3 w-3 rounded-lg shrink-0" style={{ background: theme.swatch }} />
         </div>
       </div>
@@ -83,9 +86,10 @@ function ThemePreview({ themeId }: { themeId: ThemeId }) {
 }
 
 export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
-  const { themeId, setTheme } = useTheme();
+  const { themeId, setTheme, mode } = useTheme();
   const [hoveredId, setHoveredId] = React.useState<ThemeId | null>(null);
   const previewId = hoveredId ?? themeId;
+  const isLight = mode === 'light';
 
   return (
     <AnimatePresence>
@@ -136,7 +140,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
             <div className="flex-1 p-6">
               <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">Themes</p>
               <div className="grid grid-cols-2 gap-3">
-                {THEMES.map((theme) => {
+                {THEMES.filter(t => t.id !== 'light').map((theme) => {
                   const isActive = themeId === theme.id;
                   const isHovered = hoveredId === theme.id;
                   return (
@@ -201,7 +205,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                 className="flex-1 rounded-xl border border-border-default overflow-hidden"
                 style={{ minHeight: '220px' }}
               >
-                <ThemePreview themeId={previewId} />
+                <ThemePreview themeId={previewId} isLight={isLight} />
               </motion.div>
               <div className="space-y-1">
                 {(() => {
@@ -214,17 +218,25 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                   );
                 })()}
               </div>
-              <button
-                onClick={() => { setTheme(previewId); onClose(); }}
-                className="w-full rounded-xl py-2 text-xs font-semibold transition-all"
-                style={{
-                  background: THEMES.find((t) => t.id === previewId)!.swatch,
-                  color: '#fff',
-                  boxShadow: `0 4px 16px ${THEMES.find((t) => t.id === previewId)!.swatch}55`,
-                }}
-              >
-                Apply Theme
-              </button>
+              {(() => {
+                const activeT = THEMES.find((t) => t.id === previewId)!;
+                const activeSwatch = isLight 
+                  ? (previewId === 'rose-gold' ? '#db2777' : previewId === 'slate' ? '#18181b' : activeT.swatch)
+                  : activeT.swatch;
+                return (
+                  <button
+                    onClick={() => { setTheme(previewId); onClose(); }}
+                    className="w-full rounded-xl py-2 text-xs font-semibold transition-all"
+                    style={{
+                      background: activeSwatch,
+                      color: '#fff',
+                      boxShadow: `0 4px 16px ${activeSwatch}55`,
+                    }}
+                  >
+                    Apply Theme
+                  </button>
+                );
+              })()}
             </div>
           </div>
         </div>

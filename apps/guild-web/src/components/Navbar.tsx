@@ -21,10 +21,10 @@ export function Navbar({ onSearchOpen, onMobileMenuToggle }: NavbarProps) {
 
   const { notifications, unreadCount, markRead, markAllAsRead } = useNotifications(orgId);
   const [notifOpen, setNotifOpen] = React.useState(false);
-  const { themeId, setTheme } = useTheme();
+  const { mode, toggleMode } = useTheme();
 
-  const isLight = themeId === 'light';
-  const toggleTheme = () => setTheme(isLight ? 'midnight' : 'light');
+  const isLight = mode === 'light';
+  const toggleTheme = toggleMode;
 
   const displayName = userProfile?.fullName ?? 'User';
   const initials = displayName
