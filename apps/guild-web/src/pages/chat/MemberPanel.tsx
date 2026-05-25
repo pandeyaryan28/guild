@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { MessageSquare, Users } from 'lucide-react';
+import { MessageSquare, Users, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { type UserProfile } from '../../lib/firestore';
 import { cn } from '@/lib/utils';
@@ -8,17 +8,31 @@ interface MemberPanelProps {
   members: UserProfile[];
   currentUserId: string;
   onStartDM: (member: UserProfile) => void;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
 }
 
-export function MemberPanel({ members, currentUserId, onStartDM }: MemberPanelProps) {
+export function MemberPanel({ members, currentUserId, onStartDM, isCollapsed = false, onToggle }: MemberPanelProps) {
   return (
-    <aside className="hidden xl:flex h-full w-[260px] shrink-0 flex-col border-l border-border-default bg-surface">
-      <div className="flex items-center gap-2 border-b border-border-default px-4 py-4">
+    <aside className={cn(
+      "flex h-full flex-col bg-surface transition-all duration-300 ease-in-out shrink-0 overflow-hidden w-full h-full",
+      isCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"
+    )}>
+      <div className="flex items-center gap-2 border-b border-border-default px-4 py-4 shrink-0">
         <Users className="h-3.5 w-3.5 text-text-muted" />
         <span className="text-xs font-bold uppercase tracking-widest text-text-muted">
           Members
         </span>
-        <span className="ml-auto text-[10px] text-text-muted">{members.length}</span>
+        <span className="text-[10px] text-text-muted ml-2">{members.length}</span>
+        {onToggle && (
+          <button
+            onClick={onToggle}
+            className="ml-auto flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-all cursor-pointer shrink-0"
+            title="Collapse Members Panel"
+          >
+            <PanelRightClose className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       <ScrollArea className="flex-1">

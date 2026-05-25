@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { useChannels } from '../../hooks/useChat';
 import { useMessages } from '../../hooks/useChat';
 import { sendChannelMessage, sendDMMessage, markChannelRead, markDMRead } from '../../lib/chat';
@@ -23,6 +24,8 @@ interface MessageAreaProps {
   members: UserProfile[];
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
+  isMemberPanelCollapsed?: boolean;
+  onToggleMemberPanel?: () => void;
 }
 
 export function MessageArea({ 
@@ -33,7 +36,9 @@ export function MessageArea({
   profile, 
   members,
   isSidebarCollapsed = false,
-  onToggleSidebar
+  onToggleSidebar,
+  isMemberPanelCollapsed = false,
+  onToggleMemberPanel
 }: MessageAreaProps) {
   const navigate = useNavigate();
   const messages = useMessages(channelId, dmId);
@@ -253,6 +258,24 @@ export function MessageArea({
               </button>
             )}
           </div>
+        )}
+
+        {/* Right Sidebar Toggle Button */}
+        {onToggleMemberPanel && (
+          <button
+            onClick={onToggleMemberPanel}
+            className={cn(
+              "hidden xl:flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground shrink-0 transition-colors ml-1",
+              !channelId && "ml-auto"
+            )}
+            title={isMemberPanelCollapsed ? "Expand Members List" : "Collapse Members List"}
+          >
+            {isMemberPanelCollapsed ? (
+              <PanelRightOpen className="h-4.5 w-4.5 text-primary" />
+            ) : (
+              <PanelRightClose className="h-4.5 w-4.5" />
+            )}
+          </button>
         )}
       </div>
 

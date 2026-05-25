@@ -243,6 +243,7 @@ export function ChatLayout() {
   const members = useOrgMembers(orgId);
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+  const [isMemberPanelCollapsed, setIsMemberPanelCollapsed] = React.useState(false);
 
   const handleStartDM = async (member: UserProfile) => {
     if (!user || !orgId) return;
@@ -277,12 +278,19 @@ export function ChatLayout() {
                 members={members}
                 isSidebarCollapsed={isSidebarCollapsed}
                 onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                isMemberPanelCollapsed={isMemberPanelCollapsed}
+                onToggleMemberPanel={() => setIsMemberPanelCollapsed(!isMemberPanelCollapsed)}
               />
-              <div className="border-l border-white/5">
+              <div className={cn(
+                "hidden xl:block transition-all duration-300 ease-in-out h-full overflow-hidden",
+                isMemberPanelCollapsed ? "w-0 border-l-0" : "border-l border-white/5 w-[260px]"
+              )}>
                 <MemberPanel
                   members={members}
                   currentUserId={user?.uid ?? ''}
                   onStartDM={handleStartDM}
+                  isCollapsed={isMemberPanelCollapsed}
+                  onToggle={() => setIsMemberPanelCollapsed(!isMemberPanelCollapsed)}
                 />
               </div>
             </>
