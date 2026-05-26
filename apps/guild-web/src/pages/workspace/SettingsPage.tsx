@@ -117,9 +117,6 @@ export function SettingsPage() {
         <h1 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
           Settings
         </h1>
-        <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
-          Configure personal details, notifications, workspace permissions, visual themes, and line reporting squads
-        </p>
       </div>
 
       {/* Main Split Grid Workspace */}
@@ -349,7 +346,6 @@ function ProfileSettingsView({ profile }: { profile: UserProfile }) {
     <div className="space-y-6 text-left">
       <div>
         <h2 className="text-sm font-bold text-foreground">My Profile</h2>
-        <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Customize your personal identity cards and details</p>
       </div>
 
       {generalError && (
@@ -359,180 +355,120 @@ function ProfileSettingsView({ profile }: { profile: UserProfile }) {
         </div>
       )}
 
-      {/* Grid containing forms and the live preview card */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-        {/* Forms block */}
-        <form onSubmit={handleSubmit} className="space-y-4 lg:col-span-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Full Name */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Full Name</label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className={cn(
-                  "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
-                  errors.fullName ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
-                )}
-                placeholder="Aryan Pandey"
-              />
-              {errors.fullName && <p className="text-[9px] text-red-500 font-bold">{errors.fullName}</p>}
-            </div>
-
-            {/* Username */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className={cn(
-                  "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
-                  errors.username ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
-                )}
-                placeholder="aryan_p"
-              />
-              {errors.username && <p className="text-[9px] text-red-500 font-bold">{errors.username}</p>}
-            </div>
-
-            {/* Designation */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Designation / Role</label>
-              <input
-                type="text"
-                value={designation}
-                onChange={(e) => setDesignation(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
-                placeholder="Lead Engineer"
-              />
-            </div>
-
-            {/* Employee ID */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Employee ID</label>
-              <input
-                type="text"
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
-                placeholder="G-1025"
-              />
-            </div>
-
-            {/* Age */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Age</label>
-              <input
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                className={cn(
-                  "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
-                  errors.age ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
-                )}
-                placeholder="26"
-              />
-              {errors.age && <p className="text-[9px] text-red-500 font-bold">{errors.age}</p>}
-            </div>
-
-            {/* Email (Read-Only) */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                Email Address <Info className="h-3 w-3 text-muted-foreground" />
-              </label>
-              <input
-                type="email"
-                disabled
-                value={profile.email}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-white/[0.005] text-xs text-muted-foreground cursor-not-allowed outline-none font-semibold"
-              />
-            </div>
-          </div>
-
-          <div className="pt-4 flex flex-wrap items-center justify-between gap-4">
-            <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1.5 select-none">
-              Account Privilege: <span className="font-extrabold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider">{profile.role}</span>
-            </span>
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-accent/90 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 transition-all shadow-lg hover:shadow-accent/15 cursor-pointer text-xs"
-              style={{ background: 'var(--accent)' }}
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
-                </>
-              ) : success ? (
-                <>
-                  <Check className="h-3.5 w-3.5 text-emerald-400" /> Saved!
-                </>
-              ) : (
-                'Save Profile'
+      {/* Forms block */}
+      <form onSubmit={handleSubmit} className="space-y-4 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Full Name */}
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Full Name</label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className={cn(
+                "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                errors.fullName ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
               )}
-            </button>
+              placeholder="Aryan Pandey"
+            />
+            {errors.fullName && <p className="text-[9px] text-red-500 font-bold">{errors.fullName}</p>}
           </div>
-        </form>
 
-        {/* Live ID Badge Preview Card */}
-        <div className="lg:col-span-2 flex flex-col justify-center items-center w-full h-full lg:pt-4">
-          <motion.div
-            whileHover={{ y: -4, rotateY: 3, rotateX: 3 }}
-            className="w-full max-w-[260px] aether-glass bg-gradient-to-br from-white/[0.04] to-white/[0.005] border-white/10 rounded-2xl p-5 text-center relative overflow-hidden shadow-lg flex flex-col items-center gap-4 group"
-            style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
-          >
-            {/* Shimmer backdrop */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 to-transparent pointer-events-none opacity-50 group-hover:opacity-80 transition-opacity" />
-            
-            {/* Interactive Identity circle sphere with radial color glow */}
-            <div className="relative z-10">
-              <div className="teammate-halo active">
-                <div 
-                  className="h-16 w-16 rounded-full flex items-center justify-center font-black text-white text-lg relative overflow-hidden shadow-lg"
-                  style={{
-                    background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
-                  }}
-                >
-                  <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
-                  {fullName ? fullName[0].toUpperCase() : '?'}
-                </div>
-              </div>
-            </div>
+          {/* Username */}
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={cn(
+                "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                errors.username ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
+              )}
+              placeholder="aryan_p"
+            />
+            {errors.username && <p className="text-[9px] text-red-500 font-bold">{errors.username}</p>}
+          </div>
 
-            {/* Typography */}
-            <div className="space-y-1 z-10 w-full overflow-hidden">
-              <h3 className="text-xs font-black text-foreground truncate max-w-full leading-tight">
-                {fullName || 'Your Name'}
-              </h3>
-              <p className="text-[10px] text-muted-foreground truncate max-w-full">
-                @{username || 'username'}
-              </p>
-              
-              <div className="pt-3.5 border-t border-white/5 mt-3 space-y-2 text-left w-full text-[9px] font-semibold">
-                <div className="flex justify-between items-center text-muted-foreground">
-                  <span>Designation</span>
-                  <span className="text-foreground font-bold truncate max-w-[120px]">{designation || 'Lead Engineer'}</span>
-                </div>
-                <div className="flex justify-between items-center text-muted-foreground">
-                  <span>Employee ID</span>
-                  <span className="text-foreground font-bold truncate max-w-[120px]">{employeeId || 'G-1025'}</span>
-                </div>
-                <div className="flex justify-between items-center text-muted-foreground">
-                  <span>System Rank</span>
-                  <span className="text-accent font-extrabold uppercase tracking-wider">{profile.role}</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Guild glowing badge watermark */}
-            <div className="absolute bottom-2 right-3 text-[14px] font-black uppercase text-white/[0.015] select-none pointer-events-none tracking-widest font-heading group-hover:text-white/[0.035] transition-colors">
-              Guild ID
-            </div>
-          </motion.div>
+          {/* Designation */}
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Designation / Role</label>
+            <input
+              type="text"
+              value={designation}
+              onChange={(e) => setDesignation(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+              placeholder="Lead Engineer"
+            />
+          </div>
+
+          {/* Employee ID */}
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Employee ID</label>
+            <input
+              type="text"
+              value={employeeId}
+              onChange={(e) => setEmployeeId(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+              placeholder="G-1025"
+            />
+          </div>
+
+          {/* Age */}
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Age</label>
+            <input
+              type="number"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              className={cn(
+                "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                errors.age ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
+              )}
+              placeholder="26"
+            />
+            {errors.age && <p className="text-[9px] text-red-500 font-bold">{errors.age}</p>}
+          </div>
+
+          {/* Email (Read-Only) */}
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+              Email Address <Info className="h-3 w-3 text-muted-foreground" />
+            </label>
+            <input
+              type="email"
+              disabled
+              value={profile.email}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-white/[0.005] text-xs text-muted-foreground cursor-not-allowed outline-none font-semibold"
+            />
+          </div>
         </div>
-      </div>
+
+        <div className="pt-4 flex flex-wrap items-center justify-between gap-4">
+          <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1.5 select-none">
+            Account Privilege: <span className="font-extrabold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider">{profile.role}</span>
+          </span>
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-accent/90 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 transition-all shadow-lg hover:shadow-accent/15 cursor-pointer text-xs"
+            style={{ background: 'var(--accent)' }}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
+              </>
+            ) : success ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-400" /> Saved!
+              </>
+            ) : (
+              'Save Profile'
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -580,7 +516,6 @@ function NotificationSettingsView({ profile }: { profile: UserProfile }) {
     <div className="space-y-6 text-left">
       <div>
         <h2 className="text-sm font-bold text-foreground">Notification Preferences</h2>
-        <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Control which activities trigger real-time banners and notifications</p>
       </div>
 
       <div className="space-y-3">
@@ -658,7 +593,6 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
     <div className="space-y-6 text-left animate-fluid-pop">
       <div>
         <h2 className="text-sm font-bold text-foreground">Visual Theme & Appearance</h2>
-        <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Choose your preferred workspace aesthetic. Syncs automatically across devices</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -783,7 +717,6 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-sm font-bold text-foreground">Workspace Members</h2>
-          <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Manage permissions, invite new teammates, or update line roles</p>
         </div>
         <button
           onClick={onOpenInvite}
@@ -819,8 +752,8 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
             >
               {/* Left Column: Teammate profile */}
               <div className="flex items-center gap-3.5 overflow-hidden min-w-[240px] flex-1">
-                {/* Teammate halo with initials badge */}
-                <div className={cn("teammate-halo shrink-0", member.isManager ? "active" : "offline")}>
+                {/* Teammate avatar initials badge */}
+                <div className="shrink-0">
                   <div 
                     className="h-9 w-9 rounded-xl flex items-center justify-center font-black text-white text-xs relative overflow-hidden shadow-sm"
                     style={{
@@ -958,7 +891,6 @@ function InviteLinksSettingsView({ inviteLinks, loading, members }: InviteLinksP
     <div className="space-y-6 text-left animate-fluid-pop">
       <div>
         <h2 className="text-sm font-bold text-foreground">Invite Links</h2>
-        <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">View or revoke active single-use invitation links</p>
       </div>
 
       {loading ? (
@@ -1130,7 +1062,6 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
       <div className="space-y-6">
         <div>
           <h2 className="text-sm font-bold text-foreground">Workspace General Info</h2>
-          <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Customize your company name, logo initials, and public URLs</p>
         </div>
 
         {error && (
@@ -1384,9 +1315,6 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
       {/* Title */}
       <div>
         <h2 className="text-sm font-bold text-foreground">Teams & Org Management</h2>
-        <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
-          Configure line reporting hierarchy (managers & reports) and functional squad circles
-        </p>
       </div>
 
       {/* Internal Sub-Tabs */}
