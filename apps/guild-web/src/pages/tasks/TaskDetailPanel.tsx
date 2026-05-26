@@ -56,7 +56,7 @@ function Dropdown({ trigger, children, open, onClose }: {
     <div ref={ref} className="relative">
       {trigger}
       {open && (
-        <div className="absolute top-full mt-2 left-0 z-40 rounded-2xl border border-border-default bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl shadow-2xl overflow-hidden min-w-[200px] py-1.5 animate-in fade-in slide-in-from-top-1.5 duration-200">
+        <div className="absolute top-full mt-2 left-0 z-40 rounded-2xl border border-border-default/60 bg-surface-elevated/95 dark:bg-surface-elevated/90 backdrop-blur-2xl shadow-2xl overflow-hidden min-w-[200px] py-1.5 animate-in fade-in slide-in-from-top-1.5 duration-200">
           {children}
         </div>
       )}
@@ -67,7 +67,7 @@ function Dropdown({ trigger, children, open, onClose }: {
 // ── visually polished property row ──────────────────────────────────────────
 function PropRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-4 py-2 border-b border-border-default/40 last:border-0">
+    <div className="flex items-center gap-4 py-2 border-b border-border-default/30 last:border-0">
       <span className="w-24 flex-shrink-0 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
         {label}
       </span>
@@ -307,7 +307,10 @@ export function TaskDetailPanel({
 
   const content = (
     <div 
-      className="flex flex-col h-full bg-card text-foreground"
+      className={cn(
+        "flex flex-col h-full text-foreground transition-colors duration-300",
+        layoutMode === 'inline' ? 'bg-card' : 'bg-transparent'
+      )}
       onClick={() => {
         setStatusOpen(false);
         setPriorityOpen(false);
@@ -316,7 +319,7 @@ export function TaskDetailPanel({
       }}
     >
       {/* ─── Top Bar / Header ─── */}
-      <div className="flex-shrink-0 flex items-center justify-between px-6 py-4.5 border-b border-border-default/80 bg-surface/50 backdrop-blur-md">
+      <div className="flex-shrink-0 flex items-center justify-between px-6 py-4.5 border-b border-border-default/50 bg-surface/10 backdrop-blur-md">
         
         {/* Left Side: Dynamic Selector Pills */}
         <div className="flex items-center gap-2">
@@ -330,7 +333,7 @@ export function TaskDetailPanel({
                   e.stopPropagation();
                   setStatusOpen(!statusOpen);
                 }}
-                className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold border border-border-default/60 hover:bg-accent/40 hover:border-border-default transition-all shadow-sm"
+                className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold border border-border-default/60 hover:bg-accent/10 hover:border-border-default transition-all shadow-sm"
                 style={{ color: status.dot, borderColor: `${status.dot}40`, backgroundColor: `${status.dot}10` }}
               >
                 <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: status.dot }} />
@@ -365,7 +368,7 @@ export function TaskDetailPanel({
                   e.stopPropagation();
                   setPriorityOpen(!priorityOpen);
                 }}
-                className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold border border-border-default/60 hover:bg-accent/40 hover:border-border-default transition-all shadow-sm"
+                className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold border border-border-default/60 hover:bg-accent/10 hover:border-border-default transition-all shadow-sm"
                 style={{ color: priority.color, borderColor: `${priority.color}40`, backgroundColor: `${priority.color}10` }}
               >
                 <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: priority.color }} />
@@ -446,7 +449,7 @@ export function TaskDetailPanel({
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 min-h-0">
         
         {/* Breadcrumbs & Task Pointer */}
-        <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground select-none">
           <span>Workspace</span>
           <ChevronRight className="h-2.5 w-2.5" />
           <span>Task details</span>
@@ -547,8 +550,8 @@ export function TaskDetailPanel({
           </div>
         )}
 
-        {/* Modular Properties Glass Card Container */}
-        <div className="bg-surface/35 dark:bg-surface/10 border border-border-default/60 dark:border-border-strong rounded-2xl p-4 space-y-2 shadow-sm">
+        {/* Modular Properties Card Container — styled with aether-glass */}
+        <div className="aether-glass border border-border-default/30 p-4 space-y-2 shadow-sm">
           
           {/* Assignees */}
           <PropRow label="Assignees">
@@ -626,7 +629,7 @@ export function TaskDetailPanel({
               'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold border cursor-pointer transition-colors',
               isOverdue
                 ? 'border-red-500/35 text-red-500 bg-red-500/10'
-                : 'border-border-default text-muted-foreground hover:bg-accent/40'
+                : 'border-border-default text-muted-foreground hover:bg-accent/10'
             )}>
               <Calendar className="h-3.5 w-3.5" />
               {due ? (
@@ -641,7 +644,7 @@ export function TaskDetailPanel({
                 type="date"
                 defaultValue={dueDateInput}
                 onChange={(e) => handleDueDateChange(e.target.value)}
-                className="absolute opacity-0 w-0 h-0"
+                className="absolute opacity-0 w-0 h-0 cursor-pointer"
               />
             </label>
             {due && (
@@ -696,7 +699,7 @@ export function TaskDetailPanel({
                   </button>
                 ))}
               </div>
-              <div className="border-t border-border-default/60 p-2.5">
+              <div className="border-t border-border-default/50 p-2.5">
                 {showNewLabel ? (
                   <div className="space-y-2">
                     <input
@@ -753,7 +756,7 @@ export function TaskDetailPanel({
 
         {/* Task Description Canvas */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex items-center gap-2 text-muted-foreground select-none">
             <AlignLeft className="h-4 w-4" />
             <span className="text-[10px] font-bold uppercase tracking-widest">Description</span>
           </div>
@@ -770,7 +773,7 @@ export function TaskDetailPanel({
             <div
               onClick={() => setEditingDesc(true)}
               className={cn(
-                'min-h-[44px] rounded-2xl px-3.5 py-2.5 text-sm cursor-text transition-colors border border-border-default/20 bg-accent/5 hover:bg-accent/25 hover:border-border-default',
+                'min-h-[44px] rounded-[14px] px-3.5 py-2.5 text-xs font-semibold cursor-text transition-colors border border-border-default/40 bg-surface/35 hover:bg-surface/60 hover:border-border-default',
                 task.description ? 'text-foreground/80 leading-relaxed' : 'text-muted-foreground italic'
               )}
             >
@@ -779,9 +782,9 @@ export function TaskDetailPanel({
           )}
         </div>
 
-        {/* Subtask Milestones Tracker Checklist */}
-        <div className="space-y-4 bg-surface/30 dark:bg-surface/5 border border-border-default/60 rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center justify-between">
+        {/* Subtask Milestones Tracker Checklist — styled with aether-glass */}
+        <div className="aether-glass border border-border-default/30 p-4.5 space-y-4 shadow-sm animate-in fade-in duration-200">
+          <div className="flex items-center justify-between select-none">
             <div className="flex items-center gap-2 text-muted-foreground">
               <ListTodo className="h-4 w-4" />
               <span className="text-[10px] font-bold uppercase tracking-widest">Subtask Milestones</span>
@@ -818,7 +821,7 @@ export function TaskDetailPanel({
               return (
                 <div 
                   key={sub.id} 
-                  className="flex items-center gap-3 py-2 px-2.5 rounded-xl hover:bg-accent/20 transition-colors group"
+                  className="flex items-center gap-3 py-2 px-2.5 rounded-xl hover:bg-accent/15 transition-colors group"
                 >
                   <button
                     onClick={() => handleToggleSubtask(sub)}
@@ -859,7 +862,7 @@ export function TaskDetailPanel({
                       setAddingSubtask(false);
                     }
                   }}
-                  className="flex-1 bg-transparent text-xs font-semibold text-foreground placeholder:text-text-muted outline-none border-b border-primary/50 pb-0.5"
+                  className="flex-1 bg-transparent text-xs font-semibold text-foreground placeholder:text-text-muted outline-none border-b border-primary/55 pb-0.5"
                 />
               </div>
             )}
@@ -918,16 +921,16 @@ export function TaskDetailPanel({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-[4px] pointer-events-auto"
+          className="fixed inset-0 bg-black/40 backdrop-blur-[8px] pointer-events-auto"
           onClick={onClose}
         />
-        {/* Smooth spring sliding sheet panel */}
+        {/* Smooth spring sliding sheet panel — styled with aether-glass */}
         <motion.div
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="relative z-10 w-full sm:w-[500px] h-full border-l border-border-default/80 bg-card shadow-2xl flex flex-col pointer-events-auto"
+          className="relative z-10 w-full sm:w-[520px] h-full aether-glass rounded-none md:rounded-l-[24px] border-r-0 border-y-0 border-l border-border-default/50 shadow-2xl flex flex-col pointer-events-auto overflow-hidden"
         >
           {content}
         </motion.div>

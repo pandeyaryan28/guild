@@ -140,7 +140,7 @@ export function TaskComments({ taskId, orgId, actor, authorUsername, notifyIds, 
           return (
             <div 
               key={c.id} 
-              className="group flex gap-3 p-3 rounded-2xl border border-border-default/40 bg-surface/30 hover:bg-surface/50 hover:border-border-default transition-all shadow-sm relative overflow-hidden"
+              className="group flex gap-3.5 p-4 aether-glass border border-border-default/25 hover:bg-surface-hover hover:border-border-default transition-all shadow-sm relative overflow-hidden animate-in fade-in duration-200"
             >
               {/* Initials Avatar Badge */}
               <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-extrabold text-primary shadow-sm">
