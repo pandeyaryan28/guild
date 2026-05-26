@@ -160,6 +160,7 @@ export interface Goal {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   completedAt?: Timestamp | null;
+  projectId?: string | null;
 
   // Chronology features
   horizon: GoalHorizon;

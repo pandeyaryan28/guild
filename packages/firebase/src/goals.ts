@@ -1,5 +1,5 @@
 import {
-  collection, doc, setDoc, updateDoc,
+  collection, doc, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot, serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
@@ -16,6 +16,8 @@ export async function createGoal(params: {
   actor: ActorInfo;
   horizon?: GoalHorizon;
   recurrence?: GoalRecurrence;
+  projectId?: string | null;
+  ownerId?: string | null;
 }): Promise<string> {
   const ref = doc(collection(db, 'goals'));
   const horizon = params.horizon ?? 'short_term';
@@ -25,11 +27,12 @@ export async function createGoal(params: {
     orgId: params.orgId,
     title: params.title,
     description: params.description ?? '',
-    ownerId: params.actor.uid,
+    ownerId: params.ownerId ?? params.actor.uid,
     status: 'active' as GoalStatus,
     targetDate: params.targetDate ? Timestamp.fromDate(params.targetDate) : null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+    projectId: params.projectId ?? null,
 
     // Chronology features
     horizon,
@@ -80,6 +83,10 @@ export function listenToGoal(
   return onSnapshot(doc(db, 'goals', goalId), (snap) =>
     cb(snap.exists() ? (snap.data() as Goal) : null),
   );
+}
+
+export async function deleteGoal(goalId: string): Promise<void> {
+  await deleteDoc(doc(db, 'goals', goalId));
 }
 
 export type { Goal, GoalStatus };
