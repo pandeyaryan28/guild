@@ -206,84 +206,32 @@ export function ProjectDetailPage() {
                 <ArrowLeft className="h-4 w-4" />
               </button>
               
-              {isEditing ? (
-                <div className="flex-grow space-y-2.5 min-w-0 max-w-lg">
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-xl border border-indigo-500/35 bg-white/[0.02] text-xs font-bold text-foreground outline-none focus:ring-1 focus:ring-indigo-500/30"
-                    placeholder="Project Name"
-                  />
-                  <textarea
-                    value={editDesc}
-                    onChange={(e) => setEditDesc(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-xl border border-indigo-500/25 bg-white/[0.02] text-[10px] text-foreground outline-none focus:ring-1 focus:ring-indigo-500/20 leading-relaxed font-semibold h-12 resize-none animate-fluid-pop"
-                    placeholder="Project Description"
-                  />
-                  <div className="flex flex-wrap gap-2.5">
-                    <div className="flex flex-col gap-1 text-[8px] font-bold text-muted-foreground">
-                      <label>Start Date</label>
-                      <input
-                        type="date"
-                        value={editStartDate}
-                        onChange={(e) => setEditStartDate(e.target.value)}
-                        className="px-2 py-1 rounded-lg border border-border-default bg-white/[0.02] text-[9px] font-semibold text-foreground outline-none"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1 text-[8px] font-bold text-muted-foreground">
-                      <label>Due Date</label>
-                      <input
-                        type="date"
-                        value={editDueDate}
-                        onChange={(e) => setEditDueDate(e.target.value)}
-                        className="px-2 py-1 rounded-lg border border-border-default bg-white/[0.02] text-[9px] font-semibold text-foreground outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSaveProject}
-                      className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[9px] font-extrabold transition-all cursor-pointer shadow-sm"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="px-3.5 py-1.5 border border-white/10 hover:bg-white/5 rounded-lg text-[9px] font-extrabold text-foreground transition-all cursor-pointer shadow-sm"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleToggleProjectStatus}
+                    className={cn(
+                      "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                      project.status === 'completed'
+                        ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                        : "border-border-default bg-bg-primary/50 hover:border-indigo-500"
+                    )}
+                    title={project.status === 'completed' ? "Mark Project Active" : "Mark Project Completed"}
+                  >
+                    {project.status === 'completed' ? (
+                      <Check className="w-3.5 h-3.5" />
+                    ) : (
+                      <FolderGit className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
+                    )}
+                  </button>
+                  <h1 className={cn("text-sm font-black tracking-tight truncate", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground")}>
+                    {project.name}
+                  </h1>
                 </div>
-              ) : (
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleToggleProjectStatus}
-                      className={cn(
-                        "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                        project.status === 'completed'
-                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
-                          : "border-border-default bg-bg-primary/50 hover:border-indigo-500"
-                      )}
-                      title={project.status === 'completed' ? "Mark Project Active" : "Mark Project Completed"}
-                    >
-                      {project.status === 'completed' ? (
-                        <Check className="w-3.5 h-3.5" />
-                      ) : (
-                        <FolderGit className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
-                      )}
-                    </button>
-                    <h1 className={cn("text-sm font-black tracking-tight truncate", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground")}>
-                      {project.name}
-                    </h1>
-                  </div>
-                  {project.description && (
-                    <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{project.description}</p>
-                  )}
-                </div>
-              )}
+                {project.description && (
+                  <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{project.description}</p>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-3 shrink-0 ml-auto">
@@ -595,6 +543,109 @@ export function ProjectDetailPage() {
         actor={actor}
         defaultProjectId={projectId}
       />
+
+      {/* ─── Premium Glassmorphic Edit Modal ─── */}
+      <AnimatePresence>
+        {isEditing && (
+          <>
+            {/* Dark glass backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsEditing(false)}
+              className="fixed inset-0 bg-background/80 dark:bg-black/60 backdrop-blur-sm z-[100]"
+            />
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6 rounded-2xl border border-border-default/85 bg-surface/95 dark:bg-surface/90 backdrop-blur-md shadow-2xl z-[101] flex flex-col gap-4 max-h-[90vh] overflow-y-auto aether-scroll"
+            >
+              <div className="flex items-center justify-between border-b border-border-default/45 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
+                    <FolderGit className="w-4 h-4 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
+                  </div>
+                  <h3 className="text-sm font-black text-foreground">Configure Project Initiative</h3>
+                </div>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="w-7 h-7 rounded-lg border border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground flex items-center justify-center transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Name */}
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Project Name</label>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-indigo-500/30"
+                    placeholder="Enter project name..."
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Project Description</label>
+                  <textarea
+                    value={editDesc}
+                    onChange={(e) => setEditDesc(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-indigo-500/30 h-20 resize-none leading-relaxed"
+                    placeholder="Describe what this project entails..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Start Date */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Start Date</label>
+                    <input
+                      type="date"
+                      value={editStartDate}
+                      onChange={(e) => setEditStartDate(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-indigo-500/30"
+                    />
+                  </div>
+
+                  {/* Due Date */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Due Date</label>
+                    <input
+                      type="date"
+                      value={editDueDate}
+                      onChange={(e) => setEditDueDate(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-indigo-500/30"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div className="flex items-center justify-end gap-2.5 border-t border-border-default/45 pt-4 mt-2">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-xs font-bold text-foreground transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveProject}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -8,10 +8,11 @@ import {
   Trash2,
   Check,
   ChevronDown,
-  Crown,
+  Target,
   Clock,
   Sparkles,
-  Settings
+  Settings,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,8 @@ export function GoalDetailPage() {
   const [editDesc, setEditDesc] = React.useState('');
   const [editProjId, setEditProjId] = React.useState('');
   const [editDate, setEditDate] = React.useState('');
+  const [editRecurrence, setEditRecurrence] = React.useState<'none' | 'daily' | 'weekly' | 'monthly' | 'custom'>('none');
+  const [editCustomDays, setEditCustomDays] = React.useState<number>(7);
 
   React.useEffect(() => {
     if (goal) {
@@ -53,6 +56,8 @@ export function GoalDetailPage() {
       setEditDesc(goal.description || '');
       setEditProjId(goal.projectId || 'none');
       setEditDate(goal.targetDate ? new Date((goal.targetDate as any).seconds * 1000).toISOString().split('T')[0] : '');
+      setEditRecurrence(goal.recurrence || 'none');
+      setEditCustomDays(goal.customDays || 7);
     }
   }, [goal, isEditing]);
 
@@ -155,6 +160,8 @@ export function GoalDetailPage() {
         description: editDesc.trim(),
         projectId: editProjId === 'none' ? null : editProjId,
         targetDate: editDate ? Timestamp.fromDate(new Date(editDate)) : null,
+        recurrence: editRecurrence,
+        customDays: editRecurrence === 'custom' ? Number(editCustomDays) : null,
       });
       setIsEditing(false);
     } catch (err) {
@@ -205,64 +212,32 @@ export function GoalDetailPage() {
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            {isEditing ? (
-              <div className="flex-grow space-y-2.5 min-w-0 max-w-lg">
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/35 bg-white/[0.02] text-xs font-bold text-foreground outline-none focus:ring-1 focus:ring-emerald-500/30"
-                  placeholder="Goal Title"
-                />
-                <textarea
-                  value={editDesc}
-                  onChange={(e) => setEditDesc(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/25 bg-white/[0.02] text-[10px] text-foreground outline-none focus:ring-1 focus:ring-emerald-500/20 leading-relaxed font-semibold h-12 resize-none animate-fluid-pop"
-                  placeholder="Goal Description"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveGoal}
-                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9px] font-extrabold transition-all cursor-pointer shadow-sm"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-3.5 py-1.5 border border-white/10 hover:bg-white/5 rounded-lg text-[9px] font-extrabold text-foreground transition-all cursor-pointer shadow-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleToggleGoalStatus}
+                  className={cn(
+                    "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                    goal.status === 'completed'
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "border-border-default bg-bg-primary/50 hover:border-emerald-500"
+                  )}
+                  title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
+                >
+                  {goal.status === 'completed' ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    <Target className="w-3.5 h-3.5 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
+                  )}
+                </button>
+                <h1 className={cn("text-sm font-black tracking-tight truncate", goal.status === 'completed' ? "text-muted-foreground line-through decoration-emerald-500/50" : "text-foreground")}>
+                  {goal.title}
+                </h1>
               </div>
-            ) : (
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleToggleGoalStatus}
-                    className={cn(
-                      "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                      goal.status === 'completed'
-                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                        : "border-border-default bg-bg-primary/50 hover:border-emerald-500"
-                    )}
-                    title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
-                  >
-                    {goal.status === 'completed' ? (
-                      <Check className="w-3.5 h-3.5" />
-                    ) : (
-                      <Crown className="w-3.5 h-3.5 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
-                    )}
-                  </button>
-                  <h1 className={cn("text-sm font-black tracking-tight truncate", goal.status === 'completed' ? "text-muted-foreground line-through decoration-emerald-500/50" : "text-foreground")}>
-                    {goal.title}
-                  </h1>
-                </div>
-                {goal.description && (
-                  <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{goal.description}</p>
-                )}
-              </div>
-            )}
+              {goal.description && (
+                <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{goal.description}</p>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-3 shrink-0 ml-auto">
@@ -514,6 +489,163 @@ export function GoalDetailPage() {
         actor={actor}
         defaultGoalId={goalId}
       />
+
+      {/* ─── Premium Glassmorphic Edit Modal ─── */}
+      <AnimatePresence>
+        {isEditing && (
+          <>
+            {/* Dark glass backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsEditing(false)}
+              className="fixed inset-0 bg-background/80 dark:bg-black/60 backdrop-blur-sm z-[100]"
+            />
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6 rounded-2xl border border-border-default/85 bg-surface/95 dark:bg-surface/90 backdrop-blur-md shadow-2xl z-[101] flex flex-col gap-4 max-h-[90vh] overflow-y-auto aether-scroll"
+            >
+              <div className="flex items-center justify-between border-b border-border-default/45 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                    <Target className="w-4 h-4 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
+                  </div>
+                  <h3 className="text-sm font-black text-foreground">Configure Goal Focus</h3>
+                </div>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="w-7 h-7 rounded-lg border border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground flex items-center justify-center transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Title */}
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Goal Title</label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-emerald-500/30"
+                    placeholder="Enter goal title..."
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Goal Description</label>
+                  <textarea
+                    value={editDesc}
+                    onChange={(e) => setEditDesc(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-emerald-500/30 h-20 resize-none leading-relaxed"
+                    placeholder="Describe what this goal entails..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Linked Project */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Align Initiative</label>
+                    <select
+                      value={editProjId}
+                      onChange={(e) => setEditProjId(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary dark:bg-surface text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-emerald-500/30"
+                    >
+                      <option value="none">No Initiative Link</option>
+                      {projects.map((p) => (
+                        <option key={p.id} value={p.id}>#{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Target Date */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Target Date</label>
+                    <input
+                      type="date"
+                      value={editDate}
+                      onChange={(e) => setEditDate(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-emerald-500/30"
+                    />
+                  </div>
+                </div>
+
+                {/* Frequency Recurrence options */}
+                <div className="p-3.5 rounded-xl border border-border-default/60 bg-bg-secondary/20 space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Execution Frequency</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+                      {[
+                        { val: 'none', label: 'Once' },
+                        { val: 'daily', label: 'Daily' },
+                        { val: 'weekly', label: 'Weekly' },
+                        { val: 'monthly', label: 'Monthly' },
+                        { val: 'custom', label: 'Custom' },
+                      ].map((item) => (
+                        <button
+                          key={item.val}
+                          type="button"
+                          onClick={() => setEditRecurrence(item.val as any)}
+                          className={cn(
+                            "py-1.5 px-1 rounded-lg border text-[9px] font-black text-center transition-all cursor-pointer",
+                            editRecurrence === item.val
+                              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold shadow-sm"
+                              : "border-border-default bg-bg-primary/50 hover:bg-bg-secondary text-muted-foreground"
+                          )}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {editRecurrence === 'custom' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex items-center gap-2.5 pt-1.5 overflow-hidden"
+                    >
+                      <span className="text-[10px] text-muted-foreground font-semibold">Repeat goal cycles every</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={365}
+                        value={editCustomDays}
+                        onChange={(e) => setEditCustomDays(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-16 px-2.5 py-1 rounded-lg border border-border-default bg-bg-primary/50 text-xs font-mono font-semibold text-foreground text-center outline-none focus:ring-1 focus:ring-emerald-500/30"
+                      />
+                      <span className="text-[10px] text-muted-foreground font-semibold">days</span>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div className="flex items-center justify-end gap-2.5 border-t border-border-default/45 pt-4 mt-2">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-xs font-bold text-foreground transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveGoal}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

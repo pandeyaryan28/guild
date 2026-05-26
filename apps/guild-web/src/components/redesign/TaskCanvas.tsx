@@ -19,7 +19,7 @@ import {
   // Premium Icons
   Sparkles,
   Workflow,
-  Crown,
+  Target,
   Zap,
   FolderGit,
   Hourglass,
@@ -456,7 +456,7 @@ export function TaskCanvas() {
             )}
             title="Assign Goal"
           >
-            <Crown className="w-4 h-4 shrink-0" />
+            <Target className="w-4 h-4 shrink-0" />
             {!isSidebarCollapsed && <span>Assign Goal</span>}
           </button>
 
@@ -514,7 +514,7 @@ export function TaskCanvas() {
                 
                 <div className="space-y-4">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                    <Crown className="w-3.5 h-3.5 text-emerald-500 shrink-0 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
+                    <Target className="w-3.5 h-3.5 text-emerald-500 shrink-0 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
                     <span>My Goals</span>
                   </h3>
                   <div className="space-y-4">

@@ -139,7 +139,7 @@ export interface Project {
 
 export type GoalStatus = 'active' | 'completed' | 'cancelled';
 export type GoalHorizon = 'short_term' | 'long_term';
-export type GoalRecurrence = 'none' | 'daily' | 'weekly' | 'monthly';
+export type GoalRecurrence = 'none' | 'daily' | 'weekly' | 'monthly' | 'custom';
 
 export interface GoalCycleRecord {
   cycleStart: Timestamp;
@@ -165,6 +165,7 @@ export interface Goal {
   // Chronology features
   horizon: GoalHorizon;
   recurrence: GoalRecurrence;
+  customDays?: number | null;
   currentCycleStart?: Timestamp | null;
   completedCyclesCount?: number;
   progressRollup?: number;
