@@ -111,9 +111,9 @@ export function SettingsPage() {
   }, [tabs, activeTab]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-transparent w-full">
+    <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] min-h-[600px] overflow-hidden bg-transparent w-full">
       {/* Header Overhaul */}
-      <div className="px-8 pt-8 pb-5 border-b border-white/5 bg-transparent shrink-0">
+      <div className="px-8 pt-4 pb-3 border-b border-white/5 bg-transparent shrink-0">
         <h1 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
           Settings
         </h1>
@@ -123,7 +123,7 @@ export function SettingsPage() {
       </div>
 
       {/* Main Split Grid Workspace */}
-      <div className="flex-1 flex gap-5 overflow-hidden px-8 py-4 min-h-0">
+      <div className="flex-1 flex gap-5 overflow-hidden px-8 py-2 min-h-0">
         
         {/* Navigation Sidebar (Frosted glass) */}
         <div className="w-64 shrink-0 aether-glass bg-white/[0.01] border-white/5 p-4 overflow-y-auto aether-scroll flex flex-col gap-5 h-full">
