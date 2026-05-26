@@ -111,27 +111,27 @@ export function SettingsPage() {
   }, [tabs, activeTab]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] min-h-[600px] overflow-hidden bg-transparent w-full">
+    <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] min-h-0 md:min-h-[600px] overflow-hidden bg-transparent w-full">
       {/* Header Overhaul */}
-      <div className="px-8 pt-4 pb-3 border-b border-white/5 bg-transparent shrink-0">
+      <div className="px-4 md:px-8 pt-4 pb-3 border-b border-white/5 bg-transparent shrink-0">
         <h1 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
           Settings
         </h1>
       </div>
 
       {/* Main Split Grid Workspace */}
-      <div className="flex-1 flex gap-5 overflow-hidden px-8 py-2 min-h-0">
+      <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-5 overflow-hidden px-4 md:px-8 py-2 min-h-0">
         
         {/* Navigation Sidebar (Frosted glass) */}
-        <div className="w-64 shrink-0 aether-glass bg-white/[0.01] border-white/5 p-4 overflow-y-auto aether-scroll flex flex-col gap-5 h-full">
+        <div className="w-full md:w-64 shrink-0 aether-glass bg-white/[0.01] border-white/5 p-3 md:p-4 overflow-x-auto md:overflow-y-auto scrollbar-hide aether-scroll flex flex-row md:flex-col gap-4 md:gap-5 h-auto md:h-full shrink-0">
           
           {/* Personal Group */}
           {tabs.filter(t => t.group === 'personal').length > 0 && (
-            <div className="space-y-2">
-              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 px-3 pb-1 select-none font-heading">
+            <div className="flex flex-row md:flex-col gap-2 md:gap-2 items-center md:items-stretch shrink-0">
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 px-3 pb-1 select-none font-heading hidden md:block">
                 Personal
               </p>
-              <div className="space-y-1">
+              <div className="flex flex-row md:flex-col gap-1 md:space-y-1 shrink-0">
                 {tabs.filter(t => t.group === 'personal').map((tab) => {
                   const TabIcon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -140,7 +140,7 @@ export function SettingsPage() {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={cn(
-                        "flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-bold transition-all relative group select-none cursor-pointer",
+                        "flex w-auto md:w-full items-center gap-3 px-3 py-2 md:py-2.5 rounded-xl text-[11px] font-bold transition-all relative group select-none cursor-pointer shrink-0",
                         isActive ? "text-white" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -163,11 +163,11 @@ export function SettingsPage() {
 
           {/* Workspace Group */}
           {tabs.filter(t => t.group === 'workspace').length > 0 && (
-            <div className="space-y-2">
-              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 px-3 pb-1 select-none font-heading">
+            <div className="flex flex-row md:flex-col gap-2 md:gap-2 items-center md:items-stretch shrink-0">
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 px-3 pb-1 select-none font-heading hidden md:block">
                 Workspace
               </p>
-              <div className="space-y-1">
+              <div className="flex flex-row md:flex-col gap-1 md:space-y-1 shrink-0">
                 {tabs.filter(t => t.group === 'workspace').map((tab) => {
                   const TabIcon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -176,7 +176,7 @@ export function SettingsPage() {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={cn(
-                        "flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-bold transition-all relative group select-none cursor-pointer",
+                        "flex w-auto md:w-full items-center gap-3 px-3 py-2 md:py-2.5 rounded-xl text-[11px] font-bold transition-all relative group select-none cursor-pointer shrink-0",
                         isActive ? "text-white" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -199,7 +199,7 @@ export function SettingsPage() {
         </div>
 
         {/* Dynamic Tab Content Area (Frosted Canvas) */}
-        <div className="flex-1 overflow-hidden aether-glass bg-white/[0.005] border-white/5 p-6 flex flex-col h-full">
+        <div className="flex-1 overflow-hidden aether-glass bg-white/[0.005] border-white/5 p-4 md:p-6 flex flex-col h-full">
           <div className="flex-grow overflow-y-auto aether-scroll pr-1">
             <div className="max-w-2xl mx-auto w-full">
               <AnimatePresence mode="wait">
