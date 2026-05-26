@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Timestamp } from 'firebase/firestore';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -9,7 +10,8 @@ import {
   ChevronDown,
   Crown,
   Clock,
-  Sparkles
+  Sparkles,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -38,6 +40,21 @@ export function GoalDetailPage() {
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [showCompleted, setShowCompleted] = React.useState(false);
+
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editTitle, setEditTitle] = React.useState('');
+  const [editDesc, setEditDesc] = React.useState('');
+  const [editProjId, setEditProjId] = React.useState('');
+  const [editDate, setEditDate] = React.useState('');
+
+  React.useEffect(() => {
+    if (goal) {
+      setEditTitle(goal.title);
+      setEditDesc(goal.description || '');
+      setEditProjId(goal.projectId || 'none');
+      setEditDate(goal.targetDate ? new Date((goal.targetDate as any).seconds * 1000).toISOString().split('T')[0] : '');
+    }
+  }, [goal, isEditing]);
 
   const actor = React.useMemo(
     () => ({ uid: user?.uid ?? '', name: userProfile?.fullName || user?.displayName || 'Unknown' }),
@@ -130,6 +147,21 @@ export function GoalDetailPage() {
     }
   };
 
+  const handleSaveGoal = async () => {
+    if (!editTitle.trim()) return;
+    try {
+      await updateGoal(goalId!, {
+        title: editTitle.trim(),
+        description: editDesc.trim(),
+        projectId: editProjId === 'none' ? null : editProjId,
+        targetDate: editDate ? Timestamp.fromDate(new Date(editDate)) : null,
+      });
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to update goal:', err);
+    }
+  };
+
   if (!orgId) return null;
 
   if (goalLoading) {
@@ -173,32 +205,64 @@ export function GoalDetailPage() {
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleToggleGoalStatus}
-                  className={cn(
-                    "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                    goal.status === 'completed'
-                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "border-border-default bg-bg-primary/50 hover:border-emerald-500"
-                  )}
-                  title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
-                >
-                  {goal.status === 'completed' ? (
-                    <Check className="w-3.5 h-3.5" />
-                  ) : (
-                    <Crown className="w-3.5 h-3.5 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
-                  )}
-                </button>
-                <h1 className={cn("text-sm font-black tracking-tight truncate", goal.status === 'completed' ? "text-muted-foreground line-through decoration-emerald-500/50" : "text-foreground")}>
-                  {goal.title}
-                </h1>
+            {isEditing ? (
+              <div className="flex-grow space-y-2.5 min-w-0 max-w-lg">
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/35 bg-white/[0.02] text-xs font-bold text-foreground outline-none focus:ring-1 focus:ring-emerald-500/30"
+                  placeholder="Goal Title"
+                />
+                <textarea
+                  value={editDesc}
+                  onChange={(e) => setEditDesc(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-xl border border-emerald-500/25 bg-white/[0.02] text-[10px] text-foreground outline-none focus:ring-1 focus:ring-emerald-500/20 leading-relaxed font-semibold h-12 resize-none animate-fluid-pop"
+                  placeholder="Goal Description"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveGoal}
+                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9px] font-extrabold transition-all cursor-pointer shadow-sm"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-3.5 py-1.5 border border-white/10 hover:bg-white/5 rounded-lg text-[9px] font-extrabold text-foreground transition-all cursor-pointer shadow-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-              {goal.description && (
-                <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{goal.description}</p>
-              )}
-            </div>
+            ) : (
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleToggleGoalStatus}
+                    className={cn(
+                      "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                      goal.status === 'completed'
+                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "border-border-default bg-bg-primary/50 hover:border-emerald-500"
+                    )}
+                    title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
+                  >
+                    {goal.status === 'completed' ? (
+                      <Check className="w-3.5 h-3.5" />
+                    ) : (
+                      <Crown className="w-3.5 h-3.5 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
+                    )}
+                  </button>
+                  <h1 className={cn("text-sm font-black tracking-tight truncate", goal.status === 'completed' ? "text-muted-foreground line-through decoration-emerald-500/50" : "text-foreground")}>
+                    {goal.title}
+                  </h1>
+                </div>
+                {goal.description && (
+                  <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{goal.description}</p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-3 shrink-0 ml-auto">
@@ -225,6 +289,19 @@ export function GoalDetailPage() {
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Task</span>
+            </button>
+
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className={cn(
+                "w-9 h-9 rounded-xl border flex items-center justify-center transition-all active:scale-90 shrink-0 cursor-pointer",
+                isEditing
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+              title="Goal Settings"
+            >
+              <Settings className="h-4 w-4" />
             </button>
 
             <button

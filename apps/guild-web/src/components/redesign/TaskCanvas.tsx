@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
   Folder,
   Circle,
+  Settings,
   // Premium Icons
   Sparkles,
   Workflow,
@@ -67,6 +68,8 @@ export function TaskCanvas() {
   const [showCompletedMyTeam, setShowCompletedMyTeam] = React.useState(false);
   const [showCompletedInitiatives, setShowCompletedInitiatives] = React.useState(false);
   const [completedGoalsExpanded, setCompletedGoalsExpanded] = React.useState<Record<string, boolean>>({});
+  const [showCompletedMySpaceGoals, setShowCompletedMySpaceGoals] = React.useState(false);
+  const [showCompletedProjects, setShowCompletedProjects] = React.useState(false);
 
   // Filters State
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -328,6 +331,12 @@ export function TaskCanvas() {
     return filteredGoals.filter(g => g.ownerId === actor.uid);
   }, [filteredGoals, actor.uid]);
 
+  const activeGoals = React.useMemo(() => myGoals.filter(g => g.status !== 'completed'), [myGoals]);
+  const completedGoals = React.useMemo(() => myGoals.filter(g => g.status === 'completed'), [myGoals]);
+
+  const activeProjects = React.useMemo(() => projects.filter(p => p.status !== 'completed' && p.status !== 'archived'), [projects]);
+  const completedProjects = React.useMemo(() => projects.filter(p => p.status === 'completed'), [projects]);
+
   const assignedTasks = React.useMemo(() => {
     return filteredTasks.filter(t => t.creatorId === actor.uid && !t.assigneeIds.includes(actor.uid));
   }, [filteredTasks, actor.uid]);
@@ -506,11 +515,11 @@ export function TaskCanvas() {
                 <div className="space-y-4">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                     <Crown className="w-3.5 h-3.5 text-emerald-500 shrink-0 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
-                    <span>My Operational Goals</span>
+                    <span>My Goals</span>
                   </h3>
                   <div className="space-y-4">
-                    {myGoals.length > 0 ? (
-                      myGoals.map(goal => {
+                    {activeGoals.length > 0 ? (
+                      activeGoals.map(goal => {
                         const goalTasks = tasks.filter(t => t.goalId === goal.id);
                         
                         // Separate active and completed tasks
@@ -577,6 +586,16 @@ export function TaskCanvas() {
                                     {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}
                                   </span>
                                 )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/goals/${goal.id}`);
+                                  }}
+                                  className="text-muted-foreground hover:text-accent p-1 transition-colors"
+                                  title="Goal Settings"
+                                >
+                                  <Settings className="w-3.5 h-3.5" />
+                                </button>
                                 <button
                                   onClick={(e) => handleDeleteGoalItem(e, goal.id)}
                                   className="text-muted-foreground hover:text-red-400 p-1 transition-colors"
@@ -688,17 +707,124 @@ export function TaskCanvas() {
                       })
                     ) : (
                       <div className="py-8 rounded-2xl border border-dashed border-border-default bg-bg-secondary/20 flex flex-col items-center justify-center text-center">
-                        <p className="text-[10px] text-muted-foreground italic">No goals assigned to you.</p>
+                        <p className="text-[10px] text-muted-foreground italic">No active goals assigned to you.</p>
+                      </div>
+                    )}
+
+                    {/* Collapsible Completed Goals Archive */}
+                    {completedGoals.length > 0 && (
+                      <div className="space-y-2 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowCompletedMySpaceGoals(!showCompletedMySpaceGoals)}
+                          className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
+                        >
+                          <span>Completed Goals ({completedGoals.length})</span>
+                          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompletedMySpaceGoals ? "rotate-180" : "")} />
+                        </button>
+                        <AnimatePresence>
+                          {showCompletedMySpaceGoals && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden space-y-4"
+                            >
+                              {completedGoals.map(goal => {
+                                const goalTasks = tasks.filter(t => t.goalId === goal.id);
+                                const progress = goal.progressRollup ?? 0;
+                                const linkedProj = projects.find(p => p.id === goal.projectId);
+
+                                return (
+                                  <div
+                                    key={goal.id}
+                                    className="bg-surface/50 border border-border-default rounded-2xl p-4.5 space-y-4 hover:border-emerald-500/30 hover:bg-surface transition-all shadow-sm opacity-70 hover:opacity-100"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-emerald-600 dark:text-emerald-400 bg-emerald-500/[0.04]">
+                                            {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
+                                          </span>
+                                          {linkedProj && (
+                                            <span 
+                                              onClick={(e) => { e.stopPropagation(); navigate(`/projects/${linkedProj.id}`); }}
+                                              className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-accent bg-accent/[0.04] cursor-pointer hover:bg-accent/[0.08] transition-colors" 
+                                              style={{ color: 'var(--accent)' }}
+                                            >
+                                              {linkedProj.name}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-2.5">
+                                          <button
+                                            onClick={(e) => handleToggleGoalStatus(e, goal)}
+                                            className={cn(
+                                              "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                                              goal.status === 'completed'
+                                                ? "border-emerald-500 bg-emerald-550/10 text-emerald-600 dark:text-emerald-400"
+                                                : "border-border-default bg-bg-primary/50 hover:border-emerald-500"
+                                            )}
+                                            title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
+                                          >
+                                            {goal.status === 'completed' ? (
+                                              <Check className="w-2 h-2" />
+                                            ) : (
+                                              <div className="h-1 w-1 rounded-full bg-transparent hover:bg-emerald-500/50" />
+                                            )}
+                                          </button>
+                                          <h4 
+                                            onClick={() => navigate(`/goals/${goal.id}`)}
+                                            className={cn(
+                                              "text-xs font-bold hover:text-emerald-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
+                                              goal.status === 'completed' ? "text-muted-foreground line-through decoration-emerald-500/50" : "text-foreground"
+                                            )}
+                                          >
+                                            {goal.title}
+                                          </h4>
+                                        </div>
+                                        {goal.description && <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>}
+                                      </div>
+                                      <div className="flex items-center gap-2 shrink-0">
+                                        {goal.targetDate && (
+                                          <span className="text-[8px] text-muted-foreground font-mono bg-bg-secondary border border-border-default rounded px-2 py-0.5">
+                                            {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}
+                                          </span>
+                                        )}
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/goals/${goal.id}`);
+                                          }}
+                                          className="text-muted-foreground hover:text-accent p-1 transition-colors"
+                                          title="Goal Settings"
+                                        >
+                                          <Settings className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          onClick={(e) => handleDeleteGoalItem(e, goal.id)}
+                                          className="text-muted-foreground hover:text-red-400 p-1 transition-colors"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Column 2: My Action Items */}
+                {/* Column 2: Tasks */}
                 <div className="space-y-4">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
                     <Zap className="w-3.5 h-3.5 text-sky-500 shrink-0 drop-shadow-[0_0_4px_rgba(14,165,233,0.2)]" />
-                    <span>My Action Items</span>
+                    <span>Tasks</span>
                   </h3>
                   <div className="space-y-2">
                     {/* Filter active action tasks */}
@@ -946,14 +1072,14 @@ export function TaskCanvas() {
                     <FolderGit className="w-5 h-5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.3)] shrink-0" />
                     <h3 className="text-xs font-bold text-foreground">Project Initiatives Map</h3>
                     <span className="text-[10px] text-muted-foreground bg-bg-secondary border border-border-default px-2.5 py-0.5 rounded-full font-mono font-bold">
-                      {projects.length} Active
+                      {activeProjects.length} Active
                     </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
-                  {projects.length > 0 ? (
-                    projects.map(project => {
+                  {activeProjects.length > 0 ? (
+                    activeProjects.map(project => {
                       const projectTasks = tasks.filter(t => t.projectId === project.id);
                       const doneTasks = projectTasks.filter(t => t.status === 'done');
                       const progress = projectTasks.length > 0 ? Math.round((doneTasks.length / projectTasks.length) * 100) : 0;
@@ -1001,6 +1127,16 @@ export function TaskCanvas() {
                                   </p>
                                 )}
                               </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/projects/${project.id}`);
+                                }}
+                                className="text-muted-foreground hover:text-accent p-1 transition-colors shrink-0"
+                                title="Project Settings"
+                              >
+                                <Settings className="w-3.5 h-3.5" />
+                              </button>
                               <button
                                 onClick={(e) => handleDeleteProjectItem(e, project.id)}
                                 className="text-muted-foreground hover:text-red-400 p-1 transition-colors shrink-0"
@@ -1102,6 +1238,124 @@ export function TaskCanvas() {
                     </div>
                   )}
                 </div>
+
+                {/* Collapsible Completed Projects Archive */}
+                {completedProjects.length > 0 && (
+                  <div className="space-y-4 pt-4 border-t border-border-default/45 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setShowCompletedProjects(!showCompletedProjects)}
+                      className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
+                    >
+                      <span>Completed Projects ({completedProjects.length})</span>
+                      <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompletedProjects ? "rotate-180" : "")} />
+                    </button>
+                    <AnimatePresence>
+                      {showCompletedProjects && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start mt-4">
+                            {completedProjects.map(project => {
+                              const projectTasks = tasks.filter(t => t.projectId === project.id);
+                              const doneTasks = projectTasks.filter(t => t.status === 'done');
+                              const progress = projectTasks.length > 0 ? Math.round((doneTasks.length / projectTasks.length) * 100) : 0;
+
+                              return (
+                                <div
+                                  key={project.id}
+                                  className="bg-surface/50 border border-border-default rounded-2xl p-5 space-y-4 hover:border-indigo-500/20 hover:bg-surface transition-all shadow-sm flex flex-col justify-between opacity-70 hover:opacity-100"
+                                >
+                                  <div className="space-y-3">
+                                    {/* Card Header */}
+                                    <div className="flex items-start justify-between gap-3 pb-2 border-b border-border-default/45">
+                                      <div className="min-w-0 flex-1 space-y-1">
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            onClick={(e) => handleToggleProjectStatus(e, project)}
+                                            className={cn(
+                                              "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                                              project.status === 'completed'
+                                                ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                                                : "border-border-default bg-bg-primary/50 hover:border-indigo-500"
+                                            )}
+                                            title={project.status === 'completed' ? "Mark Project Active" : "Mark Project Completed"}
+                                          >
+                                            {project.status === 'completed' ? (
+                                              <Check className="w-2 h-2" />
+                                            ) : (
+                                              <div className="h-1 w-1 rounded-full bg-transparent hover:bg-indigo-500/50" />
+                                            )}
+                                          </button>
+                                          <h4 
+                                            onClick={() => navigate(`/projects/${project.id}`)}
+                                            className={cn(
+                                              "text-xs font-bold hover:text-indigo-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
+                                              project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground"
+                                            )}
+                                          >
+                                            {project.name}
+                                          </h4>
+                                        </div>
+                                        {project.description && (
+                                          <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed font-medium">
+                                            {project.description}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate(`/projects/${project.id}`);
+                                        }}
+                                        className="text-muted-foreground hover:text-accent p-1 transition-colors shrink-0"
+                                        title="Project Settings"
+                                      >
+                                        <Settings className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={(e) => handleDeleteProjectItem(e, project.id)}
+                                        className="text-muted-foreground hover:text-red-400 p-1 transition-colors shrink-0"
+                                        title="Delete Project"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+
+                                    {/* Timeline Dates */}
+                                    <div className="flex justify-between items-center text-[8px] text-muted-foreground font-mono font-semibold">
+                                      <span>
+                                        {project.startDate ? new Date(project.startDate instanceof Date ? project.startDate : (project.startDate as any).seconds * 1000).toLocaleDateString() : 'No Start'}
+                                      </span>
+                                      <span>➜</span>
+                                      <span>
+                                        {project.dueDate ? new Date(project.dueDate instanceof Date ? project.dueDate : (project.dueDate as any).seconds * 1000).toLocaleDateString() : 'No Due'}
+                                      </span>
+                                    </div>
+
+                                    {/* Progress rollup */}
+                                    <div className="space-y-1">
+                                      <div className="flex justify-between text-[9px] text-muted-foreground font-semibold">
+                                        <span>Task Completion</span>
+                                        <span>{progress}% ({doneTasks.length}/{projectTasks.length})</span>
+                                      </div>
+                                      <div className="w-full bg-bg-secondary rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-indigo-550 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: 'var(--accent)' }} />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
               </div>
             )}
 

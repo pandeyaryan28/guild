@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Timestamp } from 'firebase/firestore';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -41,6 +42,22 @@ export function ProjectDetailPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
   const [showCompleted, setShowCompleted] = React.useState(false);
 
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editName, setEditName] = React.useState('');
+  const [editDesc, setEditDesc] = React.useState('');
+  const [editStartDate, setEditStartDate] = React.useState('');
+  const [editDueDate, setEditDueDate] = React.useState('');
+  const [showMemberPicker, setShowMemberPicker] = React.useState(false);
+
+  React.useEffect(() => {
+    if (project) {
+      setEditName(project.name);
+      setEditDesc(project.description || '');
+      setEditStartDate(project.startDate ? new Date((project.startDate as any).seconds * 1000).toISOString().split('T')[0] : '');
+      setEditDueDate(project.dueDate ? new Date((project.dueDate as any).seconds * 1000).toISOString().split('T')[0] : '');
+    }
+  }, [project, isEditing]);
+
   const actor = React.useMemo(
     () => ({ uid: user?.uid ?? '', name: userProfile?.fullName || user?.displayName || 'Unknown' }),
     [user, userProfile],
@@ -57,6 +74,18 @@ export function ProjectDetailPage() {
     const m = memberMap.get(userId);
     if (!m) return 'U';
     return m.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  };
+
+  const getAvatarColor = (userId: string) => {
+    const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colors = [
+      'bg-indigo-500/10 border-indigo-500/25 text-indigo-650 dark:text-indigo-400',
+      'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400',
+      'bg-sky-500/10 border-sky-500/25 text-sky-600 dark:text-sky-400',
+      'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400',
+      'bg-pink-500/10 border-pink-500/25 text-pink-600 dark:text-pink-400',
+    ];
+    return colors[hash % colors.length];
   };
 
   const allTasks = React.useMemo(() => {
@@ -104,6 +133,34 @@ export function ProjectDetailPage() {
     }
   };
 
+  const handleSaveProject = async () => {
+    if (!editName.trim()) return;
+    try {
+      await updateProject(project!.id, {
+        name: editName.trim(),
+        description: editDesc.trim(),
+        startDate: editStartDate ? Timestamp.fromDate(new Date(editStartDate)) : null,
+        dueDate: editDueDate ? Timestamp.fromDate(new Date(editDueDate)) : null,
+      });
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to update project:', err);
+    }
+  };
+
+  const handleToggleProjectMember = async (userId: string) => {
+    if (!project) return;
+    const currentMembers = project.memberIds || [];
+    const nextMembers = currentMembers.includes(userId)
+      ? currentMembers.filter(uid => uid !== userId)
+      : [...currentMembers, userId];
+    try {
+      await updateProject(project.id, { memberIds: nextMembers });
+    } catch (err) {
+      console.error('Failed to update project members:', err);
+    }
+  };
+
   if (!orgId) return null;
 
   if (projectLoading) {
@@ -138,61 +195,204 @@ export function ProjectDetailPage() {
       <div className="flex-1 min-h-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-10 relative">
         
         {/* Header Section */}
-        <div className="p-6 border-b border-border-default/45 flex items-center justify-between shrink-0 flex-wrap gap-4 bg-surface/10">
-          <div className="flex items-center gap-4 min-w-0">
-            <button
-              onClick={() => navigate('/workspace')}
-              className="w-9 h-9 rounded-xl border border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-90 shrink-0"
-              title="Return to Workspace"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleToggleProjectStatus}
-                  className={cn(
-                    "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                    project.status === 'completed'
-                      ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
-                      : "border-border-default bg-bg-primary/50 hover:border-indigo-500"
+        <div className="p-6 border-b border-border-default/45 flex flex-col gap-4 shrink-0 bg-surface/10">
+          <div className="flex items-center justify-between shrink-0 flex-wrap gap-4">
+            <div className="flex items-center gap-4 min-w-0 flex-1">
+              <button
+                onClick={() => navigate('/workspace')}
+                className="w-9 h-9 rounded-xl border border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-90 shrink-0"
+                title="Return to Workspace"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              
+              {isEditing ? (
+                <div className="flex-grow space-y-2.5 min-w-0 max-w-lg">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-xl border border-indigo-500/35 bg-white/[0.02] text-xs font-bold text-foreground outline-none focus:ring-1 focus:ring-indigo-500/30"
+                    placeholder="Project Name"
+                  />
+                  <textarea
+                    value={editDesc}
+                    onChange={(e) => setEditDesc(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-xl border border-indigo-500/25 bg-white/[0.02] text-[10px] text-foreground outline-none focus:ring-1 focus:ring-indigo-500/20 leading-relaxed font-semibold h-12 resize-none animate-fluid-pop"
+                    placeholder="Project Description"
+                  />
+                  <div className="flex flex-wrap gap-2.5">
+                    <div className="flex flex-col gap-1 text-[8px] font-bold text-muted-foreground">
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        value={editStartDate}
+                        onChange={(e) => setEditStartDate(e.target.value)}
+                        className="px-2 py-1 rounded-lg border border-border-default bg-white/[0.02] text-[9px] font-semibold text-foreground outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1 text-[8px] font-bold text-muted-foreground">
+                      <label>Due Date</label>
+                      <input
+                        type="date"
+                        value={editDueDate}
+                        onChange={(e) => setEditDueDate(e.target.value)}
+                        className="px-2 py-1 rounded-lg border border-border-default bg-white/[0.02] text-[9px] font-semibold text-foreground outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveProject}
+                      className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[9px] font-extrabold transition-all cursor-pointer shadow-sm"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="px-3.5 py-1.5 border border-white/10 hover:bg-white/5 rounded-lg text-[9px] font-extrabold text-foreground transition-all cursor-pointer shadow-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleToggleProjectStatus}
+                      className={cn(
+                        "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                        project.status === 'completed'
+                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                          : "border-border-default bg-bg-primary/50 hover:border-indigo-500"
+                      )}
+                      title={project.status === 'completed' ? "Mark Project Active" : "Mark Project Completed"}
+                    >
+                      {project.status === 'completed' ? (
+                        <Check className="w-3.5 h-3.5" />
+                      ) : (
+                        <FolderGit className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
+                      )}
+                    </button>
+                    <h1 className={cn("text-sm font-black tracking-tight truncate", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground")}>
+                      {project.name}
+                    </h1>
+                  </div>
+                  {project.description && (
+                    <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{project.description}</p>
                   )}
-                  title={project.status === 'completed' ? "Mark Project Active" : "Mark Project Completed"}
-                >
-                  {project.status === 'completed' ? (
-                    <Check className="w-3.5 h-3.5" />
-                  ) : (
-                    <FolderGit className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
-                  )}
-                </button>
-                <h1 className={cn("text-sm font-black tracking-tight truncate", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground")}>
-                  {project.name}
-                </h1>
-              </div>
-              {project.description && (
-                <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{project.description}</p>
+                </div>
               )}
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0 ml-auto">
+              {/* Meta dates */}
+              <div className="flex flex-col gap-0.5 text-right font-mono text-[8px] text-muted-foreground hidden sm:flex">
+                {project.startDate && (
+                  <span>Start: {new Date(project.startDate instanceof Date ? project.startDate : (project.startDate as any).seconds * 1000).toLocaleDateString()}</span>
+                )}
+                {project.dueDate && (
+                  <span>Due: {new Date(project.dueDate instanceof Date ? project.dueDate : (project.dueDate as any).seconds * 1000).toLocaleDateString()}</span>
+                )}
+              </div>
+              
+              <button
+                onClick={() => setCreateOpen(true)}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.05] hover:bg-indigo-500/[0.08] text-indigo-600 dark:text-indigo-405 px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Task</span>
+              </button>
+
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className={cn(
+                  "w-9 h-9 rounded-xl border flex items-center justify-center transition-all active:scale-90 shrink-0 cursor-pointer",
+                  isEditing
+                    ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                    : "border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground"
+                )}
+                title="Project Settings"
+              >
+                <Settings className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0 ml-auto">
-            {/* Meta dates */}
-            <div className="flex flex-col gap-0.5 text-right font-mono text-[8px] text-muted-foreground hidden sm:flex">
-              {project.startDate && (
-                <span>Start: {new Date(project.startDate instanceof Date ? project.startDate : (project.startDate as any).seconds * 1000).toLocaleDateString()}</span>
-              )}
-              {project.dueDate && (
-                <span>Due: {new Date(project.dueDate instanceof Date ? project.dueDate : (project.dueDate as any).seconds * 1000).toLocaleDateString()}</span>
-              )}
+          {/* Project Members Row */}
+          <div className="flex items-center gap-3 pt-2.5 border-t border-border-default/20 relative">
+            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Project Team</span>
+            <div className="flex items-center -space-x-1.5 overflow-hidden">
+              {(project.memberIds || []).map((uid) => (
+                <div
+                  key={uid}
+                  className={cn(
+                    "w-6 h-6 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0 ring-2 ring-surface/90",
+                    getAvatarColor(uid)
+                  )}
+                  title={memberMap.get(uid)?.fullName || 'Member'}
+                >
+                  {getInitials(uid)}
+                </div>
+              ))}
             </div>
             
-            <button
-              onClick={() => setCreateOpen(true)}
-              className="flex items-center justify-center gap-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.05] hover:bg-indigo-500/[0.08] text-indigo-600 dark:text-indigo-405 px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Task</span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowMemberPicker(!showMemberPicker)}
+                className="w-6 h-6 rounded-full border border-dashed border-border-default hover:border-indigo-500 bg-bg-primary/50 text-muted-foreground hover:text-indigo-500 flex items-center justify-center transition-all cursor-pointer"
+                title="Manage Members"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+
+              <AnimatePresence>
+                {showMemberPicker && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setShowMemberPicker(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute left-0 mt-2 w-56 max-h-60 overflow-y-auto rounded-xl border border-border-default bg-surface/95 dark:bg-surface/90 backdrop-blur-md p-2 shadow-xl z-50 aether-scroll"
+                    >
+                      <div className="px-2 py-1.5 border-b border-border-default/45 mb-1.5">
+                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">Assign Members</span>
+                      </div>
+                      <div className="space-y-0.5">
+                        {members.map((member) => {
+                          const isIncluded = (project.memberIds || []).includes(member.uid);
+                          return (
+                            <button
+                              key={member.uid}
+                              onClick={() => handleToggleProjectMember(member.uid)}
+                              className={cn(
+                                "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[10px] font-semibold text-left transition-colors cursor-pointer",
+                                isIncluded 
+                                  ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" 
+                                  : "hover:bg-bg-secondary text-foreground"
+                              )}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className={cn("w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[7px] shrink-0", getAvatarColor(member.uid))}>
+                                  {getInitials(member.uid)}
+                                </div>
+                                <span className="truncate">{member.fullName}</span>
+                              </div>
+                              {isIncluded && <Check className="w-3 h-3 text-indigo-500 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
 
