@@ -375,7 +375,7 @@ export function TaskCanvas() {
       
       {/* ─── 1. Left Collapsible Workspace Sidebar ─── */}
       <div className={cn(
-        "hidden xl:flex shrink-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl p-4 flex flex-col justify-between shadow-lg backdrop-blur-xl transition-all duration-300 ease-in-out",
+        "hidden xl:flex flex-col justify-between shrink-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl p-4 shadow-lg backdrop-blur-xl transition-all duration-300 ease-in-out",
         isSidebarCollapsed ? "w-16" : "w-60"
       )}>
         
