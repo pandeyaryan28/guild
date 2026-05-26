@@ -691,7 +691,6 @@ export function CalendarPage() {
                                       display: 'flex',
                                       alignItems: 'center',
                                       justifyContent: 'center',
-                                      boxShadow: `0 0 6px oklch(from var(--accent) l c h / 40%)`
                                     } : undefined}
                                   >
                                     {format(day, 'd')}
