@@ -245,121 +245,129 @@ export function TasksPage() {
   const taskStatuses: TaskStatus[] = ['todo', 'in_progress', 'review', 'done'];
 
   return (
-    <div className="flex flex-col h-full overflow-hidden relative p-1.5 md:p-3 bg-bg-secondary/15 rounded-3xl border border-border-default/30 shadow-inner animate-fade-in">
-      {/* ─── Premium Canvas Workspace Shell ─── */}
-      <div className="flex-1 flex flex-col bg-card/65 dark:bg-card/45 backdrop-blur-xl border border-border-default/50 rounded-2xl shadow-2xl overflow-hidden relative group">
+    <div className="flex flex-col h-full overflow-hidden relative p-1.5 md:p-3 bg-bg-secondary/25 dark:bg-bg-secondary/10 rounded-3xl border border-border-default/40 shadow-inner animate-fade-in">
+      {/* ─── Premium Canvas Workspace Shell with Glassmorphism ─── */}
+      <div className="flex-1 flex flex-col bg-gradient-to-b from-card/85 via-card/70 to-card/60 dark:from-card/55 dark:to-card/35 backdrop-blur-3xl border border-border-default/50 rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] overflow-hidden relative group transition-all duration-500">
         
-        {/* Spatial background accents */}
-        <div className="absolute top-0 right-0 -mr-24 -mt-24 w-80 h-80 bg-violet-500/[0.04] dark:bg-violet-500/[0.03] rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 bg-emerald-500/[0.03] dark:bg-emerald-500/[0.02] rounded-full blur-3xl pointer-events-none" />
+        {/* Animated and multi-layered glow mesh for spatial depth */}
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-gradient-to-br from-violet-600/10 via-fuchsia-500/[0.03] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[8s]" />
+        <div className="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] bg-gradient-to-tr from-emerald-500/5 via-cyan-500/[0.02] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[12s]" />
+        <div className="absolute top-[35%] left-[25%] w-[40%] h-[40%] bg-indigo-500/[0.015] rounded-full blur-3xl pointer-events-none" />
         
-        {/* Dotted canvas matrix pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.012)_1px,transparent_1px)] dark:bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.006)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none" />
+        {/* Fine subgrid blueprint-like grid intersections & dotted canvas matrix */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_1px,transparent_1px)] dark:bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.008)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none opacity-90" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.002)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.002)_1px,transparent_1px)] bg-[size:80px_80px] pointer-events-none" />
 
-        {/* ─── Header Section ─── */}
-        <div className="flex flex-wrap items-center justify-between px-6 py-4 border-b border-border-default/50 flex-shrink-0 gap-4 bg-white/[0.01] dark:bg-white/[0.003] backdrop-blur-md relative z-10">
+        {/* ─── Premium Glass Floating Toolbar Header ─── */}
+        <div className="flex flex-wrap items-center justify-between px-6 py-4.5 border-b border-border-default/45 flex-shrink-0 gap-4 bg-white/[0.02] dark:bg-white/[0.003] backdrop-blur-md relative z-10 shadow-sm">
         
-        {/* Segmented Tab Switcher */}
-        <div className="flex items-center gap-1.5 bg-accent/20 border border-border-default/45 p-0.5 rounded-xl shrink-0">
-          <button
-            onClick={() => handleTabChange('tasks')}
-            className={cn(
-              'px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer',
-              activeTab === 'tasks'
-                ? 'bg-bg-primary text-foreground shadow-md'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <CheckSquare className={cn('h-4 w-4 transition-colors', activeTab === 'tasks' ? 'text-violet-400' : 'text-text-muted')} />
-            <span>Tasks</span>
-          </button>
-          <button
-            onClick={() => handleTabChange('goals')}
-            className={cn(
-              'px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer',
-              activeTab === 'goals'
-                ? 'bg-bg-primary text-foreground shadow-md'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <Target className={cn('h-4 w-4 transition-colors', activeTab === 'goals' ? 'text-violet-400' : 'text-text-muted')} />
-            <span>Goals Focus</span>
-          </button>
-        </div>
-
-        {/* View toggles and creation CTA */}
-        <div className="flex items-center gap-3 shrink-0 ml-auto">
-          {/* List vs Board Toggle */}
-          <div className="flex items-center gap-1 bg-accent/20 border border-border-default/45 p-0.5 rounded-lg shrink-0">
+          {/* High-End Segmented Tab Switcher */}
+          <div className="flex items-center gap-1 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-xl shrink-0 backdrop-blur-md shadow-inner">
             <button
-              onClick={() => {
-                if (activeTab === 'tasks') {
-                  localStorage.setItem('guild_tasks_view_mode', 'list');
-                  setTasksViewMode('list');
-                } else {
-                  localStorage.setItem('guild_goals_view_mode', 'list');
-                  setGoalsViewMode('list');
-                }
-              }}
+              onClick={() => handleTabChange('tasks')}
               className={cn(
-                'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all cursor-pointer',
-                (activeTab === 'tasks' ? tasksViewMode === 'list' : goalsViewMode === 'list')
-                  ? 'bg-bg-primary text-foreground shadow-sm'
+                'px-4 py-2 rounded-lg text-xs font-black flex items-center gap-2 transition-all duration-300 cursor-pointer relative',
+                activeTab === 'tasks'
+                  ? 'bg-white/5 border border-white/10 text-foreground shadow-md'
                   : 'text-muted-foreground hover:text-foreground'
               )}
-              title="List View"
             >
-              <LayoutList className="h-3.5 w-3.5" />
+              <CheckSquare className={cn('h-4 w-4 transition-colors', activeTab === 'tasks' ? 'text-violet-400' : 'text-text-muted')} />
+              <span>Tasks</span>
+              {activeTab === 'tasks' && (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.8)]" />
+              )}
             </button>
             <button
-              onClick={() => {
-                if (activeTab === 'tasks') {
-                  localStorage.setItem('guild_tasks_view_mode', 'board');
-                  setTasksViewMode('board');
-                } else {
-                  localStorage.setItem('guild_goals_view_mode', 'board');
-                  setGoalsViewMode('board');
-                }
-              }}
+              onClick={() => handleTabChange('goals')}
               className={cn(
-                'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all cursor-pointer',
-                (activeTab === 'tasks' ? tasksViewMode === 'board' : goalsViewMode === 'board')
-                  ? 'bg-bg-primary text-foreground shadow-sm'
+                'px-4 py-2 rounded-lg text-xs font-black flex items-center gap-2 transition-all duration-300 cursor-pointer relative',
+                activeTab === 'goals'
+                  ? 'bg-white/5 border border-white/10 text-foreground shadow-md'
                   : 'text-muted-foreground hover:text-foreground'
               )}
-              title="Board View"
             >
-              <Trello className="h-3.5 w-3.5" />
+              <Target className={cn('h-4 w-4 transition-colors', activeTab === 'goals' ? 'text-violet-400' : 'text-text-muted')} />
+              <span>Goals Focus</span>
+              {activeTab === 'goals' && (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.8)]" />
+              )}
             </button>
           </div>
 
-          {/* Creation Button */}
-          {activeTab === 'tasks' ? (
-            <button
-              onClick={() => {
-                setCreateTaskDefaultStatus('todo');
-                setCreateTaskOpen(true);
-              }}
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0 h-8"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              New Task
-            </button>
-          ) : (
-            <button
-              onClick={() => setCreateGoalOpen(true)}
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0 h-8"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              New Goal
-            </button>
-          )}
+          {/* View toggles and creation CTA */}
+          <div className="flex items-center gap-3 shrink-0 ml-auto">
+            {/* List vs Board Toggle */}
+            <div className="flex items-center gap-1 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-lg shrink-0 backdrop-blur-md shadow-inner">
+              <button
+                onClick={() => {
+                  if (activeTab === 'tasks') {
+                    localStorage.setItem('guild_tasks_view_mode', 'list');
+                    setTasksViewMode('list');
+                  } else {
+                    localStorage.setItem('guild_goals_view_mode', 'list');
+                    setGoalsViewMode('list');
+                  }
+                }}
+                className={cn(
+                  'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all duration-300 cursor-pointer',
+                  (activeTab === 'tasks' ? tasksViewMode === 'list' : goalsViewMode === 'list')
+                    ? 'bg-white/5 border border-white/10 text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+                title="List View"
+              >
+                <LayoutList className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => {
+                  if (activeTab === 'tasks') {
+                    localStorage.setItem('guild_tasks_view_mode', 'board');
+                    setTasksViewMode('board');
+                  } else {
+                    localStorage.setItem('guild_goals_view_mode', 'board');
+                    setGoalsViewMode('board');
+                  }
+                }}
+                className={cn(
+                  'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all duration-300 cursor-pointer',
+                  (activeTab === 'tasks' ? tasksViewMode === 'board' : goalsViewMode === 'board')
+                    ? 'bg-white/5 border border-white/10 text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+                title="Board View"
+              >
+                <Trello className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            {/* Creation Button with premium gradient glow hover */}
+            {activeTab === 'tasks' ? (
+              <button
+                onClick={() => {
+                  setCreateTaskDefaultStatus('todo');
+                  setCreateTaskOpen(true);
+                }}
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-lg hover:shadow-violet-500/20 border-0 h-8.5"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                New Task
+              </button>
+            ) : (
+              <button
+                onClick={() => setCreateGoalOpen(true)}
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-lg hover:shadow-violet-500/20 border-0 h-8.5"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                New Goal
+              </button>
+            )}
+          </div>
+
         </div>
 
-      </div>
-
-      {/* ─── Scrollable Main Content Canvas ─── */}
-      <div className="flex-1 overflow-y-auto p-6 relative z-10">
+        {/* ─── Scrollable Main Content Canvas ─── */}
+        <div className="flex-1 overflow-y-auto p-6 relative z-10 custom-scrollbar">
         
         {/* Loading overlay */}
         {((activeTab === 'tasks' && tasksLoading) || (activeTab === 'goals' && goalsLoading)) ? (
@@ -592,6 +600,25 @@ export function TasksPage() {
             />
           )
         )}
+      </div>
+
+      {/* ─── Premium Canvas Status Bar ─── */}
+      <div className="h-7.5 border-t border-border-default/45 bg-white/[0.015] dark:bg-white/[0.002] flex items-center justify-between px-4 text-[9px] font-mono font-bold tracking-wider text-muted-foreground/50 select-none relative z-10 shrink-0">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5 text-emerald-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            CLOUD SYNCED
+          </span>
+          <div className="h-3.5 w-[1px] bg-border-default/50" />
+          <span>WORKSPACE: {orgId.slice(0, 8).toUpperCase()}</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span>ACTIVE TASKS: {activeTasksCount}</span>
+          <div className="h-3.5 w-[1px] bg-border-default/50" />
+          <span>GOALS: {goals.length}</span>
+          <div className="h-3.5 w-[1px] bg-border-default/50" />
+          <span>ACTOR: {actorName.toUpperCase()}</span>
+        </div>
       </div>
     </div>
 
