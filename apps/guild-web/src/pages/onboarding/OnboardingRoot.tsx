@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 import { setOnboardingState, getPendingInviteByEmail, getOrgById, validateInviteToken } from '../../lib/firestore';
 import { StepChoose } from './StepChoose';
 import { StepOrgDetails } from './create/StepOrgDetails';
@@ -9,7 +10,7 @@ import { StepOwnerProfile } from './create/StepOwnerProfile';
 import { StepJoinOrg } from './join/StepJoinOrg';
 import { StepMemberProfile } from './join/StepMemberProfile';
 import { StepComplete } from './StepComplete';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sun, Moon } from 'lucide-react';
 
 export type OnboardingPath = 'create' | 'join' | null;
 
@@ -39,6 +40,7 @@ export const STEP_LABELS: Record<string, { create: string; join: string }> = {
 export function OnboardingRoot() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { mode, toggleMode } = useTheme();
 
   const [data, setData] = React.useState<OnboardingData>({ path: null });
   const [checkingInvite, setCheckingInvite] = React.useState(true);
@@ -113,19 +115,30 @@ export function OnboardingRoot() {
   }
 
   return (
-    <div className="dark min-h-screen w-full bg-background relative overflow-hidden">
+    <div className="min-h-screen w-full bg-background relative overflow-hidden">
       {/* Background glow */}
       <div className="absolute top-[-15%] left-[-5%] w-[55%] h-[55%] bg-primary/6 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-15%] right-[-5%] w-[45%] h-[45%] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute inset-0 bg-dashboard-grid pointer-events-none opacity-40" />
 
       {/* Top brand bar */}
-      <div className="relative z-10 flex items-center gap-3 px-8 py-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground shadow-lg shadow-primary/30">
-          G
+      <div className="relative z-10 flex items-center justify-between px-8 py-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground shadow-lg shadow-primary/30">
+            G
+          </div>
+          <span className="text-base font-bold text-foreground tracking-tight">Guild</span>
+          <span className="ml-2 text-xs font-medium text-muted-foreground">— Setup</span>
         </div>
-        <span className="text-base font-bold text-foreground tracking-tight">Guild</span>
-        <span className="ml-2 text-xs font-medium text-muted-foreground">— Setup</span>
+
+        {/* Floating Theme Toggle */}
+        <button
+          onClick={toggleMode}
+          className="aether-glass flex h-9 w-9 items-center justify-center rounded-lg hover:scale-105 active:scale-95 transition-all shadow-sm border border-border-default/80 bg-surface/50 text-foreground cursor-pointer"
+          title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
+        >
+          {mode === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-400" />}
+        </button>
       </div>
 
       {/* Content */}

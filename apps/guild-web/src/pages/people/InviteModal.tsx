@@ -141,37 +141,37 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
               initial={{ opacity: 0, scale: 0.96, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 12 }}
-              className="aether-glass w-full max-w-md shadow-2xl relative overflow-hidden pointer-events-auto border border-white/10 p-0"
+              className="aether-glass w-full max-w-md shadow-2xl relative overflow-hidden pointer-events-auto border border-border-default/30 p-0"
               style={{ borderRadius: '28px' }}
             >
               <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
 
               {/* Header */}
-              <div className="p-6 border-b border-white/5 flex items-center justify-between relative z-10">
+              <div className="p-6 border-b border-border-default/60 dark:border-white/5 flex items-center justify-between relative z-10">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20">
                     <UserPlus className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-black text-white leading-none uppercase tracking-tight">Invite Teammates</h2>
-                    <p className="text-[10px] text-text-muted mt-1 font-semibold leading-none">Add new members to your operational command.</p>
+                    <h2 className="text-base font-black text-foreground leading-none uppercase tracking-tight">Invite Teammates</h2>
+                    <p className="text-[10px] text-muted-foreground mt-1 font-semibold leading-none">Add new members to your operational command.</p>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-xl text-text-muted hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                  className="p-2 rounded-xl text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer"
                 >
                   <X className="h-4.5 w-4.5" />
                 </button>
               </div>
 
               {/* Navigation Subtabs */}
-              <div className="px-6 pt-4 relative z-10 flex border-b border-white/5 bg-black/20 gap-1.5">
+              <div className="px-6 pt-4 relative z-10 flex border-b border-border-default/60 dark:border-white/5 bg-surface/20 dark:bg-black/20 gap-1.5">
                 <button
                   onClick={() => { setActiveTab('email'); setError(null); }}
                   className={cn(
                     'px-3 py-2 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all cursor-pointer leading-none',
-                    activeTab === 'email' ? 'border-indigo-500 text-white' : 'border-transparent text-text-muted hover:text-white'
+                    activeTab === 'email' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >
                   Email Invite
@@ -180,7 +180,7 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                   onClick={() => { setActiveTab('global'); setError(null); }}
                   className={cn(
                     'px-3 py-2 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all cursor-pointer leading-none',
-                    activeTab === 'global' ? 'border-indigo-500 text-white' : 'border-transparent text-text-muted hover:text-white'
+                    activeTab === 'global' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >
                   Permanent Link
@@ -189,7 +189,7 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                   onClick={() => { setActiveTab('single'); setError(null); }}
                   className={cn(
                     'px-3 py-2 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all cursor-pointer leading-none',
-                    activeTab === 'single' ? 'border-indigo-500 text-white' : 'border-transparent text-text-muted hover:text-white'
+                    activeTab === 'single' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >
                   Secure Code
@@ -209,39 +209,39 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                 {activeTab === 'email' && (
                   <form onSubmit={handleEmailInvite} className="space-y-4">
                     {emailSuccess && (
-                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-semibold leading-relaxed">
+                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-500 dark:text-emerald-400 font-semibold leading-relaxed">
                         {emailSuccess}
                       </div>
                     )}
                     
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
                         Teammate Email
                       </label>
                       <div className="relative group">
-                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors group-focus-within:text-indigo-400" />
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-indigo-500" />
                         <input
                           type="email"
                           value={emailInput}
                           onChange={(e) => { setEmailInput(e.target.value); setError(null); setEmailSuccess(null); }}
                           placeholder="jane@company.com"
                           required
-                          className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-semibold text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200"
+                          className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
                         Workspace Access Role
                       </label>
                       <select
                         value={roleInput}
                         onChange={(e) => setRoleInput(e.target.value as any)}
-                        className="w-full h-10 rounded-xl border border-white/5 bg-white/5 px-4.5 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200 cursor-pointer appearance-none [&>option]:bg-zinc-900"
+                        className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 px-4.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 cursor-pointer appearance-none [&>option]:bg-surface [&>option]:text-foreground"
                       >
-                        <option value="member">Regular Member (Tasks, chat, requests)</option>
-                        <option value="admin">Administrator (Settings, teammate management)</option>
+                        <option value="member" className="text-foreground bg-surface">Regular Member (Tasks, chat, requests)</option>
+                        <option value="admin" className="text-foreground bg-surface">Administrator (Settings, teammate management)</option>
                       </select>
                     </div>
 
@@ -260,31 +260,31 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                   <div className="space-y-4">
                     {isFetchingGlobal ? (
                       <div className="flex flex-col items-center justify-center py-6 gap-2">
-                        <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
-                        <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Syncing permanent token...</span>
+                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Syncing permanent token...</span>
                       </div>
                     ) : globalLink ? (
                       <div className="space-y-4">
-                        <div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-center gap-2 text-xs font-semibold text-indigo-400">
+                        <div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/15 flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
                           <Sparkles className="h-4 w-4 flex-shrink-0" />
                           Multi-use permanent link: Share with your entire team.
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
                             Teammate Invitation URL
                           </label>
-                          <div className="flex items-center gap-2 p-1 rounded-xl border border-white/5 bg-black/35">
+                          <div className="flex items-center gap-2 p-1 rounded-xl border border-border-default/60 dark:border-white/5 bg-surface/80 dark:bg-black/35 shadow-sm">
                             <input
                               readOnly
                               value={globalLink}
-                              className="flex-1 bg-transparent px-3 py-2 text-xs font-semibold text-white outline-none font-mono truncate"
+                              className="flex-1 bg-transparent px-3 py-2 text-xs font-semibold text-foreground outline-none font-mono truncate"
                             />
                             <button
                               onClick={() => handleCopy(globalLink)}
                               className={cn(
                                 'flex items-center justify-center h-8 w-8 rounded-lg transition-all cursor-pointer flex-shrink-0 active:scale-95',
-                                copied ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' : 'bg-indigo-600 text-white shadow shadow-indigo-600/10 hover:bg-indigo-500'
+                                copied ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/25' : 'bg-indigo-600 text-white shadow shadow-indigo-600/10 hover:bg-indigo-500'
                               )}
                             >
                               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -292,13 +292,13 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                           </div>
                         </div>
 
-                        <div className="border-t border-white/5 pt-4 mt-2 flex items-center justify-between gap-4">
-                          <div className="text-[10px] text-text-muted leading-tight font-semibold">
+                        <div className="border-t border-border-default pt-4 mt-2 flex items-center justify-between gap-4">
+                          <div className="text-[10px] text-muted-foreground leading-tight font-semibold">
                             Accidentally posted publicly?<br />Revoke and generate a new token link.
                           </div>
                           <button
                             onClick={handleResetGlobal}
-                            className="flex items-center gap-1.5 h-8 px-3 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest text-rose-400 transition-all cursor-pointer active:scale-95 flex-shrink-0"
+                            className="flex items-center gap-1.5 h-8 px-3 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest text-rose-500 dark:text-rose-400 transition-all cursor-pointer active:scale-95 flex-shrink-0"
                           >
                             <RefreshCw className="h-3 w-3" />
                             Reset Link
@@ -321,10 +321,10 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                   <div className="space-y-4">
                     {!singleLink ? (
                       <div className="flex flex-col items-center justify-center text-center py-4">
-                        <div className="p-4 rounded-full bg-indigo-500/5 border border-indigo-500/10 text-indigo-400/55 mb-3">
+                        <div className="p-4 rounded-full bg-indigo-500/5 border border-indigo-500/10 text-indigo-500/55 mb-3">
                           <Link2 className="h-7 w-7" />
                         </div>
-                        <p className="text-[11px] text-text-muted mb-4 max-w-[280px] font-semibold leading-normal">
+                        <p className="text-[11px] text-muted-foreground mb-4 max-w-[280px] font-semibold leading-normal">
                           Generates a secure, single-use registration URL that instantly expires once a single member claims it.
                         </p>
                         <button
@@ -338,27 +338,27 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                     ) : (
                       <div className="space-y-3">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
                             Single-Use Secure URL
                           </label>
-                          <div className="flex items-center gap-2 p-1 rounded-xl border border-white/5 bg-black/35">
+                          <div className="flex items-center gap-2 p-1 rounded-xl border border-border-default/60 dark:border-white/5 bg-surface/80 dark:bg-black/35 shadow-sm">
                             <input
                               readOnly
                               value={singleLink}
-                              className="flex-1 bg-transparent px-3 py-2 text-xs font-semibold text-white outline-none font-mono truncate"
+                              className="flex-1 bg-transparent px-3 py-2 text-xs font-semibold text-foreground outline-none font-mono truncate"
                             />
                             <button
                               onClick={() => handleCopy(singleLink)}
                               className={cn(
                                 'flex items-center justify-center h-8 w-8 rounded-lg transition-all cursor-pointer flex-shrink-0 active:scale-95',
-                                copied ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' : 'bg-indigo-600 text-white shadow shadow-indigo-600/10 hover:bg-indigo-500'
+                                copied ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/25' : 'bg-indigo-600 text-white shadow shadow-indigo-600/10 hover:bg-indigo-500'
                               )}
                             >
                               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                             </button>
                           </div>
                         </div>
-                        <p className="text-[10px] text-text-muted text-center font-bold uppercase tracking-wider mt-2.5">
+                        <p className="text-[10px] text-muted-foreground text-center font-bold uppercase tracking-wider mt-2.5">
                           This url can be claimed once and expires in 24 hours.
                         </p>
                       </div>

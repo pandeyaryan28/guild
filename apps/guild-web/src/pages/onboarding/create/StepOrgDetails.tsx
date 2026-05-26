@@ -111,23 +111,23 @@ export function StepOrgDetails({ data, updateData }: Props) {
         subtitle="Specify the core parameters of your team operations hub."
       />
 
-      <div className="aether-glass w-full p-8 mt-8 shadow-2xl relative overflow-hidden border border-white/10">
+      <div className="aether-glass w-full p-8 mt-8 shadow-2xl relative overflow-hidden border border-border-default/30">
         <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
 
         <form onSubmit={handleSubmit} className="space-y-4.5 relative z-10">
           {/* Organization Name */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
               Organization Name
             </label>
             <div className="relative group">
-              <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors group-focus-within:text-indigo-400" />
+              <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-indigo-500" />
               <input
                 value={name}
                 onChange={handleNameChange}
                 placeholder="Acme Corp"
                 required
-                className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-semibold text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200"
+                className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
               />
             </div>
             {errors.name && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.name}</p>}
@@ -136,24 +136,24 @@ export function StepOrgDetails({ data, updateData }: Props) {
           {/* Org Slug */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between pl-1">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 Workspace Slug
               </label>
-              <span className="text-[9px] font-semibold text-text-muted">Unique sub-domain identifier</span>
+              <span className="text-[9px] font-semibold text-muted-foreground">Unique sub-domain identifier</span>
             </div>
             <div className="relative group">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-text-muted select-none">guild.app/</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground select-none">guild.app/</span>
               <input
                 value={slug}
                 onChange={(e) => { setSlug(e.target.value.toLowerCase()); setSlugAvailable(null); }}
                 placeholder="acme-corp"
                 required
-                className={`w-full h-10 rounded-xl border bg-white/5 pl-18 pr-10 text-xs font-mono text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200 ${
-                  slugStatus === true ? 'border-emerald-500/50 focus:border-emerald-500/50 focus:ring-emerald-500/20' : slugStatus === false ? 'border-destructive/50 focus:border-destructive/50 focus:ring-destructive/20' : 'border-white/5'
+                className={`w-full h-10 rounded-xl border bg-surface/50 dark:bg-white/5 pl-18 pr-10 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 ${
+                  slugStatus === true ? 'border-emerald-500/50 focus:border-emerald-500/50 focus:ring-emerald-500/20' : slugStatus === false ? 'border-destructive/50 focus:border-destructive/50 focus:ring-destructive/20' : 'border-border-default/60'
                 }`}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                {checkingSlug && <Loader2 className="h-3.5 w-3.5 animate-spin text-text-muted" />}
+                {checkingSlug && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                 {!checkingSlug && slugStatus === true && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
                 {!checkingSlug && slugStatus === false && <XCircle className="h-3.5 w-3.5 text-destructive" />}
               </div>
@@ -164,20 +164,20 @@ export function StepOrgDetails({ data, updateData }: Props) {
           {/* Industry Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
                 Industry
               </label>
               <div className="relative group">
-                <Sliders className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors pointer-events-none group-focus-within:text-indigo-400" />
+                <Sliders className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors pointer-events-none group-focus-within:text-indigo-500" />
                 <select
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                   required
-                  className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200 appearance-none [&>option]:bg-zinc-900 [&>option]:text-white cursor-pointer"
+                  className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 appearance-none [&>option]:bg-surface [&>option]:text-foreground cursor-pointer"
                 >
-                  <option value="" disabled>Select template</option>
+                  <option value="" disabled className="text-muted-foreground">Select template</option>
                   {INDUSTRIES.map((i) => (
-                    <option key={i} value={i}>{i}</option>
+                    <option key={i} value={i} className="text-foreground">{i}</option>
                   ))}
                 </select>
               </div>
@@ -186,20 +186,20 @@ export function StepOrgDetails({ data, updateData }: Props) {
 
             {/* Company Size */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
                 Company Size
               </label>
               <div className="relative group">
-                <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors pointer-events-none group-focus-within:text-indigo-400" />
+                <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors pointer-events-none group-focus-within:text-indigo-500" />
                 <select
                   value={size}
                   onChange={(e) => setSize(e.target.value)}
                   required
-                  className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200 appearance-none [&>option]:bg-zinc-900 [&>option]:text-white cursor-pointer"
+                  className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 appearance-none [&>option]:bg-surface [&>option]:text-foreground cursor-pointer"
                 >
-                  <option value="" disabled>Select size</option>
+                  <option value="" disabled className="text-muted-foreground">Select size</option>
                   {COMPANY_SIZES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s} className="text-foreground">{s}</option>
                   ))}
                 </select>
               </div>

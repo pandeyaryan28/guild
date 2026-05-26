@@ -108,16 +108,16 @@ export function StepJoinOrg({ data, updateData }: Props) {
         subtitle="Connect with your organization's operational workspace."
       />
 
-      <div className="aether-glass w-full p-8 mt-8 shadow-2xl relative overflow-hidden border border-white/10">
+      <div className="aether-glass w-full p-8 mt-8 shadow-2xl relative overflow-hidden border border-border-default/30">
         <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
 
         {/* Method Toggle Buttons */}
-        <div className="flex rounded-xl border border-white/5 bg-black/40 p-1 mb-6 relative z-10">
+        <div className="flex rounded-xl border border-border-default bg-surface/50 dark:border-white/5 dark:bg-black/40 p-1 mb-6 relative z-10">
           <button
             onClick={() => { setMethod('slug'); setOrg(null); setError(''); }}
             className={cn(
               'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer',
-              method === 'slug' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10' : 'text-text-muted hover:text-white'
+              method === 'slug' ? 'bg-indigo-600 text-white shadow-md' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <Search className="h-3.5 w-3.5" />
@@ -127,7 +127,7 @@ export function StepJoinOrg({ data, updateData }: Props) {
             onClick={() => { setMethod('invite'); setOrg(null); setError(''); }}
             className={cn(
               'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer',
-              method === 'invite' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10' : 'text-text-muted hover:text-white'
+              method === 'invite' ? 'bg-indigo-600 text-white shadow-md' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <Link2 className="h-3.5 w-3.5" />
@@ -139,25 +139,25 @@ export function StepJoinOrg({ data, updateData }: Props) {
           {/* Method: By Slug */}
           {method === 'slug' ? (
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
                 Workspace Handle
               </label>
               <div className="flex gap-2">
                 <div className="relative group flex-1">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-text-muted select-none">guild.app/</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground select-none">guild.app/</span>
                   <input
                     value={slugInput}
                     onChange={(e) => { setSlugInput(e.target.value.toLowerCase()); setOrg(null); setError(''); }}
                     onKeyDown={(e) => e.key === 'Enter' && searchBySlug()}
                     placeholder="acme-corp"
-                    className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-18 pr-4 text-xs font-mono text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200"
+                    className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-18 pr-4 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={searchBySlug}
                   disabled={isSearching || !slugInput}
-                  className="h-10 px-3.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold text-white transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0"
+                  className="h-10 px-3.5 rounded-xl bg-surface/60 border border-border-default hover:bg-surface/80 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10 text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
                 >
                   {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </button>
@@ -166,25 +166,25 @@ export function StepJoinOrg({ data, updateData }: Props) {
           ) : (
             /* Method: By Invite Link */
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
                 Invite Token or Link
               </label>
               <div className="flex gap-2">
                 <div className="relative group flex-1">
-                  <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors group-focus-within:text-indigo-400" />
+                  <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                   <input
                     value={inviteInput}
                     onChange={(e) => { setInviteInput(e.target.value); setOrg(null); setError(''); }}
                     onKeyDown={(e) => e.key === 'Enter' && searchByInvite()}
                     placeholder="https://guild.app/join/token"
-                    className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-semibold text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200"
+                    className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={searchByInvite}
                   disabled={isSearching || !inviteInput}
-                  className="h-10 px-3.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold text-white transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0"
+                  className="h-10 px-3.5 rounded-xl bg-surface/60 border border-border-default hover:bg-surface/80 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10 text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
                 >
                   {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </button>
@@ -209,14 +209,14 @@ export function StepJoinOrg({ data, updateData }: Props) {
             <motion.div
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4.5 flex items-center gap-4 relative overflow-hidden"
+              className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4.5 flex items-center gap-4 relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-dashboard-grid opacity-10 pointer-events-none" />
               
               {/* Teammate presence visual logo representation */}
               <div className="relative flex-shrink-0 select-none">
-                <div className="teammate-halo active text-emerald-500">
-                  <div className="h-11 w-11 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/30 text-emerald-400 border border-emerald-500/30 text-sm font-black shadow-lg">
+                <div className="teammate-halo active border-emerald-500/30">
+                  <div className="h-11 w-11 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/30 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-sm font-black shadow-lg">
                     {org.name[0].toUpperCase()}
                   </div>
                 </div>
@@ -224,10 +224,10 @@ export function StepJoinOrg({ data, updateData }: Props) {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-black text-white truncate uppercase tracking-tight">{org.name}</h4>
+                  <h4 className="text-sm font-black text-foreground truncate uppercase tracking-tight">{org.name}</h4>
                   <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
                 </div>
-                <p className="text-[10px] text-text-muted mt-0.5 font-bold uppercase tracking-wider">
+                <p className="text-[10px] text-muted-foreground mt-0.5 font-bold uppercase tracking-wider">
                   {org.industry} · {org.companySize} employees
                 </p>
               </div>
@@ -239,7 +239,7 @@ export function StepJoinOrg({ data, updateData }: Props) {
             type="button"
             onClick={handleContinue}
             disabled={!org || isSubmitting}
-            className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
+            className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin text-white" />

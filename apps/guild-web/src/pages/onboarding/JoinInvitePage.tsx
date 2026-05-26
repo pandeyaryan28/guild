@@ -1,14 +1,16 @@
 import * as React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Loader2, AlertCircle, Building2, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
+import { Loader2, AlertCircle, Building2, CheckCircle2, ArrowRight, Sparkles, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 import { validateInviteToken, acceptInvite, type Organization } from '../../lib/firestore';
 
 export function JoinInvitePage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { user, userProfile } = useAuth();
+  const { mode, toggleMode } = useTheme();
   
   const [isValidating, setIsValidating] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -71,15 +73,26 @@ export function JoinInvitePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden select-none">
         <div className="aether-aurora opacity-50" />
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="aether-app-container dark min-h-screen w-full flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
+    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
       {/* 1. Shifting Aurora Mesh Layer */}
       <div className="aether-aurora opacity-75" />
+
+      {/* Floating Theme Mode Toggle */}
+      <div className="absolute top-6 right-8 z-50">
+        <button
+          onClick={toggleMode}
+          className="aether-glass flex h-10 w-10 items-center justify-center rounded-xl hover:scale-105 active:scale-95 transition-all shadow-sm border border-border-default/80 bg-surface/50 text-foreground cursor-pointer"
+          title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
+        >
+          {mode === 'light' ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5 text-amber-400" />}
+        </button>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 16 }}
@@ -92,22 +105,22 @@ export function JoinInvitePage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-black text-white shadow-xl shadow-indigo-500/25 transition-all duration-300">
             G
           </div>
-          <span className="text-2xl font-black text-gradient uppercase bg-gradient-to-r from-violet-400 via-indigo-400 to-cyan-400 tracking-wider">
+          <span className="text-2xl font-black text-gradient uppercase bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 dark:from-violet-400 dark:via-indigo-400 dark:to-cyan-400 tracking-wider">
             Guild
           </span>
         </div>
 
         {/* Card */}
-        <div className="aether-glass w-full p-8 shadow-2xl relative overflow-hidden border border-white/10 text-center">
+        <div className="aether-glass w-full p-8 shadow-2xl relative overflow-hidden border border-border-default/30 text-center">
           <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
 
           {error ? (
             <div className="flex flex-col items-center relative z-10">
               <div className="h-16 w-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-6 border border-rose-500/20 shadow-lg shadow-rose-500/5">
-                <AlertCircle className="h-8 w-8 text-rose-400 animate-pulse" />
+                <AlertCircle className="h-8 w-8 text-rose-500 animate-pulse animate-duration-1000" />
               </div>
-              <h1 className="text-lg font-black text-white tracking-tight uppercase leading-none mb-2">Invite Invalid</h1>
-              <p className="text-xs text-text-muted mb-8 leading-relaxed max-w-[280px] font-semibold">{error}</p>
+              <h1 className="text-lg font-black text-foreground tracking-tight uppercase leading-none mb-2">Invite Invalid</h1>
+              <p className="text-xs text-muted-foreground mb-8 leading-relaxed max-w-[280px] font-semibold">{error}</p>
               <Link
                 to="/"
                 className="w-full flex items-center justify-center h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 active:scale-98"
@@ -118,25 +131,25 @@ export function JoinInvitePage() {
           ) : success ? (
             <div className="flex flex-col items-center relative z-10">
               <div className="h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/20 shadow-lg shadow-emerald-500/5">
-                <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+                <CheckCircle2 className="h-8 w-8 text-emerald-500" />
               </div>
-              <h1 className="text-lg font-black text-white tracking-tight uppercase leading-none mb-2">Welcome!</h1>
-              <p className="text-xs text-text-muted mb-8 leading-normal font-semibold">You have successfully joined <strong>{org?.name}</strong>.</p>
-              <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
+              <h1 className="text-lg font-black text-foreground tracking-tight uppercase leading-none mb-2">Welcome!</h1>
+              <p className="text-xs text-muted-foreground mb-8 leading-normal font-semibold">You have successfully joined <strong>{org?.name}</strong>.</p>
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
             </div>
           ) : (
             <div className="flex flex-col items-center relative z-10">
               {/* Organization Circle Avatar Preview with glowing halo */}
               <div className="relative mb-6 select-none">
-                <div className="teammate-halo active text-indigo-500">
-                  <div className="h-16 w-16 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/30 text-indigo-400 border border-indigo-500/35 text-xl font-black shadow-xl">
+                <div className="teammate-halo active border-primary/40">
+                  <div className="h-16 w-16 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/30 text-indigo-600 dark:text-indigo-400 border border-indigo-500/35 text-xl font-black shadow-xl">
                     {org?.name[0].toUpperCase()}
                   </div>
                 </div>
               </div>
 
-              <h1 className="text-xl font-black text-white tracking-tight uppercase leading-none mb-2">Join {org?.name}</h1>
-              <p className="text-xs text-text-muted mb-8 leading-relaxed max-w-[300px] font-semibold">
+              <h1 className="text-xl font-black text-foreground tracking-tight uppercase leading-none mb-2">Join {org?.name}</h1>
+              <p className="text-xs text-muted-foreground mb-8 leading-relaxed max-w-[300px] font-semibold">
                 You've been invited to coordinate operations with <strong>{org?.name}</strong> on Guild.
               </p>
 
@@ -164,9 +177,9 @@ export function JoinInvitePage() {
                   >
                     Log In to Accept
                   </Link>
-                  <p className="text-[11px] text-text-muted mt-2 font-semibold tracking-wide">
+                  <p className="text-[11px] text-muted-foreground mt-2 font-semibold tracking-wide">
                     New here?{' '}
-                    <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 font-bold transition-colors ml-1">
+                    <Link to="/signup" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold transition-colors ml-1">
                       Create an account
                     </Link>
                   </p>

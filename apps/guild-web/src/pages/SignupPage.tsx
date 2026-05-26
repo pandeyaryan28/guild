@@ -1,16 +1,18 @@
 import * as React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Eye, EyeOff, Loader2, Mail, Lock, User, Zap } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, Zap, Sun, Moon } from 'lucide-react';
 import { signUpWithEmail, signInWithGoogle } from '../lib/auth';
 import { getAdditionalUserInfo } from 'firebase/auth';
 import { setOnboardingState } from '../lib/firestore';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../hooks/useTheme';
 import { isValidEmail, isValidPassword } from '../lib/validation';
 
 export function SignupPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { mode, toggleMode } = useTheme();
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -91,9 +93,20 @@ export function SignupPage() {
   if (loading) return null;
 
   return (
-    <div className="aether-app-container dark min-h-screen w-full flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
+    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
       {/* 1. Ambient Aurora Mesh Background */}
       <div className="aether-aurora opacity-75" />
+
+      {/* Floating Theme Mode Toggle */}
+      <div className="absolute top-6 right-8 z-50">
+        <button
+          onClick={toggleMode}
+          className="aether-glass flex h-10 w-10 items-center justify-center rounded-xl hover:scale-105 active:scale-95 transition-all shadow-sm border border-border-default/80 bg-surface/50 text-foreground cursor-pointer"
+          title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
+        >
+          {mode === 'light' ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5 text-amber-400" />}
+        </button>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 16 }}
@@ -106,21 +119,21 @@ export function SignupPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-black text-white shadow-xl shadow-indigo-500/25 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
             G
           </div>
-          <span className="text-2xl font-black text-gradient uppercase bg-gradient-to-r from-violet-400 via-indigo-400 to-cyan-400 tracking-wider">
+          <span className="text-2xl font-black text-gradient uppercase bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 dark:from-violet-400 dark:via-indigo-400 dark:to-cyan-400 tracking-wider">
             Guild
           </span>
         </div>
 
         {/* Card */}
-        <div className="aether-glass w-full p-8 shadow-2xl relative overflow-hidden border border-white/10">
+        <div className="aether-glass w-full p-8 shadow-2xl relative overflow-hidden border border-border-default/30">
           {/* Subtle inside grid accent */}
           <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
 
           <div className="mb-6 relative z-10">
-            <h1 className="text-xl font-black text-white tracking-tight leading-none uppercase">
+            <h1 className="text-xl font-black text-foreground tracking-tight leading-none uppercase">
               Create Account
             </h1>
-            <p className="text-xs text-text-muted mt-1.5 font-medium leading-relaxed">
+            <p className="text-xs text-muted-foreground mt-1.5 font-medium leading-relaxed">
               Start your team's operational workspace
             </p>
           </div>
@@ -128,16 +141,16 @@ export function SignupPage() {
           <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">Email</label>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Email</label>
               <div className="relative group">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted transition-colors group-focus-within:text-indigo-400" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-indigo-500" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); }}
                   placeholder="you@company.com"
                   required
-                  className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-semibold text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200"
+                  className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
                 />
               </div>
               {errors.email && <p className="text-[10px] text-destructive font-semibold pl-1 mt-1">{errors.email}</p>}
@@ -145,18 +158,18 @@ export function SignupPage() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">Password</label>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Password</label>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted transition-colors group-focus-within:text-indigo-400" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-indigo-500" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: '' })); }}
                   placeholder="Min 8 characters, letters + numbers"
                   required
-                  className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-12 text-xs font-semibold text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200"
+                  className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-12 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors cursor-pointer">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                   {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </button>
               </div>
@@ -165,18 +178,18 @@ export function SignupPage() {
 
             {/* Confirm Password */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">Confirm Password</label>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Confirm Password</label>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted transition-colors group-focus-within:text-indigo-400" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-indigo-500" />
                 <input
                   type={showConfirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => { setConfirmPassword(e.target.value); setErrors(p => ({ ...p, confirmPassword: '' })); }}
                   placeholder="Repeat your password"
                   required
-                  className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-12 text-xs font-semibold text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200"
+                  className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-12 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
                 />
-                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors cursor-pointer">
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                   {showConfirm ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </button>
               </div>
@@ -213,10 +226,10 @@ export function SignupPage() {
             {/* Separator */}
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
+                <div className="w-full border-t border-border-default/60 dark:border-white/10"></div>
               </div>
               <div className="relative flex justify-center text-[10px]">
-                <span className="bg-transparent px-3 font-semibold text-text-muted uppercase tracking-widest backdrop-blur-sm">
+                <span className="bg-transparent px-3 font-semibold text-muted-foreground uppercase tracking-widest backdrop-blur-sm">
                   Or
                 </span>
               </div>
@@ -227,9 +240,9 @@ export function SignupPage() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isSubmitting}
-              className="w-full h-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50"
+              className="w-full h-10 rounded-xl bg-surface/60 border border-border-default hover:bg-surface/80 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10 text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50"
             >
-              <svg className="h-3.5 w-3.5 text-white" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+              <svg className="h-3.5 w-3.5" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                 <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
               </svg>
               Continue with Google
@@ -238,9 +251,9 @@ export function SignupPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-[11px] text-text-muted mt-6 font-semibold tracking-wide">
+        <p className="text-center text-[11px] text-muted-foreground mt-6 font-semibold tracking-wide">
           Already have an account?{' '}
-          <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-bold transition-colors ml-1">
+          <Link to="/login" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold transition-colors ml-1">
             Sign in
           </Link>
         </p>
