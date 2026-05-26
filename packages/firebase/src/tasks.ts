@@ -105,7 +105,7 @@ export async function createTask(params: {
     id: ref.id, orgId: params.orgId, title: params.title,
     description: params.description ?? '', status,
     priority: params.priority ?? 'none',
-    assigneeIds: params.assigneeIds ?? [],
+    assigneeIds: (params.assigneeIds && params.assigneeIds.length > 0) ? params.assigneeIds : [params.actor.uid],
     creatorId: params.actor.uid,
     labelIds: params.labelIds ?? [],
     dueDate: params.dueDate ? Timestamp.fromDate(params.dueDate) : null,
