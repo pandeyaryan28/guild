@@ -26,24 +26,26 @@ export function GoalKanbanColumn({ status, goals, onGoalClick, onAddGoal, onDele
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <div className="flex flex-col w-[290px] flex-shrink-0">
+    <div className="flex flex-col w-[290px] flex-shrink-0 h-full max-h-full overflow-hidden select-none">
       {/* Column Header */}
-      <div className="flex items-center justify-between mb-3 px-1">
+      <div className="flex items-center justify-between mb-3.5 px-2 py-1.5 rounded-xl bg-white/[0.02] dark:bg-white/[0.002] border border-white/5 backdrop-blur-md">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: config.dot }} />
-          <span className="text-xs font-bold text-foreground uppercase tracking-wider">{config.label}</span>
-          <span className="text-[10px] text-muted-foreground bg-bg-tertiary rounded px-1.5 py-0.5 font-medium">
+          <div className="h-1.5 w-1.5 rounded-full shadow-[0_0_6px_currentColor]" style={{ backgroundColor: config.dot, color: config.dot }} />
+          <span className="text-[11px] font-black uppercase tracking-wider text-foreground">{config.label}</span>
+          <span className="text-[9px] font-bold text-muted-foreground bg-white/[0.04] px-2 py-0.5 rounded-lg border border-white/5 font-mono">
             {goals.length}
           </span>
         </div>
         {status === 'active' && onAddGoal && (
-          <button
-            onClick={onAddGoal}
-            className="text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded p-1 transition-colors"
-            title="Create goal"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
+          <div data-no-click>
+            <button
+              onClick={onAddGoal}
+              className="text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent hover:border-white/5 rounded-lg p-1 transition-all"
+              title="Create goal"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </div>
         )}
       </div>
 
@@ -51,9 +53,9 @@ export function GoalKanbanColumn({ status, goals, onGoalClick, onAddGoal, onDele
       <div
         ref={setNodeRef}
         className={cn(
-          'flex-1 min-h-[120px] space-y-2 rounded-xl p-2 transition-all duration-200 bg-surface/30 border border-border-default/45',
+          'flex-1 min-h-[120px] space-y-2 rounded-2xl p-2.5 transition-all duration-300 overflow-y-auto custom-scrollbar bg-white/[0.01] dark:bg-black/[0.08] border border-white/5',
           isOver
-            ? 'bg-violet-500/5 ring-1 ring-violet-500/20 border-violet-500/30'
+            ? 'bg-violet-500/[0.04] ring-1 ring-violet-500/25 border-violet-500/20 shadow-inner'
             : '',
         )}
       >
@@ -70,8 +72,8 @@ export function GoalKanbanColumn({ status, goals, onGoalClick, onAddGoal, onDele
         </SortableContext>
 
         {goals.length === 0 && !isOver && (
-          <div className="flex items-center justify-center h-20 rounded-lg border border-dashed border-border-default/60">
-            <span className="text-[10px] text-text-muted italic">Drop goals here</span>
+          <div className="flex flex-col items-center justify-center h-28 rounded-2xl border border-dashed border-white/10 bg-white/[0.005]">
+            <span className="text-[10px] text-muted-foreground font-semibold italic tracking-wide">Drop Goals Here</span>
           </div>
         )}
       </div>
@@ -80,9 +82,9 @@ export function GoalKanbanColumn({ status, goals, onGoalClick, onAddGoal, onDele
       {status === 'active' && onAddGoal && (
         <button
           onClick={onAddGoal}
-          className="mt-2 flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/20 rounded-lg transition-colors w-full"
+          className="mt-2.5 flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground bg-white/[0.015] hover:bg-white/[0.03] border border-white/5 rounded-xl transition-all w-full shadow-sm hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
         >
-          <Plus className="h-3 w-3" />
+          <Plus className="h-3.5 w-3.5" />
           Create active goal
         </button>
       )}

@@ -39,33 +39,33 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
       {...attributes}
       {...listeners}
       className={cn(
-        'group relative rounded-xl border bg-card transition-all duration-150 cursor-grab active:cursor-grabbing',
-        'border-border-default hover:border-border-default hover:bg-surface',
-        isSortableDragging && 'opacity-40 border-primary/40',
-        isDragging && 'shadow-2xl shadow-black/40 rotate-1 scale-105',
+        'group relative rounded-2xl border bg-white/[0.02] dark:bg-white/[0.002] backdrop-blur-md transition-all duration-300 cursor-grab active:cursor-grabbing select-none',
+        'border-white/5 hover:border-violet-500/25 hover:bg-white/[0.04] dark:hover:bg-white/[0.005] hover:shadow-[0_12px_24px_-10px_rgba(124,58,237,0.15)] hover:-translate-y-1',
+        isSortableDragging && 'opacity-30 border-violet-500/20',
+        isDragging && 'shadow-2xl shadow-violet-500/20 rotate-1 scale-102 border-violet-500/30 bg-white/[0.05]',
       )}
       onClick={(e) => { if (!(e.target as HTMLElement).closest('[data-no-click]')) onClick(); }}
     >
-      <div className="p-3 space-y-2.5">
-        {/* Priority bar */}
-        <div className="flex items-start gap-2">
+      <div className="p-4 space-y-3">
+        {/* Priority bar & Title */}
+        <div className="flex items-start gap-2.5">
           <div
-            className="mt-1 h-1.5 w-1.5 rounded-full flex-shrink-0"
-            style={{ backgroundColor: priority.color }}
+            className="mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0"
+            style={{ backgroundColor: priority.color, boxShadow: `0 0 6px ${priority.color}` }}
             title={priority.label}
           />
-          <p className="text-sm font-medium text-foreground leading-snug flex-1 min-w-0">
+          <p className="text-xs font-black text-foreground/95 leading-normal flex-1 min-w-0 tracking-wide">
             {task.title}
           </p>
           {/* Context menu */}
           <div data-no-click>
             <DropdownMenu>
-              <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-all outline-none">
+              <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent hover:border-white/5 transition-all outline-none">
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36 border-border-default bg-popover/90 backdrop-blur-md text-xs">
-                <DropdownMenuItem onClick={onClick}>Open</DropdownMenuItem>
-                <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400">Delete</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-36 border border-white/10 bg-surface/90 backdrop-blur-xl p-1 text-xs">
+                <DropdownMenuItem onClick={onClick} className="font-semibold cursor-pointer">Open</DropdownMenuItem>
+                <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400 font-semibold cursor-pointer">Delete</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -76,13 +76,13 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
           <div className="flex flex-wrap gap-1">
             {taskLabels.slice(0, 2).map((l) => <LabelBadge key={l.id} label={l} />)}
             {taskLabels.length > 2 && (
-              <span className="text-[10px] text-muted-foreground px-1">+{taskLabels.length - 2}</span>
+              <span className="text-[9px] font-bold text-muted-foreground/60 px-1">+{taskLabels.length - 2}</span>
             )}
           </div>
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-2 border-t border-white/5">
           {/* Assignees */}
           <div className="flex -space-x-1.5">
             {task.assigneeIds.slice(0, 3).map((uid) => {
@@ -91,7 +91,7 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
               return (
                 <div
                   key={uid}
-                  className="h-5 w-5 rounded-full bg-primary/30 ring-1 ring-background flex items-center justify-center text-[8px] font-bold text-primary"
+                  className="h-4.5 w-4.5 rounded-full bg-violet-500/10 border border-white/15 flex items-center justify-center text-[7px] font-bold text-violet-400 shadow-sm"
                   title={m?.fullName || m?.username}
                 >
                   {initials}
@@ -99,7 +99,7 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
               );
             })}
             {task.assigneeIds.length > 3 && (
-              <div className="h-5 w-5 rounded-full bg-muted ring-1 ring-background flex items-center justify-center text-[8px] text-muted-foreground">
+              <div className="h-4.5 w-4.5 rounded-full bg-white/[0.04] border border-white/15 flex items-center justify-center text-[7px] font-bold text-muted-foreground shadow-sm">
                 +{task.assigneeIds.length - 3}
               </div>
             )}
@@ -108,8 +108,8 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
           {/* Due date */}
           {due && (
             <span className={cn(
-              'flex items-center gap-1 text-[10px] font-medium',
-              isOverdue ? 'text-red-400' : isDueToday ? 'text-amber-400' : 'text-muted-foreground',
+              'flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border backdrop-blur-md font-mono',
+              isOverdue ? 'bg-red-500/5 border-red-500/20 text-red-400' : isDueToday ? 'bg-amber-500/5 border-amber-500/20 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)]' : 'bg-white/[0.02] border-white/5 text-muted-foreground',
             )}>
               <Calendar className="h-2.5 w-2.5" />
               {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

@@ -55,10 +55,10 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
       {...attributes}
       {...listeners}
       className={cn(
-        'group relative rounded-xl border bg-card transition-all duration-150 cursor-grab active:cursor-grabbing p-4 space-y-3 select-none',
-        'border-border-default hover:border-violet-500/30 hover:bg-surface',
-        isSortableDragging && 'opacity-40 border-primary/40',
-        isDragging && 'shadow-2xl shadow-black/40 rotate-1 scale-105',
+        'group relative rounded-2xl border bg-white/[0.02] dark:bg-white/[0.002] backdrop-blur-md transition-all duration-300 cursor-grab active:cursor-grabbing p-4.5 space-y-3.5 select-none',
+        'border-white/5 hover:border-violet-500/25 hover:bg-white/[0.04] dark:hover:bg-white/[0.005] hover:shadow-[0_12px_24px_-10px_rgba(124,58,237,0.15)] hover:-translate-y-1',
+        isSortableDragging && 'opacity-30 border-violet-500/20',
+        isDragging && 'shadow-2xl shadow-violet-500/20 rotate-1 scale-102 border-violet-500/30 bg-white/[0.05]',
       )}
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest('[data-no-click]')) {
@@ -66,58 +66,58 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
         }
       }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <h4 className="text-xs font-bold text-foreground leading-snug group-hover:text-violet-400 transition-colors flex-1 truncate">
+      <div className="flex items-start justify-between gap-2.5">
+        <h4 className="text-xs font-black text-foreground group-hover:text-violet-400 transition-colors flex-1 truncate tracking-wide">
           {goal.title}
         </h4>
         <div data-no-click>
           <DropdownMenu>
-            <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-all outline-none">
+            <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent hover:border-white/5 transition-all outline-none">
               <MoreHorizontal className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36 border-border-default bg-popover/90 backdrop-blur-md text-xs">
-              <DropdownMenuItem onClick={onClick}>Open Details</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-36 border border-white/10 bg-surface/90 backdrop-blur-xl p-1 text-xs">
+              <DropdownMenuItem onClick={onClick} className="font-semibold cursor-pointer">Open Details</DropdownMenuItem>
               {goal.status !== 'active' && (
-                <DropdownMenuItem onClick={() => onStatusChange('active')}>Mark Active</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onStatusChange('active')} className="font-semibold cursor-pointer">Mark Active</DropdownMenuItem>
               )}
               {goal.status !== 'completed' && (
-                <DropdownMenuItem onClick={() => onStatusChange('completed')}>Mark Completed</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onStatusChange('completed')} className="font-semibold cursor-pointer">Mark Completed</DropdownMenuItem>
               )}
               {goal.status !== 'cancelled' && (
-                <DropdownMenuItem onClick={() => onStatusChange('cancelled')}>Mark Cancelled</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onStatusChange('cancelled')} className="font-semibold cursor-pointer">Mark Cancelled</DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400">Delete</DropdownMenuItem>
+              <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400 font-semibold cursor-pointer">Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
       {goal.description && (
-        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
+        <p className="text-[10px] text-muted-foreground/80 line-clamp-2 leading-relaxed font-medium">
           {goal.description}
         </p>
       )}
 
       <div className="flex flex-wrap items-center gap-1.5 mt-2">
-        <span className={cn('px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border', horizonClass)}>
+        <span className={cn('px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border backdrop-blur-md', horizonClass)}>
           {horizonLabel}
         </span>
         {recurrenceLabel && (
-          <span className={cn('px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border', recurrenceClass)}>
+          <span className={cn('px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border backdrop-blur-md', recurrenceClass)}>
             {recurrenceLabel}
           </span>
         )}
       </div>
 
       {goal.progressRollup !== undefined && (
-        <div className="pt-2 border-t border-border-default/50 space-y-1">
-          <div className="flex items-center justify-between text-[9px] text-muted-foreground font-semibold">
-            <span>COMPLETION RATE</span>
-            <span className="font-bold text-foreground">{goal.progressRollup}%</span>
+        <div className="pt-3 border-t border-white/5 space-y-1.5">
+          <div className="flex items-center justify-between text-[8px] text-muted-foreground font-black tracking-wider">
+            <span>ROLLUP PROGRESS</span>
+            <span className="font-mono text-foreground">{goal.progressRollup}%</span>
           </div>
-          <div className="h-1 w-full bg-bg-tertiary rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-white/[0.04] dark:bg-black/20 rounded-full overflow-hidden border border-white/5">
             <div
-              className="h-full bg-violet-500 rounded-full transition-all duration-300"
+              className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-300 shadow-[0_0_6px_rgba(167,139,250,0.4)]"
               style={{ width: `${goal.progressRollup}%` }}
             />
           </div>
@@ -126,8 +126,8 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
 
       <div className="flex items-center justify-between pt-1 text-[9px] text-muted-foreground">
         {due ? (
-          <span className={cn('flex items-center gap-1 font-medium', isOverdue ? 'text-red-400' : '')}>
-            <Calendar className="h-2.5 w-2.5 text-muted-foreground mr-1" />
+          <span className={cn('flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border backdrop-blur-md font-mono', isOverdue ? 'bg-red-500/5 border-red-500/20 text-red-400' : 'bg-white/[0.02] border-white/5')}>
+            <Calendar className="h-2.5 w-2.5 text-muted-foreground shrink-0 mr-1" />
             {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         ) : (

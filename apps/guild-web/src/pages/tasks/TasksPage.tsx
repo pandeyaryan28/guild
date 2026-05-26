@@ -16,10 +16,10 @@ import { CreateGoalModal } from './CreateGoalModal';
 import { deleteTask, type Task, type TaskStatus, STATUS_CONFIG as TASK_STATUS_CONFIG } from '../../lib/tasks';
 import { deleteGoal, updateGoal, type Goal, type GoalStatus } from '../../lib/goals';
 
-const GOAL_STATUS_CONFIG: Record<Goal['status'], { label: string; color: string; dot: string }> = {
-  active:    { label: 'Active',    color: 'text-violet-400', dot: '#a78bfa' },
-  completed: { label: 'Completed', color: 'text-cyan-400', dot: '#22d3ee' },
-  cancelled: { label: 'Cancelled', color: 'text-zinc-500',    dot: '#52525b' },
+const GOAL_STATUS_CONFIG: Record<Goal['status'], { label: string; color: string; dot: string; leftBorder: string }> = {
+  active:    { label: 'Active',    color: 'text-violet-400', dot: '#a78bfa', leftBorder: 'border-l-violet-500' },
+  completed: { label: 'Completed', color: 'text-cyan-400', dot: '#22d3ee', leftBorder: 'border-l-cyan-500' },
+  cancelled: { label: 'Cancelled', color: 'text-zinc-500',    dot: '#52525b', leftBorder: 'border-l-zinc-500' },
 };
 
 function GoalListRow({
@@ -39,7 +39,7 @@ function GoalListRow({
 
   const horizonLabel = goal.horizon === 'long_term' ? 'Vision' : 'Milestone';
   const horizonClass = goal.horizon === 'long_term' 
-    ? 'text-violet-450 border-violet-500/20 bg-violet-500/5' 
+    ? 'text-violet-400 border-violet-500/20 bg-violet-500/5' 
     : 'text-sky-400 border-sky-500/20 bg-sky-500/5';
 
   const recurrenceLabel = goal.recurrence && goal.recurrence !== 'none'
@@ -50,54 +50,61 @@ function GoalListRow({
     ? 'text-cyan-400 border-cyan-500/20 bg-cyan-500/5'
     : goal.recurrence === 'weekly'
     ? 'text-amber-400 border-amber-500/20 bg-amber-500/5'
-    : 'text-rose-450 border-rose-500/20 bg-rose-500/5';
+    : 'text-rose-400 border-rose-500/20 bg-rose-500/5';
+
+  const statusCfg = GOAL_STATUS_CONFIG[goal.status];
 
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
       onClick={onSelect}
       className={cn(
-        'group relative flex items-center justify-between p-3.5 rounded-xl bg-card border border-border-default/80 hover:border-violet-500/30 hover:bg-surface hover:shadow-sm transition-all duration-200 cursor-pointer select-none',
-        goal.status === 'completed' && 'opacity-65'
+        'group relative flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] dark:bg-white/[0.002] border border-white/5 hover:border-violet-500/25 hover:bg-white/[0.04] dark:hover:bg-white/[0.005] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer select-none border-l-4',
+        statusCfg.leftBorder,
+        goal.status === 'completed' && 'opacity-60'
       )}
     >
-      <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className="flex items-center gap-3.5 min-w-0 flex-1">
         {/* Toggle complete button */}
         <button
           onClick={(e) => { e.stopPropagation(); onToggleComplete(); }}
           className={cn(
-            'flex-shrink-0 h-5 w-5 rounded-full border-[1.5px] flex items-center justify-center transition-all duration-200 cursor-pointer',
+            'flex-shrink-0 h-5 w-5 rounded-full border-[1.5px] flex items-center justify-center transition-all duration-300 cursor-pointer relative',
             goal.status === 'completed'
-              ? 'bg-cyan-500 border-cyan-500 text-white'
-              : 'border-muted-foreground/45 hover:border-cyan-500/60 hover:bg-cyan-500/5',
+              ? 'bg-gradient-to-br from-cyan-400 to-sky-500 border-transparent text-white shadow-[0_0_8px_rgba(34,211,238,0.4)]'
+              : 'border-white/20 hover:border-cyan-400/60 hover:bg-cyan-500/5',
           )}
           title={goal.status === 'completed' ? 'Mark active' : 'Mark completed'}
         >
-          {goal.status === 'completed' && <Check className="h-3 w-3 text-white" />}
+          {goal.status === 'completed' && <Check className="h-3 w-3 text-white font-black" />}
         </button>
 
         {/* Title & description */}
         <div className="min-w-0 flex-1">
           <span className={cn(
-            'text-xs font-bold block text-foreground truncate group-hover:text-violet-450 transition-colors',
-            goal.status === 'completed' && 'line-through text-text-muted font-normal'
+            'text-xs font-black tracking-wide block text-foreground truncate group-hover:text-violet-400 transition-colors',
+            goal.status === 'completed' && 'line-through text-muted-foreground font-normal'
           )}>
             {goal.title}
           </span>
           {goal.description && (
-            <p className="text-[10px] text-muted-foreground line-clamp-1 leading-normal mt-0.5 font-medium">{goal.description}</p>
+            <p className="text-[10px] text-muted-foreground line-clamp-1 leading-normal mt-1 font-medium">{goal.description}</p>
           )}
         </div>
       </div>
 
       {/* Meta alignment */}
-      <div className="flex items-center gap-4 shrink-0 ml-3">
+      <div className="flex items-center gap-5 shrink-0 ml-4">
         {/* Badges */}
         <div className="flex items-center gap-1.5 hidden sm:flex">
-          <span className={cn('px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border', horizonClass)}>
+          <span className={cn('px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border backdrop-blur-md', horizonClass)}>
             {horizonLabel}
           </span>
           {recurrenceLabel && (
-            <span className={cn('px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border', recurrenceClass)}>
+            <span className={cn('px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border backdrop-blur-md', recurrenceClass)}>
               {recurrenceLabel}
             </span>
           )}
@@ -106,24 +113,24 @@ function GoalListRow({
         {/* Target date */}
         {due && (
           <span className={cn(
-            'flex items-center gap-1 text-[10px] font-mono font-semibold',
-            isOverdue ? 'text-red-400' : 'text-muted-foreground'
+            'flex items-center gap-1.5 text-[10px] font-mono font-bold bg-white/[0.02] border border-white/5 px-2 py-0.5 rounded-lg',
+            isOverdue ? 'text-red-400 border-red-500/20' : 'text-muted-foreground'
           )}>
-            <Calendar className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+            <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
             {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         )}
 
         {/* Completion rate bar */}
         {goal.progressRollup !== undefined && (
-          <div className="w-24 flex flex-col justify-center gap-1 hidden md:flex">
-            <div className="flex items-center justify-between text-[8px] font-bold text-muted-foreground">
-              <span>COMPLETION</span>
-              <span>{goal.progressRollup}%</span>
+          <div className="w-28 flex flex-col justify-center gap-1.5 hidden md:flex">
+            <div className="flex items-center justify-between text-[8px] font-bold text-muted-foreground/80 tracking-wider">
+              <span>ROLLUP PROGRESS</span>
+              <span className="font-mono">{goal.progressRollup}%</span>
             </div>
-            <div className="h-1 w-full bg-bg-tertiary rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-white/[0.04] dark:bg-black/20 rounded-full overflow-hidden border border-white/5">
               <div
-                className="h-full bg-violet-500 rounded-full transition-all duration-300"
+                className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(167,139,250,0.5)]"
                 style={{ width: `${goal.progressRollup}%` }}
               />
             </div>
@@ -133,13 +140,13 @@ function GoalListRow({
         {/* Delete button */}
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="text-muted-foreground hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 cursor-pointer"
+          className="text-muted-foreground hover:text-red-400 p-1.5 rounded-xl hover:bg-red-500/10 transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 cursor-pointer border border-transparent hover:border-red-500/10"
           title="Delete goal"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -245,60 +252,64 @@ export function TasksPage() {
   const taskStatuses: TaskStatus[] = ['todo', 'in_progress', 'review', 'done'];
 
   return (
-    <div className="flex flex-col h-full overflow-hidden relative p-1.5 md:p-3 bg-bg-secondary/25 dark:bg-bg-secondary/10 rounded-3xl border border-border-default/40 shadow-inner animate-fade-in">
+    <div className="absolute inset-y-0 left-0 right-2 top-0 bottom-6 md:bottom-2 flex flex-col overflow-hidden relative p-1 md:p-2 bg-transparent animate-fade-in select-none">
       {/* ─── Premium Canvas Workspace Shell with Glassmorphism ─── */}
-      <div className="flex-1 flex flex-col bg-gradient-to-b from-card/85 via-card/70 to-card/60 dark:from-card/55 dark:to-card/35 backdrop-blur-3xl border border-border-default/50 rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] overflow-hidden relative group transition-all duration-500">
+      <div className="flex-1 flex flex-col bg-gradient-to-b from-card/85 via-card/70 to-card/60 dark:from-card/55 dark:to-card/35 backdrop-blur-3xl border border-white/5 rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.45)] overflow-hidden relative group transition-all duration-500">
         
         {/* Animated and multi-layered glow mesh for spatial depth */}
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-gradient-to-br from-violet-600/10 via-fuchsia-500/[0.03] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[8s]" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] bg-gradient-to-tr from-cyan-500/5 via-cyan-500/[0.02] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[12s]" />
-        <div className="absolute top-[35%] left-[25%] w-[40%] h-[40%] bg-indigo-500/[0.015] rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-gradient-to-br from-violet-600/15 via-fuchsia-500/[0.04] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[8s]" />
+        <div className="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] bg-gradient-to-tr from-cyan-500/10 via-cyan-500/[0.03] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[12s]" />
+        <div className="absolute top-[35%] left-[25%] w-[40%] h-[40%] bg-indigo-500/[0.02] rounded-full blur-3xl pointer-events-none" />
         
         {/* Fine subgrid blueprint-like grid intersections & dotted canvas matrix */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_1px,transparent_1px)] dark:bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.008)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none opacity-90" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.002)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.002)_1px,transparent_1px)] bg-[size:80px_80px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02)_1px,transparent_1px)] dark:bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none opacity-90" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.003)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.003)_1px,transparent_1px)] bg-[size:80px_80px] pointer-events-none" />
 
         {/* ─── Premium Glass Floating Toolbar Header ─── */}
-        <div className="flex flex-wrap items-center justify-between px-4 py-3 sm:px-6 sm:py-4.5 border-b border-border-default/45 flex-shrink-0 gap-4 bg-white/[0.02] dark:bg-white/[0.003] backdrop-blur-md relative z-10 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between px-4 py-3.5 sm:px-6 sm:py-5 border-b border-white/5 flex-shrink-0 gap-4 bg-white/[0.02] dark:bg-white/[0.002] backdrop-blur-md relative z-10 shadow-sm">
         
-          {/* High-End Segmented Tab Switcher */}
-          <div className="flex items-center gap-1 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-xl shrink-0 backdrop-blur-md shadow-inner">
+          {/* High-End Segmented Tab Switcher with Framer Motion Sliding highlight */}
+          <div className="flex items-center gap-1.5 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-2xl shrink-0 backdrop-blur-md shadow-inner relative">
             <button
               onClick={() => handleTabChange('tasks')}
               className={cn(
-                'px-4 py-2 rounded-lg text-xs font-black flex items-center gap-2 transition-all duration-300 cursor-pointer relative',
-                activeTab === 'tasks'
-                  ? 'bg-white/5 border border-white/10 text-foreground shadow-md'
-                  : 'text-muted-foreground hover:text-foreground'
+                'px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2.5 transition-all duration-300 cursor-pointer relative z-10',
+                activeTab === 'tasks' ? 'text-foreground font-black' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               <CheckSquare className={cn('h-4 w-4 transition-colors', activeTab === 'tasks' ? 'text-violet-400' : 'text-text-muted')} />
-              <span>Tasks</span>
+              <span>Tasks Focus</span>
               {activeTab === 'tasks' && (
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.8)]" />
+                <motion.div
+                  layoutId="activeTabIndicator"
+                  className="absolute inset-0 bg-white/5 border border-white/10 rounded-xl shadow-lg -z-10"
+                  transition={{ type: 'spring', damping: 22, stiffness: 220 }}
+                />
               )}
             </button>
             <button
               onClick={() => handleTabChange('goals')}
               className={cn(
-                'px-4 py-2 rounded-lg text-xs font-black flex items-center gap-2 transition-all duration-300 cursor-pointer relative',
-                activeTab === 'goals'
-                  ? 'bg-white/5 border border-white/10 text-foreground shadow-md'
-                  : 'text-muted-foreground hover:text-foreground'
+                'px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2.5 transition-all duration-300 cursor-pointer relative z-10',
+                activeTab === 'goals' ? 'text-foreground font-black' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               <Target className={cn('h-4 w-4 transition-colors', activeTab === 'goals' ? 'text-violet-400' : 'text-text-muted')} />
-              <span>Goals Focus</span>
+              <span>Goals focus</span>
               {activeTab === 'goals' && (
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.8)]" />
+                <motion.div
+                  layoutId="activeTabIndicator"
+                  className="absolute inset-0 bg-white/5 border border-white/10 rounded-xl shadow-lg -z-10"
+                  transition={{ type: 'spring', damping: 22, stiffness: 220 }}
+                />
               )}
             </button>
           </div>
 
           {/* View toggles and creation CTA */}
-          <div className="flex items-center gap-3 shrink-0 ml-auto">
-            {/* List vs Board Toggle */}
-            <div className="flex items-center gap-1 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-lg shrink-0 backdrop-blur-md shadow-inner">
+          <div className="flex items-center gap-3.5 shrink-0 ml-auto">
+            {/* List vs Board Toggle with Framer Motion sliding highlight */}
+            <div className="flex items-center gap-1.5 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-xl shrink-0 backdrop-blur-md shadow-inner relative">
               <button
                 onClick={() => {
                   if (activeTab === 'tasks') {
@@ -310,14 +321,21 @@ export function TasksPage() {
                   }
                 }}
                 className={cn(
-                  'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all duration-300 cursor-pointer',
+                  'p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all duration-300 cursor-pointer relative z-10',
                   (activeTab === 'tasks' ? tasksViewMode === 'list' : goalsViewMode === 'list')
-                    ? 'bg-white/5 border border-white/10 text-foreground shadow-sm'
+                    ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
                 title="List View"
               >
                 <LayoutList className="h-3.5 w-3.5" />
+                {(activeTab === 'tasks' ? tasksViewMode === 'list' : goalsViewMode === 'list') && (
+                  <motion.div
+                    layoutId="activeViewIndicator"
+                    className="absolute inset-0 bg-white/5 border border-white/10 rounded-lg shadow-sm -z-10"
+                    transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+                  />
+                )}
               </button>
               <button
                 onClick={() => {
@@ -330,14 +348,21 @@ export function TasksPage() {
                   }
                 }}
                 className={cn(
-                  'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all duration-300 cursor-pointer',
+                  'p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all duration-300 cursor-pointer relative z-10',
                   (activeTab === 'tasks' ? tasksViewMode === 'board' : goalsViewMode === 'board')
-                    ? 'bg-white/5 border border-white/10 text-foreground shadow-sm'
+                    ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
                 title="Board View"
               >
                 <Trello className="h-3.5 w-3.5" />
+                {(activeTab === 'tasks' ? tasksViewMode === 'board' : goalsViewMode === 'board') && (
+                  <motion.div
+                    layoutId="activeViewIndicator"
+                    className="absolute inset-0 bg-white/5 border border-white/10 rounded-lg shadow-sm -z-10"
+                    transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+                  />
+                )}
               </button>
             </div>
 
@@ -348,17 +373,17 @@ export function TasksPage() {
                   setCreateTaskDefaultStatus('todo');
                   setCreateTaskOpen(true);
                 }}
-                className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-lg hover:shadow-violet-500/20 border-0 h-8.5"
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-4 py-2 text-xs font-black tracking-wider transition-all active:scale-95 hover:scale-[1.02] cursor-pointer shadow-[0_8px_20px_-6px_rgba(124,58,237,0.5)] border border-violet-500/20 h-9.5"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-4 w-4" />
                 New Task
               </button>
             ) : (
               <button
                 onClick={() => setCreateGoalOpen(true)}
-                className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-lg hover:shadow-violet-500/20 border-0 h-8.5"
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-4 py-2 text-xs font-black tracking-wider transition-all active:scale-95 hover:scale-[1.02] cursor-pointer shadow-[0_8px_20px_-6px_rgba(124,58,237,0.5)] border border-violet-500/20 h-9.5"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-4 w-4" />
                 New Goal
               </button>
             )}
@@ -367,7 +392,12 @@ export function TasksPage() {
         </div>
 
         {/* ─── Scrollable Main Content Canvas ─── */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 relative z-10 custom-scrollbar">
+        <div className={cn(
+          "flex-grow relative z-10 p-4 sm:p-6 min-h-0",
+          (activeTab === 'tasks' ? tasksViewMode === 'list' : goalsViewMode === 'list')
+            ? "overflow-y-auto custom-scrollbar"
+            : "overflow-hidden"
+        )}>
         
         {/* Loading overlay */}
         {((activeTab === 'tasks' && tasksLoading) || (activeTab === 'goals' && goalsLoading)) ? (
