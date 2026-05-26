@@ -92,13 +92,13 @@ export function SettingsPage() {
   // Dynamic Tabs definition
   const tabs = React.useMemo(() => {
     const list = [
-      { id: 'profile', label: 'My Profile', icon: User, allowed: ['member', 'admin', 'owner'] },
-      { id: 'notifications', label: 'Notifications', icon: Bell, allowed: ['member', 'admin', 'owner'] },
-      { id: 'appearance', label: 'Appearance', icon: Paintbrush, allowed: ['member', 'admin', 'owner'] },
-      { id: 'members', label: 'Workspace Members', icon: Users, allowed: ['admin', 'owner'] },
-      { id: 'teams', label: 'Teams & Org', icon: Workflow, allowed: ['admin', 'owner'] },
-      { id: 'invites', label: 'Invite Links', icon: Link2, allowed: ['admin', 'owner'] },
-      { id: 'workspace', label: 'Workspace Info', icon: Building2, allowed: ['owner'] },
+      { id: 'profile', label: 'My Profile', icon: User, allowed: ['member', 'admin', 'owner'], group: 'personal' },
+      { id: 'notifications', label: 'Notifications', icon: Bell, allowed: ['member', 'admin', 'owner'], group: 'personal' },
+      { id: 'appearance', label: 'Appearance', icon: Paintbrush, allowed: ['member', 'admin', 'owner'], group: 'personal' },
+      { id: 'members', label: 'Workspace Members', icon: Users, allowed: ['admin', 'owner'], group: 'workspace' },
+      { id: 'teams', label: 'Teams & Org', icon: Workflow, allowed: ['admin', 'owner'], group: 'workspace' },
+      { id: 'invites', label: 'Invite Links', icon: Link2, allowed: ['admin', 'owner'], group: 'workspace' },
+      { id: 'workspace', label: 'Workspace Info', icon: Building2, allowed: ['owner'], group: 'workspace' },
     ];
     return list.filter((t) => t.allowed.includes(role));
   }, [role]);
@@ -125,32 +125,78 @@ export function SettingsPage() {
       {/* Main Layout Grid */}
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Navigation Sidebar */}
-        <div className="w-64 border-r border-border-default bg-sidebar p-4 overflow-y-auto space-y-1">
-          {tabs.map((tab) => {
-            const TabIcon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all relative group
-                  ${isActive
-                    ? 'bg-primary/15 text-primary shadow-sm'
-                    : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground'
-                  }`}
-              >
-                <TabIcon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-text-muted group-hover:text-foreground'}`} />
-                <span className="truncate">{tab.label}</span>
-                {isActive && (
-                  <motion.div
-                    layoutId="activeSettingsTab"
-                    className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-md bg-primary"
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                  />
-                )}
-              </button>
-            );
-          })}
+        <div className="w-64 border-r border-border-default bg-sidebar p-5 overflow-y-auto space-y-5">
+          {/* Personal Group */}
+          {tabs.filter(t => t.group === 'personal').length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[9px] font-extrabold uppercase tracking-widest text-text-muted/40 px-3 pb-1 select-none">
+                Personal
+              </p>
+              <div className="space-y-1">
+                {tabs.filter(t => t.group === 'personal').map((tab) => {
+                  const TabIcon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all relative group select-none cursor-pointer
+                        ${isActive
+                          ? 'text-primary'
+                          : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeSettingsTabBG"
+                          className="absolute inset-0 bg-primary/10 border border-primary/20 rounded-xl z-0"
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      <TabIcon className={`h-4 w-4 shrink-0 z-10 transition-colors ${isActive ? 'text-primary' : 'text-text-muted group-hover:text-foreground'}`} />
+                      <span className="truncate z-10 tracking-wide">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Workspace Group */}
+          {tabs.filter(t => t.group === 'workspace').length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[9px] font-extrabold uppercase tracking-widest text-text-muted/40 px-3 pb-1 select-none">
+                Workspace
+              </p>
+              <div className="space-y-1">
+                {tabs.filter(t => t.group === 'workspace').map((tab) => {
+                  const TabIcon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all relative group select-none cursor-pointer
+                        ${isActive
+                          ? 'text-primary'
+                          : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeSettingsTabBG"
+                          className="absolute inset-0 bg-primary/10 border border-primary/20 rounded-xl z-0"
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      <TabIcon className={`h-4 w-4 shrink-0 z-10 transition-colors ${isActive ? 'text-primary' : 'text-text-muted group-hover:text-foreground'}`} />
+                      <span className="truncate z-10 tracking-wide">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Tab Content Area */}
