@@ -209,11 +209,11 @@ export function MessageArea({
           <ChevronLeft className="h-5 w-5" />
         </button>
 
-        {/* Desktop Sidebar Toggle Button */}
+        {/* Sidebar Toggle Button */}
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
-            className="hidden md:flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent/40 hover:text-foreground shrink-0 transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent/40 hover:text-foreground shrink-0 transition-colors"
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
             {isSidebarCollapsed ? (

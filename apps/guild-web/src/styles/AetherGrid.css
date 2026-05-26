@@ -208,6 +208,47 @@
   transform: translateX(0);
 }
 
+/* Graceful scaling for smaller screen heights */
+@media (min-width: 769px) and (max-height: 800px) {
+  .aether-dock {
+    gap: 8px;
+    padding: 12px;
+    border-radius: 24px;
+  }
+  .aether-dock-item {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+  }
+  .aether-dock-item svg {
+    width: 18px;
+    height: 18px;
+  }
+  .aether-dock-item-tooltip {
+    left: 62px;
+  }
+}
+
+@media (min-width: 769px) and (max-height: 680px) {
+  .aether-dock {
+    gap: 6px;
+    padding: 8px;
+    border-radius: 20px;
+  }
+  .aether-dock-item {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+  .aether-dock-item svg {
+    width: 16px;
+    height: 16px;
+  }
+  .aether-dock-item-tooltip {
+    left: 54px;
+  }
+}
+
 /* Premium Breathing Halo Orbit */
 .teammate-halo {
   position: relative;

@@ -30,6 +30,12 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { useAuth } from '../../hooks/useAuth';
 import { useProjects } from '../../hooks/useProjects';
@@ -369,7 +375,7 @@ export function TaskCanvas() {
       
       {/* ─── 1. Left Collapsible Workspace Sidebar ─── */}
       <div className={cn(
-        "shrink-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl p-4 flex flex-col justify-between shadow-lg backdrop-blur-xl transition-all duration-300 ease-in-out",
+        "hidden lg:flex shrink-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl p-4 flex flex-col justify-between shadow-lg backdrop-blur-xl transition-all duration-300 ease-in-out",
         isSidebarCollapsed ? "w-16" : "w-60"
       )}>
         
@@ -498,6 +504,75 @@ export function TaskCanvas() {
       {/* ─── 2. Expanded Vertical Viewport Main Canvas ─── */}
       <div className="flex-grow flex flex-col min-h-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl overflow-hidden shadow-2xl z-10 relative">
         
+        {/* Mobile Navigation Segmented Control */}
+        <div className="lg:hidden flex items-center justify-between p-3 border-b border-border-default/45 bg-white/[0.02] dark:bg-white/[0.003] backdrop-blur-md shrink-0 gap-2 select-none">
+          <div className="flex items-center gap-1 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-xl shadow-inner flex-1 max-w-md">
+            <button
+              onClick={() => setActiveSection('my-space')}
+              className={cn(
+                "flex-1 py-2 rounded-lg text-[10px] font-black flex items-center justify-center gap-1.5 transition-all duration-300 cursor-pointer relative",
+                activeSection === 'my-space' ? "bg-white/5 border border-white/10 text-foreground" : "text-muted-foreground"
+              )}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+              <span>My Space</span>
+            </button>
+            <button
+              onClick={() => setActiveSection('my-team')}
+              className={cn(
+                "flex-1 py-2 rounded-lg text-[10px] font-black flex items-center justify-center gap-1.5 transition-all duration-300 cursor-pointer relative",
+                activeSection === 'my-team' ? "bg-white/5 border border-white/10 text-foreground" : "text-muted-foreground"
+              )}
+            >
+              <Workflow className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+              <span>My Team</span>
+            </button>
+            <button
+              onClick={() => setActiveSection('projects')}
+              className={cn(
+                "flex-1 py-2 rounded-lg text-[10px] font-black flex items-center justify-center gap-1.5 transition-all duration-300 cursor-pointer relative",
+                activeSection === 'projects' ? "bg-white/5 border border-white/10 text-foreground" : "text-muted-foreground"
+              )}
+            >
+              <FolderGit className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+              <span>Projects</span>
+            </button>
+          </div>
+
+          {/* Quick action triggers dropdown for mobile/tablet */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-primary text-white hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer outline-none border-none"
+            >
+              <Plus className="w-4 h-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="border-border-default/40 bg-surface/90 backdrop-blur-xl p-1 min-w-[150px]">
+              <DropdownMenuItem 
+                onClick={() => triggerAddGoal('')} 
+                className="gap-2 font-semibold text-xs text-cyan-500 focus:text-cyan-600 focus:bg-cyan-500/10 cursor-pointer"
+              >
+                <Target className="w-3.5 h-3.5 text-cyan-500" /> Assign Goal
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => triggerAddTask('', '')} 
+                className="gap-2 font-semibold text-xs text-sky-500 focus:text-sky-600 focus:bg-sky-500/10 cursor-pointer"
+              >
+                <Zap className="w-3.5 h-3.5 text-sky-500" /> Assign Task
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  setProjectForm({ name: '', description: '', startDate: '', dueDate: '' });
+                  setCreateType('project');
+                  setShowCreateDrawer(true);
+                }} 
+                className="gap-2 font-semibold text-xs text-indigo-500 focus:text-indigo-600 focus:bg-indigo-500/10 cursor-pointer"
+              >
+                <FolderGit className="w-3.5 h-3.5 text-indigo-500" /> Create Project
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         {isLoading ? (
           <div className="flex h-full w-full items-center justify-center">
             <div className="flex flex-col items-center gap-3">

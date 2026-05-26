@@ -68,8 +68,9 @@ function RedesignChatSidebar({ isCollapsed, onToggle }: RedesignChatSidebarProps
 
   return (
     <aside className={cn(
-      "flex h-full flex-col aether-glass bg-white/2 border border-white/5 overflow-hidden transition-all duration-300 ease-in-out shrink-0",
-      isCollapsed ? "w-0 opacity-0 border-0 p-0 pointer-events-none" : "w-[240px] opacity-100"
+      "flex h-full flex-col aether-glass bg-surface/95 dark:bg-surface/90 backdrop-blur-xl border-r border-white/5 overflow-hidden transition-all duration-300 ease-in-out shrink-0 z-30",
+      "fixed inset-y-0 left-0 lg:relative lg:inset-auto",
+      isCollapsed ? "-translate-x-full opacity-0 pointer-events-none w-0 lg:w-0" : "translate-x-0 opacity-100 w-[240px]"
     )}>
       {/* Workspace Branding Header */}
       <div className="flex items-center gap-2.5 border-b border-white/5 px-4 py-4 select-none">
@@ -242,7 +243,7 @@ export function ChatLayout() {
   const orgId = userProfile?.organizationId;
   const members = useOrgMembers(orgId);
   const navigate = useNavigate();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => window.innerWidth < 1024);
   const [isMemberPanelCollapsed, setIsMemberPanelCollapsed] = React.useState(false);
 
   const handleStartDM = async (member: UserProfile) => {
@@ -256,9 +257,17 @@ export function ChatLayout() {
   return (
     <RedesignLayout>
       <div className={cn(
-        "flex h-full w-full overflow-hidden animate-fluid-pop transition-all duration-300 ease-in-out",
+        "flex h-full w-full overflow-hidden animate-fluid-pop transition-all duration-300 ease-in-out relative",
         isSidebarCollapsed ? "gap-0" : "gap-6"
       )}>
+        {/* Mobile sidebar backdrop overlay */}
+        {!isSidebarCollapsed && (
+          <div 
+            onClick={() => setIsSidebarCollapsed(true)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-25 lg:hidden transition-opacity duration-300"
+          />
+        )}
+
         {/* Spatial left sidebar nested within Chat */}
         <RedesignChatSidebar
           isCollapsed={isSidebarCollapsed}
