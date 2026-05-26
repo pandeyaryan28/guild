@@ -97,7 +97,6 @@ export function CalendarPage() {
   const [selectedPriority, setSelectedPriority] = React.useState('all');
   const [selectedStatus, setSelectedStatus] = React.useState('all');
   const [showFilters, setShowFilters] = React.useState(false);
-  const [showInsightsSidebar, setShowInsightsSidebar] = React.useState(true);
 
   // Hourly Time-Blocking Schedule State
   const [timeBlocks, setTimeBlocks] = React.useState<TimeBlock[]>([]);
@@ -426,20 +425,6 @@ export function CalendarPage() {
                 </button>
               ))}
             </div>
-
-            {/* Collapsible Sidebar Toggle */}
-            <button
-              onClick={() => setShowInsightsSidebar(!showInsightsSidebar)}
-              className={cn(
-                "hidden lg:flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all duration-300 cursor-pointer shadow-inner",
-                showInsightsSidebar 
-                  ? "border-accent/30 text-accent bg-accent/[0.08]" 
-                  : "border-white/5 bg-black/10 dark:bg-white/5 text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <BarChart2 className="h-3.5 w-3.5" />
-              <span>Insights</span>
-            </button>
 
             {/* Filters toggle */}
             <button
@@ -1297,9 +1282,6 @@ export function CalendarPage() {
                             style={{ top: `${liveIndicatorTop}%` }}
                           >
                             <div className="absolute -left-1 -top-[5px] h-2.5 w-2.5 rounded-full bg-accent ring-4 ring-accent/20 animate-pulse shadow-md" style={{ backgroundColor: 'var(--accent)' }} />
-                            <span className="absolute -top-3.5 right-0 text-[8px] font-bold text-accent bg-black/60 px-1 rounded">
-                              Current Time
-                            </span>
                           </div>
                         )}
 
@@ -1432,196 +1414,7 @@ export function CalendarPage() {
             )}
           </div>
 
-          {/* ── Collapsible Aether Insights Sidebar Overhaul (Double Glass) ───── */}
-          <AnimatePresence>
-            {showInsightsSidebar && (
-              <motion.div
-                initial={{ width: 0, opacity: 0, x: 20 }}
-                animate={{ width: 300, opacity: 1, x: 0 }}
-                exit={{ width: 0, opacity: 0, x: 20 }}
-                transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className="hidden lg:flex flex-col w-80 min-h-0 bg-transparent flex-shrink-0"
-              >
-                <div className="h-full w-full aether-glass overflow-hidden flex flex-col p-4 shadow-xl border border-white/5 bg-white/[0.01]">
-                  
-                  {/* Sidebar Header */}
-                  <div className="flex items-center justify-between pb-3.5 border-b border-white/5 flex-shrink-0">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-accent" />
-                      <h3 className="text-[11px] font-black uppercase tracking-wider text-foreground">Aether Insights</h3>
-                    </div>
-                    <button
-                      onClick={() => setShowInsightsSidebar(false)}
-                      className="p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all cursor-pointer"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
 
-                  {/* Sidebar Content Scroll area */}
-                  <div className="flex-1 overflow-y-auto aether-scroll py-4 space-y-5">
-                    
-                    {/* SVG Radial Gauge Widget */}
-                    <div className="flex flex-col items-center justify-center p-4 rounded-xl border border-white/5 bg-white/[0.005] shadow-inner text-center">
-                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground/80 mb-3">View Progress Rate</span>
-                      
-                      <div className="relative h-24 w-24 flex items-center justify-center">
-                        <svg className="absolute inset-0 h-full w-full transform -rotate-90">
-                          <circle 
-                            cx="48" 
-                            cy="48" 
-                            r="38" 
-                            className="fill-none stroke-white/5" 
-                            strokeWidth="6" 
-                          />
-                          <circle 
-                            cx="48" 
-                            cy="48" 
-                            r="38" 
-                            className="fill-none stroke-accent" 
-                            strokeWidth="6" 
-                            strokeDasharray="238.7" 
-                            strokeDashoffset={238.7 - (analytics.rate / 100) * 238.7} 
-                            strokeLinecap="round"
-                            style={{ stroke: 'var(--accent)', transition: 'stroke-dashoffset 0.8s ease' }}
-                          />
-                        </svg>
-                        <div className="flex flex-col items-center">
-                          <span className="text-lg font-black text-foreground">{analytics.rate}%</span>
-                          <span className="text-[8px] font-extrabold text-muted-foreground uppercase tracking-wider">Completed</span>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between w-full mt-4 text-[10px] text-muted-foreground border-t border-white/5 pt-3 font-semibold">
-                        <div className="flex flex-col items-center">
-                          <span className="text-foreground font-extrabold text-[11px]">{analytics.completed}</span>
-                          <span>Finished</span>
-                        </div>
-                        <div className="w-[1px] bg-white/5 self-stretch" />
-                        <div className="flex flex-col items-center">
-                          <span className="text-foreground font-extrabold text-[11px]">{analytics.total - analytics.completed}</span>
-                          <span>Pending</span>
-                        </div>
-                        <div className="w-[1px] bg-white/5 self-stretch" />
-                        <div className="flex flex-col items-center">
-                          <span className="text-foreground font-extrabold text-[11px]">{analytics.total}</span>
-                          <span>Total</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Heatmap density loading bars */}
-                    <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.005]">
-                      <h4 className="text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground/80 mb-3.5 flex items-center gap-1.5">
-                        <Activity className="h-3.5 w-3.5" />
-                        <span>Workload Load Density</span>
-                      </h4>
-                      
-                      <div className="flex items-end justify-between h-20 px-1 border-b border-white/5 pb-1">
-                        {analytics.weekdayDistribution.map((count, index) => {
-                          const maxCount = Math.max(...analytics.weekdayDistribution, 1);
-                          const barHeight = (count / maxCount) * 100;
-                          const weekdaysShort = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                          
-                          return (
-                            <div key={index} className="flex flex-col items-center w-6 group/bar relative">
-                              {/* Hover tooltips */}
-                              <div className="absolute -top-7 opacity-0 group-hover/bar:opacity-100 transition-opacity bg-black/80 text-white text-[8px] font-bold px-1 py-0.5 rounded shadow z-20 pointer-events-none whitespace-nowrap">
-                                {count} tasks
-                              </div>
-                              <div 
-                                className="w-2.5 rounded-t transition-all duration-500"
-                                style={{
-                                  height: `${Math.max(barHeight, 5)}%`,
-                                  background: count > 3 
-                                    ? 'linear-gradient(180deg, var(--danger) 0%, oklch(from var(--danger) calc(l - 0.1) c h) 100%)' 
-                                    : 'linear-gradient(180deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.1) c h) 100%)',
-                                  boxShadow: count > 0 ? '0 0 6px rgba(99, 102, 241, 0.15)' : 'none'
-                                }}
-                              />
-                              <span className="text-[8px] font-extrabold text-muted-foreground/75 mt-2 font-mono">{weekdaysShort[index]}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Filter Summary Chips */}
-                    <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.005]">
-                      <h4 className="text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground/80 mb-3.5 flex items-center gap-1.5">
-                        <Target className="h-3.5 w-3.5" />
-                        <span>Active Filter Parameters</span>
-                      </h4>
-
-                      <div className="flex flex-wrap gap-1.5">
-                        {searchQuery && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded border border-accent/20 bg-accent/5 text-[9px] font-bold text-accent">
-                            <span className="truncate max-w-[80px]">"{searchQuery}"</span>
-                            <button onClick={() => setSearchQuery('')} className="hover:text-foreground">
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </div>
-                        )}
-                        {selectedProjectId !== 'all' && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded border border-accent/20 bg-accent/5 text-[9px] font-bold text-accent">
-                            <span className="truncate max-w-[80px]">{projectMap.get(selectedProjectId)}</span>
-                            <button onClick={() => setSelectedProjectId('all')} className="hover:text-foreground">
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </div>
-                        )}
-                        {selectedAssigneeId !== 'all' && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded border border-accent/20 bg-accent/5 text-[9px] font-bold text-accent">
-                            <span className="truncate max-w-[80px]">
-                              {(() => {
-                                const aMem = memberMap.get(selectedAssigneeId);
-                                return aMem?.fullName || aMem?.username || 'Assignee';
-                              })()}
-                            </span>
-                            <button onClick={() => setSelectedAssigneeId('all')} className="hover:text-foreground">
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </div>
-                        )}
-                        {selectedPriority !== 'all' && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded border border-accent/20 bg-accent/5 text-[9px] font-bold text-accent">
-                            <span className="capitalize">{selectedPriority} Priority</span>
-                            <button onClick={() => setSelectedPriority('all')} className="hover:text-foreground">
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </div>
-                        )}
-                        {selectedStatus !== 'all' && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded border border-accent/20 bg-accent/5 text-[9px] font-bold text-accent">
-                            <span className="capitalize">{selectedStatus}</span>
-                            <button onClick={() => setSelectedStatus('all')} className="hover:text-foreground">
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </div>
-                        )}
-                        {!searchQuery && selectedProjectId === 'all' && selectedAssigneeId === 'all' && selectedPriority === 'all' && selectedStatus === 'all' && (
-                          <span className="text-[9px] font-bold text-muted-foreground/60">Displaying all workspace datasets</span>
-                        )}
-                      </div>
-                    </div>
-
-                  </div>
-                  
-                  {/* Strategic milestone footer widget */}
-                  <div className="border-t border-white/5 pt-3 mt-auto flex-shrink-0 flex items-center justify-between">
-                    <span className="text-[9px] font-extrabold uppercase text-muted-foreground flex items-center gap-1">
-                      <Sparkles className="h-3 w-3 text-accent animate-pulse" />
-                      <span>Workspace Velocity</span>
-                    </span>
-                    <span className="text-[9px] font-black text-foreground">
-                      {analytics.rate >= 80 ? 'Optimal' : 'Stable'}
-                    </span>
-                  </div>
-
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
         </div>
 
