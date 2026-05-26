@@ -27,10 +27,7 @@ import {
   ChevronUp,
   Globe,
   SlidersHorizontal,
-  Folder,
-  CircleDot,
-  CheckCircle2,
-  ArrowRight
+  Folder
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -115,11 +112,11 @@ export function TaskCanvas() {
   const getAvatarColor = (userId: string) => {
     const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = [
-      'bg-indigo-500/10 border-indigo-500/25 text-indigo-400',
-      'bg-emerald-500/10 border-emerald-500/25 text-emerald-400',
-      'bg-sky-500/10 border-sky-500/25 text-sky-400',
-      'bg-amber-500/10 border-amber-500/25 text-amber-400',
-      'bg-pink-500/10 border-pink-500/25 text-pink-400',
+      'bg-indigo-500/10 border-indigo-500/25 text-indigo-600 dark:text-indigo-405',
+      'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-405',
+      'bg-sky-500/10 border-sky-500/25 text-sky-600 dark:text-sky-405',
+      'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-405',
+      'bg-pink-500/10 border-pink-500/25 text-pink-600 dark:text-pink-405',
     ];
     return colors[hash % colors.length];
   };
@@ -331,19 +328,19 @@ export function TaskCanvas() {
 
   return (
     <div className="flex-grow flex flex-col min-h-0 overflow-hidden w-full h-full bg-transparent">
-      <div className="flex flex-1 flex-col overflow-hidden px-4 py-4 md:px-8 md:py-6">
+      <div className="flex flex-grow flex-col overflow-hidden px-4 py-4 md:px-8 md:py-6">
         
         {/* ─── Premium Glassmorphic Top Controls Banner ─── */}
-        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-3.5 backdrop-blur-xl md:flex-row md:items-center md:justify-between shadow-xl">
+        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-border-default/80 bg-surface/50 dark:bg-surface/30 p-3.5 backdrop-blur-xl md:flex-row md:items-center md:justify-between shadow-xl">
           <div className="flex items-center gap-3">
-            <div className="hidden rounded-xl p-2.5 text-accent border border-white/5 bg-accent/[0.08]" style={{ color: 'var(--accent)' }}>
+            <div className="hidden rounded-xl p-2.5 text-accent border border-border-default/40 bg-accent/[0.08]" style={{ color: 'var(--accent)' }}>
               <Target className="h-5 w-5" />
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight text-foreground">
                 Workspace
               </h1>
-              <p className="text-[10px] font-medium text-muted-foreground">
+              <p className="text-[10px] font-semibold text-muted-foreground">
                 Team coordination, personal goals, and operational execution
               </p>
             </div>
@@ -351,7 +348,7 @@ export function TaskCanvas() {
 
           <div className="flex flex-wrap items-center gap-2">
             {/* View Switcher Deck */}
-            <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] p-1 shadow-inner relative backdrop-blur-md">
+            <div className="flex items-center rounded-xl border border-border-default/60 bg-bg-secondary/40 p-1 shadow-inner relative backdrop-blur-md">
               {[
                 { id: 'goals', label: 'Goals Hub', icon: Trophy },
                 { id: 'execution', label: 'Execution', icon: CheckSquare },
@@ -365,7 +362,7 @@ export function TaskCanvas() {
                     onClick={() => setActiveTab(tab.id as any)}
                     className={cn(
                       "relative rounded-lg px-3.5 py-1.5 text-[11px] font-bold transition-all duration-300 z-10 cursor-pointer flex items-center gap-1.5",
-                      isSelected ? "text-white" : "text-muted-foreground hover:text-foreground"
+                      isSelected ? "text-foreground dark:text-white" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {isSelected && (
@@ -390,7 +387,7 @@ export function TaskCanvas() {
                 "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-inner",
                 showFilters 
                   ? "border-accent/40 text-accent bg-accent/[0.08]" 
-                  : "border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-muted-foreground hover:text-foreground"
+                  : "border-border-default/60 bg-bg-secondary/40 text-muted-foreground hover:text-foreground"
               )}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -421,7 +418,7 @@ export function TaskCanvas() {
               transition={{ duration: 0.2, ease: 'easeOut' }}
               className="overflow-hidden mb-4"
             >
-              <div className="grid grid-cols-1 gap-3 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.02] to-white/[0.005] p-4 backdrop-blur-2xl sm:grid-cols-2 md:grid-cols-4 shadow-inner">
+              <div className="grid grid-cols-1 gap-3 rounded-2xl border border-border-default/80 bg-surface/50 p-4 backdrop-blur-2xl sm:grid-cols-2 md:grid-cols-4 shadow-inner">
                 
                 {/* Search */}
                 <div className="relative">
@@ -433,7 +430,7 @@ export function TaskCanvas() {
                     placeholder="Search titles..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] py-2 pl-9 pr-3 text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 transition-all font-semibold"
+                    className="w-full rounded-xl border border-border-default/60 bg-bg-secondary/40 py-2 pl-9 pr-3 text-[11px] text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 transition-all font-semibold"
                   />
                   {searchQuery && (
                     <button 
@@ -446,46 +443,46 @@ export function TaskCanvas() {
                 </div>
 
                 {/* Project Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 transition-all">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border-default/60 bg-bg-secondary/40 px-3 py-1 hover:border-border-default transition-all">
                   <Folder className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <select
                     value={selectedProjectId}
                     onChange={(e) => setSelectedProjectId(e.target.value)}
                     className="w-full bg-transparent text-[11px] font-bold text-foreground outline-none border-none py-1.5 cursor-pointer"
                   >
-                    <option value="all" className="bg-zinc-950 text-foreground font-bold">All Projects</option>
+                    <option value="all" className="bg-surface text-foreground font-bold font-heading">All Projects</option>
                     {projects.map((p) => (
-                      <option key={p.id} value={p.id} className="bg-zinc-950 text-foreground font-bold">{p.name}</option>
+                      <option key={p.id} value={p.id} className="bg-surface text-foreground font-bold font-heading">{p.name}</option>
                     ))}
                   </select>
                 </div>
 
                 {/* Assignee Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 transition-all">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border-default/60 bg-bg-secondary/40 px-3 py-1 hover:border-border-default transition-all">
                   <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <select
                     value={selectedAssigneeId}
                     onChange={(e) => setSelectedAssigneeId(e.target.value)}
                     className="w-full bg-transparent text-[11px] font-bold text-foreground outline-none border-none py-1.5 cursor-pointer"
                   >
-                    <option value="all" className="bg-zinc-950 text-foreground font-bold">All Members</option>
+                    <option value="all" className="bg-surface text-foreground font-bold font-heading">All Members</option>
                     {members.map((m) => (
-                      <option key={m.uid} value={m.uid} className="bg-zinc-950 text-foreground font-bold">{m.fullName || m.username}</option>
+                      <option key={m.uid} value={m.uid} className="bg-surface text-foreground font-bold font-heading">{m.fullName || m.username}</option>
                     ))}
                   </select>
                 </div>
 
                 {/* Priority Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 transition-all">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border-default/60 bg-bg-secondary/40 px-3 py-1 hover:border-border-default transition-all">
                   <AlertCircle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <select
                     value={selectedPriority}
                     onChange={(e) => setSelectedPriority(e.target.value)}
                     className="w-full bg-transparent text-[11px] font-bold text-foreground outline-none border-none py-1.5 cursor-pointer"
                   >
-                    <option value="all" className="bg-zinc-950 text-foreground font-bold">All Priorities</option>
+                    <option value="all" className="bg-surface text-foreground font-bold font-heading">All Priorities</option>
                     {Object.entries(PRIORITY_CONFIG).map(([key, value]) => (
-                      <option key={key} value={key} className="bg-zinc-950 text-foreground font-bold">{value.label}</option>
+                      <option key={key} value={key} className="bg-surface text-foreground font-bold font-heading">{value.label}</option>
                     ))}
                   </select>
                 </div>
@@ -503,10 +500,10 @@ export function TaskCanvas() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden mb-4 border border-white/10 bg-white/[0.01] rounded-2xl backdrop-blur-xl"
+              className="overflow-hidden mb-4 border border-border-default/80 bg-surface/50 rounded-2xl backdrop-blur-xl"
             >
               <div className="p-5 space-y-5">
-                <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                <div className="flex items-center gap-2 pb-3 border-b border-border-default/40">
                   {(['goal', 'project', 'task'] as const).map((type) => (
                     <button
                       key={type}
@@ -515,10 +512,10 @@ export function TaskCanvas() {
                       className={cn(
                         "px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer capitalize border",
                         createType === type
-                          ? "bg-accent/[0.08] border-accent/30 text-white"
+                          ? "bg-accent/[0.08] border-accent/30 text-foreground dark:text-white"
                           : "bg-transparent border-transparent text-muted-foreground hover:text-foreground"
                       )}
-                      style={createType === type ? { color: 'oklch(from var(--accent) calc(l + 0.12) c h)', borderColor: 'rgba(255,255,255,0.1)' } : undefined}
+                      style={createType === type ? { color: 'oklch(from var(--accent) calc(l + 0.12) c h)', borderColor: 'var(--border-default)' } : undefined}
                     >
                       {type}
                     </button>
@@ -534,14 +531,14 @@ export function TaskCanvas() {
                         value={projectForm.name}
                         onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
                         required
-                        className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 outline-none focus:border-accent/40 font-semibold"
+                        className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold"
                       />
                       <textarea
                         placeholder="Project Description..."
                         value={projectForm.description}
                         onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
                         rows={3}
-                        className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 outline-none focus:border-accent/40 font-semibold resize-none"
+                        className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold resize-none"
                       />
                     </div>
                     <div className="space-y-4">
@@ -552,7 +549,7 @@ export function TaskCanvas() {
                             type="date"
                             value={projectForm.startDate}
                             onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                            className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           />
                         </div>
                         <div>
@@ -561,7 +558,7 @@ export function TaskCanvas() {
                             type="date"
                             value={projectForm.dueDate}
                             onChange={(e) => setProjectForm({ ...projectForm, dueDate: e.target.value })}
-                            className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           />
                         </div>
                       </div>
@@ -569,7 +566,7 @@ export function TaskCanvas() {
                         <button
                           type="button"
                           onClick={() => setShowCreateDrawer(false)}
-                          className="border border-white/10 hover:bg-white/5 text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                          className="border border-border-default hover:bg-bg-secondary text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -595,14 +592,14 @@ export function TaskCanvas() {
                         value={goalForm.title}
                         onChange={(e) => setGoalForm({ ...goalForm, title: e.target.value })}
                         required
-                        className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 outline-none focus:border-accent/40 font-semibold"
+                        className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold"
                       />
                       <textarea
                         placeholder="Outcome / Job responsibility description..."
                         value={goalForm.description}
                         onChange={(e) => setGoalForm({ ...goalForm, description: e.target.value })}
                         rows={3}
-                        className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 outline-none focus:border-accent/40 font-semibold resize-none"
+                        className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold resize-none"
                       />
                     </div>
                     <div className="space-y-3">
@@ -612,11 +609,11 @@ export function TaskCanvas() {
                           <select
                             value={goalForm.projectId}
                             onChange={(e) => setGoalForm({ ...goalForm, projectId: e.target.value })}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-300 outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           >
-                            <option value="">Standalone Goal</option>
+                            <option value="" className="bg-surface text-foreground">Standalone Goal</option>
                             {projects.map(p => (
-                              <option key={p.id} value={p.id}>{p.name}</option>
+                              <option key={p.id} value={p.id} className="bg-surface text-foreground">{p.name}</option>
                             ))}
                           </select>
                         </div>
@@ -625,11 +622,11 @@ export function TaskCanvas() {
                           <select
                             value={goalForm.ownerId}
                             onChange={(e) => setGoalForm({ ...goalForm, ownerId: e.target.value })}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-300 outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           >
-                            <option value="">Select Employee...</option>
+                            <option value="" className="bg-surface text-foreground">Select Employee...</option>
                             {members.map(m => (
-                              <option key={m.uid} value={m.uid}>{m.fullName || m.username}</option>
+                              <option key={m.uid} value={m.uid} className="bg-surface text-foreground">{m.fullName || m.username}</option>
                             ))}
                           </select>
                         </div>
@@ -640,10 +637,10 @@ export function TaskCanvas() {
                           <select
                             value={goalForm.horizon}
                             onChange={(e) => setGoalForm({ ...goalForm, horizon: e.target.value as any })}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-300 outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           >
-                            <option value="short_term">Short Term</option>
-                            <option value="long_term">Long Term</option>
+                            <option value="short_term" className="bg-surface text-foreground">Short Term</option>
+                            <option value="long_term" className="bg-surface text-foreground">Long Term</option>
                           </select>
                         </div>
                         <div>
@@ -652,7 +649,7 @@ export function TaskCanvas() {
                             type="date"
                             value={goalForm.targetDate}
                             onChange={(e) => setGoalForm({ ...goalForm, targetDate: e.target.value })}
-                            className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           />
                         </div>
                       </div>
@@ -660,7 +657,7 @@ export function TaskCanvas() {
                         <button
                           type="button"
                           onClick={() => setShowCreateDrawer(false)}
-                          className="border border-white/10 hover:bg-white/5 text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                          className="border border-border-default hover:bg-bg-secondary text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -686,14 +683,14 @@ export function TaskCanvas() {
                         value={taskForm.title}
                         onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
                         required
-                        className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 outline-none focus:border-accent/40 font-semibold"
+                        className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold"
                       />
                       <textarea
                         placeholder="Task details and execution steps..."
                         value={taskForm.description}
                         onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
                         rows={3}
-                        className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 outline-none focus:border-accent/40 font-semibold resize-none"
+                        className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold resize-none"
                       />
                     </div>
                     <div className="space-y-3">
@@ -703,11 +700,11 @@ export function TaskCanvas() {
                           <select
                             value={taskForm.projectId}
                             onChange={(e) => setTaskForm({ ...taskForm, projectId: e.target.value })}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-300 outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           >
-                            <option value="">No Project</option>
+                            <option value="" className="bg-surface text-foreground">No Project</option>
                             {projects.map(p => (
-                              <option key={p.id} value={p.id}>{p.name}</option>
+                              <option key={p.id} value={p.id} className="bg-surface text-foreground">{p.name}</option>
                             ))}
                           </select>
                         </div>
@@ -716,11 +713,11 @@ export function TaskCanvas() {
                           <select
                             value={taskForm.goalId}
                             onChange={(e) => setTaskForm({ ...taskForm, goalId: e.target.value })}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-300 outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           >
-                            <option value="">No Goal</option>
+                            <option value="" className="bg-surface text-foreground">No Goal</option>
                             {goals.map(g => (
-                              <option key={g.id} value={g.id}>{g.title}</option>
+                              <option key={g.id} value={g.id} className="bg-surface text-foreground">{g.title}</option>
                             ))}
                           </select>
                         </div>
@@ -731,11 +728,11 @@ export function TaskCanvas() {
                           <select
                             value={taskForm.assigneeId}
                             onChange={(e) => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-300 outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           >
-                            <option value="">Select Member...</option>
+                            <option value="" className="bg-surface text-foreground">Select Member...</option>
                             {members.map(m => (
-                              <option key={m.uid} value={m.uid}>{m.fullName || m.username}</option>
+                              <option key={m.uid} value={m.uid} className="bg-surface text-foreground">{m.fullName || m.username}</option>
                             ))}
                           </select>
                         </div>
@@ -744,13 +741,13 @@ export function TaskCanvas() {
                           <select
                             value={taskForm.priority}
                             onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value as any })}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-300 outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           >
-                            <option value="none">None</option>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
+                            <option value="none" className="bg-surface text-foreground">None</option>
+                            <option value="low" className="bg-surface text-foreground">Low</option>
+                            <option value="medium" className="bg-surface text-foreground">Medium</option>
+                            <option value="high" className="bg-surface text-foreground">High</option>
+                            <option value="urgent" className="bg-surface text-foreground">Urgent</option>
                           </select>
                         </div>
                       </div>
@@ -761,7 +758,7 @@ export function TaskCanvas() {
                             type="date"
                             value={taskForm.dueDate}
                             onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
-                            className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                            className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                           />
                         </div>
                       </div>
@@ -769,7 +766,7 @@ export function TaskCanvas() {
                         <button
                           type="button"
                           onClick={() => setShowCreateDrawer(false)}
-                          className="border border-white/10 hover:bg-white/5 text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                          className="border border-border-default hover:bg-bg-secondary text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -792,10 +789,10 @@ export function TaskCanvas() {
         </AnimatePresence>
 
         {/* ─── Split Screen Workspace Panel ─── */}
-        <div className="flex-1 flex gap-5 overflow-hidden min-h-0 relative">
+        <div className="flex-grow flex gap-5 overflow-hidden min-h-0 relative">
           
           {/* Main Content Workspace Container */}
-          <div className="flex-1 min-h-0 border border-white/10 bg-white/[0.02] rounded-2xl overflow-hidden shadow-2xl flex flex-col z-10">
+          <div className="flex-1 min-h-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-10">
             {isLoading ? (
               <div className="flex h-full w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
@@ -813,9 +810,9 @@ export function TaskCanvas() {
                     {/* Visual context */}
                     <div className="bg-emerald-500/[0.04] border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <Trophy className="w-5 h-5 text-emerald-400 shrink-0 animate-pulse" />
+                        <Trophy className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <div>
-                          <h4 className="text-xs font-bold text-white">Primary Employee Goals</h4>
+                          <h4 className="text-xs font-bold text-foreground">Primary Employee Goals</h4>
                           <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">Goals represent an employee's primary operational focus. Tasks are what is needed to complete a goal.</p>
                         </div>
                       </div>
@@ -823,7 +820,7 @@ export function TaskCanvas() {
 
                     {/* Personal Focus Section */}
                     <div className="space-y-4">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-400">My Primary Focus</h3>
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">My Primary Focus</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {filteredGoals.filter(g => g.ownerId === actor.uid).length > 0 ? (
                           filteredGoals.filter(g => g.ownerId === actor.uid).map(goal => {
@@ -835,26 +832,26 @@ export function TaskCanvas() {
                             return (
                               <div
                                 key={goal.id}
-                                className="bg-white/[0.02] border border-white/5 rounded-2xl p-4.5 space-y-4 hover:border-emerald-500/30 hover:bg-white/[0.03] transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] hover:-translate-y-0.5"
+                                className="bg-surface/50 border border-border-default/80 rounded-2xl p-4.5 space-y-4 hover:border-emerald-500/30 hover:bg-surface transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] hover:-translate-y-0.5"
                               >
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <div className="flex flex-wrap items-center gap-2">
-                                      <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-white/5 bg-white/5 text-emerald-400">
+                                      <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-emerald-600 dark:text-emerald-400 bg-emerald-500/[0.04]">
                                         {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
                                       </span>
                                       {linkedProj && (
-                                        <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-white/5 bg-white/5 text-accent" style={{ color: 'var(--accent)' }}>
+                                        <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-accent bg-accent/[0.04]" style={{ color: 'var(--accent)' }}>
                                           {linkedProj.name}
                                         </span>
                                       )}
                                     </div>
-                                    <h4 className="text-xs font-bold text-white mt-2.5">{goal.title}</h4>
+                                    <h4 className="text-xs font-bold text-foreground mt-2.5">{goal.title}</h4>
                                     {goal.description && <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{goal.description}</p>}
                                   </div>
                                   <div className="flex items-center gap-2 shrink-0">
                                     {goal.targetDate && (
-                                      <span className="text-[8px] text-muted-foreground font-mono bg-white/5 border border-white/5 rounded px-2 py-0.5">
+                                      <span className="text-[8px] text-muted-foreground font-mono bg-bg-secondary border border-border-default rounded px-2 py-0.5">
                                         {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}
                                       </span>
                                     )}
@@ -873,30 +870,30 @@ export function TaskCanvas() {
                                     <span>Goal Rollup Progress</span>
                                     <span>{progress}% ({doneTasks}/{goalTasks.length} tasks)</span>
                                   </div>
-                                  <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                                    <div className="bg-emerald-400 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+                                  <div className="w-full bg-bg-secondary rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                                   </div>
                                 </div>
 
                                 {/* Checklist Tasks */}
-                                <div className="space-y-1.5 pt-3.5 border-t border-white/5">
+                                <div className="space-y-1.5 pt-3.5 border-t border-border-default/45">
                                   {goalTasks.map(task => (
                                     <div
                                       key={task.id}
                                       onClick={() => setSearchParams({ task: task.id })}
-                                      className="flex items-center justify-between p-2 rounded-xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 transition-all cursor-pointer group"
+                                      className="flex items-center justify-between p-2 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
                                     >
                                       <div className="flex items-center gap-2 min-w-0">
                                         <div
                                           onClick={(e) => handleToggleTaskStatus(e, task)}
                                           className={cn(
                                             "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                            task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-white/20 bg-white/[0.02]"
+                                            task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-border-default bg-bg-primary/50"
                                           )}
                                         >
                                           {task.status === 'done' && <Check className="w-2.5 h-2.5" />}
                                         </div>
-                                        <span className={cn("text-[11px] truncate font-semibold", task.status === 'done' ? "text-muted-foreground line-through" : "text-zinc-200")}>
+                                        <span className={cn("text-[11px] truncate font-semibold", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
                                           {task.title}
                                         </span>
                                       </div>
@@ -910,7 +907,7 @@ export function TaskCanvas() {
                                   ))}
                                   <button
                                     onClick={() => triggerAddTask(goal.id, goal.projectId)}
-                                    className="text-[9px] text-muted-foreground hover:text-white font-bold flex items-center gap-1 pt-1.5"
+                                    className="text-[9px] text-muted-foreground hover:text-foreground font-bold flex items-center gap-1 pt-1.5"
                                   >
                                     <Plus className="w-3 h-3" /> Add Task
                                   </button>
@@ -919,7 +916,7 @@ export function TaskCanvas() {
                             );
                           })
                         ) : (
-                          <div className="col-span-2 py-8 rounded-2xl border border-dashed border-white/5 bg-white/[0.005] flex flex-col items-center justify-center text-center">
+                          <div className="col-span-2 py-8 rounded-2xl border border-dashed border-border-default/80 bg-bg-secondary/20 flex flex-col items-center justify-center text-center">
                             <p className="text-[11px] text-muted-foreground italic">No goals assigned to you yet.</p>
                             <button
                               onClick={() => {
@@ -927,7 +924,7 @@ export function TaskCanvas() {
                                 setCreateType('goal');
                                 setShowCreateDrawer(true);
                               }}
-                              className="text-[10px] text-emerald-450 hover:underline mt-2 font-black uppercase tracking-wider"
+                              className="text-[10px] text-emerald-600 dark:text-emerald-450 hover:underline mt-2 font-black uppercase tracking-wider"
                             >
                               Add Your First Goal
                             </button>
@@ -945,14 +942,14 @@ export function TaskCanvas() {
                           if (selectedAssigneeId !== 'all' && member.uid !== selectedAssigneeId) return null;
 
                           return (
-                            <div key={member.uid} className="bg-white/[0.01] border border-white/5 rounded-2xl p-4.5 space-y-4">
-                              <div className="flex items-center justify-between pb-2.5 border-b border-white/5">
+                            <div key={member.uid} className="bg-surface/40 border border-border-default/80 rounded-2xl p-4.5 space-y-4">
+                              <div className="flex items-center justify-between pb-2.5 border-b border-border-default/45">
                                 <div className="flex items-center gap-2">
                                   <div className={cn("w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border", getAvatarColor(member.uid))}>
                                     {getInitials(member.uid)}
                                   </div>
                                   <div>
-                                    <h4 className="text-xs font-bold text-white">{member.fullName}</h4>
+                                    <h4 className="text-xs font-bold text-foreground">{member.fullName}</h4>
                                     <p className="text-[9px] text-muted-foreground">{member.designation || 'Team Member'}</p>
                                   </div>
                                 </div>
@@ -962,7 +959,7 @@ export function TaskCanvas() {
                                     setCreateType('goal');
                                     setShowCreateDrawer(true);
                                   }}
-                                  className="text-[9px] text-emerald-400 hover:text-emerald-350 border border-emerald-500/10 hover:border-emerald-500/25 bg-emerald-500/[0.04] hover:bg-emerald-500/[0.08] rounded-lg px-2 py-1 font-bold tracking-wide"
+                                  className="text-[9px] text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 border border-emerald-500/10 hover:border-emerald-500/25 bg-emerald-500/[0.04] hover:bg-emerald-500/[0.08] rounded-lg px-2 py-1 font-bold tracking-wide"
                                 >
                                   Assign Goal
                                 </button>
@@ -973,9 +970,9 @@ export function TaskCanvas() {
                                   memberGoals.map(goal => {
                                     const progress = goal.progressRollup ?? 0;
                                     return (
-                                      <div key={goal.id} className="p-3 bg-white/[0.01] border border-white/5 rounded-xl space-y-2 hover:border-white/10 transition-colors">
+                                      <div key={goal.id} className="p-3 bg-bg-primary/20 border border-border-subtle rounded-xl space-y-2 hover:border-border-default transition-colors">
                                         <div className="flex items-start justify-between gap-3">
-                                          <h5 className="text-[11px] font-bold text-white">{goal.title}</h5>
+                                          <h5 className="text-[11px] font-bold text-foreground">{goal.title}</h5>
                                           <button
                                             onClick={(e) => handleDeleteGoalItem(e, goal.id)}
                                             className="text-muted-foreground hover:text-red-400 transition-colors"
@@ -988,14 +985,14 @@ export function TaskCanvas() {
                                             <span>Progress Rollup</span>
                                             <span>{progress}%</span>
                                           </div>
-                                          <div className="w-full bg-white/5 rounded-full h-1 overflow-hidden">
-                                            <div className="bg-emerald-400 h-full rounded-full" style={{ width: `${progress}%` }} />
+                                          <div className="w-full bg-bg-secondary rounded-full h-1 overflow-hidden">
+                                            <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${progress}%` }} />
                                           </div>
                                         </div>
                                         <div className="flex justify-between items-center pt-2">
                                           <button
                                             onClick={() => triggerAddTask(goal.id, goal.projectId)}
-                                            className="text-[8px] text-muted-foreground hover:text-white font-bold flex items-center gap-0.5"
+                                            className="text-[8px] text-muted-foreground hover:text-foreground font-bold flex items-center gap-0.5"
                                           >
                                             <Plus className="w-2.5 h-2.5" /> Add Task
                                           </button>
@@ -1021,11 +1018,11 @@ export function TaskCanvas() {
                   <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-8">
                     
                     {/* Visual contexts */}
-                    <div className="bg-accent/[0.04] border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4" style={{ borderColor: 'oklch(from var(--accent) l c h / 20%)' }}>
+                    <div className="bg-accent/[0.04] border border-border-default/80 rounded-2xl p-4 flex items-center justify-between gap-4" style={{ borderColor: 'oklch(from var(--accent) l c h / 20%)' }}>
                       <div className="flex items-center gap-3">
                         <CheckSquare className="w-5 h-5 text-accent shrink-0" style={{ color: 'var(--accent)' }} />
                         <div>
-                          <h4 className="text-xs font-bold text-white">Segmented Execution Dashboard</h4>
+                          <h4 className="text-xs font-bold text-foreground">Segmented Execution Dashboard</h4>
                           <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">Differentiate instantly between tasks assigned to you, tasks you assigned to others, reviews pending your sign-off, and standalone items.</p>
                         </div>
                       </div>
@@ -1035,13 +1032,13 @@ export function TaskCanvas() {
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                       
                       {/* Segment 1: My Personal Tasks */}
-                      <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-5 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                      <div className="bg-surface/50 border border-border-default/80 rounded-2xl p-5 space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-border-default/45">
                           <div className="flex items-center gap-2">
-                            <UserCheck className="w-4 h-4 text-sky-400 shrink-0" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-white">My Tasks</h3>
+                            <UserCheck className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">My Tasks</h3>
                           </div>
-                          <span className="px-2 py-0.5 bg-white/5 border border-white/5 text-[9px] font-bold text-muted-foreground rounded-lg">
+                          <span className="px-2 py-0.5 bg-bg-secondary border border-border-default text-[9px] font-bold text-muted-foreground rounded-lg">
                             {myTasks.filter(t => t.status !== 'done').length} Active
                           </span>
                         </div>
@@ -1051,24 +1048,24 @@ export function TaskCanvas() {
                               <div
                                 key={task.id}
                                 onClick={() => setSearchParams({ task: task.id })}
-                                className="flex items-center justify-between p-3 rounded-xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 hover:border-sky-500/20 transition-all cursor-pointer group"
+                                className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
                                   <div
                                     onClick={(e) => handleToggleTaskStatus(e, task)}
                                     className={cn(
                                       "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                      task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-white/20 bg-white/[0.02]"
+                                      task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-border-default bg-bg-primary/50"
                                     )}
                                   >
                                     {task.status === 'done' && <Check className="w-2.5 h-2.5" />}
                                   </div>
                                   <div className="min-w-0">
-                                    <span className={cn("text-[11px] truncate font-semibold block", task.status === 'done' ? "text-muted-foreground line-through" : "text-zinc-200")}>
+                                    <span className={cn("text-[11px] truncate font-semibold block", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
                                       {task.title}
                                     </span>
                                     {task.priority !== 'none' && (
-                                      <span className="text-[7px] uppercase font-bold tracking-wider rounded font-mono text-zinc-500 mt-0.5 block">
+                                      <span className="text-[7px] uppercase font-bold tracking-wider rounded font-mono text-muted-foreground mt-0.5 block">
                                         Priority: {task.priority}
                                       </span>
                                     )}
@@ -1076,13 +1073,13 @@ export function TaskCanvas() {
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                   {task.dueDate && (
-                                    <span className="text-[8px] font-mono text-muted-foreground bg-white/5 rounded px-1.5 py-0.5 border border-white/5">
+                                    <span className="text-[8px] font-mono text-muted-foreground bg-bg-secondary rounded px-1.5 py-0.5 border border-border-default">
                                       {new Date((task.dueDate as any).seconds * 1000).toLocaleDateString()}
                                     </span>
                                   )}
                                   <button
                                     onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                                    className="text-muted-foreground hover:text-red-550 transition-colors opacity-0 group-hover:opacity-100"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -1096,13 +1093,13 @@ export function TaskCanvas() {
                       </div>
 
                       {/* Segment 2: Tasks I Assigned */}
-                      <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-5 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                      <div className="bg-surface/50 border border-border-default/80 rounded-2xl p-5 space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-border-default/45">
                           <div className="flex items-center gap-2">
-                            <Send className="w-4 h-4 text-purple-400 shrink-0" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-white">Tasks I Assigned</h3>
+                            <Send className="w-4 h-4 text-purple-650 dark:text-purple-400 shrink-0" />
+                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Tasks I Assigned</h3>
                           </div>
-                          <span className="px-2 py-0.5 bg-white/5 border border-white/5 text-[9px] font-bold text-muted-foreground rounded-lg">
+                          <span className="px-2 py-0.5 bg-bg-secondary border border-border-default text-[9px] font-bold text-muted-foreground rounded-lg">
                             {assignedTasks.filter(t => t.status !== 'done').length} Active
                           </span>
                         </div>
@@ -1112,34 +1109,34 @@ export function TaskCanvas() {
                               <div
                                 key={task.id}
                                 onClick={() => setSearchParams({ task: task.id })}
-                                className="flex items-center justify-between p-3 rounded-xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 hover:border-purple-500/20 transition-all cursor-pointer group"
+                                className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
                                   <div
                                     onClick={(e) => handleToggleTaskStatus(e, task)}
                                     className={cn(
                                       "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                      task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-white/20 bg-white/[0.02]"
+                                      task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-border-default bg-bg-primary/50"
                                     )}
                                   >
                                     {task.status === 'done' && <Check className="w-2.5 h-2.5" />}
                                   </div>
                                   <div className="min-w-0">
-                                    <span className={cn("text-[11px] truncate font-semibold block", task.status === 'done' ? "text-muted-foreground line-through" : "text-zinc-200")}>
+                                    <span className={cn("text-[11px] truncate font-semibold block", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
                                       {task.title}
                                     </span>
-                                    <span className="text-[7px] uppercase font-bold tracking-wider rounded font-mono text-purple-400 mt-0.5 block">
+                                    <span className="text-[7px] uppercase font-bold tracking-wider rounded font-mono text-purple-600 dark:text-purple-400 mt-0.5 block">
                                       Assigned To: {task.assigneeIds.map(uid => memberMap.get(uid)?.fullName || 'Member').join(', ')}
                                     </span>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
-                                  <span className="px-1.5 py-0.5 bg-white/5 rounded text-[8px] font-bold text-muted-foreground capitalize">
+                                  <span className="px-1.5 py-0.5 bg-bg-secondary border border-border-default rounded text-[8px] font-bold text-text-secondary capitalize">
                                     {task.status.replace('_', ' ')}
                                   </span>
                                   <button
                                     onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                                    className="text-muted-foreground hover:text-red-550 transition-colors opacity-0 group-hover:opacity-100"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -1153,13 +1150,13 @@ export function TaskCanvas() {
                       </div>
 
                       {/* Segment 3: Pending Approvals & Reviews */}
-                      <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-5 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                      <div className="bg-surface/50 border border-border-default/80 rounded-2xl p-5 space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-border-default/45">
                           <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-white">Approvals & Reviews</h3>
+                            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Approvals & Reviews</h3>
                           </div>
-                          <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-400 rounded-lg">
+                          <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-600 dark:text-amber-400 rounded-lg">
                             {reviewTasks.length} Pending
                           </span>
                         </div>
@@ -1169,10 +1166,10 @@ export function TaskCanvas() {
                               <div
                                 key={task.id}
                                 onClick={() => setSearchParams({ task: task.id })}
-                                className="flex items-center justify-between p-3.5 rounded-xl bg-amber-500/[0.02] border border-amber-500/20 hover:bg-amber-500/[0.04] transition-all cursor-pointer group"
+                                className="flex items-center justify-between p-3.5 rounded-xl bg-amber-500/[0.03] border border-amber-500/20 hover:bg-amber-500/[0.06] transition-all cursor-pointer group"
                               >
                                 <div className="min-w-0">
-                                  <span className="text-[11px] truncate font-bold text-white block">
+                                  <span className="text-[11px] truncate font-bold text-foreground block">
                                     {task.title}
                                   </span>
                                   <p className="text-[8px] text-muted-foreground mt-0.5 font-semibold">
@@ -1185,7 +1182,7 @@ export function TaskCanvas() {
                                       e.stopPropagation();
                                       await handleUpdateTaskStatus(task, 'done');
                                     }}
-                                    className="px-2.5 py-1 bg-white hover:bg-white/90 text-zinc-950 font-bold rounded-lg text-[9px] transition-all cursor-pointer"
+                                    className="px-2.5 py-1 bg-foreground hover:bg-foreground/90 text-background font-bold rounded-lg text-[9px] transition-all cursor-pointer"
                                   >
                                     Approve
                                   </button>
@@ -1194,7 +1191,7 @@ export function TaskCanvas() {
                                       e.stopPropagation();
                                       await handleUpdateTaskStatus(task, 'todo');
                                     }}
-                                    className="px-2.5 py-1 border border-white/10 hover:bg-white/5 text-white font-bold rounded-lg text-[9px] transition-all cursor-pointer"
+                                    className="px-2.5 py-1 border border-border-default hover:bg-bg-secondary text-foreground font-bold rounded-lg text-[9px] transition-all cursor-pointer"
                                   >
                                     Reject
                                   </button>
@@ -1208,13 +1205,13 @@ export function TaskCanvas() {
                       </div>
 
                       {/* Segment 4: Standalone Execution Items */}
-                      <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-5 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                      <div className="bg-surface/50 border border-border-default/80 rounded-2xl p-5 space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-border-default/45">
                           <div className="flex items-center gap-2">
-                            <Globe className="w-4 h-4 text-zinc-400 shrink-0" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-white">Standalone Tasks</h3>
+                            <Globe className="w-4 h-4 text-zinc-500 shrink-0" />
+                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Standalone Tasks</h3>
                           </div>
-                          <span className="px-2 py-0.5 bg-white/5 border border-white/5 text-[9px] font-bold text-muted-foreground rounded-lg">
+                          <span className="px-2 py-0.5 bg-bg-secondary border border-border-default text-[9px] font-bold text-muted-foreground rounded-lg">
                             {standaloneTasks.filter(t => t.status !== 'done').length} Active
                           </span>
                         </div>
@@ -1224,26 +1221,26 @@ export function TaskCanvas() {
                               <div
                                 key={task.id}
                                 onClick={() => setSearchParams({ task: task.id })}
-                                className="flex items-center justify-between p-3 rounded-xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 hover:border-zinc-500/20 transition-all cursor-pointer group"
+                                className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
                                   <div
                                     onClick={(e) => handleToggleTaskStatus(e, task)}
                                     className={cn(
                                       "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                      task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-white/20 bg-white/[0.02]"
+                                      task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-border-default bg-bg-primary/50"
                                     )}
                                   >
                                     {task.status === 'done' && <Check className="w-2.5 h-2.5" />}
                                   </div>
-                                  <span className={cn("text-[11px] truncate font-semibold", task.status === 'done' ? "text-muted-foreground line-through" : "text-zinc-200")}>
+                                  <span className={cn("text-[11px] truncate font-semibold", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
                                     {task.title}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                   <button
                                     onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                                    className="text-muted-foreground hover:text-red-550 transition-colors opacity-0 group-hover:opacity-100"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -1266,9 +1263,9 @@ export function TaskCanvas() {
                     
                     <div className="bg-indigo-500/[0.04] border border-indigo-500/20 rounded-2xl p-4 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <Briefcase className="w-5 h-5 text-indigo-400 shrink-0 animate-pulse" />
+                        <Briefcase className="w-5 h-5 text-indigo-650 dark:text-indigo-400 shrink-0 animate-pulse" />
                         <div>
-                          <h4 className="text-xs font-bold text-white">Active Initiatives Map</h4>
+                          <h4 className="text-xs font-bold text-foreground">Active Initiatives Map</h4>
                           <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">Projects encompass high-level team targets. Track linked employee goals and associated task metrics.</p>
                         </div>
                       </div>
@@ -1284,12 +1281,12 @@ export function TaskCanvas() {
                         return (
                           <div
                             key={project.id}
-                            className="bg-white/[0.01] border border-white/5 rounded-2xl p-5 space-y-5 hover:border-indigo-500/30 hover:bg-white/[0.02] transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]"
+                            className="bg-surface/50 border border-border-default/80 rounded-2xl p-5 space-y-5 hover:border-indigo-500/30 hover:bg-surface transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]"
                           >
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border-default/45">
                               <div>
-                                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                                  <Folder className="w-4.5 h-4.5 text-indigo-450" />
+                                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                                  <Folder className="w-4.5 h-4.5 text-indigo-650 dark:text-indigo-400" />
                                   {project.name}
                                 </h3>
                                 {project.description && <p className="text-xs text-muted-foreground mt-1 max-w-xl font-medium leading-relaxed">{project.description}</p>}
@@ -1297,7 +1294,7 @@ export function TaskCanvas() {
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => triggerAddGoal(project.id)}
-                                  className="text-[9px] text-emerald-400 hover:text-emerald-350 border border-emerald-500/10 hover:border-emerald-500/25 bg-emerald-500/[0.03] rounded-lg px-2.5 py-1.5 font-bold tracking-wide"
+                                  className="text-[9px] text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 border border-emerald-500/10 hover:border-emerald-500/25 bg-emerald-500/[0.03] rounded-lg px-2.5 py-1.5 font-bold tracking-wide"
                                 >
                                   + Goal
                                 </button>
@@ -1317,10 +1314,10 @@ export function TaskCanvas() {
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aligned Employee Goals</h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                   {projectGoals.map(goal => (
-                                    <div key={goal.id} className="p-3.5 bg-white/[0.01] border border-white/5 rounded-xl space-y-3">
+                                    <div key={goal.id} className="p-3.5 bg-bg-primary/30 border border-border-subtle rounded-xl space-y-3">
                                       <div className="flex items-start justify-between gap-2.5">
-                                        <h5 className="text-[11px] font-bold text-white leading-snug">{goal.title}</h5>
-                                        <div className="w-5.5 h-5.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center font-bold text-[9px] text-emerald-450 shrink-0" title={`Assigned to ${memberMap.get(goal.ownerId)?.fullName || 'Member'}`}>
+                                        <h5 className="text-[11px] font-bold text-foreground leading-snug">{goal.title}</h5>
+                                        <div className="w-5.5 h-5.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center font-bold text-[9px] text-emerald-600 dark:text-emerald-450 shrink-0" title={`Assigned to ${memberMap.get(goal.ownerId)?.fullName || 'Member'}`}>
                                           {getInitials(goal.ownerId)}
                                         </div>
                                       </div>
@@ -1330,15 +1327,15 @@ export function TaskCanvas() {
                                           <span>Goal Completion</span>
                                           <span>{goal.progressRollup ?? 0}%</span>
                                         </div>
-                                        <div className="w-full bg-white/5 rounded-full h-1 overflow-hidden">
-                                          <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${goal.progressRollup ?? 0}%` }} />
+                                        <div className="w-full bg-bg-secondary rounded-full h-1 overflow-hidden">
+                                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${goal.progressRollup ?? 0}%` }} />
                                         </div>
                                       </div>
 
-                                      <div className="flex justify-between pt-1 border-t border-white/5">
+                                      <div className="flex justify-between pt-1 border-t border-border-default/45">
                                         <button
                                           onClick={() => triggerAddTask(goal.id, project.id)}
-                                          className="text-[8px] text-muted-foreground hover:text-sky-400 font-bold flex items-center gap-0.5"
+                                          className="text-[8px] text-muted-foreground hover:text-foreground font-bold flex items-center gap-0.5"
                                         >
                                           <Plus className="w-2.5 h-2.5" /> Add Task
                                         </button>
@@ -1365,19 +1362,19 @@ export function TaskCanvas() {
                                     <div
                                       key={task.id}
                                       onClick={() => setSearchParams({ task: task.id })}
-                                      className="flex items-center justify-between p-2 rounded-xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 transition-all cursor-pointer group"
+                                      className="flex items-center justify-between p-2 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle transition-all cursor-pointer group"
                                     >
                                       <div className="flex items-center gap-2 min-w-0">
                                         <div
                                           onClick={(e) => handleToggleTaskStatus(e, task)}
                                           className={cn(
                                             "h-3 w-3 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                            task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-white/20 bg-white/[0.02]"
+                                            task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-border-default bg-bg-primary/50"
                                           )}
                                         >
                                           {task.status === 'done' && <Check className="w-2 h-2" />}
                                         </div>
-                                        <span className={cn("text-[10px] truncate font-semibold", task.status === 'done' ? "text-muted-foreground line-through" : "text-zinc-300")}>
+                                        <span className={cn("text-[10px] truncate font-semibold", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
                                           {task.title}
                                         </span>
                                       </div>
@@ -1397,10 +1394,10 @@ export function TaskCanvas() {
 
                             </div>
 
-                            <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[9px] text-muted-foreground font-semibold">
+                            <div className="pt-3 border-t border-border-default/45 flex items-center justify-between text-[9px] text-muted-foreground font-semibold">
                               <span>Overall execution completion rate: {progress}%</span>
-                              <div className="w-24 bg-white/5 rounded-full h-1 overflow-hidden">
-                                <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${progress}%` }} />
+                              <div className="w-24 bg-bg-secondary rounded-full h-1.5 overflow-hidden">
+                                <div className="h-full bg-indigo-550 rounded-full" style={{ width: `${progress}%` }} />
                               </div>
                             </div>
                           </div>
