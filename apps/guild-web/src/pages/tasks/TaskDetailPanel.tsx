@@ -100,6 +100,7 @@ export function TaskDetailPanel({
   const [newSubtaskTitle, setNewSubtaskTitle] = React.useState('');
   const [addingSubtask, setAddingSubtask] = React.useState(false);
   const subtaskInputRef = React.useRef<HTMLInputElement>(null);
+  const dateInputRef = React.useRef<HTMLInputElement>(null);
 
   const [rejectComment, setRejectComment] = React.useState('');
   const [showRejectForm, setShowRejectForm] = React.useState(false);
@@ -625,28 +626,39 @@ export function TaskDetailPanel({
 
           {/* Due date */}
           <PropRow label="Due Date">
-            <label className={cn(
-              'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold border cursor-pointer transition-colors',
-              isOverdue
-                ? 'border-red-500/35 text-red-500 bg-red-500/10'
-                : 'border-border-default text-muted-foreground hover:bg-accent/10'
-            )}>
-              <Calendar className="h-3.5 w-3.5" />
-              {due ? (
-                <span>
-                  {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: due.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })}
-                  {isOverdue && <span className="ml-1.5 text-[9px] font-extrabold uppercase tracking-wider text-red-500">Overdue</span>}
-                </span>
-              ) : (
-                <span>Set due date</span>
-              )}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dateInputRef.current?.showPicker?.();
+                }}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold border cursor-pointer transition-colors',
+                  isOverdue
+                    ? 'border-red-500/35 text-red-500 bg-red-500/10'
+                    : 'border-border-default text-muted-foreground hover:bg-accent/10'
+                )}
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                {due ? (
+                  <span>
+                    {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: due.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })}
+                    {isOverdue && <span className="ml-1.5 text-[9px] font-extrabold uppercase tracking-wider text-red-500">Overdue</span>}
+                  </span>
+                ) : (
+                  <span>Set due date</span>
+                )}
+              </button>
               <input
+                ref={dateInputRef}
                 type="date"
                 defaultValue={dueDateInput}
                 onChange={(e) => handleDueDateChange(e.target.value)}
-                className="absolute opacity-0 w-0 h-0 cursor-pointer"
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer pointer-events-none"
+                tabIndex={-1}
               />
-            </label>
+            </div>
             {due && (
               <button
                 onClick={() => handleDueDateChange('')}
