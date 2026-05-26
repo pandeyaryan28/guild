@@ -214,7 +214,7 @@ export function TaskListRow({
         {onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(task); }}
-            className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-text-muted hover:text-red-400 transition-all p-1.5 rounded-md hover:bg-red-500/10"
+            className="flex-shrink-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-text-muted hover:text-red-400 transition-all p-1.5 rounded-md hover:bg-red-500/10"
             title="Delete task"
           >
             <Trash2 className="h-3.5 w-3.5" />

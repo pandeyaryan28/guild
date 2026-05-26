@@ -133,7 +133,7 @@ function GoalListRow({
         {/* Delete button */}
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="text-muted-foreground hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+          className="text-muted-foreground hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 cursor-pointer"
           title="Delete goal"
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -259,7 +259,7 @@ export function TasksPage() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.002)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.002)_1px,transparent_1px)] bg-[size:80px_80px] pointer-events-none" />
 
         {/* ─── Premium Glass Floating Toolbar Header ─── */}
-        <div className="flex flex-wrap items-center justify-between px-6 py-4.5 border-b border-border-default/45 flex-shrink-0 gap-4 bg-white/[0.02] dark:bg-white/[0.003] backdrop-blur-md relative z-10 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between px-4 py-3 sm:px-6 sm:py-4.5 border-b border-border-default/45 flex-shrink-0 gap-4 bg-white/[0.02] dark:bg-white/[0.003] backdrop-blur-md relative z-10 shadow-sm">
         
           {/* High-End Segmented Tab Switcher */}
           <div className="flex items-center gap-1 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-xl shrink-0 backdrop-blur-md shadow-inner">
@@ -367,7 +367,7 @@ export function TasksPage() {
         </div>
 
         {/* ─── Scrollable Main Content Canvas ─── */}
-        <div className="flex-1 overflow-y-auto p-6 relative z-10 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 relative z-10 custom-scrollbar">
         
         {/* Loading overlay */}
         {((activeTab === 'tasks' && tasksLoading) || (activeTab === 'goals' && goalsLoading)) ? (

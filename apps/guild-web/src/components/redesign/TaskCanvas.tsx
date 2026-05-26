@@ -581,7 +581,7 @@ export function TaskCanvas() {
             </div>
           </div>
         ) : (
-          <div className="h-full w-full overflow-y-auto aether-scroll p-6 space-y-6">
+          <div className="h-full w-full overflow-y-auto aether-scroll p-4 lg:p-6 space-y-6">
             
             {/* ━━━━━━ Section A: My Space ━━━━━━ */}
             {activeSection === 'my-space' && (
@@ -713,7 +713,7 @@ export function TaskCanvas() {
                                   </div>
                                   <button
                                     onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                                    className="text-muted-foreground hover:text-red-400 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                                   >
                                     <X className="w-3.5 h-3.5" />
                                   </button>
@@ -936,7 +936,7 @@ export function TaskCanvas() {
                             )}
                             <button
                               onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                              className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                              className="text-muted-foreground hover:text-red-400 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>

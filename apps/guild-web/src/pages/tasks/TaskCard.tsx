@@ -60,7 +60,7 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
           {/* Context menu */}
           <div data-no-click>
             <DropdownMenu>
-              <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-all outline-none">
+              <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-all outline-none">
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-36 border-border-default bg-popover/90 backdrop-blur-md text-xs">

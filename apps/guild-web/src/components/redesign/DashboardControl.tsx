@@ -319,7 +319,7 @@ export function DashboardControl() {
   return (
     <div className="space-y-4 animate-fluid-pop">
       {/* 1. Header Focus Intention Banner */}
-      <header className="aether-glass py-3 px-5 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden group">
+      <header className="aether-glass py-3 px-4 sm:px-5 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden group">
         {/* Glow effect on hover */}
         <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none group-hover:scale-125 transition-transform duration-700" />
         
@@ -369,7 +369,7 @@ export function DashboardControl() {
       </header>
 
       {/* 2. Teammate Presence Halo Orbit */}
-      <section className="aether-glass py-2 px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative">
+      <section className="aether-glass py-2 px-3.5 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative">
         <div className="flex items-center gap-2 select-none shrink-0">
           <Users className="w-3.5 h-3.5 text-primary" />
           <span className="text-[11px] font-bold text-foreground">Orbit Presence</span>
@@ -378,7 +378,7 @@ export function DashboardControl() {
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 max-w-full overflow-x-auto scrollbar-hide pr-1">
+        <div className="flex flex-row items-center gap-2 max-w-full overflow-x-auto scrollbar-hide pr-1">
           {displayedTeammates.map((member) => {
             const hasFocus = !!member.focusStatus?.text;
             const isOnline = hasFocus; // simple heuristic
@@ -433,7 +433,7 @@ export function DashboardControl() {
         {/* Left Execution Column (3/5) */}
         <div className="lg:col-span-3 space-y-6">
           {/* Active Tasks & Quick Add */}
-          <div className="aether-glass p-6 space-y-4">
+          <div className="aether-glass p-4 sm:p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div>
                 <span className="text-xs font-bold text-foreground block">Active Action Items</span>
@@ -541,7 +541,7 @@ export function DashboardControl() {
 
           {/* Strategic Milestone progressions */}
           {activeProject && (
-            <div className="aether-glass p-6 space-y-4">
+            <div className="aether-glass p-4 sm:p-6 space-y-4">
               <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <div>
                   <span className="text-xs font-bold text-foreground block">Active Roadmap Milestone</span>
@@ -595,7 +595,7 @@ export function DashboardControl() {
         <div className="lg:col-span-2 space-y-6">
           {/* Inbox Approvals */}
           {(pendingRequests.length > 0 || (isManager && reviewTasksForTeam.length > 0)) ? (
-            <div className="aether-glass p-5 space-y-4">
+            <div className="aether-glass p-4 sm:p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <div className="space-y-0.5">
                   <span className="text-xs font-bold text-foreground block">Inbox Approvals</span>
@@ -672,7 +672,7 @@ export function DashboardControl() {
           )}
 
           {/* Operations Activity Stream */}
-          <div className="aether-glass p-5 space-y-4">
+          <div className="aether-glass p-4 sm:p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <span className="text-xs font-bold text-foreground">Execution Timeline</span>
               <Clock className="w-4 h-4 text-muted-foreground" />
