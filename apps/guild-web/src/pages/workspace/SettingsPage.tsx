@@ -111,7 +111,7 @@ export function SettingsPage() {
   }, [tabs, activeTab]);
 
   return (
-    <div className="flex flex-col h-full min-h-[780px] overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="px-8 pt-8 pb-6 border-b border-border-default shrink-0">
         <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
@@ -123,9 +123,9 @@ export function SettingsPage() {
       </div>
 
       {/* Main Layout Grid */}
-      <div className="flex-1 flex overflow-hidden min-h-[700px]">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Navigation Sidebar */}
-        <div className="w-64 border-r border-border-default bg-sidebar p-5 overflow-y-auto space-y-5">
+        <div className="w-64 border-r border-border-default bg-sidebar p-5 overflow-y-auto space-y-5 h-[calc(100vh-220px)] min-h-[480px] max-h-[600px] aether-scroll">
           {/* Personal Group */}
           {tabs.filter(t => t.group === 'personal').length > 0 && (
             <div className="space-y-1.5">
@@ -200,7 +200,7 @@ export function SettingsPage() {
         </div>
 
         {/* Dynamic Tab Content Area */}
-        <div className="flex-1 overflow-y-auto bg-bg-primary p-8">
+        <div className="flex-1 overflow-hidden bg-bg-primary p-8 flex flex-col justify-start">
           <div className="max-w-3xl mx-auto">
             <AnimatePresence mode="wait">
               <motion.div
@@ -342,7 +342,7 @@ function ProfileSettingsView({ profile }: { profile: UserProfile }) {
   };
 
   return (
-    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 md:p-10 shadow-sm space-y-8 min-h-[580px] flex flex-col justify-between">
+    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 shadow-sm space-y-6 overflow-y-auto aether-scroll h-[calc(100vh-220px)] min-h-[480px] max-h-[600px] w-full">
       <div>
         <h2 className="text-lg font-bold text-foreground">My Profile</h2>
         <p className="text-xs text-muted-foreground mt-0.5">Customize your personal identity cards and details.</p>
@@ -504,7 +504,7 @@ function NotificationSettingsView({ profile }: { profile: UserProfile }) {
   ];
 
   return (
-    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 md:p-10 shadow-sm space-y-8 min-h-[580px] flex flex-col justify-between">
+    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 shadow-sm space-y-6 overflow-y-auto aether-scroll h-[calc(100vh-220px)] min-h-[480px] max-h-[600px] w-full">
       <div>
         <h2 className="text-lg font-bold text-foreground">Notification Preferences</h2>
         <p className="text-xs text-muted-foreground mt-0.5">Control which activities trigger real-time banners and notifications.</p>
@@ -564,7 +564,7 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
   };
 
   return (
-    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 md:p-10 shadow-sm space-y-8 min-h-[580px] flex flex-col">
+    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 shadow-sm space-y-6 overflow-y-auto aether-scroll h-[calc(100vh-220px)] min-h-[480px] max-h-[600px] w-full">
       <div>
         <h2 className="text-lg font-bold text-foreground">Visual Theme & Appearance</h2>
         <p className="text-xs text-muted-foreground mt-0.5">Choose your preferred workspace aesthetic. Syncs across devices.</p>
@@ -673,7 +673,7 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
   };
 
   return (
-    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 md:p-10 shadow-sm space-y-8 min-h-[580px] flex flex-col justify-between">
+    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 shadow-sm space-y-6 overflow-y-auto aether-scroll h-[calc(100vh-220px)] min-h-[480px] max-h-[600px] w-full">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-foreground">Workspace Members</h2>
@@ -843,7 +843,7 @@ function InviteLinksSettingsView({ profile, inviteLinks, loading, members }: Inv
   };
 
   return (
-    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 md:p-10 shadow-sm space-y-8 min-h-[580px] flex flex-col justify-between">
+    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 shadow-sm space-y-6 overflow-y-auto aether-scroll h-[calc(100vh-220px)] min-h-[480px] max-h-[600px] w-full">
       <div>
         <h2 className="text-lg font-bold text-foreground">Invite Links</h2>
         <p className="text-xs text-muted-foreground mt-0.5">View or revoke active single-use invitation links.</p>
@@ -1018,7 +1018,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-surface border border-border-default/60 rounded-3xl p-8 md:p-10 shadow-sm space-y-8 min-h-[480px] flex flex-col justify-between">
+      <div className="bg-surface border border-border-default/60 rounded-3xl p-8 shadow-sm space-y-6 overflow-y-auto aether-scroll h-[calc(100vh-220px)] min-h-[480px] max-h-[600px] w-full">
         <div>
           <h2 className="text-lg font-bold text-foreground">Workspace General Info</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Customize your company name, logo initials, and public URLs.</p>
@@ -1268,7 +1268,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
   };
 
   return (
-    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 md:p-10 shadow-sm space-y-8 min-h-[580px] flex flex-col">
+    <div className="bg-surface border border-border-default/60 rounded-3xl p-8 shadow-sm space-y-6 overflow-y-auto aether-scroll h-[calc(100vh-220px)] min-h-[480px] max-h-[600px] w-full">
       {/* Title */}
       <div>
         <h2 className="text-lg font-bold text-foreground">Teams & Org Management</h2>
