@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Send, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Send, Pencil, Trash2, Check, X, MessageSquare, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type TaskComment, type ActorInfo, addComment, editComment, deleteComment } from '../../lib/tasks';
 import { useTaskComments } from '../../hooks/useTasks';
