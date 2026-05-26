@@ -27,7 +27,8 @@ import {
   ChevronUp,
   Globe,
   SlidersHorizontal,
-  Folder
+  Folder,
+  Circle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -60,8 +61,8 @@ export function TaskCanvas() {
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
 
-  // View States: 'goals' (Goals & Job alignment), 'execution' (Segmented task lists), 'projects' (Initiative map)
-  const [activeTab, setActiveTab] = React.useState<'goals' | 'execution' | 'projects'>('goals');
+  // Sidebar Controls: 'my-space' (Personal workspace), 'my-team' (Team coordination & projects)
+  const [activeSection, setActiveSection] = React.useState<'my-space' | 'my-team'>('my-space');
   
   // Filters State
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -70,12 +71,12 @@ export function TaskCanvas() {
   const [selectedPriority, setSelectedPriority] = React.useState('all');
   const [showFilters, setShowFilters] = React.useState(false);
 
-  // Creation Drawer States
+  // Scrollable Slide-Over Drawer States
   const [showCreateDrawer, setShowCreateDrawer] = React.useState(false);
   const [createType, setCreateType] = React.useState<'goal' | 'project' | 'task'>('goal');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  // Form Initializations
+  // Form States
   const [projectForm, setProjectForm] = React.useState({ name: '', description: '', startDate: '', dueDate: '' });
   const [goalForm, setGoalForm] = React.useState({ title: '', description: '', projectId: '', ownerId: '', horizon: 'short_term' as 'short_term' | 'long_term', targetDate: '' });
   const [taskForm, setTaskForm] = React.useState({ title: '', description: '', priority: 'none' as TaskPriority, projectId: '', goalId: '', assigneeId: '', dueDate: '' });
@@ -112,11 +113,11 @@ export function TaskCanvas() {
   const getAvatarColor = (userId: string) => {
     const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = [
-      'bg-indigo-500/10 border-indigo-500/25 text-indigo-600 dark:text-indigo-405',
-      'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-405',
-      'bg-sky-500/10 border-sky-500/25 text-sky-600 dark:text-sky-405',
-      'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-405',
-      'bg-pink-500/10 border-pink-500/25 text-pink-600 dark:text-pink-405',
+      'bg-indigo-500/10 border-indigo-500/25 text-indigo-600 dark:text-indigo-400',
+      'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400',
+      'bg-sky-500/10 border-sky-500/25 text-sky-600 dark:text-sky-400',
+      'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400',
+      'bg-pink-500/10 border-pink-500/25 text-pink-600 dark:text-pink-400',
     ];
     return colors[hash % colors.length];
   };
@@ -151,21 +152,21 @@ export function TaskCanvas() {
     });
   }, [goals, searchQuery, selectedProjectId, selectedAssigneeId]);
 
-  // Pre-fill action setups
+  // Pre-fill action triggers for scrollable slide-over drawer
   const triggerAddGoal = (projectId: string) => {
-    setGoalForm(prev => ({ ...prev, projectId }));
+    setGoalForm({ title: '', description: '', projectId, ownerId: '', horizon: 'short_term', targetDate: '' });
     setCreateType('goal');
     setShowCreateDrawer(true);
   };
 
   const triggerAddTask = (goalId: string, projectId?: string | null) => {
-    setTaskForm(prev => ({ ...prev, goalId, projectId: projectId || '' }));
+    setTaskForm({ title: '', description: '', priority: 'none', projectId: projectId || '', goalId, assigneeId: '', dueDate: '' });
     setCreateType('task');
     setShowCreateDrawer(true);
   };
 
-  // Creation Submissions
-  const handleCreateProject = async (e: React.FormEvent) => {
+  // Creation submissions
+  const handleCreateProjectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!projectForm.name.trim() || !orgId) return;
     setIsSubmitting(true);
@@ -187,7 +188,7 @@ export function TaskCanvas() {
     }
   };
 
-  const handleCreateGoal = async (e: React.FormEvent) => {
+  const handleCreateGoalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!goalForm.title.trim() || !orgId) return;
     setIsSubmitting(true);
@@ -211,7 +212,7 @@ export function TaskCanvas() {
     }
   };
 
-  const handleCreateTask = async (e: React.FormEvent) => {
+  const handleCreateTaskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskForm.title.trim() || !orgId) return;
     setIsSubmitting(true);
@@ -236,7 +237,6 @@ export function TaskCanvas() {
     }
   };
 
-  // Task Modifications
   const handleToggleTaskStatus = async (e: React.MouseEvent, task: Task) => {
     e.stopPropagation();
     if (!orgId) return;
@@ -245,7 +245,7 @@ export function TaskCanvas() {
     try {
       await moveTask(task.id, orgId, newStatus, task.orderIndex || 1000, oldStatus, actor);
     } catch (err) {
-      console.error('Failed to toggle status:', err);
+      console.error('Failed to toggle task status:', err);
     }
   };
 
@@ -254,7 +254,7 @@ export function TaskCanvas() {
     try {
       await moveTask(task.id, orgId, newStatus, task.orderIndex || 1000, task.status, actor);
     } catch (err) {
-      console.error('Failed to move task status:', err);
+      console.error('Failed to update task status:', err);
     }
   };
 
@@ -291,10 +291,14 @@ export function TaskCanvas() {
     }
   };
 
-  // Task Segmentation (For activeTab === 'execution')
+  // Segmenting Tasks & Goals (My Space vs. My Team)
   const myTasks = React.useMemo(() => {
     return filteredTasks.filter(t => t.assigneeIds.includes(actor.uid));
   }, [filteredTasks, actor.uid]);
+
+  const myGoals = React.useMemo(() => {
+    return filteredGoals.filter(g => g.ownerId === actor.uid);
+  }, [filteredGoals, actor.uid]);
 
   const assignedTasks = React.useMemo(() => {
     return filteredTasks.filter(t => t.creatorId === actor.uid && !t.assigneeIds.includes(actor.uid));
@@ -308,223 +312,531 @@ export function TaskCanvas() {
     return filteredTasks.filter(t => !t.projectId && !t.goalId);
   }, [filteredTasks]);
 
-  // Analytics aggregation
-  const analytics = React.useMemo(() => {
-    const total = tasks.filter(t => !t.parentTaskId).length;
-    const completed = tasks.filter(t => !t.parentTaskId && t.status === 'done').length;
-    const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return {
-      total,
-      completed,
-      rate,
-      activeGoals: goals.filter(g => g.status === 'active').length,
-      activeProjects: projects.filter(p => p.status === 'active').length,
-      myActiveTasksCount: tasks.filter(t => t.assigneeIds.includes(actor.uid) && t.status !== 'done').length,
-      pendingReviewsCount: tasks.filter(t => t.creatorId === actor.uid && t.status === 'review').length
-    };
-  }, [tasks, goals, projects, actor.uid]);
+  const briefTasksList = React.useMemo(() => {
+    return tasks.filter(t => !t.parentTaskId && t.status !== 'done').slice(0, 5);
+  }, [tasks]);
+
+  const briefGoalsList = React.useMemo(() => {
+    return goals.filter(g => g.status === 'active').slice(0, 3);
+  }, [goals]);
 
   const isLoading = tasksLoading || goalsLoading || projectsLoading;
 
+  if (!orgId) {
+    return (
+      <div className="flex h-full items-center justify-center text-muted-foreground text-xs font-semibold">
+        No organization context found. Please log in and check your workspace parameters.
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-grow flex flex-col min-h-0 overflow-hidden w-full h-full bg-transparent">
-      <div className="flex flex-grow flex-col overflow-hidden px-4 py-4 md:px-8 md:py-6">
-        
-        {/* ─── Premium Glassmorphic Top Controls Banner ─── */}
-        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-border-default/80 bg-surface/50 dark:bg-surface/30 p-3.5 backdrop-blur-xl md:flex-row md:items-center md:justify-between shadow-xl">
-          <div className="flex items-center gap-3">
-            <div className="hidden rounded-xl p-2.5 text-accent border border-border-default/40 bg-accent/[0.08]" style={{ color: 'var(--accent)' }}>
-              <Target className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-foreground">
-                Workspace
-              </h1>
-              <p className="text-[10px] font-semibold text-muted-foreground">
-                Team coordination, personal goals, and operational execution
-              </p>
+    <div className="flex flex-col h-full w-full bg-transparent overflow-hidden">
+      
+      {/* ─── Top Workspace Brief Banner (Active Summary Section) ─── */}
+      <div className="mb-4 shrink-0 rounded-2xl border border-border-default/80 bg-surface/50 dark:bg-surface/30 p-4 backdrop-blur-xl shadow-md">
+        <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Workspace Brief</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Active Goals brief */}
+          <div className="space-y-2">
+            <h3 className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+              <Trophy className="w-3 h-3" /> Active Goals Briefing
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {briefGoalsList.length > 0 ? (
+                briefGoalsList.map(g => (
+                  <div key={g.id} className="p-2 rounded-xl bg-bg-secondary/40 border border-border-default text-[10px] space-y-1">
+                    <span className="font-semibold text-foreground truncate block">{g.title}</span>
+                    <span className="text-[8px] text-muted-foreground block">Rollup: {g.progressRollup ?? 0}%</span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-[10px] text-muted-foreground italic col-span-3">No active goals.</span>
+              )}
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {/* View Switcher Deck */}
-            <div className="flex items-center rounded-xl border border-border-default/60 bg-bg-secondary/40 p-1 shadow-inner relative backdrop-blur-md">
-              {[
-                { id: 'goals', label: 'Goals Hub', icon: Trophy },
-                { id: 'execution', label: 'Execution', icon: CheckSquare },
-                { id: 'projects', label: 'Projects Map', icon: Briefcase }
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const isSelected = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={cn(
-                      "relative rounded-lg px-3.5 py-1.5 text-[11px] font-bold transition-all duration-300 z-10 cursor-pointer flex items-center gap-1.5",
-                      isSelected ? "text-foreground dark:text-white" : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {isSelected && (
-                      <motion.div
-                        layoutId="activeTabPill"
-                        className="absolute inset-0 bg-accent rounded-lg shadow-lg"
-                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                        style={{ zIndex: -1, backgroundColor: 'var(--accent)' }}
-                      />
-                    )}
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Filters toggle */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-inner",
-                showFilters 
-                  ? "border-accent/40 text-accent bg-accent/[0.08]" 
-                  : "border-border-default/60 bg-bg-secondary/40 text-muted-foreground hover:text-foreground"
+          {/* Pending Tasks brief */}
+          <div className="space-y-2">
+            <h3 className="text-[9px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider flex items-center gap-1">
+              <CheckSquare className="w-3 h-3" /> Urgent Execution Briefing
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {briefTasksList.length > 0 ? (
+                briefTasksList.map(t => (
+                  <div key={t.id} className="px-2.5 py-1 rounded-xl bg-bg-secondary/40 border border-border-default text-[9px] font-semibold text-foreground flex items-center gap-1.5">
+                    <Circle className="w-1.5 h-1.5 fill-current text-sky-400" />
+                    <span>{t.title}</span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-[10px] text-muted-foreground italic">No pending tasks.</span>
               )}
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              <span>Filters</span>
-            </button>
-
-            {/* Create Trigger */}
-            <button
-              onClick={() => setShowCreateDrawer(!showCreateDrawer)}
-              className="flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[11px] font-bold text-white hover:scale-105 active:scale-95 transition-all shadow-lg cursor-pointer"
-              style={{
-                background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.12) c h) 100%)`,
-              }}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Create Item</span>
-            </button>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* ─── Expandable Filters Bar ─── */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, y: -10 }}
-              animate={{ opacity: 1, height: 'auto', y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -10 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="overflow-hidden mb-4"
+      {/* ─── Main Content Split Screen (Left Sidebar + Vertical Canvas) ─── */}
+      <div className="flex-1 flex gap-5 overflow-hidden min-h-0 relative">
+        
+        {/* ─── 1. Left Workspace Sidebar ─── */}
+        <div className="w-60 shrink-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl p-4 flex flex-col justify-between shadow-lg backdrop-blur-xl">
+          
+          {/* Navigation Controls */}
+          <div className="space-y-4">
+            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground block select-none">
+              Space Controls
+            </span>
+
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={() => setActiveSection('my-space')}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border",
+                  activeSection === 'my-space'
+                    ? "bg-accent/[0.08] border-accent/25 text-foreground dark:text-white"
+                    : "bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/30"
+                )}
+              >
+                <Trophy className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>My Space</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveSection('my-team')}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border",
+                  activeSection === 'my-team'
+                    ? "bg-accent/[0.08] border-accent/25 text-foreground dark:text-white"
+                    : "bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/30"
+                )}
+              >
+                <Users className="w-4 h-4 text-indigo-500 shrink-0" />
+                <span>My Team</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Action CTAs (Drawer triggers) */}
+          <div className="space-y-2 pt-4 border-t border-border-default/45">
+            <button
+              onClick={() => {
+                setGoalForm({ title: '', description: '', projectId: '', ownerId: actor.uid, horizon: 'short_term', targetDate: '' });
+                setCreateType('goal');
+                setShowCreateDrawer(true);
+              }}
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] hover:bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-450 py-2.5 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm"
             >
-              <div className="grid grid-cols-1 gap-3 rounded-2xl border border-border-default/80 bg-surface/50 p-4 backdrop-blur-2xl sm:grid-cols-2 md:grid-cols-4 shadow-inner">
-                
-                {/* Search */}
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                    <Search className="h-3.5 w-3.5" />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search titles..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-xl border border-border-default/60 bg-bg-secondary/40 py-2 pl-9 pr-3 text-[11px] text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 transition-all font-semibold"
-                  />
-                  {searchQuery && (
-                    <button 
-                      onClick={() => setSearchQuery('')}
-                      className="absolute inset-y-0 right-2.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
+              <Plus className="w-3.5 h-3.5" />
+              <span>Assign Goal</span>
+            </button>
 
-                {/* Project Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-border-default/60 bg-bg-secondary/40 px-3 py-1 hover:border-border-default transition-all">
-                  <Folder className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                  <select
-                    value={selectedProjectId}
-                    onChange={(e) => setSelectedProjectId(e.target.value)}
-                    className="w-full bg-transparent text-[11px] font-bold text-foreground outline-none border-none py-1.5 cursor-pointer"
-                  >
-                    <option value="all" className="bg-surface text-foreground font-bold font-heading">All Projects</option>
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.id} className="bg-surface text-foreground font-bold font-heading">{p.name}</option>
-                    ))}
-                  </select>
-                </div>
+            <button
+              onClick={() => {
+                setTaskForm({ title: '', description: '', priority: 'none', projectId: '', goalId: '', assigneeId: actor.uid, dueDate: '' });
+                setCreateType('task');
+                setShowCreateDrawer(true);
+              }}
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-sky-500/20 bg-sky-500/[0.05] hover:bg-sky-500/[0.08] text-sky-600 dark:text-sky-450 py-2.5 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Assign Task</span>
+            </button>
 
-                {/* Assignee Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-border-default/60 bg-bg-secondary/40 px-3 py-1 hover:border-border-default transition-all">
-                  <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                  <select
-                    value={selectedAssigneeId}
-                    onChange={(e) => setSelectedAssigneeId(e.target.value)}
-                    className="w-full bg-transparent text-[11px] font-bold text-foreground outline-none border-none py-1.5 cursor-pointer"
-                  >
-                    <option value="all" className="bg-surface text-foreground font-bold font-heading">All Members</option>
-                    {members.map((m) => (
-                      <option key={m.uid} value={m.uid} className="bg-surface text-foreground font-bold font-heading">{m.fullName || m.username}</option>
-                    ))}
-                  </select>
-                </div>
+            <button
+              onClick={() => {
+                setProjectForm({ name: '', description: '', startDate: '', dueDate: '' });
+                setCreateType('project');
+                setShowCreateDrawer(true);
+              }}
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.05] hover:bg-indigo-500/[0.08] text-indigo-600 dark:text-indigo-405 py-2.5 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Project</span>
+            </button>
+          </div>
 
-                {/* Priority Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-border-default/60 bg-bg-secondary/40 px-3 py-1 hover:border-border-default transition-all">
-                  <AlertCircle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                  <select
-                    value={selectedPriority}
-                    onChange={(e) => setSelectedPriority(e.target.value)}
-                    className="w-full bg-transparent text-[11px] font-bold text-foreground outline-none border-none py-1.5 cursor-pointer"
-                  >
-                    <option value="all" className="bg-surface text-foreground font-bold font-heading">All Priorities</option>
-                    {Object.entries(PRIORITY_CONFIG).map(([key, value]) => (
-                      <option key={key} value={key} className="bg-surface text-foreground font-bold font-heading">{value.label}</option>
-                    ))}
-                  </select>
-                </div>
+        </div>
 
+        {/* ─── 2. Expanded Vertical Viewport Main Canvas ─── */}
+        <div className="flex-1 min-h-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-10">
+          
+          {isLoading ? (
+            <div className="flex h-full w-full items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 h-8 animate-spin text-accent" />
+                <p className="text-[11px] text-muted-foreground font-semibold tracking-wide animate-pulse">Loading active view...</p>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          ) : (
+            <div className="h-full w-full overflow-y-auto aether-scroll p-6 space-y-6">
+              
+              {/* ━━━━━━ Section A: My Space ━━━━━━ */}
+              {activeSection === 'my-space' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+                  
+                  {/* Column 1: My Operational Goals */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">My Operational Goals</h3>
+                    <div className="space-y-4">
+                      {myGoals.length > 0 ? (
+                        myGoals.map(goal => {
+                          const goalTasks = tasks.filter(t => t.goalId === goal.id);
+                          const doneTasks = goalTasks.filter(t => t.status === 'done').length;
+                          const progress = goal.progressRollup ?? 0;
+                          const linkedProj = projects.find(p => p.id === goal.projectId);
 
-        {/* ─── Expandable Creation Drawer ─── */}
-        <AnimatePresence>
-          {showCreateDrawer && (
+                          return (
+                            <div
+                              key={goal.id}
+                              className="bg-surface/50 border border-border-default rounded-2xl p-4.5 space-y-4 hover:border-emerald-500/30 hover:bg-surface transition-all shadow-sm"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-emerald-600 dark:text-emerald-450 bg-emerald-500/[0.04]">
+                                      {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
+                                    </span>
+                                    {linkedProj && (
+                                      <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-accent bg-accent/[0.04]" style={{ color: 'var(--accent)' }}>
+                                        {linkedProj.name}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <h4 className="text-xs font-bold text-foreground mt-2.5">{goal.title}</h4>
+                                  {goal.description && <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>}
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {goal.targetDate && (
+                                    <span className="text-[8px] text-muted-foreground font-mono bg-bg-secondary border border-border-default rounded px-2 py-0.5">
+                                      {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                  <button
+                                    onClick={(e) => handleDeleteGoalItem(e, goal.id)}
+                                    className="text-muted-foreground hover:text-red-400 p-1 transition-colors"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Progress rollup */}
+                              <div className="space-y-1">
+                                <div className="flex justify-between text-[9px] text-muted-foreground font-semibold">
+                                  <span>Goal Rollup Progress</span>
+                                  <span>{progress}% ({doneTasks}/{goalTasks.length} tasks)</span>
+                                </div>
+                                <div className="w-full bg-bg-secondary rounded-full h-1.5 overflow-hidden">
+                                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+                                </div>
+                              </div>
+
+                              {/* Nested Tasks checklist */}
+                              <div className="space-y-1.5 pt-3.5 border-t border-border-default/45">
+                                {goalTasks.map(task => (
+                                  <div
+                                    key={task.id}
+                                    onClick={() => setSearchParams({ task: task.id })}
+                                    className="flex items-center justify-between p-2 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <div
+                                        onClick={(e) => handleToggleTaskStatus(e, task)}
+                                        className={cn(
+                                          "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                                          task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-450" : "border-border-default bg-bg-primary/50"
+                                        )}
+                                      >
+                                        {task.status === 'done' && <Check className="w-2.5 h-2.5" />}
+                                      </div>
+                                      <span className={cn("text-[11px] truncate font-semibold", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
+                                        {task.title}
+                                      </span>
+                                    </div>
+                                    <button
+                                      onClick={(e) => handleDeleteTaskItem(e, task.id)}
+                                      className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  onClick={() => triggerAddTask(goal.id, goal.projectId)}
+                                  className="text-[9px] text-muted-foreground hover:text-foreground font-bold flex items-center gap-1 pt-1.5"
+                                >
+                                  <Plus className="w-3 h-3" /> Add Task
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="py-8 rounded-2xl border border-dashed border-border-default bg-bg-secondary/20 flex flex-col items-center justify-center text-center">
+                          <p className="text-[10px] text-muted-foreground italic">No goals assigned to you.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Column 2: My Execution Tasks */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-sky-650 dark:text-sky-400">My Action Items</h3>
+                    <div className="space-y-2">
+                      {myTasks.length > 0 ? (
+                        myTasks.map(task => (
+                          <div
+                            key={task.id}
+                            onClick={() => setSearchParams({ task: task.id })}
+                            className="flex items-center justify-between p-3 rounded-xl bg-surface/50 hover:bg-surface border border-border-default transition-all cursor-pointer group shadow-sm"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div
+                                onClick={(e) => handleToggleTaskStatus(e, task)}
+                                className={cn(
+                                  "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                                  task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-border-default bg-bg-primary/50"
+                                )}
+                              >
+                                {task.status === 'done' && <Check className="w-2.5 h-2.5" />}
+                              </div>
+                              <div className="min-w-0">
+                                <span className={cn("text-[11px] truncate font-semibold block", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
+                                  {task.title}
+                                </span>
+                                {task.priority !== 'none' && (
+                                  <span className="text-[7px] uppercase font-bold tracking-wider font-mono text-muted-foreground mt-0.5 block">
+                                    Priority: {task.priority}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {task.dueDate && (
+                                <span className="text-[8px] font-mono text-muted-foreground bg-bg-secondary rounded px-1.5 py-0.5 border border-border-default">
+                                  {new Date((task.dueDate as any).seconds * 1000).toLocaleDateString()}
+                                </span>
+                              )}
+                              <button
+                                onClick={(e) => handleDeleteTaskItem(e, task.id)}
+                                className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground italic text-center py-6">No tasks assigned to you.</p>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* ━━━━━━ Section B: My Team ━━━━━━ */}
+              {activeSection === 'my-team' && (
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                  
+                  {/* Sub-section 1: Approvals & Reviews */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Pending Reviews</h3>
+                    <div className="space-y-2">
+                      {reviewTasks.length > 0 ? (
+                        reviewTasks.map(task => (
+                          <div
+                            key={task.id}
+                            onClick={() => setSearchParams({ task: task.id })}
+                            className="flex flex-col gap-3 p-3.5 rounded-2xl bg-amber-500/[0.03] border border-amber-500/20 hover:bg-amber-500/[0.05] transition-all cursor-pointer shadow-sm"
+                          >
+                            <div className="min-w-0">
+                              <span className="text-[11px] truncate font-bold text-foreground block">
+                                {task.title}
+                              </span>
+                              <p className="text-[8px] text-muted-foreground mt-0.5 font-semibold">
+                                Submitted by: {task.assigneeIds.map(uid => memberMap.get(uid)?.fullName || 'Member').join(', ')}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  await handleUpdateTaskStatus(task, 'done');
+                                }}
+                                className="flex-1 py-1 bg-foreground hover:bg-foreground/90 text-background font-bold rounded-lg text-[9px] transition-all cursor-pointer"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  await handleUpdateTaskStatus(task, 'todo');
+                                }}
+                                className="flex-1 py-1 border border-border-default hover:bg-bg-secondary text-foreground font-bold rounded-lg text-[9px] transition-all cursor-pointer"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground italic text-center py-6">No reviews pending.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sub-section 2: Tasks I Assigned */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-purple-650 dark:text-purple-400">Delegated Tasks</h3>
+                    <div className="space-y-2">
+                      {assignedTasks.length > 0 ? (
+                        assignedTasks.map(task => (
+                          <div
+                            key={task.id}
+                            onClick={() => setSearchParams({ task: task.id })}
+                            className="flex items-center justify-between p-3 rounded-xl bg-surface/50 hover:bg-surface border border-border-default transition-all cursor-pointer group shadow-sm"
+                          >
+                            <div className="min-w-0">
+                              <span className="text-[11px] truncate font-semibold block text-foreground">
+                                {task.title}
+                              </span>
+                              <span className="text-[7px] uppercase font-bold tracking-wider font-mono text-purple-600 dark:text-purple-450 mt-0.5 block">
+                                Delegate: {task.assigneeIds.map(uid => memberMap.get(uid)?.fullName || 'Member').join(', ')}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                              <span className="px-1.5 py-0.5 bg-bg-secondary border border-border-default rounded text-[8px] font-bold text-text-secondary capitalize">
+                                {task.status.replace('_', ' ')}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground italic text-center py-6">No assigned tasks.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sub-section 3: Projects & Initiatives */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-650 dark:text-indigo-400">Team Initiatives</h3>
+                    <div className="space-y-4">
+                      {projects.map(project => {
+                        const projectTasks = filteredTasks.filter(t => t.projectId === project.id);
+                        const done = projectTasks.filter(t => t.status === 'done').length;
+                        const progress = projectTasks.length > 0 ? Math.round((done / projectTasks.length) * 100) : 0;
+
+                        return (
+                          <div
+                            key={project.id}
+                            className="bg-surface/50 border border-border-default rounded-2xl p-4 space-y-4 hover:border-indigo-500/20 transition-all shadow-sm"
+                          >
+                            <div className="flex items-center justify-between gap-3 pb-2 border-b border-border-default/45">
+                              <h4 className="text-xs font-bold text-foreground truncate flex items-center gap-1.5">
+                                <Folder className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                                {project.name}
+                              </h4>
+                              <button
+                                onClick={(e) => handleDeleteProjectItem(e, project.id)}
+                                className="text-muted-foreground hover:text-red-400"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            <div className="flex justify-between items-center text-[9px] text-muted-foreground font-semibold">
+                              <span>Tasks: {done}/{projectTasks.length}</span>
+                              <span>{progress}%</span>
+                            </div>
+
+                            <div className="flex justify-between pt-1 border-t border-border-default/45">
+                              <button
+                                onClick={() => triggerAddGoal(project.id)}
+                                className="text-[9px] text-emerald-600 dark:text-emerald-450 hover:underline font-bold flex items-center gap-0.5"
+                              >
+                                <Plus className="w-2.5 h-2.5" /> Goal
+                              </button>
+                              <button
+                                onClick={() => triggerAddTask('', project.id)}
+                                className="text-[9px] text-sky-600 dark:text-sky-450 hover:underline font-bold flex items-center gap-0.5"
+                              >
+                                <Plus className="w-2.5 h-2.5" /> Task
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+          )}
+
+        </div>
+
+      </div>
+
+      {/* ─── 3. Scrollable Right-Side Slide-Over Creation Drawer ─── */}
+      <AnimatePresence>
+        {showCreateDrawer && (
+          <>
+            {/* Backdrop overlay */}
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden mb-4 border border-border-default/80 bg-surface/50 rounded-2xl backdrop-blur-xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCreateDrawer(false)}
+              className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-40"
+            />
+
+            {/* Scrollable Drawer Container */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border-l border-border-default shadow-2xl flex flex-col h-full overflow-hidden"
             >
-              <div className="p-5 space-y-5">
-                <div className="flex items-center gap-2 pb-3 border-b border-border-default/40">
-                  {(['goal', 'project', 'task'] as const).map((type) => (
+              {/* Header */}
+              <div className="p-6 border-b border-border-default/45 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  {(['goal', 'task', 'project'] as const).map((type) => (
                     <button
                       key={type}
                       type="button"
                       onClick={() => setCreateType(type)}
                       className={cn(
-                        "px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer capitalize border",
+                        "px-4 py-1.5 rounded-lg text-xs font-black tracking-wide cursor-pointer capitalize border transition-all",
                         createType === type
-                          ? "bg-accent/[0.08] border-accent/30 text-foreground dark:text-white"
+                          ? "bg-accent/[0.08] border-accent/40 text-foreground dark:text-white"
                           : "bg-transparent border-transparent text-muted-foreground hover:text-foreground"
                       )}
-                      style={createType === type ? { color: 'oklch(from var(--accent) calc(l + 0.12) c h)', borderColor: 'var(--border-default)' } : undefined}
                     >
                       {type}
                     </button>
                   ))}
                 </div>
+                <button
+                  onClick={() => setShowCreateDrawer(false)}
+                  className="w-8 h-8 rounded-full border border-border-default flex items-center justify-center hover:bg-bg-secondary text-muted-foreground hover:text-foreground transition-all active:scale-90"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
+              {/* Infinite Scrollable Form */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 aether-scroll">
+                
                 {createType === 'project' && (
-                  <form onSubmit={handleCreateProject} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
-                    <div className="space-y-3">
+                  <form onSubmit={handleCreateProjectSubmit} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Initiative Name</label>
                       <input
                         type="text"
                         placeholder="Project Name..."
@@ -533,59 +845,52 @@ export function TaskCanvas() {
                         required
                         className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold"
                       />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Scope Description</label>
                       <textarea
-                        placeholder="Project Description..."
+                        placeholder="Initiative parameters and deliverables..."
                         value={projectForm.description}
                         onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                        rows={3}
+                        rows={4}
                         className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold resize-none"
                       />
                     </div>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Start Date</label>
-                          <input
-                            type="date"
-                            value={projectForm.startDate}
-                            onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                            className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Due Date</label>
-                          <input
-                            type="date"
-                            value={projectForm.dueDate}
-                            onChange={(e) => setProjectForm({ ...projectForm, dueDate: e.target.value })}
-                            className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          />
-                        </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Start Date</label>
+                        <input
+                          type="date"
+                          value={projectForm.startDate}
+                          onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
+                          className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                        />
                       </div>
-                      <div className="flex gap-2 justify-end pt-3">
-                        <button
-                          type="button"
-                          onClick={() => setShowCreateDrawer(false)}
-                          className="border border-border-default hover:bg-bg-secondary text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={isSubmitting || !projectForm.name.trim()}
-                          className="px-5 py-2 rounded-xl text-xs font-bold text-white transition-all disabled:opacity-40 cursor-pointer"
-                          style={{ background: 'var(--accent)' }}
-                        >
-                          {isSubmitting ? 'Creating...' : 'Create Project'}
-                        </button>
+                      <div>
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Due Date</label>
+                        <input
+                          type="date"
+                          value={projectForm.dueDate}
+                          onChange={(e) => setProjectForm({ ...projectForm, dueDate: e.target.value })}
+                          className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                        />
                       </div>
                     </div>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !projectForm.name.trim()}
+                      className="w-full py-3 bg-accent text-white font-bold rounded-xl text-xs active:scale-98 transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer shadow-lg mt-6"
+                      style={{ background: 'var(--accent)' }}
+                    >
+                      {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Initiative Project'}
+                    </button>
                   </form>
                 )}
 
                 {createType === 'goal' && (
-                  <form onSubmit={handleCreateGoal} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
-                    <div className="space-y-3">
+                  <form onSubmit={handleCreateGoalSubmit} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Goal Focus</label>
                       <input
                         type="text"
                         placeholder="Goal Title..."
@@ -594,89 +899,82 @@ export function TaskCanvas() {
                         required
                         className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold"
                       />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Job Outcome Definition</label>
                       <textarea
-                        placeholder="Outcome / Job responsibility description..."
+                        placeholder="What responsibility is mapped to this goal?"
                         value={goalForm.description}
                         onChange={(e) => setGoalForm({ ...goalForm, description: e.target.value })}
-                        rows={3}
+                        rows={4}
                         className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold resize-none"
                       />
                     </div>
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Link to Project</label>
-                          <select
-                            value={goalForm.projectId}
-                            onChange={(e) => setGoalForm({ ...goalForm, projectId: e.target.value })}
-                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          >
-                            <option value="" className="bg-surface text-foreground">Standalone Goal</option>
-                            {projects.map(p => (
-                              <option key={p.id} value={p.id} className="bg-surface text-foreground">{p.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Assignee</label>
-                          <select
-                            value={goalForm.ownerId}
-                            onChange={(e) => setGoalForm({ ...goalForm, ownerId: e.target.value })}
-                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          >
-                            <option value="" className="bg-surface text-foreground">Select Employee...</option>
-                            {members.map(m => (
-                              <option key={m.uid} value={m.uid} className="bg-surface text-foreground">{m.fullName || m.username}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Horizon</label>
-                          <select
-                            value={goalForm.horizon}
-                            onChange={(e) => setGoalForm({ ...goalForm, horizon: e.target.value as any })}
-                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          >
-                            <option value="short_term" className="bg-surface text-foreground">Short Term</option>
-                            <option value="long_term" className="bg-surface text-foreground">Long Term</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Target Date</label>
-                          <input
-                            type="date"
-                            value={goalForm.targetDate}
-                            onChange={(e) => setGoalForm({ ...goalForm, targetDate: e.target.value })}
-                            className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-2 justify-end pt-3">
-                        <button
-                          type="button"
-                          onClick={() => setShowCreateDrawer(false)}
-                          className="border border-border-default hover:bg-bg-secondary text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Project Initiative</label>
+                        <select
+                          value={goalForm.projectId}
+                          onChange={(e) => setGoalForm({ ...goalForm, projectId: e.target.value })}
+                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                         >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={isSubmitting || !goalForm.title.trim()}
-                          className="px-5 py-2 rounded-xl text-xs font-bold text-white transition-all disabled:opacity-40 cursor-pointer"
-                          style={{ background: 'var(--accent)' }}
+                          <option value="" className="bg-surface text-foreground font-semibold">Standalone Goal</option>
+                          {projects.map(p => (
+                            <option key={p.id} value={p.id} className="bg-surface text-foreground font-semibold">{p.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Assignee Employee</label>
+                        <select
+                          value={goalForm.ownerId}
+                          onChange={(e) => setGoalForm({ ...goalForm, ownerId: e.target.value })}
+                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                         >
-                          {isSubmitting ? 'Creating...' : 'Create Goal'}
-                        </button>
+                          <option value="" className="bg-surface text-foreground font-semibold">Select Employee...</option>
+                          {members.map(m => (
+                            <option key={m.uid} value={m.uid} className="bg-surface text-foreground font-semibold">{m.fullName || m.username}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Chronology Horizon</label>
+                        <select
+                          value={goalForm.horizon}
+                          onChange={(e) => setGoalForm({ ...goalForm, horizon: e.target.value as any })}
+                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                        >
+                          <option value="short_term" className="bg-surface text-foreground font-semibold">Short Term</option>
+                          <option value="long_term" className="bg-surface text-foreground font-semibold">Long Term</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Target Date</label>
+                        <input
+                          type="date"
+                          value={goalForm.targetDate}
+                          onChange={(e) => setGoalForm({ ...goalForm, targetDate: e.target.value })}
+                          className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !goalForm.title.trim()}
+                      className="w-full py-3 bg-accent text-white font-bold rounded-xl text-xs active:scale-98 transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer shadow-lg mt-6"
+                      style={{ background: 'var(--accent)' }}
+                    >
+                      {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Assign Goal focus'}
+                    </button>
                   </form>
                 )}
 
                 {createType === 'task' && (
-                  <form onSubmit={handleCreateTask} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
-                    <div className="space-y-3">
+                  <form onSubmit={handleCreateTaskSubmit} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Task Action</label>
                       <input
                         type="text"
                         placeholder="Task Title..."
@@ -685,734 +983,101 @@ export function TaskCanvas() {
                         required
                         className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold"
                       />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Execution Steps</label>
                       <textarea
-                        placeholder="Task details and execution steps..."
+                        placeholder="Parameters to fulfill..."
                         value={taskForm.description}
                         onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-                        rows={3}
+                        rows={4}
                         className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold resize-none"
                       />
                     </div>
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Link to Project</label>
-                          <select
-                            value={taskForm.projectId}
-                            onChange={(e) => setTaskForm({ ...taskForm, projectId: e.target.value })}
-                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          >
-                            <option value="" className="bg-surface text-foreground">No Project</option>
-                            {projects.map(p => (
-                              <option key={p.id} value={p.id} className="bg-surface text-foreground">{p.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Link to Goal</label>
-                          <select
-                            value={taskForm.goalId}
-                            onChange={(e) => setTaskForm({ ...taskForm, goalId: e.target.value })}
-                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          >
-                            <option value="" className="bg-surface text-foreground">No Goal</option>
-                            {goals.map(g => (
-                              <option key={g.id} value={g.id} className="bg-surface text-foreground">{g.title}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="col-span-2">
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Assignee</label>
-                          <select
-                            value={taskForm.assigneeId}
-                            onChange={(e) => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
-                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          >
-                            <option value="" className="bg-surface text-foreground">Select Member...</option>
-                            {members.map(m => (
-                              <option key={m.uid} value={m.uid} className="bg-surface text-foreground">{m.fullName || m.username}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Priority</label>
-                          <select
-                            value={taskForm.priority}
-                            onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value as any })}
-                            className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          >
-                            <option value="none" className="bg-surface text-foreground">None</option>
-                            <option value="low" className="bg-surface text-foreground">Low</option>
-                            <option value="medium" className="bg-surface text-foreground">Medium</option>
-                            <option value="high" className="bg-surface text-foreground">High</option>
-                            <option value="urgent" className="bg-surface text-foreground">Urgent</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[9px] text-muted-foreground block uppercase tracking-widest mb-1.5 font-bold">Due Date</label>
-                          <input
-                            type="date"
-                            value={taskForm.dueDate}
-                            onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
-                            className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-2 justify-end pt-3">
-                        <button
-                          type="button"
-                          onClick={() => setShowCreateDrawer(false)}
-                          className="border border-border-default hover:bg-bg-secondary text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Link to Project</label>
+                        <select
+                          value={taskForm.projectId}
+                          onChange={(e) => setTaskForm({ ...taskForm, projectId: e.target.value })}
+                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                         >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={isSubmitting || !taskForm.title.trim()}
-                          className="px-5 py-2 rounded-xl text-xs font-bold text-white transition-all disabled:opacity-40 cursor-pointer"
-                          style={{ background: 'var(--accent)' }}
+                          <option value="" className="bg-surface text-foreground font-semibold">No Project</option>
+                          {projects.map(p => (
+                            <option key={p.id} value={p.id} className="bg-surface text-foreground font-semibold">{p.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Link to Goal</label>
+                        <select
+                          value={taskForm.goalId}
+                          onChange={(e) => setTaskForm({ ...taskForm, goalId: e.target.value })}
+                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
                         >
-                          {isSubmitting ? 'Creating...' : 'Create Task'}
-                        </button>
+                          <option value="" className="bg-surface text-foreground font-semibold">No Goal</option>
+                          {goals.map(g => (
+                            <option key={g.id} value={g.id} className="bg-surface text-foreground font-semibold">{g.title}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-2">
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Assignee</label>
+                        <select
+                          value={taskForm.assigneeId}
+                          onChange={(e) => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
+                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                        >
+                          <option value="" className="bg-surface text-foreground font-semibold">Select Member...</option>
+                          {members.map(m => (
+                            <option key={m.uid} value={m.uid} className="bg-surface text-foreground font-semibold">{m.fullName || m.username}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Priority</label>
+                        <select
+                          value={taskForm.priority}
+                          onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value as any })}
+                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                        >
+                          <option value="none" className="bg-surface text-foreground font-semibold">None</option>
+                          <option value="low" className="bg-surface text-foreground font-semibold">Low</option>
+                          <option value="medium" className="bg-surface text-foreground font-semibold">Medium</option>
+                          <option value="high" className="bg-surface text-foreground font-semibold">High</option>
+                          <option value="urgent" className="bg-surface text-foreground font-semibold">Urgent</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Due Date</label>
+                        <input
+                          type="date"
+                          value={taskForm.dueDate}
+                          onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
+                          className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !taskForm.title.trim()}
+                      className="w-full py-3 bg-accent text-white font-bold rounded-xl text-xs active:scale-98 transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer shadow-lg mt-6"
+                      style={{ background: 'var(--accent)' }}
+                    >
+                      {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Assign Task'}
+                    </button>
                   </form>
                 )}
 
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ─── Split Screen Workspace Panel ─── */}
-        <div className="flex-grow flex gap-5 overflow-hidden min-h-0 relative">
-          
-          {/* Main Content Workspace Container */}
-          <div className="flex-1 min-h-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-10">
-            {isLoading ? (
-              <div className="flex h-full w-full items-center justify-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="h-10 w-10 animate-spin rounded-full border-4" style={{ borderColor: 'oklch(from var(--accent) l c h / 10%)', borderTopColor: 'var(--accent)' }} />
-                  <p className="text-[11px] text-muted-foreground font-semibold tracking-wide animate-pulse">Syncing workspace coordinates...</p>
-                </div>
-              </div>
-            ) : (
-              <div className="h-full w-full overflow-hidden flex flex-col">
-                
-                {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ VIEW 1: GOALS MATRIX (Job & Role focus) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-                {activeTab === 'goals' && (
-                  <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-6">
-                    
-                    {/* Visual context */}
-                    <div className="bg-emerald-500/[0.04] border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <Trophy className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                        <div>
-                          <h4 className="text-xs font-bold text-foreground">Primary Employee Goals</h4>
-                          <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">Goals represent an employee's primary operational focus. Tasks are what is needed to complete a goal.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Personal Focus Section */}
-                    <div className="space-y-4">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">My Primary Focus</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filteredGoals.filter(g => g.ownerId === actor.uid).length > 0 ? (
-                          filteredGoals.filter(g => g.ownerId === actor.uid).map(goal => {
-                            const goalTasks = tasks.filter(t => t.goalId === goal.id);
-                            const doneTasks = goalTasks.filter(t => t.status === 'done').length;
-                            const progress = goal.progressRollup ?? 0;
-                            const linkedProj = projects.find(p => p.id === goal.projectId);
-
-                            return (
-                              <div
-                                key={goal.id}
-                                className="bg-surface/50 border border-border-default/80 rounded-2xl p-4.5 space-y-4 hover:border-emerald-500/30 hover:bg-surface transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] hover:-translate-y-0.5"
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-emerald-600 dark:text-emerald-400 bg-emerald-500/[0.04]">
-                                        {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
-                                      </span>
-                                      {linkedProj && (
-                                        <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-accent bg-accent/[0.04]" style={{ color: 'var(--accent)' }}>
-                                          {linkedProj.name}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <h4 className="text-xs font-bold text-foreground mt-2.5">{goal.title}</h4>
-                                    {goal.description && <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{goal.description}</p>}
-                                  </div>
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    {goal.targetDate && (
-                                      <span className="text-[8px] text-muted-foreground font-mono bg-bg-secondary border border-border-default rounded px-2 py-0.5">
-                                        {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}
-                                      </span>
-                                    )}
-                                    <button
-                                      onClick={(e) => handleDeleteGoalItem(e, goal.id)}
-                                      className="text-muted-foreground hover:text-red-400 transition-colors"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                </div>
-
-                                {/* Circular/Linear Rollup Progress */}
-                                <div className="space-y-1">
-                                  <div className="flex justify-between text-[9px] text-muted-foreground font-semibold">
-                                    <span>Goal Rollup Progress</span>
-                                    <span>{progress}% ({doneTasks}/{goalTasks.length} tasks)</span>
-                                  </div>
-                                  <div className="w-full bg-bg-secondary rounded-full h-1.5 overflow-hidden">
-                                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
-                                  </div>
-                                </div>
-
-                                {/* Checklist Tasks */}
-                                <div className="space-y-1.5 pt-3.5 border-t border-border-default/45">
-                                  {goalTasks.map(task => (
-                                    <div
-                                      key={task.id}
-                                      onClick={() => setSearchParams({ task: task.id })}
-                                      className="flex items-center justify-between p-2 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
-                                    >
-                                      <div className="flex items-center gap-2 min-w-0">
-                                        <div
-                                          onClick={(e) => handleToggleTaskStatus(e, task)}
-                                          className={cn(
-                                            "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                            task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-border-default bg-bg-primary/50"
-                                          )}
-                                        >
-                                          {task.status === 'done' && <Check className="w-2.5 h-2.5" />}
-                                        </div>
-                                        <span className={cn("text-[11px] truncate font-semibold", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
-                                          {task.title}
-                                        </span>
-                                      </div>
-                                      <button
-                                        onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                        className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
-                                  ))}
-                                  <button
-                                    onClick={() => triggerAddTask(goal.id, goal.projectId)}
-                                    className="text-[9px] text-muted-foreground hover:text-foreground font-bold flex items-center gap-1 pt-1.5"
-                                  >
-                                    <Plus className="w-3 h-3" /> Add Task
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="col-span-2 py-8 rounded-2xl border border-dashed border-border-default/80 bg-bg-secondary/20 flex flex-col items-center justify-center text-center">
-                            <p className="text-[11px] text-muted-foreground italic">No goals assigned to you yet.</p>
-                            <button
-                              onClick={() => {
-                                setGoalForm(prev => ({ ...prev, ownerId: actor.uid }));
-                                setCreateType('goal');
-                                setShowCreateDrawer(true);
-                              }}
-                              className="text-[10px] text-emerald-600 dark:text-emerald-450 hover:underline mt-2 font-black uppercase tracking-wider"
-                            >
-                              Add Your First Goal
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Team Focus Section */}
-                    <div className="space-y-4 pt-4">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Team Member Focus</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {members.filter(m => m.uid !== actor.uid).map(member => {
-                          const memberGoals = filteredGoals.filter(g => g.ownerId === member.uid);
-                          if (selectedAssigneeId !== 'all' && member.uid !== selectedAssigneeId) return null;
-
-                          return (
-                            <div key={member.uid} className="bg-surface/40 border border-border-default/80 rounded-2xl p-4.5 space-y-4">
-                              <div className="flex items-center justify-between pb-2.5 border-b border-border-default/45">
-                                <div className="flex items-center gap-2">
-                                  <div className={cn("w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border", getAvatarColor(member.uid))}>
-                                    {getInitials(member.uid)}
-                                  </div>
-                                  <div>
-                                    <h4 className="text-xs font-bold text-foreground">{member.fullName}</h4>
-                                    <p className="text-[9px] text-muted-foreground">{member.designation || 'Team Member'}</p>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    setGoalForm(prev => ({ ...prev, ownerId: member.uid }));
-                                    setCreateType('goal');
-                                    setShowCreateDrawer(true);
-                                  }}
-                                  className="text-[9px] text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 border border-emerald-500/10 hover:border-emerald-500/25 bg-emerald-500/[0.04] hover:bg-emerald-500/[0.08] rounded-lg px-2 py-1 font-bold tracking-wide"
-                                >
-                                  Assign Goal
-                                </button>
-                              </div>
-
-                              <div className="space-y-3">
-                                {memberGoals.length > 0 ? (
-                                  memberGoals.map(goal => {
-                                    const progress = goal.progressRollup ?? 0;
-                                    return (
-                                      <div key={goal.id} className="p-3 bg-bg-primary/20 border border-border-subtle rounded-xl space-y-2 hover:border-border-default transition-colors">
-                                        <div className="flex items-start justify-between gap-3">
-                                          <h5 className="text-[11px] font-bold text-foreground">{goal.title}</h5>
-                                          <button
-                                            onClick={(e) => handleDeleteGoalItem(e, goal.id)}
-                                            className="text-muted-foreground hover:text-red-400 transition-colors"
-                                          >
-                                            <X className="w-3.5 h-3.5" />
-                                          </button>
-                                        </div>
-                                        <div className="space-y-1">
-                                          <div className="flex justify-between text-[8px] text-muted-foreground font-semibold">
-                                            <span>Progress Rollup</span>
-                                            <span>{progress}%</span>
-                                          </div>
-                                          <div className="w-full bg-bg-secondary rounded-full h-1 overflow-hidden">
-                                            <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${progress}%` }} />
-                                          </div>
-                                        </div>
-                                        <div className="flex justify-between items-center pt-2">
-                                          <button
-                                            onClick={() => triggerAddTask(goal.id, goal.projectId)}
-                                            className="text-[8px] text-muted-foreground hover:text-foreground font-bold flex items-center gap-0.5"
-                                          >
-                                            <Plus className="w-2.5 h-2.5" /> Add Task
-                                          </button>
-                                        </div>
-                                      </div>
-                                    );
-                                  })
-                                ) : (
-                                  <p className="text-[10px] text-muted-foreground/60 italic py-2 text-center">No goals assigned.</p>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                  </div>
-                )}
-
-                {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ VIEW 2: SEGMENTED EXECUTION CANVAS (Personal, Assigned, Approvals, Standalone) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-                {activeTab === 'execution' && (
-                  <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-8">
-                    
-                    {/* Visual contexts */}
-                    <div className="bg-accent/[0.04] border border-border-default/80 rounded-2xl p-4 flex items-center justify-between gap-4" style={{ borderColor: 'oklch(from var(--accent) l c h / 20%)' }}>
-                      <div className="flex items-center gap-3">
-                        <CheckSquare className="w-5 h-5 text-accent shrink-0" style={{ color: 'var(--accent)' }} />
-                        <div>
-                          <h4 className="text-xs font-bold text-foreground">Segmented Execution Dashboard</h4>
-                          <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">Differentiate instantly between tasks assigned to you, tasks you assigned to others, reviews pending your sign-off, and standalone items.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Split Segments Grid */}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                      
-                      {/* Segment 1: My Personal Tasks */}
-                      <div className="bg-surface/50 border border-border-default/80 rounded-2xl p-5 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-border-default/45">
-                          <div className="flex items-center gap-2">
-                            <UserCheck className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">My Tasks</h3>
-                          </div>
-                          <span className="px-2 py-0.5 bg-bg-secondary border border-border-default text-[9px] font-bold text-muted-foreground rounded-lg">
-                            {myTasks.filter(t => t.status !== 'done').length} Active
-                          </span>
-                        </div>
-                        <div className="space-y-2 max-h-72 overflow-y-auto aether-scroll pr-1">
-                          {myTasks.length > 0 ? (
-                            myTasks.map(task => (
-                              <div
-                                key={task.id}
-                                onClick={() => setSearchParams({ task: task.id })}
-                                className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
-                              >
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <div
-                                    onClick={(e) => handleToggleTaskStatus(e, task)}
-                                    className={cn(
-                                      "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                      task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-border-default bg-bg-primary/50"
-                                    )}
-                                  >
-                                    {task.status === 'done' && <Check className="w-2.5 h-2.5" />}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <span className={cn("text-[11px] truncate font-semibold block", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
-                                      {task.title}
-                                    </span>
-                                    {task.priority !== 'none' && (
-                                      <span className="text-[7px] uppercase font-bold tracking-wider rounded font-mono text-muted-foreground mt-0.5 block">
-                                        Priority: {task.priority}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  {task.dueDate && (
-                                    <span className="text-[8px] font-mono text-muted-foreground bg-bg-secondary rounded px-1.5 py-0.5 border border-border-default">
-                                      {new Date((task.dueDate as any).seconds * 1000).toLocaleDateString()}
-                                    </span>
-                                  )}
-                                  <button
-                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="text-muted-foreground hover:text-red-550 transition-colors opacity-0 group-hover:opacity-100"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-[10px] text-muted-foreground/60 italic py-6 text-center">No tasks assigned to you.</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Segment 2: Tasks I Assigned */}
-                      <div className="bg-surface/50 border border-border-default/80 rounded-2xl p-5 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-border-default/45">
-                          <div className="flex items-center gap-2">
-                            <Send className="w-4 h-4 text-purple-650 dark:text-purple-400 shrink-0" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Tasks I Assigned</h3>
-                          </div>
-                          <span className="px-2 py-0.5 bg-bg-secondary border border-border-default text-[9px] font-bold text-muted-foreground rounded-lg">
-                            {assignedTasks.filter(t => t.status !== 'done').length} Active
-                          </span>
-                        </div>
-                        <div className="space-y-2 max-h-72 overflow-y-auto aether-scroll pr-1">
-                          {assignedTasks.length > 0 ? (
-                            assignedTasks.map(task => (
-                              <div
-                                key={task.id}
-                                onClick={() => setSearchParams({ task: task.id })}
-                                className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
-                              >
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <div
-                                    onClick={(e) => handleToggleTaskStatus(e, task)}
-                                    className={cn(
-                                      "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                      task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-border-default bg-bg-primary/50"
-                                    )}
-                                  >
-                                    {task.status === 'done' && <Check className="w-2.5 h-2.5" />}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <span className={cn("text-[11px] truncate font-semibold block", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
-                                      {task.title}
-                                    </span>
-                                    <span className="text-[7px] uppercase font-bold tracking-wider rounded font-mono text-purple-600 dark:text-purple-400 mt-0.5 block">
-                                      Assigned To: {task.assigneeIds.map(uid => memberMap.get(uid)?.fullName || 'Member').join(', ')}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <span className="px-1.5 py-0.5 bg-bg-secondary border border-border-default rounded text-[8px] font-bold text-text-secondary capitalize">
-                                    {task.status.replace('_', ' ')}
-                                  </span>
-                                  <button
-                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="text-muted-foreground hover:text-red-550 transition-colors opacity-0 group-hover:opacity-100"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-[10px] text-muted-foreground/60 italic py-6 text-center">No tasks assigned to other employees.</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Segment 3: Pending Approvals & Reviews */}
-                      <div className="bg-surface/50 border border-border-default/80 rounded-2xl p-5 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-border-default/45">
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Approvals & Reviews</h3>
-                          </div>
-                          <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-600 dark:text-amber-400 rounded-lg">
-                            {reviewTasks.length} Pending
-                          </span>
-                        </div>
-                        <div className="space-y-2 max-h-72 overflow-y-auto aether-scroll pr-1">
-                          {reviewTasks.length > 0 ? (
-                            reviewTasks.map(task => (
-                              <div
-                                key={task.id}
-                                onClick={() => setSearchParams({ task: task.id })}
-                                className="flex items-center justify-between p-3.5 rounded-xl bg-amber-500/[0.03] border border-amber-500/20 hover:bg-amber-500/[0.06] transition-all cursor-pointer group"
-                              >
-                                <div className="min-w-0">
-                                  <span className="text-[11px] truncate font-bold text-foreground block">
-                                    {task.title}
-                                  </span>
-                                  <p className="text-[8px] text-muted-foreground mt-0.5 font-semibold">
-                                    Submitted by: {task.assigneeIds.map(uid => memberMap.get(uid)?.fullName || 'Member').join(', ')}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <button
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      await handleUpdateTaskStatus(task, 'done');
-                                    }}
-                                    className="px-2.5 py-1 bg-foreground hover:bg-foreground/90 text-background font-bold rounded-lg text-[9px] transition-all cursor-pointer"
-                                  >
-                                    Approve
-                                  </button>
-                                  <button
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      await handleUpdateTaskStatus(task, 'todo');
-                                    }}
-                                    className="px-2.5 py-1 border border-border-default hover:bg-bg-secondary text-foreground font-bold rounded-lg text-[9px] transition-all cursor-pointer"
-                                  >
-                                    Reject
-                                  </button>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-[10px] text-muted-foreground/60 italic py-6 text-center">No reviews pending your approval.</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Segment 4: Standalone Execution Items */}
-                      <div className="bg-surface/50 border border-border-default/80 rounded-2xl p-5 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-border-default/45">
-                          <div className="flex items-center gap-2">
-                            <Globe className="w-4 h-4 text-zinc-500 shrink-0" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Standalone Tasks</h3>
-                          </div>
-                          <span className="px-2 py-0.5 bg-bg-secondary border border-border-default text-[9px] font-bold text-muted-foreground rounded-lg">
-                            {standaloneTasks.filter(t => t.status !== 'done').length} Active
-                          </span>
-                        </div>
-                        <div className="space-y-2 max-h-72 overflow-y-auto aether-scroll pr-1">
-                          {standaloneTasks.length > 0 ? (
-                            standaloneTasks.map(task => (
-                              <div
-                                key={task.id}
-                                onClick={() => setSearchParams({ task: task.id })}
-                                className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
-                              >
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <div
-                                    onClick={(e) => handleToggleTaskStatus(e, task)}
-                                    className={cn(
-                                      "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                      task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-border-default bg-bg-primary/50"
-                                    )}
-                                  >
-                                    {task.status === 'done' && <Check className="w-2.5 h-2.5" />}
-                                  </div>
-                                  <span className={cn("text-[11px] truncate font-semibold", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
-                                    {task.title}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <button
-                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="text-muted-foreground hover:text-red-550 transition-colors opacity-0 group-hover:opacity-100"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-[10px] text-muted-foreground/60 italic py-6 text-center">No standalone tasks found.</p>
-                          )}
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                )}
-
-                {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ VIEW 3: INITIATIVE PROJECTS MAP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-                {activeTab === 'projects' && (
-                  <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-6">
-                    
-                    <div className="bg-indigo-500/[0.04] border border-indigo-500/20 rounded-2xl p-4 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <Briefcase className="w-5 h-5 text-indigo-650 dark:text-indigo-400 shrink-0 animate-pulse" />
-                        <div>
-                          <h4 className="text-xs font-bold text-foreground">Active Initiatives Map</h4>
-                          <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">Projects encompass high-level team targets. Track linked employee goals and associated task metrics.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-6">
-                      {projects.map(project => {
-                        const projectGoals = filteredGoals.filter(g => g.projectId === project.id);
-                        const projectTasks = filteredTasks.filter(t => t.projectId === project.id);
-                        const doneTasks = projectTasks.filter(t => t.status === 'done').length;
-                        const progress = projectTasks.length > 0 ? Math.round((doneTasks / projectTasks.length) * 100) : 0;
-
-                        return (
-                          <div
-                            key={project.id}
-                            className="bg-surface/50 border border-border-default/80 rounded-2xl p-5 space-y-5 hover:border-indigo-500/30 hover:bg-surface transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]"
-                          >
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border-default/45">
-                              <div>
-                                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                                  <Folder className="w-4.5 h-4.5 text-indigo-650 dark:text-indigo-400" />
-                                  {project.name}
-                                </h3>
-                                {project.description && <p className="text-xs text-muted-foreground mt-1 max-w-xl font-medium leading-relaxed">{project.description}</p>}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => triggerAddGoal(project.id)}
-                                  className="text-[9px] text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 border border-emerald-500/10 hover:border-emerald-500/25 bg-emerald-500/[0.03] rounded-lg px-2.5 py-1.5 font-bold tracking-wide"
-                                >
-                                  + Goal
-                                </button>
-                                <button
-                                  onClick={(e) => handleDeleteProjectItem(e, project.id)}
-                                  className="text-muted-foreground hover:text-red-400 p-1.5 transition-colors"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                              
-                              {/* Linked Employee Goals Column */}
-                              <div className="md:col-span-2 space-y-3">
-                                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aligned Employee Goals</h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                  {projectGoals.map(goal => (
-                                    <div key={goal.id} className="p-3.5 bg-bg-primary/30 border border-border-subtle rounded-xl space-y-3">
-                                      <div className="flex items-start justify-between gap-2.5">
-                                        <h5 className="text-[11px] font-bold text-foreground leading-snug">{goal.title}</h5>
-                                        <div className="w-5.5 h-5.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center font-bold text-[9px] text-emerald-600 dark:text-emerald-450 shrink-0" title={`Assigned to ${memberMap.get(goal.ownerId)?.fullName || 'Member'}`}>
-                                          {getInitials(goal.ownerId)}
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="space-y-1">
-                                        <div className="flex justify-between text-[8px] text-muted-foreground font-semibold">
-                                          <span>Goal Completion</span>
-                                          <span>{goal.progressRollup ?? 0}%</span>
-                                        </div>
-                                        <div className="w-full bg-bg-secondary rounded-full h-1 overflow-hidden">
-                                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${goal.progressRollup ?? 0}%` }} />
-                                        </div>
-                                      </div>
-
-                                      <div className="flex justify-between pt-1 border-t border-border-default/45">
-                                        <button
-                                          onClick={() => triggerAddTask(goal.id, project.id)}
-                                          className="text-[8px] text-muted-foreground hover:text-foreground font-bold flex items-center gap-0.5"
-                                        >
-                                          <Plus className="w-2.5 h-2.5" /> Add Task
-                                        </button>
-                                        <button
-                                          onClick={(e) => handleDeleteGoalItem(e, goal.id)}
-                                          className="text-muted-foreground hover:text-red-400 transition-colors"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ))}
-                                  {projectGoals.length === 0 && (
-                                    <p className="text-[10px] text-muted-foreground/60 italic py-6 text-center col-span-2">No employee goals aligned yet.</p>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Aligned Tasks Column */}
-                              <div className="space-y-3">
-                                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Initiative Action Items</h4>
-                                <div className="space-y-2 max-h-56 overflow-y-auto aether-scroll pr-1">
-                                  {projectTasks.map(task => (
-                                    <div
-                                      key={task.id}
-                                      onClick={() => setSearchParams({ task: task.id })}
-                                      className="flex items-center justify-between p-2 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle transition-all cursor-pointer group"
-                                    >
-                                      <div className="flex items-center gap-2 min-w-0">
-                                        <div
-                                          onClick={(e) => handleToggleTaskStatus(e, task)}
-                                          className={cn(
-                                            "h-3 w-3 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                            task.status === 'done' ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-border-default bg-bg-primary/50"
-                                          )}
-                                        >
-                                          {task.status === 'done' && <Check className="w-2 h-2" />}
-                                        </div>
-                                        <span className={cn("text-[10px] truncate font-semibold", task.status === 'done' ? "text-muted-foreground line-through font-normal" : "text-foreground")}>
-                                          {task.title}
-                                        </span>
-                                      </div>
-                                      <button
-                                        onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                        className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
-                                  ))}
-                                  {projectTasks.length === 0 && (
-                                    <p className="text-[10px] text-muted-foreground/60 italic py-6 text-center">No tasks assigned.</p>
-                                  )}
-                                </div>
-                              </div>
-
-                            </div>
-
-                            <div className="pt-3 border-t border-border-default/45 flex items-center justify-between text-[9px] text-muted-foreground font-semibold">
-                              <span>Overall execution completion rate: {progress}%</span>
-                              <div className="w-24 bg-bg-secondary rounded-full h-1.5 overflow-hidden">
-                                <div className="h-full bg-indigo-550 rounded-full" style={{ width: `${progress}%` }} />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            )}
-          </div>
-        </div>
-
-      </div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ─── Shared Task Details Overlay Drawer ─── */}
       {openTask && (
