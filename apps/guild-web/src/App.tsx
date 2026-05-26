@@ -33,9 +33,8 @@ import { CalendarPage } from './pages/calendar/CalendarPage';
 
 // Execution OS
 import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
-import { GoalDetailPage } from './pages/goals/GoalDetailPage';
+import { GoalDetailPage } from './pages/tasks/GoalDetailPage';
 import { TasksPage } from './pages/tasks/TasksPage';
-import { GoalsPage } from './pages/goals/GoalsPage';
 
 // Reports
 import { ReportsPage } from './pages/reports/ReportsPage';
@@ -121,17 +120,6 @@ export default function App() {
             }
           />
 
-          {/* Goals Board View */}
-          <Route
-            path="/goals"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <GoalsPage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
 
           {/* Project detail */}
           <Route
