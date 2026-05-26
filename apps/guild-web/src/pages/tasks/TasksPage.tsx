@@ -11,7 +11,6 @@ import { useTeams } from '../../hooks/useTeams';
 import { TasksLayout } from './TasksLayout';
 import { TasksNav, type NavView } from './TasksNav';
 import { TaskIsland } from '../../components/tasks/TaskIsland';
-import { InlineTaskInput } from './InlineTaskInput';
 import { TaskDetailPanel } from './TaskDetailPanel';
 import { KanbanBoard } from './KanbanBoard';
 import { CreateTaskPopup } from '../../components/tasks/CreateTaskPopup';

@@ -34,6 +34,8 @@ import { CalendarPage } from './pages/calendar/CalendarPage';
 // Execution OS
 import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
 import { GoalDetailPage } from './pages/goals/GoalDetailPage';
+import { TasksPage } from './pages/tasks/TasksPage';
+import { GoalsPage } from './pages/goals/GoalsPage';
 
 // Reports
 import { ReportsPage } from './pages/reports/ReportsPage';
@@ -107,8 +109,27 @@ export default function App() {
             }
           />
 
-          {/* Tasks → redirect to /workspace */}
-          <Route path="/tasks" element={<Navigate to="/workspace" replace />} />
+          {/* Tasks Board View */}
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute>
+                <TasksPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Goals Board View */}
+          <Route
+            path="/goals"
+            element={
+              <ProtectedRoute>
+                <DashboardApp>
+                  <GoalsPage />
+                </DashboardApp>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Project detail */}
           <Route
