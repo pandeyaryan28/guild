@@ -30,8 +30,8 @@ export function NavDock() {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/chat', label: 'Chat', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined },
-    { path: '/workspace', label: 'Workspace', icon: CheckSquare },
-    { path: '/tasks', label: 'Tasks & Goals', icon: Trello },
+    { path: '/workspace', label: 'Workspace', icon: Trello },
+    { path: '/tasks', label: 'Tasks & Goals', icon: CheckSquare },
     { path: '/requests', label: 'Requests', icon: FileCheck },
     { path: '/people', label: 'People', icon: Users },
     { path: '/calendar', label: 'Calendar', icon: Calendar, className: 'hidden md:flex' },
