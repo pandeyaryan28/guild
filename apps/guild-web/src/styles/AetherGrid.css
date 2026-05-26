@@ -391,6 +391,9 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.25);
     pointer-events: auto;
+    width: 100%;
+    max-width: 100%;
+    justify-content: space-around;
   }
 
   .aether-dock-item {
@@ -425,5 +428,15 @@
     border-radius: 99px;
     margin: 8px auto 16px auto;
   }
+
+  /* Force show on mobile */
+  .aether-dock-item-menu {
+    display: flex !important;
+  }
+}
+
+/* Force hide on desktop/laptop */
+.aether-dock-item-menu {
+  display: none !important;
 }
 

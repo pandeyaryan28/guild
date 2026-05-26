@@ -124,7 +124,7 @@ export function NavDock() {
         {/* More Button (Mobile only) */}
         <div
           onClick={() => setShowMobileMore(true)}
-          className="aether-dock-item flex md:hidden hover:scale-110 active:scale-95 transition-all text-text-secondary items-center justify-center relative cursor-pointer"
+          className="aether-dock-item aether-dock-item-menu flex md:hidden hover:scale-110 active:scale-95 transition-all text-text-secondary items-center justify-center relative cursor-pointer"
         >
           <Menu className="w-5 h-5" />
           {unreadCount > 0 && (

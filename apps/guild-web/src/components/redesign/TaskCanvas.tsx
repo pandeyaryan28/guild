@@ -375,7 +375,7 @@ export function TaskCanvas() {
       
       {/* ─── 1. Left Collapsible Workspace Sidebar ─── */}
       <div className={cn(
-        "hidden lg:flex shrink-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl p-4 flex flex-col justify-between shadow-lg backdrop-blur-xl transition-all duration-300 ease-in-out",
+        "hidden xl:flex shrink-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl p-4 flex flex-col justify-between shadow-lg backdrop-blur-xl transition-all duration-300 ease-in-out",
         isSidebarCollapsed ? "w-16" : "w-60"
       )}>
         
@@ -505,7 +505,7 @@ export function TaskCanvas() {
       <div className="flex-grow flex flex-col min-h-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl overflow-hidden shadow-2xl z-10 relative">
         
         {/* Mobile Navigation Segmented Control */}
-        <div className="lg:hidden flex items-center justify-between p-3 border-b border-border-default/45 bg-white/[0.02] dark:bg-white/[0.003] backdrop-blur-md shrink-0 gap-2 select-none">
+        <div className="xl:hidden flex items-center justify-between p-3 border-b border-border-default/45 bg-white/[0.02] dark:bg-white/[0.003] backdrop-blur-md shrink-0 gap-2 select-none">
           <div className="flex items-center gap-1 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-xl shadow-inner flex-1 max-w-md">
             <button
               onClick={() => setActiveSection('my-space')}
