@@ -154,6 +154,7 @@ export function TaskCanvas() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = React.useState(false);
   const [isCompletedExpanded, setIsCompletedExpanded] = React.useState(false);
+  const [isBoardCompletedExpanded, setIsBoardCompletedExpanded] = React.useState(false);
 
   // Dropdown states for interactive smart pills
   const [selectedProjectId, setSelectedProjectId] = React.useState<string | null>(null);
@@ -267,11 +268,11 @@ export function TaskCanvas() {
 
   const counts = React.useMemo(() => {
     return {
-      my: myTasks.filter(t => !t.parentTaskId).length,
-      assigned: assignedTasks.filter(t => !t.parentTaskId).length,
-      review: reviewTasks.filter(t => !t.parentTaskId).length,
-      team: teamTasks.filter(t => !t.parentTaskId).length,
-      all: tasks.filter(t => !t.parentTaskId).length,
+      my: myTasks.filter(t => !t.parentTaskId && t.status !== 'done').length,
+      assigned: assignedTasks.filter(t => !t.parentTaskId && t.status !== 'done').length,
+      review: reviewTasks.filter(t => !t.parentTaskId && t.status !== 'done').length,
+      team: teamTasks.filter(t => !t.parentTaskId && t.status !== 'done').length,
+      all: tasks.filter(t => !t.parentTaskId && t.status !== 'done').length,
     };
   }, [myTasks, assignedTasks, reviewTasks, teamTasks, tasks]);
 
@@ -1448,23 +1449,24 @@ export function TaskCanvas() {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
-                    className="grid grid-cols-1 md:grid-cols-4 gap-5 items-start pb-12 overflow-x-auto"
+                    className="flex flex-col md:flex-row gap-5 items-start pb-12 overflow-x-auto w-full"
                   >
-                    {STATUSES.map((status) => {
+                    {/* Render the 3 ongoing columns: To Do, In Progress, Under Review */}
+                    {['todo', 'in_progress', 'review'].map((status) => {
                       const colTasks = filteredTasks.filter(t => t.status === status);
                       const cfg = STATUS_CONFIG[status];
 
                       return (
                         <div
                           key={status}
-                          className="bg-surface/60 dark:bg-surface/20 border border-border/80 dark:border-white/5 rounded-2xl flex flex-col shadow-md shrink-0"
+                          className="w-full md:w-72 flex-1 min-w-[260px] md:max-w-none bg-surface/60 dark:bg-surface/20 border border-border/80 dark:border-white/5 rounded-2xl flex flex-col shadow-md shrink-0"
                         >
                           {/* Lane Header */}
                           <div className="px-4 py-3.5 border-b border-border/40 dark:border-white/5 flex items-center justify-between select-none">
                             <div className="flex items-center gap-2.5">
                               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cfg.dot }} />
                               <span className="text-[10px] font-bold uppercase tracking-widest text-foreground">
-                                {cfg.label === 'Done' ? 'Completed' : cfg.label === 'In Progress' ? 'In Progress' : cfg.label === 'To Do' ? 'To Do' : 'Under Review'}
+                                {cfg.label === 'In Progress' ? 'In Progress' : cfg.label === 'To Do' ? 'To Do' : 'Under Review'}
                               </span>
                             </div>
                             <span className="px-2.5 py-0.5 rounded-md bg-foreground/5 font-mono text-[10px] font-bold text-muted-foreground">
@@ -1472,7 +1474,7 @@ export function TaskCanvas() {
                             </span>
                           </div>
 
-                          {/* Lane Cards Scrollable Deck - No max-height block, displays naturally */}
+                          {/* Lane Cards scrollable deck */}
                           <div className="flex-1 p-3.5 space-y-3.5 min-h-[300px]">
                             {colTasks.length === 0 ? (
                               <div className="py-16 text-center select-none">
@@ -1565,7 +1567,7 @@ export function TaskCanvas() {
 
                                       {matchedGoal && (
                                         <span className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-500 text-[8px] font-bold shrink-0 truncate max-w-[80px] inline-flex items-center gap-0.5">
-                                          <Target className="w-2 h-2 shrink-0" />
+                                          <Target className="w-2.5 h-2.5 shrink-0" />
                                           {matchedGoal.title}
                                         </span>
                                       )}
@@ -1611,7 +1613,121 @@ export function TaskCanvas() {
                         </div>
                       );
                     })}
+
+                    {/* Collapsible Completed Lane column */}
+                    {(() => {
+                      const completedTasks = filteredTasks.filter(t => t.status === 'done');
+                      const cfg = STATUS_CONFIG['done'];
+
+                      if (isBoardCompletedExpanded) {
+                        return (
+                          <div className="w-full md:w-72 flex-1 min-w-[260px] md:max-w-none bg-surface/60 dark:bg-surface/20 border border-border/80 dark:border-white/5 rounded-2xl flex flex-col shadow-md shrink-0">
+                            {/* Header with collapse trigger */}
+                            <div 
+                              onClick={() => setIsBoardCompletedExpanded(false)}
+                              className="px-4 py-3.5 border-b border-border/40 dark:border-white/5 flex items-center justify-between select-none cursor-pointer hover:bg-foreground/[0.01]"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cfg.dot }} />
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-foreground">Completed</span>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/10 font-mono text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+                                  {completedTasks.length}
+                                </span>
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                              </div>
+                            </div>
+
+                            {/* Cards */}
+                            <div className="flex-1 p-3.5 space-y-3.5 min-h-[300px]">
+                              {completedTasks.length === 0 ? (
+                                <div className="py-16 text-center select-none">
+                                  <span className="text-[10px] text-muted-foreground/30 italic block uppercase tracking-wider font-semibold">No completed work</span>
+                                </div>
+                              ) : (
+                                completedTasks.map((task) => {
+                                  const matchedProj = projects.find(p => p.id === task.projectId);
+                                  const matchedGoal = goals.find(g => g.id === task.goalId);
+                                  const subStats = getSubtaskStats(task.id);
+                                  const due = task.dueDate?.toDate?.();
+                                  const initials = task.assigneeIds.length > 0 ? memberMap[task.assigneeIds[0]]?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : null;
+
+                                  return (
+                                    <div
+                                      key={task.id}
+                                      onClick={() => setSearchParams({ task: task.id })}
+                                      className="bg-surface dark:bg-white/[0.02] border border-border/80 dark:border-white/5 hover:border-primary/45 p-4 space-y-3.5 cursor-pointer hover:scale-[1.01] active:scale-99 transition-all rounded-xl shadow-sm hover:shadow-md relative flex flex-col"
+                                    >
+                                      <div className="flex items-start justify-between gap-3">
+                                        <span className="text-xs font-semibold text-muted-foreground/50 line-through truncate flex-1">
+                                          {task.title}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleToggleComplete(task);
+                                          }}
+                                          className="shrink-0 transition-all hover:scale-110 active:scale-90 cursor-pointer"
+                                        >
+                                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                        </button>
+                                      </div>
+
+                                      <div className="flex flex-wrap gap-1.5 items-center pt-2.5 border-t border-border/40 dark:border-white/5">
+                                        {due && (
+                                          <span className="px-2 py-0.5 rounded bg-foreground/5 border border-border/30 text-[8px] font-bold text-muted-foreground/60 shrink-0 inline-flex items-center gap-0.5">
+                                            <Calendar className="w-2.5 h-2.5 shrink-0" />
+                                            {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                          </span>
+                                        )}
+
+                                        {matchedProj && (
+                                          <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[8px] font-bold shrink-0 truncate max-w-[80px]">
+                                            #{matchedProj.name}
+                                          </span>
+                                        )}
+
+                                        {initials && (
+                                          <div className={cn(
+                                            'w-4.5 h-4.5 rounded-full border text-[8px] font-black flex items-center justify-center select-none shadow-sm ml-auto shrink-0',
+                                            getAvatarColor(task.assigneeIds[0])
+                                          )}>
+                                            {initials}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => setIsBoardCompletedExpanded(true)}
+                          className="w-14 shrink-0 self-stretch border border-dashed border-border/80 dark:border-white/5 bg-surface/30 rounded-2xl flex flex-col items-center justify-between py-5 cursor-pointer hover:bg-foreground/[0.01] hover:border-primary/30 transition-all shadow-sm group min-h-[400px]"
+                          title="Expand Completed Lane"
+                        >
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 group-hover:scale-110 transition-transform" />
+                          <div className="[writing-mode:vertical-lr] font-bold text-[10px] text-muted-foreground uppercase tracking-widest my-4 flex items-center gap-1 select-none">
+                            <span>Completed Work</span>
+                            <ChevronLeft className="w-3.5 h-3.5 mt-1 select-none" />
+                          </div>
+                          <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/10 font-mono text-[9px] font-bold text-emerald-600 dark:text-emerald-400 select-none">
+                            {completedTasks.length}
+                          </span>
+                        </button>
+                      );
+                    })()}
                   </motion.div>
+
                 )}
 
                 {/* ─── 3. Projects & Goals Tracker View (New Full-Page Dashboard Tab) ─── */}
