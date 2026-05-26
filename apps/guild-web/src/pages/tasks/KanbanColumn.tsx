@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Task, type TaskLabel, STATUS_CONFIG, type TaskStatus } from '../../lib/tasks';
 import { TaskCard } from './TaskCard';
@@ -14,9 +14,10 @@ interface KanbanColumnProps {
   onTaskClick: (task: Task) => void;
   onAddTask: () => void;
   onDeleteTask: (taskId: string) => void;
+  onCollapse?: () => void;
 }
 
-export function KanbanColumn({ status, tasks, labels, memberMap, onTaskClick, onAddTask, onDeleteTask }: KanbanColumnProps) {
+export function KanbanColumn({ status, tasks, labels, memberMap, onTaskClick, onAddTask, onDeleteTask, onCollapse }: KanbanColumnProps) {
   const config = STATUS_CONFIG[status];
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
@@ -31,13 +32,24 @@ export function KanbanColumn({ status, tasks, labels, memberMap, onTaskClick, on
             {tasks.length}
           </span>
         </div>
-        <button
-          onClick={onAddTask}
-          className="text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded p-1 transition-colors"
-          title="Add task"
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={onAddTask}
+            className="text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded p-1 transition-colors"
+            title="Add task"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+          {onCollapse && (
+            <button
+              onClick={onCollapse}
+              className="text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded p-1 transition-colors"
+              title="Collapse column"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Drop zone */}
