@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Target, Plus, Calendar, Loader2 } from 'lucide-react';
+import { Target, Plus, Calendar, Loader2, Trello, LayoutList, Trash2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/useAuth';
 import { useGoals } from '../../hooks/useGoals';
 import { CreateGoalModal } from './CreateGoalModal';
-import type { Goal } from '../../lib/goals';
+import { GoalKanbanBoard } from './GoalKanbanBoard';
+import { deleteGoal, updateGoal, type Goal } from '../../lib/goals';
 
 const STATUS_CONFIG: Record<Goal['status'], { label: string; color: string; dot: string }> = {
   active:    { label: 'Active',    color: 'text-violet-400', dot: '#a78bfa' },
@@ -109,11 +110,137 @@ function GoalCard({ goal }: { goal: Goal }) {
   );
 }
 
+function GoalListRow({
+  goal,
+  onSelect,
+  onDelete,
+  onToggleComplete,
+}: {
+  goal: Goal;
+  onSelect: () => void;
+  onDelete: () => void;
+  onToggleComplete: () => void;
+}) {
+  const config = STATUS_CONFIG[goal.status];
+  const due = goal.targetDate?.toDate?.();
+  const now = new Date();
+  const isOverdue = due && due < now && goal.status === 'active';
+
+  const horizonLabel = goal.horizon === 'long_term' ? 'Vision' : 'Milestone';
+  const horizonClass = goal.horizon === 'long_term' 
+    ? 'text-violet-450 border-violet-500/20 bg-violet-500/5' 
+    : 'text-sky-400 border-sky-500/20 bg-sky-500/5';
+
+  const recurrenceLabel = goal.recurrence && goal.recurrence !== 'none'
+    ? goal.recurrence.charAt(0).toUpperCase() + goal.recurrence.slice(1)
+    : null;
+
+  const recurrenceClass = goal.recurrence === 'daily'
+    ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5'
+    : goal.recurrence === 'weekly'
+    ? 'text-amber-400 border-amber-500/20 bg-amber-500/5'
+    : 'text-rose-450 border-rose-500/20 bg-rose-500/5';
+
+  return (
+    <div
+      onClick={onSelect}
+      className={cn(
+        'group relative flex items-center justify-between p-3.5 rounded-xl bg-card border border-border-default/80 hover:border-violet-500/30 hover:bg-surface hover:shadow-sm transition-all duration-200 cursor-pointer select-none',
+        goal.status === 'completed' && 'opacity-65'
+      )}
+    >
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        {/* Toggle complete button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleComplete(); }}
+          className={cn(
+            'flex-shrink-0 h-5 w-5 rounded-full border-[1.5px] flex items-center justify-center transition-all duration-200 cursor-pointer',
+            goal.status === 'completed'
+              ? 'bg-emerald-500 border-emerald-500 text-white'
+              : 'border-muted-foreground/45 hover:border-emerald-500/60 hover:bg-emerald-500/5',
+          )}
+          title={goal.status === 'completed' ? 'Mark active' : 'Mark completed'}
+        >
+          {goal.status === 'completed' && <Check className="h-3 w-3 text-white" />}
+        </button>
+
+        {/* Title & description */}
+        <div className="min-w-0 flex-1">
+          <span className={cn(
+            'text-xs font-bold block text-foreground truncate group-hover:text-violet-450 transition-colors',
+            goal.status === 'completed' && 'line-through text-text-muted font-normal'
+          )}>
+            {goal.title}
+          </span>
+          {goal.description && (
+            <p className="text-[10px] text-muted-foreground line-clamp-1 leading-normal mt-0.5 font-medium">{goal.description}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Meta alignment */}
+      <div className="flex items-center gap-4 shrink-0 ml-3">
+        {/* Badges */}
+        <div className="flex items-center gap-1.5 hidden sm:flex">
+          <span className={cn('px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border', horizonClass)}>
+            {horizonLabel}
+          </span>
+          {recurrenceLabel && (
+            <span className={cn('px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border', recurrenceClass)}>
+              {recurrenceLabel}
+            </span>
+          )}
+        </div>
+
+        {/* Target date */}
+        {due && (
+          <span className={cn(
+            'flex items-center gap-1 text-[10px] font-mono font-semibold',
+            isOverdue ? 'text-red-400' : 'text-muted-foreground'
+          )}>
+            <Calendar className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+            {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </span>
+        )}
+
+        {/* Completion rate bar */}
+        {goal.progressRollup !== undefined && (
+          <div className="w-24 flex flex-col justify-center gap-1 hidden md:flex">
+            <div className="flex items-center justify-between text-[8px] font-bold text-muted-foreground">
+              <span>COMPLETION</span>
+              <span>{goal.progressRollup}%</span>
+            </div>
+            <div className="h-1 w-full bg-bg-tertiary rounded-full overflow-hidden">
+              <div
+                className="h-full bg-violet-500 rounded-full transition-all duration-300"
+                style={{ width: `${goal.progressRollup}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Delete button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="text-muted-foreground hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+          title="Delete goal"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function GoalsPage() {
+  const navigate = useNavigate();
   const { userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
   const { goals, loading } = useGoals(orgId);
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [viewMode, setViewMode] = React.useState<'list' | 'board'>(() => {
+    return (localStorage.getItem('guild_goals_view_mode') as 'list' | 'board') || 'list';
+  });
 
   const active = goals.filter((g) => g.status === 'active');
   const others = goals.filter((g) => g.status !== 'active');
@@ -135,10 +262,45 @@ export function GoalsPage() {
             </p>
           </div>
         </div>
-        <Button size="sm" onClick={() => setCreateOpen(true)} className="h-8 gap-1.5 text-xs bg-violet-600 hover:bg-violet-700 text-white border-0">
-          <Plus className="h-3.5 w-3.5" />
-          New Goal
-        </Button>
+        <div className="flex items-center gap-3 shrink-0">
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 bg-accent/20 border border-border-default/45 p-0.5 rounded-lg mr-1 shrink-0">
+            <button
+              onClick={() => {
+                localStorage.setItem('guild_goals_view_mode', 'list');
+                setViewMode('list');
+              }}
+              className={cn(
+                'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all cursor-pointer',
+                viewMode === 'list'
+                  ? 'bg-bg-primary text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              title="List View"
+            >
+              <LayoutList className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => {
+                localStorage.setItem('guild_goals_view_mode', 'board');
+                setViewMode('board');
+              }}
+              className={cn(
+                'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all cursor-pointer',
+                viewMode === 'board'
+                  ? 'bg-bg-primary text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              title="Board View"
+            >
+              <Trello className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <Button size="sm" onClick={() => setCreateOpen(true)} className="h-8 gap-1.5 text-xs bg-violet-600 hover:bg-violet-700 text-white border-0 cursor-pointer">
+            <Plus className="h-3.5 w-3.5" />
+            New Goal
+          </Button>
+        </div>
       </div>
 
       {/* Content */}
@@ -156,19 +318,34 @@ export function GoalsPage() {
               <p className="text-sm font-medium text-foreground">No goals yet</p>
               <p className="text-[11px] text-muted-foreground">Create a goal to track outcomes independent of projects.</p>
             </div>
-            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5 text-xs h-8 bg-violet-600 hover:bg-violet-700 text-white border-0">
+            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5 text-xs h-8 bg-violet-600 hover:bg-violet-700 text-white border-0 cursor-pointer">
               <Plus className="h-3.5 w-3.5" />
               New Goal
             </Button>
           </div>
-        ) : (
+        ) : viewMode === 'list' ? (
           <div className="space-y-8">
             {active.length > 0 && (
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Active</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
                   <AnimatePresence>
-                    {active.map((g) => <GoalCard key={g.id} goal={g} />)}
+                    {active.map((g) => (
+                      <GoalListRow
+                        key={g.id}
+                        goal={g}
+                        onSelect={() => navigate(`/goals/${g.id}`)}
+                        onDelete={async () => {
+                          if (confirm('Delete this goal? associated tasks will be unlinked.')) {
+                            await deleteGoal(g.id);
+                          }
+                        }}
+                        onToggleComplete={async () => {
+                          const nextStatus = g.status === 'completed' ? 'active' : 'completed';
+                          await updateGoal(g.id, { status: nextStatus });
+                        }}
+                      />
+                    ))}
                   </AnimatePresence>
                 </div>
               </div>
@@ -176,14 +353,35 @@ export function GoalsPage() {
             {others.length > 0 && (
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Others</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+                <div className="space-y-2">
                   <AnimatePresence>
-                    {others.map((g) => <GoalCard key={g.id} goal={g} />)}
+                    {others.map((g) => (
+                      <GoalListRow
+                        key={g.id}
+                        goal={g}
+                        onSelect={() => navigate(`/goals/${g.id}`)}
+                        onDelete={async () => {
+                          if (confirm('Delete this goal? associated tasks will be unlinked.')) {
+                            await deleteGoal(g.id);
+                          }
+                        }}
+                        onToggleComplete={async () => {
+                          const nextStatus = g.status === 'completed' ? 'active' : 'completed';
+                          await updateGoal(g.id, { status: nextStatus });
+                        }}
+                      />
+                    ))}
                   </AnimatePresence>
                 </div>
               </div>
             )}
           </div>
+        ) : (
+          <GoalKanbanBoard
+            goals={goals}
+            onGoalClick={(g) => navigate(`/goals/${g.id}`)}
+            onAddGoal={() => setCreateOpen(true)}
+          />
         )}
       </div>
 

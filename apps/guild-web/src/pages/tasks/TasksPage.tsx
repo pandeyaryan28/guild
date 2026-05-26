@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FolderOpen, Target, LayoutList, Sun, CalendarDays, CheckCircle2, Settings, Send, Eye, Users, Menu } from 'lucide-react';
+import { FolderOpen, Target, LayoutList, Sun, CalendarDays, CheckCircle2, Settings, Send, Eye, Users, Menu, Trello, Plus } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useTasks } from '../../hooks/useTasks';
+import { useTasks, useTaskLabels } from '../../hooks/useTasks';
 import { useProjects } from '../../hooks/useProjects';
 import { useGoals } from '../../hooks/useGoals';
 import { useOrgMembers } from '../../hooks/useChat';
@@ -13,7 +13,9 @@ import { TasksNav, type NavView } from './TasksNav';
 import { TaskIsland } from '../../components/tasks/TaskIsland';
 import { InlineTaskInput } from './InlineTaskInput';
 import { TaskDetailPanel } from './TaskDetailPanel';
-import type { Task } from '../../lib/tasks';
+import { KanbanBoard } from './KanbanBoard';
+import { CreateTaskPopup } from '../../components/tasks/CreateTaskPopup';
+import type { Task, TaskStatus } from '../../lib/tasks';
 
 function getViewTitle(view: NavView, projects: { id: string; name: string }[], goals: { id: string; title: string }[]): { title: string; subtitle?: string } {
   switch (view.type) {
@@ -96,12 +98,18 @@ export function TasksPage() {
   const [activeView, setActiveView] = React.useState<NavView>({ type: 'all' });
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+  const [viewMode, setViewMode] = React.useState<'list' | 'board'>(() => {
+    return (localStorage.getItem('guild_tasks_view_mode') as 'list' | 'board') || 'list';
+  });
+  const [createTaskOpen, setCreateTaskOpen] = React.useState(false);
+  const [createTaskDefaultStatus, setCreateTaskDefaultStatus] = React.useState<TaskStatus>('todo');
 
   const { projects } = useProjects(orgId);
   const { goals } = useGoals(orgId);
 
   // Always load all org tasks (the hook is inexpensive and we filter client-side)
   const { tasks, loading } = useTasks(orgId);
+  const labels = useTaskLabels(orgId);
 
   const members = useOrgMembers(orgId);
   const { teams } = useTeams(orgId);
@@ -135,6 +143,34 @@ export function TasksPage() {
 
   const viewTasks = filterTasksForView(tasks, activeView, user?.uid ?? '', teamMemberIds);
   const { title, subtitle } = getViewTitle(activeView, projects, goals);
+
+  // Group columns for Kanban board view
+  const viewColumns = React.useMemo(() => {
+    const map = new Map<TaskStatus, Task[]>();
+    map.set('todo', []);
+    map.set('in_progress', []);
+    map.set('review', []);
+    map.set('done', []);
+    for (const task of viewTasks) {
+      const col = map.get(task.status);
+      if (col) col.push(task);
+    }
+    for (const [s, col] of map) {
+      map.set(s, [...col].sort((a, b) => a.orderIndex - b.orderIndex));
+    }
+    return map;
+  }, [viewTasks]);
+
+  const kanbanMemberMap = React.useMemo(() => {
+    const map = new Map<string, { fullName: string; username: string }>();
+    members.forEach((m) => {
+      map.set(m.uid, {
+        fullName: m.fullName || m.uid,
+        username: m.username || m.uid,
+      });
+    });
+    return map;
+  }, [members]);
 
   // Scope defaults for InlineTaskInput
   const defaultProjectId = activeView.type === 'project' ? activeView.id : null;
@@ -194,6 +230,39 @@ export function TasksPage() {
                 </div>
               )}
             </div>
+            {/* View Toggle */}
+            <div className="flex items-center gap-1 bg-accent/20 border border-border-default/45 p-0.5 rounded-lg shrink-0 mr-1.5">
+              <button
+                onClick={() => {
+                  localStorage.setItem('guild_tasks_view_mode', 'list');
+                  setViewMode('list');
+                }}
+                className={cn(
+                  'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all',
+                  viewMode === 'list'
+                    ? 'bg-bg-primary text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+                title="List View"
+              >
+                <LayoutList className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem('guild_tasks_view_mode', 'board');
+                  setViewMode('board');
+                }}
+                className={cn(
+                  'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all',
+                  viewMode === 'board'
+                    ? 'bg-bg-primary text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+                title="Board View"
+              >
+                <Trello className="h-3.5 w-3.5" />
+              </button>
+            </div>
             {/* Task count */}
             {!loading && (
               <span className={cn(
@@ -207,25 +276,80 @@ export function TasksPage() {
 
           {/* Task Island Container */}
           <div className="flex-1 min-h-0 bg-accent/10 relative">
-            <TaskIsland
-              title={title}
-              tasks={viewTasks}
-              loading={loading}
+            {viewMode === 'list' ? (
+              <TaskIsland
+                title={title}
+                tasks={viewTasks}
+                loading={loading}
+                orgId={orgId}
+                actor={actor}
+                selectedTask={selectedTask}
+                onSelectTask={handleSelectTask}
+                defaultProjectId={defaultProjectId}
+                defaultGoalId={defaultGoalId}
+                showCompleted={activeView.type === 'completed'}
+                emptyMessage={
+                  activeView.type === 'today' ? 'Nothing due today' :
+                  activeView.type === 'upcoming' ? 'No upcoming tasks' :
+                  activeView.type === 'completed' ? 'No completed tasks yet' :
+                  activeView.type === 'assigned' ? 'You haven\'t assigned any tasks to others' :
+                  activeView.type === 'review' ? 'No tasks pending your review' :
+                  'No tasks yet'
+                }
+              />
+            ) : (
+              <div className="h-full w-full p-6 overflow-hidden">
+                {loading ? (
+                  <div className="flex items-center justify-center py-12 h-full">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                      <p className="text-sm text-muted-foreground">Loading board…</p>
+                    </div>
+                  </div>
+                ) : viewTasks.length === 0 ? (
+                  <div className="flex items-center justify-center py-12 h-full">
+                    <div className="text-center space-y-3">
+                      <div className="text-5xl opacity-15 select-none">✓</div>
+                      <p className="text-sm text-muted-foreground">No tasks in this view</p>
+                      <button
+                        onClick={() => {
+                          setCreateTaskDefaultStatus('todo');
+                          setCreateTaskOpen(true);
+                        }}
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add a task
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <KanbanBoard
+                    columns={viewColumns}
+                    allTasks={viewTasks}
+                    labels={labels}
+                    memberMap={kanbanMemberMap}
+                    orgId={orgId}
+                    actor={actor}
+                    onTaskClick={handleSelectTask}
+                    onAddTask={(status) => {
+                      setCreateTaskDefaultStatus(status);
+                      setCreateTaskOpen(true);
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Kanban Mode Task Creation Popup */}
+            <CreateTaskPopup
+              open={createTaskOpen}
+              onClose={() => setCreateTaskOpen(false)}
               orgId={orgId}
               actor={actor}
-              selectedTask={selectedTask}
-              onSelectTask={handleSelectTask}
+              defaultStatus={createTaskDefaultStatus}
               defaultProjectId={defaultProjectId}
               defaultGoalId={defaultGoalId}
-              showCompleted={activeView.type === 'completed'}
-              emptyMessage={
-                activeView.type === 'today' ? 'Nothing due today' :
-                activeView.type === 'upcoming' ? 'No upcoming tasks' :
-                activeView.type === 'completed' ? 'No completed tasks yet' :
-                activeView.type === 'assigned' ? 'You haven\'t assigned any tasks to others' :
-                activeView.type === 'review' ? 'No tasks pending your review' :
-                'No tasks yet'
-              }
             />
           </div>
         </div>
