@@ -4,7 +4,7 @@ import {
   User, Bell, Paintbrush, Users, Link2, Building2,
   Check, Loader2, ShieldAlert, Trash2, Crown, ShieldCheck,
   UserMinus, Copy, AlertCircle, Info,
-  Plus, Workflow
+  Plus, Workflow, MessageSquare, AtSign, CheckSquare, MessagesSquare, UserPlus
 } from 'lucide-react';
 import { createTeam, updateTeam, deleteTeam } from '../../lib/teams';
 import { useTeams } from '../../hooks/useTeams';
@@ -353,129 +353,191 @@ function ProfileSettingsView({ profile }: { profile: UserProfile }) {
       </div>
 
       {generalError && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-xl flex items-start gap-2">
+        <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-xl flex items-start gap-2 animate-fluid-pop">
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
           <span>{generalError}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Full Name */}
-          <div className="space-y-1.5">
-            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Full Name</label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className={cn(
-                "w-full px-3.5 py-2.5 rounded-xl border bg-black/10 dark:bg-white/[0.02] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/15 transition-all font-semibold shadow-inner",
-                errors.fullName ? "border-red-500/40 focus:border-red-500/40" : "border-white/5"
+      {/* Grid containing forms and the live preview card */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+        {/* Forms block */}
+        <form onSubmit={handleSubmit} className="space-y-4 lg:col-span-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Full Name */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Full Name</label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className={cn(
+                  "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                  errors.fullName ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
+                )}
+                placeholder="Aryan Pandey"
+              />
+              {errors.fullName && <p className="text-[9px] text-red-500 font-bold">{errors.fullName}</p>}
+            </div>
+
+            {/* Username */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className={cn(
+                  "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                  errors.username ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
+                )}
+                placeholder="aryan_p"
+              />
+              {errors.username && <p className="text-[9px] text-red-500 font-bold">{errors.username}</p>}
+            </div>
+
+            {/* Designation */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Designation / Role</label>
+              <input
+                type="text"
+                value={designation}
+                onChange={(e) => setDesignation(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+                placeholder="Lead Engineer"
+              />
+            </div>
+
+            {/* Employee ID */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Employee ID</label>
+              <input
+                type="text"
+                value={employeeId}
+                onChange={(e) => setEmployeeId(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+                placeholder="G-1025"
+              />
+            </div>
+
+            {/* Age */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Age</label>
+              <input
+                type="number"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                className={cn(
+                  "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                  errors.age ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
+                )}
+                placeholder="26"
+              />
+              {errors.age && <p className="text-[9px] text-red-500 font-bold">{errors.age}</p>}
+            </div>
+
+            {/* Email (Read-Only) */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                Email Address <Info className="h-3 w-3 text-muted-foreground" />
+              </label>
+              <input
+                type="email"
+                disabled
+                value={profile.email}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-white/[0.005] text-xs text-muted-foreground cursor-not-allowed outline-none font-semibold"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4 flex flex-wrap items-center justify-between gap-4">
+            <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1.5 select-none">
+              Account Privilege: <span className="font-extrabold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider">{profile.role}</span>
+            </span>
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-accent/90 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 transition-all shadow-lg hover:shadow-accent/15 cursor-pointer text-xs"
+              style={{ background: 'var(--accent)' }}
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
+                </>
+              ) : success ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-400" /> Saved!
+                </>
+              ) : (
+                'Save Profile'
               )}
-              placeholder="Aryan Pandey"
-            />
-            {errors.fullName && <p className="text-[9px] text-red-500 font-bold">{errors.fullName}</p>}
+            </button>
           </div>
+        </form>
 
-          {/* Username */}
-          <div className="space-y-1.5">
-            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className={cn(
-                "w-full px-3.5 py-2.5 rounded-xl border bg-black/10 dark:bg-white/[0.02] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/15 transition-all font-semibold shadow-inner",
-                errors.username ? "border-red-500/40 focus:border-red-500/40" : "border-white/5"
-              )}
-              placeholder="aryan_p"
-            />
-            {errors.username && <p className="text-[9px] text-red-500 font-bold">{errors.username}</p>}
-          </div>
-
-          {/* Designation */}
-          <div className="space-y-1.5">
-            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Designation / Role</label>
-            <input
-              type="text"
-              value={designation}
-              onChange={(e) => setDesignation(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-black/10 dark:bg-white/[0.02] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/15 transition-all font-semibold shadow-inner"
-              placeholder="Lead Engineer"
-            />
-          </div>
-
-          {/* Employee ID */}
-          <div className="space-y-1.5">
-            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Employee ID</label>
-            <input
-              type="text"
-              value={employeeId}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-black/10 dark:bg-white/[0.02] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/15 transition-all font-semibold shadow-inner"
-              placeholder="G-1025"
-            />
-          </div>
-
-          {/* Age */}
-          <div className="space-y-1.5">
-            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Age</label>
-            <input
-              type="number"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              className={cn(
-                "w-full px-3.5 py-2.5 rounded-xl border bg-black/10 dark:bg-white/[0.02] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/15 transition-all font-semibold shadow-inner",
-                errors.age ? "border-red-500/40 focus:border-red-500/40" : "border-white/5"
-              )}
-              placeholder="26"
-            />
-            {errors.age && <p className="text-[9px] text-red-500 font-bold">{errors.age}</p>}
-          </div>
-
-          {/* Email (Read-Only) */}
-          <div className="space-y-1.5">
-            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-              Email Address <Info className="h-3 w-3 text-muted-foreground" />
-            </label>
-            <input
-              type="email"
-              disabled
-              value={profile.email}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-black/20 dark:bg-white/[0.005] text-xs text-muted-foreground cursor-not-allowed outline-none font-semibold"
-            />
-          </div>
-        </div>
-
-        <div className="pt-4 flex flex-wrap items-center justify-between gap-4">
-          <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1.5 select-none">
-            Account Privilege: <span className="font-extrabold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider">{profile.role}</span>
-          </span>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-accent/90 disabled:opacity-50 transition-all shadow-lg hover:shadow-accent/10 cursor-pointer text-xs"
-            style={{ background: 'var(--accent)' }}
+        {/* Live ID Badge Preview Card */}
+        <div className="lg:col-span-2 flex flex-col justify-center items-center w-full h-full lg:pt-4">
+          <motion.div
+            whileHover={{ y: -4, rotateY: 3, rotateX: 3 }}
+            className="w-full max-w-[260px] aether-glass bg-gradient-to-br from-white/[0.04] to-white/[0.005] border-white/10 rounded-2xl p-5 text-center relative overflow-hidden shadow-lg flex flex-col items-center gap-4 group"
+            style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
           >
-            {saving ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
-              </>
-            ) : success ? (
-              <>
-                <Check className="h-3.5 w-3.5 text-emerald-400" /> Saved!
-              </>
-            ) : (
-              'Save Profile'
-            )}
-          </button>
+            {/* Shimmer backdrop */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 to-transparent pointer-events-none opacity-50 group-hover:opacity-80 transition-opacity" />
+            
+            {/* Interactive Identity circle sphere with radial color glow */}
+            <div className="relative z-10">
+              <div className="teammate-halo active">
+                <div 
+                  className="h-16 w-16 rounded-full flex items-center justify-center font-black text-white text-lg relative overflow-hidden shadow-lg"
+                  style={{
+                    background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
+                  }}
+                >
+                  <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
+                  {fullName ? fullName[0].toUpperCase() : '?'}
+                </div>
+              </div>
+            </div>
+
+            {/* Typography */}
+            <div className="space-y-1 z-10 w-full overflow-hidden">
+              <h3 className="text-xs font-black text-foreground truncate max-w-full leading-tight">
+                {fullName || 'Your Name'}
+              </h3>
+              <p className="text-[10px] text-muted-foreground truncate max-w-full">
+                @{username || 'username'}
+              </p>
+              
+              <div className="pt-3.5 border-t border-white/5 mt-3 space-y-2 text-left w-full text-[9px] font-semibold">
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span>Designation</span>
+                  <span className="text-foreground font-bold truncate max-w-[120px]">{designation || 'Lead Engineer'}</span>
+                </div>
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span>Employee ID</span>
+                  <span className="text-foreground font-bold truncate max-w-[120px]">{employeeId || 'G-1025'}</span>
+                </div>
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span>System Rank</span>
+                  <span className="text-accent font-extrabold uppercase tracking-wider">{profile.role}</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Guild glowing badge watermark */}
+            <div className="absolute bottom-2 right-3 text-[14px] font-black uppercase text-white/[0.015] select-none pointer-events-none tracking-widest font-heading group-hover:text-white/[0.035] transition-colors">
+              Guild ID
+            </div>
+          </motion.div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
 
+// ─── TAB VIEW: NOTIFICATIONS ────────────────────────────────────────────────
 // ─── TAB VIEW: NOTIFICATIONS ────────────────────────────────────────────────
 function NotificationSettingsView({ profile }: { profile: UserProfile }) {
   const [saving, setSaving] = React.useState<string | null>(null);
@@ -507,11 +569,11 @@ function NotificationSettingsView({ profile }: { profile: UserProfile }) {
   };
 
   const notificationOptions = [
-    { key: 'dm' as const, label: 'Direct Messages', desc: 'Notify me when I receive private direct messages.' },
-    { key: 'mention' as const, label: 'Mentions & Tags', desc: 'Notify me when someone mentions me (@username) in channels.' },
-    { key: 'taskAssigned' as const, label: 'Tasks Assigned to Me', desc: 'Send alerts when a workspace manager assigns a task to me.' },
-    { key: 'taskCommented' as const, label: 'Task Activities & Comments', desc: 'Notify me when colleagues comment or update tasks I created or belong to.' },
-    { key: 'channelInvite' as const, label: 'Channel Invitations', desc: 'Notify me when I am invited or added to a new communication channel.' },
+    { key: 'dm' as const, label: 'Direct Messages', desc: 'Notify me when I receive private direct messages.', icon: MessageSquare, colors: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400' },
+    { key: 'mention' as const, label: 'Mentions & Tags', desc: 'Notify me when someone mentions me (@username) in channels.', icon: AtSign, colors: 'bg-violet-500/10 border-violet-500/20 text-violet-400' },
+    { key: 'taskAssigned' as const, label: 'Tasks Assigned to Me', desc: 'Send alerts when a workspace manager assigns a task to me.', icon: CheckSquare, colors: 'bg-amber-500/10 border-amber-500/20 text-amber-400' },
+    { key: 'taskCommented' as const, label: 'Task Activities & Comments', desc: 'Notify me when colleagues comment or update tasks I created or belong to.', icon: MessagesSquare, colors: 'bg-teal-500/10 border-teal-500/20 text-teal-400' },
+    { key: 'channelInvite' as const, label: 'Channel Invitations', desc: 'Notify me when I am invited or added to a new communication channel.', icon: UserPlus, colors: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' },
   ];
 
   return (
@@ -521,38 +583,53 @@ function NotificationSettingsView({ profile }: { profile: UserProfile }) {
         <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Control which activities trigger real-time banners and notifications</p>
       </div>
 
-      <div className="divide-y divide-white/5 space-y-4">
+      <div className="space-y-3">
         {notificationOptions.map((opt) => {
           const isChecked = settings[opt.key];
           const isToggling = saving === opt.key;
+          const OptIcon = opt.icon;
+
           return (
-            <div key={opt.key} className="py-4 flex items-center justify-between gap-6 first:pt-0 last:pb-0">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-foreground">{opt.label}</span>
-                <p className="text-[10px] text-muted-foreground leading-relaxed">{opt.desc}</p>
+            <motion.div 
+              key={opt.key} 
+              whileHover={{ x: 2 }}
+              className="p-4 flex items-center justify-between gap-6 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-white/5 hover:border-white/10 rounded-2xl transition-all shadow-sm"
+            >
+              <div className="flex items-start gap-3.5 overflow-hidden">
+                {/* Icon sphere */}
+                <div className={cn("h-8.5 w-8.5 rounded-xl border flex items-center justify-center shrink-0 shadow-sm", opt.colors)}>
+                  <OptIcon className="h-4 w-4" />
+                </div>
+                
+                <div className="space-y-0.5 overflow-hidden">
+                  <span className="text-[11px] font-extrabold text-foreground tracking-wide leading-tight">{opt.label}</span>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed truncate max-w-[420px] font-medium">{opt.desc}</p>
+                </div>
               </div>
 
-              {/* Smooth Switch */}
+              {/* Bouncy Custom Switch */}
               <button
                 onClick={() => handleToggle(opt.key)}
                 disabled={isToggling}
                 className={cn(
-                  "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none shadow-inner",
-                  isChecked ? "bg-accent" : "bg-black/20 dark:bg-white/5",
+                  "relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border border-transparent transition-all duration-300 ease-in-out outline-none shadow-md",
+                  isChecked 
+                    ? "bg-accent shadow-[0_0_12px_oklch(from_var(--accent)_l_c_h_/_30%)]" 
+                    : "bg-white/5 hover:bg-white/10 border-white/10",
                   isToggling && "opacity-50 cursor-not-allowed"
                 )}
                 style={isChecked ? { backgroundColor: 'var(--accent)' } : undefined}
               >
                 <span
                   className={cn(
-                    "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out flex items-center justify-center",
-                    isChecked ? "translate-x-4" : "translate-x-0"
+                    "pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow-sm transition-all duration-300 ease-in-out flex items-center justify-center mt-[1px]",
+                    isChecked ? "translate-x-4.5 bg-white" : "translate-x-0.5 bg-muted-foreground/60"
                   )}
                 >
                   {isToggling && <Loader2 className="h-2.5 w-2.5 animate-spin text-accent" />}
                 </span>
               </button>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -578,7 +655,7 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
   };
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-6 text-left animate-fluid-pop">
       <div>
         <h2 className="text-sm font-bold text-foreground">Visual Theme & Appearance</h2>
         <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Choose your preferred workspace aesthetic. Syncs automatically across devices</p>
@@ -588,43 +665,53 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
         {THEMES.map((theme) => {
           const isActive = themeId === theme.id;
           return (
-            <button
+            <motion.button
               key={theme.id}
               onClick={() => handleThemeChange(theme.id)}
+              whileHover={{ scale: 1.02, y: -4, rotateY: 2, rotateX: -2 }}
               className={cn(
-                "flex flex-col text-left p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden group hover:shadow-md hover:scale-[1.01] cursor-pointer",
+                "flex flex-col text-left p-4 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 shadow-sm",
                 isActive
-                  ? "border-accent/40 bg-accent/[0.04] shadow-[inset_0_0_0_1px_oklch(from_var(--accent)_l_c_h_/_15%)]"
-                  : "border-white/5 bg-black/10 dark:bg-white/[0.01] hover:border-white/10"
+                  ? "border-accent/40 bg-accent/[0.04] shadow-[0_4px_24px_oklch(from_var(--accent)_l_c_h_/_12%),inset_0_1px_1px_rgba(255,255,255,0.05)]"
+                  : "border-white/10 bg-white/[0.015] dark:bg-white/[0.005] hover:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]"
               )}
+              style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
             >
               {/* Top Swatch Row */}
-              <div className="flex items-center justify-between gap-3 w-full mb-3">
+              <div className="flex items-center justify-between gap-3 w-full mb-3 z-10">
                 <div className="flex items-center gap-1.5 relative">
                   <div
-                    className="h-5.5 w-5.5 rounded-full border border-white/10 shrink-0 shadow-md relative z-10 overflow-hidden"
+                    className="h-6 w-6 rounded-full border border-white/10 shrink-0 shadow-md relative z-10 overflow-hidden"
                     style={{ backgroundColor: theme.swatch }}
                   >
                     <span className="absolute top-0 left-0 right-0 h-[40%] bg-white/10 rounded-t-full pointer-events-none" />
                   </div>
                   <div
-                    className="h-5.5 w-5.5 rounded-full border border-white/10 shrink-0 shadow-md -ml-2.5 relative z-0 overflow-hidden"
+                    className="h-6 w-6 rounded-full border border-white/10 shrink-0 shadow-md -ml-2.5 relative z-0 overflow-hidden"
                     style={{ backgroundColor: theme.bgSwatch }}
                   >
                     <span className="absolute top-0 left-0 right-0 h-[40%] bg-white/10 rounded-t-full pointer-events-none" />
                   </div>
                 </div>
                 {isActive && (
-                  <span className="p-1 rounded-full text-white bg-accent shadow" style={{ backgroundColor: 'var(--accent)' }}>
+                  <span className="p-1 rounded-full text-white bg-accent shadow-[0_0_12px_rgba(255,255,255,0.2)]" style={{ backgroundColor: 'var(--accent)' }}>
                     <Check className="h-3 w-3" />
                   </span>
                 )}
               </div>
 
               {/* Labels */}
-              <span className="text-xs font-bold text-foreground">{theme.name}</span>
-              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium leading-relaxed">{theme.description}</p>
-            </button>
+              <span className="text-xs font-black text-foreground tracking-wide z-10">{theme.name}</span>
+              <p className="text-[10px] text-muted-foreground mt-1.5 font-semibold leading-relaxed z-10">{theme.description}</p>
+              
+              {/* Orbit ambient light glow behind active card */}
+              {isActive && (
+                <div 
+                  className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-20 filter blur-xl"
+                  style={{ backgroundColor: theme.swatch }}
+                />
+              )}
+            </motion.button>
           );
         })}
       </div>
@@ -714,117 +801,117 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
         </div>
       )}
 
-      {/* Overhauled Members Table */}
-      <div className="border border-white/5 rounded-2xl overflow-hidden bg-black/10 dark:bg-white/[0.002] shadow-inner backdrop-blur-md">
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[500px]">
-            <thead>
-              <tr className="border-b border-white/5 bg-white/[0.01] text-[9px] uppercase font-extrabold text-muted-foreground/80 tracking-widest">
-                <th className="px-4 py-3.5">Teammate</th>
-                <th className="px-4 py-3.5">Role</th>
-                <th className="px-4 py-3.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {sorted.map((member) => {
-                const isSelf = member.uid === profile.uid;
-                const isOwner = member.role === 'owner';
-                const isAdmin = member.role === 'admin';
-                
-                const canManage = profile.role === 'owner' ? !isSelf : (profile.role === 'admin' && member.role === 'member');
-                const isProcessing = updatingId === member.uid;
+      {/* Redesigned Members Cards List */}
+      <div className="space-y-3">
+        {sorted.map((member) => {
+          const isSelf = member.uid === profile.uid;
+          const isOwner = member.role === 'owner';
+          const isAdmin = member.role === 'admin';
+          
+          const canManage = profile.role === 'owner' ? !isSelf : (profile.role === 'admin' && member.role === 'member');
+          const isProcessing = updatingId === member.uid;
 
-                return (
-                  <tr key={member.uid} className="hover:bg-white/[0.01] transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="h-8.5 w-8.5 rounded-xl flex items-center justify-center font-black text-white text-xs relative overflow-hidden"
-                          style={{
-                            background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
-                          }}
-                        >
-                          <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
-                          {member.fullName ? member.fullName[0].toUpperCase() : '?'}
-                        </div>
-                        <div className="overflow-hidden">
-                          <p className="text-xs font-bold text-foreground truncate leading-tight flex items-center gap-1.5">
-                            {member.fullName}
-                            {isSelf && <span className="text-[8px] font-black uppercase tracking-widest bg-accent/15 border border-accent/25 text-accent px-1.5 py-0.5 rounded">You</span>}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground truncate mt-0.5">@{member.username} · {member.designation || 'Teammate'}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {isOwner ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-amber-500/20 bg-amber-500/10 text-[9px] font-extrabold uppercase tracking-wider text-amber-500 shadow-sm">
-                          <Crown className="h-3 w-3 shrink-0" /> Owner
-                        </span>
-                      ) : isAdmin ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-violet-500/20 bg-violet-500/10 text-[9px] font-extrabold uppercase tracking-wider text-violet-500 shadow-sm">
-                          <ShieldCheck className="h-3 w-3 shrink-0" /> Admin
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-sky-500/20 bg-sky-500/10 text-[9px] font-extrabold uppercase tracking-wider text-sky-500 shadow-sm">
-                          <User className="h-3 w-3 shrink-0" /> Member
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {isProcessing ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-accent inline" />
-                      ) : canManage ? (
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Demote Admin / Promote Member */}
-                          {isAdmin ? (
-                            <button
-                              onClick={() => handleRoleChange(member.uid, 'member')}
-                              className="px-2.5 py-1 border border-white/5 bg-black/10 dark:bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-extrabold text-foreground transition-all cursor-pointer shadow-sm"
-                              title="Demote to standard Member"
-                            >
-                              Demote Member
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleRoleChange(member.uid, 'admin')}
-                              className="px-2.5 py-1 bg-violet-600 hover:bg-violet-750 text-white rounded-lg text-[9px] font-extrabold transition-all cursor-pointer shadow-md"
-                              title="Promote to Workspace Admin"
-                            >
-                              Promote Admin
-                            </button>
-                          )}
+          return (
+            <motion.div
+              key={member.uid}
+              whileHover={{ x: 3 }}
+              className="p-4 flex flex-wrap items-center justify-between gap-4 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-white/5 hover:border-white/10 rounded-2xl transition-all shadow-sm"
+            >
+              {/* Left Column: Teammate profile */}
+              <div className="flex items-center gap-3.5 overflow-hidden min-w-[240px] flex-1">
+                {/* Teammate halo with initials badge */}
+                <div className={cn("teammate-halo shrink-0", member.isManager ? "active" : "offline")}>
+                  <div 
+                    className="h-9 w-9 rounded-xl flex items-center justify-center font-black text-white text-xs relative overflow-hidden shadow-sm"
+                    style={{
+                      background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
+                    }}
+                  >
+                    <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
+                    {member.fullName ? member.fullName[0].toUpperCase() : '?'}
+                  </div>
+                </div>
 
-                          {/* Transfer Ownership (Owner Only) */}
-                          {profile.role === 'owner' && !isOwner && (
-                            <button
-                              onClick={() => handleTransfer(member.uid, member.fullName)}
-                              className="px-2.5 py-1 border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/15 text-amber-500 rounded-lg text-[9px] font-extrabold transition-all cursor-pointer shadow-sm"
-                              title="Transfer Ownership"
-                            >
-                              Transfer Owner
-                            </button>
-                          )}
+                <div className="overflow-hidden">
+                  <p className="text-xs font-black text-foreground truncate leading-tight flex items-center gap-1.5">
+                    {member.fullName}
+                    {isSelf && <span className="text-[8px] font-black uppercase tracking-widest bg-accent/15 border border-accent/25 text-accent px-1.5 py-0.5 rounded">You</span>}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1.5 font-semibold">
+                    @{member.username} · {member.designation || 'Teammate'}
+                  </p>
+                </div>
+              </div>
 
-                          {/* Remove from workspace */}
-                          <button
-                            onClick={() => handleRemoveMember(member.uid)}
-                            className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 rounded-lg transition-all cursor-pointer"
-                            title="Remove from Workspace"
-                          >
-                            <UserMinus className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground italic">—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+              {/* Middle Column: Role badging */}
+              <div className="flex items-center shrink-0">
+                {isOwner ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-amber-500/20 bg-amber-500/10 text-[9px] font-extrabold uppercase tracking-wider text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.15)]">
+                    <Crown className="h-3 w-3 shrink-0" /> Owner
+                  </span>
+                ) : isAdmin ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-violet-500/20 bg-violet-500/10 text-[9px] font-extrabold uppercase tracking-wider text-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.15)]">
+                    <ShieldCheck className="h-3 w-3 shrink-0" /> Admin
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-sky-500/20 bg-sky-500/10 text-[9px] font-extrabold uppercase tracking-wider text-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.15)]">
+                    <User className="h-3 w-3 shrink-0" /> Member
+                  </span>
+                )}
+              </div>
+
+              {/* Right Column: Actions */}
+              <div className="flex items-center gap-2 shrink-0">
+                {isProcessing ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                ) : canManage ? (
+                  <div className="flex items-center gap-1.5">
+                    {/* Demote Admin / Promote Member */}
+                    {isAdmin ? (
+                      <button
+                        onClick={() => handleRoleChange(member.uid, 'member')}
+                        className="px-2.5 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 rounded-xl text-[9px] font-extrabold text-foreground transition-all cursor-pointer shadow-sm"
+                        title="Demote to standard Member"
+                      >
+                        Demote
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleRoleChange(member.uid, 'admin')}
+                        className="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-750 text-white rounded-xl text-[9px] font-extrabold transition-all cursor-pointer shadow-md"
+                        title="Promote to Workspace Admin"
+                      >
+                        Promote Admin
+                      </button>
+                    )}
+
+                    {/* Transfer Ownership (Owner Only) */}
+                    {profile.role === 'owner' && !isOwner && (
+                      <button
+                        onClick={() => handleTransfer(member.uid, member.fullName)}
+                        className="px-2.5 py-1.5 border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/15 text-amber-500 rounded-xl text-[9px] font-extrabold transition-all cursor-pointer shadow-sm"
+                        title="Transfer Ownership"
+                      >
+                        Transfer Owner
+                      </button>
+                    )}
+
+                    {/* Remove from workspace */}
+                    <button
+                      onClick={() => handleRemoveMember(member.uid)}
+                      className="p-2 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-500/20"
+                      title="Remove from Workspace"
+                    >
+                      <UserMinus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground italic select-none px-2">—</span>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
@@ -868,7 +955,7 @@ function InviteLinksSettingsView({ inviteLinks, loading, members }: InviteLinksP
   };
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-6 text-left animate-fluid-pop">
       <div>
         <h2 className="text-sm font-bold text-foreground">Invite Links</h2>
         <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">View or revoke active single-use invitation links</p>
@@ -880,77 +967,74 @@ function InviteLinksSettingsView({ inviteLinks, loading, members }: InviteLinksP
           <span className="text-xs font-bold">Synchronizing links…</span>
         </div>
       ) : inviteLinks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-white/5 rounded-2xl bg-black/10 dark:bg-white/[0.002]">
+        <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
           <Link2 className="h-7 w-7 text-muted-foreground opacity-50 mb-2" />
           <p className="text-xs font-bold text-foreground">No active invite tokens</p>
-          <p className="text-[10px] text-muted-foreground mt-1 max-w-[240px] leading-relaxed">
+          <p className="text-[10px] text-muted-foreground mt-1 max-w-[240px] leading-relaxed font-semibold">
             Generate invite tokens on the Teammates directory or from the Members tab
           </p>
         </div>
       ) : (
-        <div className="border border-white/5 rounded-2xl overflow-hidden bg-black/10 dark:bg-white/[0.002] shadow-inner backdrop-blur-md">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/5 bg-white/[0.01] text-[9px] uppercase font-extrabold text-muted-foreground/80 tracking-widest">
-                <th className="px-4 py-3.5">Invite Token</th>
-                <th className="px-4 py-3.5">Created By</th>
-                <th className="px-4 py-3.5">Status</th>
-                <th className="px-4 py-3.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {inviteLinks.map((link) => {
-                const now = Date.now();
-                const isExpired = link.expiresAt.toMillis() < now;
-                const isActive = !link.used && !isExpired;
-                const isRevoking = revoking === link.token;
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {inviteLinks.map((link) => {
+            const now = Date.now();
+            const isExpired = link.expiresAt.toMillis() < now;
+            const isActive = !link.used && !isExpired;
+            const isRevoking = revoking === link.token;
 
-                return (
-                  <tr key={link.token} className="hover:bg-white/[0.01] transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 overflow-hidden max-w-[240px]">
-                        <span className="text-xs font-mono text-foreground font-semibold truncate">/join/{link.token}</span>
-                        {isActive && (
-                          <button
-                            onClick={() => handleCopy(link.token)}
-                            className="p-1 hover:bg-white/10 text-accent rounded transition-colors"
-                            title="Copy link"
-                          >
-                            {copiedId === link.token ? <Check className="h-3 w-3 text-emerald-400 animate-fluid-pop" /> : <Copy className="h-3 w-3 text-accent" />}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-[11px] text-muted-foreground font-bold">
-                      {getCreatorName(link.createdBy)}
-                    </td>
-                    <td className="px-4 py-3">
-                      {link.used ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded border border-white/5 bg-white/5 text-[8px] font-black uppercase tracking-wider text-muted-foreground">Used</span>
-                      ) : isExpired ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded border border-red-500/10 bg-red-500/10 text-[8px] font-black uppercase tracking-wider text-red-400">Expired</span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded border border-emerald-500/15 bg-emerald-500/10 text-[8px] font-black uppercase tracking-wider text-emerald-400">Active</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {isRevoking ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-accent inline" />
-                      ) : (
-                        <button
-                          onClick={() => handleRevoke(link.token)}
-                          className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-450 rounded-lg transition-all cursor-pointer"
-                          title="Delete link"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+            return (
+              <motion.div
+                key={link.token}
+                whileHover={{ y: -2 }}
+                className="p-4 flex flex-col justify-between gap-4 aether-glass bg-gradient-to-br from-white/[0.015] to-transparent border-white/5 hover:border-white/10 rounded-2xl transition-all shadow-sm relative overflow-hidden"
+              >
+                <div className="space-y-3.5 z-10">
+                  <div className="flex items-center justify-between gap-2 w-full">
+                    {/* Status Badge */}
+                    {link.used ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-white/5 bg-white/5 text-[8px] font-black uppercase tracking-wider text-muted-foreground">Used</span>
+                    ) : isExpired ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-red-500/10 bg-red-500/10 text-[8px] font-black uppercase tracking-wider text-red-400">Expired</span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-emerald-500/15 bg-emerald-500/10 text-[8px] font-black uppercase tracking-wider text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.1)]">Active</span>
+                    )}
+
+                    {/* Actions */}
+                    {isRevoking ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                    ) : (
+                      <button
+                        onClick={() => handleRevoke(link.token)}
+                        className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 rounded-lg transition-all cursor-pointer border border-transparent hover:border-red-500/10"
+                        title="Delete link"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Token link box */}
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-xl border border-white/5 bg-white/[0.01] shadow-inner w-full overflow-hidden">
+                    <span className="text-[11px] font-mono text-foreground font-semibold truncate flex-1">/join/{link.token}</span>
+                    {isActive && (
+                      <button
+                        onClick={() => handleCopy(link.token)}
+                        className="p-1.5 hover:bg-white/10 text-accent rounded-lg transition-all"
+                        title="Copy link"
+                      >
+                        {copiedId === link.token ? <Check className="h-3.5 w-3.5 text-emerald-400 animate-fluid-pop" /> : <Copy className="h-3.5 w-3.5 text-accent" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center text-[9px] font-semibold text-muted-foreground border-t border-white/5 pt-3 z-10">
+                  <span>Created By</span>
+                  <span className="text-foreground font-bold">{getCreatorName(link.createdBy)}</span>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -1042,7 +1126,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
   };
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-6 text-left animate-fluid-pop">
       <div className="space-y-6">
         <div>
           <h2 className="text-sm font-bold text-foreground">Workspace General Info</h2>
@@ -1050,7 +1134,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
         </div>
 
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-xl flex items-start gap-2">
+          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-xl flex items-start gap-2 animate-fluid-pop">
             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -1065,7 +1149,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-black/10 dark:bg-white/[0.02] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/15 transition-all font-semibold shadow-inner"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
                 placeholder="Google Deepmind"
               />
             </div>
@@ -1073,7 +1157,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
             {/* Slug */}
             <div className="space-y-1.5">
               <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Workspace URL Slug</label>
-              <div className="flex items-center gap-1 p-1 rounded-xl border border-white/5 bg-black/10 dark:bg-white/[0.02] shadow-inner">
+              <div className="flex items-center gap-1 p-1 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
                 <span className="text-xs text-muted-foreground font-bold pl-2.5 select-none truncate">guild.com/</span>
                 <input
                   type="text"
@@ -1091,7 +1175,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-accent/90 disabled:opacity-50 transition-all shadow-lg hover:shadow-accent/10 cursor-pointer text-xs"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-accent/90 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 transition-all shadow-lg hover:shadow-accent/15 cursor-pointer text-xs"
               style={{ background: 'var(--accent)' }}
             >
               {saving ? (
@@ -1111,7 +1195,10 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
       </div>
 
       {/* Danger Zone Overhaul */}
-      <div className="bg-red-500/[0.01] border border-red-500/15 rounded-3xl p-6 space-y-4 shadow-sm relative overflow-hidden mt-6">
+      <div className="aether-glass bg-red-500/[0.01] border border-red-500/20 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-4 relative overflow-hidden mt-6">
+        {/* Crimson pulse accent glow */}
+        <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.08] filter blur-xl bg-red-500" />
+        
         <div className="flex items-start gap-3">
           <ShieldAlert className="h-5 w-5 text-red-500 shrink-0 mt-0.5 animate-pulse" />
           <div>
@@ -1131,13 +1218,13 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
               type="text"
               value={confirmName}
               onChange={(e) => setConfirmName(e.target.value)}
-              className="flex-1 px-3.5 py-2 rounded-xl border border-red-500/20 bg-black/10 dark:bg-white/[0.02] text-xs text-foreground outline-none focus:border-red-500/50 transition-all font-semibold"
+              className="flex-1 px-3.5 py-2.5 rounded-xl border border-red-500/20 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold"
               placeholder="Type workspace name"
             />
             <button
               onClick={handleDelete}
               disabled={deleting || confirmName !== org.name}
-              className="px-4 py-2 bg-red-650 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
+              className="px-4 py-2.5 bg-red-600 hover:bg-red-650 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
             >
               {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
               Delete Workspace
@@ -1303,13 +1390,13 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
       </div>
 
       {/* Internal Sub-Tabs */}
-      <div className="flex gap-2 p-1 bg-black/10 dark:bg-white/5 rounded-xl border border-white/5 self-start w-fit shadow-inner">
+      <div className="flex gap-1.5 p-1 bg-white/[0.02] dark:bg-white/[0.01] rounded-xl border border-white/10 self-start w-fit shadow-[inset_0_1px_2px_rgba(255,255,255,0.02)]">
         <button
           onClick={() => setSubTab('teams')}
           className={cn(
             "px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer",
             subTab === 'teams'
-              ? "bg-accent text-accent-foreground shadow"
+              ? "bg-accent text-accent-foreground shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
               : "text-muted-foreground hover:text-foreground"
           )}
           style={subTab === 'teams' ? { backgroundColor: 'var(--accent)' } : undefined}
@@ -1321,7 +1408,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
           className={cn(
             "px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer",
             subTab === 'hierarchy'
-              ? "bg-accent text-accent-foreground shadow"
+              ? "bg-accent text-accent-foreground shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
               : "text-muted-foreground hover:text-foreground"
           )}
           style={subTab === 'hierarchy' ? { backgroundColor: 'var(--accent)' } : undefined}
@@ -1335,7 +1422,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
         <div className="space-y-6">
           {/* Create Team Overlay/Form */}
           {isCreating ? (
-            <form onSubmit={handleCreateTeam} className="p-5 border border-accent/25 bg-accent/[0.02] rounded-2xl space-y-4 shadow-sm">
+            <form onSubmit={handleCreateTeam} className="p-5 border border-accent/30 bg-accent/[0.02] rounded-2xl space-y-4 shadow-sm animate-fluid-pop">
               <h3 className="text-xs font-black text-accent uppercase tracking-wider flex items-center gap-1.5">
                 <Plus className="h-4 w-4" /> Create Functional Team
               </h3>
@@ -1356,7 +1443,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
                     placeholder="e.g. Growth Squad"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-black/10 dark:bg-white/[0.02] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -1365,7 +1452,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                     required
                     value={teamManager}
                     onChange={(e) => setTeamManager(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-black/10 dark:bg-white/[0.02] text-xs text-foreground outline-none focus:border-accent/40 font-bold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-bold"
                   >
                     <option value="" className="bg-surface font-bold text-foreground">-- Assign Lead --</option>
                     {members.map((m) => (
@@ -1384,14 +1471,14 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                   value={teamDesc}
                   onChange={(e) => setTeamDesc(e.target.value)}
                   placeholder="e.g. Responsible for user acquisition..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-black/10 dark:bg-white/[0.02] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
                 />
               </div>
 
               {/* Members Selection List */}
               <div className="space-y-2">
                 <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Assign Members</label>
-                <div className="border border-white/5 rounded-xl p-3 max-h-40 overflow-y-auto bg-black/10 dark:bg-white/[0.02] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner">
+                <div className="border border-white/10 rounded-xl p-3 max-h-40 overflow-y-auto bg-white/[0.01] dark:bg-white/[0.005] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner custom-scrollbar">
                   {members.map((m) => (
                     <label key={m.uid} className="flex items-center gap-2 px-2 py-1.5 hover:bg-white/5 rounded-lg cursor-pointer text-xs font-semibold">
                       <input
@@ -1401,7 +1488,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                         className="rounded border-white/20 text-accent focus:ring-accent/15"
                       />
                       <span className="truncate text-foreground font-semibold">{m.fullName}</span>
-                      <span className="text-[10px] text-muted-foreground">@{m.username}</span>
+                      <span className="text-[10px] text-muted-foreground font-normal">@{m.username}</span>
                     </label>
                   ))}
                 </div>
@@ -1411,7 +1498,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                 <button
                   type="button"
                   onClick={() => setIsCreating(false)}
-                  className="px-4 py-2 border border-white/5 bg-black/10 dark:bg-white/5 rounded-xl text-xs font-bold text-foreground cursor-pointer"
+                  className="px-4 py-2 border border-white/10 bg-white/5 rounded-xl text-xs font-bold text-foreground cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1429,7 +1516,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
           ) : (
             <button
               onClick={() => setIsCreating(true)}
-              className="flex items-center justify-center gap-2 w-full p-4 border border-dashed border-white/10 hover:border-accent/30 hover:bg-accent/[0.02] rounded-2xl text-xs font-bold text-muted-foreground hover:text-accent transition-all duration-305 cursor-pointer shadow-sm"
+              className="flex items-center justify-center gap-2 w-full p-4 border border-dashed border-white/15 hover:border-accent/30 hover:bg-accent/[0.02] rounded-2xl text-xs font-bold text-muted-foreground hover:text-accent transition-all duration-305 cursor-pointer shadow-sm"
             >
               <Plus className="h-4 w-4" /> Add Functional Team
             </button>
@@ -1441,10 +1528,10 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
               <Loader2 className="h-6 w-6 animate-spin text-accent" />
             </div>
           ) : teams.length === 0 ? (
-            <div className="text-center py-10 border border-dashed border-white/5 rounded-2xl bg-black/10 dark:bg-white/[0.002]">
+            <div className="text-center py-10 border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
               <Users className="h-7 w-7 mx-auto text-muted-foreground opacity-50 mb-2" />
               <h4 className="text-xs font-bold text-foreground">No Teams Defined</h4>
-              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Create your first functional squad above</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Create your first functional squad above</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1458,7 +1545,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                     <form
                       key={t.id}
                       onSubmit={handleUpdateTeam}
-                      className="p-5 border border-accent bg-accent/[0.02] rounded-2xl space-y-4 col-span-1 md:col-span-2 shadow-sm"
+                      className="p-5 border border-accent bg-accent/[0.02] rounded-2xl space-y-4 col-span-1 md:col-span-2 shadow-sm animate-fluid-pop"
                     >
                       <h3 className="text-xs font-black text-accent uppercase tracking-wider">Edit Functional Team: {t.name}</h3>
 
@@ -1478,7 +1565,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             placeholder="e.g. Growth Squad"
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-black/10 dark:bg-white/[0.02] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -1487,7 +1574,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                             required
                             value={editManager}
                             onChange={(e) => setEditManager(e.target.value)}
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-black/10 dark:bg-white/[0.02] text-xs text-foreground outline-none focus:border-accent/40 font-bold"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-bold"
                           >
                             <option value="" className="bg-surface font-bold text-foreground">-- Select Lead --</option>
                             {members.map((m) => (
@@ -1506,14 +1593,14 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                           value={editDesc}
                           onChange={(e) => setEditDesc(e.target.value)}
                           placeholder="Team description..."
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-black/10 dark:bg-white/[0.02] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
                         />
                       </div>
 
                       {/* Members Selection List */}
                       <div className="space-y-2">
                         <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Assign Members</label>
-                        <div className="border border-white/5 rounded-xl p-3 max-h-40 overflow-y-auto bg-black/10 dark:bg-white/[0.02] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner">
+                        <div className="border border-white/10 rounded-xl p-3 max-h-40 overflow-y-auto bg-white/[0.01] dark:bg-white/[0.005] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner custom-scrollbar">
                           {members.map((m) => (
                             <label key={m.uid} className="flex items-center gap-2 px-2 py-1.5 hover:bg-white/5 rounded-lg cursor-pointer text-xs font-semibold">
                               <input
@@ -1533,7 +1620,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                         <button
                           type="button"
                           onClick={() => setEditingTeamId(null)}
-                          className="px-4 py-2 border border-white/5 bg-black/10 dark:bg-white/5 rounded-xl text-xs font-bold text-foreground cursor-pointer"
+                          className="px-4 py-2 border border-white/10 bg-white/5 rounded-xl text-xs font-bold text-foreground cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -1555,7 +1642,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                   <motion.div
                     key={t.id}
                     whileHover={{ y: -3, scale: 1.01 }}
-                    className="p-5 border border-white/5 bg-black/10 dark:bg-white/[0.005] rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                    className="p-5 border border-white/10 bg-gradient-to-br from-white/[0.02] to-transparent rounded-2xl shadow-sm hover:shadow-[0_4px_20px_oklch(from_var(--accent)_l_c_h_/_8%)] hover:border-accent/30 transition-all duration-300 flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex justify-between items-start gap-4 mb-2">
@@ -1570,13 +1657,13 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                               setEditMembers(t.memberIds || []);
                               setEditError(null);
                             }}
-                            className="px-2.5 py-1 text-[9px] font-extrabold border border-white/5 rounded-lg hover:bg-white/10 text-foreground transition-all cursor-pointer shadow-sm"
+                            className="px-2.5 py-1.5 text-[9px] font-extrabold border border-white/10 rounded-xl hover:bg-white/10 text-foreground transition-all cursor-pointer shadow-sm"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteTeam(t.id, t.name)}
-                            className="p-1 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 rounded-lg transition-all cursor-pointer"
+                            className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-500/10"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -1616,90 +1703,84 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
             </div>
           )}
 
-          {/* Overhauled Hierarchy Table */}
-          <div className="border border-white/5 rounded-2xl overflow-hidden bg-black/10 dark:bg-white/[0.002] shadow-inner backdrop-blur-md">
-            <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[500px]">
-                <thead>
-                  <tr className="border-b border-white/5 bg-white/[0.01] text-[9px] uppercase font-extrabold text-muted-foreground/80 tracking-widest">
-                    <th className="px-4 py-3.5">Member</th>
-                    <th className="px-4 py-3.5">Designation</th>
-                    <th className="px-4 py-3.5">Manager Privilege</th>
-                    <th className="px-4 py-3.5">Direct Line Manager</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {members.map((m) => {
-                    const isProcessing = updatingUserId === m.uid;
-                    const potentialManagers = members.filter((pm) => pm.uid !== m.uid);
+          {/* Overhauled Hierarchy List */}
+          <div className="space-y-3">
+            {members.map((m) => {
+              const isProcessing = updatingUserId === m.uid;
+              const potentialManagers = members.filter((pm) => pm.uid !== m.uid);
 
-                    return (
-                      <tr key={m.uid} className="hover:bg-white/[0.01] transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div 
-                              className="h-8.5 w-8.5 rounded-xl flex items-center justify-center font-black text-white text-xs shrink-0 relative overflow-hidden"
-                              style={{
-                                background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
-                              }}
-                            >
-                              <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
-                              {m.fullName ? m.fullName[0].toUpperCase() : '?'}
-                            </div>
-                            <div className="overflow-hidden">
-                              <p className="text-xs font-bold text-foreground truncate leading-tight">
-                                {m.fullName}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground truncate mt-0.5">@{m.username}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-foreground font-semibold">
-                          {m.designation || 'Teammate'}
-                        </td>
-                        <td className="px-4 py-3">
-                          {isProcessing ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-accent" />
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleManagerToggle(m.uid, !!m.isManager)}
-                              className={cn(
-                                "px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider border cursor-pointer transition-all shadow-sm",
-                                m.isManager
-                                  ? "bg-accent/15 text-accent border-accent/25"
-                                  : "bg-white/5 text-muted-foreground border-white/5 hover:bg-white/10"
-                              )}
-                              style={m.isManager ? { color: 'var(--accent)', borderColor: 'oklch(from var(--accent) l c h / 25%)' } : undefined}
-                            >
-                              {m.isManager ? 'Is Manager' : 'Standard Member'}
-                            </button>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {isProcessing ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-accent" />
-                          ) : (
-                            <select
-                              value={m.managerId || 'none'}
-                              onChange={(e) => handleLineManagerChange(m.uid, e.target.value)}
-                              className="bg-black/20 dark:bg-white/[0.02] border border-white/5 text-[11px] font-bold text-foreground rounded-lg px-2.5 py-1.5 outline-none focus:border-accent/40 transition-all max-w-[170px] truncate cursor-pointer shadow-inner"
-                            >
-                              <option value="none" className="bg-surface font-bold text-foreground">No Manager</option>
-                              {potentialManagers.map((pm) => (
-                                <option key={pm.uid} value={pm.uid} className="bg-surface font-bold text-foreground">
-                                  {pm.fullName}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+              return (
+                <motion.div
+                  key={m.uid}
+                  whileHover={{ x: 2 }}
+                  className="p-4 flex flex-wrap items-center justify-between gap-4 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-white/5 hover:border-white/10 rounded-2xl transition-all shadow-sm"
+                >
+                  {/* Member Details */}
+                  <div className="flex items-center gap-3.5 min-w-[200px] flex-1 overflow-hidden">
+                    <div 
+                      className="h-8.5 w-8.5 rounded-xl flex items-center justify-center font-black text-white text-xs shrink-0 relative overflow-hidden"
+                      style={{
+                        background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
+                      }}
+                    >
+                      <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
+                      {m.fullName ? m.fullName[0].toUpperCase() : '?'}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-xs font-black text-foreground truncate leading-tight">
+                        {m.fullName}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground truncate mt-1.5 font-semibold">@{m.username}</p>
+                    </div>
+                  </div>
+
+                  {/* Designation */}
+                  <div className="text-xs text-foreground font-semibold min-w-[130px] shrink-0">
+                    {m.designation || 'Teammate'}
+                  </div>
+
+                  {/* Manager Privilege Toggle */}
+                  <div className="shrink-0 min-w-[130px] flex items-center">
+                    {isProcessing ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleManagerToggle(m.uid, !!m.isManager)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-wider border cursor-pointer transition-all shadow-sm",
+                          m.isManager
+                            ? "bg-accent/15 text-accent border-accent/25"
+                            : "bg-white/5 text-muted-foreground border-white/10 hover:bg-white/10"
+                        )}
+                        style={m.isManager ? { color: 'var(--accent)', borderColor: 'oklch(from var(--accent) l c h / 25%)' } : undefined}
+                      >
+                        {m.isManager ? 'Is Manager' : 'Standard'}
+                      </button>
+                    )}
+                  </div>
+                  {/* Direct Line Manager Selector */}
+                  <div className="shrink-0">
+                    {isProcessing ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                    ) : (
+                      <select
+                        value={m.managerId || 'none'}
+                        onChange={(e) => handleLineManagerChange(m.uid, e.target.value)}
+                        className="bg-white/[0.02] dark:bg-white/[0.01] border border-white/10 text-[11px] font-bold text-foreground rounded-lg px-2.5 py-1.5 outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 transition-all max-w-[170px] truncate cursor-pointer shadow-inner"
+                      >
+                        <option value="none" className="bg-surface font-bold text-foreground">No Manager</option>
+                        {potentialManagers.map((pm) => (
+                          <option key={pm.uid} value={pm.uid} className="bg-surface font-bold text-foreground">
+                            {pm.fullName}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       )}

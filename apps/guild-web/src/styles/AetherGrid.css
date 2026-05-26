@@ -8,13 +8,14 @@
   --aether-radius: 20px;
   
   --aether-bg: var(--bg-primary);
-  --aether-bg-gradient: radial-gradient(circle at 0% 0%, oklch(from var(--bg-secondary) calc(l - 0.03) calc(c + 0.02) h) 0%, var(--bg-primary) 50%, oklch(from var(--bg-tertiary) calc(l - 0.02) calc(c + 0.01) h) 100%);
+  --aether-bg-gradient: linear-gradient(135deg, oklch(from var(--bg-primary) calc(l - 0.03) calc(c + 0.01) h) 0%, var(--bg-primary) 50%, oklch(from var(--bg-secondary) calc(l - 0.04) calc(c + 0.02) h) 100%);
   
-  --aether-glass-bg: oklch(from var(--surface) l c h / 55%);
-  --aether-glass-border: oklch(from var(--border-default) l c h / 50%);
-  --aether-glass-border-inner: oklch(from var(--border-subtle) l c h / 40%);
+  --aether-glass-bg: oklch(from var(--accent) 0.98 0.01 h / 65%);
+  --aether-glass-border: oklch(from var(--accent) 0.90 0.03 h / 20%);
+  --aether-glass-border-inner: oklch(from var(--accent) 0.95 0.03 h / 15%);
   --aether-glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06), 
-                         inset 0 1px 1px 0 oklch(from var(--text-primary) l c h / 8%);
+                         inset 0 1px 1px 0 oklch(from var(--text-primary) l c h / 6%),
+                         0 0 1px 0 oklch(from var(--accent) l c h / 10%);
   
   --aether-text-primary: var(--text-primary);
   --aether-text-secondary: var(--text-secondary);
@@ -37,11 +38,12 @@
 
 .dark {
   /* Dynamic mappings adapt automatically, but can specify overrides if needed */
-  --aether-glass-bg: oklch(from var(--surface) l c h / 45%);
-  --aether-glass-border: oklch(from var(--border-default) l c h / 30%);
-  --aether-glass-border-inner: oklch(from var(--border-subtle) l c h / 20%);
-  --aether-glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3), 
-                         inset 0 1px 0 0 oklch(from var(--text-primary) l c h / 6%);
+  --aether-glass-bg: oklch(from var(--accent) 0.97 0.03 h / 3.5%);
+  --aether-glass-border: oklch(from var(--accent) 0.95 0.04 h / 10%);
+  --aether-glass-border-inner: oklch(from var(--accent) 0.98 0.04 h / 7%);
+  --aether-glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.22), 
+                         inset 0 1px 0 0 oklch(from var(--text-primary) l c h / 5%),
+                         0 0 1px 0 oklch(from var(--accent) l c h / 12%);
 }
 
 
@@ -66,8 +68,11 @@
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  filter: blur(140px);
-  opacity: 0.75;
+  filter: blur(150px);
+  opacity: 0.82;
+  background: 
+    radial-gradient(circle at 80% 20%, oklch(0.62 0.20 190 / 22%), transparent 60%),
+    radial-gradient(circle at 20% 85%, oklch(0.55 0.16 150 / 18%), transparent 60%);
 }
 
 .aether-aurora::before,
@@ -79,46 +84,46 @@
 }
 
 .aether-aurora::before {
-  width: 50vw;
-  height: 50vw;
-  background: radial-gradient(circle, var(--aether-primary) 0%, transparent 70%);
-  top: -10%;
-  left: -10%;
-  animation: aurora-float-1 25s ease-in-out infinite alternate;
+  width: 65vw;
+  height: 65vw;
+  background: radial-gradient(circle, oklch(from var(--aether-primary) 0.58 0.22 h / 35%) 0%, transparent 70%);
+  top: -15%;
+  left: -15%;
+  animation: aurora-float-1 30s ease-in-out infinite alternate;
 }
 
 .aether-aurora::after {
-  width: 45vw;
-  height: 45vw;
-  background: radial-gradient(circle, var(--aether-secondary) 0%, transparent 70%);
-  bottom: -5%;
-  right: -5%;
-  animation: aurora-float-2 20s ease-in-out infinite alternate;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, oklch(from var(--aether-secondary) 0.55 0.18 h / 30%) 0%, transparent 70%);
+  bottom: -15%;
+  right: -15%;
+  animation: aurora-float-2 25s ease-in-out infinite alternate;
 }
 
 @keyframes aurora-float-1 {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(10vw, 8vh) scale(1.15); }
-  100% { transform: translate(-5vw, -5vh) scale(0.9); }
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(8vw, 6vh) scale(1.1) rotate(60deg); }
+  100% { transform: translate(-4vw, -4vh) scale(0.95) rotate(120deg); }
 }
 
 @keyframes aurora-float-2 {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-8vw, -12vh) scale(0.9); }
-  100% { transform: translate(5vw, 5vh) scale(1.1); }
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(-6vw, -8vh) scale(0.95) rotate(-60deg); }
+  100% { transform: translate(4vw, 4vh) scale(1.05) rotate(-120deg); }
 }
 
 /* Custom Glassmorphic Panels */
 .aether-glass {
   background: var(--aether-glass-bg);
-  backdrop-filter: blur(28px) saturate(1.4);
-  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  backdrop-filter: blur(40px) saturate(1.8);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8);
   border: 1px solid var(--aether-glass-border);
   border-top-color: var(--aether-glass-border-inner);
   border-left-color: var(--aether-glass-border-inner);
   border-radius: var(--aether-radius);
   box-shadow: var(--aether-glass-shadow);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .aether-glass-interactive:hover {

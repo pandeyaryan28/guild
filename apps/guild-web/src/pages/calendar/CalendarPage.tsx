@@ -377,7 +377,7 @@ export function CalendarPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             {/* Navigation button deck */}
-            <div className="flex items-center rounded-xl border border-white/5 bg-black/10 dark:bg-white/5 p-1 shadow-inner">
+            <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] p-1 shadow-inner backdrop-blur-md">
               <button 
                 onClick={handlePrev} 
                 className="rounded-lg p-1.5 text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all cursor-pointer"
@@ -401,7 +401,7 @@ export function CalendarPage() {
             </div>
 
             {/* Premium Sliding View Switcher Deck */}
-            <div className="flex items-center rounded-xl border border-white/5 bg-black/10 dark:bg-white/5 p-1 shadow-inner relative">
+            <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] p-1 shadow-inner relative backdrop-blur-md">
               {(['month', 'week', 'day'] as const).map((view) => (
                 <button
                   key={view}
@@ -433,7 +433,7 @@ export function CalendarPage() {
                 "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-inner",
                 showFilters 
                   ? "border-accent/40 text-accent bg-accent/[0.08]" 
-                  : "border-white/5 bg-black/10 dark:bg-white/5 text-muted-foreground hover:text-foreground"
+                  : "border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-muted-foreground hover:text-foreground"
               )}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -462,9 +462,9 @@ export function CalendarPage() {
               animate={{ opacity: 1, height: 'auto', y: 0 }}
               exit={{ opacity: 0, height: 0, y: -10 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="overflow-hidden mb-4"
+              className="overflow-hidden mb-4 animate-fluid-pop"
             >
-              <div className="grid grid-cols-1 gap-3 rounded-2xl border border-white/5 bg-black/10 dark:bg-white/2 p-4 backdrop-blur-xl sm:grid-cols-2 md:grid-cols-5 shadow-inner">
+              <div className="grid grid-cols-1 gap-3 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.02] to-white/[0.005] p-4 backdrop-blur-2xl sm:grid-cols-2 md:grid-cols-5 shadow-inner">
                 
                 {/* Search query */}
                 <div className="relative">
@@ -476,7 +476,7 @@ export function CalendarPage() {
                     placeholder="Search tasks..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-xl border border-white/5 bg-black/20 dark:bg-white/5 py-2 pl-9 pr-3 text-[11px] text-foreground placeholder:text-muted-foreground outline-none hover:bg-black/30 dark:hover:bg-white/10 hover:border-white/10 focus:border-accent/40 transition-all font-medium"
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] py-2 pl-9 pr-3 text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 transition-all font-semibold"
                   />
                   {searchQuery && (
                     <button 
@@ -489,7 +489,7 @@ export function CalendarPage() {
                 </div>
 
                 {/* Project Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/5 bg-black/20 dark:bg-white/5 px-3 py-1 hover:bg-black/30 dark:hover:bg-white/10 hover:border-white/10 focus-within:border-accent/40 transition-all">
+                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
                   <Folder className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <select
                     value={selectedProjectId}
@@ -504,7 +504,7 @@ export function CalendarPage() {
                 </div>
 
                 {/* Assignee Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/5 bg-black/20 dark:bg-white/5 px-3 py-1 hover:bg-black/30 dark:hover:bg-white/10 hover:border-white/10 focus-within:border-accent/40 transition-all">
+                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
                   <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <select
                     value={selectedAssigneeId}
@@ -519,7 +519,7 @@ export function CalendarPage() {
                 </div>
 
                 {/* Priority Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/5 bg-black/20 dark:bg-white/5 px-3 py-1 hover:bg-black/30 dark:hover:bg-white/10 hover:border-white/10 focus-within:border-accent/40 transition-all">
+                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
                   <AlertCircle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <select
                     value={selectedPriority}
@@ -534,7 +534,7 @@ export function CalendarPage() {
                 </div>
 
                 {/* Status Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/5 bg-black/20 dark:bg-white/5 px-3 py-1 hover:bg-black/30 dark:hover:bg-white/10 hover:border-white/10 focus-within:border-accent/40 transition-all">
+                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
                   <ListTodo className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <select
                     value={selectedStatus}
@@ -637,7 +637,7 @@ export function CalendarPage() {
                                 "relative group p-2.5 md:p-3 flex flex-col rounded-2xl border transition-all duration-300 select-none overflow-hidden h-full",
                                 isCurrentMonth 
                                   ? "border-white/5 bg-white/[0.01] hover:border-accent/30 dark:bg-white/[0.003] dark:hover:bg-white/[0.015] shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]" 
-                                  : "opacity-15 border-white/[0.02] bg-black/10 hover:opacity-25",
+                                  : "opacity-15 border-white/[0.02] bg-white/[0.005] hover:opacity-25",
                                 isMobileSelected && isCurrentMonth && "bg-white/[0.03] border-accent/40 shadow-[inset_0_0_0_1px_oklch(from_var(--accent)_l_c_h_/_20%)] backdrop-blur-sm",
                                 isDayToday && "border-accent/40 ring-1 ring-accent/20 bg-gradient-to-br from-accent/[0.06] to-indigo-500/[0.01]"
                               )}
@@ -772,7 +772,7 @@ export function CalendarPage() {
                                               "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300 cursor-pointer",
                                               isDone 
                                                 ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 animate-fluid-pop" 
-                                                : "border-white/20 bg-black/20 hover:border-accent/50 hover:bg-accent/5"
+                                                : "border-white/20 bg-white/[0.02] hover:border-accent/50 hover:bg-accent/5"
                                             )}
                                           >
                                             {isDone ? (
