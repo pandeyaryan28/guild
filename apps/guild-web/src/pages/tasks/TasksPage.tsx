@@ -245,9 +245,19 @@ export function TasksPage() {
   const taskStatuses: TaskStatus[] = ['todo', 'in_progress', 'review', 'done'];
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* ─── Header Section ─── */}
-      <div className="flex flex-wrap items-center justify-between px-6 py-4 border-b border-border-default flex-shrink-0 gap-4">
+    <div className="flex flex-col h-full overflow-hidden relative p-1.5 md:p-3 bg-bg-secondary/15 rounded-3xl border border-border-default/30 shadow-inner animate-fade-in">
+      {/* ─── Premium Canvas Workspace Shell ─── */}
+      <div className="flex-1 flex flex-col bg-card/65 dark:bg-card/45 backdrop-blur-xl border border-border-default/50 rounded-2xl shadow-2xl overflow-hidden relative group">
+        
+        {/* Spatial background accents */}
+        <div className="absolute top-0 right-0 -mr-24 -mt-24 w-80 h-80 bg-violet-500/[0.04] dark:bg-violet-500/[0.03] rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 bg-emerald-500/[0.03] dark:bg-emerald-500/[0.02] rounded-full blur-3xl pointer-events-none" />
+        
+        {/* Dotted canvas matrix pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.012)_1px,transparent_1px)] dark:bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.006)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none" />
+
+        {/* ─── Header Section ─── */}
+        <div className="flex flex-wrap items-center justify-between px-6 py-4 border-b border-border-default/50 flex-shrink-0 gap-4 bg-white/[0.01] dark:bg-white/[0.003] backdrop-blur-md relative z-10">
         
         {/* Segmented Tab Switcher */}
         <div className="flex items-center gap-1.5 bg-accent/20 border border-border-default/45 p-0.5 rounded-xl shrink-0">
@@ -349,7 +359,7 @@ export function TasksPage() {
       </div>
 
       {/* ─── Scrollable Main Content Canvas ─── */}
-      <div className="flex-1 overflow-y-auto p-6 relative">
+      <div className="flex-1 overflow-y-auto p-6 relative z-10">
         
         {/* Loading overlay */}
         {((activeTab === 'tasks' && tasksLoading) || (activeTab === 'goals' && goalsLoading)) ? (
@@ -583,6 +593,7 @@ export function TasksPage() {
           )
         )}
       </div>
+    </div>
 
       {/* ─── Overlay & Modal Drawers ─── */}
 
