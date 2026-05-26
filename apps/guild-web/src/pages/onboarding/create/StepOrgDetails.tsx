@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Building2, Loader2, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
+import { Building2, Loader2, CheckCircle2, XCircle, ChevronRight, Hash, Sliders } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
-import { FormField, TextInput, SelectInput, OnboardingCard } from '../../../components/onboarding/FormComponents';
 import { checkOrgSlugUnique, createOrganization, createInviteLink } from '../../../lib/firestore';
 import { seedDefaultChannels } from '../../../lib/chat';
 import { isValidSlug, slugify } from '../../../lib/validation';
@@ -89,8 +88,8 @@ export function StepOrgDetails({ data, updateData }: Props) {
       });
       const inviteToken = await createInviteLink(orgId, user.uid);
 
-      // Seed default channels for the new org (only on creation, never on join)
-      await seedDefaultChannels(orgId, user.uid);
+      // Seed default channels for the new org with dynamic templates based on the industry
+      await seedDefaultChannels(orgId, user.uid, industry);
 
       updateData({ orgName: name, orgSlug: slug, orgIndustry: industry, orgSize: size, orgId, inviteToken });
       navigate('/onboarding/create/profile');
@@ -104,88 +103,130 @@ export function StepOrgDetails({ data, updateData }: Props) {
   const slugStatus = checkingSlug ? null : slugAvailable === true ? true : slugAvailable === false ? false : undefined;
 
   return (
-    <div className="w-full max-w-lg">
+    <div className="w-full max-w-[500px] px-4 flex flex-col items-center">
       <StepHeader
         step={2}
         totalSteps={4}
-        title="Set up your organization"
-        subtitle="Create a workspace for your entire team."
+        title="Workspace Credentials"
+        subtitle="Specify the core parameters of your team operations hub."
       />
 
-      <OnboardingCard>
-        <form onSubmit={handleSubmit} className="space-y-5 mt-2">
-          <FormField label="Organization Name" error={errors.name}>
-            <TextInput
-              icon={Building2}
-              value={name}
-              onChange={handleNameChange}
-              placeholder="Acme Corp"
-              required
-            />
-          </FormField>
+      <div className="aether-glass w-full p-8 mt-8 shadow-2xl relative overflow-hidden border border-white/10">
+        <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
 
-          <FormField
-            label="Organization Slug"
-            error={errors.slug}
-            hint="This is your organization's unique URL identifier."
-          >
+        <form onSubmit={handleSubmit} className="space-y-4.5 relative z-10">
+          {/* Organization Name */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+              Organization Name
+            </label>
             <div className="relative group">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-text-muted">guild.app/</span>
+              <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors group-focus-within:text-indigo-400" />
+              <input
+                value={name}
+                onChange={handleNameChange}
+                placeholder="Acme Corp"
+                required
+                className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-semibold text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200"
+              />
+            </div>
+            {errors.name && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.name}</p>}
+          </div>
+
+          {/* Org Slug */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between pl-1">
+              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
+                Workspace Slug
+              </label>
+              <span className="text-[9px] font-semibold text-text-muted">Unique sub-domain identifier</span>
+            </div>
+            <div className="relative group">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-text-muted select-none">guild.app/</span>
               <input
                 value={slug}
                 onChange={(e) => { setSlug(e.target.value.toLowerCase()); setSlugAvailable(null); }}
                 placeholder="acme-corp"
-                className={`w-full h-11 rounded-xl border bg-bg-tertiary pl-[72px] pr-10 text-sm font-mono text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all ${
-                  slugStatus === true ? 'border-emerald-500/50' : slugStatus === false ? 'border-destructive/50' : 'border-border-default'
+                required
+                className={`w-full h-10 rounded-xl border bg-white/5 pl-18 pr-10 text-xs font-mono text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200 ${
+                  slugStatus === true ? 'border-emerald-500/50 focus:border-emerald-500/50 focus:ring-emerald-500/20' : slugStatus === false ? 'border-destructive/50 focus:border-destructive/50 focus:ring-destructive/20' : 'border-white/5'
                 }`}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                {checkingSlug && <Loader2 className="h-4 w-4 animate-spin text-text-muted" />}
-                {!checkingSlug && slugStatus === true && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-                {!checkingSlug && slugStatus === false && <XCircle className="h-4 w-4 text-destructive" />}
+                {checkingSlug && <Loader2 className="h-3.5 w-3.5 animate-spin text-text-muted" />}
+                {!checkingSlug && slugStatus === true && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                {!checkingSlug && slugStatus === false && <XCircle className="h-3.5 w-3.5 text-destructive" />}
               </div>
             </div>
-          </FormField>
+            {errors.slug && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.slug}</p>}
+          </div>
 
+          {/* Industry Selection */}
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Industry" error={errors.industry}>
-              <SelectInput
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                placeholder="Select industry"
-              >
-                {INDUSTRIES.map((i) => (
-                  <option key={i} value={i} className="bg-card">{i}</option>
-                ))}
-              </SelectInput>
-            </FormField>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+                Industry
+              </label>
+              <div className="relative group">
+                <Sliders className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors pointer-events-none group-focus-within:text-indigo-400" />
+                <select
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
+                  required
+                  className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200 appearance-none [&>option]:bg-zinc-900 [&>option]:text-white cursor-pointer"
+                >
+                  <option value="" disabled>Select template</option>
+                  {INDUSTRIES.map((i) => (
+                    <option key={i} value={i}>{i}</option>
+                  ))}
+                </select>
+              </div>
+              {errors.industry && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.industry}</p>}
+            </div>
 
-            <FormField label="Company Size" error={errors.size}>
-              <SelectInput
-                value={size}
-                onChange={(e) => setSize(e.target.value)}
-                placeholder="Select size"
-              >
-                {COMPANY_SIZES.map((s) => (
-                  <option key={s} value={s} className="bg-card">{s}</option>
-                ))}
-              </SelectInput>
-            </FormField>
+            {/* Company Size */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+                Company Size
+              </label>
+              <div className="relative group">
+                <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors pointer-events-none group-focus-within:text-indigo-400" />
+                <select
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  required
+                  className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200 appearance-none [&>option]:bg-zinc-900 [&>option]:text-white cursor-pointer"
+                >
+                  <option value="" disabled>Select size</option>
+                  {COMPANY_SIZES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              {errors.size && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.size}</p>}
+            </div>
           </div>
 
           {errors.submit && (
-            <p className="text-xs text-destructive font-medium">{errors.submit}</p>
+            <p className="text-xs text-destructive font-semibold text-center mt-2">{errors.submit}</p>
           )}
 
           <button
             type="submit"
             disabled={isSubmitting || checkingSlug || slugAvailable === false}
-            className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground text-sm font-bold transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 mt-2"
+            className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
           >
-            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Continue <ChevronRight className="h-4 w-4" /></>}
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
+            ) : (
+              <>
+                Initialize Space
+                <ChevronRight className="h-4 w-4 text-white" />
+              </>
+            )}
           </button>
         </form>
-      </OnboardingCard>
+      </div>
     </div>
   );
 }

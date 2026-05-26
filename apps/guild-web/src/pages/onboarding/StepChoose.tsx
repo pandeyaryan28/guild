@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Building2, Users, ArrowRight } from 'lucide-react';
+import { Building2, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
 import type { OnboardingData } from './OnboardingRoot';
-import { OnboardingCard } from '../../components/onboarding/OnboardingCard';
 import { StepHeader } from '../../components/onboarding/StepHeader';
 
 interface Props {
@@ -21,61 +20,109 @@ export function StepChoose({ data, updateData }: Props) {
     setTimeout(() => {
       if (path === 'create') navigate('/onboarding/create/org');
       else navigate('/onboarding/join/find');
-    }, 300);
+    }, 400);
   };
 
+  const createBenefits = [
+    'Dynamic channel bootstrapping',
+    'Custom team settings control',
+    'Full administrative privileges',
+  ];
+
+  const joinBenefits = [
+    'Teammate directory lookup',
+    'Immediate shared boards access',
+    'Centralized chat sync',
+  ];
+
   return (
-    <div className="w-full max-w-xl">
+    <div className="w-full max-w-2xl px-4 flex flex-col items-center">
       <StepHeader
         step={1}
         totalSteps={4}
-        title="How do you want to get started?"
-        subtitle="Set up your organization or join an existing team."
+        title="Let's build your space"
+        subtitle="Every great operation starts with a single coordination point."
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-8">
+        {/* Create Organization */}
         <motion.button
           onClick={() => choose('create')}
-          whileHover={{ scale: 1.02, y: -2 }}
+          whileHover={{ scale: 1.02, y: -4 }}
           whileTap={{ scale: 0.98 }}
-          className={`group relative flex flex-col items-start gap-4 rounded-2xl border p-6 text-left transition-all duration-200 ${
+          className={`group text-left p-6.5 rounded-3xl border relative transition-all duration-300 cursor-pointer overflow-hidden ${
             selected === 'create'
-              ? 'border-primary/60 bg-primary/10 shadow-lg shadow-primary/10'
-              : 'border-border-default bg-surface hover:border-primary/30 hover:bg-surface'
+              ? 'border-indigo-500/50 bg-indigo-500/10 shadow-2xl shadow-indigo-500/15'
+              : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10 shadow-lg'
           }`}
+          style={{ backdropFilter: 'blur(20px)' }}
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 border border-primary/20 group-hover:bg-primary/20 transition-colors">
-            <Building2 className="h-6 w-6 text-primary" />
+          {/* Decorative subtle background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/15 border border-indigo-500/25 group-hover:bg-indigo-500/25 group-hover:scale-110 transition-all duration-300 mb-5 text-indigo-400">
+            <Building2 className="h-6 w-6" />
           </div>
+
           <div>
-            <h3 className="text-base font-bold text-foreground">Create Organization</h3>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              Set up a new workspace for your team
+            <h3 className="text-lg font-black text-white leading-none uppercase tracking-tight flex items-center gap-2">
+              Create Space
+              <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-indigo-400 group-hover:translate-x-1.5 transition-all duration-300" />
+            </h3>
+            <p className="text-xs text-text-muted mt-2 leading-relaxed">
+              Provision a clean, customized operation hub for your company or department.
             </p>
           </div>
-          <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted group-hover:text-primary/50 group-hover:translate-x-1 transition-all" />
+
+          {/* Benefits checklist */}
+          <ul className="mt-6 space-y-2 border-t border-white/5 pt-5">
+            {createBenefits.map((b) => (
+              <li key={b} className="flex items-center gap-2 text-[11px] text-text-secondary font-semibold">
+                <CheckCircle2 className="h-3.5 w-3.5 text-indigo-400 flex-shrink-0" />
+                {b}
+              </li>
+            ))}
+          </ul>
         </motion.button>
 
+        {/* Join Organization */}
         <motion.button
           onClick={() => choose('join')}
-          whileHover={{ scale: 1.02, y: -2 }}
+          whileHover={{ scale: 1.02, y: -4 }}
           whileTap={{ scale: 0.98 }}
-          className={`group relative flex flex-col items-start gap-4 rounded-2xl border p-6 text-left transition-all duration-200 ${
+          className={`group text-left p-6.5 rounded-3xl border relative transition-all duration-300 cursor-pointer overflow-hidden ${
             selected === 'join'
-              ? 'border-primary/60 bg-primary/10 shadow-lg shadow-primary/10'
-              : 'border-border-default bg-surface hover:border-primary/30 hover:bg-surface'
+              ? 'border-indigo-500/50 bg-indigo-500/10 shadow-2xl shadow-indigo-500/15'
+              : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10 shadow-lg'
           }`}
+          style={{ backdropFilter: 'blur(20px)' }}
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 border border-primary/20 group-hover:bg-primary/20 transition-colors">
-            <Users className="h-6 w-6 text-primary" />
+          {/* Decorative subtle background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/15 border border-indigo-500/25 group-hover:bg-indigo-500/25 group-hover:scale-110 transition-all duration-300 mb-5 text-indigo-400">
+            <Users className="h-6 w-6" />
           </div>
+
           <div>
-            <h3 className="text-base font-bold text-foreground">Join Organization</h3>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              Join a team via org username or invite link
+            <h3 className="text-lg font-black text-white leading-none uppercase tracking-tight flex items-center gap-2">
+              Join Team
+              <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-indigo-400 group-hover:translate-x-1.5 transition-all duration-300" />
+            </h3>
+            <p className="text-xs text-text-muted mt-2 leading-relaxed">
+              Step into an active workspace using an invite token or organization slug.
             </p>
           </div>
-          <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted group-hover:text-primary/50 group-hover:translate-x-1 transition-all" />
+
+          {/* Benefits checklist */}
+          <ul className="mt-6 space-y-2 border-t border-white/5 pt-5">
+            {joinBenefits.map((b) => (
+              <li key={b} className="flex items-center gap-2 text-[11px] text-text-secondary font-semibold">
+                <CheckCircle2 className="h-3.5 w-3.5 text-indigo-400 flex-shrink-0" />
+                {b}
+              </li>
+            ))}
+          </ul>
         </motion.button>
       </div>
     </div>

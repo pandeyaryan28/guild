@@ -11,6 +11,7 @@ import {
   Timestamp,
   updateDoc,
   deleteDoc,
+  increment,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { generateInviteToken } from './validation';
@@ -21,6 +22,7 @@ import type {
   OrganizationMember,
   OnboardingState,
   InviteLink,
+  PendingEmailInvite,
 } from '@guild/types';
 
 // ─── Uniqueness Checks ────────────────────────────────────────────────────────
@@ -131,9 +133,11 @@ export async function getOnboardingState(uid: string): Promise<OnboardingState |
 
 // ─── Invite Links ─────────────────────────────────────────────────────────────
 
-export async function createInviteLink(orgId: string, createdBy: string): Promise<string> {
+export async function createInviteLink(orgId: string, createdBy: string, isGlobal = false): Promise<string> {
   const token = generateInviteToken();
-  const expiresAt = Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  const expiresAt = isGlobal 
+    ? Timestamp.fromMillis(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000) // 10 years for global
+    : Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000); // 24 hours for single-use
 
   await setDoc(doc(db, 'inviteLinks', token), {
     token,
@@ -141,6 +145,8 @@ export async function createInviteLink(orgId: string, createdBy: string): Promis
     createdBy,
     expiresAt,
     used: false,
+    isGlobal,
+    usageCount: 0,
   });
 
   return token;
@@ -158,7 +164,7 @@ export async function validateInviteToken(
   const invite = await getInviteLinkByToken(token);
 
   if (!invite) return { valid: false, org: null, error: 'Invite link not found.' };
-  if (invite.used) return { valid: false, org: null, error: 'This invite link has already been used.' };
+  if (!invite.isGlobal && invite.used) return { valid: false, org: null, error: 'This invite link has already been used.' };
 
   const now = Timestamp.now();
   if (invite.expiresAt.toMillis() < now.toMillis()) {
@@ -174,21 +180,154 @@ export async function markInviteUsed(token: string): Promise<void> {
 }
 
 export async function acceptInvite(uid: string, token: string, orgId: string): Promise<void> {
-  // Update the user profile to be part of the organization
+  // Backwards compatibility layer
   await setDoc(
     doc(db, 'users', uid),
     { organizationId: orgId, role: 'member' },
     { merge: true }
   );
-
-  // Add member record
   await addOrgMember(orgId, uid, 'member');
-
-  // Mark token as used
   await markInviteUsed(token);
-
-  // Mark onboarding as completed and clear path
   await setOnboardingState(uid, { completed: true, path: null, step: 4 });
+}
+
+// ─── Direct Email Invitation Logic ───────────────────────────────────────────
+
+export async function createPendingEmailInvite(
+  email: string,
+  orgId: string,
+  role: UserRole,
+  invitedBy: string
+): Promise<string> {
+  const token = generateInviteToken();
+  const ref = doc(db, 'pendingInvites', `${orgId}_${email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_')}`);
+  await setDoc(ref, {
+    email: email.toLowerCase().trim(),
+    orgId,
+    role,
+    invitedBy,
+    token,
+    createdAt: serverTimestamp(),
+  });
+  return token;
+}
+
+export async function getPendingInviteByEmail(email: string): Promise<PendingEmailInvite | null> {
+  const q = query(
+    collection(db, 'pendingInvites'),
+    where('email', '==', email.toLowerCase().trim())
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return snap.docs[0].data() as PendingEmailInvite;
+}
+
+// ─── Global Multi-Use Invite Links ────────────────────────────────────────────
+
+export async function createGlobalInviteLink(orgId: string, createdBy: string): Promise<string> {
+  const token = await createInviteLink(orgId, createdBy, true);
+  await updateDoc(doc(db, 'organizations', orgId), {
+    globalInviteToken: token,
+  });
+  return token;
+}
+
+export async function getOrCreateGlobalInviteLink(orgId: string, createdBy: string): Promise<string> {
+  const org = await getOrgById(orgId);
+  if (org?.globalInviteToken) {
+    const snap = await getDoc(doc(db, 'inviteLinks', org.globalInviteToken));
+    if (snap.exists()) {
+      return org.globalInviteToken;
+    }
+  }
+  return createGlobalInviteLink(orgId, createdBy);
+}
+
+export async function resetGlobalInviteLink(orgId: string, createdBy: string): Promise<string> {
+  const org = await getOrgById(orgId);
+  if (org?.globalInviteToken) {
+    await deleteDoc(doc(db, 'inviteLinks', org.globalInviteToken));
+  }
+  return createGlobalInviteLink(orgId, createdBy);
+}
+
+// ─── Member Custom Join Transaction ───────────────────────────────────────────
+
+export interface AcceptInvitePayload {
+  uid: string;
+  email: string;
+  fullName: string;
+  username: string;
+  designation: string;
+  employeeId: string;
+  age: number;
+  orgId: string;
+  role: UserRole;
+  token?: string;
+  isGlobal?: boolean;
+}
+
+export async function executeMemberOnboardingJoin(payload: AcceptInvitePayload): Promise<void> {
+  const {
+    uid,
+    email,
+    fullName,
+    username,
+    designation,
+    employeeId,
+    age,
+    orgId,
+    role,
+    token,
+    isGlobal,
+  } = payload;
+
+  // 1. Transactionally write User Profile
+  await createUser(uid, {
+    email,
+    fullName,
+    username: username.toLowerCase(),
+    designation,
+    employeeId,
+    age,
+    organizationId: orgId,
+    role,
+  });
+
+  // 2. Add member record
+  await addOrgMember(orgId, uid, role);
+
+  // 3. Mark/increment token
+  if (token) {
+    if (isGlobal) {
+      await updateDoc(doc(db, 'inviteLinks', token), {
+        usageCount: increment(1)
+      });
+    } else {
+      await markInviteUsed(token);
+    }
+  }
+
+  // 4. Delete matching direct email invite
+  try {
+    const q = query(
+      collection(db, 'pendingInvites'),
+      where('email', '==', email.toLowerCase().trim()),
+      where('orgId', '==', orgId)
+    );
+    const snap = await getDocs(q);
+    const deletePromises = snap.docs.map((d) => deleteDoc(d.ref));
+    await Promise.all(deletePromises);
+  } catch (err) {
+    console.error('Failed to clean up pending direct email invites:', err);
+  }
+
+  // 5. Complete onboarding journey
+  await setOnboardingState(uid, {
+    completed: true,
+    path: 'join',
+    step: 4,
+  });
 }
 
 // ─── Settings / Role Operations ──────────────────────────────────────────────

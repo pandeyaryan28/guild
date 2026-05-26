@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../hooks/useAuth';
-import { setOnboardingState } from '../../lib/firestore';
+import { setOnboardingState, getPendingInviteByEmail, getOrgById, validateInviteToken } from '../../lib/firestore';
 import { StepChoose } from './StepChoose';
 import { StepOrgDetails } from './create/StepOrgDetails';
 import { StepOwnerProfile } from './create/StepOwnerProfile';
@@ -25,6 +25,8 @@ export interface OnboardingData {
   // Join org
   joinOrgId?: string;
   joinOrgName?: string;
+  inviteRole?: string;
+  directInviteDetected?: boolean;
 }
 
 export const STEP_LABELS: Record<string, { create: string; join: string }> = {
@@ -39,15 +41,69 @@ export function OnboardingRoot() {
   const navigate = useNavigate();
 
   const [data, setData] = React.useState<OnboardingData>({ path: null });
+  const [checkingInvite, setCheckingInvite] = React.useState(true);
 
   const updateData = (patch: Partial<OnboardingData>) => {
     setData((prev) => ({ ...prev, ...patch }));
   };
 
-  if (loading) {
+  React.useEffect(() => {
+    async function checkInvitesAndToken() {
+      if (!user?.email) {
+        setCheckingInvite(false);
+        return;
+      }
+      try {
+        // 1. First, check if there is an explicit token in the URL params
+        const url = new URL(window.location.href);
+        const token = url.searchParams.get('token');
+        if (token && !data.directInviteDetected) {
+          const res = await validateInviteToken(token);
+          if (res.valid && res.org) {
+            updateData({
+              path: 'join',
+              joinOrgId: res.org.id,
+              joinOrgName: res.org.name,
+              inviteToken: token,
+              inviteRole: 'member',
+              directInviteDetected: true
+            });
+            navigate('/onboarding/join/profile', { replace: true });
+            setCheckingInvite(false);
+            return;
+          }
+        }
+
+        // 2. Second, check if there is a pending pre-authorized email invitation
+        const invite = await getPendingInviteByEmail(user.email);
+        if (invite && !data.directInviteDetected) {
+          const org = await getOrgById(invite.orgId);
+          updateData({
+            path: 'join',
+            joinOrgId: invite.orgId,
+            joinOrgName: org?.name || 'Organization',
+            inviteRole: invite.role,
+            inviteToken: invite.token,
+            directInviteDetected: true
+          });
+          navigate('/onboarding/join/profile', { replace: true });
+        }
+      } catch (err) {
+        console.error('Invite/token auto-scan failed:', err);
+      } finally {
+        setCheckingInvite(false);
+      }
+    }
+    checkInvitesAndToken();
+  }, [user]);
+
+  if (loading || checkingInvite) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground font-medium">Scanning for invitations...</p>
+        </div>
       </div>
     );
   }

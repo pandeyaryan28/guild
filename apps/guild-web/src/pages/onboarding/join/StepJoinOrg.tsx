@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Search, Link2, Building2, Loader2, CheckCircle2, XCircle, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Search, Link2, Building2, Loader2, CheckCircle2, XCircle, ChevronRight, AlertTriangle, User } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
-import { FormField, TextInput, OnboardingCard } from '../../../components/onboarding/FormComponents';
 import { getOrgBySlug, validateInviteToken, type Organization } from '../../../lib/firestore';
 import { setOnboardingState } from '../../../lib/firestore';
 import { useAuth } from '../../../hooks/useAuth';
@@ -101,32 +100,34 @@ export function StepJoinOrg({ data, updateData }: Props) {
   };
 
   return (
-    <div className="w-full max-w-lg">
+    <div className="w-full max-w-[500px] px-4 flex flex-col items-center">
       <StepHeader
         step={2}
         totalSteps={4}
-        title="Find your organization"
-        subtitle="Search by username or paste your invite link."
+        title="Find your team"
+        subtitle="Connect with your organization's operational workspace."
       />
 
-      <OnboardingCard>
-        {/* Method toggle */}
-        <div className="flex rounded-xl border border-border-default bg-bg-tertiary p-1 mb-6">
+      <div className="aether-glass w-full p-8 mt-8 shadow-2xl relative overflow-hidden border border-white/10">
+        <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
+
+        {/* Method Toggle Buttons */}
+        <div className="flex rounded-xl border border-white/5 bg-black/40 p-1 mb-6 relative z-10">
           <button
             onClick={() => { setMethod('slug'); setOrg(null); setError(''); }}
             className={cn(
-              'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all',
-              method === 'slug' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer',
+              method === 'slug' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10' : 'text-text-muted hover:text-white'
             )}
           >
             <Search className="h-3.5 w-3.5" />
-            By Username
+            By Handle
           </button>
           <button
             onClick={() => { setMethod('invite'); setOrg(null); setError(''); }}
             className={cn(
-              'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all',
-              method === 'invite' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer',
+              method === 'invite' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10' : 'text-text-muted hover:text-white'
             )}
           >
             <Link2 className="h-3.5 w-3.5" />
@@ -134,98 +135,123 @@ export function StepJoinOrg({ data, updateData }: Props) {
           </button>
         </div>
 
-        {/* Search form */}
-        <div className="space-y-4">
+        <div className="space-y-5 relative z-10">
+          {/* Method: By Slug */}
           {method === 'slug' ? (
-            <FormField label="Organization Username">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+                Workspace Handle
+              </label>
               <div className="flex gap-2">
                 <div className="relative group flex-1">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-text-muted">guild.app/</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-text-muted select-none">guild.app/</span>
                   <input
                     value={slugInput}
-                    onChange={(e) => { setSlugInput(e.target.value); setOrg(null); setError(''); }}
+                    onChange={(e) => { setSlugInput(e.target.value.toLowerCase()); setOrg(null); setError(''); }}
                     onKeyDown={(e) => e.key === 'Enter' && searchBySlug()}
                     placeholder="acme-corp"
-                    className="w-full h-11 rounded-xl border border-border-default bg-bg-tertiary pl-[72px] pr-4 text-sm font-mono text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all"
+                    className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-18 pr-4 text-xs font-mono text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={searchBySlug}
                   disabled={isSearching || !slugInput}
-                  className="h-11 px-4 rounded-xl bg-bg-tertiary border border-border-default hover:bg-bg-tertiary text-sm font-bold text-foreground transition-all disabled:opacity-40 flex items-center gap-2"
+                  className="h-10 px-3.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold text-white transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0"
                 >
                   {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </button>
               </div>
-            </FormField>
+            </div>
           ) : (
-            <FormField label="Invite Link or Token" hint="Paste the full invite URL or just the token.">
+            /* Method: By Invite Link */
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-1">
+                Invite Token or Link
+              </label>
               <div className="flex gap-2">
-                <TextInput
-                  icon={Link2}
-                  value={inviteInput}
-                  onChange={(e) => { setInviteInput(e.target.value); setOrg(null); setError(''); }}
-                  onKeyDown={(e: any) => e.key === 'Enter' && searchByInvite()}
-                  placeholder="https://guild.app/join?token=..."
-                />
+                <div className="relative group flex-1">
+                  <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted transition-colors group-focus-within:text-indigo-400" />
+                  <input
+                    value={inviteInput}
+                    onChange={(e) => { setInviteInput(e.target.value); setOrg(null); setError(''); }}
+                    onKeyDown={(e) => e.key === 'Enter' && searchByInvite()}
+                    placeholder="https://guild.app/join/token"
+                    className="w-full h-10 rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-semibold text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-white/10 transition-all duration-200"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={searchByInvite}
                   disabled={isSearching || !inviteInput}
-                  className="h-11 px-4 rounded-xl bg-bg-tertiary border border-border-default hover:bg-bg-tertiary text-sm font-bold text-foreground transition-all disabled:opacity-40 flex items-center gap-2"
+                  className="h-10 px-3.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold text-white transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0"
                 >
                   {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </button>
               </div>
-            </FormField>
+            </div>
           )}
 
-          {/* Error */}
+          {/* Validation Alert */}
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3"
+              className="flex items-center gap-2.5 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3"
             >
               <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
-              <p className="text-xs font-medium text-destructive">{error}</p>
+              <p className="text-[11px] font-semibold text-destructive">{error}</p>
             </motion.div>
           )}
 
-          {/* Org preview */}
+          {/* Majestic Org Preview Card */}
           {org && (
             <motion.div
-              initial={{ opacity: 0, y: -6, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 flex items-center gap-4"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4.5 flex items-center gap-4 relative overflow-hidden"
             >
-              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-primary text-base font-black text-primary-foreground shadow-lg shadow-primary/20">
-                {org.name[0]}
+              <div className="absolute inset-0 bg-dashboard-grid opacity-10 pointer-events-none" />
+              
+              {/* Teammate presence visual logo representation */}
+              <div className="relative flex-shrink-0 select-none">
+                <div className="teammate-halo active text-emerald-500">
+                  <div className="h-11 w-11 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/30 text-emerald-400 border border-emerald-500/30 text-sm font-black shadow-lg">
+                    {org.name[0].toUpperCase()}
+                  </div>
+                </div>
               </div>
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-bold text-foreground truncate">{org.name}</h4>
+                  <h4 className="text-sm font-black text-white truncate uppercase tracking-tight">{org.name}</h4>
                   <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-[10px] text-text-muted mt-0.5 font-bold uppercase tracking-wider">
                   {org.industry} · {org.companySize} employees
                 </p>
               </div>
             </motion.div>
           )}
 
-          {/* Continue */}
+          {/* Submit/Continue Join */}
           <button
             type="button"
             onClick={handleContinue}
             disabled={!org || isSubmitting}
-            className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground text-sm font-bold transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+            className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
           >
-            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Join {org?.name || 'Organization'} <ChevronRight className="h-4 w-4" /></>}
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
+            ) : (
+              <>
+                Join {org?.name || 'Organization'}
+                <ChevronRight className="h-4 w-4 text-white" />
+              </>
+            )}
           </button>
         </div>
-      </OnboardingCard>
+      </div>
     </div>
   );
 }

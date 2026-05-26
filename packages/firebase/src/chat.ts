@@ -19,11 +19,77 @@ const DEFAULT_CHANNELS = [
   { name: 'announcements', description: 'Important org-wide announcements' },
 ];
 
-/** Called ONLY when an org is created — not on join */
-export async function seedDefaultChannels(orgId: string, creatorUid: string): Promise<void> {
-  const batch = writeBatch(db);
+const INDUSTRY_TEMPLATES: Record<string, {
+  channels: { name: string; description: string }[];
+  tasks: { title: string; description: string; priority: 'none' | 'low' | 'medium' | 'high' | 'urgent'; status: 'todo' | 'in_progress' | 'review' | 'done' }[];
+}> = {
+  'Technology': {
+    channels: [
+      { name: 'general', description: 'Company-wide updates and announcements' },
+      { name: 'engineering', description: 'Code reviews, deployments, and architecture discussions' },
+      { name: 'product-roadmap', description: 'Product specs, features, and prioritization' },
+      { name: 'design-feedback', description: 'UI mockups, asset sharing, and UX discussions' },
+      { name: 'operations', description: 'Administrative and operational coordination' }
+    ],
+    tasks: [
+      { title: 'Deploy production v1.0 release bundle', description: 'Prepare CI/CD pipeline and release logs for version 1.0', priority: 'high', status: 'todo' },
+      { title: 'Optimize database indexing and replication', description: 'Verify read replica latencies and slow-query indexes', priority: 'medium', status: 'todo' },
+      { title: 'Design premium onboarding step-wizard UI', description: 'Sketch high-fidelity Aether glass panel user journeys', priority: 'urgent', status: 'in_progress' }
+    ]
+  },
+  'Marketing & Creative Agency': {
+    channels: [
+      { name: 'general', description: 'Company-wide updates and announcements' },
+      { name: 'creative-briefs', description: 'Client campaigns, assets, and brainstorming' },
+      { name: 'social-media', description: 'Content calendar, copy review, and trends' },
+      { name: 'client-feedback', description: 'Account management, approvals, and reviews' },
+      { name: 'operations', description: 'Billing, schedules, and resource planning' }
+    ],
+    tasks: [
+      { title: 'Draft social media campaign briefing', description: 'Outline design guidelines and voice directions for client X', priority: 'medium', status: 'todo' },
+      { title: 'Prepare Q2 email marketing calendar', description: 'Finalize template graphics and copy proofs for newsletter', priority: 'high', status: 'in_progress' }
+    ]
+  },
+  'Logistics & Supply Chain': {
+    channels: [
+      { name: 'general', description: 'Company-wide updates and announcements' },
+      { name: 'operations', description: 'Daily dispatch and fleet coordination' },
+      { name: 'supply-chain', description: 'Vendors, inventory, and warehouse updates' },
+      { name: 'delivery-tracking', description: 'Route optimization and ETA alerts' },
+      { name: 'safety', description: 'Compliance, reporting, and equipment audits' }
+    ],
+    tasks: [
+      { title: 'Run weekly preventative fleet checklist', description: 'Audit tire tread depth, oil levels, and electronic logs', priority: 'urgent', status: 'todo' },
+      { title: 'Audit warehouse zone B stock levels', description: 'Cross-reference manual inventory counts with ERP records', priority: 'medium', status: 'in_progress' }
+    ]
+  },
+  'Manufacturing': {
+    channels: [
+      { name: 'general', description: 'Company-wide updates and announcements' },
+      { name: 'assembly-line', description: 'Production planning, schedules, and equipment status' },
+      { name: 'quality-assurance', description: 'QC checklists, audits, and defect reports' },
+      { name: 'inventory-logistics', description: 'Raw materials, vendor shipping, and warehousing' },
+      { name: 'safety-training', description: 'Daily safety briefings and compliance logs' }
+    ],
+    tasks: [
+      { title: 'Calibrate assembly line thermal sensors', description: 'Verify tolerance deviations on machine 4 heater rails', priority: 'urgent', status: 'todo' },
+      { title: 'Record daily scrap weight and shift reports', description: 'Log material yield efficiencies for team shifts', priority: 'high', status: 'in_progress' }
+    ]
+  }
+};
 
-  for (const ch of DEFAULT_CHANNELS) {
+/** Called ONLY when an org is created — not on join */
+export async function seedDefaultChannels(orgId: string, creatorUid: string, industry = 'Other'): Promise<void> {
+  const batch = writeBatch(db);
+  const template = INDUSTRY_TEMPLATES[industry] || {
+    channels: DEFAULT_CHANNELS,
+    tasks: [
+      { title: 'Welcome to your Guild workspace!', description: 'Create your first channel, send a chat message, or assign a task to get started.', priority: 'none', status: 'todo' }
+    ]
+  };
+
+  // 1. Seed channels
+  for (const ch of template.channels) {
     const channelRef = doc(collection(db, 'channels'));
     const channelId = channelRef.id;
 
@@ -37,6 +103,21 @@ export async function seedDefaultChannels(orgId: string, creatorUid: string): Pr
       channelId, userId: creatorUid, orgId,
       joinedAt: serverTimestamp(), lastRead: serverTimestamp(),
     });
+  }
+
+  // 2. Seed starter tasks
+  let orderIndex = 1000;
+  for (const t of template.tasks) {
+    const taskRef = doc(collection(db, 'tasks'));
+    batch.set(taskRef, {
+      id: taskRef.id, orgId, title: t.title, description: t.description,
+      status: t.status, priority: t.priority,
+      assigneeIds: [creatorUid], creatorId: creatorUid,
+      labelIds: [], dueDate: null, orderIndex,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      projectId: null, goalId: null, parentTaskId: null,
+    });
+    orderIndex += 1000;
   }
 
   await batch.commit();

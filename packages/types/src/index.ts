@@ -45,6 +45,7 @@ export interface Organization {
   ownerId: string;
   billingPlan?: 'free' | 'premium' | 'enterprise';
   createdAt: Timestamp;
+  globalInviteToken?: string;
 }
 
 export interface OrganizationMember {
@@ -86,6 +87,17 @@ export interface InviteLink {
   createdBy: string;
   expiresAt: Timestamp;
   used: boolean;
+  isGlobal?: boolean;
+  usageCount?: number;
+}
+
+export interface PendingEmailInvite {
+  email: string;
+  orgId: string;
+  role: UserRole;
+  invitedBy: string;
+  token: string;
+  createdAt: Timestamp;
 }
 
 // ─── Notifications ────────────────────────────────────────────────────────────
