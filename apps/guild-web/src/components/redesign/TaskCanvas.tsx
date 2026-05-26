@@ -498,12 +498,21 @@ export function TaskCanvas() {
                                     {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
                                   </span>
                                   {linkedProj && (
-                                    <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-accent bg-accent/[0.04]" style={{ color: 'var(--accent)' }}>
+                                    <span 
+                                      onClick={(e) => { e.stopPropagation(); navigate(`/projects/${linkedProj.id}`); }}
+                                      className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-accent bg-accent/[0.04] cursor-pointer hover:bg-accent/[0.08] transition-colors" 
+                                      style={{ color: 'var(--accent)' }}
+                                    >
                                       {linkedProj.name}
                                     </span>
                                   )}
                                 </div>
-                                <h4 className="text-xs font-bold text-foreground mt-2.5">{goal.title}</h4>
+                                <h4 
+                                  onClick={() => navigate(`/goals/${goal.id}`)}
+                                  className="text-xs font-bold text-foreground mt-2.5 hover:text-emerald-500 cursor-pointer transition-colors"
+                                >
+                                  {goal.title}
+                                </h4>
                                 {goal.description && <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>}
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
@@ -891,7 +900,10 @@ export function TaskCanvas() {
                                 {task.title}
                               </span>
                               {linkedProj && (
-                                <span className="text-[8px] font-black uppercase tracking-wider font-mono text-indigo-600 dark:text-indigo-400 mt-1 block">
+                                <span 
+                                  onClick={(e) => { e.stopPropagation(); navigate(`/projects/${linkedProj.id}`); }}
+                                  className="text-[8px] font-black uppercase tracking-wider font-mono text-indigo-600 dark:text-indigo-400 mt-1 block cursor-pointer hover:underline"
+                                >
                                   #{linkedProj.name}
                                 </span>
                               )}
@@ -942,7 +954,10 @@ export function TaskCanvas() {
                                         {task.title}
                                       </span>
                                       {linkedProj && (
-                                        <span className="text-[8px] font-black uppercase tracking-wider font-mono text-muted-foreground mt-1 block">
+                                        <span 
+                                          onClick={(e) => { e.stopPropagation(); navigate(`/projects/${linkedProj.id}`); }}
+                                          className="text-[8px] font-black uppercase tracking-wider font-mono text-muted-foreground mt-1 block cursor-pointer hover:underline"
+                                        >
                                           #{linkedProj.name}
                                         </span>
                                       )}
