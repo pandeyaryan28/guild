@@ -606,24 +606,6 @@ export function CalendarPage() {
                           const dailyCompleted = dayTasks.filter(t => t.status === 'done').length;
                           const dailyProgressPercent = dailyTotal > 0 ? (dailyCompleted / dailyTotal) * 100 : 0;
 
-                          // Heatmap glowing colors
-                          const getAmbientGlowStyle = () => {
-                            if (!isCurrentMonth || dailyTotal === 0) return undefined;
-                            if (dailyProgressPercent === 100) {
-                              return {
-                                background: 'radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.05) 0%, transparent 60%)'
-                              };
-                            }
-                            if (dailyTotal > 3) {
-                              return {
-                                background: 'radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.05) 0%, transparent 60%)'
-                              };
-                            }
-                            return {
-                              background: 'radial-gradient(circle at bottom right, oklch(from var(--accent) l c h / 3%) 0%, transparent 50%)'
-                            };
-                          };
-
                           return (
                             <motion.div
                               key={day.toString()}
@@ -641,66 +623,19 @@ export function CalendarPage() {
                                 isMobileSelected && isCurrentMonth && "bg-white/[0.03] border-accent/40 shadow-[inset_0_0_0_1px_oklch(from_var(--accent)_l_c_h_/_20%)] backdrop-blur-sm",
                                 isDayToday && "border-accent/40 ring-1 ring-accent/20 bg-gradient-to-br from-accent/[0.06] to-indigo-500/[0.01]"
                               )}
-                              style={getAmbientGlowStyle()}
                             >
-                              {/* Breathing radial backdrop pulse only for Today */}
-                              {isDayToday && (
-                                <div 
-                                  className="absolute inset-0.5 rounded-2xl pointer-events-none z-0 opacity-80"
-                                  style={{
-                                    background: `radial-gradient(circle at center, oklch(from var(--accent) l c h / 6%) 0%, transparent 80%)`,
-                                  }}
-                                />
-                              )}
-
-                              {/* Day number cell header with circular progress indicator */}
+                              {/* Day number cell header */}
                               <div className="flex items-center justify-between mb-3 z-10">
-                                <div className="relative h-6.5 w-6.5 flex items-center justify-center shrink-0">
-                                  {/* Fine visual circular arc indicating completion progress */}
-                                  <svg className="absolute inset-0 h-full w-full transform -rotate-90">
-                                    <circle cx="13" cy="13" r="10" className="fill-none stroke-white/5" strokeWidth="1.5" />
-                                    {dailyTotal > 0 && (
-                                      <circle 
-                                        cx="13" 
-                                        cy="13" 
-                                        r="10" 
-                                        className={cn(
-                                          "fill-none transition-all duration-500",
-                                          dailyProgressPercent === 100 ? "stroke-emerald-400" : "stroke-accent"
-                                        )}
-                                        strokeWidth="1.5" 
-                                        strokeDasharray="62.8" 
-                                        strokeDashoffset={62.8 - (dailyProgressPercent / 100) * 62.8} 
-                                        strokeLinecap="round"
-                                        style={{ stroke: dailyProgressPercent === 100 ? undefined : 'var(--accent)' }}
-                                      />
-                                    )}
-                                  </svg>
-                                  
-                                  <span
-                                    className={cn(
-                                      "text-[9px] font-black tracking-tight",
-                                      isDayToday ? "text-accent-foreground" : "text-foreground",
-                                      dailyProgressPercent === 100 && dailyTotal > 0 && "text-emerald-400"
-                                    )}
-                                    style={isDayToday ? {
-                                      background: 'var(--accent)',
-                                      height: '16px',
-                                      width: '16px',
-                                      borderRadius: '9999px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                    } : undefined}
-                                  >
-                                    {format(day, 'd')}
-                                  </span>
-
-                                  {/* Pulsing successful complete mark */}
-                                  {dailyProgressPercent === 100 && dailyTotal > 0 && (
-                                    <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow animate-pulse" />
+                                <span
+                                  className={cn(
+                                    "text-[10px] font-bold tracking-tight flex items-center justify-center rounded-full h-5 w-5 shrink-0",
+                                    isDayToday 
+                                      ? "bg-accent text-white" 
+                                      : "text-foreground/80"
                                   )}
-                                </div>
+                                >
+                                  {format(day, 'd')}
+                                </span>
 
                                 {/* Quick create action button */}
                                 <button
@@ -845,7 +780,6 @@ export function CalendarPage() {
                                     style={{ 
                                       width: `${dailyProgressPercent}%`,
                                       background: `linear-gradient(90deg, var(--accent) 0%, oklch(from var(--accent) calc(l + 0.1) c h) 100%)`,
-                                      boxShadow: `0 0 6px oklch(from var(--accent) l c h / 30%)`
                                     }}
                                   />
                                 </div>
@@ -960,43 +894,25 @@ export function CalendarPage() {
                                   style={{ 
                                     width: `${percentComplete}%`, 
                                     background: 'linear-gradient(90deg, var(--accent) 0%, oklch(from var(--accent) calc(l + 0.1) c h) 100%)',
-                                    boxShadow: `0 0 6px oklch(from var(--accent) l c h / 30%)`
                                   }} 
                                 />
                               )}
                             </div>
 
-                            {/* Upgraded Column Header with SVG Completion Arc */}
+                            {/* Column Header */}
                             <div className={cn(
                               "p-3.5 border-b border-white/5 flex items-center justify-between flex-shrink-0 bg-white/[0.01]",
                               isDayToday && "bg-white/[0.03]"
                             )}>
                               <div className="flex items-center gap-2">
-                                {/* Miniature progress indicator arc around day number */}
-                                <div className="relative h-6 w-6 flex items-center justify-center flex-shrink-0">
-                                  <svg className="absolute inset-0 h-full w-full transform -rotate-90">
-                                    <circle cx="12" cy="12" r="9" className="fill-none stroke-white/5" strokeWidth="2" />
-                                    {totalTasks > 0 && (
-                                      <circle 
-                                        cx="12" 
-                                        cy="12" 
-                                        r="9" 
-                                        className="fill-none stroke-accent" 
-                                        strokeWidth="2" 
-                                        strokeDasharray="56.5" 
-                                        strokeDashoffset={56.5 - (percentComplete / 100) * 56.5} 
-                                        strokeLinecap="round"
-                                        style={{ stroke: 'var(--accent)' }}
-                                      />
-                                    )}
-                                  </svg>
-                                  <span className={cn(
-                                    "text-[9px] font-black text-center relative",
-                                    isDayToday ? "text-accent" : "text-foreground"
-                                  )}>
-                                    {format(day, 'd')}
-                                  </span>
-                                </div>
+                                <span className={cn(
+                                  "text-[10px] font-bold tracking-tight flex items-center justify-center rounded-full h-5 w-5 shrink-0",
+                                  isDayToday 
+                                    ? "bg-accent text-white" 
+                                    : "text-foreground/80"
+                                )}>
+                                  {format(day, 'd')}
+                                </span>
                                 <div className="flex flex-col">
                                   <span className="text-[11px] font-bold text-foreground leading-none">{format(day, 'EEEE')}</span>
                                   <span className="text-[9px] text-muted-foreground font-bold leading-none mt-0.5">{format(day, 'MMM d')}</span>
