@@ -48,7 +48,7 @@ import {
   PRIORITY_CONFIG
 } from '../../lib/tasks';
 import { createGoal, updateGoal, deleteGoal } from '../../lib/goals';
-import { createProject, deleteProject } from '../../lib/projects';
+import { createProject, deleteProject, updateProject } from '../../lib/projects';
 import type { Task, TaskStatus, TaskPriority, ActorInfo } from '../../lib/tasks';
 import type { Project } from '../../lib/projects';
 import type { Goal } from '../../lib/goals';
@@ -295,6 +295,26 @@ export function TaskCanvas() {
     }
   };
 
+  const handleToggleGoalStatus = async (e: React.MouseEvent, goal: Goal) => {
+    e.stopPropagation();
+    const nextStatus = goal.status === 'completed' ? 'active' : 'completed';
+    try {
+      await updateGoal(goal.id, { status: nextStatus });
+    } catch (err) {
+      console.error('Failed to toggle goal status:', err);
+    }
+  };
+
+  const handleToggleProjectStatus = async (e: React.MouseEvent, project: Project) => {
+    e.stopPropagation();
+    const nextStatus = project.status === 'completed' ? 'active' : 'completed';
+    try {
+      await updateProject(project.id, { status: nextStatus });
+    } catch (err) {
+      console.error('Failed to toggle project status:', err);
+    }
+  };
+
   const toggleGoalCompletedTasks = (goalId: string) => {
     setCompletedGoalsExpanded(prev => ({ ...prev, [goalId]: !prev[goalId] }));
   };
@@ -522,12 +542,33 @@ export function TaskCanvas() {
                                     </span>
                                   )}
                                 </div>
-                                <h4 
-                                  onClick={() => navigate(`/goals/${goal.id}`)}
-                                  className="text-xs font-bold text-foreground mt-2.5 hover:text-emerald-500 cursor-pointer transition-colors"
-                                >
-                                  {goal.title}
-                                </h4>
+                                <div className="flex items-center gap-2 mt-2.5">
+                                  <button
+                                    onClick={(e) => handleToggleGoalStatus(e, goal)}
+                                    className={cn(
+                                      "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                                      goal.status === 'completed'
+                                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                        : "border-border-default bg-bg-primary/50 hover:border-emerald-500"
+                                    )}
+                                    title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
+                                  >
+                                    {goal.status === 'completed' ? (
+                                      <Check className="w-2 h-2" />
+                                    ) : (
+                                      <div className="h-1 w-1 rounded-full bg-transparent hover:bg-emerald-500/50" />
+                                    )}
+                                  </button>
+                                  <h4 
+                                    onClick={() => navigate(`/goals/${goal.id}`)}
+                                    className={cn(
+                                      "text-xs font-bold hover:text-emerald-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
+                                      goal.status === 'completed' ? "text-muted-foreground line-through decoration-emerald-500/50" : "text-foreground"
+                                    )}
+                                  >
+                                    {goal.title}
+                                  </h4>
+                                </div>
                                 {goal.description && <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>}
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
@@ -926,15 +967,36 @@ export function TaskCanvas() {
                           <div className="space-y-3">
                             {/* Card Header */}
                             <div className="flex items-start justify-between gap-3 pb-2 border-b border-border-default/45">
-                              <div className="min-w-0">
-                                <h4 
-                                  onClick={() => navigate(`/projects/${project.id}`)}
-                                  className="text-xs font-bold text-foreground truncate hover:text-indigo-500 cursor-pointer transition-colors"
-                                >
-                                  {project.name}
-                                </h4>
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={(e) => handleToggleProjectStatus(e, project)}
+                                    className={cn(
+                                      "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                                      project.status === 'completed'
+                                        ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                                        : "border-border-default bg-bg-primary/50 hover:border-indigo-500"
+                                    )}
+                                    title={project.status === 'completed' ? "Mark Project Active" : "Mark Project Completed"}
+                                  >
+                                    {project.status === 'completed' ? (
+                                      <Check className="w-2 h-2" />
+                                    ) : (
+                                      <div className="h-1 w-1 rounded-full bg-transparent hover:bg-indigo-500/50" />
+                                    )}
+                                  </button>
+                                  <h4 
+                                    onClick={() => navigate(`/projects/${project.id}`)}
+                                    className={cn(
+                                      "text-xs font-bold hover:text-indigo-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
+                                      project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground"
+                                    )}
+                                  >
+                                    {project.name}
+                                  </h4>
+                                </div>
                                 {project.description && (
-                                  <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed font-medium">
+                                  <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed font-medium">
                                     {project.description}
                                   </p>
                                 )}

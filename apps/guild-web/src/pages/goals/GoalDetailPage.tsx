@@ -22,7 +22,7 @@ import { TaskDetailPanel } from '../tasks/TaskDetailPanel';
 import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
 import { useOrgMembers } from '../../hooks/useChat';
 import { moveTask, deleteTask, type Task, type TaskStatus } from '../../lib/tasks';
-import { deleteGoal } from '../../lib/goals';
+import { deleteGoal, updateGoal } from '../../lib/goals';
 
 export function GoalDetailPage() {
   const { goalId } = useParams<{ goalId: string }>();
@@ -120,6 +120,16 @@ export function GoalDetailPage() {
     }
   };
 
+  const handleToggleGoalStatus = async () => {
+    if (!goal) return;
+    const nextStatus = goal.status === 'completed' ? 'active' : 'completed';
+    try {
+      await updateGoal(goal.id, { status: nextStatus });
+    } catch (err) {
+      console.error('Failed to toggle goal status:', err);
+    }
+  };
+
   if (!orgId) return null;
 
   if (goalLoading) {
@@ -165,8 +175,25 @@ export function GoalDetailPage() {
             </button>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <Crown className="w-5 h-5 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.3)] shrink-0" />
-                <h1 className="text-sm font-black tracking-tight text-foreground truncate">{goal.title}</h1>
+                <button
+                  onClick={handleToggleGoalStatus}
+                  className={cn(
+                    "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                    goal.status === 'completed'
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "border-border-default bg-bg-primary/50 hover:border-emerald-500"
+                  )}
+                  title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
+                >
+                  {goal.status === 'completed' ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    <Crown className="w-3.5 h-3.5 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
+                  )}
+                </button>
+                <h1 className={cn("text-sm font-black tracking-tight truncate", goal.status === 'completed' ? "text-muted-foreground line-through decoration-emerald-500/50" : "text-foreground")}>
+                  {goal.title}
+                </h1>
               </div>
               {goal.description && (
                 <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{goal.description}</p>

@@ -24,6 +24,7 @@ import { TaskDetailPanel } from '../tasks/TaskDetailPanel';
 import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
 import { useOrgMembers } from '../../hooks/useChat';
 import { moveTask, deleteTask, type Task, type TaskStatus } from '../../lib/tasks';
+import { updateProject } from '../../lib/projects';
 
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -93,6 +94,16 @@ export function ProjectDetailPage() {
     }
   };
 
+  const handleToggleProjectStatus = async () => {
+    if (!project) return;
+    const nextStatus = project.status === 'completed' ? 'active' : 'completed';
+    try {
+      await updateProject(project.id, { status: nextStatus });
+    } catch (err) {
+      console.error('Failed to toggle project status:', err);
+    }
+  };
+
   if (!orgId) return null;
 
   if (projectLoading) {
@@ -138,8 +149,25 @@ export function ProjectDetailPage() {
             </button>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <FolderGit className="w-5 h-5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.3)] shrink-0" />
-                <h1 className="text-sm font-black tracking-tight text-foreground truncate">{project.name}</h1>
+                <button
+                  onClick={handleToggleProjectStatus}
+                  className={cn(
+                    "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                    project.status === 'completed'
+                      ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                      : "border-border-default bg-bg-primary/50 hover:border-indigo-500"
+                  )}
+                  title={project.status === 'completed' ? "Mark Project Active" : "Mark Project Completed"}
+                >
+                  {project.status === 'completed' ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    <FolderGit className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
+                  )}
+                </button>
+                <h1 className={cn("text-sm font-black tracking-tight truncate", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground")}>
+                  {project.name}
+                </h1>
               </div>
               {project.description && (
                 <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{project.description}</p>
