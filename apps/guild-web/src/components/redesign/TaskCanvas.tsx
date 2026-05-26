@@ -608,9 +608,9 @@ export function TaskCanvas() {
                         return (
                           <div
                             key={goal.id}
-                            className="bg-surface/50 border border-border-default rounded-2xl p-4.5 space-y-4 hover:border-cyan-500/30 hover:bg-surface transition-all shadow-sm"
+                            className="bg-surface/50 border border-border-default rounded-2xl p-3.5 sm:p-4.5 space-y-3 sm:space-y-4 hover:border-cyan-500/30 hover:bg-surface transition-all shadow-sm"
                           >
-                            <div className="flex items-start justify-between gap-3">
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                               <div>
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04]">
@@ -655,7 +655,7 @@ export function TaskCanvas() {
                                 </div>
                                 {goal.description && <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>}
                               </div>
-                              <div className="flex items-center gap-2 shrink-0">
+                              <div className="flex items-center gap-2 shrink-0 sm:self-start mt-2 sm:mt-0">
                                 {goal.targetDate && (
                                   <span className="text-[8px] text-muted-foreground font-mono bg-bg-secondary border border-border-default rounded px-2 py-0.5">
                                     {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}
@@ -813,9 +813,9 @@ export function TaskCanvas() {
                                 return (
                                   <div
                                     key={goal.id}
-                                    className="bg-surface/50 border border-border-default rounded-2xl p-4.5 space-y-4 hover:border-cyan-500/30 hover:bg-surface transition-all shadow-sm opacity-70 hover:opacity-100"
+                                    className="bg-surface/50 border border-border-default rounded-2xl p-3.5 sm:p-4.5 space-y-3 sm:space-y-4 hover:border-cyan-500/30 hover:bg-surface transition-all shadow-sm opacity-70 hover:opacity-100"
                                   >
-                                    <div className="flex items-start justify-between gap-3">
+                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                                       <div>
                                         <div className="flex flex-wrap items-center gap-2">
                                           <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04]">
@@ -860,7 +860,7 @@ export function TaskCanvas() {
                                         </div>
                                         {goal.description && <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>}
                                       </div>
-                                      <div className="flex items-center gap-2 shrink-0">
+                                      <div className="flex items-center gap-2 shrink-0 sm:self-start mt-2 sm:mt-0">
                                         {goal.targetDate && (
                                           <span className="text-[8px] text-muted-foreground font-mono bg-bg-secondary border border-border-default rounded px-2 py-0.5">
                                             {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}

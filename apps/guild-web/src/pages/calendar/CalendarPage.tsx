@@ -1024,7 +1024,7 @@ export function CalendarPage() {
                   <div className="h-full w-full flex flex-col md:flex-row overflow-y-auto md:overflow-hidden custom-scrollbar bg-transparent">
                     
                     {/* Left Column: Detailed Agenda List */}
-                    <div className="w-full md:w-1/2 flex flex-col h-[400px] md:h-full border-b md:border-b-0 md:border-r border-white/5 overflow-hidden bg-white/[0.005]">
+                    <div className="w-full md:w-1/2 flex flex-col h-[280px] md:h-full border-b md:border-b-0 md:border-r border-white/5 overflow-hidden bg-white/[0.005]">
                       <div className="p-4 border-b border-white/5 bg-white/[0.01] flex-shrink-0 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <ListTodo className="h-4 w-4 text-accent" />
@@ -1159,7 +1159,7 @@ export function CalendarPage() {
                     </div>
 
                     {/* Right Column: Time-Blocking Hourly Planner with Live Tracker Line */}
-                    <div className="w-full md:w-1/2 flex flex-col h-[500px] md:h-full overflow-hidden bg-white/[0.005]">
+                    <div className="w-full md:w-1/2 flex flex-col h-[400px] md:h-full overflow-hidden bg-white/[0.005]">
                       <div className="p-4 border-b border-white/5 bg-white/[0.01] flex-shrink-0 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <Clock className="h-4 w-4 text-accent" />
