@@ -27,7 +27,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const [mode, setMode] = React.useState<'light' | 'dark'>(() => {
     const stored = localStorage.getItem('guild-mode') as 'light' | 'dark' | null;
-    return stored ?? 'dark';
+    return stored ?? 'light';
   });
 
   // Apply theme colors dynamically when selection changes
