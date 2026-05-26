@@ -153,6 +153,7 @@ export function TaskCanvas() {
   const [quickInput, setQuickInput] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = React.useState(false);
+  const [isCompletedExpanded, setIsCompletedExpanded] = React.useState(false);
 
   // Dropdown states for interactive smart pills
   const [selectedProjectId, setSelectedProjectId] = React.useState<string | null>(null);
@@ -1109,6 +1110,154 @@ export function TaskCanvas() {
 
                         const cfg = STATUS_CONFIG[status];
                         
+                        if (status === 'done') {
+                          return (
+                            <div key={status} className="space-y-3">
+                              {/* Collapsible Completed Tasks Header */}
+                              <button
+                                type="button"
+                                onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
+                                className="w-full flex items-center justify-between px-5 py-4 border border-border/80 dark:border-white/10 rounded-2xl bg-surface/50 dark:bg-white/[0.01] hover:bg-foreground/[0.02] cursor-pointer shadow-sm transition-all text-left"
+                              >
+                                <div className="flex items-center gap-3 select-none">
+                                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-foreground">Completed Tasks Archive</span>
+                                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
+                                      {isCompletedExpanded ? 'Hide completed work' : 'Show completed work'}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-3">
+                                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/10 font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                                    {statusTasks.length}
+                                  </span>
+                                  <ChevronDown className={cn('w-4 h-4 text-muted-foreground transition-transform duration-200', isCompletedExpanded ? 'rotate-180' : '')} />
+                                </div>
+                              </button>
+
+                              {/* Collapsible task rows */}
+                              <AnimatePresence initial={false}>
+                                {isCompletedExpanded && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="border border-border/80 dark:border-white/10 rounded-2xl bg-surface divide-y divide-border/40 dark:divide-white/5 overflow-hidden shadow-md">
+                                      {statusTasks.map((task) => {
+                                        const matchedProj = projects.find(p => p.id === task.projectId);
+                                        const matchedGoal = goals.find(g => g.id === task.goalId);
+                                        const subStats = getSubtaskStats(task.id);
+                                        const due = task.dueDate?.toDate?.();
+
+                                        const initials = task.assigneeIds.length > 0 ? memberMap[task.assigneeIds[0]]?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : null;
+
+                                        return (
+                                          <div
+                                            key={task.id}
+                                            className="group hover:bg-foreground/[0.01] transition-all flex flex-col"
+                                          >
+                                            <div 
+                                              onClick={() => setSearchParams({ task: task.id })}
+                                              className="flex items-center justify-between gap-5 px-5 py-4.5 cursor-pointer text-xs"
+                                            >
+                                              <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                                
+                                                <button
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleToggleComplete(task);
+                                                  }}
+                                                  className="shrink-0 transition-all hover:scale-110 active:scale-90 cursor-pointer mt-0.5"
+                                                >
+                                                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                                                </button>
+
+                                                {task.priority !== 'none' && (
+                                                  <span className="shrink-0 flex items-center justify-center">
+                                                    <span className={cn('h-2 w-2 rounded-full', 
+                                                      task.priority === 'urgent' && 'bg-rose-500',
+                                                      task.priority === 'high' && 'bg-orange-500',
+                                                      task.priority === 'medium' && 'bg-amber-500',
+                                                      task.priority === 'low' && 'bg-sky-500'
+                                                    )} />
+                                                  </span>
+                                                )}
+
+                                                <div className="min-w-0 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                                                  <span className="font-bold text-foreground text-xs leading-normal line-through text-muted-foreground/50 font-normal">
+                                                    {task.title}
+                                                  </span>
+
+                                                  {subStats && (
+                                                    <span className="text-[9px] font-bold text-muted-foreground bg-foreground/5 border border-border/40 rounded-md px-2 py-0.5">
+                                                      {subStats.completed}/{subStats.total} subtasks
+                                                    </span>
+                                                  )}
+
+                                                  {matchedProj && (
+                                                    <span className="text-[9px] font-bold text-primary bg-primary/5 border border-primary/10 rounded-md px-2 py-0.5">
+                                                      #{matchedProj.name}
+                                                    </span>
+                                                  )}
+
+                                                  {matchedGoal && (
+                                                    <span className="text-[9px] font-bold text-violet-505 dark:text-violet-400 bg-violet-500/5 border border-violet-500/10 rounded-md px-2 py-0.5 inline-flex items-center gap-0.5">
+                                                      <Target className="w-3 h-3" />
+                                                      {matchedGoal.title}
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              </div>
+
+                                              <div className="flex items-center gap-4 shrink-0 ml-4" onClick={e => e.stopPropagation()}>
+                                                {due && (
+                                                  <span className="text-[10px] font-semibold flex items-center gap-1 select-none text-muted-foreground/60">
+                                                    <Calendar className="w-4 h-4 shrink-0" />
+                                                    <span>{due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                                  </span>
+                                                )}
+
+                                                {initials ? (
+                                                  <div
+                                                    title={memberMap[task.assigneeIds[0]]}
+                                                    className={cn(
+                                                      'w-6.5 h-6.5 rounded-full border text-[10px] font-black flex items-center justify-center select-none shadow-sm shrink-0',
+                                                      getAvatarColor(task.assigneeIds[0])
+                                                    )}
+                                                  >
+                                                    {initials}
+                                                  </div>
+                                                ) : (
+                                                  <div className="w-6.5 h-6.5 rounded-full border border-dashed border-border flex items-center justify-center text-muted-foreground/20" title="Unassigned">
+                                                    <Users className="w-3.5 h-3.5" />
+                                                  </div>
+                                                )}
+
+                                                <button
+                                                  onClick={() => handleDeleteTask(task.id)}
+                                                  className="p-1 rounded text-muted-foreground/30 hover:text-rose-500 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+                                                  title="Delete Task"
+                                                >
+                                                  <Trash2 className="w-4 h-4" />
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        }
+
                         return (
                           <div key={status} className="space-y-3">
                             {/* Status Group Header */}
@@ -1197,7 +1346,7 @@ export function TaskCanvas() {
 
                                           {/* Goal Tag */}
                                           {matchedGoal && (
-                                            <span className="text-[9px] font-bold text-violet-505 dark:text-violet-400 bg-violet-500/5 border border-violet-500/10 rounded-md px-2 py-0.5 inline-flex items-center gap-0.5">
+                                            <span className="text-[9px] font-bold text-violet-550 dark:text-violet-400 bg-violet-550/5 border border-violet-550/10 rounded-md px-2 py-0.5 inline-flex items-center gap-0.5">
                                               <Target className="w-3 h-3" />
                                               {matchedGoal.title}
                                             </span>
@@ -1288,6 +1437,7 @@ export function TaskCanvas() {
                         );
                       })
                     )}
+
                   </motion.div>
                 )}
 
