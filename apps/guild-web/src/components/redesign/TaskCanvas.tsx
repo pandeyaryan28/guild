@@ -58,8 +58,8 @@ export function TaskCanvas() {
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
 
-  // Sidebar Controls: 'my-space' (Personal workspace), 'my-team' (Team coordination & projects)
-  const [activeSection, setActiveSection] = React.useState<'my-space' | 'my-team'>('my-space');
+  // Sidebar Controls: 'my-space' (Personal workspace), 'my-team' (Team coordination & projects), 'projects' (Initiative mapping)
+  const [activeSection, setActiveSection] = React.useState<'my-space' | 'my-team' | 'projects'>('my-space');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
   
   // Collapsed states for completed tasks sections
@@ -394,6 +394,21 @@ export function TaskCanvas() {
             >
               <Workflow className="w-4 h-4 text-indigo-500 shrink-0" />
               {!isSidebarCollapsed && <span>My Team</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveSection('projects')}
+              className={cn(
+                "w-full flex items-center rounded-xl text-xs font-bold transition-all cursor-pointer border py-2.5",
+                isSidebarCollapsed ? "justify-center px-1" : "px-3.5 gap-2.5",
+                activeSection === 'projects'
+                  ? "bg-accent/[0.08] border-accent/25 text-foreground dark:text-white"
+                  : "bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/30"
+              )}
+              title="Projects Map"
+            >
+              <FolderGit className="w-4 h-4 text-sky-500 shrink-0" />
+              {!isSidebarCollapsed && <span>Projects</span>}
             </button>
           </div>
         </div>
@@ -747,7 +762,7 @@ export function TaskCanvas() {
 
             {/* ━━━━━━ Section B: My Team ━━━━━━ */}
             {activeSection === 'my-team' && (
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
                 
                 {/* Column 1: Pending Reviews */}
                 <div className="space-y-4">
@@ -879,107 +894,152 @@ export function TaskCanvas() {
                   </div>
                 </div>
 
-                {/* Column 3: Initiative Project Tasks List (Properly List Tasks instead of Grid) */}
-                <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-650 dark:text-indigo-400 flex items-center gap-1.5">
-                    <FolderGit className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
-                    <span>Initiative Action Items</span>
-                  </h3>
-                  <div className="space-y-2">
-                    {projectTasksList.filter(t => t.status !== 'done').length > 0 ? (
-                      projectTasksList.filter(t => t.status !== 'done').map(task => {
-                        const linkedProj = projects.find(p => p.id === task.projectId);
-                        return (
-                          <div
-                            key={task.id}
-                            onClick={() => setSearchParams({ task: task.id })}
-                            className="flex items-center justify-between p-3 rounded-xl bg-surface/50 hover:bg-surface border border-border-default transition-all cursor-pointer group shadow-sm"
-                          >
-                            <div className="min-w-0">
-                              <span className="text-[11px] font-bold block text-foreground truncate">
-                                {task.title}
-                              </span>
-                              {linkedProj && (
-                                <span 
-                                  onClick={(e) => { e.stopPropagation(); navigate(`/projects/${linkedProj.id}`); }}
-                                  className="text-[8px] font-black uppercase tracking-wider font-mono text-indigo-600 dark:text-indigo-400 mt-1 block cursor-pointer hover:underline"
-                                >
-                                  #{linkedProj.name}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                              {task.assigneeIds.length > 0 && (
-                                <div className="w-5 h-5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground" title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}>
-                                  {getInitials(task.assigneeIds[0])}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-[10px] text-muted-foreground italic text-center py-6">No active project action items.</p>
-                    )}
+              </div>
+            )}
 
-                    {/* Collapsible Completed Project Tasks */}
-                    {projectTasksList.filter(t => t.status === 'done').length > 0 && (
-                      <div className="space-y-2 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => setShowCompletedInitiatives(!showCompletedInitiatives)}
-                          className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
-                        >
-                          <span>Completed Initiatives ({projectTasksList.filter(t => t.status === 'done').length})</span>
-                          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompletedInitiatives ? "rotate-180" : "")} />
-                        </button>
-                        <AnimatePresence>
-                          {showCompletedInitiatives && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden space-y-2"
-                            >
-                              {projectTasksList.filter(t => t.status === 'done').map(task => {
-                                const linkedProj = projects.find(p => p.id === task.projectId);
-                                return (
-                                  <div
-                                    key={task.id}
-                                    onClick={() => setSearchParams({ task: task.id })}
-                                    className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/20 border border-border-subtle/50 transition-all cursor-pointer opacity-50 hover:opacity-85 shadow-sm"
-                                  >
-                                    <div className="min-w-0">
-                                      <span className="text-[11px] truncate font-normal block text-muted-foreground line-through">
-                                        {task.title}
-                                      </span>
-                                      {linkedProj && (
-                                        <span 
-                                          onClick={(e) => { e.stopPropagation(); navigate(`/projects/${linkedProj.id}`); }}
-                                          className="text-[8px] font-black uppercase tracking-wider font-mono text-muted-foreground mt-1 block cursor-pointer hover:underline"
-                                        >
-                                          #{linkedProj.name}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                      {task.assigneeIds.length > 0 && (
-                                        <div className="w-5 h-5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground" title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}>
-                                          {getInitials(task.assigneeIds[0])}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    )}
+            {/* ━━━━━━ Section C: Projects ━━━━━━ */}
+            {activeSection === 'projects' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between pb-2 border-b border-border-default/45">
+                  <div className="flex items-center gap-2">
+                    <FolderGit className="w-5 h-5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.3)] shrink-0" />
+                    <h3 className="text-xs font-bold text-foreground">Project Initiatives Map</h3>
+                    <span className="text-[10px] text-muted-foreground bg-bg-secondary border border-border-default px-2.5 py-0.5 rounded-full font-mono font-bold">
+                      {projects.length} Active
+                    </span>
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+                  {projects.length > 0 ? (
+                    projects.map(project => {
+                      const projectTasks = tasks.filter(t => t.projectId === project.id);
+                      const doneTasks = projectTasks.filter(t => t.status === 'done');
+                      const progress = projectTasks.length > 0 ? Math.round((doneTasks.length / projectTasks.length) * 100) : 0;
+                      const projectGoals = goals.filter(g => g.projectId === project.id);
+
+                      return (
+                        <div
+                          key={project.id}
+                          className="bg-surface/50 border border-border-default rounded-2xl p-5 space-y-4 hover:border-indigo-500/20 hover:bg-surface transition-all shadow-sm flex flex-col justify-between"
+                        >
+                          <div className="space-y-3">
+                            {/* Card Header */}
+                            <div className="flex items-start justify-between gap-3 pb-2 border-b border-border-default/45">
+                              <div className="min-w-0">
+                                <h4 
+                                  onClick={() => navigate(`/projects/${project.id}`)}
+                                  className="text-xs font-bold text-foreground truncate hover:text-indigo-500 cursor-pointer transition-colors"
+                                >
+                                  {project.name}
+                                </h4>
+                                {project.description && (
+                                  <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed font-medium">
+                                    {project.description}
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                onClick={(e) => handleDeleteProjectItem(e, project.id)}
+                                className="text-muted-foreground hover:text-red-400 p-1 transition-colors shrink-0"
+                                title="Delete Project"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {/* Timeline Dates */}
+                            <div className="flex justify-between items-center text-[8px] text-muted-foreground font-mono font-semibold">
+                              <span>
+                                {project.startDate ? new Date(project.startDate instanceof Date ? project.startDate : (project.startDate as any).seconds * 1000).toLocaleDateString() : 'No Start'}
+                              </span>
+                              <span>➜</span>
+                              <span>
+                                {project.dueDate ? new Date(project.dueDate instanceof Date ? project.dueDate : (project.dueDate as any).seconds * 1000).toLocaleDateString() : 'No Due'}
+                              </span>
+                            </div>
+
+                            {/* Progress rollup */}
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[9px] text-muted-foreground font-semibold">
+                                <span>Task Completion</span>
+                                <span>{progress}% ({doneTasks.length}/{projectTasks.length})</span>
+                              </div>
+                              <div className="w-full bg-bg-secondary rounded-full h-1.5 overflow-hidden">
+                                <div className="bg-indigo-550 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: 'var(--accent)' }} />
+                              </div>
+                            </div>
+
+                            {/* Aligned employee goals list */}
+                            {projectGoals.length > 0 && (
+                              <div className="pt-2 space-y-1.5">
+                                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground block">
+                                  Aligned Goals Focus
+                                </span>
+                                <div className="space-y-1">
+                                  {projectGoals.slice(0, 3).map(goal => (
+                                    <div 
+                                      key={goal.id} 
+                                      onClick={() => navigate(`/goals/${goal.id}`)}
+                                      className="flex items-center justify-between p-1.5 rounded-lg bg-bg-primary/20 border border-border-subtle hover:border-emerald-500/20 hover:bg-bg-primary/40 cursor-pointer transition-all"
+                                    >
+                                      <span className="text-[10px] font-semibold text-foreground truncate max-w-44 leading-none">
+                                        {goal.title}
+                                      </span>
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        <span className="text-[7.5px] font-mono text-muted-foreground">{goal.progressRollup ?? 0}%</span>
+                                        {goal.ownerId && (
+                                          <div className="w-4 h-4 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[7px] text-muted-foreground">
+                                            {getInitials(goal.ownerId)}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {projectGoals.length > 3 && (
+                                    <span className="text-[8px] text-muted-foreground font-semibold block text-center pt-0.5">
+                                      + {projectGoals.length - 3} more aligned goals
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Quick Actions */}
+                          <div className="flex items-center justify-between pt-3 border-t border-border-default/45 mt-3">
+                            <button
+                              onClick={() => triggerAddGoal(project.id)}
+                              className="text-[9px] text-emerald-600 dark:text-emerald-455 hover:underline font-black tracking-wide flex items-center gap-0.5 cursor-pointer"
+                            >
+                              + Goal focus
+                            </button>
+                            <button
+                              onClick={() => triggerAddTask('', project.id)}
+                              className="text-[9px] text-sky-600 dark:text-sky-455 hover:underline font-black tracking-wide flex items-center gap-0.5 cursor-pointer"
+                            >
+                              + Task item
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="md:col-span-2 xl:col-span-3 py-16 border border-dashed border-border-default bg-bg-secondary/20 rounded-2xl flex flex-col items-center justify-center text-center gap-2">
+                      <p className="text-[10px] text-muted-foreground italic">No projects created yet.</p>
+                      <button
+                        onClick={() => {
+                          setProjectForm({ name: '', description: '', startDate: '', dueDate: '' });
+                          setCreateType('project');
+                          setShowCreateDrawer(true);
+                        }}
+                        className="text-[9px] text-indigo-500 font-bold hover:underline"
+                      >
+                        Create your first Project Initiative
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
