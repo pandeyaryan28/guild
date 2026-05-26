@@ -26,6 +26,21 @@ export function NavDock() {
   const { themeId, setTheme, themes } = useTheme();
   const { unreadCount } = useNotifications(userProfile?.organizationId);
   const [showThemePicker, setShowThemePicker] = React.useState(false);
+  const themePickerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (themePickerRef.current && !themePickerRef.current.contains(event.target as Node)) {
+        setShowThemePicker(false);
+      }
+    }
+    if (showThemePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showThemePicker]);
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -97,7 +112,7 @@ export function NavDock() {
         <div className="w-8 h-[1px] bg-white/10 my-2 hidden md:block" />
 
         {/* Theme Toggler Palette Icon - Hidden on mobile */}
-        <div className="relative hidden md:block">
+        <div ref={themePickerRef} className="relative hidden md:block">
           <button
             onClick={() => setShowThemePicker(!showThemePicker)}
             className={`aether-dock-item hover:scale-110 transition-all ${showThemePicker ? 'text-primary' : ''}`}
