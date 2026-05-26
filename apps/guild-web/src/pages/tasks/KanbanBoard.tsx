@@ -30,20 +30,20 @@ function CollapsedDoneColumn({
       className={cn(
         "w-12 h-full flex-shrink-0 flex flex-col items-center justify-between py-4 rounded-2xl border transition-all duration-300 cursor-pointer select-none relative group",
         isOver
-          ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/20"
-          : "bg-bg-primary/45 border-border-default/50 hover:border-emerald-500/35 hover:bg-emerald-500/[0.02]"
+          ? "bg-cyan-500/10 border-cyan-500/40 ring-1 ring-cyan-500/20"
+          : "bg-bg-primary/45 border-border-default/50 hover:border-cyan-500/35 hover:bg-cyan-500/[0.02]"
       )}
       title="Expand Completed Tasks"
     >
       {/* Background Accent Glow on hover */}
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 rounded-2xl pointer-events-none transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 rounded-2xl pointer-events-none transition-opacity duration-300" />
       
       {/* Top Section: Badge and Icon */}
       <div className="flex flex-col items-center gap-3 relative z-10">
-        <div className="h-7 w-7 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-450 group-hover:scale-105 transition-transform">
+        <div className="h-7 w-7 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 text-cyan-400 group-hover:scale-105 transition-transform">
           <CheckCircle2 className="h-4 w-4" />
         </div>
-        <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+        <span className="text-[10px] font-black text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full">
           {tasks.length}
         </span>
       </div>

@@ -76,7 +76,7 @@ const PRIORITY_LABELS: Record<string, string> = {
   urgent: 'text-red-400 border-red-500/20 bg-red-500/5',
   high:   'text-orange-400 border-orange-500/20 bg-orange-500/5',
   medium: 'text-indigo-400 border-indigo-500/20 bg-indigo-500/5',
-  low:    'text-emerald-400 border-emerald-500/20 bg-emerald-500/5',
+  low:    'text-cyan-400 border-cyan-500/20 bg-cyan-500/5',
   none:   'text-muted-foreground border-white/5 bg-white/5',
 };
 
@@ -411,7 +411,7 @@ export function DashboardControl() {
                     <div className="w-full h-[1px] bg-white/5 my-1" />
                     {hasFocus ? (
                       <div className="flex items-start gap-1">
-                        <span className="h-1 w-1 rounded-full bg-emerald-400 shrink-0 mt-1 animate-pulse" />
+                        <span className="h-1 w-1 rounded-full bg-cyan-400 shrink-0 mt-1 animate-pulse" />
                         <span className="text-[9px] font-medium text-foreground italic leading-tight">
                           "{member.focusStatus!.text}"
                         </span>
@@ -474,7 +474,7 @@ export function DashboardControl() {
               </div>
             ) : coreTasks.length === 0 ? (
               <div className="py-8 text-center border border-dashed border-white/10 rounded-2xl bg-white/2">
-                <Check className="w-5 h-5 text-emerald-400 mx-auto mb-2" />
+                <Check className="w-5 h-5 text-cyan-400 mx-auto mb-2" />
                 <span className="text-xs font-semibold text-foreground block">Clear Day</span>
                 <span className="text-[9px] text-muted-foreground mt-0.5 block">No active checklist assigned to you today.</span>
               </div>
@@ -665,7 +665,7 @@ export function DashboardControl() {
             </div>
           ) : (
             <div className="aether-glass p-5 text-center py-6">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-2" />
+              <CheckCircle2 className="w-5 h-5 text-cyan-400 mx-auto mb-2" />
               <span className="text-xs font-bold text-foreground block">Approvals Cleared</span>
               <span className="text-[9px] text-muted-foreground mt-0.5 block">No requests currently require your signature.</span>
             </div>

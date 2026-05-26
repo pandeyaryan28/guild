@@ -18,7 +18,7 @@ import { deleteGoal, updateGoal, type Goal, type GoalStatus } from '../../lib/go
 
 const GOAL_STATUS_CONFIG: Record<Goal['status'], { label: string; color: string; dot: string }> = {
   active:    { label: 'Active',    color: 'text-violet-400', dot: '#a78bfa' },
-  completed: { label: 'Completed', color: 'text-emerald-400', dot: '#34d399' },
+  completed: { label: 'Completed', color: 'text-cyan-400', dot: '#22d3ee' },
   cancelled: { label: 'Cancelled', color: 'text-zinc-500',    dot: '#52525b' },
 };
 
@@ -47,7 +47,7 @@ function GoalListRow({
     : null;
 
   const recurrenceClass = goal.recurrence === 'daily'
-    ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5'
+    ? 'text-cyan-400 border-cyan-500/20 bg-cyan-500/5'
     : goal.recurrence === 'weekly'
     ? 'text-amber-400 border-amber-500/20 bg-amber-500/5'
     : 'text-rose-450 border-rose-500/20 bg-rose-500/5';
@@ -67,8 +67,8 @@ function GoalListRow({
           className={cn(
             'flex-shrink-0 h-5 w-5 rounded-full border-[1.5px] flex items-center justify-center transition-all duration-200 cursor-pointer',
             goal.status === 'completed'
-              ? 'bg-emerald-500 border-emerald-500 text-white'
-              : 'border-muted-foreground/45 hover:border-emerald-500/60 hover:bg-emerald-500/5',
+              ? 'bg-cyan-500 border-cyan-500 text-white'
+              : 'border-muted-foreground/45 hover:border-cyan-500/60 hover:bg-cyan-500/5',
           )}
           title={goal.status === 'completed' ? 'Mark active' : 'Mark completed'}
         >
@@ -251,7 +251,7 @@ export function TasksPage() {
         
         {/* Animated and multi-layered glow mesh for spatial depth */}
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-gradient-to-br from-violet-600/10 via-fuchsia-500/[0.03] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[8s]" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] bg-gradient-to-tr from-emerald-500/5 via-cyan-500/[0.02] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[12s]" />
+        <div className="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] bg-gradient-to-tr from-cyan-500/5 via-cyan-500/[0.02] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[12s]" />
         <div className="absolute top-[35%] left-[25%] w-[40%] h-[40%] bg-indigo-500/[0.015] rounded-full blur-3xl pointer-events-none" />
         
         {/* Fine subgrid blueprint-like grid intersections & dotted canvas matrix */}
@@ -419,7 +419,7 @@ export function TasksPage() {
                         className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide select-none"
                       >
                         <span className="flex items-center gap-2">
-                          <CheckSquare className="h-3.5 w-3.5 text-emerald-450" />
+                          <CheckSquare className="h-3.5 w-3.5 text-cyan-400" />
                           Completed Tasks ({statusTasks.length})
                         </span>
                         <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompletedTasks ? "rotate-180" : "")} />
@@ -557,7 +557,7 @@ export function TasksPage() {
                     className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide select-none"
                   >
                     <span className="flex items-center gap-2">
-                      <Target className="h-3.5 w-3.5 text-emerald-450" />
+                      <Target className="h-3.5 w-3.5 text-cyan-400" />
                       Completed & Cancelled Goals ({completedOrCancelledGoals.length})
                     </span>
                     <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompletedGoals ? "rotate-180" : "")} />
@@ -605,8 +605,8 @@ export function TasksPage() {
       {/* ─── Premium Canvas Status Bar ─── */}
       <div className="h-7.5 border-t border-border-default/45 bg-white/[0.015] dark:bg-white/[0.002] flex items-center justify-between px-4 text-[9px] font-mono font-bold tracking-wider text-muted-foreground/50 select-none relative z-10 shrink-0">
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-emerald-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="flex items-center gap-1.5 text-cyan-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
             CLOUD SYNCED
           </span>
           <div className="h-3.5 w-[1px] bg-border-default/50" />

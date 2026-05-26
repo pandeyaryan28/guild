@@ -83,7 +83,7 @@ export function GoalDetailPage() {
     const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = [
       'bg-indigo-500/10 border-indigo-500/25 text-indigo-650 dark:text-indigo-400',
-      'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400',
+      'bg-cyan-500/10 border-cyan-500/25 text-cyan-600 dark:text-cyan-400',
       'bg-sky-500/10 border-sky-500/25 text-sky-600 dark:text-sky-400',
       'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400',
       'bg-pink-500/10 border-pink-500/25 text-pink-600 dark:text-pink-400',
@@ -219,18 +219,18 @@ export function GoalDetailPage() {
                   className={cn(
                     "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
                     goal.status === 'completed'
-                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "border-border-default bg-bg-primary/50 hover:border-emerald-500"
+                      ? "border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                      : "border-border-default bg-bg-primary/50 hover:border-cyan-500"
                   )}
                   title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
                 >
                   {goal.status === 'completed' ? (
                     <Check className="w-3.5 h-3.5" />
                   ) : (
-                    <Target className="w-3.5 h-3.5 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
+                    <Target className="w-3.5 h-3.5 text-cyan-500 drop-shadow-[0_0_4px_rgba(6,182,212,0.2)]" />
                   )}
                 </button>
-                <h1 className={cn("text-sm font-black tracking-tight truncate", goal.status === 'completed' ? "text-muted-foreground line-through decoration-emerald-500/50" : "text-foreground")}>
+                <h1 className={cn("text-sm font-black tracking-tight truncate", goal.status === 'completed' ? "text-muted-foreground line-through decoration-cyan-500/50" : "text-foreground")}>
                   {goal.title}
                 </h1>
               </div>
@@ -260,7 +260,7 @@ export function GoalDetailPage() {
 
             <button
               onClick={() => setCreateOpen(true)}
-              className="flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] hover:bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-450 px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm"
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.05] hover:bg-cyan-500/[0.08] text-cyan-600 dark:text-cyan-400 px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Task</span>
@@ -271,7 +271,7 @@ export function GoalDetailPage() {
               className={cn(
                 "w-9 h-9 rounded-xl border flex items-center justify-center transition-all active:scale-90 shrink-0 cursor-pointer",
                 isEditing
-                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  ? "border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
                   : "border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground"
               )}
               title="Goal Settings"
@@ -304,7 +304,7 @@ export function GoalDetailPage() {
                   <span className="text-[9px] text-muted-foreground font-semibold">({completedTasks.length}/{allTasks.length} tasks completed)</span>
                 </div>
                 <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
-                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${progressRate}%` }} />
+                  <div className="bg-cyan-500 h-full rounded-full transition-all duration-500" style={{ width: `${progressRate}%` }} />
                 </div>
               </div>
             </div>
@@ -334,7 +334,7 @@ export function GoalDetailPage() {
             <div className="p-4 rounded-xl border border-border-default/60 bg-bg-secondary/20 flex flex-col justify-between gap-3 shadow-sm">
               <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Horizon & Timeline</span>
               <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-emerald-600 dark:text-emerald-450 bg-emerald-500/[0.04] w-max">
+                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04] w-max">
                   {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
                 </span>
                 {goal.targetDate && (
@@ -349,8 +349,8 @@ export function GoalDetailPage() {
 
           {/* Nested Tasks list */}
           <div className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-650 dark:text-emerald-400 flex items-center gap-1.5 border-b border-border-default/45 pb-2">
-              <Clock className="w-3.5 h-3.5 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 border-b border-border-default/45 pb-2">
+              <Clock className="w-3.5 h-3.5 text-cyan-500 drop-shadow-[0_0_4px_rgba(6,182,212,0.2)]" />
               <span>Aligned Goal Tasks</span>
             </h3>
 
@@ -371,9 +371,9 @@ export function GoalDetailPage() {
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           onClick={(e) => handleToggleTaskStatus(e, task)}
-                          className="h-4 w-4 rounded-full border border-border-default bg-bg-primary/50 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:border-emerald-500/50"
+                          className="h-4 w-4 rounded-full border border-border-default bg-bg-primary/50 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:border-cyan-500/50"
                         >
-                          <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-emerald-500/50" />
+                          <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-cyan-500/50" />
                         </div>
                         <div className="min-w-0">
                           <span className="text-xs font-bold block text-foreground truncate">{task.title}</span>
@@ -434,7 +434,7 @@ export function GoalDetailPage() {
                               <div className="flex items-center gap-3 min-w-0">
                                 <div
                                   onClick={(e) => handleToggleTaskStatus(e, task)}
-                                  className="h-4 w-4 rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                                  className="h-4 w-4 rounded-full border border-cyan-500/50 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
                                 >
                                   <Check className="w-2.5 h-2.5" />
                                 </div>
@@ -511,8 +511,8 @@ export function GoalDetailPage() {
             >
               <div className="flex items-center justify-between border-b border-border-default/45 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                    <Target className="w-4 h-4 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
+                  <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shrink-0">
+                    <Target className="w-4 h-4 text-cyan-500 drop-shadow-[0_0_4px_rgba(6,182,212,0.2)]" />
                   </div>
                   <h3 className="text-sm font-black text-foreground">Configure Goal Focus</h3>
                 </div>
@@ -532,7 +532,7 @@ export function GoalDetailPage() {
                     type="text"
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-emerald-500/30"
+                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-cyan-500/30"
                     placeholder="Enter goal title..."
                   />
                 </div>
@@ -543,7 +543,7 @@ export function GoalDetailPage() {
                   <textarea
                     value={editDesc}
                     onChange={(e) => setEditDesc(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-emerald-500/30 h-20 resize-none leading-relaxed"
+                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-cyan-500/30 h-20 resize-none leading-relaxed"
                     placeholder="Describe what this goal entails..."
                   />
                 </div>
@@ -555,7 +555,7 @@ export function GoalDetailPage() {
                     <select
                       value={editProjId}
                       onChange={(e) => setEditProjId(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary dark:bg-surface text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-emerald-500/30"
+                      className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary dark:bg-surface text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-cyan-500/30"
                     >
                       <option value="none">No Initiative Link</option>
                       {projects.map((p) => (
@@ -571,7 +571,7 @@ export function GoalDetailPage() {
                       type="date"
                       value={editDate}
                       onChange={(e) => setEditDate(e.target.value)}
-                      className="w-full px-3 py-1.5 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-emerald-500/30"
+                      className="w-full px-3 py-1.5 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-cyan-500/30"
                     />
                   </div>
                 </div>
@@ -592,12 +592,12 @@ export function GoalDetailPage() {
                           key={item.val}
                           type="button"
                           onClick={() => setEditRecurrence(item.val as any)}
-                          className={cn(
-                            "py-1.5 px-1 rounded-lg border text-[9px] font-black text-center transition-all cursor-pointer",
-                            editRecurrence === item.val
-                              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold shadow-sm"
-                              : "border-border-default bg-bg-primary/50 hover:bg-bg-secondary text-muted-foreground"
-                          )}
+                            className={cn(
+                              "py-1.5 px-1 rounded-lg border text-[9px] font-black text-center transition-all cursor-pointer",
+                              editRecurrence === item.val
+                                ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-extrabold shadow-sm"
+                                : "border-border-default bg-bg-primary/50 hover:bg-bg-secondary text-muted-foreground"
+                            )}
                         >
                           {item.label}
                         </button>
@@ -619,7 +619,7 @@ export function GoalDetailPage() {
                         max={365}
                         value={editCustomDays}
                         onChange={(e) => setEditCustomDays(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-16 px-2.5 py-1 rounded-lg border border-border-default bg-bg-primary/50 text-xs font-mono font-semibold text-foreground text-center outline-none focus:ring-1 focus:ring-emerald-500/30"
+                        className="w-16 px-2.5 py-1 rounded-lg border border-border-default bg-bg-primary/50 text-xs font-mono font-semibold text-foreground text-center outline-none focus:ring-1 focus:ring-cyan-500/30"
                       />
                       <span className="text-[10px] text-muted-foreground font-semibold">days</span>
                     </motion.div>
@@ -637,7 +637,7 @@ export function GoalDetailPage() {
                 </button>
                 <button
                   onClick={handleSaveGoal}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md"
+                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md"
                 >
                   Save Changes
                 </button>

@@ -8,7 +8,7 @@ import type { Goal } from '../../lib/goals';
 
 const STATUS_CONFIG: Record<Goal['status'], { label: string; color: string; dot: string }> = {
   active:    { label: 'Active',    color: 'text-violet-400', dot: '#a78bfa' },
-  completed: { label: 'Completed', color: 'text-emerald-400', dot: '#34d399' },
+  completed: { label: 'Completed', color: 'text-cyan-400', dot: '#22d3ee' },
   cancelled: { label: 'Cancelled', color: 'text-zinc-500',    dot: '#52525b' },
 };
 
@@ -43,7 +43,7 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
     : null;
 
   const recurrenceClass = goal.recurrence === 'daily'
-    ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5'
+    ? 'text-cyan-400 border-cyan-500/20 bg-cyan-500/5'
     : goal.recurrence === 'weekly'
     ? 'text-amber-400 border-amber-500/20 bg-amber-500/5'
     : 'text-rose-450 border-rose-500/20 bg-rose-500/5';

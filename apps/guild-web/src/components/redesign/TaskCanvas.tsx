@@ -121,7 +121,7 @@ export function TaskCanvas() {
     const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = [
       'bg-indigo-500/10 border-indigo-500/25 text-indigo-650 dark:text-indigo-400',
-      'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400',
+      'bg-cyan-500/10 border-cyan-500/25 text-cyan-600 dark:text-cyan-400',
       'bg-sky-500/10 border-sky-500/25 text-sky-600 dark:text-sky-400',
       'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400',
       'bg-pink-500/10 border-pink-500/25 text-pink-600 dark:text-pink-400',
@@ -406,7 +406,7 @@ export function TaskCanvas() {
               )}
               title="My Space"
             >
-              <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
+              <Sparkles className="w-4 h-4 text-cyan-500 shrink-0" />
               {!isSidebarCollapsed && <span>My Space</span>}
             </button>
             
@@ -451,7 +451,7 @@ export function TaskCanvas() {
               setShowCreateDrawer(true);
             }}
             className={cn(
-              "w-full flex items-center justify-center border border-emerald-500/20 bg-emerald-500/[0.05] hover:bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-455 py-2.5 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm",
+              "w-full flex items-center justify-center border border-cyan-500/20 bg-cyan-500/[0.05] hover:bg-cyan-500/[0.08] text-cyan-600 dark:text-cyan-400 py-2.5 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm",
               isSidebarCollapsed ? "rounded-full p-2 h-10 w-10 mx-auto" : "rounded-xl gap-1.5"
             )}
             title="Assign Goal"
@@ -513,8 +513,8 @@ export function TaskCanvas() {
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
                 
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                    <Target className="w-3.5 h-3.5 text-emerald-500 shrink-0 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-cyan-500 shrink-0 drop-shadow-[0_0_4px_rgba(6,182,212,0.2)]" />
                     <span>My Goals</span>
                   </h3>
                   <div className="space-y-4">
@@ -533,12 +533,12 @@ export function TaskCanvas() {
                         return (
                           <div
                             key={goal.id}
-                            className="bg-surface/50 border border-border-default rounded-2xl p-4.5 space-y-4 hover:border-emerald-500/30 hover:bg-surface transition-all shadow-sm"
+                            className="bg-surface/50 border border-border-default rounded-2xl p-4.5 space-y-4 hover:border-cyan-500/30 hover:bg-surface transition-all shadow-sm"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-emerald-600 dark:text-emerald-400 bg-emerald-500/[0.04]">
+                                  <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04]">
                                     {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
                                   </span>
                                   {linkedProj && (
@@ -557,22 +557,22 @@ export function TaskCanvas() {
                                     className={cn(
                                       "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
                                       goal.status === 'completed'
-                                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                        : "border-border-default bg-bg-primary/50 hover:border-emerald-500"
+                                        ? "border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                                        : "border-border-default bg-bg-primary/50 hover:border-cyan-500"
                                     )}
                                     title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
                                   >
                                     {goal.status === 'completed' ? (
                                       <Check className="w-2 h-2" />
                                     ) : (
-                                      <div className="h-1 w-1 rounded-full bg-transparent hover:bg-emerald-500/50" />
+                                      <div className="h-1 w-1 rounded-full bg-transparent hover:bg-cyan-500/50" />
                                     )}
                                   </button>
                                   <h4 
                                     onClick={() => navigate(`/goals/${goal.id}`)}
                                     className={cn(
-                                      "text-xs font-bold hover:text-emerald-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
-                                      goal.status === 'completed' ? "text-muted-foreground line-through decoration-emerald-500/50" : "text-foreground"
+                                      "text-xs font-bold hover:text-cyan-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
+                                      goal.status === 'completed' ? "text-muted-foreground line-through decoration-cyan-500/50" : "text-foreground"
                                     )}
                                   >
                                     {goal.title}
@@ -612,7 +612,7 @@ export function TaskCanvas() {
                                 <span>{progress}% ({completedGoalTasks.length}/{goalTasks.length} tasks)</span>
                               </div>
                               <div className="w-full bg-bg-secondary rounded-full h-1.5 overflow-hidden">
-                                <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+                                <div className="bg-cyan-500 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                               </div>
                             </div>
 
@@ -673,7 +673,7 @@ export function TaskCanvas() {
                                             <div className="flex items-center gap-2 min-w-0">
                                               <div
                                                 onClick={(e) => handleToggleTaskStatus(e, task)}
-                                                className="h-3.5 w-3.5 rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                                                className="h-3.5 w-3.5 rounded-full border border-cyan-500/50 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
                                               >
                                                 <Check className="w-2.5 h-2.5" />
                                               </div>
@@ -738,12 +738,12 @@ export function TaskCanvas() {
                                 return (
                                   <div
                                     key={goal.id}
-                                    className="bg-surface/50 border border-border-default rounded-2xl p-4.5 space-y-4 hover:border-emerald-500/30 hover:bg-surface transition-all shadow-sm opacity-70 hover:opacity-100"
+                                    className="bg-surface/50 border border-border-default rounded-2xl p-4.5 space-y-4 hover:border-cyan-500/30 hover:bg-surface transition-all shadow-sm opacity-70 hover:opacity-100"
                                   >
                                     <div className="flex items-start justify-between gap-3">
                                       <div>
                                         <div className="flex flex-wrap items-center gap-2">
-                                          <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-emerald-600 dark:text-emerald-400 bg-emerald-500/[0.04]">
+                                          <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04]">
                                             {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
                                           </span>
                                           {linkedProj && (
@@ -762,22 +762,22 @@ export function TaskCanvas() {
                                             className={cn(
                                               "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
                                               goal.status === 'completed'
-                                                ? "border-emerald-500 bg-emerald-550/10 text-emerald-600 dark:text-emerald-400"
-                                                : "border-border-default bg-bg-primary/50 hover:border-emerald-500"
+                                                ? "border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                                                : "border-border-default bg-bg-primary/50 hover:border-cyan-500"
                                             )}
                                             title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
                                           >
                                             {goal.status === 'completed' ? (
                                               <Check className="w-2 h-2" />
                                             ) : (
-                                              <div className="h-1 w-1 rounded-full bg-transparent hover:bg-emerald-500/50" />
+                                              <div className="h-1 w-1 rounded-full bg-transparent hover:bg-cyan-500/50" />
                                             )}
                                           </button>
                                           <h4 
                                             onClick={() => navigate(`/goals/${goal.id}`)}
                                             className={cn(
-                                              "text-xs font-bold hover:text-emerald-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
-                                              goal.status === 'completed' ? "text-muted-foreground line-through decoration-emerald-500/50" : "text-foreground"
+                                              "text-xs font-bold hover:text-cyan-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
+                                              goal.status === 'completed' ? "text-muted-foreground line-through decoration-cyan-500/50" : "text-foreground"
                                             )}
                                           >
                                             {goal.title}
@@ -900,7 +900,7 @@ export function TaskCanvas() {
                                   <div className="flex items-center gap-2.5 min-w-0">
                                     <div
                                       onClick={(e) => handleToggleTaskStatus(e, task)}
-                                      className="h-3.5 w-3.5 rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                                      className="h-3.5 w-3.5 rounded-full border border-cyan-500/50 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
                                     >
                                       <Check className="w-2.5 h-2.5" />
                                     </div>
@@ -1179,7 +1179,7 @@ export function TaskCanvas() {
                                     <div 
                                       key={goal.id} 
                                       onClick={() => navigate(`/goals/${goal.id}`)}
-                                      className="flex items-center justify-between p-1.5 rounded-lg bg-bg-primary/20 border border-border-subtle hover:border-emerald-500/20 hover:bg-bg-primary/40 cursor-pointer transition-all"
+                                      className="flex items-center justify-between p-1.5 rounded-lg bg-bg-primary/20 border border-border-subtle hover:border-cyan-500/20 hover:bg-bg-primary/40 cursor-pointer transition-all"
                                     >
                                       <span className="text-[10px] font-semibold text-foreground truncate max-w-44 leading-none">
                                         {goal.title}
@@ -1208,7 +1208,7 @@ export function TaskCanvas() {
                           <div className="flex items-center justify-between pt-3 border-t border-border-default/45 mt-3">
                             <button
                               onClick={() => triggerAddGoal(project.id)}
-                              className="text-[9px] text-emerald-600 dark:text-emerald-455 hover:underline font-black tracking-wide flex items-center gap-0.5 cursor-pointer"
+                              className="text-[9px] text-cyan-600 dark:text-cyan-400 hover:underline font-black tracking-wide flex items-center gap-0.5 cursor-pointer"
                             >
                               + Goal focus
                             </button>

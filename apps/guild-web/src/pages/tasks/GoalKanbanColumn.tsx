@@ -8,7 +8,7 @@ import { GoalKanbanCard } from './GoalKanbanCard';
 
 const STATUS_CONFIG: Record<Goal['status'], { label: string; color: string; dot: string }> = {
   active:    { label: 'Active',    color: 'text-violet-400', dot: '#a78bfa' },
-  completed: { label: 'Completed', color: 'text-emerald-400', dot: '#34d399' },
+  completed: { label: 'Completed', color: 'text-cyan-400', dot: '#22d3ee' },
   cancelled: { label: 'Cancelled', color: 'text-zinc-500',    dot: '#52525b' },
 };
 
