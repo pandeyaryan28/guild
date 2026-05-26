@@ -416,5 +416,14 @@
   .aether-scroll {
     padding-right: 0px !important;
   }
+
+  /* Mobile bottom drawer handle bar indicator */
+  .aether-mobile-handle {
+    width: 38px;
+    height: 5px;
+    background: oklch(from var(--border-default) l c h / 60%);
+    border-radius: 99px;
+    margin: 8px auto 16px auto;
+  }
 }
 

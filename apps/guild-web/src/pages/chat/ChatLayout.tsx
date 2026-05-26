@@ -254,6 +254,14 @@ export function ChatLayout() {
 
   const hasContent = !!channelId || !!dmId;
 
+  // Automatically manage sidebar expansion on mobile screens:
+  // Open directory when on the home lane (/chat), collapse when reading messages
+  React.useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setIsSidebarCollapsed(hasContent);
+    }
+  }, [channelId, dmId, hasContent]);
+
   return (
     <RedesignLayout>
       <div className={cn(
