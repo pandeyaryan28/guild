@@ -587,16 +587,16 @@ export function CalendarPage() {
                 {activeView === 'month' && (
                   <div className="h-full w-full flex flex-col overflow-hidden">
                     {/* Grid Weekday Headers Overhaul */}
-                    <div className="grid grid-cols-7 border-b border-white/5 bg-white/[0.01] text-center py-3.5 px-1 backdrop-blur-md">
+                    <div className="grid grid-cols-7 border-b border-white/5 bg-white/[0.01] text-center py-4 px-1.5 backdrop-blur-md">
                       {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                        <span key={day} className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/80 font-heading">
+                        <span key={day} className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 font-heading">
                           {day}
                         </span>
                       ))}
                     </div>
 
-                    {/* Days grid container */}
-                    <div className="flex-1 grid grid-cols-7 overflow-y-auto aether-scroll md:grid-rows-6">
+                    {/* Days grid container - Overhauled to Floating Grid */}
+                    <div className="flex-1 grid grid-cols-7 gap-2 p-2.5 overflow-y-auto aether-scroll md:grid-rows-6">
                       {(() => {
                         const monthStartDay = startOfMonth(currentDate);
                         const monthEndDay = endOfMonth(monthStartDay);
@@ -621,77 +621,118 @@ export function CalendarPage() {
                           const dailyCompleted = dayTasks.filter(t => t.status === 'done').length;
                           const dailyProgressPercent = dailyTotal > 0 ? (dailyCompleted / dailyTotal) * 100 : 0;
 
+                          // Heatmap glowing colors
+                          const getAmbientGlowStyle = () => {
+                            if (!isCurrentMonth || dailyTotal === 0) return undefined;
+                            if (dailyProgressPercent === 100) {
+                              return {
+                                background: 'radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.05) 0%, transparent 60%)'
+                              };
+                            }
+                            if (dailyTotal > 3) {
+                              return {
+                                background: 'radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.05) 0%, transparent 60%)'
+                              };
+                            }
+                            return {
+                              background: 'radial-gradient(circle at bottom right, oklch(from var(--accent) l c h / 3%) 0%, transparent 50%)'
+                            };
+                          };
+
                           return (
-                            <div
+                            <motion.div
                               key={day.toString()}
+                              whileHover={isCurrentMonth ? { y: -3, scale: 1.01 } : undefined}
+                              transition={{ type: "spring", stiffness: 400, damping: 25 }}
                               onClick={() => {
                                 setMobileSelectedDate(day);
                                 setActiveDayFlyout(day);
                               }}
                               className={cn(
-                                "relative group min-h-[105px] border-b border-r border-white/5 p-2 md:p-3 flex flex-col cursor-pointer transition-all duration-300 select-none overflow-hidden",
+                                "relative group p-2.5 md:p-3 flex flex-col rounded-2xl border transition-all duration-300 select-none overflow-hidden h-full",
                                 isCurrentMonth 
-                                  ? "bg-white/[0.005] hover:bg-white/[0.03]" 
-                                  : "bg-black/15 dark:bg-white/[0.002] opacity-35 hover:opacity-50",
-                                isMobileSelected && "bg-white/[0.04] shadow-[inset_0_0_0_1px_oklch(from_var(--accent)_l_c_h_/_25%)] backdrop-blur-sm"
+                                  ? "border-white/5 bg-white/[0.01] hover:border-accent/30 dark:bg-white/[0.003] dark:hover:bg-white/[0.015] shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]" 
+                                  : "opacity-15 border-white/[0.02] bg-black/10 hover:opacity-25",
+                                isMobileSelected && isCurrentMonth && "bg-white/[0.03] border-accent/40 shadow-[inset_0_0_0_1px_oklch(from_var(--accent)_l_c_h_/_20%)] backdrop-blur-sm",
+                                isDayToday && "border-accent/40 ring-1 ring-accent/20 bg-gradient-to-br from-accent/[0.06] to-indigo-500/[0.01]"
                               )}
+                              style={getAmbientGlowStyle()}
                             >
-                              {/* Glowing radial backdrop only for Today */}
+                              {/* Breathing radial backdrop pulse only for Today */}
                               {isDayToday && (
-                                <motion.div 
-                                  className="absolute inset-1 rounded-2xl pointer-events-none z-0"
-                                  animate={{
-                                    boxShadow: [
-                                      '0 0 0 0px oklch(from var(--accent) l c h / 8%)',
-                                      '0 0 16px 4px oklch(from var(--accent) l c h / 18%)',
-                                      '0 0 0 0px oklch(from var(--accent) l c h / 8%)'
-                                    ]
-                                  }}
-                                  transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                  }}
+                                <div 
+                                  className="absolute inset-0.5 rounded-2xl pointer-events-none z-0 opacity-80"
                                   style={{
                                     background: `radial-gradient(circle at center, oklch(from var(--accent) l c h / 6%) 0%, transparent 80%)`,
-                                    border: '1px solid oklch(from var(--accent) l c h / 25%)',
                                   }}
                                 />
                               )}
 
-                              {/* Day number cell header */}
-                              <div className="flex items-center justify-between mb-2 z-10">
-                                <span
-                                  className={cn(
-                                    "flex h-6 w-6 items-center justify-center text-[10px] font-extrabold rounded-full transition-all duration-300",
-                                    !isDayToday && isCurrentMonth && "text-foreground hover:bg-white/10",
-                                    !isDayToday && !isCurrentMonth && "text-muted-foreground/60",
-                                    isMobileSelected && !isDayToday && "bg-white/10 text-foreground font-black"
-                                  )}
-                                  style={isDayToday ? {
-                                    background: 'var(--accent)',
-                                    color: 'var(--accent-foreground)',
-                                    boxShadow: `0 0 10px oklch(from var(--accent) l c h / 30%)`
-                                  } : undefined}
-                                >
-                                  {format(day, 'd')}
-                                </span>
+                              {/* Day number cell header with circular progress indicator */}
+                              <div className="flex items-center justify-between mb-3 z-10">
+                                <div className="relative h-6.5 w-6.5 flex items-center justify-center shrink-0">
+                                  {/* Fine visual circular arc indicating completion progress */}
+                                  <svg className="absolute inset-0 h-full w-full transform -rotate-90">
+                                    <circle cx="13" cy="13" r="10" className="fill-none stroke-white/5" strokeWidth="1.5" />
+                                    {dailyTotal > 0 && (
+                                      <circle 
+                                        cx="13" 
+                                        cy="13" 
+                                        r="10" 
+                                        className={cn(
+                                          "fill-none transition-all duration-500",
+                                          dailyProgressPercent === 100 ? "stroke-emerald-400" : "stroke-accent"
+                                        )}
+                                        strokeWidth="1.5" 
+                                        strokeDasharray="62.8" 
+                                        strokeDashoffset={62.8 - (dailyProgressPercent / 100) * 62.8} 
+                                        strokeLinecap="round"
+                                        style={{ stroke: dailyProgressPercent === 100 ? undefined : 'var(--accent)' }}
+                                      />
+                                    )}
+                                  </svg>
+                                  
+                                  <span
+                                    className={cn(
+                                      "text-[9px] font-black tracking-tight",
+                                      isDayToday ? "text-accent-foreground" : "text-foreground",
+                                      dailyProgressPercent === 100 && dailyTotal > 0 && "text-emerald-400"
+                                    )}
+                                    style={isDayToday ? {
+                                      background: 'var(--accent)',
+                                      height: '16px',
+                                      width: '16px',
+                                      borderRadius: '9999px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      boxShadow: `0 0 6px oklch(from var(--accent) l c h / 40%)`
+                                    } : undefined}
+                                  >
+                                    {format(day, 'd')}
+                                  </span>
 
-                                {/* Quick create mini button */}
+                                  {/* Pulsing successful complete mark */}
+                                  {dailyProgressPercent === 100 && dailyTotal > 0 && (
+                                    <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow animate-pulse" />
+                                  )}
+                                </div>
+
+                                {/* Quick create action button */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleQuickAddClick(day);
                                   }}
-                                  className="opacity-0 group-hover:opacity-100 flex items-center justify-center h-5 w-5 rounded-lg border border-white/5 bg-white/5 hover:bg-white/15 text-foreground hover:scale-105 active:scale-95 transition-all duration-200 shadow-sm"
-                                  title="Add Task to Date"
+                                  className="opacity-0 group-hover:opacity-100 flex items-center justify-center h-5 w-5 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 text-foreground hover:scale-105 active:scale-95 transition-all duration-200 shadow-sm"
+                                  title="Schedule task"
                                 >
                                   <Plus className="h-3 w-3" />
                                 </button>
                               </div>
 
                               {/* Task item stack inside day cell */}
-                              <div className="flex-1 space-y-1.5 overflow-y-auto aether-scroll pr-0.5 z-10">
+                              <div className="flex-1 space-y-2 overflow-y-auto aether-scroll pr-0.5 z-10">
                                 {/* Mobile dots */}
                                 <div className="flex md:hidden flex-wrap gap-0.5 justify-center mt-1">
                                   {dayTasks.slice(0, 3).map((t) => (
@@ -706,7 +747,7 @@ export function CalendarPage() {
                                   )}
                                 </div>
 
-                                {/* Premium desktop strips */}
+                                {/* Premium desktop capsule strips */}
                                 <div className="hidden md:block space-y-1.5">
                                   {dayTasks.slice(0, 3).map((task) => {
                                     const isDone = task.status === 'done';
@@ -722,14 +763,12 @@ export function CalendarPage() {
                                           setSelectedTask(task);
                                         }}
                                         className={cn(
-                                          "group/task-strip flex items-center justify-between rounded-lg border px-2 py-1 text-[9px] transition-all duration-300 select-none cursor-pointer",
+                                          "group/task-strip flex items-center justify-between rounded-xl border p-2 text-[9px] transition-all duration-300 select-none cursor-pointer",
                                           isDone 
                                             ? "border-white/5 bg-white/[0.01] opacity-35 line-through hover:opacity-50" 
-                                            : "hover:translate-x-0.5 hover:shadow-lg"
+                                            : "hover:translate-x-0.5 bg-white/[0.02] border-white/5 hover:border-accent/20 hover:bg-white/[0.05] hover:shadow-md"
                                         )}
                                         style={!isDone ? {
-                                          background: `linear-gradient(90deg, ${priorityColor}14 0%, ${priorityColor}04 70%, rgba(255,255,255,0.01) 100%)`,
-                                          borderColor: `${priorityColor}1c`,
                                           borderLeft: `3px solid ${priorityColor}`,
                                           boxShadow: `inset 0 1px 0 0 rgba(255,255,255,0.02)`
                                         } : {
@@ -737,25 +776,26 @@ export function CalendarPage() {
                                         }}
                                         title={task.title}
                                       >
-                                        <div className="flex items-center gap-1.5 min-w-0 flex-grow">
-                                          {/* Glowing priority dot */}
-                                          {!isDone ? (
-                                            <div className="relative flex h-1.5 w-1.5 items-center justify-center shrink-0">
-                                              <span 
-                                                className="absolute inline-flex h-full w-full rounded-full opacity-30 animate-ping"
-                                                style={{ backgroundColor: priorityColor }}
-                                              />
-                                              <span 
-                                                className="relative inline-flex rounded-full h-1 w-1"
-                                                style={{ 
-                                                  backgroundColor: priorityColor,
-                                                  boxShadow: `0 0 4px 1px ${priorityColor}`
-                                                }}
-                                              />
-                                            </div>
-                                          ) : (
-                                            <span className="h-1 w-1 rounded-full bg-white/20 shrink-0" />
-                                          )}
+                                        <div className="flex items-center gap-2 min-w-0 flex-grow">
+                                          {/* Direct check click toggle */}
+                                          <div 
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              await handleToggleTaskStatus(e, task);
+                                            }}
+                                            className={cn(
+                                              "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300 cursor-pointer",
+                                              isDone 
+                                                ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 animate-fluid-pop" 
+                                                : "border-white/20 bg-black/20 hover:border-accent/50 hover:bg-accent/5"
+                                            )}
+                                          >
+                                            {isDone ? (
+                                              <Check className="h-2 w-2" />
+                                            ) : (
+                                              <div className="h-1 w-1 rounded-full bg-transparent group-hover/task-strip:bg-accent/40" />
+                                            )}
+                                          </div>
 
                                           <span className={cn(
                                             "truncate tracking-tight leading-none text-foreground/90 font-semibold transition-colors duration-200",
@@ -765,10 +805,10 @@ export function CalendarPage() {
                                           </span>
                                         </div>
 
-                                        <div className="flex items-center gap-1 shrink-0 ml-1.5">
+                                        <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
                                           {projInitials && (
                                             <span 
-                                              className="text-[8px] font-black uppercase tracking-wider px-1 py-0.5 rounded border border-white/5 bg-white/5"
+                                              className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-white/5 bg-white/5"
                                               style={{ 
                                                 color: 'oklch(from var(--accent) calc(l + 0.12) c h)',
                                                 lineHeight: '1'
@@ -804,16 +844,16 @@ export function CalendarPage() {
                                         setMobileSelectedDate(day);
                                         setActiveDayFlyout(day);
                                       }}
-                                      className="w-full flex items-center justify-center gap-1 py-1 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 text-[8px] font-bold text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-sm select-none backdrop-blur-md"
+                                      className="w-full flex items-center justify-center gap-1 py-1 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 text-[8px] font-bold text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-sm select-none backdrop-blur-md"
                                     >
-                                      <span className="h-1 w-1 rounded-full bg-accent shrink-0 animate-pulse" />
+                                      <span className="h-1.5 w-1.5 rounded-full bg-accent shrink-0 animate-pulse" />
                                       <span>+{dayTasks.length - 3} more tasks</span>
                                     </button>
                                   )}
                                 </div>
                               </div>
 
-                              {/* Daily Completion Progress Line Overhaul */}
+                              {/* Daily Completion Progress Line */}
                               {dailyTotal > 0 && (
                                 <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/5 pointer-events-none">
                                   <div 
@@ -826,7 +866,7 @@ export function CalendarPage() {
                                   />
                                 </div>
                               )}
-                            </div>
+                            </motion.div>
                           );
                         });
                       })()}
