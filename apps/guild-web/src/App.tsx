@@ -114,7 +114,9 @@ export default function App() {
             path="/tasks"
             element={
               <ProtectedRoute>
-                <TasksPage />
+                <DashboardApp>
+                  <TasksPage />
+                </DashboardApp>
               </ProtectedRoute>
             }
           />

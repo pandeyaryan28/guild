@@ -1,166 +1,40 @@
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
+import { Plus, Loader2, Trello, LayoutList, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FolderOpen, Target, LayoutList, Sun, CalendarDays, CheckCircle2, Settings, Send, Eye, Users, Menu, Trello, Plus } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTasks, useTaskLabels } from '../../hooks/useTasks';
-import { useProjects } from '../../hooks/useProjects';
-import { useGoals } from '../../hooks/useGoals';
 import { useOrgMembers } from '../../hooks/useChat';
-import { useTeams } from '../../hooks/useTeams';
-import { TasksLayout } from './TasksLayout';
-import { TasksNav, type NavView } from './TasksNav';
-import { TaskIsland } from '../../components/tasks/TaskIsland';
 import { TaskDetailPanel } from './TaskDetailPanel';
 import { KanbanBoard } from './KanbanBoard';
 import { CreateTaskPopup } from '../../components/tasks/CreateTaskPopup';
-import type { Task, TaskStatus } from '../../lib/tasks';
-
-function getViewTitle(view: NavView, projects: { id: string; name: string }[], goals: { id: string; title: string }[]): { title: string; subtitle?: string } {
-  switch (view.type) {
-    case 'all': return { title: 'My Tasks', subtitle: 'All your tasks' };
-    case 'today': return { title: 'Today', subtitle: 'Due today' };
-    case 'upcoming': return { title: 'Upcoming', subtitle: 'Due in the next 7 days' };
-    case 'completed': return { title: 'Completed', subtitle: 'Done tasks' };
-    case 'assigned': return { title: 'Assigned to Others', subtitle: 'Tasks you assigned to others' };
-    case 'review': return { title: 'In Review', subtitle: 'Tasks waiting for your review' };
-    case 'team': return { title: 'Team Tasks', subtitle: 'Overview of active tasks assigned to your team members' };
-    case 'project': {
-      const p = projects.find((x) => x.id === view.id);
-      return { title: p?.name ?? 'Project', subtitle: 'Project tasks' };
-    }
-    case 'goal': {
-      const g = goals.find((x) => x.id === view.id);
-      return { title: g?.title ?? 'Goal', subtitle: 'Goal tasks' };
-    }
-  }
-}
-
-function filterTasksForView(tasks: Task[], view: NavView, myUid: string, teamMemberIds: string[] = []): Task[] {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayEnd = new Date(todayStart.getTime() + 86400000);
-  const upcomingEnd = new Date(todayStart.getTime() + 7 * 86400000);
-
-  switch (view.type) {
-    case 'all':
-      return tasks.filter((t) => t.assigneeIds.includes(myUid) && t.status !== 'done' && t.status !== 'review');
-    case 'today': {
-      return tasks.filter((t) => {
-        if (t.status === 'done' || t.status === 'review') return false;
-        if (!t.assigneeIds.includes(myUid)) return false;
-        const due = t.dueDate?.toDate?.();
-        return due && due >= todayStart && due < todayEnd;
-      });
-    }
-    case 'upcoming': {
-      return tasks.filter((t) => {
-        if (t.status === 'done' || t.status === 'review') return false;
-        if (!t.assigneeIds.includes(myUid)) return false;
-        const due = t.dueDate?.toDate?.();
-        return due && due >= todayEnd && due < upcomingEnd;
-      });
-    }
-    case 'completed':
-      return tasks.filter((t) => t.status === 'done' && t.assigneeIds.includes(myUid));
-    case 'assigned':
-      return tasks.filter((t) => t.creatorId === myUid && t.assigneeIds.some(id => id !== myUid) && t.status !== 'done' && t.status !== 'review');
-    case 'review':
-      return tasks.filter((t) => t.creatorId === myUid && t.status === 'review');
-    case 'team':
-      return tasks.filter((t) => t.assigneeIds.some((id) => teamMemberIds.includes(id)));
-    case 'project':
-      return tasks.filter((t) => t.projectId === view.id);
-    case 'goal':
-      return tasks.filter((t) => t.goalId === view.id);
-  }
-}
-
-function ViewIcon({ view }: { view: NavView }) {
-  const cls = 'h-4 w-4 text-muted-foreground';
-  switch (view.type) {
-    case 'all': return <LayoutList className={cls} />;
-    case 'today': return <Sun className={cls} />;
-    case 'upcoming': return <CalendarDays className={cls} />;
-    case 'completed': return <CheckCircle2 className={cls} />;
-    case 'assigned': return <Send className={cls} />;
-    case 'review': return <Eye className={cls} />;
-    case 'team': return <Users className={cls} />;
-    case 'project': return <FolderOpen className={cls} />;
-    case 'goal': return <Target className={cls} />;
-  }
-}
+import { TaskListRow } from './TaskListRow';
+import { deleteTask, type Task, type TaskStatus, STATUS_CONFIG } from '../../lib/tasks';
 
 export function TasksPage() {
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
-  const [activeView, setActiveView] = React.useState<NavView>({ type: 'all' });
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
-  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const [viewMode, setViewMode] = React.useState<'list' | 'board'>(() => {
     return (localStorage.getItem('guild_tasks_view_mode') as 'list' | 'board') || 'list';
   });
   const [createTaskOpen, setCreateTaskOpen] = React.useState(false);
   const [createTaskDefaultStatus, setCreateTaskDefaultStatus] = React.useState<TaskStatus>('todo');
 
-  const { projects } = useProjects(orgId);
-  const { goals } = useGoals(orgId);
-
-  // Always load all org tasks (the hook is inexpensive and we filter client-side)
-  const { tasks, loading } = useTasks(orgId);
+  // Load all tasks, labels, and members
+  const { tasks, columns, loading } = useTasks(orgId);
   const labels = useTaskLabels(orgId);
-
   const members = useOrgMembers(orgId);
-  const { teams } = useTeams(orgId);
-
-  const teamMemberIds = React.useMemo(() => {
-    if (!user) return [];
-    const directReportIds = members
-      .filter((m) => m.managerId === user.uid)
-      .map((m) => m.uid);
-
-    const managedTeamMemberIds = teams
-      .filter((t) => t.managerId === user.uid)
-      .flatMap((t) => t.memberIds);
-
-    const allIds = new Set([...directReportIds, ...managedTeamMemberIds]);
-    allIds.delete(user.uid);
-    return Array.from(allIds);
-  }, [members, teams, user]);
-
-  const teamMemberProfiles = React.useMemo(() => {
-    return members.filter((m) => teamMemberIds.includes(m.uid));
-  }, [members, teamMemberIds]);
 
   const actor = React.useMemo(() => ({
     uid: user?.uid ?? '',
     name: userProfile?.fullName || user?.displayName || 'Unknown',
   }), [user, userProfile]);
+  
   const actorName = userProfile?.fullName || user?.displayName || user?.email || 'Me';
 
-  if (!user || !orgId) return <Navigate to="/login" replace />;
-
-  const viewTasks = filterTasksForView(tasks, activeView, user?.uid ?? '', teamMemberIds);
-  const { title, subtitle } = getViewTitle(activeView, projects, goals);
-
-  // Group columns for Kanban board view
-  const viewColumns = React.useMemo(() => {
-    const map = new Map<TaskStatus, Task[]>();
-    map.set('todo', []);
-    map.set('in_progress', []);
-    map.set('review', []);
-    map.set('done', []);
-    for (const task of viewTasks) {
-      const col = map.get(task.status);
-      if (col) col.push(task);
-    }
-    for (const [s, col] of map) {
-      map.set(s, [...col].sort((a, b) => a.orderIndex - b.orderIndex));
-    }
-    return map;
-  }, [viewTasks]);
-
-  const kanbanMemberMap = React.useMemo(() => {
+  // Member map for TaskCard and TaskListRow
+  const memberMap = React.useMemo(() => {
     const map = new Map<string, { fullName: string; username: string }>();
     members.forEach((m) => {
       map.set(m.uid, {
@@ -171,198 +45,205 @@ export function TasksPage() {
     return map;
   }, [members]);
 
-  // Scope defaults for InlineTaskInput
-  const defaultProjectId = activeView.type === 'project' ? activeView.id : null;
-  const defaultGoalId = activeView.type === 'goal' ? activeView.id : null;
+  const memberRecordMap = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    members.forEach((m) => {
+      map[m.uid] = m.fullName || m.username || m.uid;
+    });
+    return map;
+  }, [members]);
 
-  const handleViewChange = (view: NavView) => {
-    setActiveView(view);
-    setSelectedTask(null);
-    setMobileNavOpen(false);
+  // Root level tasks and subtask map
+  const rootTasks = React.useMemo(() => tasks.filter((t) => !t.parentTaskId), [tasks]);
+  
+  const subtaskMap = React.useMemo(() => {
+    const map: Record<string, Task[]> = {};
+    tasks.filter((t) => t.parentTaskId).forEach((t) => {
+      const key = t.parentTaskId!;
+      if (!map[key]) map[key] = [];
+      map[key].push(t);
+    });
+    return map;
+  }, [tasks]);
+
+  if (!user || !orgId) return <Navigate to="/login" replace />;
+
+  const activeTasksCount = rootTasks.filter((t) => t.status !== 'done').length;
+
+  const handleDeleteTask = async (task: Task) => {
+    if (!confirm('Delete this task?')) return;
+    await deleteTask(task.id);
+    if (selectedTask?.id === task.id) {
+      setSelectedTask(null);
+    }
   };
 
-  const handleSelectTask = (task: Task) => {
+  const handleToggleTaskSelect = (task: Task) => {
     setSelectedTask((prev) => (prev?.id === task.id ? null : task));
   };
 
+  const statuses: TaskStatus[] = ['todo', 'in_progress', 'review', 'done'];
+
   return (
-    <TasksLayout
-      panelOpen={!!selectedTask}
-      mobileNavOpen={mobileNavOpen}
-      onMobileNavClose={() => setMobileNavOpen(false)}
-      nav={
-        <TasksNav
-          orgId={orgId}
-          actor={actor}
-          activeView={activeView}
-          onViewChange={handleViewChange}
-          actorName={actorName}
-        />
-      }
-      main={
-        <div className="flex flex-col h-full overflow-hidden">
-          {/* Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-border-default">
-            <button
-              onClick={() => setMobileNavOpen(true)}
-              className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent/40 hover:text-foreground shrink-0 transition-colors"
-              title="Open Menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <ViewIcon view={activeView} />
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-semibold text-foreground leading-tight">{title}</h1>
-              {subtitle && (
-                <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>
-              )}
-              {activeView.type === 'team' && teamMemberProfiles.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {teamMemberProfiles.map((m) => (
-                    <span
-                      key={m.uid}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20"
-                    >
-                      {m.fullName}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            {/* View Toggle */}
-            <div className="flex items-center gap-1 bg-accent/20 border border-border-default/45 p-0.5 rounded-lg shrink-0 mr-1.5">
-              <button
-                onClick={() => {
-                  localStorage.setItem('guild_tasks_view_mode', 'list');
-                  setViewMode('list');
-                }}
-                className={cn(
-                  'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all',
-                  viewMode === 'list'
-                    ? 'bg-bg-primary text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-                title="List View"
-              >
-                <LayoutList className="h-3.5 w-3.5" />
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.setItem('guild_tasks_view_mode', 'board');
-                  setViewMode('board');
-                }}
-                className={cn(
-                  'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all',
-                  viewMode === 'board'
-                    ? 'bg-bg-primary text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-                title="Board View"
-              >
-                <Trello className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            {/* Task count */}
-            {!loading && (
-              <span className={cn(
-                'flex-shrink-0 text-xs font-medium rounded-full px-2.5 py-1',
-                'bg-muted text-muted-foreground',
-              )}>
-                {viewTasks.filter((t) => !t.parentTaskId).length}
-              </span>
-            )}
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border-default flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/10">
+            <CheckSquare className="h-4 w-4 text-violet-400" />
           </div>
-
-          {/* Task Island Container */}
-          <div className="flex-1 min-h-0 bg-accent/10 relative">
-            {viewMode === 'list' ? (
-              <TaskIsland
-                title={title}
-                tasks={viewTasks}
-                loading={loading}
-                orgId={orgId}
-                actor={actor}
-                selectedTask={selectedTask}
-                onSelectTask={handleSelectTask}
-                defaultProjectId={defaultProjectId}
-                defaultGoalId={defaultGoalId}
-                showCompleted={activeView.type === 'completed'}
-                emptyMessage={
-                  activeView.type === 'today' ? 'Nothing due today' :
-                  activeView.type === 'upcoming' ? 'No upcoming tasks' :
-                  activeView.type === 'completed' ? 'No completed tasks yet' :
-                  activeView.type === 'assigned' ? 'You haven\'t assigned any tasks to others' :
-                  activeView.type === 'review' ? 'No tasks pending your review' :
-                  'No tasks yet'
-                }
-              />
-            ) : (
-              <div className="h-full w-full p-6 overflow-hidden">
-                {loading ? (
-                  <div className="flex items-center justify-center py-12 h-full">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-                      <p className="text-sm text-muted-foreground">Loading board…</p>
-                    </div>
-                  </div>
-                ) : viewTasks.length === 0 ? (
-                  <div className="flex items-center justify-center py-12 h-full">
-                    <div className="text-center space-y-3">
-                      <div className="text-5xl opacity-15 select-none">✓</div>
-                      <p className="text-sm text-muted-foreground">No tasks in this view</p>
-                      <button
-                        onClick={() => {
-                          setCreateTaskDefaultStatus('todo');
-                          setCreateTaskOpen(true);
-                        }}
-                        className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                      >
-                        <Plus className="h-3 w-3" />
-                        Add a task
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <KanbanBoard
-                    columns={viewColumns}
-                    allTasks={viewTasks}
-                    labels={labels}
-                    memberMap={kanbanMemberMap}
-                    orgId={orgId}
-                    actor={actor}
-                    onTaskClick={handleSelectTask}
-                    onAddTask={(status) => {
-                      setCreateTaskDefaultStatus(status);
-                      setCreateTaskOpen(true);
-                    }}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Kanban Mode Task Creation Popup */}
-            <CreateTaskPopup
-              open={createTaskOpen}
-              onClose={() => setCreateTaskOpen(false)}
-              orgId={orgId}
-              actor={actor}
-              defaultStatus={createTaskDefaultStatus}
-              defaultProjectId={defaultProjectId}
-              defaultGoalId={defaultGoalId}
-            />
+          <div>
+            <h1 className="text-sm font-semibold text-foreground">Tasks</h1>
+            <p className="text-[11px] text-muted-foreground">
+              {loading ? 'Loading…' : `${activeTasksCount} active task${activeTasksCount !== 1 ? 's' : ''}`}
+            </p>
           </div>
         </div>
-      }
-      panel={
+        <div className="flex items-center gap-3 shrink-0">
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 bg-accent/20 border border-border-default/45 p-0.5 rounded-lg mr-1 shrink-0">
+            <button
+              onClick={() => {
+                localStorage.setItem('guild_tasks_view_mode', 'list');
+                setViewMode('list');
+              }}
+              className={cn(
+                'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all cursor-pointer',
+                viewMode === 'list'
+                  ? 'bg-bg-primary text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              title="List View"
+            >
+              <LayoutList className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => {
+                localStorage.setItem('guild_tasks_view_mode', 'board');
+                setViewMode('board');
+              }}
+              className={cn(
+                'p-1.5 rounded-md text-xs font-bold flex items-center gap-1 transition-all cursor-pointer',
+                viewMode === 'board'
+                  ? 'bg-bg-primary text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              title="Board View"
+            >
+              <Trello className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setCreateTaskDefaultStatus('todo');
+              setCreateTaskOpen(true);
+            }}
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0 h-8"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Task
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-grow overflow-y-auto p-6 relative">
+        {loading ? (
+          <div className="flex h-full items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-text-muted" />
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 ring-1 ring-violet-500/20">
+              <CheckSquare className="h-6 w-6 text-violet-400/60" />
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-foreground">No tasks yet</p>
+              <p className="text-[11px] text-muted-foreground">Create a task to get started.</p>
+            </div>
+            <button
+              onClick={() => {
+                setCreateTaskDefaultStatus('todo');
+                setCreateTaskOpen(true);
+              }}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-violet-650 hover:bg-violet-750 text-white px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0 h-8"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              New Task
+            </button>
+          </div>
+        ) : viewMode === 'list' ? (
+          <div className="space-y-8">
+            {statuses.map((status) => {
+              const statusTasks = rootTasks.filter((t) => t.status === status);
+              if (statusTasks.length === 0) return null;
+              const statusCfg = STATUS_CONFIG[status];
+              return (
+                <div key={status} className="space-y-3">
+                  <div className="flex items-center gap-2 px-1">
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: statusCfg.dot }} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      {statusCfg.label}
+                    </span>
+                    <span className="text-[9px] text-text-muted bg-bg-tertiary px-1.5 py-0.5 rounded font-bold">
+                      {statusTasks.length}
+                    </span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {statusTasks.map((task) => (
+                      <TaskListRow
+                        key={task.id}
+                        task={task}
+                        orgId={orgId}
+                        actor={actor}
+                        subtasks={subtaskMap[task.id] ?? []}
+                        isSelected={selectedTask?.id === task.id}
+                        onSelect={handleToggleTaskSelect}
+                        onDelete={handleDeleteTask}
+                        memberMap={memberRecordMap}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <KanbanBoard
+            columns={columns}
+            allTasks={rootTasks}
+            labels={labels}
+            memberMap={memberMap}
+            orgId={orgId}
+            actor={actor}
+            onTaskClick={handleToggleTaskSelect}
+            onAddTask={(status) => {
+              setCreateTaskDefaultStatus(status);
+              setCreateTaskOpen(true);
+            }}
+          />
+        )}
+      </div>
+
+      {/* Task Creation Popup */}
+      <CreateTaskPopup
+        open={createTaskOpen}
+        onClose={() => setCreateTaskOpen(false)}
+        orgId={orgId}
+        actor={actor}
+        defaultStatus={createTaskDefaultStatus}
+      />
+
+      {/* Task Detail Sidebar Panel */}
+      {selectedTask && (
         <TaskDetailPanel
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
           orgId={orgId}
           actor={actor}
           authorUsername={actorName}
-          layoutMode="inline"
         />
-      }
-    />
+      )}
+    </div>
   );
 }
