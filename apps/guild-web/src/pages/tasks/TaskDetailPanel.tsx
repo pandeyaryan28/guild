@@ -1,5 +1,10 @@
 import * as React from 'react';
-import { X, Calendar, AlignLeft, ChevronDown, Plus, Check, ListTodo, Clock, Trash2 } from 'lucide-react';
+import { 
+  X, Calendar, AlignLeft, ChevronDown, Plus, Check, ListTodo, Clock, Trash2, 
+  UserPlus, UserMinus, Tag, MessageSquare, History, CheckSquare, Square,
+  Folder, Target, ChevronRight, Send, Loader2, AlertCircle
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import {
   updateTask, updatePriority, updateAssignees, updateDueDate, updateLabels,
@@ -21,12 +26,13 @@ interface Props {
   orgId: string;
   actor: ActorInfo;
   authorUsername: string;
+  layoutMode?: 'drawer' | 'inline';
 }
 
 type PanelTab = 'comments' | 'activity';
 
-// ── tiny hook: close a floating panel when clicking outside ──────────────────
-function useClickOutside(ref: React.RefObject<HTMLElement | null>, onClose: () => void, enabled: boolean) {
+// ── click outside custom hook ──────────────────────────────────────────────
+function useClickOutside(ref: React.RefObject<HTMLDivElement | null>, onClose: () => void, enabled: boolean) {
   React.useEffect(() => {
     if (!enabled) return;
     const handler = (e: MouseEvent) => {
@@ -37,7 +43,7 @@ function useClickOutside(ref: React.RefObject<HTMLElement | null>, onClose: () =
   }, [ref, onClose, enabled]);
 }
 
-// ── reusable dropdown wrapper ────────────────────────────────────────────────
+// ── reusable drop down with premium card style ──────────────────────────────
 function Dropdown({ trigger, children, open, onClose }: {
   trigger: React.ReactNode;
   children: React.ReactNode;
@@ -50,7 +56,7 @@ function Dropdown({ trigger, children, open, onClose }: {
     <div ref={ref} className="relative">
       {trigger}
       {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-30 rounded-xl border border-border-default bg-popover shadow-2xl overflow-hidden min-w-[160px] animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute top-full mt-2 left-0 z-40 rounded-2xl border border-border-default bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl shadow-2xl overflow-hidden min-w-[200px] py-1.5 animate-in fade-in slide-in-from-top-1.5 duration-200">
           {children}
         </div>
       )}
@@ -58,19 +64,28 @@ function Dropdown({ trigger, children, open, onClose }: {
   );
 }
 
-// ── property row ─────────────────────────────────────────────────────────────
+// ── visually polished property row ──────────────────────────────────────────
 function PropRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3 py-2.5 group">
-      <span className="w-20 flex-shrink-0 text-[11px] font-medium text-text-muted pt-0.5 uppercase tracking-wide">
+    <div className="flex items-center gap-4 py-2 border-b border-border-default/40 last:border-0">
+      <span className="w-24 flex-shrink-0 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
         {label}
       </span>
-      <div className="flex-1 min-w-0 flex flex-wrap gap-1.5">{children}</div>
+      <div className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
+        {children}
+      </div>
     </div>
   );
 }
 
-export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }: Props) {
+export function TaskDetailPanel({ 
+  task, 
+  onClose, 
+  orgId, 
+  actor, 
+  authorUsername, 
+  layoutMode = 'drawer' 
+}: Props) {
   const { userProfile } = useAuth();
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
   const canDelete = userProfile?.role === 'owner' || userProfile?.role === 'admin';
@@ -101,7 +116,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
         authorId: actor.uid,
         authorName: actor.name,
         authorUsername,
-        body: 'Approved! Task is marked as Done.',
+        body: 'Approved! Task is marked as Completed.',
         mentions: [],
         notifyIds: task.assigneeIds.filter((id) => id !== actor.uid),
         taskTitle: task.title,
@@ -124,7 +139,7 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
         authorId: actor.uid,
         authorName: actor.name,
         authorUsername,
-        body: `Re-opened: ${rejectComment.trim()}`,
+        body: `Requested Changes: ${rejectComment.trim()}`,
         mentions: [],
         notifyIds: task.assigneeIds.filter((id) => id !== actor.uid),
         taskTitle: task.title,
@@ -159,19 +174,27 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
       setEditTitle(task.title);
       setEditDesc(task.description ?? '');
       setShowConfirmDelete(false);
+      setShowRejectForm(false);
+      setRejectComment('');
     }
   }, [task?.id]);
 
   React.useEffect(() => {
-    if (addingSubtask) subtaskInputRef.current?.focus();
+    if (addingSubtask) {
+      requestAnimationFrame(() => subtaskInputRef.current?.focus());
+    }
   }, [addingSubtask]);
 
   React.useEffect(() => {
     if (!task) return;
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const h = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !statusOpen && !priorityOpen && !assigneeOpen && !labelOpen && !showNewLabel) {
+        onClose();
+      }
+    };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [task, onClose]);
+  }, [task, onClose, statusOpen, priorityOpen, assigneeOpen, labelOpen, showNewLabel]);
 
   if (!task) return null;
 
@@ -182,15 +205,20 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
   const status = STATUS_CONFIG[task.status];
   const priority = PRIORITY_CONFIG[task.priority];
 
+  const completedSubtasksCount = subtasks.filter((s) => s.status === 'done').length;
+  const subtaskProgress = subtasks.length > 0 ? Math.round((completedSubtasksCount / subtasks.length) * 100) : 0;
+
   const saveTitle = async () => {
-    if (editTitle.trim() && editTitle !== task.title)
+    if (editTitle.trim() && editTitle !== task.title) {
       await updateTask(task.id, orgId, { title: editTitle.trim() }, actor);
+    }
     setEditingTitle(false);
   };
 
   const saveDesc = async () => {
-    if (editDesc !== (task.description ?? ''))
+    if (editDesc !== (task.description ?? '')) {
       await updateTask(task.id, orgId, { description: editDesc }, actor);
+    }
     setEditingDesc(false);
   };
 
@@ -207,7 +235,9 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
 
   const handlePriorityChange = async (p: TaskPriority) => {
     setPriorityOpen(false);
-    if (p !== task.priority) await updatePriority(task.id, orgId, p, task.priority, actor);
+    if (p !== task.priority) {
+      await updatePriority(task.id, orgId, p, task.priority, actor);
+    }
   };
 
   const toggleAssignee = async (uid: string) => {
@@ -228,7 +258,8 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
     if (!newLabelName.trim()) return;
     const id = await createLabel(orgId, newLabelName.trim(), newLabelColor);
     await updateLabels(task.id, orgId, [...task.labelIds, id], task.labelIds, actor);
-    setNewLabelName(''); setShowNewLabel(false);
+    setNewLabelName('');
+    setShowNewLabel(false);
   };
 
   const handleDueDateChange = async (val: string) => {
@@ -247,15 +278,26 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
 
   const handleCreateSubtask = async () => {
     const t = newSubtaskTitle.trim();
-    if (!t) { setAddingSubtask(false); return; }
+    if (!t) {
+      setAddingSubtask(false);
+      return;
+    }
     await createTask({
-      orgId, title: t, description: '', status: 'todo', priority: 'none',
-      assigneeIds: [], labelIds: [], dueDate: null, actor,
-      projectId: task.projectId ?? null, goalId: task.goalId ?? null,
+      orgId,
+      title: t,
+      description: '',
+      status: 'todo',
+      priority: 'none',
+      assigneeIds: [],
+      labelIds: [],
+      dueDate: null,
+      actor,
+      projectId: task.projectId ?? null,
+      goalId: task.goalId ?? null,
       parentTaskId: task.id,
     });
     setNewSubtaskTitle('');
-    subtaskInputRef.current?.focus();
+    requestAnimationFrame(() => subtaskInputRef.current?.focus());
   };
 
   const handleToggleSubtask = async (sub: Task) => {
@@ -263,149 +305,241 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
     await moveTask(sub.id, orgId, s, sub.orderIndex, sub.status, actor);
   };
 
-  return (
-    <div className="flex flex-col h-full overflow-hidden" onClick={() => { setStatusOpen(false); setPriorityOpen(false); setAssigneeOpen(false); setLabelOpen(false); }}>
-
-      {/* ── Header ── */}
-      <div className="flex-shrink-0 px-5 pt-5 pb-4 border-b border-border-default">
-        {/* Status chip + close */}
-        <div className="flex items-center justify-between mb-3">
+  const content = (
+    <div 
+      className="flex flex-col h-full bg-card text-foreground"
+      onClick={() => {
+        setStatusOpen(false);
+        setPriorityOpen(false);
+        setAssigneeOpen(false);
+        setLabelOpen(false);
+      }}
+    >
+      {/* ─── Top Bar / Header ─── */}
+      <div className="flex-shrink-0 flex items-center justify-between px-6 py-4.5 border-b border-border-default/80 bg-surface/50 backdrop-blur-md">
+        
+        {/* Left Side: Dynamic Selector Pills */}
+        <div className="flex items-center gap-2">
+          {/* Status Dropdown */}
           <Dropdown
             open={statusOpen}
             onClose={() => setStatusOpen(false)}
             trigger={
               <button
-                onClick={(e) => { e.stopPropagation(); setStatusOpen(!statusOpen); }}
-                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold border transition-all hover:opacity-80"
-                style={{ borderColor: `${status.dot}50`, color: status.dot, backgroundColor: `${status.dot}18` }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setStatusOpen(!statusOpen);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold border border-border-default/60 hover:bg-accent/40 hover:border-border-default transition-all shadow-sm"
+                style={{ color: status.dot, borderColor: `${status.dot}40`, backgroundColor: `${status.dot}10` }}
               >
                 <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: status.dot }} />
-                {status.label}
+                <span>{status.label}</span>
                 <ChevronDown className="h-3 w-3 opacity-60" />
               </button>
             }
           >
             {STATUSES.map((s) => (
-              <button key={s} onClick={(e) => { e.stopPropagation(); handleStatusChange(s); }}
-                className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors">
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: STATUS_CONFIG[s].dot }} />
+              <button
+                key={s}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStatusChange(s);
+                }}
+                className="flex items-center gap-2.5 w-full px-4 py-2 text-xs font-semibold hover:bg-accent/40 transition-colors text-left"
+              >
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: STATUS_CONFIG[s].dot }} />
                 <span style={{ color: STATUS_CONFIG[s].dot }}>{STATUS_CONFIG[s].label}</span>
-                {task.status === s && <Check className="h-3 w-3 ml-auto text-primary" />}
+                {task.status === s && <Check className="h-3.5 w-3.5 ml-auto text-primary" />}
               </button>
             ))}
           </Dropdown>
 
-          <div className="flex items-center gap-2">
-            {showConfirmDelete ? (
-              <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-1 duration-150">
-                <span className="text-[10px] font-semibold text-red-500 uppercase tracking-wide">Delete?</span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDeleteTask(); }}
-                  className="rounded px-2 py-0.5 text-[10px] font-bold bg-red-600 hover:bg-red-500 text-white transition-colors"
-                >
-                  Yes
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowConfirmDelete(false); }}
-                  className="rounded px-2 py-0.5 text-[10px] font-medium border border-border-default text-foreground hover:bg-accent/20 transition-colors"
-                >
-                  No
-                </button>
-              </div>
-            ) : (
-              canDelete && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowConfirmDelete(true); }}
-                  title="Delete Task"
-                  className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors animate-in fade-in duration-200"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )
-            )}
-
-            <button onClick={onClose}
-              className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          {/* Priority Dropdown */}
+          <Dropdown
+            open={priorityOpen}
+            onClose={() => setPriorityOpen(false)}
+            trigger={
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPriorityOpen(!priorityOpen);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold border border-border-default/60 hover:bg-accent/40 hover:border-border-default transition-all shadow-sm"
+                style={{ color: priority.color, borderColor: `${priority.color}40`, backgroundColor: `${priority.color}10` }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: priority.color }} />
+                <span>{priority.label}</span>
+                <ChevronDown className="h-3 w-3 opacity-60" />
+              </button>
+            }
+          >
+            {(Object.entries(PRIORITY_CONFIG) as [TaskPriority, (typeof PRIORITY_CONFIG)[TaskPriority]][]).map(([p, cfg]) => (
+              <button
+                key={p}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePriorityChange(p);
+                }}
+                className="flex items-center gap-2.5 w-full px-4 py-2 text-xs font-semibold hover:bg-accent/40 transition-colors text-left"
+                style={{ color: cfg.color }}
+              >
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: cfg.color }} />
+                <span>{cfg.label}</span>
+                {task.priority === p && <Check className="h-3.5 w-3.5 ml-auto text-primary" />}
+              </button>
+            ))}
+          </Dropdown>
         </div>
 
-        {/* Title */}
-        {editingTitle ? (
-          <input autoFocus value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onBlur={saveTitle}
-            onKeyDown={(e) => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setEditTitle(task.title); setEditingTitle(false); } }}
-            className="w-full bg-transparent text-[17px] font-semibold text-foreground outline-none border-b-2 border-primary/40 pb-0.5 leading-snug"
-          />
-        ) : (
-          <h2 onClick={() => setEditingTitle(true)}
-            className="text-[17px] font-semibold text-foreground cursor-text hover:text-primary/90 transition-colors leading-snug">
-            {task.title}
-          </h2>
-        )}
+        {/* Right Side: Global Utility Controls */}
+        <div className="flex items-center gap-2.5">
+          {/* Danger Zone: Trash Toggle */}
+          {showConfirmDelete ? (
+            <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-2 duration-200">
+              <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Delete?</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteTask();
+                }}
+                className="rounded-lg px-2.5 py-1 text-[10px] font-bold bg-red-600 hover:bg-red-500 text-white transition-colors shadow-sm"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowConfirmDelete(false);
+                }}
+                className="rounded-lg px-2.5 py-1 text-[10px] font-bold border border-border-default text-muted-foreground hover:bg-accent/40 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            canDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowConfirmDelete(true);
+                }}
+                title="Delete Task"
+                className="h-8 w-8 flex items-center justify-center rounded-xl text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )
+          )}
+
+          {/* Close Panel Button */}
+          <button
+            onClick={onClose}
+            className="h-8 w-8 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors"
+          >
+            <X className="h-4.5 w-4.5" />
+          </button>
+        </div>
       </div>
 
-      {/* ── Scrollable body ── */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+      {/* ─── Main Scrollable Canvas ─── */}
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 min-h-0">
+        
+        {/* Breadcrumbs & Task Pointer */}
+        <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+          <span>Workspace</span>
+          <ChevronRight className="h-2.5 w-2.5" />
+          <span>Task details</span>
+          <ChevronRight className="h-2.5 w-2.5" />
+          <span className="font-mono text-primary select-all">#{task.id.slice(-6)}</span>
+        </div>
 
-        {/* Review Banner */}
+        {/* Task Title Editable Zone */}
+        <div className="space-y-1">
+          {editingTitle ? (
+            <input
+              autoFocus
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onBlur={saveTitle}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveTitle();
+                if (e.key === 'Escape') {
+                  setEditTitle(task.title);
+                  setEditingTitle(false);
+                }
+              }}
+              className="w-full bg-transparent text-xl font-bold tracking-tight text-foreground outline-none border-b-2 border-primary/50 pb-1 leading-snug"
+            />
+          ) : (
+            <h2
+              onClick={() => setEditingTitle(true)}
+              className="text-xl font-bold tracking-tight text-foreground cursor-text hover:text-primary transition-colors leading-snug outline-none border-b border-transparent"
+            >
+              {task.title}
+            </h2>
+          )}
+        </div>
+
+        {/* Pending Review Approver Callout Panel */}
         {task.status === 'review' && task.creatorId === actor.uid && (
-          <div className="mx-5 mt-4 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex flex-col gap-3">
-            <div className="flex items-start gap-2.5">
-              <Clock className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 space-y-3 shadow-inner">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-semibold text-amber-400">Task Pending Review</h4>
-                <p className="text-[11px] text-text-muted mt-0.5">
-                  The assignee has completed this task. Review their work and approve it or request changes.
+                <h4 className="text-xs font-bold text-amber-400">Milestone Review Pending</h4>
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                  The assignees have submitted this task for review. Verify the completion and sign off or request changes.
                 </p>
               </div>
             </div>
 
             {!showRejectForm ? (
-              <div className="flex gap-2.5 mt-1">
+              <div className="flex gap-2 pt-1">
                 <button
                   onClick={handleApprove}
                   disabled={submittingReview}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold py-2 px-3 transition-colors shadow-sm"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-foreground hover:bg-foreground/90 disabled:opacity-50 text-background text-xs font-bold py-2 px-3 transition-all shadow-md cursor-pointer"
                 >
                   <Check className="h-3.5 w-3.5" />
-                  Approve & Done
+                  Approve Completion
                 </button>
                 <button
                   onClick={() => setShowRejectForm(true)}
                   disabled={submittingReview}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-500/20 hover:bg-red-500/10 disabled:opacity-50 text-red-400 text-xs font-semibold py-2 px-3 transition-colors"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-border-default hover:bg-accent/40 disabled:opacity-50 text-foreground text-xs font-bold py-2 px-3 transition-all cursor-pointer"
                 >
                   <X className="h-3.5 w-3.5" />
                   Request Changes
                 </button>
               </div>
             ) : (
-              <div className="space-y-2 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="space-y-2 pt-1 animate-in fade-in duration-200">
                 <textarea
                   value={rejectComment}
                   onChange={(e) => setRejectComment(e.target.value)}
-                  placeholder="Explain what needs to be changed..."
-                  rows={2}
-                  className="w-full resize-none rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-primary/50"
+                  placeholder="Provide detailed feedback on requested modifications..."
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-border-default bg-bg-primary px-3 py-2 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-primary/50 transition-colors shadow-inner"
                   autoFocus
                 />
                 <div className="flex gap-2 justify-end">
                   <button
-                    onClick={() => { setShowRejectForm(false); setRejectComment(''); }}
+                    onClick={() => {
+                      setShowRejectForm(false);
+                      setRejectComment('');
+                    }}
                     disabled={submittingReview}
-                    className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-[11px] font-semibold text-text-muted hover:text-foreground transition-colors"
+                    className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-[11px] font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleReject}
                     disabled={!rejectComment.trim() || submittingReview}
-                    className="inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 text-[11px] font-semibold py-1.5 px-3 transition-colors"
+                    className="inline-flex items-center justify-center rounded-xl bg-red-600 hover:bg-red-500 text-white disabled:opacity-40 text-[11px] font-bold py-1.5 px-3 transition-colors cursor-pointer"
                   >
-                    Resend Task
+                    Send Back to Ongoing
                   </button>
                 </div>
               </div>
@@ -413,102 +547,72 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
           </div>
         )}
 
-        {/* Properties block */}
-        <div className="px-5 py-2 border-b border-border-default divide-y divide-border-default/50">
-
-          {/* Priority */}
-          <PropRow label="Priority">
-            <Dropdown
-              open={priorityOpen}
-              onClose={() => setPriorityOpen(false)}
-              trigger={
-                <button
-                  onClick={(e) => { e.stopPropagation(); setPriorityOpen(!priorityOpen); }}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium border border-border-default hover:bg-accent/30 transition-colors"
-                  style={{ color: priority.color }}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: priority.color }} />
-                  {priority.label}
-                  <ChevronDown className="h-3 w-3 opacity-50" />
-                </button>
-              }
-            >
-              {(Object.entries(PRIORITY_CONFIG) as [TaskPriority, (typeof PRIORITY_CONFIG)[TaskPriority]][]).map(([p, cfg]) => (
-                <button key={p} onClick={(e) => { e.stopPropagation(); handlePriorityChange(p); }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors"
-                  style={{ color: cfg.color }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: cfg.color }} />
-                  {cfg.label}
-                  {task.priority === p && <Check className="h-3 w-3 ml-auto text-primary" />}
-                </button>
-              ))}
-            </Dropdown>
-          </PropRow>
-
-          {/* Due date */}
-          <PropRow label="Due date">
-            <label className={cn(
-              'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium border cursor-pointer transition-colors hover:bg-accent/30',
-              isOverdue ? 'border-red-400/40 text-red-400 bg-red-400/10' : 'border-border-default text-foreground/70',
-            )}>
-              <Calendar className="h-3 w-3" />
-              {due
-                ? due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: due.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })
-                : <span className="text-text-muted">Add date</span>}
-              <input type="date" defaultValue={dueDateInput}
-                onChange={(e) => handleDueDateChange(e.target.value)}
-                className="absolute opacity-0 w-0 h-0" />
-            </label>
-            {due && (
-              <button onClick={() => handleDueDateChange('')}
-                className="inline-flex items-center justify-center h-6 w-6 rounded-md text-text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors text-xs">
-                ×
-              </button>
-            )}
-          </PropRow>
-
+        {/* Modular Properties Glass Card Container */}
+        <div className="bg-surface/35 dark:bg-surface/10 border border-border-default/60 dark:border-border-strong rounded-2xl p-4 space-y-2 shadow-sm">
+          
           {/* Assignees */}
           <PropRow label="Assignees">
             {task.assigneeIds.map((uid) => {
               const m = members.find((x) => x.uid === uid);
               const name = m?.fullName || m?.username || uid;
               return (
-                <button key={uid} onClick={() => toggleAssignee(uid)} title="Click to remove"
-                  className="inline-flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 text-[11px] font-medium bg-primary/12 border border-primary/25 text-primary hover:bg-red-500/12 hover:border-red-400/30 hover:text-red-400 transition-all">
-                  <div className="h-4 w-4 rounded-full bg-primary/30 flex items-center justify-center text-[8px] font-bold flex-shrink-0">
+                <button
+                  key={uid}
+                  onClick={() => toggleAssignee(uid)}
+                  title="Remove Assignee"
+                  className="inline-flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-0.5 text-[10px] font-semibold bg-primary/10 border border-primary/20 hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-400 text-primary transition-all cursor-pointer"
+                >
+                  <div className="h-4.5 w-4.5 rounded-full bg-primary/30 flex items-center justify-center text-[8px] font-bold flex-shrink-0 text-primary">
                     {name[0].toUpperCase()}
                   </div>
-                  {name}
+                  <span className="truncate max-w-[100px]">{name}</span>
                 </button>
               );
             })}
+            
             <Dropdown
               open={assigneeOpen}
               onClose={() => setAssigneeOpen(false)}
               trigger={
-                <button onClick={(e) => { e.stopPropagation(); setAssigneeOpen(!assigneeOpen); }}
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] border border-dashed border-border-default text-text-muted hover:border-primary/40 hover:text-primary transition-colors">
-                  <Plus className="h-3 w-3" /> Assign
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAssigneeOpen(!assigneeOpen);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border border-dashed border-border-default text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>Assign</span>
                 </button>
               }
             >
               <div className="max-h-52 overflow-y-auto py-1">
                 {members.length === 0 && (
-                  <p className="px-3 py-2 text-xs text-text-muted">No members</p>
+                  <p className="px-4 py-2 text-xs text-muted-foreground italic">No members found</p>
                 )}
                 {members.map((m) => {
                   const name = m.fullName || m.username || m.uid;
                   const selected = task.assigneeIds.includes(m.uid);
                   return (
-                    <button key={m.uid} onClick={(e) => { e.stopPropagation(); toggleAssignee(m.uid); }}
-                      className={cn('flex items-center gap-2.5 w-full px-3 py-2 text-xs transition-colors text-left',
-                        selected ? 'bg-primary/10 text-primary' : 'text-foreground/80 hover:bg-accent/40')}>
-                      <div className={cn('h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0',
-                        selected ? 'bg-primary text-primary-foreground' : 'bg-accent text-muted-foreground')}>
+                    <button
+                      key={m.uid}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleAssignee(m.uid);
+                      }}
+                      className={cn(
+                        'flex items-center gap-2.5 w-full px-4 py-2.5 text-xs transition-colors text-left font-semibold',
+                        selected ? 'bg-primary/10 text-primary' : 'text-foreground/80 hover:bg-accent/40'
+                      )}
+                    >
+                      <div className={cn(
+                        'h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0',
+                        selected ? 'bg-primary text-primary-foreground' : 'bg-accent text-muted-foreground'
+                      )}>
                         {name[0].toUpperCase()}
                       </div>
-                      <span className="flex-1 font-medium truncate">{name}</span>
-                      {selected && <Check className="h-3 w-3 flex-shrink-0" />}
+                      <span className="flex-1 truncate">{name}</span>
+                      {selected && <Check className="h-3.5 w-3.5 flex-shrink-0 text-primary" />}
                     </button>
                   );
                 })}
@@ -516,55 +620,130 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
             </Dropdown>
           </PropRow>
 
+          {/* Due date */}
+          <PropRow label="Due Date">
+            <label className={cn(
+              'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold border cursor-pointer transition-colors',
+              isOverdue
+                ? 'border-red-500/35 text-red-500 bg-red-500/10'
+                : 'border-border-default text-muted-foreground hover:bg-accent/40'
+            )}>
+              <Calendar className="h-3.5 w-3.5" />
+              {due ? (
+                <span>
+                  {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: due.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })}
+                  {isOverdue && <span className="ml-1.5 text-[9px] font-extrabold uppercase tracking-wider text-red-500">Overdue</span>}
+                </span>
+              ) : (
+                <span>Set due date</span>
+              )}
+              <input
+                type="date"
+                defaultValue={dueDateInput}
+                onChange={(e) => handleDueDateChange(e.target.value)}
+                className="absolute opacity-0 w-0 h-0"
+              />
+            </label>
+            {due && (
+              <button
+                onClick={() => handleDueDateChange('')}
+                className="inline-flex items-center justify-center h-5 w-5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors text-xs cursor-pointer font-extrabold"
+              >
+                ×
+              </button>
+            )}
+          </PropRow>
+
           {/* Labels */}
           <PropRow label="Labels">
             {taskLabels.map((l) => (
               <LabelBadge key={l.id} label={l} onRemove={() => toggleLabel(l.id)} />
             ))}
+            
             <Dropdown
               open={labelOpen}
-              onClose={() => { setLabelOpen(false); setShowNewLabel(false); setNewLabelName(''); }}
+              onClose={() => {
+                setLabelOpen(false);
+                setShowNewLabel(false);
+                setNewLabelName('');
+              }}
               trigger={
-                <button onClick={(e) => { e.stopPropagation(); setLabelOpen(!labelOpen); }}
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] border border-dashed border-border-default text-text-muted hover:border-primary/40 hover:text-primary transition-colors">
-                  <Plus className="h-3 w-3" /> Label
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLabelOpen(!labelOpen);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border border-dashed border-border-default text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>Label</span>
                 </button>
               }
             >
               <div className="max-h-56 overflow-y-auto py-1">
                 {labels.map((l) => (
-                  <button key={l.id} onClick={(e) => { e.stopPropagation(); toggleLabel(l.id); }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-accent/40 transition-colors">
-                    <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: l.color }} />
-                    <span style={{ color: l.color }} className="flex-1 text-left">{l.name}</span>
-                    {task.labelIds.includes(l.id) && <Check className="h-3 w-3 text-primary" />}
+                  <button
+                    key={l.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleLabel(l.id);
+                    }}
+                    className="flex items-center gap-2.5 w-full px-4 py-2 text-xs font-semibold hover:bg-accent/40 transition-colors text-left"
+                  >
+                    <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: l.color }} />
+                    <span style={{ color: l.color }} className="flex-1 truncate">{l.name}</span>
+                    {task.labelIds.includes(l.id) && <Check className="h-3.5 w-3.5 text-primary ml-auto" />}
                   </button>
                 ))}
               </div>
-              <div className="border-t border-border-default p-2">
+              <div className="border-t border-border-default/60 p-2.5">
                 {showNewLabel ? (
                   <div className="space-y-2">
-                    <input value={newLabelName} autoFocus
+                    <input
+                      value={newLabelName}
+                      autoFocus
                       onChange={(e) => setNewLabelName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleCreateLabel(); e.stopPropagation(); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleCreateLabel();
+                        e.stopPropagation();
+                      }}
                       placeholder="Label name"
-                      className="w-full rounded-lg border border-border-default bg-bg-primary px-2 py-1.5 text-xs text-foreground outline-none focus:border-primary/50" />
+                      className="w-full rounded-lg border border-border-default bg-bg-primary px-2.5 py-1 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-primary/50 transition-colors shadow-inner"
+                    />
                     <div className="flex gap-1 flex-wrap">
                       {LABEL_COLORS.map((c) => (
-                        <button key={c} type="button" onClick={(e) => { e.stopPropagation(); setNewLabelColor(c); }}
-                          className="h-4 w-4 rounded-full transition-transform hover:scale-110"
-                          style={{ backgroundColor: c, outline: newLabelColor === c ? `2px solid ${c}` : 'none', outlineOffset: '2px' }} />
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNewLabelColor(c);
+                          }}
+                          className="h-4 w-4 rounded-full transition-transform hover:scale-110 cursor-pointer"
+                          style={{ backgroundColor: c, outline: newLabelColor === c ? `2px solid ${c}` : 'none', outlineOffset: '1.5px' }}
+                        />
                       ))}
                     </div>
-                    <button onClick={(e) => { e.stopPropagation(); handleCreateLabel(); }}
-                      className="w-full rounded-lg bg-primary text-primary-foreground text-xs py-1.5 hover:bg-primary/90 transition-colors font-medium">
-                      Create
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateLabel();
+                      }}
+                      className="w-full rounded-xl bg-foreground hover:bg-foreground/90 text-background text-[11px] font-bold py-1.5 transition-colors cursor-pointer"
+                    >
+                      Create Label
                     </button>
                   </div>
                 ) : (
-                  <button onClick={(e) => { e.stopPropagation(); setShowNewLabel(true); }}
-                    className="flex items-center gap-1.5 text-xs text-text-muted hover:text-foreground w-full py-0.5">
-                    <Plus className="h-3 w-3" /> New label
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowNewLabel(true);
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground w-full py-1 cursor-pointer"
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span>Create new label</span>
                   </button>
                 )}
               </div>
@@ -572,59 +751,88 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
           </PropRow>
         </div>
 
-        {/* Description */}
-        <div className="px-5 py-4 border-b border-border-default">
-          <div className="flex items-center gap-2 mb-2">
-            <AlignLeft className="h-3.5 w-3.5 text-text-muted" />
-            <span className="text-xs font-medium text-text-muted">Description</span>
+        {/* Task Description Canvas */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <AlignLeft className="h-4 w-4" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Description</span>
           </div>
           {editingDesc ? (
-            <textarea autoFocus value={editDesc} rows={4}
+            <textarea
+              autoFocus
+              value={editDesc}
+              rows={4}
               onChange={(e) => setEditDesc(e.target.value)}
               onBlur={saveDesc}
-              className="w-full resize-none rounded-xl border border-primary/30 bg-accent/20 px-3 py-2 text-sm text-foreground outline-none leading-relaxed" />
+              className="w-full resize-none rounded-2xl border border-primary/45 bg-accent/10 px-3.5 py-2.5 text-sm text-foreground outline-none leading-relaxed shadow-inner"
+            />
           ) : (
-            <div onClick={() => setEditingDesc(true)}
-              className={cn('min-h-[36px] rounded-xl px-3 py-2 text-sm cursor-text transition-colors hover:bg-accent/20',
-                task.description ? 'text-foreground/80' : 'text-text-muted italic')}>
-              {task.description || 'Add a description…'}
+            <div
+              onClick={() => setEditingDesc(true)}
+              className={cn(
+                'min-h-[44px] rounded-2xl px-3.5 py-2.5 text-sm cursor-text transition-colors border border-border-default/20 bg-accent/5 hover:bg-accent/25 hover:border-border-default',
+                task.description ? 'text-foreground/80 leading-relaxed' : 'text-muted-foreground italic'
+              )}
+            >
+              {task.description || 'Add a detailed description for this task…'}
             </div>
           )}
         </div>
 
-        {/* Subtasks */}
-        <div className="px-5 py-4 border-b border-border-default">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <ListTodo className="h-3.5 w-3.5 text-text-muted" />
-              <span className="text-xs font-medium text-text-muted">Subtasks</span>
-              {subtasks.length > 0 && (
-                <span className="text-[10px] text-text-muted">
-                  {subtasks.filter((s) => s.status === 'done').length}/{subtasks.length}
-                </span>
-              )}
+        {/* Subtask Milestones Tracker Checklist */}
+        <div className="space-y-4 bg-surface/30 dark:bg-surface/5 border border-border-default/60 rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <ListTodo className="h-4 w-4" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Subtask Milestones</span>
             </div>
-            <button onClick={() => setAddingSubtask(true)}
-              className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-primary transition-colors">
-              <Plus className="h-3 w-3" /> Add
+            
+            <button
+              onClick={() => setAddingSubtask(true)}
+              className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary hover:underline cursor-pointer"
+            >
+              <Plus className="h-3 w-3 animate-pulse" />
+              <span>Add</span>
             </button>
           </div>
+
+          {/* Micro-animated Progress Track */}
+          {subtasks.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="h-1.5 w-full bg-bg-tertiary/50 rounded-full overflow-hidden shadow-inner relative">
+                <div 
+                  className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full shadow-[0_0_8px_rgba(139,92,246,0.3)] transition-all duration-500 ease-out"
+                  style={{ width: `${subtaskProgress}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center text-[9px] font-mono text-muted-foreground/80 uppercase">
+                <span>{completedSubtasksCount} of {subtasks.length} milestones complete</span>
+                <span className="font-bold text-foreground">{subtaskProgress}%</span>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-1">
             {subtasks.map((sub) => {
               const done = sub.status === 'done';
               return (
-                <div key={sub.id} className="flex items-center gap-2.5 py-1 group rounded-lg hover:bg-accent/20 px-1 transition-colors">
-                  <button onClick={() => handleToggleSubtask(sub)}
-                    className={cn('flex-shrink-0 h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all',
-                      done ? 'bg-primary border-primary' : 'border-border-default hover:border-primary/60')}>
-                    {done && (
-                      <svg className="h-2.5 w-2.5 text-primary-foreground" fill="none" viewBox="0 0 12 12">
-                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                <div 
+                  key={sub.id} 
+                  className="flex items-center gap-3 py-2 px-2.5 rounded-xl hover:bg-accent/20 transition-colors group"
+                >
+                  <button
+                    onClick={() => handleToggleSubtask(sub)}
+                    className={cn(
+                      'flex-shrink-0 h-4.5 w-4.5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer',
+                      done ? 'bg-primary border-primary' : 'border-border-default hover:border-primary/60'
                     )}
+                  >
+                    {done && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
                   </button>
-                  <span className={cn('flex-1 text-xs', done ? 'line-through text-text-muted' : 'text-foreground/80')}>
+                  <span className={cn(
+                    'flex-1 text-xs font-semibold truncate',
+                    done ? 'line-through text-muted-foreground' : 'text-foreground/80'
+                  )}>
                     {sub.title}
                   </span>
                 </div>
@@ -632,49 +840,100 @@ export function TaskDetailPanel({ task, onClose, orgId, actor, authorUsername }:
             })}
 
             {addingSubtask && (
-              <div className="flex items-center gap-2.5 py-1 px-1">
-                <div className="flex-shrink-0 h-4 w-4 rounded-full border-2 border-dashed border-border-default" />
-                <input ref={subtaskInputRef} value={newSubtaskTitle}
+              <div className="flex items-center gap-3 py-2 px-2.5">
+                <div className="flex-shrink-0 h-4.5 w-4.5 rounded-full border-2 border-dashed border-border-default" />
+                <input
+                  ref={subtaskInputRef}
+                  value={newSubtaskTitle}
                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                  placeholder="Subtask title…"
+                  placeholder="Write milestone title…"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleCreateSubtask();
-                    if (e.key === 'Escape') { setNewSubtaskTitle(''); setAddingSubtask(false); }
+                    if (e.key === 'Escape') {
+                      setNewSubtaskTitle('');
+                      setAddingSubtask(false);
+                    }
                   }}
-                  onBlur={() => { if (!newSubtaskTitle.trim()) setAddingSubtask(false); }}
-                  className="flex-1 bg-transparent text-xs text-foreground placeholder:text-text-muted outline-none border-b border-primary/30 pb-0.5" />
+                  onBlur={() => {
+                    if (!newSubtaskTitle.trim()) {
+                      setAddingSubtask(false);
+                    }
+                  }}
+                  className="flex-1 bg-transparent text-xs font-semibold text-foreground placeholder:text-text-muted outline-none border-b border-primary/50 pb-0.5"
+                />
               </div>
             )}
 
             {subtasks.length === 0 && !addingSubtask && (
-              <p className="text-xs text-text-muted italic px-1">No subtasks yet</p>
+              <p className="text-xs text-muted-foreground italic py-2 text-center select-none">No active milestones defined.</p>
             )}
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex px-5 border-b border-border-default">
-          {(['comments', 'activity'] as PanelTab[]).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={cn('py-3 px-1 mr-5 text-xs font-medium capitalize border-b-2 transition-colors',
-                tab === t ? 'text-foreground border-primary' : 'text-text-muted border-transparent hover:text-foreground')}>
-              {t}
-            </button>
-          ))}
-        </div>
+        {/* Tabbed Interactive Timeline Section */}
+        <div className="space-y-4 pt-2">
+          {/* Segmented slider pill container */}
+          <div className="flex p-0.5 rounded-xl bg-bg-tertiary/60 border border-border-default/60">
+            {(['comments', 'activity'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cn(
+                  'flex-1 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer',
+                  tab === t
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {t === 'comments' ? 'Discussion' : 'Audit Trail'}
+              </button>
+            ))}
+          </div>
 
-        {/* Tab content */}
-        <div className="px-5 pb-5 pt-3">
-          {tab === 'comments' ? (
-            <TaskComments taskId={task.id} orgId={orgId} actor={actor}
-              authorUsername={authorUsername}
-              notifyIds={[task.creatorId, ...task.assigneeIds].filter(Boolean)}
-              taskTitle={task.title} />
-          ) : (
-            <TaskActivityFeed activities={activities} />
-          )}
+          {/* Dynamic Tab Body */}
+          <div className="min-h-[200px]">
+            {tab === 'comments' ? (
+              <TaskComments 
+                taskId={task.id} 
+                orgId={orgId} 
+                actor={actor}
+                authorUsername={authorUsername}
+                notifyIds={[task.creatorId, ...task.assigneeIds].filter(Boolean)}
+                taskTitle={task.title} 
+              />
+            ) : (
+              <TaskActivityFeed activities={activities} />
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
+
+  if (layoutMode === 'drawer') {
+    return (
+      <div className="fixed inset-0 z-50 flex justify-end pointer-events-none">
+        {/* Darkened blur backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-[4px] pointer-events-auto"
+          onClick={onClose}
+        />
+        {/* Smooth spring sliding sheet panel */}
+        <motion.div
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="relative z-10 w-full sm:w-[500px] h-full border-l border-border-default/80 bg-card shadow-2xl flex flex-col pointer-events-auto"
+        >
+          {content}
+        </motion.div>
+      </div>
+    );
+  }
+
+  return content;
 }

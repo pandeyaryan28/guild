@@ -237,6 +237,7 @@ export function TasksPage() {
           orgId={orgId}
           actor={actor}
           authorUsername={actorName}
+          layoutMode="inline"
         />
       }
     />
