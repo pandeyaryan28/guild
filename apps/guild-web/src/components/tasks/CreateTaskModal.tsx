@@ -57,7 +57,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
     try {
       await createTask({
         orgId, title: title.trim(), description, status, priority,
-        assigneeIds, labelIds,
+        assigneeIds: assigneeIds.length > 0 ? assigneeIds : [actor.uid], labelIds,
         dueDate: dueDate ? new Date(dueDate) : null,
         actor,
         // Scope fields — null if not provided

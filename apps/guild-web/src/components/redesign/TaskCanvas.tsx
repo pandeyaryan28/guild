@@ -337,7 +337,7 @@ export function TaskCanvas() {
       const projectId = parsed.projectId || selectedProjectId;
       const assigneeIds = parsed.assigneeIds.length > 0
         ? parsed.assigneeIds
-        : (selectedAssigneeId ? [selectedAssigneeId] : []);
+        : (selectedAssigneeId ? [selectedAssigneeId] : [actor.uid]);
       const priority = parsed.priority !== 'none' ? parsed.priority : selectedPriority;
       const dueDate = parsed.dueDate || selectedDueDate;
 
