@@ -478,9 +478,9 @@ export function CalendarPage() {
               {activeView === 'month' && (
                 <div className="h-full w-full flex flex-col overflow-hidden">
                   {/* Grid Weekday Headers */}
-                  <div className="grid grid-cols-7 border-b border-white/5 bg-white/2 text-center py-2.5 px-1">
+                  <div className="grid grid-cols-7 border-b border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] text-center py-3 px-1 backdrop-blur-md">
                     {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                      <span key={day} className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <span key={day} className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80">
                         {day}
                       </span>
                     ))}
@@ -516,15 +516,17 @@ export function CalendarPage() {
                               setActiveDayFlyout(day);
                             }}
                             className={cn(
-                              "relative group min-h-[95px] border-b border-r border-white/5 p-1.5 md:p-2.5 flex flex-col cursor-pointer transition-all duration-300 hover:bg-white/5",
-                              !isCurrentMonth && "bg-white/[0.01] opacity-35",
-                              isMobileSelected && "bg-white/2"
+                              "relative group min-h-[95px] border-b border-r border-black/[0.06] dark:border-white/[0.06] p-2 md:p-3 flex flex-col cursor-pointer transition-all duration-300 select-none overflow-hidden",
+                              isCurrentMonth ? "bg-white/[0.002]" : "bg-black/[0.08] dark:bg-white/[0.01] opacity-35",
+                              isMobileSelected 
+                                ? "bg-black/[0.02] dark:bg-white/[0.04] shadow-[inset_0_0_0_1px_oklch(from_var(--accent)_l_c_h_/_25%)] backdrop-blur-sm" 
+                                : "hover:bg-black/[0.015] dark:hover:bg-white/[0.03] hover:shadow-[inset_0_0_15px_rgba(255,255,255,0.015)]"
                             )}
                           >
                             {/* Today's breathing halo pulse overlay */}
                             {isDayToday && (
                               <motion.div 
-                                className="absolute inset-0 pointer-events-none z-0"
+                                className="absolute inset-1 rounded-2xl pointer-events-none z-0"
                                 animate={{
                                   boxShadow: [
                                     '0 0 0 0px oklch(from var(--accent) l c h / 10%)',
@@ -538,8 +540,8 @@ export function CalendarPage() {
                                   ease: "easeInOut"
                                 }}
                                 style={{
-                                  background: `radial-gradient(circle at center, oklch(from var(--accent) l c h / 6%) 0%, transparent 80%)`,
-                                  border: '1px solid oklch(from var(--accent) l c h / 30%)',
+                                  background: `radial-gradient(circle at center, oklch(from var(--accent) l c h / 8%) 0%, transparent 80%)`,
+                                  border: '1px solid oklch(from var(--accent) l c h / 35%)',
                                 }}
                               />
                             )}
@@ -555,13 +557,13 @@ export function CalendarPage() {
                             )}
 
                             {/* Day number cell header */}
-                            <div className="flex items-center justify-between mb-2 z-10">
+                            <div className="flex items-center justify-between mb-2.5 z-10">
                               <span
                                 className={cn(
                                   "flex h-6 w-6 items-center justify-center text-[11px] font-bold rounded-full transition-all duration-300",
-                                  !isDayToday && isCurrentMonth && "text-foreground hover:bg-white/10",
-                                  !isDayToday && !isCurrentMonth && "text-muted-foreground",
-                                  isMobileSelected && !isDayToday && "bg-white/10 text-foreground font-extrabold"
+                                  !isDayToday && isCurrentMonth && "text-foreground hover:bg-black/10 dark:hover:bg-white/10",
+                                  !isDayToday && !isCurrentMonth && "text-muted-foreground/60",
+                                  isMobileSelected && !isDayToday && "bg-black/10 dark:bg-white/10 text-foreground font-extrabold"
                                 )}
                                 style={isDayToday ? {
                                   background: 'var(--accent)',
@@ -578,7 +580,7 @@ export function CalendarPage() {
                                   e.stopPropagation();
                                   handleQuickAddClick(day);
                                 }}
-                                className="opacity-0 group-hover:opacity-100 flex items-center justify-center h-5 w-5 rounded-lg bg-white/10 hover:bg-white/20 text-foreground hover:scale-105 active:scale-95 transition-all duration-200"
+                                className="opacity-0 group-hover:opacity-100 flex items-center justify-center h-5 w-5 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-foreground hover:scale-105 active:scale-95 transition-all duration-200 shadow-sm"
                                 title="Quick Create Task"
                               >
                                 <Plus className="h-3.5 w-3.5" />
@@ -586,7 +588,7 @@ export function CalendarPage() {
                             </div>
 
                             {/* Task item stack inside day cell */}
-                            <div className="flex-1 space-y-1 overflow-y-auto aether-scroll pr-0.5 z-10">
+                            <div className="flex-1 space-y-1.5 overflow-y-auto aether-scroll pr-0.5 z-10">
                               {/* Mobile view dots indicator (to avoid massive squeeze on tiny phones) */}
                               <div className="flex md:hidden flex-wrap gap-0.5 justify-center mt-1">
                                 {dayTasks.slice(0, 3).map((t) => (
@@ -602,10 +604,12 @@ export function CalendarPage() {
                               </div>
 
                               {/* Desktop compact color-coded strips */}
-                              <div className="hidden md:block space-y-1">
+                              <div className="hidden md:block space-y-1.5">
                                 {dayTasks.slice(0, 3).map((task) => {
                                   const isDone = task.status === 'done';
                                   const priorityColor = PRIORITY_CONFIG[task.priority]?.color || '#52525b';
+                                  const projName = task.projectId ? projectMap.get(task.projectId) : null;
+                                  const projInitials = projName ? projName.split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase() : '';
                                   
                                   return (
                                     <div
@@ -615,17 +619,83 @@ export function CalendarPage() {
                                         setSelectedTask(task);
                                       }}
                                       className={cn(
-                                        "flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-semibold transition-all duration-200 truncate cursor-pointer hover:brightness-125 select-none",
-                                        isDone && "opacity-40 line-through"
+                                        "group/task-strip flex items-center justify-between rounded-[6px] border px-2 py-1 text-[9px] transition-all duration-300 select-none cursor-pointer",
+                                        isDone 
+                                          ? "border-black/5 dark:border-white/5 bg-black/[0.01] dark:bg-white/[0.01] opacity-35 line-through hover:opacity-50" 
+                                          : "hover:translate-x-0.5 hover:shadow-[0_4px_10px_-2px_rgba(0,0,0,0.25)]"
                                       )}
-                                      style={{
-                                        backgroundColor: `${priorityColor}15`,
-                                        borderLeft: `2.5px solid ${priorityColor}`,
-                                        color: priorityColor,
+                                      style={!isDone ? {
+                                        background: `linear-gradient(90deg, ${priorityColor}1c 0%, ${priorityColor}06 60%, rgba(255,255,255,0.01) 100%)`,
+                                        borderColor: `${priorityColor}22`,
+                                        borderLeft: `3.5px solid ${priorityColor}`,
+                                        boxShadow: `inset 0 1px 0 0 rgba(255,255,255,0.03)`
+                                      } : {
+                                        borderLeft: `3.5px solid rgba(255, 255, 255, 0.1)`
                                       }}
                                       title={task.title}
                                     >
-                                      <span className="truncate flex-grow text-left">{task.title}</span>
+                                      <div className="flex items-center gap-1.5 min-w-0 flex-grow">
+                                        {/* Luxury pulsing priority neon glow indicator */}
+                                        {!isDone ? (
+                                          <div className="relative flex h-2 w-2 items-center justify-center shrink-0">
+                                            <span 
+                                              className="absolute inline-flex h-full w-full rounded-full opacity-40 animate-ping"
+                                              style={{ backgroundColor: priorityColor }}
+                                            />
+                                            <span 
+                                              className="relative inline-flex rounded-full h-1.5 w-1.5"
+                                              style={{ 
+                                                backgroundColor: priorityColor,
+                                                boxShadow: `0 0 6px 1px ${priorityColor}`
+                                              }}
+                                            />
+                                          </div>
+                                        ) : (
+                                          <span className="h-1.5 w-1.5 rounded-full bg-black/20 dark:bg-white/20 shrink-0" />
+                                        )}
+
+                                        <span className={cn(
+                                          "truncate tracking-tight leading-none text-foreground/90 font-medium transition-colors duration-200 group-hover/task-strip:text-foreground",
+                                          isDone && "text-muted-foreground/60"
+                                        )}>
+                                          {task.title}
+                                        </span>
+                                      </div>
+
+                                      <div className="flex items-center gap-1 shrink-0 ml-1.5">
+                                        {/* Super compact project badge if exists */}
+                                        {projName && (
+                                          <span 
+                                            className="text-[7px] font-extrabold uppercase tracking-widest px-1 py-0.2 rounded-[4px] border border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 text-[10px] transition-all duration-300 group-hover/task-strip:border-black/10 dark:group-hover/task-strip:border-white/10 group-hover/task-strip:bg-black/10 dark:group-hover/task-strip:bg-white/10 select-none cursor-default"
+                                            style={{ 
+                                              color: 'oklch(from var(--accent) calc(l + 0.15) c h)',
+                                              fontSize: '10px',
+                                              lineHeight: '1'
+                                            }}
+                                            title={`Project: ${projName}`}
+                                          >
+                                            {projInitials}
+                                          </span>
+                                        )}
+
+                                        {/* Assignee miniature circle */}
+                                        {task.assigneeIds.length > 0 && (
+                                          <div 
+                                            className="flex h-3.5 w-3.5 items-center justify-center rounded-full text-[7px] font-black text-white shadow-[0_1px_3px_rgba(0,0,0,0.3)] ring-1 ring-white/10 relative overflow-hidden shrink-0"
+                                            style={{
+                                              background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`,
+                                              fontSize: '10px'
+                                            }}
+                                          >
+                                            {/* Glossy light reflection highlight */}
+                                            <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/15 rounded-t-full pointer-events-none" />
+                                            {(() => {
+                                              const aMem = memberMap.get(task.assigneeIds[0]);
+                                              return (aMem?.fullName || aMem?.username || '?')[0].toUpperCase();
+                                            })()}
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
                                   );
                                 })}
@@ -636,9 +706,14 @@ export function CalendarPage() {
                                       setMobileSelectedDate(day);
                                       setActiveDayFlyout(day);
                                     }}
-                                    className="w-full flex items-center justify-center py-0.5 rounded-md border border-white/5 bg-white/5 hover:bg-white/10 text-[9px] font-bold text-muted-foreground hover:text-foreground transition-all duration-200 cursor-pointer"
+                                    className="w-full flex items-center justify-center gap-1 py-1 rounded-[6px] border border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[9px] font-bold text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md select-none backdrop-blur-md"
+                                    style={{
+                                      border: '1px solid rgba(255, 255, 255, 0.04)',
+                                      background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
+                                    }}
                                   >
-                                    +{dayTasks.length - 3} more
+                                    <span className="h-1.5 w-1.5 rounded-full bg-primary/60 dark:bg-accent/60 shrink-0 animate-pulse" />
+                                    <span>+{dayTasks.length - 3} more tasks</span>
                                   </button>
                                 )}
                               </div>
