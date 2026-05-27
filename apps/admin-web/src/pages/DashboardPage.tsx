@@ -98,6 +98,29 @@ export function DashboardPage({
   const [isSavingOrg, setIsSavingOrg] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  const currentUser = useMemo(() => {
+    const uid = auth.currentUser?.uid;
+    return users.find(u => u.uid === uid);
+  }, [users]);
+
+  const activeOrg = useMemo(() => {
+    return orgs.find(o => o.id === selectedOrgId) || orgs.find(o => o.id === currentUser?.organizationId) || orgs[0];
+  }, [selectedOrgId, orgs, currentUser]);
+
+  // Sync form states and global invite token when activeOrg changes
+  useEffect(() => {
+    if (activeOrg) {
+      setOrgFormName(activeOrg.name || '');
+      setOrgFormIndustry(activeOrg.industry || '');
+      setOrgFormCompanySize(activeOrg.companySize || '');
+      if (activeOrg.globalInviteToken) {
+        setSettingsGlobalInviteLink(`${window.location.origin}/join/${activeOrg.globalInviteToken}`);
+      } else {
+        setSettingsGlobalInviteLink('');
+      }
+    }
+    setCopiedLink(false);
+  }, [activeOrg]);
 
   if (loading) {
     return (
@@ -140,30 +163,6 @@ export function DashboardPage({
 
   const orgMap = Object.fromEntries(orgs.map(o => [o.id, o.name]));
   const userMap = Object.fromEntries(users.map(u => [u.uid, u.fullName || u.username]));
-
-  const currentUser = useMemo(() => {
-    const uid = auth.currentUser?.uid;
-    return users.find(u => u.uid === uid);
-  }, [users]);
-
-  const activeOrg = useMemo(() => {
-    return orgs.find(o => o.id === selectedOrgId) || orgs.find(o => o.id === currentUser?.organizationId) || orgs[0];
-  }, [selectedOrgId, orgs, currentUser]);
-
-  // Sync form states and global invite token when activeOrg changes
-  useEffect(() => {
-    if (activeOrg) {
-      setOrgFormName(activeOrg.name || '');
-      setOrgFormIndustry(activeOrg.industry || '');
-      setOrgFormCompanySize(activeOrg.companySize || '');
-      if (activeOrg.globalInviteToken) {
-        setSettingsGlobalInviteLink(`${window.location.origin}/join/${activeOrg.globalInviteToken}`);
-      } else {
-        setSettingsGlobalInviteLink('');
-      }
-    }
-    setCopiedLink(false);
-  }, [activeOrg]);
 
   const handleSettingsGenerateLink = async () => {
     if (!activeOrg || !currentUser) return;
