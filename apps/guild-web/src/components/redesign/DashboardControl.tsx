@@ -368,10 +368,10 @@ export function DashboardControl() {
         </div>
       </header>
 
-      {/* Main Content Grid: 3 Clean Columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Main Content Grid: 2 Clean Balanced Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* Column 1: Personal Tasks & Active Projects */}
+        {/* Left Column: Personal Actions & Operations */}
         <div className="space-y-8">
           
           {/* Tasks Container */}
@@ -453,6 +453,153 @@ export function DashboardControl() {
             </form>
           </section>
 
+          {/* Approvals & Reviews Section */}
+          <section className="aether-glass p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+              <h2 className="text-sm font-bold text-foreground">Approvals</h2>
+              {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0) > 0 && (
+                <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400 text-[10px] font-semibold">
+                  {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0)} pending
+                </span>
+              )}
+            </div>
+
+            {(pendingRequests.length === 0 && (!isManager || reviewTasksForTeam.length === 0)) ? (
+              <div className="py-8 text-center bg-zinc-50/50 dark:bg-zinc-900/30 border border-dashed border-border-default rounded-lg bg-white/1">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
+                <span className="text-xs font-semibold text-foreground block">Approvals Cleared</span>
+                <span className="text-[10px] text-muted-foreground mt-0.5 block">No pending requests require your sign-off.</span>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                
+                {/* Approval Requests */}
+                {pendingRequests.map((req) => (
+                  <div key={req.id} className="p-4 rounded-xl border border-white/5 bg-white/3 dark:bg-black/10 space-y-3">
+                    <div>
+                      <span className="text-xs font-bold text-foreground block truncate">{req.title}</span>
+                      <span className="text-[10px] text-muted-foreground block mt-0.5">Submitted by {req.creatorName}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
+                        }}
+                        className="flex-1 py-1 rounded-md bg-foreground text-background text-[10px] font-bold hover:bg-foreground/90 transition-all cursor-pointer shadow-sm"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={async () => {
+                          await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
+                        }}
+                        className="flex-1 py-1 rounded-md border border-white/10 hover:bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Task Reviews for Managers */}
+                {isManager && reviewTasksForTeam.map((task) => {
+                  const assigneeName = task.assigneeIds.map(id => memberMap.get(id)?.fullName).filter(Boolean).join(', ');
+                  return (
+                    <div key={task.id} className="p-4 rounded-xl border border-white/5 bg-white/3 dark:bg-black/10 space-y-3">
+                      <div>
+                        <span className="text-xs font-bold text-foreground block truncate">{task.title}</span>
+                        <span className="text-[10px] text-muted-foreground block mt-0.5">Task review for {assigneeName}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleReviewAction(task, 'approve')}
+                          className="flex-1 py-1 rounded-md bg-foreground text-background text-[10px] font-bold hover:bg-foreground/90 transition-all cursor-pointer shadow-sm"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleReviewAction(task, 'reject')}
+                          className="flex-1 py-1 rounded-md border border-white/10 hover:bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
+                        >
+                          Needs Changes
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+              </div>
+            )}
+          </section>
+
+        </div>
+
+        {/* Right Column: Teammate Focus & Direct Conversations */}
+        <div className="space-y-8">
+          
+          {/* Team Focus Section */}
+          <section className="aether-glass p-6 space-y-4 self-start">
+            <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+              <h2 className="text-sm font-bold text-foreground">Team Focus</h2>
+              <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-semibold text-muted-foreground">
+                {teammates.length} members
+              </span>
+            </div>
+
+            {teammates.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-6 italic">No teammates connected yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {teammates.map((member) => {
+                  const hasFocus = !!member.focusStatus?.text;
+                  const initials = avatarInitials(member.fullName || member.username || '?');
+                  
+                  return (
+                    <div key={member.uid} className="flex items-start gap-3 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors">
+                      
+                      {/* Teammate Icon */}
+                      <div 
+                        className="w-9 h-9 flex items-center justify-center text-xs font-bold text-white rounded-full shrink-0 border border-white/10 relative"
+                        style={{ background: `hsl(${avatarHue(member.uid)} 55% 45%)` }}
+                      >
+                        {initials}
+                        {/* Active Indicator dot */}
+                        <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface dark:bg-zinc-950 flex items-center justify-center shadow-sm">
+                          <span className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            member.availabilityStatus === 'focus' ? "bg-red-500" :
+                            member.availabilityStatus === 'away' ? "bg-amber-500" :
+                            member.availabilityStatus === 'active' ? "bg-emerald-500" :
+                            hasFocus ? "bg-emerald-500" : "bg-zinc-300"
+                          )} />
+                        </span>
+                      </div>
+
+                      {/* Teammate Info */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground block truncate">{member.fullName}</span>
+                          <span className="text-[9px] text-muted-foreground shrink-0">{member.role || 'Member'}</span>
+                        </div>
+                        
+                        {hasFocus ? (
+                          <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 italic line-clamp-2">
+                            "{member.focusStatus!.text}"
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5 italic">
+                            No daily goal declared
+                          </p>
+                        )}
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
           {/* New Messages Section */}
           <section className="aether-glass p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-border-subtle pb-3">
@@ -532,194 +679,7 @@ export function DashboardControl() {
             )}
           </section>
 
-          {/* Active Projects Tracker */}
-          {activeProject && (
-            <section className="aether-glass p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-border-subtle pb-3">
-                <h2 className="text-sm font-bold text-foreground">Projects</h2>
-                <button 
-                  onClick={() => navigate('/workspace')}
-                  className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider hover:text-foreground hover:underline"
-                >
-                  Manage
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-semibold text-foreground">{activeProject.name}</span>
-                  </div>
-                </div>
-
-                {(() => {
-                  const projTasks = tasks.filter(t => t.projectId === activeProject.id);
-                  const completedProjTasks = projTasks.filter(t => t.status === 'done');
-                  const percentage = projTasks.length > 0 ? Math.round((completedProjTasks.length / projTasks.length) * 100) : 0;
-                  
-                  return (
-                    <div className="space-y-1.5">
-                      <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-foreground rounded-full transition-all duration-500 ease-out"
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between items-center text-[10px] text-muted-foreground font-mono">
-                        <span>{completedProjTasks.length} of {projTasks.length} done</span>
-                        <span className="font-semibold text-foreground">{percentage}%</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </section>
-          )}
-
         </div>
-
-        {/* Column 2: Teammate Activity (Daily Focus) */}
-        <section className="aether-glass p-6 space-y-4 self-start">
-          <div className="flex items-center justify-between border-b border-border-subtle pb-3">
-            <h2 className="text-sm font-bold text-foreground">Team Focus</h2>
-            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-semibold text-muted-foreground">
-              {teammates.length} members
-            </span>
-          </div>
-
-          {teammates.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-6 italic">No teammates connected yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {teammates.map((member) => {
-                const hasFocus = !!member.focusStatus?.text;
-                const initials = avatarInitials(member.fullName || member.username || '?');
-                
-                return (
-                  <div key={member.uid} className="flex items-start gap-3 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors">
-                    
-                    {/* Teammate Icon */}
-                    <div 
-                      className="w-9 h-9 flex items-center justify-center text-xs font-bold text-white rounded-full shrink-0 border border-white/10 relative"
-                      style={{ background: `hsl(${avatarHue(member.uid)} 55% 45%)` }}
-                    >
-                      {initials}
-                      {/* Active Indicator dot */}
-                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface dark:bg-zinc-950 flex items-center justify-center shadow-sm">
-                        <span className={cn(
-                          "h-1.5 w-1.5 rounded-full",
-                          member.availabilityStatus === 'focus' ? "bg-red-500" :
-                          member.availabilityStatus === 'away' ? "bg-amber-500" :
-                          member.availabilityStatus === 'active' ? "bg-emerald-500" :
-                          hasFocus ? "bg-emerald-500" : "bg-zinc-300"
-                        )} />
-                      </span>
-                    </div>
-
-                    {/* Teammate Info */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-foreground block truncate">{member.fullName}</span>
-                        <span className="text-[9px] text-muted-foreground shrink-0">{member.role || 'Member'}</span>
-                      </div>
-                      
-                      {hasFocus ? (
-                        <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 italic line-clamp-2">
-                          "{member.focusStatus!.text}"
-                        </p>
-                      ) : (
-                        <p className="text-[10px] text-muted-foreground/60 mt-0.5 italic">
-                          No daily goal declared
-                        </p>
-                      )}
-                    </div>
-
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        {/* Column 3: Approvals & Reviews */}
-        <section className="aether-glass p-6 space-y-4 self-start">
-          <div className="flex items-center justify-between border-b border-border-subtle pb-3">
-            <h2 className="text-sm font-bold text-foreground">Approvals</h2>
-            {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0) > 0 && (
-              <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400 text-[10px] font-semibold">
-                {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0)} pending
-              </span>
-            )}
-          </div>
-
-          {(pendingRequests.length === 0 && (!isManager || reviewTasksForTeam.length === 0)) ? (
-            <div className="py-8 text-center bg-zinc-50/50 dark:bg-zinc-900/30 border border-dashed border-border-default rounded-lg">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
-              <span className="text-xs font-semibold text-foreground block">Approvals Cleared</span>
-              <span className="text-[10px] text-muted-foreground mt-0.5 block">No pending requests require your sign-off.</span>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              
-              {/* Approval Requests */}
-              {pendingRequests.map((req) => (
-                <div key={req.id} className="p-4 rounded-xl border border-white/5 bg-white/3 dark:bg-black/10 space-y-3">
-                  <div>
-                    <span className="text-xs font-bold text-foreground block truncate">{req.title}</span>
-                    <span className="text-[10px] text-muted-foreground block mt-0.5">Submitted by {req.creatorName}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={async () => {
-                        await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
-                      }}
-                      className="flex-1 py-1 rounded-md bg-foreground text-background text-[10px] font-bold hover:bg-foreground/90 transition-all cursor-pointer shadow-sm"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={async () => {
-                        await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
-                      }}
-                      className="flex-1 py-1 rounded-md border border-white/10 hover:bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {/* Task Reviews for Managers */}
-              {isManager && reviewTasksForTeam.map((task) => {
-                const assigneeName = task.assigneeIds.map(id => memberMap.get(id)?.fullName).filter(Boolean).join(', ');
-                return (
-                  <div key={task.id} className="p-4 rounded-xl border border-white/5 bg-white/3 dark:bg-black/10 space-y-3">
-                    <div>
-                      <span className="text-xs font-bold text-foreground block truncate">{task.title}</span>
-                      <span className="text-[10px] text-muted-foreground block mt-0.5">Task review for {assigneeName}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleReviewAction(task, 'approve')}
-                        className="flex-1 py-1 rounded-md bg-foreground text-background text-[10px] font-bold hover:bg-foreground/90 transition-all cursor-pointer shadow-sm"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleReviewAction(task, 'reject')}
-                        className="flex-1 py-1 rounded-md border border-white/10 hover:bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
-                      >
-                        Needs Changes
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-
-            </div>
-          )}
-        </section>
 
       </div>
     </div>

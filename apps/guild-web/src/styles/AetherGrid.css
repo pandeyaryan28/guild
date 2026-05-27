@@ -10,9 +10,9 @@
   --aether-bg: var(--bg-primary);
   --aether-bg-gradient: linear-gradient(135deg, oklch(from var(--bg-primary) calc(l - 0.03) calc(c + 0.01) h) 0%, var(--bg-primary) 50%, oklch(from var(--bg-secondary) calc(l - 0.04) calc(c + 0.02) h) 100%);
   
-  --aether-glass-bg: oklch(from var(--accent) 0.98 0.01 h / 65%);
-  --aether-glass-border: oklch(from var(--accent) 0.90 0.03 h / 20%);
-  --aether-glass-border-inner: oklch(from var(--accent) 0.95 0.03 h / 15%);
+  --aether-glass-bg: oklch(from var(--bg-primary) calc(l - 0.01) c h / 72%);
+  --aether-glass-border: oklch(from var(--accent) 0.90 0.03 h / 24%);
+  --aether-glass-border-inner: oklch(from var(--accent) 0.95 0.03 h / 18%);
   --aether-glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06), 
                          inset 0 1px 1px 0 oklch(from var(--text-primary) l c h / 6%),
                          0 0 1px 0 oklch(from var(--accent) l c h / 10%);
@@ -38,9 +38,9 @@
 
 .dark {
   /* Dynamic mappings adapt automatically, but can specify overrides if needed */
-  --aether-glass-bg: oklch(from var(--accent) 0.97 0.03 h / 3.5%);
-  --aether-glass-border: oklch(from var(--accent) 0.95 0.04 h / 10%);
-  --aether-glass-border-inner: oklch(from var(--accent) 0.98 0.04 h / 7%);
+  --aether-glass-bg: oklch(from var(--bg-primary) calc(l + 0.04) c h / 75%);
+  --aether-glass-border: oklch(from var(--accent) 0.95 0.04 h / 16%);
+  --aether-glass-border-inner: oklch(from var(--accent) 0.98 0.04 h / 12%);
   --aether-glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.22), 
                          inset 0 1px 0 0 oklch(from var(--text-primary) l c h / 5%),
                          0 0 1px 0 oklch(from var(--accent) l c h / 12%);
