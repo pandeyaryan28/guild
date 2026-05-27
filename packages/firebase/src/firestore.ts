@@ -364,9 +364,35 @@ export async function updateOrganizationDetails(
 }
 
 export async function deleteOrganization(
-  orgId: string
+  orgId: string,
+  slug: string,
+  ownerId: string
 ): Promise<void> {
+  // 1. Delete the organization document
   await deleteDoc(doc(db, 'organizations', orgId));
+
+  // 2. Release the globally reserved URL slug
+  await deleteDoc(doc(db, 'orgSlugs', slug.toLowerCase()));
+
+  // 3. Reset the owner's profile to clear workspace references and role
+  const userRef = doc(db, 'users', ownerId);
+  await updateDoc(userRef, {
+    organizationId: '',
+    role: 'member'
+  });
+
+  // 4. Reset onboarding state for the owner so they go back to the setup track
+  const onboardingRef = doc(db, 'onboardingState', ownerId);
+  await setDoc(onboardingRef, {
+    uid: ownerId,
+    completed: false,
+    step: 1,
+    path: null,
+    updatedAt: serverTimestamp()
+  });
+
+  // 5. Clean up organizationMembers entry for the owner
+  await deleteDoc(doc(db, 'organizationMembers', `${orgId}_${ownerId}`));
 }
 
 export async function revokeInviteLink(

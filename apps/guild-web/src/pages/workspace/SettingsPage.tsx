@@ -1176,7 +1176,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
     }
     setDeleting(true);
     try {
-      await deleteOrganization(org.id);
+      await deleteOrganization(org.id, org.slug, profile.uid);
       await logout();
       window.location.href = '/signup';
     } catch (err) {
