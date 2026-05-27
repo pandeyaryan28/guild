@@ -26,6 +26,7 @@ import { ChatLayout } from './pages/chat/ChatLayout';
 
 // Tasks & Work
 import { TaskCanvas } from './components/redesign/TaskCanvas';
+import { GoalsBoardPage } from './pages/workspace/GoalsBoardPage';
 import { RequestsPage } from './pages/requests/RequestsPage';
 import { PeoplePage } from './pages/people/PeoplePage';
 import { SettingsPage } from './pages/workspace/SettingsPage';
@@ -101,6 +102,18 @@ export default function App() {
               <ProtectedRoute>
                 <RedesignLayout>
                   <TaskCanvas />
+                </RedesignLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Goals & Tasks Board */}
+          <Route
+            path="/goals-board"
+            element={
+              <ProtectedRoute>
+                <RedesignLayout>
+                  <GoalsBoardPage />
                 </RedesignLayout>
               </ProtectedRoute>
             }

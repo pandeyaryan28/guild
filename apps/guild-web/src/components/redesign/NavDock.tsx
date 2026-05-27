@@ -13,7 +13,8 @@ import {
   Trello,
   Menu,
   ChevronRight,
-  X
+  X,
+  Target
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
@@ -49,6 +50,7 @@ export function NavDock() {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/chat', label: 'Chat', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined },
     { path: '/workspace', label: 'Workspace', icon: Trello },
+    { path: '/goals-board', label: 'Goals', icon: Target },
     { path: '/requests', label: 'Requests', icon: FileCheck, className: 'hidden md:flex' },
     { path: '/people', label: 'People', icon: Users, className: 'hidden md:flex' },
     { path: '/calendar', label: 'Calendar', icon: Calendar, className: 'hidden md:flex' },
@@ -57,6 +59,7 @@ export function NavDock() {
   ];
 
   const secondaryLinks = [
+    { path: '/goals-board', label: 'Goals', icon: Target },
     { path: '/requests', label: 'Requests', icon: FileCheck },
     { path: '/people', label: 'People', icon: Users },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
