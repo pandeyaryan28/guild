@@ -31,8 +31,8 @@ export function GoalsBoardPage() {
   // Layout View toggle: 'list' or 'kanban'
   const [activeView, setActiveView] = React.useState<'list' | 'kanban'>('list');
 
-  // Content Focus toggle: 'goals' or 'tasks'
-  const [activeFocus, setActiveFocus] = React.useState<'goals' | 'tasks'>('goals');
+  // Content Focus toggle: 'tasks' as the default instead of 'goals'
+  const [activeFocus, setActiveFocus] = React.useState<'goals' | 'tasks'>('tasks');
 
   // Filters State
   const [horizonFilter, setHorizonFilter] = React.useState<'all' | 'short_term' | 'long_term'>('all');
@@ -242,7 +242,7 @@ export function GoalsBoardPage() {
     <div className="flex flex-col h-full overflow-hidden bg-transparent">
       
       {/* ─── Centered Page Header ─── */}
-      <div className="border-b border-white/5 shrink-0 bg-white/[0.01]">
+      <div className="border-b border-border-default/80 dark:border-white/10 shrink-0 bg-surface/50 dark:bg-bg-secondary/40 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto w-full px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-foreground tracking-tight">Goals & Tasks Board</h1>
@@ -250,11 +250,13 @@ export function GoalsBoardPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Goals vs Tasks Focus Toggle */}
-            <div className="flex items-center gap-1 bg-white/2 border border-white/5 p-1 rounded-xl shadow-inner">
+            <div className="flex items-center gap-1 bg-surface dark:bg-bg-primary/80 border border-border-default dark:border-white/10 p-1 rounded-xl shadow-inner">
               <button
                 onClick={() => { setActiveFocus('goals'); setActiveView('list'); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  activeFocus === 'goals' ? 'bg-white/5 border border-white/10 text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  activeFocus === 'goals' 
+                    ? 'bg-accent/15 border border-accent/25 text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Target className="w-3.5 h-3.5" />
@@ -263,7 +265,9 @@ export function GoalsBoardPage() {
               <button
                 onClick={() => setActiveFocus('tasks')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  activeFocus === 'tasks' ? 'bg-white/5 border border-white/10 text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  activeFocus === 'tasks' 
+                    ? 'bg-accent/15 border border-accent/25 text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Zap className="w-3.5 h-3.5" />
@@ -272,11 +276,13 @@ export function GoalsBoardPage() {
             </div>
 
             {/* Layout View Toggle */}
-            <div className="flex items-center gap-1 bg-white/2 border border-white/5 p-1 rounded-xl shadow-inner">
+            <div className="flex items-center gap-1 bg-surface dark:bg-bg-primary/80 border border-border-default dark:border-white/10 p-1 rounded-xl shadow-inner">
               <button
                 onClick={() => setActiveView('list')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  activeView === 'list' ? 'bg-white/5 border border-white/10 text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  activeView === 'list' 
+                    ? 'bg-accent/15 border border-accent/25 text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -285,7 +291,9 @@ export function GoalsBoardPage() {
               <button
                 onClick={() => setActiveView('kanban')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  activeView === 'kanban' ? 'bg-white/5 border border-white/10 text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  activeView === 'kanban' 
+                    ? 'bg-accent/15 border border-accent/25 text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Kanban className="w-3.5 h-3.5" />
@@ -312,7 +320,7 @@ export function GoalsBoardPage() {
       </div>
 
       {/* ─── Centered Global Filters Bar ─── */}
-      <div className="border-b border-white/5 bg-white/[0.01] shrink-0 text-xs">
+      <div className="border-b border-border-default/80 dark:border-white/10 bg-surface/30 dark:bg-bg-secondary/20 shrink-0 text-xs">
         <div className="max-w-5xl mx-auto w-full px-6 py-3 flex flex-wrap items-center gap-4">
           
           {/* Horizon Filter - Goals Only */}
@@ -322,11 +330,11 @@ export function GoalsBoardPage() {
               <select
                 value={horizonFilter}
                 onChange={(e: any) => setHorizonFilter(e.target.value)}
-                className="bg-white/2 border border-white/5 rounded-lg px-2.5 py-1.5 text-xs text-foreground outline-none cursor-pointer focus:border-white/10"
+                className="bg-surface border border-border-default dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40"
               >
-                <option value="all" className="bg-surface text-foreground">All Horizons</option>
-                <option value="short_term" className="bg-surface text-foreground">Short Term</option>
-                <option value="long_term" className="bg-surface text-foreground">Long Term</option>
+                <option value="all">All Horizons</option>
+                <option value="short_term">Short Term</option>
+                <option value="long_term">Long Term</option>
               </select>
             </div>
           )}
@@ -337,11 +345,11 @@ export function GoalsBoardPage() {
             <select
               value={projectFilter}
               onChange={(e: any) => setProjectFilter(e.target.value)}
-              className="bg-white/2 border border-white/5 rounded-lg px-2.5 py-1.5 text-xs text-foreground outline-none cursor-pointer focus:border-white/10 max-w-[200px]"
+              className="bg-surface border border-border-default dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 max-w-[200px]"
             >
-              <option value="all" className="bg-surface text-foreground">All Projects</option>
+              <option value="all">All Projects</option>
               {projects.map(proj => (
-                <option key={proj.id} value={proj.id} className="bg-surface text-foreground">
+                <option key={proj.id} value={proj.id}>
                   {proj.name}
                 </option>
               ))}
@@ -355,14 +363,14 @@ export function GoalsBoardPage() {
               <select
                 value={priorityFilter}
                 onChange={(e: any) => setPriorityFilter(e.target.value)}
-                className="bg-white/2 border border-white/5 rounded-lg px-2.5 py-1.5 text-xs text-foreground outline-none cursor-pointer focus:border-white/10"
+                className="bg-surface border border-border-default dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40"
               >
-                <option value="all" className="bg-surface text-foreground">All Priorities</option>
-                <option value="urgent" className="bg-surface text-foreground">Urgent</option>
-                <option value="high" className="bg-surface text-foreground">High</option>
-                <option value="medium" className="bg-surface text-foreground">Medium</option>
-                <option value="low" className="bg-surface text-foreground">Low</option>
-                <option value="none" className="bg-surface text-foreground">None</option>
+                <option value="all">All Priorities</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+                <option value="none">None</option>
               </select>
             </div>
           )}
@@ -376,11 +384,11 @@ export function GoalsBoardPage() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-b border-white/5 bg-white/[0.02]"
+            className="overflow-hidden border-b border-border-default/80 dark:border-white/10 bg-surface/80 dark:bg-bg-secondary/60"
           >
             <div className="max-w-5xl mx-auto w-full px-6 py-6">
               <form onSubmit={handleCreateGoalSubmit} className="max-w-2xl space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                <div className="flex items-center justify-between pb-2 border-b border-border-default dark:border-white/10">
                   <span className="text-xs font-bold text-foreground">Add New Strategic Goal</span>
                   <button
                     type="button"
@@ -399,7 +407,7 @@ export function GoalsBoardPage() {
                       required
                       value={newGoalTitle}
                       onChange={(e) => setNewGoalTitle(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-white/5 bg-white/5 text-xs text-foreground outline-none placeholder:text-muted-foreground hover:bg-white/10 focus:border-white/10"
+                      className="w-full px-3 py-2 rounded-xl border border-border-default dark:border-white/10 bg-surface text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-accent/40"
                       placeholder="Describe high-level objective..."
                     />
                   </div>
@@ -409,7 +417,7 @@ export function GoalsBoardPage() {
                     <select
                       value={newGoalHorizon}
                       onChange={(e: any) => setNewGoalHorizon(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-white/5 bg-white/5 text-xs text-foreground outline-none cursor-pointer"
+                      className="w-full px-3 py-2 rounded-xl border border-border-default dark:border-white/10 bg-surface text-xs text-foreground outline-none cursor-pointer focus:border-accent/40"
                     >
                       <option value="short_term">Short Term (Weekly/Monthly)</option>
                       <option value="long_term">Long Term (Quarterly/Annual)</option>
@@ -421,7 +429,7 @@ export function GoalsBoardPage() {
                     <select
                       value={newGoalProjectId}
                       onChange={(e) => setNewGoalProjectId(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-white/5 bg-white/5 text-xs text-foreground outline-none cursor-pointer"
+                      className="w-full px-3 py-2 rounded-xl border border-border-default dark:border-white/10 bg-surface text-xs text-foreground outline-none cursor-pointer focus:border-accent/40"
                     >
                       <option value="">None (Standalone Goal)</option>
                       {projects.map(proj => (
@@ -435,7 +443,7 @@ export function GoalsBoardPage() {
                   <button
                     type="button"
                     onClick={() => setShowAddGoalForm(false)}
-                    className="px-4 py-2 rounded-xl border border-white/5 text-xs font-semibold text-muted-foreground hover:bg-white/5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl border border-border-default dark:border-white/10 text-xs font-semibold text-muted-foreground hover:bg-white/5 cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -457,8 +465,9 @@ export function GoalsBoardPage() {
       </AnimatePresence>
 
       {/* ─── Centered Main Content Canvas ─── */}
-      <div className="flex-1 overflow-y-auto aether-scroll">
-        <div className="max-w-5xl mx-auto w-full px-6 py-6">
+      <div className="flex-grow overflow-y-auto aether-scroll">
+        {/* Centric wrapper for lists to look highly centered and focused */}
+        <div className="max-w-3xl mx-auto w-full px-6 py-8">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-accent" style={{ color: 'var(--accent)' }} />
@@ -489,7 +498,7 @@ export function GoalsBoardPage() {
                         </h3>
 
                         {activeGoalsList.length > 0 ? (
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <div className="grid grid-cols-1 gap-6">
                             {activeGoalsList.map(goal => {
                               const goalTasks = filteredTasks.filter(t => t.goalId === goal.id);
                               const activeGoalTasks = goalTasks.filter(t => t.status !== 'done');
@@ -501,15 +510,15 @@ export function GoalsBoardPage() {
                               return (
                                 <div
                                   key={goal.id}
-                                  className="glass border border-white/5 rounded-2xl p-4.5 space-y-4 hover:border-white/10 transition-all flex flex-col justify-between"
+                                  className="bg-surface border border-border-strong/90 dark:bg-bg-secondary/90 dark:border-white/15 rounded-2xl p-5 space-y-4 shadow-xl hover:border-accent/40 dark:hover:border-accent/45 transition-all duration-300 flex flex-col justify-between"
                                 >
                                   <div className="space-y-3.5">
                                     <div className="flex flex-wrap items-center gap-2">
-                                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-white/5 text-cyan-400 bg-cyan-500/5">
+                                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-border-default/60 dark:border-white/10 text-cyan-500 dark:text-cyan-400 bg-cyan-500/5">
                                         {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
                                       </span>
                                       {linkedProj && (
-                                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-white/5 text-indigo-400 bg-indigo-500/5">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-border-default/60 dark:border-white/10 text-indigo-500 dark:text-indigo-400 bg-indigo-500/5">
                                           Project: {linkedProj.name}
                                         </span>
                                       )}
@@ -520,12 +529,12 @@ export function GoalsBoardPage() {
                                         <button
                                           type="button"
                                           onClick={(e) => handleToggleGoalStatus(e, goal)}
-                                          className="h-4 w-4 rounded-full border border-white/10 hover:border-cyan-400 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                                          className="h-4.5 w-4.5 rounded-full border border-border-strong hover:border-cyan-400 dark:border-white/20 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
                                           title="Mark Goal Completed"
                                         >
-                                          <div className="h-1.5 w-1.5 rounded-full bg-transparent hover:bg-cyan-400" />
+                                          <div className="h-2 w-2 rounded-full bg-transparent hover:bg-cyan-400" />
                                         </button>
-                                        <h4 className="text-xs font-bold text-foreground truncate select-text">
+                                        <h4 className="text-sm font-bold text-foreground truncate select-text">
                                           {goal.title}
                                         </h4>
                                       </div>
@@ -533,9 +542,9 @@ export function GoalsBoardPage() {
                                       <div className="flex items-center gap-1.5 shrink-0">
                                         <button
                                           onClick={(e) => handleDeleteGoalItem(e, goal.id)}
-                                          className="text-muted-foreground hover:text-red-400 p-1 rounded-lg transition-colors cursor-pointer"
+                                          className="text-muted-foreground hover:text-red-400 p-1.5 rounded-lg transition-colors cursor-pointer"
                                         >
-                                          <Trash2 className="w-3.5 h-3.5" />
+                                          <Trash2 className="w-4 h-4" />
                                         </button>
                                       </div>
                                     </div>
@@ -546,9 +555,9 @@ export function GoalsBoardPage() {
                                         <span>Goal Progress Rollup</span>
                                         <span>{progress}% ({completedGoalTasks.length}/{goalTasks.length} completed)</span>
                                       </div>
-                                      <div className="w-full bg-white/5 border border-white/5 rounded-full h-1.5 overflow-hidden">
+                                      <div className="w-full bg-bg-secondary dark:bg-bg-primary border border-border-default dark:border-white/10 rounded-full h-2 overflow-hidden">
                                         <div
-                                          className="h-full rounded-full transition-all duration-500"
+                                          className="h-full rounded-full transition-all duration-500 animate-pulse"
                                           style={{
                                             width: `${progress}%`,
                                             background: `linear-gradient(90deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.1) c h) 100%)`
@@ -558,17 +567,17 @@ export function GoalsBoardPage() {
                                     </div>
 
                                     {/* Linked Active Tasks */}
-                                    <div className="space-y-2 pt-2 border-t border-white/5">
+                                    <div className="space-y-2 pt-2 border-t border-border-default dark:border-white/10">
                                       {activeGoalTasks.map(task => (
                                         <div
                                           key={task.id}
-                                          className="flex items-center justify-between p-2 rounded-xl bg-white/2 hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
+                                          className="flex items-center justify-between p-3 rounded-xl bg-surface-hover hover:bg-surface border border-border-default/60 dark:bg-bg-primary/20 dark:border-white/10 hover:border-accent/40 dark:hover:border-accent/40 transition-all duration-300 group shadow-sm"
                                         >
                                           <div className="flex items-center gap-2.5 min-w-0">
                                             <button
                                               type="button"
                                               onClick={(e) => handleToggleTaskStatus(e, task)}
-                                              className="h-4 w-4 rounded-full border border-white/10 hover:border-accent flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                                              className="h-4.5 w-4.5 rounded-full border border-border-strong dark:border-white/20 hover:border-accent flex items-center justify-center shrink-0 cursor-pointer transition-colors"
                                             >
                                               <div className="h-1.5 w-1.5 rounded-full bg-transparent" />
                                             </button>
@@ -581,7 +590,7 @@ export function GoalsBoardPage() {
                                             onClick={(e) => handleDeleteTaskItem(e, task.id)}
                                             className="text-muted-foreground hover:text-red-400 transition-colors p-0.5 cursor-pointer opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                                           >
-                                            <X className="w-3.5 h-3.5" />
+                                            <X className="w-4 h-4" />
                                           </button>
                                         </div>
                                       ))}
@@ -592,7 +601,7 @@ export function GoalsBoardPage() {
                                           <button
                                             type="button"
                                             onClick={() => toggleGoalCompletedTasks(goal.id)}
-                                            className="w-full border border-white/5 bg-white/2 hover:bg-white/5 rounded-xl p-2 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground transition-colors font-bold"
+                                            className="w-full border border-border-default dark:border-white/10 bg-bg-secondary hover:bg-surface-hover rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground transition-colors font-bold shadow-inner"
                                           >
                                             <span>Completed Tasks ({completedGoalTasks.length})</span>
                                             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isCompletedExpanded ? 'rotate-180' : ''}`} />
@@ -609,13 +618,13 @@ export function GoalsBoardPage() {
                                                 {completedGoalTasks.map(task => (
                                                   <div
                                                     key={task.id}
-                                                    className="flex items-center justify-between p-2 rounded-xl bg-white/1 border border-white/5 opacity-55 hover:opacity-85 transition-opacity"
+                                                    className="flex items-center justify-between p-3 rounded-xl bg-bg-secondary/40 border border-border-default/40 dark:border-white/5 opacity-65 hover:opacity-90 transition-all shadow-inner"
                                                   >
                                                     <div className="flex items-center gap-2.5 min-w-0">
                                                       <button
                                                         type="button"
                                                         onClick={(e) => handleToggleTaskStatus(e, task)}
-                                                        className="h-4 w-4 rounded-full border border-cyan-400 bg-cyan-400/10 flex items-center justify-center shrink-0 cursor-pointer"
+                                                        className="h-4.5 w-4.5 rounded-full border border-cyan-500 bg-cyan-500/10 flex items-center justify-center shrink-0 cursor-pointer"
                                                       >
                                                         <Check className="w-2.5 h-2.5 text-cyan-400" />
                                                       </button>
@@ -628,7 +637,7 @@ export function GoalsBoardPage() {
                                                       onClick={(e) => handleDeleteTaskItem(e, task.id)}
                                                       className="text-muted-foreground hover:text-red-400 transition-colors p-0.5 cursor-pointer"
                                                     >
-                                                      <X className="w-3.5 h-3.5" />
+                                                      <X className="w-4 h-4" />
                                                     </button>
                                                   </div>
                                                 ))}
@@ -643,20 +652,20 @@ export function GoalsBoardPage() {
                                   {/* Quick Inline task insert */}
                                   <form
                                     onSubmit={(e) => handleInlineTaskSubmit(e, goal.id)}
-                                    className="mt-4 pt-3.5 border-t border-white/5 flex gap-2"
+                                    className="mt-4 pt-3.5 border-t border-border-default dark:border-white/10 flex gap-2"
                                   >
                                     <input
                                       type="text"
                                       placeholder="Add task to goal..."
                                       value={inlineTaskTitles[goal.id] || ''}
                                       onChange={(e) => setInlineTaskTitles(prev => ({ ...prev, [goal.id]: e.target.value }))}
-                                      className="flex-1 bg-white/2 border border-white/5 rounded-xl px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-white/5 focus:border-white/10"
+                                      className="flex-1 bg-surface-hover border border-border-default dark:border-white/10 rounded-xl px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-surface focus:border-accent/40 shadow-inner"
                                     />
                                     <button
                                       type="submit"
-                                      className="px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:text-foreground text-muted-foreground transition-all cursor-pointer"
+                                      className="px-3 py-2 bg-surface hover:bg-surface-hover border border-border-default dark:border-white/10 rounded-xl hover:text-foreground text-muted-foreground transition-all cursor-pointer shadow-sm"
                                     >
-                                      <Plus className="w-3.5 h-3.5" />
+                                      <Plus className="w-4 h-4" />
                                     </button>
                                   </form>
                                 </div>
@@ -664,24 +673,24 @@ export function GoalsBoardPage() {
                             })}
                           </div>
                         ) : (
-                          <div className="py-12 border border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center text-center bg-white/[0.01]">
+                          <div className="py-12 border border-dashed border-border-default dark:border-white/15 rounded-2xl flex flex-col items-center justify-center text-center bg-surface/50 dark:bg-bg-secondary/40 shadow-sm">
                             <p className="text-xs text-muted-foreground italic">No active goals match the current filters.</p>
                           </div>
                         )}
                       </div>
 
                       {/* Archived Completed Goals */}
-                      <div className="pt-6 border-t border-white/5 space-y-4">
+                      <div className="pt-6 border-t border-border-default dark:border-white/10 space-y-4">
                         <button
                           type="button"
                           onClick={() => setShowArchivedGoals(!showArchivedGoals)}
-                          className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-white/2 hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all font-bold text-xs text-muted-foreground cursor-pointer"
+                          className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-surface border border-border-default dark:border-white/10 hover:border-accent/40 transition-all font-bold text-xs text-muted-foreground cursor-pointer shadow-md"
                         >
                           <div className="flex items-center gap-2">
-                            {showArchivedGoals ? <EyeOff className="w-4 h-4 text-cyan-400" /> : <Eye className="w-4 h-4 text-cyan-400" />}
+                            {showArchivedGoals ? <EyeOff className="w-4.5 h-4.5 text-cyan-400" /> : <Eye className="w-4.5 h-4.5 text-cyan-400" />}
                             <span>Archived Completed Goals ({completedGoalsList.length})</span>
                           </div>
-                          <ChevronDown className={`w-4 h-4 transition-transform ${showArchivedGoals ? 'rotate-180' : ''}`} />
+                          <ChevronDown className={`w-4.5 h-4.5 transition-transform ${showArchivedGoals ? 'rotate-180' : ''}`} />
                         </button>
 
                         <AnimatePresence>
@@ -693,15 +702,15 @@ export function GoalsBoardPage() {
                               className="overflow-hidden space-y-3 pt-2"
                             >
                               {completedGoalsList.length > 0 ? (
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4">
                                   {completedGoalsList.map(goal => (
-                                    <div key={goal.id} className="glass border border-white/5 rounded-2xl p-4 opacity-60 hover:opacity-90 transition-opacity">
+                                    <div key={goal.id} className="bg-surface border border-border-default dark:bg-bg-secondary/60 dark:border-white/10 rounded-2xl p-4.5 opacity-65 hover:opacity-95 transition-all shadow-md">
                                       <div className="flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-2 min-w-0">
                                           <button
                                             type="button"
                                             onClick={(e) => handleToggleGoalStatus(e, goal)}
-                                            className="h-4 w-4 rounded-full border border-cyan-400 bg-cyan-400/10 flex items-center justify-center shrink-0 cursor-pointer"
+                                            className="h-4.5 w-4.5 rounded-full border border-cyan-400 bg-cyan-400/10 flex items-center justify-center shrink-0 cursor-pointer"
                                           >
                                             <Check className="w-2.5 h-2.5 text-cyan-400" />
                                           </button>
@@ -711,9 +720,9 @@ export function GoalsBoardPage() {
                                         </div>
                                         <button
                                           onClick={(e) => handleDeleteGoalItem(e, goal.id)}
-                                          className="text-muted-foreground hover:text-red-400 p-1 transition-colors cursor-pointer"
+                                          className="text-muted-foreground hover:text-red-400 p-1.5 transition-colors cursor-pointer"
                                         >
-                                          <Trash2 className="w-3.5 h-3.5" />
+                                          <Trash2 className="w-4 h-4" />
                                         </button>
                                       </div>
                                     </div>
@@ -738,30 +747,30 @@ export function GoalsBoardPage() {
                           <span>Active Tasks ({activeTasksList.length})</span>
                         </h3>
 
-                        <div className="glass border border-white/5 rounded-2xl p-4.5 space-y-4">
+                        <div className="bg-surface border border-border-strong/90 dark:bg-bg-secondary/90 dark:border-white/15 rounded-2xl p-5 space-y-4 shadow-xl">
                           {/* Inline Task creation */}
                           <form
                             onSubmit={(e) => handleInlineTaskSubmit(e, null)}
-                            className="flex gap-2 max-w-md pb-2 border-b border-white/5"
+                            className="flex gap-2 max-w-md pb-3.5 border-b border-border-default dark:border-white/10"
                           >
                             <input
                               type="text"
                               placeholder="Add a new task..."
                               value={inlineTaskTitles['standalone'] || ''}
                               onChange={(e) => setInlineTaskTitles(prev => ({ ...prev, standalone: e.target.value }))}
-                              className="flex-1 bg-white/2 border border-white/5 rounded-xl px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-white/5 focus:border-white/10"
+                              className="flex-1 bg-surface-hover border border-border-default dark:border-white/10 rounded-xl px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-surface focus:border-accent/40 shadow-inner"
                             />
                             <button
                               type="submit"
-                              className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:text-foreground text-muted-foreground transition-all flex items-center gap-1 cursor-pointer text-xs font-bold"
+                              className="px-4 py-2 bg-surface hover:bg-surface-hover border border-border-default dark:border-white/10 rounded-xl text-muted-foreground hover:text-foreground transition-all flex items-center gap-1 cursor-pointer text-xs font-bold shadow-sm"
                             >
-                              <Plus className="w-3.5 h-3.5" />
+                              <Plus className="w-4 h-4" />
                               <span>Add Task</span>
                             </button>
                           </form>
 
                           {activeTasksList.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="space-y-2.5">
                               {activeTasksList.map(task => {
                                 const linkedProj = projects.find(p => p.id === task.projectId);
                                 const linkedGoal = goals.find(g => g.id === task.goalId);
@@ -769,13 +778,13 @@ export function GoalsBoardPage() {
                                 return (
                                   <div
                                     key={task.id}
-                                    className="flex items-center justify-between p-3 rounded-xl bg-white/2 hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
+                                    className="flex items-center justify-between p-3.5 rounded-xl bg-surface border border-border-default/80 dark:bg-bg-primary/20 dark:border-white/10 hover:border-accent/40 dark:hover:border-accent/45 transition-all duration-300 group shadow-sm"
                                   >
                                     <div className="flex flex-wrap items-center gap-3 min-w-0">
                                       <button
                                         type="button"
                                         onClick={(e) => handleToggleTaskStatus(e, task)}
-                                        className="h-4 w-4 rounded-full border border-white/10 hover:border-accent flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                                        className="h-4.5 w-4.5 rounded-full border border-border-strong dark:border-white/20 hover:border-accent flex items-center justify-center shrink-0 cursor-pointer transition-colors"
                                       >
                                         <div className="h-1.5 w-1.5 rounded-full bg-transparent" />
                                       </button>
@@ -810,7 +819,7 @@ export function GoalsBoardPage() {
                                       onClick={(e) => handleDeleteTaskItem(e, task.id)}
                                       className="text-muted-foreground hover:text-red-400 transition-colors p-1 cursor-pointer opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                                     >
-                                      <Trash2 className="w-3.5 h-3.5" />
+                                      <Trash2 className="w-4 h-4" />
                                     </button>
                                   </div>
                                 );
@@ -823,17 +832,17 @@ export function GoalsBoardPage() {
                       </div>
 
                       {/* Archived Completed Tasks */}
-                      <div className="pt-6 border-t border-white/5 space-y-4">
+                      <div className="pt-6 border-t border-border-default dark:border-white/10 space-y-4">
                         <button
                           type="button"
                           onClick={() => setShowArchivedTasks(!showArchivedTasks)}
-                          className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-white/2 hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all font-bold text-xs text-muted-foreground cursor-pointer"
+                          className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-surface border border-border-default dark:border-white/10 hover:border-accent/40 transition-all font-bold text-xs text-muted-foreground cursor-pointer shadow-md"
                         >
                           <div className="flex items-center gap-2">
-                            {showArchivedTasks ? <EyeOff className="w-4 h-4 text-cyan-400" /> : <Eye className="w-4 h-4 text-cyan-400" />}
+                            {showArchivedTasks ? <EyeOff className="w-4.5 h-4.5 text-cyan-400" /> : <Eye className="w-4.5 h-4.5 text-cyan-400" />}
                             <span>Archived Completed Tasks ({completedTasksList.length})</span>
                           </div>
-                          <ChevronDown className={`w-4 h-4 transition-transform ${showArchivedTasks ? 'rotate-180' : ''}`} />
+                          <ChevronDown className={`w-4.5 h-4.5 transition-transform ${showArchivedTasks ? 'rotate-180' : ''}`} />
                         </button>
 
                         <AnimatePresence>
@@ -845,17 +854,17 @@ export function GoalsBoardPage() {
                               className="overflow-hidden space-y-2 pt-2"
                             >
                               {completedTasksList.length > 0 ? (
-                                <div className="glass border border-white/5 rounded-2xl p-3 space-y-2">
+                                <div className="bg-surface border border-border-default dark:bg-bg-secondary/40 dark:border-white/10 rounded-2xl p-4 space-y-2 shadow-inner">
                                   {completedTasksList.map(task => (
                                     <div
                                       key={task.id}
-                                      className="flex items-center justify-between p-2 rounded-xl bg-white/1 border border-white/5 opacity-55 hover:opacity-85 transition-opacity"
+                                      className="flex items-center justify-between p-3 rounded-xl bg-bg-secondary/40 border border-border-default/45 dark:border-white/5 opacity-65 hover:opacity-90 transition-opacity shadow-sm"
                                     >
                                       <div className="flex items-center gap-2.5 min-w-0">
                                         <button
                                           type="button"
                                           onClick={(e) => handleToggleTaskStatus(e, task)}
-                                          className="h-4 w-4 rounded-full border border-cyan-400 bg-cyan-400/10 flex items-center justify-center shrink-0 cursor-pointer"
+                                          className="h-4.5 w-4.5 rounded-full border border-cyan-400 bg-cyan-400/10 flex items-center justify-center shrink-0 cursor-pointer"
                                         >
                                           <Check className="w-2.5 h-2.5 text-cyan-400" />
                                         </button>
@@ -868,7 +877,7 @@ export function GoalsBoardPage() {
                                         onClick={(e) => handleDeleteTaskItem(e, task.id)}
                                         className="text-muted-foreground hover:text-red-400 transition-colors p-0.5 cursor-pointer"
                                       >
-                                        <X className="w-3.5 h-3.5" />
+                                        <X className="w-4 h-4" />
                                       </button>
                                     </div>
                                   ))}
@@ -909,41 +918,57 @@ export function GoalsBoardPage() {
 
                     let colTitle = '';
                     let colColorClass = '';
-                    if (colStatus === 'todo') { colTitle = 'To Do'; colColorClass = 'bg-white/10 border-white/5'; }
-                    else if (colStatus === 'in_progress') { colTitle = 'In Progress'; colColorClass = 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'; }
-                    else if (colStatus === 'review') { colTitle = 'In Review'; colColorClass = 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'; }
-                    else if (colStatus === 'done') { colTitle = 'Done'; colColorClass = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'; }
+                    if (colStatus === 'todo') { colTitle = 'To Do'; colColorClass = 'bg-surface border-border-default text-foreground dark:border-white/10 dark:bg-bg-secondary/40'; }
+                    else if (colStatus === 'in_progress') { colTitle = 'In Progress'; colColorClass = 'bg-cyan-500/10 border-cyan-500/30 text-cyan-500'; }
+                    else if (colStatus === 'review') { colTitle = 'In Review'; colColorClass = 'bg-indigo-500/10 border-indigo-500/30 text-indigo-500'; }
+                    else if (colStatus === 'done') { colTitle = 'Done'; colColorClass = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'; }
 
                     const isDoneCol = colStatus === 'done';
 
                     return (
                       <div
                         key={colStatus}
-                        className="glass border border-white/5 rounded-2xl p-4 flex flex-col min-h-[450px] gap-4"
+                        className="bg-surface border border-border-strong/95 dark:bg-bg-secondary/90 dark:border-white/15 rounded-2xl p-4.5 flex flex-col min-h-[480px] gap-4.5 shadow-xl transition-all duration-300"
                       >
                         {/* Column Header */}
-                        <div className="flex items-center justify-between pb-2 border-b border-white/5 shrink-0">
+                        <div className="flex items-center justify-between pb-2 border-b border-border-default dark:border-white/10 shrink-0">
                           <span className={`text-xs font-bold px-2.5 py-1 rounded-xl border ${colColorClass}`}>
                             {colTitle}
                           </span>
-                          <span className="text-[10px] font-bold font-mono text-muted-foreground bg-white/2 border border-white/5 rounded-lg px-2 py-0.5">
+                          <span className="text-[10px] font-bold font-mono text-muted-foreground bg-bg-secondary border border-border-default dark:border-white/10 rounded-lg px-2 py-0.5">
                             {colTasks.length}
                           </span>
                         </div>
 
-                        {/* Collapsed view for Done Column tasks inside Kanban */}
-                        {isDoneCol && colTasks.length > 0 && (
+                        {/* Collapsed Done tasks as a highly space-saving compact vertical button strip */}
+                        {isDoneCol && colTasks.length > 0 && !showCompletedKanban && (
                           <button
-                            onClick={() => setShowCompletedKanban(!showCompletedKanban)}
-                            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/2 hover:bg-white/5 border border-white/5 text-[10px] text-muted-foreground font-bold cursor-pointer transition-colors"
+                            onClick={() => setShowCompletedKanban(true)}
+                            className="w-full flex flex-col items-center justify-center py-5 px-3 border border-dashed border-border-default hover:border-accent/40 rounded-xl text-center text-muted-foreground transition-all duration-300 cursor-pointer bg-bg-secondary/40 hover:bg-bg-secondary/80 hover:text-foreground h-44 gap-1.5 shadow-inner"
                           >
-                            <span>{showCompletedKanban ? 'Hide Completed' : 'Show Completed'} ({colTasks.length})</span>
-                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCompletedKanban ? 'rotate-180' : ''}`} />
+                            <ChevronDown className="w-4 h-4 shrink-0 transition-transform text-accent" />
+                            <span 
+                              className="text-[9px] font-extrabold uppercase tracking-widest text-center select-none"
+                              style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}
+                            >
+                              Show {colTasks.length} Completed Tasks
+                            </span>
+                          </button>
+                        )}
+
+                        {/* Standard toggle header inside the column when opened */}
+                        {isDoneCol && colTasks.length > 0 && showCompletedKanban && (
+                          <button
+                            onClick={() => setShowCompletedKanban(false)}
+                            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-bg-secondary/60 hover:bg-surface border border-border-default text-[10px] text-muted-foreground font-bold cursor-pointer transition-colors shrink-0 shadow-sm"
+                          >
+                            <span>Hide Completed ({colTasks.length})</span>
+                            <ChevronDown className="w-3.5 h-3.5 rotate-180 transition-transform" />
                           </button>
                         )}
 
                         {/* Column Task Cards */}
-                        <div className="flex-1 space-y-3 overflow-y-auto max-h-[550px] scrollbar-thin pr-1">
+                        <div className="flex-1 space-y-3.5 overflow-y-auto max-h-[500px] scrollbar-thin pr-1">
                           {(!isDoneCol || showCompletedKanban) ? (
                             colTasks.map(task => {
                               const parentGoal = task.goalId ? goals.find(g => g.id === task.goalId) : null;
@@ -952,17 +977,17 @@ export function GoalsBoardPage() {
                               return (
                                 <div
                                   key={task.id}
-                                  className="bg-white/2 hover:bg-white/5 border border-white/5 hover:border-white/10 rounded-xl p-3.5 space-y-3.5 transition-all shadow-sm relative group cursor-pointer"
+                                  className="bg-surface border border-border-default/80 dark:bg-bg-primary/20 dark:border-white/10 hover:border-accent/40 dark:hover:border-accent/45 rounded-xl p-3.5 space-y-3.5 transition-all duration-300 shadow-sm relative group cursor-pointer"
                                 >
                                   <div className="space-y-1.5">
                                     <div className="flex flex-wrap items-center gap-1.5">
                                       {parentGoal && (
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-cyan-500/10 text-cyan-400 bg-cyan-500/5 truncate max-w-[120px]">
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-cyan-500/10 text-cyan-500 dark:text-cyan-405 bg-cyan-500/5 truncate max-w-[120px]">
                                           Goal: {parentGoal.title}
                                         </span>
                                       )}
                                       {parentProject && (
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-indigo-500/10 text-indigo-400 bg-indigo-500/5 truncate max-w-[120px]">
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-indigo-500/10 text-indigo-500 dark:text-indigo-405 bg-indigo-500/5 truncate max-w-[120px]">
                                           Proj: {parentProject.name}
                                         </span>
                                       )}
@@ -972,7 +997,7 @@ export function GoalsBoardPage() {
                                     </h5>
                                   </div>
 
-                                  <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[9px] text-muted-foreground font-semibold">
+                                  <div className="flex items-center justify-between pt-2 border-t border-border-default dark:border-white/10 text-[9px] text-muted-foreground font-semibold">
                                     {task.priority !== 'none' ? (
                                       <span className={`px-1.5 py-0.5 rounded border ${getPriorityColors(task.priority)}`}>
                                         {getPriorityLabel(task.priority)}
@@ -993,7 +1018,7 @@ export function GoalsBoardPage() {
                                           <button
                                             key={s}
                                             onClick={(e) => { e.stopPropagation(); handleUpdateTaskStatus(task, s); }}
-                                            className="h-5 px-1.5 border border-white/5 hover:border-white/10 rounded bg-white/2 text-[8px] font-black tracking-tighter hover:text-foreground hover:bg-white/5 transition-all cursor-pointer uppercase"
+                                            className="h-5 px-1.5 border border-border-default/60 dark:border-white/10 hover:border-accent/40 rounded bg-surface hover:bg-surface-hover text-[8px] font-black tracking-tighter hover:text-foreground transition-all cursor-pointer uppercase"
                                             title={`Move to ${s.replace('_', ' ')}`}
                                           >
                                             {sym}
@@ -1003,7 +1028,7 @@ export function GoalsBoardPage() {
                                       
                                       <button
                                         onClick={(e) => { e.stopPropagation(); handleDeleteTaskItem(e, task.id); }}
-                                        className="h-5 w-5 border border-white/5 hover:border-red-500/20 text-muted-foreground hover:text-red-400 rounded bg-white/2 flex items-center justify-center transition-all cursor-pointer opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                                        className="h-5 w-5 border border-border-default/60 dark:border-white/10 hover:border-red-500/20 text-muted-foreground hover:text-red-400 rounded bg-surface flex items-center justify-center transition-all cursor-pointer opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                                         title="Delete Task"
                                       >
                                         <Trash2 className="w-3 h-3" />
@@ -1016,14 +1041,8 @@ export function GoalsBoardPage() {
                           ) : null}
 
                           {colTasks.length === 0 && (
-                            <div className="h-28 border border-dashed border-white/5 rounded-xl flex items-center justify-center text-center">
+                            <div className="h-28 border border-dashed border-border-default dark:border-white/15 rounded-xl flex items-center justify-center text-center bg-bg-secondary/20">
                               <p className="text-[10px] text-muted-foreground italic">Empty column</p>
-                            </div>
-                          )}
-
-                          {isDoneCol && !showCompletedKanban && colTasks.length > 0 && (
-                            <div className="py-8 border border-dashed border-white/5 rounded-xl flex items-center justify-center text-center bg-white/[0.01]">
-                              <p className="text-[10px] text-muted-foreground italic">Completed tasks are collapsed</p>
                             </div>
                           )}
                         </div>
