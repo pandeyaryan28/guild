@@ -17,12 +17,11 @@ export function ThemeSlider() {
 
   // Track Dimensions
   const trackWidth = 96; // px
-  const knobSize = 20;  // px
-  const padding = 2;    // px
-  const maxSlide = trackWidth - knobSize - 2 * padding; // 96 - 20 - 4 = 72px
+  const knobSize = 22;  // px
+  const maxSlide = trackWidth - knobSize; // 96 - 22 = 74px (Edge-to-edge sliding!)
 
   // Calculate the left offset of the knob
-  const knobLeft = padding + themeProgress * maxSlide;
+  const knobLeft = themeProgress * maxSlide;
 
   // Handle Drag Start
   const handleStart = (clientX: number) => {
@@ -89,46 +88,53 @@ export function ThemeSlider() {
 
     if (trackRef.current) {
       const rect = trackRef.current.getBoundingClientRect();
-      const clickX = e.clientX - rect.left - padding - knobSize / 2;
+      const clickX = e.clientX - rect.left - knobSize / 2;
       const newProgress = Math.max(0, Math.min(1, clickX / maxSlide));
       setThemeProgress(newProgress);
     }
   };
 
   return (
+    /* 1. Parent Wrapper: Handles layout and has OVERFLOW VISIBLE to keep the overlapping knob fully round and visible! */
     <div
-      ref={trackRef}
-      onClick={handleTrackClick}
-      className={cn(
-        "relative flex h-3 items-center rounded-full border cursor-pointer select-none overflow-hidden transition-all duration-300",
-        "border-border-default bg-bg-tertiary/60 backdrop-blur-md shadow-inner",
-        isDragging && "scale-[1.01] border-primary/20"
-      )}
+      className="relative flex h-[22px] items-center select-none"
       style={{ width: `${trackWidth}px` }}
       title={`Workspace Ambiance Dimmer: ${Math.round(themeProgress * 100)}% Dark`}
     >
-      {/* Glowing Neon Accent Trail inside the track */}
+      {/* 2. Inner Rail (Track): Child div that is h-2 (8px) and has overflow-hidden to perfectly clip the progress trail inside! */}
       <div
-        className="absolute left-0 top-0 bottom-0 rounded-full opacity-70"
-        style={{
-          width: `${themeProgress * 100}%`,
-          background: 'var(--accent)',
-          boxShadow: '0 0 10px var(--accent)',
-          transition: isDragging ? 'none' : 'width 320ms cubic-bezier(0.25, 1, 0.5, 1)',
-        }}
-      />
+        ref={trackRef}
+        onClick={handleTrackClick}
+        className={cn(
+          "absolute left-0 right-0 h-2 rounded-full border cursor-pointer overflow-hidden transition-all duration-300",
+          "border-border-default/40 bg-bg-tertiary/60 shadow-inner",
+          isDragging && "border-primary/20"
+        )}
+      >
+        {/* Glowing Neon Accent Trail inside the rail */}
+        <div
+          className="absolute left-0 top-0 bottom-0 rounded-full opacity-80"
+          style={{
+            width: `${themeProgress * 100}%`,
+            background: 'var(--accent)',
+            boxShadow: '0 0 10px var(--accent)',
+            transition: isDragging ? 'none' : 'width 320ms cubic-bezier(0.25, 1, 0.5, 1)',
+          }}
+        />
+      </div>
 
-      {/* Pure, Blank Floating Glassmorphic Orb Knob (Centered on rail with vertical overlap) */}
+      {/* 3. Fully Visible Overlapping Glassmorphic Knob: Sibling element that floats outside the clipped rail! */}
       <div
         ref={knobRef}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         className={cn(
           "absolute top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full cursor-grab",
-          "bg-white dark:bg-white/95 border border-white/50 dark:border-white/20",
+          "bg-gradient-to-br from-white/95 to-white/70 dark:from-white/95 dark:to-white/85",
+          "border border-white/60 dark:border-white/35",
           isDragging 
-            ? "cursor-grabbing shadow-[0_4px_16px_rgba(0,0,0,0.2),0_0_16px_var(--accent)] scale-95" 
-            : "shadow-[0_2px_8px_rgba(0,0,0,0.15),0_0_8px_var(--accent)] active:scale-90"
+            ? "cursor-grabbing shadow-[0_4px_16px_rgba(0,0,0,0.25),0_0_16px_var(--accent)] scale-[1.05]" 
+            : "shadow-[0_2px_8px_rgba(0,0,0,0.18),0_0_10px_var(--accent)] hover:scale-105 active:scale-95 transition-transform"
         )}
         style={{
           width: `${knobSize}px`,
