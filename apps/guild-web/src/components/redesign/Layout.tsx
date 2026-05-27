@@ -5,9 +5,10 @@ import { GlobalSearch } from '../GlobalSearch';
 import { Search, Bell, Command, Sun, Moon } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../hooks/useAuth';
+import { cn } from '@/lib/utils';
 import { useTheme } from '../../hooks/useTheme';
 import { NotificationPanel } from '../NotificationPanel';
-import { cn } from '@/lib/utils';
+import { ThemeSlider } from '../ThemeSlider';
 
 interface RedesignLayoutProps {
   children: React.ReactNode;
@@ -108,15 +109,10 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
               />
             </div>
 
-            {/* Quick theme toggler for visual contrast */}
-            <button
-              onClick={toggleTheme}
-              className="aether-glass h-10 w-10 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-sm"
-              style={{ borderRadius: '14px' }}
-              title={isLight ? 'Activate Cosmic Theme' : 'Activate Light Theme'}
-            >
-              {isLight ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-400" />}
-            </button>
+            {/* Theme Toggle Slider */}
+            <div className="flex items-center">
+              <ThemeSlider />
+            </div>
           </div>
         </header>
 
