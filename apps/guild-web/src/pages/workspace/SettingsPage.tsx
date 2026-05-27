@@ -71,14 +71,14 @@ export function SettingsPage() {
   // Real-time org listener
   const [localOrg, setLocalOrg] = React.useState<Organization | null>(null);
   React.useEffect(() => {
-    if (!userProfile?.organizationId) return;
-    const unsub = onSnapshot(doc(db, 'organizations', userProfile.organizationId), (snap) => {
+    if (!localProfile?.organizationId) return;
+    const unsub = onSnapshot(doc(db, 'organizations', localProfile.organizationId), (snap) => {
       if (snap.exists()) {
         setLocalOrg({ ...snap.data(), id: snap.id } as Organization);
       }
     });
     return unsub;
-  }, [userProfile?.organizationId]);
+  }, [localProfile?.organizationId]);
 
   const orgId = localProfile?.organizationId;
   const role = localProfile?.role ?? 'member';
