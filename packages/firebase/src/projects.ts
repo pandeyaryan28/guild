@@ -57,12 +57,14 @@ export async function deleteProject(projectId: string): Promise<void> {
 
 export function listenToProjects(
   orgId: string,
+  userId: string,
   cb: (projects: Project[]) => void,
 ): () => void {
   return onSnapshot(
     query(
       collection(db, 'projects'),
       where('orgId', '==', orgId),
+      where('memberIds', 'array-contains', userId),
       orderBy('createdAt', 'asc'),
     ),
     (snap) => cb(snap.docs.map((d) => d.data() as Project)),

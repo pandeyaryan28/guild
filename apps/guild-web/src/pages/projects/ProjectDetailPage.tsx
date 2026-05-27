@@ -11,7 +11,8 @@ import {
   ChevronDown,
   FolderGit,
   Clock,
-  X
+  X,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -224,8 +225,12 @@ export function ProjectDetailPage() {
                       <FolderGit className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
                     )}
                   </button>
-                  <h1 className={cn("text-sm font-black tracking-tight truncate", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground")}>
-                    {project.name}
+                  <h1 className={cn("text-sm font-black tracking-tight truncate flex items-center gap-1.5", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground")}>
+                    <Lock className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>{project.name}</span>
+                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-amber-500/25 text-amber-600 dark:text-amber-400 bg-amber-500/[0.04] leading-none ml-2">
+                      Secure Initiative
+                    </span>
                   </h1>
                 </div>
                 {project.description && (
@@ -555,10 +560,10 @@ export function ProjectDetailPage() {
             >
               <div className="flex items-center justify-between border-b border-border-default/45 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
-                    <FolderGit className="w-4 h-4 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
+                  <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 shrink-0">
+                    <Lock className="w-4 h-4 text-amber-500 drop-shadow-[0_0_4px_rgba(245,158,11,0.2)]" />
                   </div>
-                  <h3 className="text-sm font-black text-foreground">Configure Project Initiative</h3>
+                  <h3 className="text-sm font-black text-foreground">Configure Secure Project</h3>
                 </div>
                 <button
                   onClick={() => setIsEditing(false)}
@@ -569,6 +574,17 @@ export function ProjectDetailPage() {
               </div>
 
               <div className="space-y-4">
+                {/* Security Active Notice */}
+                <div className="p-3 bg-amber-500/[0.03] border border-amber-500/15 rounded-xl space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Strict Security Active</span>
+                  </div>
+                  <p className="text-[9px] text-muted-foreground leading-relaxed">
+                    This project is strictly private and secure. Only assigned project members can view the initiative, milestones, and its linked tasks/goals.
+                  </p>
+                </div>
+
                 {/* Name */}
                 <div className="space-y-1">
                   <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Project Name</label>

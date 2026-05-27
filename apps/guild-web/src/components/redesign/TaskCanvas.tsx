@@ -26,7 +26,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   CheckCircle,
-  AlertOctagon
+  AlertOctagon,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -91,7 +92,7 @@ export function TaskCanvas() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // Form States
-  const [projectForm, setProjectForm] = React.useState({ name: '', description: '', startDate: '', dueDate: '' });
+  const [projectForm, setProjectForm] = React.useState({ name: '', description: '', startDate: '', dueDate: '', memberIds: [] as string[] });
   const [goalForm, setGoalForm] = React.useState({ title: '', description: '', projectId: '', ownerId: '', horizon: 'short_term' as 'short_term' | 'long_term', targetDate: '' });
   const [taskForm, setTaskForm] = React.useState({ title: '', description: '', priority: 'none' as TaskPriority, projectId: '', goalId: '', assigneeId: '', dueDate: '' });
 
@@ -204,15 +205,17 @@ export function TaskCanvas() {
     if (!projectForm.name.trim() || !orgId) return;
     setIsSubmitting(true);
     try {
+      const finalMemberIds = Array.from(new Set([actor.uid, ...projectForm.memberIds]));
       await createProject({
         orgId,
         name: projectForm.name.trim(),
         description: projectForm.description,
         startDate: projectForm.startDate ? new Date(projectForm.startDate) : null,
         dueDate: projectForm.dueDate ? new Date(projectForm.dueDate) : null,
+        memberIds: finalMemberIds,
         actor
       });
-      setProjectForm({ name: '', description: '', startDate: '', dueDate: '' });
+      setProjectForm({ name: '', description: '', startDate: '', dueDate: '', memberIds: [] });
       setShowCreateDrawer(false);
     } catch (err) {
       console.error('Failed to create project:', err);
@@ -504,7 +507,7 @@ export function TaskCanvas() {
 
           <button
             onClick={() => {
-              setProjectForm({ name: '', description: '', startDate: '', dueDate: '' });
+              setProjectForm({ name: '', description: '', startDate: '', dueDate: '', memberIds: [] });
               setCreateType('project');
               setShowCreateDrawer(true);
             }}
@@ -581,7 +584,7 @@ export function TaskCanvas() {
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => {
-                  setProjectForm({ name: '', description: '', startDate: '', dueDate: '' });
+                  setProjectForm({ name: '', description: '', startDate: '', dueDate: '', memberIds: [] });
                   setCreateType('project');
                   setShowCreateDrawer(true);
                 }} 
@@ -1209,11 +1212,12 @@ export function TaskCanvas() {
                                   <h4 
                                     onClick={() => navigate(`/projects/${project.id}`)}
                                     className={cn(
-                                      "text-xs font-bold hover:text-indigo-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
+                                      "text-xs font-bold hover:text-indigo-500 cursor-pointer transition-colors truncate min-w-0 flex-1 flex items-center gap-1.5",
                                       project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground"
                                     )}
                                   >
-                                    {project.name}
+                                    <Lock className="w-3 h-3 text-amber-500 shrink-0" />
+                                    <span>{project.name}</span>
                                   </h4>
                                 </div>
                                 {project.description && (
@@ -1322,7 +1326,7 @@ export function TaskCanvas() {
                       <p className="text-[10px] text-muted-foreground italic">No projects created yet.</p>
                       <button
                         onClick={() => {
-                          setProjectForm({ name: '', description: '', startDate: '', dueDate: '' });
+                          setProjectForm({ name: '', description: '', startDate: '', dueDate: '', memberIds: [] });
                           setCreateType('project');
                           setShowCreateDrawer(true);
                         }}
@@ -1388,11 +1392,12 @@ export function TaskCanvas() {
                                           <h4 
                                             onClick={() => navigate(`/projects/${project.id}`)}
                                             className={cn(
-                                              "text-xs font-bold hover:text-indigo-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
+                                              "text-xs font-bold hover:text-indigo-500 cursor-pointer transition-colors truncate min-w-0 flex-1 flex items-center gap-1.5",
                                               project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground"
                                             )}
                                           >
-                                            {project.name}
+                                            <Lock className="w-3 h-3 text-amber-500 shrink-0" />
+                                            <span>{project.name}</span>
                                           </h4>
                                         </div>
                                         {project.description && (
@@ -1553,6 +1558,46 @@ export function TaskCanvas() {
                         />
                       </div>
                     </div>
+                    
+                    {/* Select Team Members */}
+                    <div className="space-y-2.5">
+                      <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold flex items-center gap-1.5">
+                        <Lock className="w-3 h-3 text-amber-500 shrink-0" />
+                        <span>Select Project Team Members</span>
+                      </label>
+                      <div className="max-h-40 overflow-y-auto border border-border-default rounded-xl p-2.5 space-y-1.5 aether-scroll bg-surface/50">
+                        {members.filter(m => m.uid !== actor.uid).map(m => {
+                          const isChecked = projectForm.memberIds.includes(m.uid);
+                          return (
+                            <div key={m.uid} className="flex items-center justify-between hover:bg-bg-secondary/40 p-1.5 rounded-lg transition-colors">
+                              <div className="flex items-center gap-2">
+                                <div className={cn("w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[7px] shrink-0", getAvatarColor(m.uid))}>
+                                  {getInitials(m.uid)}
+                                </div>
+                                <span className="text-xs text-foreground font-semibold">
+                                  {m.fullName || m.username}
+                                </span>
+                              </div>
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => {
+                                  const updatedMemberIds = isChecked
+                                    ? projectForm.memberIds.filter(id => id !== m.uid)
+                                    : [...projectForm.memberIds, m.uid];
+                                  setProjectForm({ ...projectForm, memberIds: updatedMemberIds });
+                                }}
+                                className="rounded border-border-default text-accent focus:ring-accent accent-accent w-4 h-4 cursor-pointer"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[9px] text-muted-foreground leading-relaxed italic">
+                        Note: You will be automatically added as a member and owner of this project.
+                      </p>
+                    </div>
+
                     <button
                       type="submit"
                       disabled={isSubmitting || !projectForm.name.trim()}

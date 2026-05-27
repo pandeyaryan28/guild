@@ -1,19 +1,21 @@
 import * as React from 'react';
 import { listenToProjects, listenToProject } from '../lib/projects';
 import type { Project } from '../lib/projects';
+import { useAuth } from './useAuth';
 
 export function useProjects(orgId: string | undefined) {
+  const { userProfile } = useAuth();
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!orgId) return;
+    if (!orgId || !userProfile?.uid) return;
     setLoading(true);
-    return listenToProjects(orgId, (p) => {
+    return listenToProjects(orgId, userProfile.uid, (p) => {
       setProjects(p);
       setLoading(false);
     });
-  }, [orgId]);
+  }, [orgId, userProfile?.uid]);
 
   return { projects, loading };
 }
