@@ -43,6 +43,8 @@ import { useGoals } from '../../hooks/useGoals';
 import { useTasks } from '../../hooks/useTasks';
 import { useOrgMembers } from '../../hooks/useChat';
 import { useTeams } from '../../hooks/useTeams';
+import { TaskDetailDrawer } from '../tasks/TaskDetailDrawer';
+import { GoalDetailDrawer } from '../tasks/GoalDetailDrawer';
 
 
 import {
@@ -97,12 +99,16 @@ export function TaskCanvas() {
   const { projects, loading: projectsLoading } = useProjects(orgId);
   const { goals, loading: goalsLoading } = useGoals(orgId);
   const { tasks, loading: tasksLoading } = useTasks(orgId);
+  const { teams, loading: teamsLoading } = useTeams(orgId);
   const members = useOrgMembers(orgId);
 
   // Task Drawer context
   const [searchParams, setSearchParams] = useSearchParams();
   const openTaskId = searchParams.get('task');
   const openTask = React.useMemo(() => tasks.find((t) => t.id === openTaskId) ?? null, [tasks, openTaskId]);
+
+  const openGoalId = searchParams.get('goal');
+  const openGoal = React.useMemo(() => goals.find((g) => g.id === openGoalId) ?? null, [goals, openGoalId]);
 
   const actor: ActorInfo = React.useMemo(() => ({
     uid: user?.uid || '',
@@ -145,6 +151,21 @@ export function TaskCanvas() {
   // Filter Tasks
   const filteredTasks = React.useMemo(() => {
     return tasks.filter((t) => {
+      // 1. Precise logic scoping:
+      const isAssignedToMe = t.assigneeIds.includes(user?.uid || '');
+      const isAssignedByMe = t.creatorId === user?.uid; // tasks that he/she assigned to others
+
+      // Check if user is the manager of the team this task is assigned to
+      const isManagedTeamTask = teams.some(team => 
+        team.managerId === user?.uid && 
+        t.assigneeIds.some(uid => team.memberIds.includes(uid))
+      );
+
+      if (!isAssignedToMe && !isAssignedByMe && !isManagedTeamTask) {
+        return false;
+      }
+
+      // 2. UI Criteria:
       if (t.parentTaskId) return false;
       if (searchQuery.trim() && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (selectedProjectId !== 'all' && t.projectId !== selectedProjectId) return false;
@@ -152,7 +173,7 @@ export function TaskCanvas() {
       if (selectedPriority !== 'all' && t.priority !== selectedPriority) return false;
       return true;
     });
-  }, [tasks, searchQuery, selectedProjectId, selectedAssigneeId, selectedPriority]);
+  }, [tasks, teams, user?.uid, searchQuery, selectedProjectId, selectedAssigneeId, selectedPriority]);
 
   // Filter Goals
   const filteredGoals = React.useMemo(() => {
@@ -643,7 +664,7 @@ export function TaskCanvas() {
                                     )}
                                   </button>
                                   <h4 
-                                    onClick={() => navigate(`/goals/${goal.id}`)}
+                                    onClick={() => setSearchParams({ goal: goal.id })}
                                     className={cn(
                                       "text-xs font-bold hover:text-cyan-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
                                       goal.status === 'completed' ? "text-muted-foreground line-through decoration-cyan-500/50" : "text-foreground"
@@ -663,7 +684,7 @@ export function TaskCanvas() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    navigate(`/goals/${goal.id}`);
+                                    setSearchParams({ goal: goal.id });
                                   }}
                                   className="text-muted-foreground hover:text-accent p-1 transition-colors"
                                   title="Goal Settings"
@@ -848,7 +869,7 @@ export function TaskCanvas() {
                                             )}
                                           </button>
                                           <h4 
-                                            onClick={() => navigate(`/goals/${goal.id}`)}
+                                            onClick={() => setSearchParams({ goal: goal.id })}
                                             className={cn(
                                               "text-xs font-bold hover:text-cyan-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
                                               goal.status === 'completed' ? "text-muted-foreground line-through decoration-cyan-500/50" : "text-foreground"
@@ -868,7 +889,7 @@ export function TaskCanvas() {
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            navigate(`/goals/${goal.id}`);
+                                            setSearchParams({ goal: goal.id });
                                           }}
                                           className="text-muted-foreground hover:text-accent p-1 transition-colors"
                                           title="Goal Settings"
@@ -1252,7 +1273,7 @@ export function TaskCanvas() {
                                   {projectGoals.slice(0, 3).map(goal => (
                                     <div 
                                       key={goal.id} 
-                                      onClick={() => navigate(`/goals/${goal.id}`)}
+                                      onClick={() => setSearchParams({ goal: goal.id })}
                                       className="flex items-center justify-between p-1.5 rounded-lg bg-bg-primary/20 border border-border-subtle hover:border-cyan-500/20 hover:bg-bg-primary/40 cursor-pointer transition-all"
                                     >
                                       <span className="text-[10px] font-semibold text-foreground truncate max-w-44 leading-none">
@@ -1735,6 +1756,28 @@ export function TaskCanvas() {
         )}
       </AnimatePresence>
 
+      <TaskDetailDrawer
+        task={openTask}
+        onClose={() => setSearchParams({})}
+        orgId={orgId}
+        actor={actor}
+        members={members}
+        projects={projects}
+        goals={goals}
+      />
+
+      <GoalDetailDrawer
+        goal={openGoal}
+        onClose={() => setSearchParams({})}
+        orgId={orgId}
+        actor={actor}
+        members={members}
+        projects={projects}
+        tasks={tasks}
+        onSelectTask={(task) => {
+          setSearchParams({ task: task.id });
+        }}
+      />
 
     </div>
   );
