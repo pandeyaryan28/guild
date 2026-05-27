@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { X, Calendar, Clock, User, AlignLeft, ChevronRight, Sun, Sunset } from 'lucide-react';
+import { X, Calendar, Clock, User, AlignLeft, ChevronRight, Sun, Sunset, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import {

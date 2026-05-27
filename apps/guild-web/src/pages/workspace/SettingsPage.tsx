@@ -20,7 +20,8 @@ import {
   revokeInviteLink,
   transferOrgOwnership,
   checkUsernameUnique,
-  checkOrgSlugUnique
+  checkOrgSlugUnique,
+  deleteUserProfile
 } from '../../lib/firestore';
 import { useOrgMembers } from '../../hooks/useChat';
 import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
@@ -212,7 +213,7 @@ export function SettingsPage() {
                   className="space-y-6"
                 >
                   {activeTab === 'profile' && localProfile && (
-                    <ProfileSettingsView profile={localProfile} />
+                    <ProfileSettingsView profile={localProfile} logout={logout} />
                   )}
                   {activeTab === 'notifications' && localProfile && (
                     <NotificationSettingsView profile={localProfile} />
@@ -275,7 +276,7 @@ interface FormError {
   age?: string;
 }
 
-function ProfileSettingsView({ profile }: { profile: UserProfile }) {
+function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout: () => Promise<void> }) {
   const [fullName, setFullName] = React.useState(profile.fullName || '');
   const [username, setUsername] = React.useState(profile.username || '');
   const [designation, setDesignation] = React.useState(profile.designation || '');
@@ -286,6 +287,29 @@ function ProfileSettingsView({ profile }: { profile: UserProfile }) {
   const [success, setSuccess] = React.useState(false);
   const [errors, setErrors] = React.useState<FormError>({});
   const [generalError, setGeneralError] = React.useState<string | null>(null);
+
+  // Profile deletion states
+  const [deletingProfile, setDeletingProfile] = React.useState(false);
+  const [confirmUsername, setConfirmUsername] = React.useState('');
+  const [profileDeleteError, setProfileDeleteError] = React.useState<string | null>(null);
+
+  const handleDeleteProfile = async () => {
+    if (confirmUsername !== profile.username) {
+      alert('Confirmation failed. Please type your username exactly.');
+      return;
+    }
+    setDeletingProfile(true);
+    setProfileDeleteError(null);
+    try {
+      await deleteUserProfile(profile.uid, profile.username, profile.organizationId);
+      await logout();
+      window.location.href = '/signup';
+    } catch (err: any) {
+      console.error('Failed to delete profile', err);
+      setProfileDeleteError(err.message || 'Failed to delete profile.');
+      setDeletingProfile(false);
+    }
+  };
 
   // Sync profile update if edited elsewhere
   React.useEffect(() => {
@@ -469,6 +493,57 @@ function ProfileSettingsView({ profile }: { profile: UserProfile }) {
           </button>
         </div>
       </form>
+
+      {/* Danger Zone */}
+      <div className="aether-glass bg-red-500/[0.01] border border-red-500/20 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-4 relative overflow-hidden mt-8 text-left">
+        {/* Crimson pulse accent glow */}
+        <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.08] filter blur-xl bg-red-500" />
+        
+        <div className="flex items-start gap-3">
+          <ShieldAlert className="h-5 w-5 text-red-500 shrink-0 mt-0.5 animate-pulse" />
+          <div>
+            <h2 className="text-xs font-black text-red-500 uppercase tracking-wider">Danger Zone</h2>
+            <p className="text-[10px] text-red-500/80 mt-0.5 leading-relaxed font-semibold">
+              Deleting your profile is permanent. Your personal details, account settings, and workspace presence will be deleted. Your unique username will be released.
+            </p>
+          </div>
+        </div>
+
+        {profile.role === 'owner' ? (
+          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <p className="text-[10px] text-red-500 font-bold leading-normal">
+              CRITICAL: You are currently the Owner of this workspace. You cannot delete your profile until you either transfer workspace ownership to another teammate (via Workspace Members tab) or delete the workspace entirely (via Workspace Info tab).
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3 max-w-md">
+            <p className="text-[10px] text-muted-foreground font-semibold">
+              To confirm profile deletion, please type your exact username <span className="font-bold text-foreground select-all">"{profile.username}"</span> below:
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                value={confirmUsername}
+                onChange={(e) => setConfirmUsername(e.target.value)}
+                className="flex-1 px-3.5 py-2.5 rounded-xl border border-red-500/20 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold"
+                placeholder="Type your username"
+              />
+              <button
+                type="button"
+                onClick={handleDeleteProfile}
+                disabled={deletingProfile || confirmUsername !== profile.username}
+                className="px-4 py-2.5 bg-red-600 hover:bg-red-650 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
+              >
+                {deletingProfile ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                Delete Profile
+              </button>
+            </div>
+            {profileDeleteError && (
+              <p className="text-[10px] text-red-500 font-bold mt-1.5">{profileDeleteError}</p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

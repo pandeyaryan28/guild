@@ -385,5 +385,26 @@ export async function transferOrgOwnership(
   await updateDoc(doc(db, 'organizations', orgId), { ownerId: newOwnerId });
 }
 
+export async function deleteUserProfile(
+  uid: string,
+  username: string,
+  organizationId?: string
+): Promise<void> {
+  // 1. Delete user profile document
+  await deleteDoc(doc(db, 'users', uid));
+
+  // 2. Release the globally unique username handle
+  await deleteDoc(doc(db, 'usernames', username.toLowerCase()));
+
+  // 3. Clear the onboarding state history
+  await deleteDoc(doc(db, 'onboardingState', uid));
+
+  // 4. Clean up workspace members association if user was part of an organization
+  if (organizationId) {
+    await deleteDoc(doc(db, 'organizationMembers', `${organizationId}_${uid}`));
+  }
+}
+
+
 // Re-export types
 export type { UserRole, UserProfile, Organization, OrganizationMember, OnboardingState, InviteLink };
