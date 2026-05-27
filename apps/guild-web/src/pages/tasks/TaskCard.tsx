@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { MoreHorizontal, Calendar, Clock, Terminal } from 'lucide-react';
+import { MoreHorizontal, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Task, type TaskLabel, PRIORITY_CONFIG } from '../../lib/tasks';
 import { LabelBadge } from '../../components/tasks/LabelBadge';
@@ -33,23 +33,23 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
 
   const priorityColor = priority?.color || '#52525b';
 
-  // Custom visual Severity codes for the card HUD
-  const severityTag = React.useMemo(() => {
+  // Custom visual priority chips for premium layout
+  const priorityBadge = React.useMemo(() => {
     switch (task.priority) {
       case 'urgent':
-        return { text: `[/// URGENT ///]`, className: 'text-red-400 font-black shadow-[0_0_8px_rgba(239,68,68,0.2)] bg-red-500/5 px-1.5 py-0.5 rounded border border-red-500/10' };
+        return { text: 'Urgent', className: 'text-rose-600 dark:text-rose-455 border-rose-200 dark:border-rose-900/30 bg-rose-50 dark:bg-rose-950/20 font-semibold' };
       case 'high':
-        return { text: `[// HIGH //]`, className: 'text-amber-400 font-bold bg-amber-500/5 px-1.5 py-0.5 rounded border border-amber-500/10' };
+        return { text: 'High', className: 'text-amber-600 dark:text-amber-450 border-amber-200 dark:border-amber-900/30 bg-amber-50 dark:bg-amber-950/20 font-semibold' };
       case 'medium':
-        return { text: `[MEDIUM]`, className: 'text-violet-400 bg-violet-500/5 px-1.5 py-0.5 rounded border border-violet-500/10' };
+        return { text: 'Medium', className: 'text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/30 bg-indigo-50 dark:bg-indigo-950/20' };
       case 'low':
-        return { text: `[LOW]`, className: 'text-cyan-400 bg-cyan-500/5 px-1.5 py-0.5 rounded border border-cyan-500/10' };
+        return { text: 'Low', className: 'text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-900/30 bg-teal-50 dark:bg-teal-950/20' };
       default:
         return null;
     }
   }, [task.priority]);
 
-  const taskIdCode = `T-${task.id.slice(0, 4).toUpperCase()}`;
+  const taskIdCode = `#${task.id.slice(0, 4).toUpperCase()}`;
 
   return (
     <div
@@ -58,10 +58,10 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
       {...attributes}
       {...listeners}
       className={cn(
-        'group relative rounded-xl border bg-white/[0.015] dark:bg-black/[0.15] backdrop-blur-md transition-all duration-300 cursor-grab active:cursor-grabbing select-none overflow-hidden pl-3.5 py-4 pr-4 font-mono',
-        'border-white/5 hover:border-violet-500/25 hover:bg-white/[0.035] dark:hover:bg-white/[0.002] hover:shadow-[0_8px_20px_-10px_rgba(124,58,237,0.2)] hover:-translate-y-0.5',
-        isSortableDragging && 'opacity-20 border-violet-500/10',
-        isDragging && 'shadow-2xl shadow-violet-500/25 border-violet-500/35 bg-white/[0.04] dark:bg-white/[0.004] rotate-1 scale-102',
+        'group relative rounded-2xl border bg-white dark:bg-[#1f2937] transition-all duration-300 cursor-grab active:cursor-grabbing select-none p-4.5 space-y-3.5 shadow-sm',
+        'border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/40 dark:hover:border-indigo-400/40 hover:shadow-md hover:-translate-y-0.5',
+        isSortableDragging && 'opacity-20 border-indigo-500/10',
+        isDragging && 'shadow-xl shadow-indigo-500/10 border-indigo-500/40 bg-white dark:bg-[#1f2937]/90 rotate-1 scale-102',
       )}
       onClick={(e) => { 
         if (!(e.target as HTMLElement).closest('[data-no-click]')) {
@@ -69,73 +69,59 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
         }
       }}
     >
-      {/* Blueprint Grid mesh background specifically inside the card HUD */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.008)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none" />
-
-      {/* Borderless absolute Glowing Left Laser indicator line */}
-      {task.priority !== 'none' && (
-        <div 
-          className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-300"
-          style={{ 
-            backgroundColor: priorityColor, 
-            boxShadow: `0 0 10px ${priorityColor}`
-          }}
-        />
-      )}
-
       <div className="space-y-3 relative z-10">
         
-        {/* Monospace Code index & Severity bracket tags */}
+        {/* Task code & Priority details */}
         <div className="flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-mono text-[9px] font-black text-violet-400/90 bg-violet-500/5 border border-violet-500/10 px-1 rounded select-none tracking-wider">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-sans text-[11px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-full select-none shrink-0 tracking-tight">
               {taskIdCode}
             </span>
-            {severityTag && (
-              <span className={cn('text-[8.5px] font-mono select-none tracking-widest', severityTag.className)}>
-                {severityTag.text}
+            {priorityBadge && (
+              <span className={cn('text-[11px] font-medium px-2 py-0.5 rounded-full border tracking-tight', priorityBadge.className)}>
+                {priorityBadge.text}
               </span>
             )}
           </div>
 
           <div data-no-click className="shrink-0">
             <DropdownMenu>
-              <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded p-1 text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent hover:border-white/10 transition-all outline-none min-h-7 min-w-7 flex items-center justify-center cursor-pointer">
-                <MoreHorizontal className="h-3.5 w-3.5" />
+              <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded-xl p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all outline-none min-h-7 min-w-7 flex items-center justify-center cursor-pointer border border-transparent">
+                <MoreHorizontal className="h-4.5 w-4.5" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36 border border-white/10 bg-surface/95 backdrop-blur-2xl p-1 text-xs shadow-xl rounded font-mono">
-                <DropdownMenuItem onClick={onClick} className="font-semibold cursor-pointer py-1.5 hover:bg-white/5 rounded">Open Node</DropdownMenuItem>
-                <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400 font-semibold cursor-pointer py-1.5 hover:bg-red-500/10 rounded">Remove Node</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-36 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 text-xs shadow-xl rounded-xl font-sans">
+                <DropdownMenuItem onClick={onClick} className="font-semibold cursor-pointer py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Open details</DropdownMenuItem>
+                <DropdownMenuItem onClick={onDelete} className="text-rose-500 focus:text-rose-500 font-semibold cursor-pointer py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg">Remove task</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
 
-        {/* Title Node Description */}
-        <div className="flex items-start gap-1.5">
-          <Terminal className="h-3.5 w-3.5 text-violet-400/50 mt-0.5 shrink-0" />
-          <p className="text-[12px] font-sans font-semibold text-foreground/90 group-hover:text-violet-400 leading-snug flex-1 min-w-0 tracking-wide break-words transition-colors duration-300">
+        {/* Task Title Description */}
+        <div className="space-y-1">
+          <p className="text-[13.5px] font-sans font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 leading-snug tracking-tight break-words transition-colors duration-300">
             {task.title}
           </p>
         </div>
 
-        {/* Custom Telemetry Badges */}
+        {/* Labels badging */}
         {taskLabels.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-1">
+          <div className="flex flex-wrap gap-1.5 pt-1">
             {taskLabels.slice(0, 2).map((l) => (
               <LabelBadge key={l.id} label={l} />
             ))}
             {taskLabels.length > 2 && (
-              <span className="text-[8.5px] font-black text-muted-foreground/60 bg-white/[0.02] border border-white/10 px-1 rounded select-none">
+              <span className="text-[10px] font-semibold text-slate-400 bg-slate-150/40 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/20 px-2 py-0.5 rounded-full select-none">
                 +{taskLabels.length - 2}
               </span>
             )}
           </div>
         )}
 
-        {/* Telemetry stats: assignees & clocks */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/5 select-none">
-          {/* Overlapping tactical initials */}
+        {/* User initials avatars & Clocks */}
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/80 select-none">
+          
+          {/* Overlapping avatar stacks */}
           <div className="flex items-center -space-x-1.5">
             {task.assigneeIds.slice(0, 3).map((uid) => {
               const m = memberMap.get(uid);
@@ -143,7 +129,7 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
               return (
                 <div
                   key={uid}
-                  className="h-4.5 w-4.5 rounded-full bg-violet-500/15 border border-white/10 flex items-center justify-center text-[7.5px] font-black text-violet-400 shadow-sm transition-colors cursor-default"
+                  className="h-5 w-5 rounded-full bg-indigo-50 dark:bg-indigo-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-[9px] font-bold text-indigo-650 dark:text-indigo-400 shadow-sm cursor-default"
                   title={m?.fullName || m?.username}
                 >
                   {initials}
@@ -151,23 +137,23 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
               );
             })}
             {task.assigneeIds.length > 3 && (
-              <div className="h-4.5 w-4.5 rounded bg-white/[0.04] border border-white/10 flex items-center justify-center text-[7px] font-bold text-muted-foreground shadow-sm">
+              <div className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-[9px] font-semibold text-slate-500 shadow-sm">
                 +{task.assigneeIds.length - 3}
               </div>
             )}
           </div>
 
-          {/* Glowing Due Clock badge */}
+          {/* Clock stamp */}
           {due && (
             <span className={cn(
-              'flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border backdrop-blur-md transition-all duration-300 font-mono',
+              'flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border backdrop-blur-md transition-all duration-300 font-sans',
               isOverdue 
-                ? 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.15)]' 
+                ? 'bg-rose-50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30 text-rose-600 dark:text-rose-450' 
                 : isDueToday 
-                ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.2)] animate-pulse' 
-                : 'bg-white/[0.02] border-white/10 text-muted-foreground',
+                ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/30 text-amber-600 dark:text-amber-450 animate-pulse' 
+                : 'bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400',
             )}>
-              <Clock className="h-2.5 w-2.5 opacity-80" />
+              <Clock className="h-3 w-3 opacity-80 shrink-0" />
               {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
           )}

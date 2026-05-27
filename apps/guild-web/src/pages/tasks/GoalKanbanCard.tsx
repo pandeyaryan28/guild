@@ -6,12 +6,6 @@ import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { Goal } from '../../lib/goals';
 
-const STATUS_CONFIG: Record<Goal['status'], { label: string; color: string; dot: string }> = {
-  active:    { label: 'Active',    color: 'text-violet-400', dot: '#a78bfa' },
-  completed: { label: 'Completed', color: 'text-cyan-400', dot: '#22d3ee' },
-  cancelled: { label: 'Cancelled', color: 'text-zinc-500',    dot: '#52525b' },
-};
-
 interface GoalKanbanCardProps {
   goal: Goal;
   onClick: () => void;
@@ -34,27 +28,27 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
 
   const horizonLabel = goal.horizon === 'long_term' ? 'Vision' : 'Milestone';
   const horizonClass = goal.horizon === 'long_term'
-    ? 'text-violet-400 border-violet-500/20 bg-violet-500/5'
-    : 'text-sky-400 border-sky-500/20 bg-sky-500/5';
+    ? 'text-indigo-650 dark:text-indigo-400 border-indigo-200/50 dark:border-indigo-850/30 bg-indigo-50/50 dark:bg-indigo-950/10'
+    : 'text-sky-650 dark:text-sky-400 border-sky-200/50 dark:border-sky-850/30 bg-sky-50/50 dark:bg-sky-950/10';
 
   const recurrenceLabel = goal.recurrence && goal.recurrence !== 'none'
     ? goal.recurrence.charAt(0).toUpperCase() + goal.recurrence.slice(1)
     : null;
 
   const recurrenceClass = goal.recurrence === 'daily'
-    ? 'text-cyan-400 border-cyan-500/20 bg-cyan-500/5'
+    ? 'text-teal-600 dark:text-teal-400 border-teal-200/50 dark:border-teal-850/30 bg-teal-50/50 dark:bg-teal-950/10'
     : goal.recurrence === 'weekly'
-    ? 'text-amber-400 border-amber-500/20 bg-amber-500/5'
-    : 'text-rose-450 border-rose-500/20 bg-rose-500/5';
+    ? 'text-amber-600 dark:text-amber-450 border-amber-200/50 dark:border-amber-850/30 bg-amber-50/50 dark:bg-amber-950/10'
+    : 'text-rose-600 dark:text-rose-450 border-rose-200/50 dark:border-rose-850/30 bg-rose-50/50 dark:bg-rose-950/10';
 
-  // SVG Radial Telemetry Arc calculations
+  // SVG Radial progress calculations
   const progressValue = goal.progressRollup !== undefined ? goal.progressRollup : 0;
   const radius = 18;
   const strokeWidth = 3;
   const circumference = 2 * Math.PI * radius; // Approx 113.1
   const strokeDashoffset = circumference - (progressValue / 100) * circumference;
 
-  const goalIdCode = `G-${goal.id.slice(0, 4).toUpperCase()}`;
+  const goalIdCode = `#${goal.id.slice(0, 4).toUpperCase()}`;
 
   return (
     <div
@@ -63,10 +57,10 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
       {...attributes}
       {...listeners}
       className={cn(
-        'group relative rounded-xl border bg-white/[0.015] dark:bg-black/[0.15] backdrop-blur-md transition-all duration-300 cursor-grab active:cursor-grabbing p-4.5 space-y-3.5 select-none font-mono overflow-hidden',
-        'border-white/5 hover:border-violet-500/25 hover:bg-white/[0.035] dark:hover:bg-white/[0.002] hover:shadow-[0_8px_20px_-10px_rgba(124,58,237,0.2)] hover:-translate-y-0.5',
-        isSortableDragging && 'opacity-20 border-violet-500/10',
-        isDragging && 'shadow-2xl shadow-violet-500/25 border-violet-500/35 bg-white/[0.04] dark:bg-white/[0.004] rotate-1 scale-102',
+        'group relative rounded-2xl border bg-white dark:bg-[#1f2937] transition-all duration-300 cursor-grab active:cursor-grabbing p-4.5 space-y-3.5 shadow-sm',
+        'border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/40 dark:hover:border-indigo-400/40 hover:shadow-md hover:-translate-y-0.5',
+        isSortableDragging && 'opacity-20 border-indigo-500/10',
+        isDragging && 'shadow-xl shadow-indigo-500/10 border-indigo-500/40 bg-white dark:bg-[#1f2937]/90 rotate-1 scale-102',
       )}
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest('[data-no-click]')) {
@@ -74,26 +68,15 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
         }
       }}
     >
-      {/* Blueprint Grid layout underlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.008)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none" />
-
-      {/* Main card details: Radial SVG progress split side-by-side with Content */}
-      <div className="flex items-start gap-3 relative z-10">
+      <div className="flex items-start gap-4 relative z-10">
         
         {/* Left Side: SVG Circular Telemetry Ring */}
         {goal.progressRollup !== undefined && (
-          <div className="shrink-0 flex items-center justify-center relative h-12 w-12 bg-white/[0.02] border border-white/5 rounded-full select-none" data-no-click>
+          <div className="shrink-0 flex items-center justify-center relative h-12 w-12 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-full select-none" data-no-click>
             <svg className="w-12 h-12 transform -rotate-90">
-              {/* Radial linear gradient definition */}
-              <defs>
-                <linearGradient id={`radialGrad-${goal.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#06b6d4" />
-                </linearGradient>
-              </defs>
               {/* Circle track underlay */}
               <circle
-                className="text-white/[0.04] stroke-current"
+                className="text-slate-100 dark:text-slate-800 stroke-current"
                 strokeWidth={strokeWidth}
                 fill="transparent"
                 r={radius}
@@ -102,7 +85,7 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
               />
               {/* Circle active progress path */}
               <circle
-                className="stroke-current transition-all duration-700 ease-out"
+                className="text-indigo-500 dark:text-indigo-400 stroke-current transition-all duration-700 ease-out"
                 strokeWidth={strokeWidth}
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
@@ -111,50 +94,45 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
                 r={radius}
                 cx="24"
                 cy="24"
-                style={{ 
-                  stroke: `url(#radialGrad-${goal.id})`,
-                  filter: `drop-shadow(0 0 4px rgba(139, 92, 246, 0.4))` 
-                }}
               />
             </svg>
-            {/* Centered Monospace Rate display */}
-            <span className="absolute text-[8px] font-black text-foreground font-mono select-none">
+            {/* Centered Rate display */}
+            <span className="absolute text-[10px] font-bold text-slate-850 dark:text-slate-100 font-sans">
               {progressValue}%
             </span>
           </div>
         )}
 
         {/* Right Side: Title details and context actions */}
-        <div className="flex-1 min-w-0 space-y-2 pl-0.5">
+        <div className="flex-1 min-w-0 space-y-2.5 pl-0.5">
           <div className="flex items-start justify-between gap-2.5">
             <div className="flex flex-col gap-1 min-w-0 flex-1">
-              {/* Monospace directive index tag */}
-              <span className="font-mono text-[9px] font-black text-violet-400/90 bg-violet-500/5 border border-violet-500/10 px-1 rounded select-none w-fit">
+              <span className="font-sans text-[11px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-full select-none w-fit tracking-tight">
                 {goalIdCode}
               </span>
               
-              <h4 className="text-[12px] font-sans font-semibold text-foreground group-hover:text-violet-400 transition-colors truncate tracking-wide leading-snug">
+              <h4 className="text-[13.5px] font-sans font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate tracking-tight leading-snug">
                 {goal.title}
               </h4>
             </div>
 
             <div data-no-click className="shrink-0">
               <DropdownMenu>
-                <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded p-1 text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent hover:border-white/10 transition-all outline-none min-h-7 min-w-7 flex items-center justify-center cursor-pointer">
-                  <MoreHorizontal className="h-3.5 w-3.5" />
+                <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded-xl p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-850 transition-all outline-none min-h-7 min-w-7 flex items-center justify-center cursor-pointer border border-transparent">
+                  <MoreHorizontal className="h-4.5 w-4.5" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-36 border border-white/10 bg-surface/95 backdrop-blur-2xl p-1 text-xs shadow-xl rounded font-mono">
-                  <DropdownMenuItem onClick={onClick} className="font-semibold cursor-pointer py-1.5 hover:bg-white/5 rounded">Open details</DropdownMenuItem>
+                <DropdownMenuContent align="end" className="w-36 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 text-xs shadow-xl rounded-xl font-sans">
+                  <DropdownMenuItem onClick={onClick} className="font-semibold cursor-pointer py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Open details</DropdownMenuItem>
                   {goal.status !== 'active' && (
-                    <DropdownMenuItem onClick={() => onStatusChange('active')} className="font-semibold cursor-pointer py-1.5 hover:bg-white/5 rounded">Set active</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onStatusChange('active')} className="font-semibold cursor-pointer py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Set active</DropdownMenuItem>
                   )}
                   {goal.status !== 'completed' && (
-                    <DropdownMenuItem onClick={() => onStatusChange('completed')} className="font-semibold cursor-pointer py-1.5 hover:bg-white/5 rounded">Set completed</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onStatusChange('completed')} className="font-semibold cursor-pointer py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Set completed</DropdownMenuItem>
                   )}
                   {goal.status !== 'cancelled' && (
-                    <DropdownMenuItem onClick={() => onStatusChange('cancelled')} className="font-semibold cursor-pointer py-1.5 hover:bg-white/5 rounded">Set cancelled</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onStatusChange('cancelled')} className="font-semibold cursor-pointer py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Set cancelled</DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400 font-semibold cursor-pointer py-1.5 hover:bg-red-500/10 rounded">Remove directive</DropdownMenuItem>
+                  <DropdownMenuItem onClick={onDelete} className="text-rose-500 focus:text-rose-500 font-semibold cursor-pointer py-1.5 hover:bg-rose-550 dark:hover:bg-rose-950/20 rounded-lg">Remove goal</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -162,18 +140,18 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
 
           {/* Description */}
           {goal.description && (
-            <p className="text-[10px] text-muted-foreground/80 line-clamp-2 leading-relaxed font-sans pl-0.5">
+            <p className="text-[12.5px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-sans pl-0.5">
               {goal.description}
             </p>
           )}
 
-          {/* Severity & Recurrence directive tags */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-1 pl-0.5">
-            <span className={cn('px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border backdrop-blur-md select-none', horizonClass)}>
+          {/* Badges */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5 pl-0.5">
+            <span className={cn('px-2.5 py-0.5 rounded-full text-[11px] font-semibold border backdrop-blur-md select-none', horizonClass)}>
               {horizonLabel}
             </span>
             {recurrenceLabel && (
-              <span className={cn('px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border backdrop-blur-md select-none', recurrenceClass)}>
+              <span className={cn('px-2.5 py-0.5 rounded-full text-[11px] font-semibold border backdrop-blur-md select-none', recurrenceClass)}>
                 {recurrenceLabel}
               </span>
             )}
@@ -184,14 +162,14 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
 
       {/* Target date stamp at bottom */}
       {due && (
-        <div className="flex items-center justify-end pt-2 border-t border-white/5 text-[9px] text-muted-foreground relative z-10 select-none">
+        <div className="flex items-center justify-end pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-500 relative z-10 select-none">
           <span className={cn(
-            'flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border backdrop-blur-md font-mono transition-all duration-300',
+            'flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border backdrop-blur-md transition-all duration-300 font-sans',
             isOverdue 
-              ? 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.15)]' 
-              : 'bg-white/[0.02] border-white/10 text-muted-foreground',
+              ? 'bg-rose-50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30 text-rose-600 dark:text-rose-450' 
+              : 'bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400',
           )}>
-            <Calendar className="h-2.5 w-2.5 text-muted-foreground shrink-0 mr-0.5" />
+            <Calendar className="h-3.5 w-3.5 text-slate-450 dark:text-slate-500 shrink-0 mr-0.5" />
             {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         </div>

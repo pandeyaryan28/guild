@@ -6,7 +6,7 @@ import {
   type DragStartEvent, type DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, ChevronRight, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { KanbanColumn } from './KanbanColumn';
 import { TaskCard } from './TaskCard';
@@ -28,39 +28,33 @@ function CollapsedDoneColumn({
       ref={setNodeRef}
       onClick={onExpand}
       className={cn(
-        "w-14 h-full flex-shrink-0 flex flex-col items-center justify-between py-6 rounded-xl border transition-all duration-300 cursor-pointer select-none relative group font-mono overflow-hidden",
+        "w-16 h-full flex-shrink-0 flex flex-col items-center justify-between py-6 rounded-2xl border transition-all duration-300 cursor-pointer select-none relative group overflow-hidden bg-slate-50/50 dark:bg-slate-900/50",
         isOver
-          ? "bg-cyan-950/20 border-cyan-500/40 ring-1 ring-cyan-500/25 shadow-[0_0_15px_rgba(34,211,238,0.25)]"
-          : "bg-white/[0.01] border-white/5 hover:border-cyan-500/35 hover:bg-cyan-500/[0.02]"
+          ? "bg-indigo-50/20 dark:bg-indigo-950/20 border-indigo-500/40 ring-1 ring-indigo-500/20 shadow-lg"
+          : "border-slate-200 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/80"
       )}
-      title="Expand Vault Chamber"
+      title="Expand Completed Tasks Column"
     >
-      {/* Holographic scanning overlay effect inside the shutter tab */}
-      <div className="absolute inset-x-0 top-0 bottom-0 bg-gradient-to-b from-transparent via-cyan-500/[0.04] to-transparent pointer-events-none animate-pulse duration-[3s]" />
-      
-      {/* Top telemetry panel */}
-      <div className="flex flex-col items-center gap-3.5 relative z-10 select-none">
-        <div className="h-8 w-8 rounded bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 text-cyan-400 group-hover:scale-105 transition-transform duration-300">
+      <div className="flex flex-col items-center gap-3 relative z-10 select-none">
+        <div className="h-8 w-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center border border-indigo-150 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform duration-300">
           <CheckCircle2 className="h-4.5 w-4.5" />
         </div>
-        <span className="text-[9px] font-black text-cyan-400 bg-cyan-500/5 border border-cyan-500/25 px-2 py-0.5 rounded font-mono select-none">
+        <span className="text-[11px] font-bold text-indigo-650 dark:text-indigo-455 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 px-2 py-0.5 rounded-full">
           {tasks.length}
         </span>
       </div>
 
-      {/* Middle rotating vertical text tag */}
       <div className="flex items-center justify-center flex-1 relative z-10 my-4 select-none">
         <span 
-          className="text-[9.5px] font-black text-muted-foreground uppercase tracking-[0.25em] select-none pointer-events-none group-hover:text-foreground transition-colors duration-300"
+          className="text-xs font-semibold text-slate-450 dark:text-slate-550 uppercase tracking-widest select-none pointer-events-none group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors duration-300"
           style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
         >
-          [ARCHIVE_VAULT]
+          Completed Archive
         </span>
       </div>
 
-      {/* Bottom expand chevron */}
-      <div className="h-8 w-8 rounded bg-white/[0.01] border border-white/5 flex items-center justify-center text-muted-foreground group-hover:text-foreground group-hover:bg-white/10 transition-all duration-300 min-h-8 min-w-8">
-        <ChevronLeft className="h-4 w-4 rotate-180 transition-transform duration-300 group-hover:translate-x-0.5" />
+      <div className="h-8 w-8 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-all duration-300 min-h-8 min-w-8">
+        <ChevronRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
       </div>
     </div>
   );
@@ -140,7 +134,7 @@ export function KanbanBoard({ columns, allTasks, labels, memberMap, orgId, actor
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-5 h-full pb-4 overflow-x-auto custom-scrollbar select-none scroll-smooth">
+      <div className="flex gap-5 h-full pb-4 overflow-x-auto scrollbar-thin select-none scroll-smooth items-stretch">
         {STATUSES.map((status) => {
           if (status === 'done' && isDoneCollapsed) {
             return (
