@@ -70,12 +70,25 @@ export function SettingsPage() {
 
   // Real-time org listener
   const [localOrg, setLocalOrg] = React.useState<Organization | null>(null);
+  const [loadingOrg, setLoadingOrg] = React.useState(true);
   React.useEffect(() => {
-    if (!localProfile?.organizationId) return;
+    if (!localProfile?.organizationId) {
+      setLocalOrg(null);
+      setLoadingOrg(false);
+      return;
+    }
+    setLoadingOrg(true);
     const unsub = onSnapshot(doc(db, 'organizations', localProfile.organizationId), (snap) => {
       if (snap.exists()) {
         setLocalOrg({ ...snap.data(), id: snap.id } as Organization);
+      } else {
+        setLocalOrg(null);
       }
+      setLoadingOrg(false);
+    }, (err) => {
+      console.error('Failed to load organization', err);
+      setLocalOrg(null);
+      setLoadingOrg(false);
     });
     return unsub;
   }, [localProfile?.organizationId]);
@@ -242,12 +255,53 @@ export function SettingsPage() {
                       members={members}
                     />
                   )}
-                  {activeTab === 'workspace' && localOrg && localProfile && (
-                    <WorkspaceSettingsView
-                      org={localOrg}
-                      profile={localProfile}
-                      logout={logout}
-                    />
+                  {activeTab === 'workspace' && localProfile && (
+                    loadingOrg ? (
+                      <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                        <span className="text-xs font-bold">Synchronizing workspace details…</span>
+                      </div>
+                    ) : localOrg ? (
+                      <WorkspaceSettingsView
+                        org={localOrg}
+                        profile={localProfile}
+                        logout={logout}
+                      />
+                    ) : (
+                      <div className="aether-glass bg-red-500/[0.01] border border-red-500/20 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-4 relative overflow-hidden mt-6 text-left">
+                        <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.08] filter blur-xl bg-red-500" />
+                        
+                        <div className="flex items-start gap-3">
+                          <ShieldAlert className="h-5 w-5 text-red-500 shrink-0 mt-0.5 animate-pulse" />
+                          <div>
+                            <h2 className="text-xs font-black text-red-500 uppercase tracking-wider">Workspace Missing</h2>
+                            <p className="text-[10px] text-red-500/80 mt-0.5 leading-relaxed font-semibold">
+                              The workspace associated with your account (ID: <span className="font-mono text-foreground font-bold">{localProfile.organizationId}</span>) could not be located in our records. It may have been deleted or orphaned.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (window.confirm('Do you want to reset your workspace association? You will be navigated back to onboarding/workspace setup.')) {
+                                try {
+                                  await removeUserFromOrg(localProfile.uid);
+                                  window.location.reload();
+                                } catch (err) {
+                                  alert('Failed to reset workspace');
+                                }
+                              }
+                            }}
+                            className="px-4 py-2 bg-accent text-accent-foreground rounded-xl text-xs font-bold hover:bg-accent/90 transition-all cursor-pointer shadow-md text-xs"
+                            style={{ background: 'var(--accent)' }}
+                          >
+                            Reset Workspace Setup
+                          </button>
+                        </div>
+                      </div>
+                    )
                   )}
                 </motion.div>
               </AnimatePresence>
