@@ -243,7 +243,7 @@ export function GoalsBoardPage() {
       
       {/* ─── Centered Page Header (More transparent glass dock) ─── */}
       <div className="border-b border-border-default/40 dark:border-white/10 shrink-0 bg-surface/20 dark:bg-white/[0.01] backdrop-blur-xl">
-        <div className={`mx-auto w-full px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300 ${activeView === 'list' ? 'max-w-5xl' : 'max-w-[92rem]'}`}>
+        <div className={`mx-auto w-full px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300 ${activeView === 'list' ? 'max-w-5xl' : 'max-w-none'}`}>
           <div>
             <h1 className="text-xl font-bold text-foreground tracking-tight">Goals & Tasks Board</h1>
           </div>
@@ -321,7 +321,7 @@ export function GoalsBoardPage() {
 
       {/* ─── Centered Global Filters Bar ─── */}
       <div className="border-b border-border-default/40 dark:border-white/10 bg-surface/10 dark:bg-white/[0.005] shrink-0 text-xs">
-        <div className={`mx-auto w-full px-6 py-3 flex flex-wrap items-center gap-4 transition-all duration-300 ${activeView === 'list' ? 'max-w-5xl' : 'max-w-[92rem]'}`}>
+        <div className={`mx-auto w-full px-6 py-3 flex flex-wrap items-center gap-4 transition-all duration-300 ${activeView === 'list' ? 'max-w-5xl' : 'max-w-none'}`}>
           
           {/* Horizon Filter - Goals Only */}
           {activeFocus === 'goals' && (
@@ -386,7 +386,7 @@ export function GoalsBoardPage() {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden border-b border-border-default/40 dark:border-white/10 bg-surface/10 dark:bg-white/[0.01] backdrop-blur-xl"
           >
-            <div className={`mx-auto w-full px-6 py-6 transition-all duration-300 ${activeView === 'list' ? 'max-w-5xl' : 'max-w-[92rem]'}`}>
+            <div className={`mx-auto w-full px-6 py-6 transition-all duration-300 ${activeView === 'list' ? 'max-w-5xl' : 'max-w-none'}`}>
               <form onSubmit={handleCreateGoalSubmit} className="max-w-2xl space-y-4">
                 <div className="flex items-center justify-between pb-2 border-b border-border-default/60 dark:border-white/10">
                   <span className="text-xs font-bold text-foreground">Add New Strategic Goal</span>
@@ -466,8 +466,8 @@ export function GoalsBoardPage() {
 
       {/* ─── Main Content Canvas ─── */}
       <div className="flex-grow overflow-y-auto aether-scroll">
-        {/* Dynamic centered wrapper: max-w-3xl for focused List View, max-w-92rem for wider Kanban Board columns */}
-        <div className={`mx-auto w-full px-6 py-8 transition-all duration-300 ${activeView === 'list' ? 'max-w-3xl' : 'max-w-[92rem]'}`}>
+        {/* Dynamic centered wrapper: max-w-3xl for focused List View, max-w-none for fully wide fluid Kanban Board columns */}
+        <div className={`mx-auto w-full px-6 py-8 transition-all duration-300 ${activeView === 'list' ? 'max-w-3xl' : 'max-w-none'}`}>
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-accent" style={{ color: 'var(--accent)' }} />
