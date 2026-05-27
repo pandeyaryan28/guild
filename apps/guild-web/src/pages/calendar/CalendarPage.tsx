@@ -1197,15 +1197,7 @@ export function CalendarPage() {
                               key={slot.value} 
                               className="flex items-start gap-4 p-1 rounded-xl hover:bg-white/[0.01] transition-all duration-300 relative"
                             >
-                              {/* Live Current Time Line Indicator Overlay */}
-                              {isCurrentHour && (
-                                <div 
-                                  className="absolute left-[80px] right-1 border-t-2 border-accent border-dashed z-20 pointer-events-none transition-all"
-                                  style={{ top: `${(currentMins / 60) * 100}%` }}
-                                >
-                                  <div className="absolute -left-1.5 -top-[5px] h-2.5 w-2.5 rounded-full bg-accent ring-4 ring-accent/20 animate-pulse shadow-md" style={{ backgroundColor: 'var(--accent)' }} />
-                                </div>
-                              )}
+
                               {/* Time Label column */}
                               <div className="w-16 pt-2.5 flex-shrink-0 text-right">
                                 <span className="text-[9px] font-extrabold tracking-tight text-muted-foreground font-mono">
