@@ -8,6 +8,23 @@ import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { cn } from '@/lib/utils';
 
+// Lightweight, ultra-fast hex color interpolation helper
+function interpolateHex(c1: string, c2: string, progress: number): string {
+  const r1 = parseInt(c1.slice(1, 3), 16);
+  const g1 = parseInt(c1.slice(3, 5), 16);
+  const b1 = parseInt(c1.slice(5, 7), 16);
+
+  const r2 = parseInt(c2.slice(1, 3), 16);
+  const g2 = parseInt(c2.slice(3, 5), 16);
+  const b2 = parseInt(c2.slice(5, 7), 16);
+
+  const r = Math.round(r1 + (r2 - r1) * progress);
+  const g = Math.round(g1 + (g2 - g1) * progress);
+  const b = Math.round(b1 + (b2 - b1) * progress);
+
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 export function ThemeSlider() {
   const { themeProgress, setThemeProgress } = useTheme();
   
@@ -24,6 +41,9 @@ export function ThemeSlider() {
 
   // Calculate the left offset of the knob
   const knobLeft = padding + themeProgress * maxSlide;
+
+  // Calculate the dynamic neon laser slit color
+  const slitColor = interpolateHex('#f59e0b', '#818cf8', themeProgress);
 
   // Handle Drag Start
   const handleStart = (clientX: number) => {
@@ -128,14 +148,15 @@ export function ThemeSlider() {
         />
       </div>
 
-      {/* Pure Glassmorphic Sliding Orb (No icons, acts as a frosted magnifying lens) */}
+      {/* Futuristic Holographic Glass Capsule Knob */}
       <div
         ref={knobRef}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         className={cn(
-          "absolute flex items-center justify-center rounded-full cursor-grab",
-          "bg-white/40 dark:bg-white/10 backdrop-blur-lg border border-white/45 dark:border-white/20",
+          "absolute flex items-center justify-center rounded-xl cursor-grab",
+          "bg-gradient-to-br from-white/35 via-white/10 to-transparent dark:from-white/15 dark:to-white/5",
+          "backdrop-blur-lg border border-white/45 dark:border-white/20",
           isDragging ? "cursor-grabbing shadow-[0_4px_16px_rgba(0,0,0,0.25),0_0_18px_var(--accent)] scale-98" : "shadow-[0_2px_8px_rgba(0,0,0,0.12),0_0_8px_var(--accent)] active:scale-95"
         )}
         style={{
@@ -146,7 +167,16 @@ export function ThemeSlider() {
           transition: isDragging ? 'none' : 'transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1)',
           touchAction: 'none',
         }}
-      />
+      >
+        {/* Shifting Glowing Neon Slit Centerpiece */}
+        <div
+          className="w-[2px] h-[10px] rounded-full transition-all duration-200"
+          style={{
+            background: slitColor,
+            boxShadow: `0 0 6px ${slitColor}, 0 0 12px ${slitColor}`,
+          }}
+        />
+      </div>
     </div>
   );
 }
