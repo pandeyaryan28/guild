@@ -251,6 +251,17 @@ export async function resetGlobalInviteLink(orgId: string, createdBy: string): P
   return createGlobalInviteLink(orgId, createdBy);
 }
 
+export async function disableGlobalInviteLink(orgId: string): Promise<void> {
+  const org = await getOrgById(orgId);
+  if (org?.globalInviteToken) {
+    await deleteDoc(doc(db, 'inviteLinks', org.globalInviteToken));
+  }
+  await updateDoc(doc(db, 'organizations', orgId), {
+    globalInviteToken: '',
+  });
+}
+
+
 // ─── Member Custom Join Transaction ───────────────────────────────────────────
 
 export interface AcceptInvitePayload {

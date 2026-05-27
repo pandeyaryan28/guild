@@ -19,6 +19,12 @@ export const ROLE_META: Record<UserRole, { label: string; icon: React.ElementTyp
     color: 'text-violet-400',
     bg: 'bg-violet-400/10 border-violet-400/25',
   },
+  manager: {
+    label: 'Manager',
+    icon: Briefcase,
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-400/10 border-emerald-400/25',
+  },
   member: {
     label: 'Member',
     icon: User,

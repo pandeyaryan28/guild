@@ -32,6 +32,12 @@ const ROLE_META: Record<UserRole, { label: string; icon: React.ElementType; colo
     color: 'text-violet-400',
     bg: 'bg-violet-400/10 border-violet-400/25',
   },
+  manager: {
+    label: 'Manager',
+    icon: Briefcase,
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-400/10 border-emerald-400/25',
+  },
   member: {
     label: 'Member',
     icon: User,
@@ -433,11 +439,11 @@ export function PeoplePage() {
     getOrgById(orgId).then((org) => { if (org) setOrgName(org.name); });
   }, [orgId]);
 
-  // Sort: owner → admin → member, then alpha
+  // Sort: owner → admin → manager → member, then alpha
   const sorted = React.useMemo(() => {
-    const order: Record<UserRole, number> = { owner: 0, admin: 1, member: 2 };
+    const order: Record<UserRole, number> = { owner: 0, admin: 1, manager: 2, member: 3 };
     return [...members].sort((a, b) => {
-      const ro = (order[a.role] ?? 2) - (order[b.role] ?? 2);
+      const ro = (order[a.role] ?? 3) - (order[b.role] ?? 3);
       if (ro !== 0) return ro;
       return (a.fullName || '').localeCompare(b.fullName || '');
     });

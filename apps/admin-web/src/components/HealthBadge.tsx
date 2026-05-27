@@ -12,6 +12,7 @@ const PALETTE: Record<string, { bg: string; text: string; label: string; dot?: s
   // Roles
   owner: { bg: 'oklch(0.65 0.26 300 / 12%)', text: 'oklch(0.65 0.26 300)', label: 'Owner' },
   admin: { bg: 'oklch(0.62 0.18 265 / 12%)', text: 'oklch(0.62 0.18 265)', label: 'Admin' },
+  manager: { bg: 'oklch(0.68 0.16 142 / 12%)', text: 'oklch(0.68 0.16 142)', label: 'Manager' },
   member: { bg: 'oklch(0.62 0.02 265 / 12%)', text: 'oklch(0.62 0.02 265)', label: 'Member' },
 
   // Task Statuses

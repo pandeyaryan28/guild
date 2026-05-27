@@ -1,0 +1,441 @@
+/**
+ * Aether Grid Design System Tokens & Global Styles (Trigger Vercel Deploy)
+ * Pure custom Vanilla CSS implementation for the Aether Grid theme.
+ */
+
+:root {
+  /* Visual Tokens (Dynamically mapped to active theme colors) */
+  --aether-radius: 20px;
+  
+  --aether-bg: var(--bg-primary);
+  --aether-bg-gradient: linear-gradient(135deg, oklch(from var(--bg-primary) calc(l - 0.03) calc(c + 0.01) h) 0%, var(--bg-primary) 50%, oklch(from var(--bg-secondary) calc(l - 0.04) calc(c + 0.02) h) 100%);
+  
+  --aether-glass-bg: oklch(from var(--bg-primary) calc(l - 0.01) c h / 72%);
+  --aether-glass-border: oklch(from var(--accent) 0.90 0.03 h / 24%);
+  --aether-glass-border-inner: oklch(from var(--accent) 0.95 0.03 h / 18%);
+  --aether-glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06), 
+                         inset 0 1px 1px 0 oklch(from var(--text-primary) l c h / 6%),
+                         0 0 1px 0 oklch(from var(--accent) l c h / 10%);
+  
+  --aether-text-primary: var(--text-primary);
+  --aether-text-secondary: var(--text-secondary);
+  --aether-text-muted: var(--text-muted);
+  
+  --aether-primary: var(--accent); 
+  --aether-primary-glow: oklch(from var(--accent) l c h / 20%);
+  --aether-secondary: oklch(from var(--accent) calc(l + 0.05) calc(c - 0.05) calc(h + 40)); 
+  
+  /* Status Halos */
+  --aether-halo-active: oklch(0.72 0.18 144); /* Emerald Pulse */
+  --aether-halo-away: oklch(0.76 0.15 65); /* Amber Pulse */
+  --aether-halo-busy: oklch(0.62 0.18 28); /* Ruby Glow */
+  --aether-halo-offline: oklch(0.60 0.02 260); /* Muted Slate */
+  
+  --aether-success: oklch(0.68 0.16 142);
+  --aether-warning: oklch(0.78 0.14 68);
+  --aether-danger: oklch(0.62 0.19 28);
+}
+
+.dark {
+  /* Dynamic mappings adapt automatically, but can specify overrides if needed */
+  --aether-glass-bg: oklch(from var(--bg-primary) calc(l + 0.04) c h / 75%);
+  --aether-glass-border: oklch(from var(--accent) 0.95 0.04 h / 16%);
+  --aether-glass-border-inner: oklch(from var(--accent) 0.98 0.04 h / 12%);
+  --aether-glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.22), 
+                         inset 0 1px 0 0 oklch(from var(--text-primary) l c h / 5%),
+                         0 0 1px 0 oklch(from var(--accent) l c h / 12%);
+}
+
+
+/* Base Body Application */
+.aether-app-container {
+  min-height: 100vh;
+  background: var(--aether-bg-gradient);
+  color: var(--aether-text-primary);
+  font-family: 'Geist Variable', 'Inter', sans-serif;
+  overflow-x: hidden;
+  position: relative;
+  transition: background 0.5s ease;
+}
+
+/* Ambient Moving Aurora Mesh Background */
+.aether-aurora {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  filter: blur(150px);
+  opacity: 0.82;
+  background: 
+    radial-gradient(circle at 80% 20%, oklch(0.62 0.20 190 / 22%), transparent 60%),
+    radial-gradient(circle at 20% 85%, oklch(0.55 0.16 150 / 18%), transparent 60%);
+}
+
+.aether-aurora::before,
+.aether-aurora::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+}
+
+.aether-aurora::before {
+  width: 65vw;
+  height: 65vw;
+  background: radial-gradient(circle, oklch(from var(--aether-primary) 0.58 0.22 h / 35%) 0%, transparent 70%);
+  top: -15%;
+  left: -15%;
+  animation: aurora-float-1 30s ease-in-out infinite alternate;
+}
+
+.aether-aurora::after {
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, oklch(from var(--aether-secondary) 0.55 0.18 h / 30%) 0%, transparent 70%);
+  bottom: -15%;
+  right: -15%;
+  animation: aurora-float-2 25s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-float-1 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(8vw, 6vh) scale(1.1) rotate(60deg); }
+  100% { transform: translate(-4vw, -4vh) scale(0.95) rotate(120deg); }
+}
+
+@keyframes aurora-float-2 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(-6vw, -8vh) scale(0.95) rotate(-60deg); }
+  100% { transform: translate(4vw, 4vh) scale(1.05) rotate(-120deg); }
+}
+
+/* Custom Glassmorphic Panels */
+.aether-glass {
+  background: var(--aether-glass-bg);
+  backdrop-filter: blur(40px) saturate(1.8);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  border: 1px solid var(--aether-glass-border);
+  border-top-color: var(--aether-glass-border-inner);
+  border-left-color: var(--aether-glass-border-inner);
+  border-radius: var(--aether-radius);
+  box-shadow: var(--aether-glass-shadow);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.aether-glass-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.08), var(--aether-glass-shadow);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.aether-glass-interactive:active {
+  transform: translateY(0px);
+}
+
+/* macOS-Style Floating Dock */
+.aether-dock-wrapper {
+  position: fixed;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.aether-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 28px;
+  pointer-events: auto;
+}
+
+.aether-dock-item {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  color: var(--aether-text-secondary);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.aether-dock-item:hover {
+  transform: scale(1.15) translateY(-2px);
+  color: var(--aether-text-primary);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+}
+
+.aether-dock-item.active {
+  background: var(--aether-primary);
+  color: white;
+  box-shadow: 0 0 20px var(--aether-primary-glow);
+}
+
+.aether-dock-item-tooltip {
+  position: absolute;
+  left: 70px;
+  background: var(--aether-glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--aether-glass-border);
+  color: var(--aether-text-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-10px);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.aether-dock-item:hover .aether-dock-item-tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Graceful scaling for smaller screen heights */
+@media (min-width: 769px) and (max-height: 800px) {
+  .aether-dock {
+    gap: 8px;
+    padding: 12px;
+    border-radius: 24px;
+  }
+  .aether-dock-item {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+  }
+  .aether-dock-item svg {
+    width: 18px;
+    height: 18px;
+  }
+  .aether-dock-item-tooltip {
+    left: 62px;
+  }
+}
+
+@media (min-width: 769px) and (max-height: 680px) {
+  .aether-dock {
+    gap: 6px;
+    padding: 8px;
+    border-radius: 20px;
+  }
+  .aether-dock-item {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+  .aether-dock-item svg {
+    width: 16px;
+    height: 16px;
+  }
+  .aether-dock-item-tooltip {
+    left: 54px;
+  }
+}
+
+/* Premium Breathing Halo Orbit */
+.teammate-halo {
+  position: relative;
+  border-radius: 50%;
+  padding: 3px;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.teammate-halo::after {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px; right: -1px; bottom: -1px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  pointer-events: none;
+  transition: border-color 0.3s ease;
+}
+
+.teammate-halo.active::after {
+  border-color: var(--aether-halo-active);
+  animation: breathe-halo 3s infinite alternate;
+}
+
+.teammate-halo.away::after {
+  border-color: var(--aether-halo-away);
+  animation: breathe-halo 4s infinite alternate;
+}
+
+.teammate-halo.busy::after {
+  border-color: var(--aether-halo-busy);
+  animation: breathe-halo 2.5s infinite alternate;
+}
+
+@keyframes breathe-halo {
+  0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0 0px currentColor; }
+  100% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 8px 2px currentColor; }
+}
+
+/* Strategic Milestone Progression Arc */
+.progression-arc-svg {
+  transform: rotate(-90deg);
+}
+
+.progression-arc-bg {
+  fill: none;
+  stroke: var(--aether-glass-border);
+  stroke-width: 12;
+}
+
+.progression-arc-value {
+  fill: none;
+  stroke: url(#arc-grad);
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glassmorphic Task Card Stack */
+.task-glass-card {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+}
+
+.task-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 4px;
+  background: var(--aether-primary);
+  opacity: 0.6;
+}
+
+.task-glass-card.priority-urgent::before { background: var(--aether-danger); }
+.task-glass-card.priority-high::before { background: var(--aether-warning); }
+.task-glass-card.priority-medium::before { background: var(--aether-primary); }
+.task-glass-card.priority-low::before { background: var(--aether-secondary); }
+
+/* Unified Fluid Scrollbars */
+.aether-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.aether-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.aether-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 99px;
+}
+.aether-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Animations */
+@keyframes fluid-pop {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-fluid-pop {
+  animation: fluid-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Dynamic Ambient Accent Glows */
+.aether-ambient-glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--aether-primary-glow) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   RESPONSIVE MOBILE STYLES (iOS Bottom Floating Dock Adaptation)
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Floating Bottom Dock adaptation */
+  .aether-dock-wrapper {
+    left: 50%;
+    bottom: 16px;
+    top: auto;
+    transform: translateX(-50%);
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    max-width: calc(100% - 32px);
+    pointer-events: none;
+  }
+
+  .aether-dock {
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 24px;
+    background: oklch(from var(--surface) l c h / 75%);
+    backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.25);
+    pointer-events: auto;
+    width: 100%;
+    max-width: 100%;
+    justify-content: space-around;
+  }
+
+  .aether-dock-item {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .aether-dock-item:hover {
+    transform: scale(1.1) translateY(-2px);
+  }
+
+  .aether-dock-item-tooltip {
+    display: none !important; /* Touch screens do not support tooltips */
+  }
+
+  /* Compact teammate presence */
+  .teammate-halo {
+    padding: 2px;
+  }
+  
+  /* Optimize scroll spaces */
+  .aether-scroll {
+    padding-right: 0px !important;
+  }
+
+  /* Mobile bottom drawer handle bar indicator */
+  .aether-mobile-handle {
+    width: 38px;
+    height: 5px;
+    background: oklch(from var(--border-default) l c h / 60%);
+    border-radius: 99px;
+    margin: 8px auto 16px auto;
+  }
+
+  /* Force show on mobile */
+  .aether-dock-item-menu {
+    display: flex !important;
+  }
+}
+
+/* Force hide on desktop/laptop */
+.aether-dock-item-menu {
+  display: none !important;
+}

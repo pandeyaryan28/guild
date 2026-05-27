@@ -2,7 +2,7 @@ import type { Timestamp } from 'firebase/firestore';
 
 // ─── Auth / User ──────────────────────────────────────────────────────────────
 
-export type UserRole = 'owner' | 'admin' | 'member';
+export type UserRole = 'owner' | 'admin' | 'manager' | 'member';
 
 export interface UserProfile {
   uid: string;

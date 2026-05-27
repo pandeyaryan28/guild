@@ -1,35 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "./styles/AetherGrid.css";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   DESIGN TOKENS — Midnight theme (matches guild-web default)
+   DESIGN TOKENS — Compatible with Aether Grid macOS Glassmorphism
 ───────────────────────────────────────────────────────────────────────────── */
 :root {
-  --background:         oklch(0.09  0.01  265);
-  --foreground:         oklch(0.96  0     0);
-  --card:               oklch(0.13  0.012 265);
-  --card-foreground:    oklch(0.96  0     0);
-  --popover:            oklch(0.13  0.012 265);
-  --popover-foreground: oklch(0.96  0     0);
-  --primary:            oklch(0.62  0.18  265);
-  --primary-foreground: oklch(0.99  0     0);
-  --secondary:          oklch(0.19  0.015 265);
-  --secondary-foreground: oklch(0.96 0   0);
-  --muted:              oklch(0.19  0.015 265);
-  --muted-foreground:   oklch(0.62  0.02  265);
-  --accent:             oklch(0.19  0.015 265);
-  --accent-foreground:  oklch(0.96  0     0);
-  --destructive:        oklch(0.65  0.22  25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border:             oklch(1     0     0  / 7%);
-  --input:              oklch(1     0     0  / 9%);
-  --ring:               oklch(0.62  0.18  265);
-  --radius:             0.75rem;
-  --sidebar:            oklch(0.11  0.012 265);
-  --sidebar-foreground: oklch(0.96  0     0);
-  --sidebar-border:     oklch(1     0     0  / 6%);
+  --radius: 0.75rem;
+
+  /* Light Theme (Clean, calm productivity) */
+  --bg-primary: oklch(0.99 0.002 264);
+  --bg-secondary: oklch(0.97 0.005 264);
+  --bg-tertiary: oklch(0.94 0.008 264);
+
+  --surface: oklch(1 0 0);
+  --surface-elevated: oklch(1 0 0);
+  --surface-hover: oklch(0.98 0.005 264);
+
+  --text-primary: oklch(0.20 0.02 264);
+  --text-secondary: oklch(0.38 0.02 264);
+  --text-muted: oklch(0.55 0.02 264);
+  --text-disabled: oklch(0.70 0.01 264);
+
+  --border-default: oklch(0.88 0.01 264);
+  --border-strong: oklch(0.75 0.02 264);
+  --border-subtle: oklch(0.93 0.005 264);
+
+  --accent: oklch(0.55 0.16 260);
+  --accent-foreground: oklch(0.99 0 0);
+
+  --success: oklch(0.60 0.15 150);
+  --warning: oklch(0.70 0.15 70);
+  --danger: oklch(0.60 0.20 25);
+  --info: oklch(0.60 0.15 240);
+
+  /* Legacy variables for compatibility */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-elevated);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-foreground);
+  --secondary: var(--bg-secondary);
+  --secondary-foreground: var(--text-secondary);
+  --muted: var(--bg-tertiary);
+  --muted-foreground: var(--text-muted);
+  --border: var(--border-default);
+  --input: var(--border-default);
+  --ring: var(--accent);
+  --sidebar: var(--bg-secondary);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-border: var(--border-default);
+  --accent-color: var(--accent);
+  --accent-foreground-color: var(--accent-foreground);
 
   /* Status colours */
   --status-todo:        oklch(0.62 0.02 265);
@@ -47,6 +74,34 @@
   --role-owner:  oklch(0.65 0.26 300);
   --role-admin:  oklch(0.62 0.18 265);
   --role-member: oklch(0.62 0.02 265);
+}
+
+.dark {
+  /* Dark Theme (Layered, deep slate/indigo, clear borders) */
+  --bg-primary: oklch(0.18 0.02 260);
+  --bg-secondary: oklch(0.22 0.02 260);
+  --bg-tertiary: oklch(0.25 0.02 260);
+
+  --surface: oklch(0.21 0.02 260);
+  --surface-elevated: oklch(0.26 0.02 260);
+  --surface-hover: oklch(0.28 0.02 260);
+
+  --text-primary: oklch(0.95 0.01 260);
+  --text-secondary: oklch(0.75 0.02 260);
+  --text-muted: oklch(0.60 0.02 260);
+  --text-disabled: oklch(0.40 0.02 260);
+
+  --border-default: oklch(0.32 0.02 260);
+  --border-strong: oklch(0.42 0.03 260);
+  --border-subtle: oklch(0.25 0.02 260);
+
+  --accent: oklch(0.62 0.14 260);
+  --accent-foreground: oklch(0.98 0 0);
+
+  --success: oklch(0.65 0.15 150);
+  --warning: oklch(0.75 0.15 70);
+  --danger: oklch(0.65 0.20 25);
+  --info: oklch(0.65 0.15 240);
 }
 
 @theme inline {
@@ -124,11 +179,15 @@
     background-size: 28px 28px;
   }
 
-  /* Glassmorphism card */
+  /* Glassmorphism card - Aligned with macOS Aether-Glass */
   .glass {
-    background: oklch(from var(--card) l c h / 55%);
-    backdrop-filter: blur(20px) saturate(1.5);
-    border: 1px solid oklch(1 0 0 / 8%);
+    background: var(--aether-glass-bg);
+    backdrop-filter: blur(40px) saturate(1.8);
+    -webkit-backdrop-filter: blur(40px) saturate(1.8);
+    border: 1px solid var(--aether-glass-border);
+    border-top-color: var(--aether-glass-border-inner);
+    border-left-color: var(--aether-glass-border-inner);
+    box-shadow: var(--aether-glass-shadow);
   }
 
   /* Primary glow */

@@ -70,6 +70,7 @@ function AuthorizedApp({ profile }: { profile: ReturnType<typeof useAdminAuth> &
           teams={data.teams}
           goals={data.goals}
           activities={data.activities}
+          projects={data.projects}
           loading={data.loading}
           error={data.error}
           refresh={data.refresh}

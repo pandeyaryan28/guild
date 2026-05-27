@@ -4,7 +4,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type {
-  Organization, UserProfile, Task, Channel, Team, Goal, TaskActivity
+  Organization, UserProfile, Task, Channel, Team, Goal, TaskActivity, Project
 } from '@guild/types';
 
 export interface AdminDashboardData {
@@ -15,6 +15,7 @@ export interface AdminDashboardData {
   teams:      Team[];
   goals:      Goal[];
   activities: TaskActivity[];
+  projects:   Project[];
   loading:    boolean;
   error:      string | null;
   refresh:    () => void;
@@ -32,6 +33,7 @@ export function useAdminData(): AdminDashboardData {
   const [teams,      setTeams]      = useState<Team[]>([]);
   const [goals,      setGoals]      = useState<Goal[]>([]);
   const [activities, setActivities] = useState<TaskActivity[]>([]);
+  const [projects,   setProjects]   = useState<Project[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState<string | null>(null);
   const [tick,       setTick]       = useState(0);
@@ -50,7 +52,8 @@ export function useAdminData(): AdminDashboardData {
           channelsSnap,
           teamsSnap,
           goalsSnap,
-          activitiesSnap
+          activitiesSnap,
+          projectsSnap
         ] = await Promise.all([
           getDocs(query(collection(db, 'organizations'), orderBy('createdAt', 'desc'))),
           getDocs(query(collection(db, 'users'),         orderBy('createdAt', 'desc'))),
@@ -59,6 +62,7 @@ export function useAdminData(): AdminDashboardData {
           getDocs(query(collection(db, 'teams'),         orderBy('createdAt', 'desc'))),
           getDocs(query(collection(db, 'goals'),         orderBy('createdAt', 'desc'))),
           getDocs(query(collection(db, 'taskActivities'), orderBy('createdAt', 'desc'), limit(200))),
+          getDocs(query(collection(db, 'projects'),       orderBy('createdAt', 'desc'))),
         ]);
 
         if (cancelled) return;
@@ -70,6 +74,7 @@ export function useAdminData(): AdminDashboardData {
         setTeams(teamsSnap.docs.map(d => d.data() as Team));
         setGoals(goalsSnap.docs.map(d => d.data() as Goal));
         setActivities(activitiesSnap.docs.map(d => d.data() as TaskActivity));
+        setProjects(projectsSnap.docs.map(d => d.data() as Project));
       } catch (e: unknown) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load data');
       } finally {
@@ -82,7 +87,7 @@ export function useAdminData(): AdminDashboardData {
   }, [tick]);
 
   return {
-    orgs, users, tasks, channels, teams, goals, activities, loading, error,
+    orgs, users, tasks, channels, teams, goals, activities, projects, loading, error,
     refresh: () => setTick(t => t + 1),
   };
 }
