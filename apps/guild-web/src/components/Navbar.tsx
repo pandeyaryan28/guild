@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { NotificationPanel } from './NotificationPanel';
 import { useTheme } from '../hooks/useTheme';
+import { ThemeSlider } from './ThemeSlider';
 
 interface NavbarProps {
   onSearchOpen: () => void;
@@ -119,16 +120,10 @@ export function Navbar({ onSearchOpen, onMobileMenuToggle }: NavbarProps) {
             <HelpCircle className="h-4 w-4" />
           </Button>
 
-          {/* Theme Toggle Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            title={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-            className="h-9 w-9 rounded-full text-muted-foreground hover:bg-accent/40 hover:text-primary transition-colors"
-          >
-            {isLight ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </Button>
+          {/* Theme Toggle Slider */}
+          <div className="flex items-center">
+            <ThemeSlider />
+          </div>
 
           {/* User avatar */}
           <div className="ml-1 sm:ml-2 flex items-center gap-2 pl-1 sm:pl-2 border-l border-border-default cursor-pointer group">
