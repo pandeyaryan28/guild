@@ -30,7 +30,6 @@ import { useOrgMembers } from '../../hooks/useChat';
 import { moveTask, deleteTask, type Task, type TaskStatus } from '../../lib/tasks';
 import { updateProject } from '../../lib/projects';
 
-// Triggering auto-deploy pipeline
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
