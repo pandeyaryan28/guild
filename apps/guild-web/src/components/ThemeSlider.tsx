@@ -9,7 +9,7 @@ import { useTheme } from '../hooks/useTheme';
 import { cn } from '@/lib/utils';
 
 export function ThemeSlider() {
-  const { mode, themeProgress, setThemeProgress } = useTheme();
+  const { themeProgress, setThemeProgress } = useTheme();
   
   const trackRef = React.useRef<HTMLDivElement>(null);
   const knobRef = React.useRef<HTMLDivElement>(null);
@@ -110,46 +110,43 @@ export function ThemeSlider() {
     >
       {/* Background Icons in the track */}
       <div className="absolute inset-0 flex justify-between px-2 items-center text-text-muted/40 pointer-events-none">
-        <Sun className="h-3.5 w-3.5 transition-opacity" style={{ opacity: themeProgress > 0.4 ? 0.3 : 1 }} />
-        <Moon className="h-3.5 w-3.5 transition-opacity" style={{ opacity: themeProgress < 0.6 ? 0.3 : 1 }} />
+        <Sun 
+          className="h-3.5 w-3.5 transition-all duration-300" 
+          style={{ 
+            opacity: Math.max(0.25, 1 - themeProgress),
+            color: themeProgress < 0.5 ? '#f59e0b' : 'currentColor',
+            transform: `scale(${themeProgress < 0.5 ? 1.05 : 0.95})`
+          }} 
+        />
+        <Moon 
+          className="h-3.5 w-3.5 transition-all duration-300" 
+          style={{ 
+            opacity: Math.max(0.25, themeProgress),
+            color: themeProgress >= 0.5 ? '#a5b4fc' : 'currentColor',
+            transform: `scale(${themeProgress >= 0.5 ? 1.05 : 0.95})`
+          }} 
+        />
       </div>
 
-      {/* Glassmorphic Sliding Orb */}
+      {/* Pure Glassmorphic Sliding Orb (No icons, acts as a frosted magnifying lens) */}
       <div
         ref={knobRef}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         className={cn(
-          "absolute flex items-center justify-center rounded-full transition-transform active:scale-95 cursor-grab",
-          "bg-white/80 dark:bg-white/10 backdrop-blur-md border border-white/30 dark:border-white/10",
-          isDragging ? "cursor-grabbing shadow-[0_0_16px_var(--accent)]" : "shadow-[0_2px_8px_rgba(0,0,0,0.12),0_0_6px_var(--accent)]"
+          "absolute flex items-center justify-center rounded-full cursor-grab",
+          "bg-white/40 dark:bg-white/10 backdrop-blur-lg border border-white/45 dark:border-white/20",
+          isDragging ? "cursor-grabbing shadow-[0_4px_16px_rgba(0,0,0,0.25),0_0_18px_var(--accent)] scale-98" : "shadow-[0_2px_8px_rgba(0,0,0,0.12),0_0_8px_var(--accent)] active:scale-95"
         )}
         style={{
           width: `${knobSize}px`,
           height: `${knobSize}px`,
           left: 0,
           transform: `translateX(${knobLeft}px)`,
+          transition: isDragging ? 'none' : 'transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1)',
           touchAction: 'none',
         }}
-      >
-        {/* Sun Icon inside knob (fades out as dark mode approaches) */}
-        <Sun
-          className="absolute h-3 w-3 text-amber-500 pointer-events-none transition-transform"
-          style={{
-            opacity: 1 - themeProgress,
-            transform: `rotate(${(1 - themeProgress) * 180}deg) scale(${1 - themeProgress})`,
-          }}
-        />
-
-        {/* Moon Icon inside knob (fades in as dark mode approaches) */}
-        <Moon
-          className="absolute h-3 w-3 text-indigo-300 pointer-events-none transition-transform"
-          style={{
-            opacity: themeProgress,
-            transform: `rotate(${themeProgress * 360}deg) scale(${themeProgress})`,
-          }}
-        />
-      </div>
+      />
     </div>
   );
 }
