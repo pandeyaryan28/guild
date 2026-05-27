@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Trello, LayoutList, CheckSquare, Target, Check, Trash2, ChevronDown, Calendar, ShieldCheck } from 'lucide-react';
+import { Plus, Loader2, Trello, LayoutList, CheckSquare, Target, Check, Trash2, ChevronDown, Calendar, Terminal, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/useAuth';
@@ -16,10 +16,10 @@ import { CreateGoalModal } from './CreateGoalModal';
 import { deleteTask, type Task, type TaskStatus, STATUS_CONFIG as TASK_STATUS_CONFIG } from '../../lib/tasks';
 import { deleteGoal, updateGoal, type Goal } from '../../lib/goals';
 
-const GOAL_STATUS_CONFIG: Record<Goal['status'], { label: string; color: string; dot: string; leftBorder: string }> = {
-  active:    { label: 'Active',    color: 'text-violet-400', dot: '#a78bfa', leftBorder: 'border-l-violet-550' },
-  completed: { label: 'Completed', color: 'text-cyan-400', dot: '#22d3ee', leftBorder: 'border-l-cyan-550' },
-  cancelled: { label: 'Cancelled', color: 'text-zinc-500',    dot: '#52525b', leftBorder: 'border-l-zinc-550' },
+const GOAL_STATUS_CONFIG: Record<Goal['status'], { label: string; color: string; dot: string }> = {
+  active:    { label: 'Active',    color: 'text-violet-400', dot: '#a78bfa' },
+  completed: { label: 'Completed', color: 'text-cyan-400', dot: '#22d3ee' },
+  cancelled: { label: 'Cancelled', color: 'text-zinc-500',    dot: '#52525b' },
 };
 
 function GoalListRow({
@@ -53,7 +53,16 @@ function GoalListRow({
     : 'text-rose-450 border-rose-500/20 bg-rose-500/5';
 
   const statusCfg = GOAL_STATUS_CONFIG[goal.status];
-  const leftBorderColor = statusCfg?.dot || '#a78bfa';
+  const sideColor = statusCfg?.dot || '#a78bfa';
+
+  // SVG progress dial metrics
+  const progress = goal.progressRollup !== undefined ? goal.progressRollup : 0;
+  const radius = 16;
+  const strokeWidth = 3;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (progress / 100) * circumference;
+
+  const goalIdCode = `G-${goal.id.slice(0, 4).toUpperCase()}`;
 
   return (
     <motion.div
@@ -63,21 +72,21 @@ function GoalListRow({
       exit={{ opacity: 0, y: -8 }}
       onClick={onSelect}
       className={cn(
-        'group relative flex flex-col md:flex-row md:items-center justify-between p-4.5 rounded-2xl bg-white/[0.015] dark:bg-white/[0.002] border border-white/5 hover:border-violet-500/25 hover:bg-white/[0.035] dark:hover:bg-white/[0.004] hover:shadow-[0_12px_24px_-12px_rgba(124,58,237,0.12)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer select-none pl-5 gap-4.5',
-        goal.status === 'completed' && 'opacity-60'
+        'group relative flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl bg-white/[0.01] dark:bg-black/[0.1] border border-white/5 hover:border-violet-500/20 hover:bg-white/[0.02] dark:hover:bg-white/[0.002] hover:shadow-[0_0_8px_rgba(167,139,250,0.08)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer select-none pl-4.5 font-mono gap-4',
+        goal.status === 'completed' && 'opacity-55'
       )}
     >
-      {/* Decorative vertical glowing status strip on the left edge */}
+      {/* Absolute sidebar priority scan track */}
       <div 
-        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl transition-all duration-300"
+        className="absolute left-0 top-0 bottom-0 w-1 rounded-l transition-all duration-300"
         style={{ 
-          backgroundColor: leftBorderColor,
-          boxShadow: `0 0 10px ${leftBorderColor}`
+          backgroundColor: sideColor,
+          boxShadow: `0 0 8px ${sideColor}`
         }}
       />
 
-      <div className="flex items-start gap-3.5 min-w-0 flex-1">
-        {/* Toggle complete circle with neon gradients */}
+      <div className="flex items-start gap-3 min-w-0 flex-1">
+        {/* Toggle directive circle */}
         <button
           onClick={(e) => { e.stopPropagation(); onToggleComplete(); }}
           className={cn(
@@ -86,74 +95,94 @@ function GoalListRow({
               ? 'bg-gradient-to-br from-cyan-400 to-sky-500 border-transparent text-white shadow-[0_0_8px_rgba(34,211,238,0.4)] scale-102 hover:scale-105 active:scale-95'
               : 'border-white/20 hover:border-cyan-400/60 hover:bg-cyan-500/5 hover:scale-105 active:scale-95',
           )}
-          title={goal.status === 'completed' ? 'Mark active' : 'Mark completed'}
+          title={goal.status === 'completed' ? 'Mark Active' : 'Mark Completed'}
         >
           {goal.status === 'completed' && <Check className="h-3.5 w-3.5 text-white font-black stroke-[3px]" />}
         </button>
 
-        {/* Goal Title & description */}
-        <div className="min-w-0 flex-1">
-          <span className={cn(
-            'text-[13.5px] font-bold tracking-wide block text-foreground truncate group-hover:text-violet-400 transition-colors',
-            goal.status === 'completed' && 'line-through text-muted-foreground font-normal'
-          )}>
-            {goal.title}
-          </span>
+        {/* Title */}
+        <div className="min-w-0 flex-1 pl-1">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[9px] font-black text-violet-400/90 bg-violet-500/5 border border-violet-500/10 px-1.5 py-0.5 rounded w-fit select-none shrink-0">
+              {goalIdCode}
+            </span>
+            <span className={cn(
+              'text-[13px] font-sans font-bold tracking-wide block text-foreground truncate group-hover:text-violet-400 transition-colors',
+              goal.status === 'completed' && 'line-through text-muted-foreground font-normal'
+            )}>
+              {goal.title}
+            </span>
+          </div>
           {goal.description && (
-            <p className="text-[10px] text-muted-foreground/80 line-clamp-1 leading-normal mt-1 font-medium">{goal.description}</p>
+            <p className="text-[10px] font-sans text-muted-foreground/80 line-clamp-1 leading-normal mt-1 pl-0.5 font-medium">{goal.description}</p>
           )}
         </div>
       </div>
 
-      {/* Meta alignments & badges */}
+      {/* Badges and Radial dials row */}
       <div className="flex items-center justify-between md:justify-end gap-4 shrink-0 md:ml-4 border-t border-white/5 pt-3.5 md:pt-0 md:border-none">
         
-        {/* Badges container */}
+        {/* Recurrence milestone directive badges */}
         <div className="flex items-center gap-1.5 select-none">
-          <span className={cn('px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border backdrop-blur-md', horizonClass)}>
+          <span className={cn('px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border backdrop-blur-md', horizonClass)}>
             {horizonLabel}
           </span>
           {recurrenceLabel && (
-            <span className={cn('px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border backdrop-blur-md', recurrenceClass)}>
+            <span className={cn('px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border backdrop-blur-md', recurrenceClass)}>
               {recurrenceLabel}
             </span>
           )}
         </div>
 
-        {/* Target due date badge */}
+        {/* Target due clock stamp */}
         {due && (
           <span className={cn(
-            'flex items-center gap-1 text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border backdrop-blur-md font-mono select-none transition-all duration-300',
-            isOverdue ? 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.1)] animate-pulse' : 'bg-white/[0.02] border-white/5 text-muted-foreground'
+            'flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border backdrop-blur-md font-mono select-none transition-all duration-300',
+            isOverdue ? 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.15)] animate-pulse' : 'bg-white/[0.02] border-white/5 text-muted-foreground'
           )}>
             <Calendar className="h-2.5 w-2.5 text-muted-foreground shrink-0 mr-0.5" />
             {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         )}
 
-        {/* Progress Rollup bar (hidden on mobile devices for layout simplicity) */}
+        {/* Small SVG progress dial */}
         {goal.progressRollup !== undefined && (
-          <div className="w-28 flex flex-col justify-center gap-1.5 hidden lg:flex select-none">
-            <div className="flex items-center justify-between text-[8px] font-black text-muted-foreground tracking-wider">
-              <span>ROLLUP PROGRESS</span>
-              <span className="font-mono text-foreground">{goal.progressRollup}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-white/[0.04] dark:bg-black/20 rounded-full overflow-hidden border border-white/5 relative">
-              <div
-                className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-500 shadow-[0_0_6px_rgba(167,139,250,0.4)]"
-                style={{ width: `${goal.progressRollup}%` }}
+          <div className="shrink-0 flex items-center justify-center relative h-9 w-9 bg-white/[0.02] border border-white/5 rounded-full select-none" data-no-click>
+            <svg className="w-9 h-9 transform -rotate-90">
+              <circle
+                className="text-white/[0.04] stroke-current"
+                strokeWidth="2.5"
+                fill="transparent"
+                r={radius - 2}
+                cx="18"
+                cy="18"
               />
-            </div>
+              <circle
+                className="text-violet-400 stroke-current transition-all duration-500 ease-out"
+                strokeWidth="2.5"
+                strokeDasharray={circumference - 10}
+                strokeDashoffset={offset - 10}
+                strokeLinecap="round"
+                fill="transparent"
+                r={radius - 2}
+                cx="18"
+                cy="18"
+                style={{ stroke: 'url(#listRadialGrad)' }}
+              />
+            </svg>
+            <span className="absolute text-[7.5px] font-black text-foreground font-mono select-none">
+              {progress}%
+            </span>
           </div>
         )}
 
-        {/* Delete action button */}
+        {/* Technical deletion trigger */}
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="text-muted-foreground hover:text-red-400 p-2 rounded-xl hover:bg-red-500/10 border border-transparent hover:border-red-500/15 transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 cursor-pointer min-h-9 min-w-9 flex items-center justify-center"
-          title="Delete goal"
+          className="text-muted-foreground hover:text-red-400 p-2 rounded hover:bg-red-500/10 border border-transparent hover:border-red-500/15 transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 cursor-pointer min-h-8 min-w-8 flex items-center justify-center"
+          title="Remove outcome directive"
         >
-          <Trash2 className="h-4.5 w-4.5" />
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
     </motion.div>
@@ -261,38 +290,41 @@ export function TasksPage() {
 
   const taskStatuses: TaskStatus[] = ['todo', 'in_progress', 'review', 'done'];
 
-  return (
-    <div className="absolute inset-y-0 left-0 right-0 top-0 bottom-6 md:bottom-2 flex flex-col overflow-hidden p-1 sm:p-2 bg-transparent select-none">
-      
-      {/* ─── Premium Canvas Workspace Shell with Acrylic details ─── */}
-      <div className="flex-1 flex flex-col bg-gradient-to-b from-card/80 to-card/50 dark:from-card/50 dark:to-card/25 backdrop-blur-3xl border border-white/5 rounded-3xl shadow-2xl overflow-hidden relative group transition-all duration-500">
-        
-        {/* Shifting Aurora mesh glows */}
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-gradient-to-br from-violet-600/15 via-fuchsia-500/[0.04] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[8s]" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] bg-gradient-to-tr from-cyan-500/10 via-cyan-500/[0.03] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[12s]" />
-        
-        {/* Canvas dot grid */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_1px,transparent_1px)] dark:bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.008)_1px,transparent_1px)] bg-[size:18px_18px] pointer-events-none opacity-90" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.002)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.002)_1px,transparent_1px)] bg-[size:80px_80px] pointer-events-none" />
+  // Left HUD Panel Metrics and SVGs
+  const tasksDoneCount = rootTasks.filter((t) => t.status === 'done').length;
+  const completionPercent = rootTasks.length > 0 ? Math.round((tasksDoneCount / rootTasks.length) * 100) : 0;
+  const radarCircumference = 2 * Math.PI * 45; // radius = 45 -> 282.74
+  const radarOffset = radarCircumference - (completionPercent / 100) * radarCircumference;
 
-        {/* ─── Responsive Glass operational Deck Header ─── */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-5 py-4 sm:px-6 sm:py-5 border-b border-white/5 flex-shrink-0 gap-4.5 bg-white/[0.015] dark:bg-white/[0.002] backdrop-blur-md relative z-10 shadow-sm">
+  return (
+    <div className="absolute inset-y-0 left-0 right-0 top-0 bottom-6 md:bottom-2 flex flex-col overflow-hidden p-1 sm:p-2 bg-transparent select-none font-mono">
+      
+      {/* Asymmetric Linear/Terminal background block panel */}
+      <div className="flex-1 flex flex-col bg-gradient-to-b from-card/85 to-card/50 dark:from-card/50 dark:to-card/20 border border-white/5 rounded-2xl shadow-2xl overflow-hidden relative group transition-all duration-500">
         
-          {/* Segmented control tab switcher with framer sliding highlight */}
-          <div className="flex items-center gap-1.5 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1.5 rounded-2xl shrink-0 backdrop-blur-md shadow-inner relative justify-around sm:justify-start">
+        {/* Animated ambient mesh rays */}
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-gradient-to-br from-violet-600/10 via-cyan-500/[0.02] to-transparent rounded-full blur-3xl pointer-events-none animate-pulse duration-[8s]" />
+        
+        {/* Blueprint-grid background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.01)_1px,transparent_1px)] dark:bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.005)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-90" />
+
+        {/* ─── Cybernetic Operational command deck header ─── */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-5 py-4 border-b border-white/5 flex-shrink-0 gap-4 bg-white/[0.01] dark:bg-black/35 backdrop-blur-md relative z-10 shadow-sm">
+          
+          <div className="flex items-center gap-1.5 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1.5 rounded-xl shrink-0 justify-around sm:justify-start">
             <button
               onClick={() => handleTabChange('tasks')}
               className={cn(
-                'px-4 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2.5 transition-all duration-300 cursor-pointer relative z-10 flex-1 sm:flex-none min-h-9',
+                'px-4 py-2 rounded text-xs font-black flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer relative z-10 flex-1 sm:flex-none min-h-9 uppercase tracking-widest',
                 activeTab === 'tasks' ? 'text-foreground font-black' : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <CheckSquare className={cn('h-4 w-4 transition-colors duration-300', activeTab === 'tasks' ? 'text-violet-400' : 'text-muted-foreground')} />
-              <span>Tasks Focus</span>
+              <CheckSquare className={cn('h-3.5 w-3.5 transition-colors duration-300', activeTab === 'tasks' ? 'text-violet-400' : 'text-muted-foreground')} />
+              <span>[Tasks Focus]</span>
               {activeTab === 'tasks' && (
                 <motion.div
                   layoutId="activeTabIndicator"
-                  className="absolute inset-0 bg-white/5 border border-white/10 rounded-xl shadow-lg -z-10"
+                  className="absolute inset-0 bg-white/5 border border-white/10 rounded shadow-md -z-10"
                   transition={{ type: 'spring', damping: 22, stiffness: 220 }}
                 />
               )}
@@ -300,27 +332,26 @@ export function TasksPage() {
             <button
               onClick={() => handleTabChange('goals')}
               className={cn(
-                'px-4 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2.5 transition-all duration-300 cursor-pointer relative z-10 flex-1 sm:flex-none min-h-9',
+                'px-4 py-2 rounded text-xs font-black flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer relative z-10 flex-1 sm:flex-none min-h-9 uppercase tracking-widest',
                 activeTab === 'goals' ? 'text-foreground font-black' : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <Target className={cn('h-4 w-4 transition-colors duration-300', activeTab === 'goals' ? 'text-violet-400' : 'text-muted-foreground')} />
-              <span>Goals Focus</span>
+              <Target className={cn('h-3.5 w-3.5 transition-colors duration-300', activeTab === 'goals' ? 'text-violet-400' : 'text-muted-foreground')} />
+              <span>[Goals Focus]</span>
               {activeTab === 'goals' && (
                 <motion.div
                   layoutId="activeTabIndicator"
-                  className="absolute inset-0 bg-white/5 border border-white/10 rounded-xl shadow-lg -z-10"
+                  className="absolute inset-0 bg-white/5 border border-white/10 rounded shadow-md -z-10"
                   transition={{ type: 'spring', damping: 22, stiffness: 220 }}
                 />
               )}
             </button>
           </div>
 
-          {/* View Toggles & creation button CTA */}
-          <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0">
+          {/* Controls viewports and commands */}
+          <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0 select-none">
             
-            {/* View toggles sliding background */}
-            <div className="flex items-center gap-1 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-xl shrink-0 backdrop-blur-md shadow-inner relative">
+            <div className="flex items-center gap-1 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded shrink-0 backdrop-blur-md relative">
               <button
                 onClick={() => {
                   if (activeTab === 'tasks') {
@@ -332,18 +363,18 @@ export function TasksPage() {
                   }
                 }}
                 className={cn(
-                  'p-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all duration-300 cursor-pointer relative z-10 min-h-8 min-w-8',
+                  'p-2 rounded text-xs font-bold flex items-center justify-center gap-1 transition-all duration-300 cursor-pointer relative z-10 min-h-8 min-w-8',
                   (activeTab === 'tasks' ? tasksViewMode === 'list' : goalsViewMode === 'list')
-                    ? 'text-foreground'
+                    ? 'text-foreground font-black'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
-                title="List View"
+                title="Ledger View"
               >
                 <LayoutList className="h-4 w-4" />
                 {(activeTab === 'tasks' ? tasksViewMode === 'list' : goalsViewMode === 'list') && (
                   <motion.div
                     layoutId="activeViewIndicator"
-                    className="absolute inset-0 bg-white/5 border border-white/10 rounded-lg shadow-sm -z-10"
+                    className="absolute inset-0 bg-white/5 border border-white/10 rounded -z-10"
                     transition={{ type: 'spring', damping: 20, stiffness: 200 }}
                   />
                 )}
@@ -359,321 +390,417 @@ export function TasksPage() {
                   }
                 }}
                 className={cn(
-                  'p-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all duration-300 cursor-pointer relative z-10 min-h-8 min-w-8',
+                  'p-2 rounded text-xs font-bold flex items-center justify-center gap-1 transition-all duration-300 cursor-pointer relative z-10 min-h-8 min-w-8',
                   (activeTab === 'tasks' ? tasksViewMode === 'board' : goalsViewMode === 'board')
-                    ? 'text-foreground'
+                    ? 'text-foreground font-black'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
-                title="Board View"
+                title="Chamber Grid"
               >
                 <Trello className="h-4 w-4" />
                 {(activeTab === 'tasks' ? tasksViewMode === 'board' : goalsViewMode === 'board') && (
                   <motion.div
                     layoutId="activeViewIndicator"
-                    className="absolute inset-0 bg-white/5 border border-white/10 rounded-lg shadow-sm -z-10"
+                    className="absolute inset-0 bg-white/5 border border-white/10 rounded -z-10"
                     transition={{ type: 'spring', damping: 20, stiffness: 200 }}
                   />
                 )}
               </button>
             </div>
 
-            {/* Premium action button */}
             {activeTab === 'tasks' ? (
               <button
                 onClick={() => {
                   setCreateTaskDefaultStatus('todo');
                   setCreateTaskOpen(true);
                 }}
-                className="flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-4.5 py-2 text-xs font-black tracking-wider transition-all duration-300 active:scale-95 hover:scale-[1.02] cursor-pointer shadow-[0_8px_20px_-6px_rgba(124,58,237,0.4)] border border-violet-500/20 h-10 select-none"
+                className="flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 rounded bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-4 py-2 text-xs font-black tracking-widest transition-all duration-300 active:scale-95 hover:scale-[1.02] cursor-pointer shadow-[0_4px_12px_rgba(124,58,237,0.3)] border border-violet-500/20 h-10 select-none uppercase"
               >
                 <Plus className="h-4 w-4 shrink-0" />
-                <span>New Task</span>
+                <span>[Stage task]</span>
               </button>
             ) : (
               <button
                 onClick={() => setCreateGoalOpen(true)}
-                className="flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-4.5 py-2 text-xs font-black tracking-wider transition-all duration-300 active:scale-95 hover:scale-[1.02] cursor-pointer shadow-[0_8px_20px_-6px_rgba(124,58,237,0.4)] border border-violet-500/20 h-10 select-none"
+                className="flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 rounded bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-4 py-2 text-xs font-black tracking-widest transition-all duration-300 active:scale-95 hover:scale-[1.02] cursor-pointer shadow-[0_4px_12px_rgba(124,58,237,0.3)] border border-violet-500/20 h-10 select-none uppercase"
               >
                 <Plus className="h-4 w-4 shrink-0" />
-                <span>New Goal</span>
+                <span>[Stage goal]</span>
               </button>
             )}
           </div>
 
         </div>
 
-        {/* ─── Scrollable main content viewports ─── */}
-        <div className={cn(
-          "flex-grow relative z-10 p-4 sm:p-5.5 min-h-0",
-          (activeTab === 'tasks' ? tasksViewMode === 'list' : goalsViewMode === 'list')
-            ? "overflow-y-auto custom-scrollbar"
-            : "overflow-hidden"
-        )}>
-        
-        {((activeTab === 'tasks' && tasksLoading) || (activeTab === 'goals' && goalsLoading)) ? (
-          <div className="flex h-full items-center justify-center min-h-[300px]">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-7 w-7 animate-spin text-violet-400" />
-              <p className="text-[11px] text-muted-foreground font-black tracking-widest uppercase animate-pulse select-none">Syncing viewport…</p>
-            </div>
-          </div>
-        ) : activeTab === 'tasks' ? (
+        {/* ─── Split Screen HUD Main Console Area ─── */}
+        <div className="flex-grow flex flex-col xl:flex-row min-h-0 overflow-hidden relative z-10">
           
-          /* =========================================================================
-             TASKS VIEWPORT
-             ========================================================================= */
-          tasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[350px] gap-5 px-4 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 ring-1 ring-violet-500/20 shadow-inner">
-                <CheckSquare className="h-7 w-7 text-violet-400/80" />
-              </div>
-              <div className="space-y-1.5 select-none">
-                <p className="text-sm font-black text-foreground uppercase tracking-wide">No tasks created yet</p>
-                <p className="text-[11px] text-muted-foreground/80 max-w-[280px]">Add your initial task focus area to launch collaborate operations.</p>
-              </div>
-              <button
-                onClick={() => {
-                  setCreateTaskDefaultStatus('todo');
-                  setCreateTaskOpen(true);
-                }}
-                className="flex items-center justify-center gap-1.5 rounded-xl bg-violet-650 hover:bg-violet-600 text-white px-4.5 py-2 text-xs font-black tracking-wider transition-all duration-300 active:scale-95 hover:scale-[1.02] cursor-pointer h-9 shadow-md border-0 uppercase"
-              >
-                <Plus className="h-4 w-4 shrink-0" />
-                Add task
-              </button>
+          {/* Asymmetric LEFT: Radar Telemetry HUD Panel */}
+          <div className="w-full xl:w-[290px] border-b xl:border-b-0 xl:border-r border-white/5 bg-white/[0.005] dark:bg-black/[0.15] p-5 shrink-0 flex flex-col gap-5 font-mono select-none overflow-y-auto custom-scrollbar select-none text-center xl:text-left">
+            
+            {/* HUD Status Header */}
+            <div className="flex items-center justify-center xl:justify-start gap-2 border-b border-white/5 pb-3">
+              <Activity className="h-4.5 w-4.5 text-cyan-400 animate-pulse" />
+              <span className="text-[10px] font-black tracking-[0.25em] text-foreground">TELEMETRY_HUD</span>
             </div>
-          ) : tasksViewMode === 'list' ? (
-            <div className="space-y-8 select-none">
-              {taskStatuses.map((status) => {
-                const statusTasks = rootTasks.filter((t) => t.status === status);
-                if (statusTasks.length === 0) return null;
-                const statusCfg = TASK_STATUS_CONFIG[status];
-                const statusColor = statusCfg?.dot || '#a78bfa';
+
+            {/* Radar Telemetry dial */}
+            <div className="flex justify-center py-4 relative select-none">
+              <div className="relative h-32 w-32 flex items-center justify-center bg-white/[0.01] border border-white/5 rounded-full select-none shadow-sm">
                 
-                // Done tasks collapsed archive rows
-                if (status === 'done') {
-                  return (
-                    <div key={status} className="space-y-3.5 pt-2 select-none">
+                {/* SVG radar dialect ring */}
+                <svg className="w-32 h-32 transform -rotate-90">
+                  <defs>
+                    <linearGradient id="radarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#8b5cf6" />
+                      <stop offset="100%" stopColor="#22d3ee" />
+                    </linearGradient>
+                  </defs>
+                  
+                  {/* Concentric grids circles */}
+                  <circle className="text-white/[0.02] stroke-current" strokeWidth="1" fill="transparent" r="25" cx="64" cy="64" />
+                  <circle className="text-white/[0.02] stroke-current" strokeWidth="1" fill="transparent" r="35" cx="64" cy="64" />
+                  
+                  {/* Underlay tracking circle */}
+                  <circle
+                    className="text-white/[0.04] stroke-current"
+                    strokeWidth="3.5"
+                    fill="transparent"
+                    r="45"
+                    cx="64"
+                    cy="64"
+                  />
+                  {/* Active scanning completion rate dial */}
+                  <circle
+                    className="stroke-current transition-all duration-700 ease-out"
+                    strokeWidth="3.5"
+                    strokeDasharray={radarCircumference}
+                    strokeDashoffset={radarOffset}
+                    strokeLinecap="round"
+                    fill="transparent"
+                    r="45"
+                    cx="64"
+                    cy="64"
+                    style={{ 
+                      stroke: 'url(#radarGrad)',
+                      filter: 'drop-shadow(0 0 6px rgba(139, 92, 246, 0.45))'
+                    }}
+                  />
+                </svg>
+                
+                {/* Radial inner scanner indicators */}
+                <div className="absolute text-center space-y-0.5 select-none">
+                  <span className="block text-[14px] font-black text-foreground font-mono tracking-wide leading-none">{completionPercent}%</span>
+                  <span className="block text-[7.5px] text-muted-foreground uppercase tracking-widest font-mono">COMPLETE</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Tactical outcomes details */}
+            <div className="space-y-3.5 pt-2 select-none text-left">
+              <div className="bg-white/[0.01] border border-white/5 rounded-lg p-3 space-y-2.5">
+                <div className="flex items-center justify-between text-[9px] font-bold">
+                  <span className="text-muted-foreground uppercase tracking-wider">Total Directives:</span>
+                  <span className="font-mono text-foreground font-black">{rootTasks.length}</span>
+                </div>
+                <div className="flex items-center justify-between text-[9px] font-bold">
+                  <span className="text-muted-foreground uppercase tracking-wider">Completed Directives:</span>
+                  <span className="font-mono text-cyan-400 font-black">{tasksDoneCount}</span>
+                </div>
+                <div className="flex items-center justify-between text-[9px] font-bold">
+                  <span className="text-muted-foreground uppercase tracking-wider">Staged outcomes:</span>
+                  <span className="font-mono text-violet-400 font-black">{activeTasksCount}</span>
+                </div>
+                <div className="flex items-center justify-between text-[9px] font-bold">
+                  <span className="text-muted-foreground uppercase tracking-wider">Goal directives:</span>
+                  <span className="font-mono text-foreground font-black">{goals.length}</span>
+                </div>
+              </div>
+
+              <div className="border border-dashed border-white/10 rounded-lg p-3 text-center">
+                <span className="block text-[8px] font-black text-violet-400/90 tracking-widest uppercase">HUD_STATUS_ON</span>
+                <span className="block text-[7.5px] text-muted-foreground/60 tracking-wider mt-0.5 font-bold uppercase">LEDGER MODULE ACTIVE</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Asymmetric RIGHT: Main viewport canvas ledger lanes */}
+          <div className={cn(
+            "flex-grow relative p-4 sm:p-5.5 min-h-0",
+            (activeTab === 'tasks' ? tasksViewMode === 'list' : goalsViewMode === 'list')
+              ? "overflow-y-auto custom-scrollbar"
+              : "overflow-hidden"
+          )}>
+            
+            {activeTab === 'tasks' ? (
+              
+              /* =========================================================================
+                 TASKS DIRECTIVES VIEWPORT
+                 ========================================================================= */
+              tasks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full min-h-[350px] gap-5 px-4 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded border border-white/10 bg-violet-500/10 ring-1 ring-violet-500/20">
+                    <Terminal className="h-6 w-6 text-violet-400/70" />
+                  </div>
+                  <div className="space-y-1.5 select-none">
+                    <p className="text-sm font-black text-foreground uppercase tracking-widest font-mono">[NO_DIRECTIVES_STAGED]</p>
+                    <p className="text-[10px] text-muted-foreground max-w-[280px]">Add your initial operational task Outcomes to begin ledger tracking.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setCreateTaskDefaultStatus('todo');
+                      setCreateTaskOpen(true);
+                    }}
+                    className="flex items-center justify-center gap-1.5 rounded bg-violet-650 hover:bg-violet-600 text-white px-4 py-2 text-xs font-black tracking-widest transition-all duration-300 active:scale-95 cursor-pointer h-9 shadow-md border-0 uppercase font-mono"
+                  >
+                    <Plus className="h-4 w-4 shrink-0" />
+                    <span>[Stage outcomes]</span>
+                  </button>
+                </div>
+              ) : tasksViewMode === 'list' ? (
+                <div className="space-y-8 select-none">
+                  {taskStatuses.map((status) => {
+                    const statusTasks = rootTasks.filter((t) => t.status === status);
+                    if (statusTasks.length === 0) return null;
+                    const statusCfg = TASK_STATUS_CONFIG[status];
+                    const statusColor = statusCfg?.dot || '#a78bfa';
+
+                    // Collapsed Vault shutter
+                    if (status === 'done') {
+                      return (
+                        <div key={status} className="space-y-3.5 pt-2 select-none">
+                          <button
+                            type="button"
+                            onClick={() => setShowCompletedTasks(!showCompletedTasks)}
+                            className="w-full border border-white/10 bg-white/[0.015] hover:bg-white/[0.035] rounded-xl p-3 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:text-foreground transition-all duration-300 font-black tracking-[0.2em] select-none font-mono shadow-sm"
+                          >
+                            <span className="flex items-center gap-2 uppercase">
+                              <ShieldCheck className="h-4 w-4 text-cyan-400" />
+                              [ARCHIVED_DIRECTIVES_VAULT] ({statusTasks.length})
+                            </span>
+                            <ChevronDown className={cn("w-4 h-4 transition-transform duration-300", showCompletedTasks ? "rotate-180 text-cyan-400" : "")} />
+                          </button>
+                          <AnimatePresence>
+                            {showCompletedTasks && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden space-y-2 pb-1"
+                              >
+                                {statusTasks.map((task) => (
+                                  <TaskListRow
+                                    key={task.id}
+                                    task={task}
+                                    orgId={orgId}
+                                    actor={actor}
+                                    subtasks={subtaskMap[task.id] ?? []}
+                                    isSelected={selectedTask?.id === task.id}
+                                    onSelect={handleToggleTaskSelect}
+                                    onDelete={handleDeleteTask}
+                                    memberMap={memberRecordMap}
+                                  />
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={status} className="space-y-3 select-none">
+                        <div className="flex items-center gap-2.5 px-2 select-none">
+                          <div 
+                            className="h-1.5 w-1.5 rounded-full" 
+                            style={{ 
+                              backgroundColor: statusColor,
+                              boxShadow: `0 0 10px ${statusColor}` 
+                            }} 
+                          />
+                          <span className="text-[9.5px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                            {statusCfg?.label || status}
+                          </span>
+                          <span className="text-[8.5px] font-bold text-muted-foreground bg-white/[0.04] px-2 py-0.5 rounded border border-white/5 font-mono select-none">
+                            {statusTasks.length}
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          {statusTasks.map((task) => (
+                            <TaskListRow
+                              key={task.id}
+                              task={task}
+                              orgId={orgId}
+                              actor={actor}
+                              subtasks={subtaskMap[task.id] ?? []}
+                              isSelected={selectedTask?.id === task.id}
+                              onSelect={handleToggleTaskSelect}
+                              onDelete={handleDeleteTask}
+                              memberMap={memberRecordMap}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <KanbanBoard
+                  columns={taskColumns}
+                  allTasks={rootTasks}
+                  labels={labels}
+                  memberMap={memberMap}
+                  orgId={orgId}
+                  actor={actor}
+                  onTaskClick={handleToggleTaskSelect}
+                  onAddTask={(status) => {
+                    setCreateTaskDefaultStatus(status);
+                    setCreateTaskOpen(true);
+                  }}
+                />
+              )
+            ) : (
+              
+              /* =========================================================================
+                 GOALS DIRECTIVES VIEWPORT
+                 ========================================================================= */
+              goals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full min-h-[350px] gap-5 px-4 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded border border-white/10 bg-violet-500/10 ring-1 ring-violet-500/20">
+                    <Target className="h-6 w-6 text-violet-400/70" />
+                  </div>
+                  <div className="space-y-1.5 select-none">
+                    <p className="text-sm font-black text-foreground uppercase tracking-widest font-mono">[NO_TARGETS_STAGED]</p>
+                    <p className="text-[10px] text-muted-foreground max-w-[280px]">Add your strategic milstone directives to trace outcome goals.</p>
+                  </div>
+                  <button
+                    onClick={() => setCreateGoalOpen(true)}
+                    className="flex items-center justify-center gap-1.5 rounded bg-violet-650 hover:bg-violet-600 text-white px-4 py-2 text-xs font-black tracking-widest transition-all duration-300 active:scale-95 cursor-pointer h-9 shadow-md border-0 uppercase font-mono"
+                  >
+                    <Plus className="h-4 w-4 shrink-0" />
+                    <span>[Stage goal]</span>
+                  </button>
+                </div>
+              ) : goalsViewMode === 'list' ? (
+                <div className="space-y-8 select-none">
+                  {/* Linear gradients definitions specifically inside the list view canvas */}
+                  <svg className="absolute w-0 h-0">
+                    <defs>
+                      <linearGradient id="listRadialGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#8b5cf6" />
+                        <stop offset="100%" stopColor="#06b6d4" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+
+                  {/* Active milestones outcomes */}
+                  {activeGoals.length > 0 && (
+                    <div>
+                      <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3.5 px-2 select-none">[ACTIVE DIRECTIVES]</p>
+                      <div className="space-y-2.5">
+                        <AnimatePresence>
+                          {activeGoals.map((g) => (
+                            <GoalListRow
+                              key={g.id}
+                              goal={g}
+                              onSelect={() => navigate(`/goals/${g.id}`)}
+                              onDelete={async () => {
+                                if (confirm('Delete this goal? associated tasks will be unlinked.')) {
+                                  await deleteGoal(g.id);
+                                }
+                              }}
+                              onToggleComplete={async () => {
+                                const nextStatus = g.status === 'completed' ? 'active' : 'completed';
+                                await updateGoal(g.id, { status: nextStatus });
+                              }}
+                            />
+                          ))}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Completed and Cancelled milestones directives */}
+                  {completedOrCancelledGoals.length > 0 && (
+                    <div className="space-y-3.5 pt-2 select-none">
                       <button
                         type="button"
-                        onClick={() => setShowCompletedTasks(!showCompletedTasks)}
-                        className="w-full border border-white/5 bg-white/[0.015] hover:bg-white/[0.035] rounded-2xl p-3 cursor-pointer flex items-center justify-between text-[10.5px] text-muted-foreground hover:text-foreground transition-all duration-300 font-black tracking-wider select-none shadow-sm"
+                        onClick={() => setShowCompletedGoals(!showCompletedGoals)}
+                        className="w-full border border-white/10 bg-white/[0.015] hover:bg-white/[0.035] rounded-xl p-3 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:text-foreground transition-all duration-300 font-black tracking-[0.2em] select-none font-mono shadow-sm"
                       >
-                        <span className="flex items-center gap-2">
-                          <CheckSquare className="h-4 w-4 text-cyan-400" />
-                          Completed Tasks Archive ({statusTasks.length})
+                        <span className="flex items-center gap-2 uppercase">
+                          <ShieldCheck className="h-4 w-4 text-cyan-400" />
+                          [COMPLETED_DIRECTIVES_ARCHIVE] ({completedOrCancelledGoals.length})
                         </span>
-                        <ChevronDown className={cn("w-4 h-4 transition-transform duration-350", showCompletedTasks ? "rotate-180 text-cyan-400" : "")} />
+                        <ChevronDown className={cn("w-4 h-4 transition-transform duration-300", showCompletedGoals ? "rotate-180 text-cyan-400" : "")} />
                       </button>
                       <AnimatePresence>
-                        {showCompletedTasks && (
+                        {showCompletedGoals && (
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden space-y-2 pb-1"
+                            className="overflow-hidden space-y-2.5 pb-1"
                           >
-                            {statusTasks.map((task) => (
-                              <TaskListRow
-                                key={task.id}
-                                task={task}
-                                orgId={orgId}
-                                actor={actor}
-                                subtasks={subtaskMap[task.id] ?? []}
-                                isSelected={selectedTask?.id === task.id}
-                                onSelect={handleToggleTaskSelect}
-                                onDelete={handleDeleteTask}
-                                memberMap={memberRecordMap}
+                            {completedOrCancelledGoals.map((g) => (
+                              <GoalListRow
+                                key={g.id}
+                                goal={g}
+                                onSelect={() => navigate(`/goals/${g.id}`)}
+                                onDelete={async () => {
+                                  if (confirm('Delete this goal? associated tasks will be unlinked.')) {
+                                    await deleteGoal(g.id);
+                                  }
+                                }}
+                                onToggleComplete={async () => {
+                                  const nextStatus = g.status === 'completed' ? 'active' : 'completed';
+                                  await updateGoal(g.id, { status: nextStatus });
+                                }}
                               />
                             ))}
                           </motion.div>
                         )}
                       </AnimatePresence>
                     </div>
-                  );
-                }
-
-                return (
-                  <div key={status} className="space-y-3 select-none">
-                    <div className="flex items-center gap-2.5 px-2 select-none">
-                      {/* Halo styled status marker */}
-                      <div 
-                        className="h-2 w-2 rounded-full" 
-                        style={{ 
-                          backgroundColor: statusColor,
-                          boxShadow: `0 0 10px ${statusColor}` 
-                        }} 
-                      />
-                      <span className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
-                        {statusCfg?.label || status}
-                      </span>
-                      <span className="text-[9.5px] font-black text-muted-foreground/80 bg-white/[0.04] px-2 py-0.5 rounded-lg border border-white/5 font-mono select-none">
-                        {statusTasks.length}
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      {statusTasks.map((task) => (
-                        <TaskListRow
-                          key={task.id}
-                          task={task}
-                          orgId={orgId}
-                          actor={actor}
-                          subtasks={subtaskMap[task.id] ?? []}
-                          isSelected={selectedTask?.id === task.id}
-                          onSelect={handleToggleTaskSelect}
-                          onDelete={handleDeleteTask}
-                          memberMap={memberRecordMap}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <KanbanBoard
-              columns={taskColumns}
-              allTasks={rootTasks}
-              labels={labels}
-              memberMap={memberMap}
-              orgId={orgId}
-              actor={actor}
-              onTaskClick={handleToggleTaskSelect}
-              onAddTask={(status) => {
-                setCreateTaskDefaultStatus(status);
-                setCreateTaskOpen(true);
-              }}
-            />
-          )
-        ) : (
-          
-          /* =========================================================================
-             GOALS VIEWPORT
-             ========================================================================= */
-          goals.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[350px] gap-5 px-4 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 ring-1 ring-violet-500/20 shadow-inner">
-                <Target className="h-7 w-7 text-violet-400/80" />
-              </div>
-              <div className="space-y-1.5 select-none">
-                <p className="text-sm font-black text-foreground uppercase tracking-wide">No goals created yet</p>
-                <p className="text-[11px] text-muted-foreground/80 max-w-[280px]">Add your core milestone focus results to launch your tracking targets.</p>
-              </div>
-              <button
-                onClick={() => setCreateGoalOpen(true)}
-                className="flex items-center justify-center gap-1.5 rounded-xl bg-violet-650 hover:bg-violet-650 text-white px-4.5 py-2 text-xs font-black tracking-wider transition-all duration-300 active:scale-95 hover:scale-[1.02] cursor-pointer h-9 shadow-md border-0 uppercase"
-              >
-                <Plus className="h-4 w-4 shrink-0" />
-                Add Goal
-              </button>
-            </div>
-          ) : goalsViewMode === 'list' ? (
-            <div className="space-y-8 select-none">
-              {/* Active Goals list */}
-              {activeGoals.length > 0 && (
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground mb-3.5 px-2 select-none">Active Goals</p>
-                  <div className="space-y-2.5">
-                    <AnimatePresence>
-                      {activeGoals.map((g) => (
-                        <GoalListRow
-                          key={g.id}
-                          goal={g}
-                          onSelect={() => navigate(`/goals/${g.id}`)}
-                          onDelete={async () => {
-                            if (confirm('Delete this goal? associated tasks will be unlinked.')) {
-                              await deleteGoal(g.id);
-                            }
-                          }}
-                          onToggleComplete={async () => {
-                            const nextStatus = g.status === 'completed' ? 'active' : 'completed';
-                            await updateGoal(g.id, { status: nextStatus });
-                          }}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </div>
+                  )}
                 </div>
-              )}
+              ) : (
+                <GoalKanbanBoard
+                  goals={goals}
+                  onGoalClick={(g) => navigate(`/goals/${g.id}`)}
+                  onAddGoal={() => setCreateGoalOpen(true)}
+                />
+              )
+            )}
+          </div>
 
-              {/* Collapsible Completed/Cancelled Goals Archive */}
-              {completedOrCancelledGoals.length > 0 && (
-                <div className="space-y-3.5 pt-2 select-none">
-                  <button
-                    type="button"
-                    onClick={() => setShowCompletedGoals(!showCompletedGoals)}
-                    className="w-full border border-white/5 bg-white/[0.015] hover:bg-white/[0.035] rounded-2xl p-3 cursor-pointer flex items-center justify-between text-[10.5px] text-muted-foreground hover:text-foreground transition-all duration-300 font-black tracking-wider select-none shadow-sm"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-cyan-400" />
-                      Completed & Cancelled Goals Archive ({completedOrCancelledGoals.length})
-                    </span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform duration-350", showCompletedGoals ? "rotate-180 text-cyan-400" : "")} />
-                  </button>
-                  <AnimatePresence>
-                    {showCompletedGoals && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden space-y-2.5 pb-1"
-                      >
-                        {completedOrCancelledGoals.map((g) => (
-                          <GoalListRow
-                            key={g.id}
-                            goal={g}
-                            onSelect={() => navigate(`/goals/${g.id}`)}
-                            onDelete={async () => {
-                              if (confirm('Delete this goal? associated tasks will be unlinked.')) {
-                                await deleteGoal(g.id);
-                              }
-                            }}
-                            onToggleComplete={async () => {
-                              const nextStatus = g.status === 'completed' ? 'active' : 'completed';
-                              await updateGoal(g.id, { status: nextStatus });
-                            }}
-                          />
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-            </div>
-          ) : (
-            <GoalKanbanBoard
-              goals={goals}
-              onGoalClick={(g) => navigate(`/goals/${g.id}`)}
-              onAddGoal={() => setCreateGoalOpen(true)}
-            />
-          )
-        )}
-      </div>
-
-      {/* ─── Premium glass status metrics canvas bar ─── */}
-      <div className="h-8.5 border-t border-white/5 bg-white/[0.01] dark:bg-white/[0.002] flex items-center justify-between px-5 text-[9.5px] font-mono font-bold tracking-wider text-muted-foreground/60 select-none relative z-10 shrink-0">
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-cyan-400 select-none">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_#06b6d4]" />
-            CLOUD SYNCED
-          </span>
-          <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
-          <span className="hidden sm:block">WORKSPACE: {orgId.slice(0, 8).toUpperCase()}</span>
         </div>
-        <div className="flex items-center gap-4.5">
-          <span>ACTIVE TASKS: {activeTasksCount}</span>
-          <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
-          <span className="hidden md:block">GOALS: {goals.length}</span>
-          <div className="h-4 w-[1px] bg-white/10 hidden lg:block" />
-          <span className="hidden lg:block">OPERATOR: {actorName.toUpperCase()}</span>
+
+        {/* ─── HUD bottom terminal parameters bar ─── */}
+        <div className="h-8.5 border-t border-white/5 bg-white/[0.005] dark:bg-black/35 flex items-center justify-between px-5 text-[9px] font-mono font-bold tracking-widest text-muted-foreground/60 select-none relative z-10 shrink-0">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-cyan-400 select-none animate-pulse">
+              <span className="h-1 w-1 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
+              HUD_ACTIVE
+            </span>
+            <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
+            <span className="hidden sm:block">SYS_WORKSPACE: {orgId.slice(0, 8).toUpperCase()}</span>
+          </div>
+          <div className="flex items-center gap-4.5">
+            <span>DIRECTIVES: {rootTasks.length}</span>
+            <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
+            <span className="hidden md:block">VAULT_ARCHIVE: {tasksDoneCount}</span>
+            <div className="h-4 w-[1px] bg-white/10 hidden lg:block" />
+            <span className="hidden lg:block">SYS_OPERATOR: {actorName.toUpperCase()}</span>
+          </div>
         </div>
-      </div>
 
       </div>
 
-      {/* ─── Unified Create Drawers / Overlays ─── */}
+      {/* ─── STAGE DRAWER DRAWER OVERLAYS ─── */}
 
-      {/* Create task popup */}
+      {/* Task Creation popup */}
       <CreateTaskPopup
         open={createTaskOpen}
         onClose={() => setCreateTaskOpen(false)}
@@ -682,14 +809,14 @@ export function TasksPage() {
         defaultStatus={createTaskDefaultStatus}
       />
 
-      {/* Create goal dialog */}
+      {/* Goal Creation modal */}
       <CreateGoalModal
         open={createGoalOpen}
         onClose={() => setCreateGoalOpen(false)}
         orgId={orgId}
       />
 
-      {/* Detail panel canvas */}
+      {/* Detail dashboard sidebar */}
       {selectedTask && (
         <TaskDetailPanel
           task={selectedTask}

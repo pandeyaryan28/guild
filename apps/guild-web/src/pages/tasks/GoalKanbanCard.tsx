@@ -45,7 +45,16 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
     ? 'text-cyan-400 border-cyan-500/20 bg-cyan-500/5'
     : goal.recurrence === 'weekly'
     ? 'text-amber-400 border-amber-500/20 bg-amber-500/5'
-    : 'text-rose-400 border-rose-500/20 bg-rose-500/5';
+    : 'text-rose-450 border-rose-500/20 bg-rose-500/5';
+
+  // SVG Radial Telemetry Arc calculations
+  const progressValue = goal.progressRollup !== undefined ? goal.progressRollup : 0;
+  const radius = 18;
+  const strokeWidth = 3;
+  const circumference = 2 * Math.PI * radius; // Approx 113.1
+  const strokeDashoffset = circumference - (progressValue / 100) * circumference;
+
+  const goalIdCode = `G-${goal.id.slice(0, 4).toUpperCase()}`;
 
   return (
     <div
@@ -54,10 +63,10 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
       {...attributes}
       {...listeners}
       className={cn(
-        'group relative rounded-2xl border bg-white/[0.025] dark:bg-white/[0.002] backdrop-blur-md transition-all duration-300 cursor-grab active:cursor-grabbing p-4.5 space-y-4 select-none',
-        'border-white/5 hover:border-violet-500/25 hover:bg-white/[0.05] dark:hover:bg-white/[0.005] hover:shadow-[0_12px_24px_-10px_rgba(124,58,237,0.18)] hover:-translate-y-0.5',
-        isSortableDragging && 'opacity-25 border-violet-500/15',
-        isDragging && 'shadow-2xl shadow-violet-500/25 border-violet-500/35 bg-white/[0.06] dark:bg-white/[0.01] rotate-1 scale-102',
+        'group relative rounded-xl border bg-white/[0.015] dark:bg-black/[0.15] backdrop-blur-md transition-all duration-300 cursor-grab active:cursor-grabbing p-4.5 space-y-3.5 select-none font-mono overflow-hidden',
+        'border-white/5 hover:border-violet-500/25 hover:bg-white/[0.035] dark:hover:bg-white/[0.002] hover:shadow-[0_8px_20px_-10px_rgba(124,58,237,0.2)] hover:-translate-y-0.5',
+        isSortableDragging && 'opacity-20 border-violet-500/10',
+        isDragging && 'shadow-2xl shadow-violet-500/25 border-violet-500/35 bg-white/[0.04] dark:bg-white/[0.004] rotate-1 scale-102',
       )}
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest('[data-no-click]')) {
@@ -65,95 +74,128 @@ export function GoalKanbanCard({ goal, onClick, onDelete, onStatusChange, isDrag
         }
       }}
     >
-      {/* Title & Dropdown */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-2 min-w-0 flex-1">
-          <Target className="h-4 w-4 text-violet-400/80 shrink-0 mt-0.5" />
-          <h4 className="text-xs font-black text-foreground group-hover:text-violet-400 transition-colors truncate tracking-wide leading-snug">
-            {goal.title}
-          </h4>
-        </div>
+      {/* Blueprint Grid layout underlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.008)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none" />
 
-        <div data-no-click className="shrink-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded-xl p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/10 dark:hover:bg-white/5 border border-transparent hover:border-white/10 transition-all outline-none min-h-8 min-w-8 flex items-center justify-center cursor-pointer">
-              <MoreHorizontal className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36 border border-white/10 bg-surface/90 backdrop-blur-xl p-1 text-xs shadow-xl rounded-xl">
-              <DropdownMenuItem onClick={onClick} className="font-semibold cursor-pointer py-2 hover:bg-white/5 rounded-lg">Open Details</DropdownMenuItem>
-              {goal.status !== 'active' && (
-                <DropdownMenuItem onClick={() => onStatusChange('active')} className="font-semibold cursor-pointer py-2 hover:bg-white/5 rounded-lg">Mark Active</DropdownMenuItem>
-              )}
-              {goal.status !== 'completed' && (
-                <DropdownMenuItem onClick={() => onStatusChange('completed')} className="font-semibold cursor-pointer py-2 hover:bg-white/5 rounded-lg">Mark Completed</DropdownMenuItem>
-              )}
-              {goal.status !== 'cancelled' && (
-                <DropdownMenuItem onClick={() => onStatusChange('cancelled')} className="font-semibold cursor-pointer py-2 hover:bg-white/5 rounded-lg">Mark Cancelled</DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400 font-semibold cursor-pointer py-2 hover:bg-red-500/10 rounded-lg">Delete Goal</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* Description */}
-      {goal.description && (
-        <p className="text-[10px] text-muted-foreground/80 line-clamp-2 leading-relaxed font-medium pl-6">
-          {goal.description}
-        </p>
-      )}
-
-      {/* Badges / Horizon tags */}
-      <div className="flex flex-wrap items-center gap-1.5 pl-6">
-        <span className={cn('px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border backdrop-blur-md select-none', horizonClass)}>
-          {horizonLabel}
-        </span>
-        {recurrenceLabel && (
-          <span className={cn('px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border backdrop-blur-md select-none', recurrenceClass)}>
-            {recurrenceLabel}
-          </span>
-        )}
-      </div>
-
-      {/* Futuristic Progress Rollup Gauges */}
-      {goal.progressRollup !== undefined && (
-        <div className="pt-3 border-t border-white/5 space-y-2 pl-6">
-          <div className="flex items-center justify-between text-[8px] text-muted-foreground font-black tracking-wider">
-            <span>ROLLUP PROGRESS</span>
-            <span className="font-mono text-foreground">{goal.progressRollup}%</span>
+      {/* Main card details: Radial SVG progress split side-by-side with Content */}
+      <div className="flex items-start gap-3 relative z-10">
+        
+        {/* Left Side: SVG Circular Telemetry Ring */}
+        {goal.progressRollup !== undefined && (
+          <div className="shrink-0 flex items-center justify-center relative h-12 w-12 bg-white/[0.02] border border-white/5 rounded-full select-none" data-no-click>
+            <svg className="w-12 h-12 transform -rotate-90">
+              {/* Radial linear gradient definition */}
+              <defs>
+                <linearGradient id={`radialGrad-${goal.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#06b6d4" />
+                </linearGradient>
+              </defs>
+              {/* Circle track underlay */}
+              <circle
+                className="text-white/[0.04] stroke-current"
+                strokeWidth={strokeWidth}
+                fill="transparent"
+                r={radius}
+                cx="24"
+                cy="24"
+              />
+              {/* Circle active progress path */}
+              <circle
+                className="stroke-current transition-all duration-700 ease-out"
+                strokeWidth={strokeWidth}
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                fill="transparent"
+                r={radius}
+                cx="24"
+                cy="24"
+                style={{ 
+                  stroke: `url(#radialGrad-${goal.id})`,
+                  filter: `drop-shadow(0 0 4px rgba(139, 92, 246, 0.4))` 
+                }}
+              />
+            </svg>
+            {/* Centered Monospace Rate display */}
+            <span className="absolute text-[8px] font-black text-foreground font-mono select-none">
+              {progressValue}%
+            </span>
           </div>
-          
-          {/* Double-layer gauge track */}
-          <div className="h-1.5 w-full bg-white/[0.04] dark:bg-black/20 rounded-full overflow-hidden border border-white/5 relative">
-            <div
-              className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(167,139,250,0.4)] relative"
-              style={{ width: `${goal.progressRollup}%` }}
-            >
-              {/* Glowing Particle effect */}
-              {goal.progressRollup > 0 && (
-                <div className="absolute right-0 top-0 bottom-0 w-2.5 bg-white rounded-full opacity-70 filter blur-[1px] animate-pulse" />
-              )}
+        )}
+
+        {/* Right Side: Title details and context actions */}
+        <div className="flex-1 min-w-0 space-y-2 pl-0.5">
+          <div className="flex items-start justify-between gap-2.5">
+            <div className="flex flex-col gap-1 min-w-0 flex-1">
+              {/* Monospace directive index tag */}
+              <span className="font-mono text-[9px] font-black text-violet-400/90 bg-violet-500/5 border border-violet-500/10 px-1 rounded select-none w-fit">
+                {goalIdCode}
+              </span>
+              
+              <h4 className="text-[12px] font-sans font-semibold text-foreground group-hover:text-violet-400 transition-colors truncate tracking-wide leading-snug">
+                {goal.title}
+              </h4>
+            </div>
+
+            <div data-no-click className="shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded p-1 text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent hover:border-white/10 transition-all outline-none min-h-7 min-w-7 flex items-center justify-center cursor-pointer">
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-36 border border-white/10 bg-surface/95 backdrop-blur-2xl p-1 text-xs shadow-xl rounded font-mono">
+                  <DropdownMenuItem onClick={onClick} className="font-semibold cursor-pointer py-1.5 hover:bg-white/5 rounded">Open details</DropdownMenuItem>
+                  {goal.status !== 'active' && (
+                    <DropdownMenuItem onClick={() => onStatusChange('active')} className="font-semibold cursor-pointer py-1.5 hover:bg-white/5 rounded">Set active</DropdownMenuItem>
+                  )}
+                  {goal.status !== 'completed' && (
+                    <DropdownMenuItem onClick={() => onStatusChange('completed')} className="font-semibold cursor-pointer py-1.5 hover:bg-white/5 rounded">Set completed</DropdownMenuItem>
+                  )}
+                  {goal.status !== 'cancelled' && (
+                    <DropdownMenuItem onClick={() => onStatusChange('cancelled')} className="font-semibold cursor-pointer py-1.5 hover:bg-white/5 rounded">Set cancelled</DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400 font-semibold cursor-pointer py-1.5 hover:bg-red-500/10 rounded">Remove directive</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Target Date stamp */}
-      <div className="flex items-center justify-between pt-1 text-[9px] text-muted-foreground pl-6">
-        {due ? (
+          {/* Description */}
+          {goal.description && (
+            <p className="text-[10px] text-muted-foreground/80 line-clamp-2 leading-relaxed font-sans pl-0.5">
+              {goal.description}
+            </p>
+          )}
+
+          {/* Severity & Recurrence directive tags */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-1 pl-0.5">
+            <span className={cn('px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border backdrop-blur-md select-none', horizonClass)}>
+              {horizonLabel}
+            </span>
+            {recurrenceLabel && (
+              <span className={cn('px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border backdrop-blur-md select-none', recurrenceClass)}>
+                {recurrenceLabel}
+              </span>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Target date stamp at bottom */}
+      {due && (
+        <div className="flex items-center justify-end pt-2 border-t border-white/5 text-[9px] text-muted-foreground relative z-10 select-none">
           <span className={cn(
-            'flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border backdrop-blur-md font-mono select-none transition-all duration-300',
+            'flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border backdrop-blur-md font-mono transition-all duration-300',
             isOverdue 
-              ? 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.1)]' 
-              : 'bg-white/[0.02] border-white/5',
+              ? 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.15)]' 
+              : 'bg-white/[0.02] border-white/10 text-muted-foreground',
           )}>
-            <Calendar className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+            <Calendar className="h-2.5 w-2.5 text-muted-foreground shrink-0 mr-0.5" />
             {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
-        ) : (
-          <span />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

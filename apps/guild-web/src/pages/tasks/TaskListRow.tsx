@@ -42,16 +42,16 @@ function DueBadge({ dueDate }: { dueDate: { toDate: () => Date } | null | undefi
 
   return (
     <span className={cn(
-      'flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border backdrop-blur-md font-mono select-none transition-all duration-300',
+      'flex items-center gap-1 px-2.5 py-0.5 rounded border backdrop-blur-md font-mono text-[9px] font-bold select-none uppercase transition-all duration-300',
       isOverdue 
-        ? 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.1)]' 
+        ? 'bg-red-500/10 border-red-500/30 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.15)]' 
         : isToday 
-        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)] animate-pulse' 
+        ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.2)] animate-pulse' 
         : isTomorrow 
-        ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.1)]' 
-        : 'bg-white/[0.03] border-white/5 text-muted-foreground',
+        ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.15)]' 
+        : 'bg-white/[0.02] border-white/10 text-muted-foreground',
     )}>
-      <Calendar className="h-3 w-3 opacity-80" />
+      <Calendar className="h-2.5 w-2.5 opacity-80" />
       {label}
     </span>
   );
@@ -98,22 +98,44 @@ export function TaskListRow({
 
   // Safe defaults if priority is missing
   const priorityLabel = priority?.label || 'None';
-  const priorityColor = priority?.color || '#52525b';
+
+  // Custom styling for Severity Brackets
+  const severityBracket = React.useMemo(() => {
+    switch (task.priority) {
+      case 'urgent':
+        return { text: `[/// URGENT ///]`, className: 'text-red-400 border-red-500/20 bg-red-500/5 shadow-[0_0_6px_rgba(239,68,68,0.25)] font-black' };
+      case 'high':
+        return { text: `[// HIGH //]`, className: 'text-amber-400 border-amber-500/20 bg-amber-500/5 shadow-[0_0_6px_rgba(245,158,11,0.15)] font-bold' };
+      case 'medium':
+        return { text: `[MEDIUM]`, className: 'text-violet-400 border-violet-500/20 bg-violet-500/5' };
+      case 'low':
+        return { text: `[LOW]`, className: 'text-cyan-400 border-cyan-500/20 bg-cyan-500/5' };
+      default:
+        return null;
+    }
+  }, [task.priority]);
+
+  // Dynamic hexadecimal clip-path hexagon polygon
+  const hexClipStyle: React.CSSProperties = {
+    clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+  };
+
+  const taskIdCode = `T-${task.id.slice(0, 4).toUpperCase()}`;
 
   return (
     <>
       <div
         className={cn(
-          'task-row group relative flex items-start gap-4 px-4.5 py-3.5 rounded-2xl cursor-pointer select-none border transition-all duration-300 ease-out',
+          'task-row group relative flex items-start gap-4 px-4 py-3 border select-none transition-all duration-300 font-mono',
           isSelected 
-            ? 'bg-white/[0.05] dark:bg-white/[0.008] border-violet-500/40 shadow-[0_8px_24px_-8px_rgba(124,58,237,0.25)]' 
-            : 'bg-white/[0.015] dark:bg-white/[0.002] border-white/5 hover:border-violet-500/25 hover:bg-white/[0.035] dark:hover:bg-white/[0.004] hover:shadow-[0_12px_24px_-12px_rgba(124,58,237,0.12)] hover:-translate-y-0.5',
-          isDone && 'opacity-55 hover:opacity-75',
+            ? 'bg-violet-950/20 dark:bg-violet-950/5 border-violet-500/40 shadow-[0_0_12px_rgba(167,139,250,0.15)]' 
+            : 'bg-white/[0.01] dark:bg-black/[0.1] border-white/5 hover:border-violet-500/20 hover:bg-white/[0.02] dark:hover:bg-white/[0.002] hover:shadow-[0_0_8px_rgba(167,139,250,0.08)] hover:-translate-y-0.5',
+          isDone && 'opacity-45 hover:opacity-65',
         )}
         style={{ paddingLeft: depth > 0 ? `${16 + depth * 22}px` : undefined }}
         onClick={() => onSelect(task)}
       >
-        {/* Decorative hierarchical left guide lines for subtasks with glow */}
+        {/* Dynamic laser guide lines for nested subtasks */}
         {depth > 0 && (
           <div 
             className="absolute top-0 bottom-0 pointer-events-none"
@@ -122,104 +144,106 @@ export function TaskListRow({
               width: '20px' 
             }}
           >
-            {/* Curved subtle thread line */}
-            <div className="absolute top-0 bottom-1/2 left-[12px] w-[1.5px] bg-gradient-to-b from-white/10 to-violet-500/20 dark:from-white/5 dark:to-violet-500/10" />
-            <div className="absolute top-1/2 left-[12px] w-[12px] h-[1.5px] bg-violet-500/20 dark:bg-violet-500/10 rounded-r" />
+            {/* Cyber laser horizontal and vertical lines */}
+            <div className="absolute top-0 bottom-1/2 left-[12px] w-[1px] bg-gradient-to-b from-white/10 to-violet-500/30 dark:from-white/5 dark:to-violet-500/15" />
+            <div className="absolute top-1/2 left-[12px] w-[10px] h-[1px] bg-violet-500/30 dark:bg-violet-500/15" />
           </div>
         )}
 
-        {/* Expand/collapse subtask chevron with premium micro-interaction */}
+        {/* Dynamic Chevron trigger */}
         {hasSubtasks && (
           <button
             onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-            className="flex-shrink-0 mt-0.5 text-muted-foreground hover:text-foreground hover:bg-white/10 dark:hover:bg-white/5 p-1.5 rounded-xl border border-transparent hover:border-white/10 transition-all duration-200 relative z-10 min-h-8 min-w-8 flex items-center justify-center cursor-pointer"
+            className="flex-shrink-0 mt-1 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded p-1 transition-all duration-200 min-h-7 min-w-7 flex items-center justify-center cursor-pointer border border-transparent hover:border-white/10"
           >
-            <ChevronRight className={cn("h-4 w-4 transition-transform duration-300", expanded ? "rotate-90 text-violet-400" : "")} />
+            <ChevronRight className={cn("h-3.5 w-3.5 transition-transform duration-300", expanded ? "rotate-90 text-violet-400" : "")} />
           </button>
         )}
 
-        {/* Custom interactive checkbox circle with neon states */}
-        <button
-          onClick={handleComplete}
-          className={cn(
-            'flex-shrink-0 h-6 w-6 mt-0.5 rounded-full border-[1.5px] flex items-center justify-center transition-all duration-300 cursor-pointer relative z-10 min-h-6 min-w-6',
-            isDone
-              ? 'bg-gradient-to-br from-cyan-400 to-sky-500 border-transparent text-white shadow-[0_0_10px_rgba(34,211,238,0.4)] scale-102 hover:scale-105 active:scale-95'
-              : isReview
-                ? 'bg-gradient-to-br from-amber-400 to-orange-500 border-transparent text-white shadow-[0_0_10px_rgba(245,158,11,0.4)] animate-pulse'
-                : 'border-white/20 hover:border-violet-400 hover:bg-violet-500/10 hover:scale-105 active:scale-95',
-            completing && 'opacity-65 scale-90',
-          )}
-          title={isDone ? 'Mark incomplete' : isReview ? 'In review - Mark incomplete' : 'Mark complete'}
-        >
-          {isDone && (
-            <Check className="h-3.5 w-3.5 text-white font-black stroke-[3px] animate-bounce-subtle" />
-          )}
-          {isReview && (
-            <Clock className="h-3.5 w-3.5 text-white font-black animate-spin" style={{ animationDuration: '3s' }} />
-          )}
-        </button>
+        {/* Hexagonal clipped toggle plate checkbox */}
+        <div className="relative mt-1 shrink-0 select-none" data-no-click>
+          <button
+            onClick={handleComplete}
+            style={hexClipStyle}
+            className={cn(
+              'h-6 w-6 flex items-center justify-center transition-all duration-300 cursor-pointer relative z-10 font-bold min-h-6 min-w-6',
+              isDone
+                ? 'bg-gradient-to-br from-cyan-400 to-sky-500 text-white shadow-[0_0_10px_rgba(34,211,238,0.5)] scale-102 hover:scale-105 active:scale-95'
+                : isReview
+                  ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_0_10px_rgba(245,158,11,0.5)] animate-pulse'
+                  : 'bg-white/[0.04] dark:bg-black/20 border border-white/20 hover:border-cyan-400/60 hover:bg-cyan-500/5 hover:scale-105 active:scale-95',
+              completing && 'opacity-65 scale-90',
+            )}
+            title={isDone ? 'Mark active' : isReview ? 'Mark active' : 'Mark completed'}
+          >
+            {isDone && (
+              <Check className="h-3 w-3 text-white font-black stroke-[3.5px] animate-bounce-subtle" />
+            )}
+            {isReview && (
+              <Clock className="h-3 w-3 text-white animate-spin" style={{ animationDuration: '3s' }} />
+            )}
+          </button>
+        </div>
 
-        {/* Title, tags and details metadata */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
-          {/* Title Text */}
-          <span className={cn(
-            'text-[13.5px] leading-snug transition-colors break-words font-semibold tracking-wide',
-            isDone 
-              ? 'line-through text-muted-foreground/70 font-normal' 
-              : isReview 
-              ? 'text-foreground/80 italic font-medium' 
-              : isSelected 
-              ? 'text-violet-400 font-bold' 
-              : 'text-foreground/90 group-hover:text-foreground transition-colors',
-          )}>
-            {task.title}
-          </span>
+        {/* Operational Command Row details */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5 pl-1.5">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            {/* Monospace index ID code tag */}
+            <span className="font-mono text-[9px] font-black text-violet-400 bg-violet-500/5 border border-violet-500/10 px-1.5 py-0.5 rounded w-fit select-all tracking-wider select-none shrink-0">
+              {taskIdCode}
+            </span>
 
-          {/* Meta badges row */}
+            {/* Title Text */}
+            <span className={cn(
+              'text-[12.5px] leading-snug transition-colors break-words font-semibold font-sans tracking-wide',
+              isDone 
+                ? 'line-through text-muted-foreground/60 font-normal' 
+                : isReview 
+                ? 'text-foreground/75 italic font-medium' 
+                : isSelected 
+                ? 'text-violet-400 font-bold' 
+                : 'text-foreground/90 group-hover:text-violet-400 transition-colors duration-300',
+            )}>
+              {task.title}
+            </span>
+          </div>
+
+          {/* Telemetry Row Badge tags */}
           {(task.dueDate || task.priority !== 'none' || task.assigneeIds.length > 0 || (task.status !== 'todo' && task.status !== 'done') || hasSubtasks) && (
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Due date */}
+            <div className="flex items-center gap-2 flex-wrap pt-1 select-none">
+              {/* Target date */}
               <DueBadge dueDate={task.dueDate as any} />
 
-              {/* Priority badge with glow */}
-              {task.priority !== 'none' && (
-                <div className="flex items-center gap-1.5 bg-white/[0.03] border border-white/5 px-2.5 py-1 rounded-xl select-none">
-                  <span
-                    className="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                    style={{ 
-                      backgroundColor: priorityColor, 
-                      boxShadow: `0 0 8px ${priorityColor}` 
-                    }}
-                    title={priorityLabel}
-                  />
-                  <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">{priorityLabel}</span>
-                </div>
+              {/* Glowing Cyber Severity bracket */}
+              {task.priority !== 'none' && severityBracket && (
+                <span className={cn('px-2 py-0.5 rounded border text-[8.5px] select-none tracking-widest font-mono', severityBracket.className)}>
+                  {severityBracket.text}
+                </span>
               )}
 
-              {/* Status badge (for in_progress & review) */}
+              {/* Holographic Status Badge (non-todo) */}
               {task.status !== 'todo' && task.status !== 'done' && statusCfg && (
                 <span
-                  className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl border select-none"
+                  className="text-[8.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border select-none font-mono"
                   style={{ 
                     backgroundColor: `${statusCfg.dot}08`, 
                     borderColor: `${statusCfg.dot}20`, 
                     color: statusCfg.dot,
-                    boxShadow: `0 0 8px ${statusCfg.dot}10`
+                    boxShadow: `0 0 6px ${statusCfg.dot}10`
                   }}
                 >
                   {statusCfg.label}
                 </span>
               )}
 
-              {/* Subtask progress count badge */}
+              {/* Nested count progress */}
               {hasSubtasks && (
-                <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl bg-white/[0.03] border border-white/5 text-muted-foreground select-none">
-                  {subtasks.filter((s) => s.status === 'done').length}/{subtasks.length} Subtasks
+                <span className="text-[8.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/[0.02] border border-white/10 text-muted-foreground select-none font-mono">
+                  {subtasks.filter((s) => s.status === 'done').length}/{subtasks.length} subtasks
                 </span>
               )}
 
-              {/* Overlapping premium assignee avatars */}
+              {/* Overlapping tactical assignee initials */}
               {task.assigneeIds.length > 0 && (
                 <div className="flex items-center -space-x-1.5 ml-1 select-none">
                   {task.assigneeIds.slice(0, 3).map((uid) => {
@@ -227,7 +251,7 @@ export function TaskListRow({
                     return (
                       <div
                         key={uid}
-                        className="h-5 w-5 rounded-full bg-violet-500/10 border border-white/10 hover:border-violet-500/30 flex items-center justify-center text-[8.5px] font-bold text-violet-400 flex-shrink-0 relative z-10 shadow-sm transition-colors cursor-default"
+                        className="h-4.5 w-4.5 rounded-full bg-violet-500/15 border border-white/10 flex items-center justify-center text-[7.5px] font-black text-violet-400 shadow-inner tracking-tighter"
                         title={name}
                       >
                         {getInitials(name)}
@@ -235,7 +259,7 @@ export function TaskListRow({
                     );
                   })}
                   {task.assigneeIds.length > 3 && (
-                    <div className="h-5 w-5 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-[7.5px] font-bold text-muted-foreground flex-shrink-0 relative z-0 shadow-sm">
+                    <div className="h-4.5 w-4.5 rounded bg-white/[0.04] border border-white/10 flex items-center justify-center text-[7px] font-bold text-muted-foreground">
                       +{task.assigneeIds.length - 3}
                     </div>
                   )}
@@ -245,19 +269,19 @@ export function TaskListRow({
           )}
         </div>
 
-        {/* Delete Action (Fully accessible with clean styling) */}
+        {/* Technical Delete Trigger (fully hover optimized) */}
         {onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(task); }}
-            className="flex-shrink-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all p-2 rounded-xl hover:bg-red-500/10 border border-transparent hover:border-red-500/15 cursor-pointer min-h-9 min-w-9 flex items-center justify-center"
-            title="Delete task"
+            className="flex-shrink-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all p-2 rounded hover:bg-red-500/10 border border-transparent hover:border-red-500/15 cursor-pointer min-h-8 min-w-8 flex items-center justify-center shrink-0"
+            title="Remove Directive"
           >
-            <Trash2 className="h-4.5 w-4.5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      {/* Hierarchical Subtasks Rendering */}
+      {/* Recursive Subtasks expansion */}
       {expanded && subtasks.map((sub) => (
         <TaskListRow
           key={sub.id}
