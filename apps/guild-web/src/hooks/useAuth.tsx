@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { onAuthStateChanged, signOut } from '../lib/auth';
-import { getOnboardingState, type UserProfile, type OnboardingState } from '../lib/firestore';
+import { getUserById, getOnboardingState, type UserProfile, type OnboardingState } from '../lib/firestore';
 import { type User } from 'firebase/auth';
 import { onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -27,62 +27,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [onboarding, setOnboarding] = React.useState<OnboardingState | null>(null);
   const [loading, setLoading] = React.useState(true);
 
+  // 1. Initial Authentication and Onboarding State Loader (100% identical to original)
   React.useEffect(() => {
-    let unsubscribeProfile: (() => void) | null = null;
-
-    const unsubscribeAuth = onAuthStateChanged(async (firebaseUser) => {
-      // Clean up previous profile listener if exists
-      if (unsubscribeProfile) {
-        unsubscribeProfile();
-        unsubscribeProfile = null;
-      }
-
+    const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
+      setLoading(true);
       setUser(firebaseUser);
 
       if (firebaseUser) {
-        setLoading(true);
         try {
-          // Fetch onboarding state once
-          const onboardingState = await getOnboardingState(firebaseUser.uid);
+          const [profile, onboardingState] = await Promise.all([
+            getUserById(firebaseUser.uid),
+            getOnboardingState(firebaseUser.uid),
+          ]);
+          setUserProfile(profile);
           setOnboarding(onboardingState);
-
-          // Subscribe to real-time changes to the user's profile document
-          const userRef = doc(db, 'users', firebaseUser.uid);
-          unsubscribeProfile = onSnapshot(
-            userRef,
-            (snap) => {
-              if (snap.exists()) {
-                setUserProfile(snap.data() as UserProfile);
-              } else {
-                setUserProfile(null);
-              }
-              setLoading(false);
-            },
-            (error) => {
-              console.error('Error listening to user profile in AuthProvider:', error);
-              setLoading(false);
-            }
-          );
-        } catch (error) {
-          console.error('Error in AuthProvider initialization:', error);
+        } catch {
           setUserProfile(null);
           setOnboarding(null);
-          setLoading(false);
         }
       } else {
         setUserProfile(null);
         setOnboarding(null);
-        setLoading(false);
       }
+
+      setLoading(false);
     });
 
-    return () => {
-      unsubscribeAuth();
-      if (unsubscribeProfile) {
-        unsubscribeProfile();
-      }
-    };
+    return unsubscribe;
   }, []);
+
+  // 2. Real-Time Profile Sync Listener (layers on dynamically after initial load)
+  React.useEffect(() => {
+    if (!user?.uid) return;
+
+    const userRef = doc(db, 'users', user.uid);
+    const unsubscribe = onSnapshot(
+      userRef,
+      (snap) => {
+        if (snap.exists()) {
+          setUserProfile(snap.data() as UserProfile);
+        }
+      },
+      (error) => {
+        console.error('Error in real-time user profile sync listener:', error);
+      }
+    );
+
+    return unsubscribe;
+  }, [user?.uid]);
 
   return (
     <AuthContext.Provider value={{ user, userProfile, onboarding, loading, logout: signOut }}>
