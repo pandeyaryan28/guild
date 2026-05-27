@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { MoreHorizontal, MessageSquare, Calendar } from 'lucide-react';
-import { motion } from 'motion/react';
+import { MoreHorizontal, Calendar, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { type Task, type TaskLabel, PRIORITY_CONFIG, STATUS_CONFIG } from '../../lib/tasks';
+import { type Task, type TaskLabel, PRIORITY_CONFIG } from '../../lib/tasks';
 import { LabelBadge } from '../../components/tasks/LabelBadge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -29,8 +28,11 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
   const priority = PRIORITY_CONFIG[task.priority];
   const due = task.dueDate?.toDate();
   const now = new Date();
-  const isOverdue = due && due < now;
-  const isDueToday = due && due.toDateString() === now.toDateString();
+  const isOverdue = due && due < now && task.status !== 'done';
+  const isDueToday = due && due.toDateString() === now.toDateString() && task.status !== 'done';
+
+  const priorityLabel = priority?.label || 'None';
+  const priorityColor = priority?.color || '#52525b';
 
   return (
     <div
@@ -39,59 +41,74 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
       {...attributes}
       {...listeners}
       className={cn(
-        'group relative rounded-2xl border bg-white/[0.02] dark:bg-white/[0.002] backdrop-blur-md transition-all duration-300 cursor-grab active:cursor-grabbing select-none',
-        'border-white/5 hover:border-violet-500/25 hover:bg-white/[0.04] dark:hover:bg-white/[0.005] hover:shadow-[0_12px_24px_-10px_rgba(124,58,237,0.15)] hover:-translate-y-1',
-        isSortableDragging && 'opacity-30 border-violet-500/20',
-        isDragging && 'shadow-2xl shadow-violet-500/20 rotate-1 scale-102 border-violet-500/30 bg-white/[0.05]',
+        'group relative rounded-2xl border bg-white/[0.025] dark:bg-white/[0.002] backdrop-blur-md transition-all duration-300 cursor-grab active:cursor-grabbing select-none overflow-hidden pl-3',
+        'border-white/5 hover:border-violet-500/25 hover:bg-white/[0.05] dark:hover:bg-white/[0.005] hover:shadow-[0_12px_24px_-10px_rgba(124,58,237,0.18)] hover:-translate-y-0.5',
+        isSortableDragging && 'opacity-25 border-violet-500/15',
+        isDragging && 'shadow-2xl shadow-violet-500/25 border-violet-500/35 bg-white/[0.06] dark:bg-white/[0.01] rotate-1 scale-102',
       )}
-      onClick={(e) => { if (!(e.target as HTMLElement).closest('[data-no-click]')) onClick(); }}
+      onClick={(e) => { 
+        if (!(e.target as HTMLElement).closest('[data-no-click]')) {
+          onClick(); 
+        }
+      }}
     >
-      <div className="p-4 space-y-3">
-        {/* Priority bar & Title */}
-        <div className="flex items-start gap-2.5">
-          <div
-            className="mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0"
-            style={{ backgroundColor: priority.color, boxShadow: `0 0 6px ${priority.color}` }}
-            title={priority.label}
-          />
-          <p className="text-xs font-black text-foreground/95 leading-normal flex-1 min-w-0 tracking-wide">
+      {/* Absolute Priority Glowing Left Accent Strip */}
+      {task.priority !== 'none' && (
+        <div 
+          className="absolute left-0 top-0 bottom-0 w-[5px] transition-all duration-300"
+          style={{ 
+            backgroundColor: priorityColor, 
+            boxShadow: `0 0 12px ${priorityColor}80`
+          }}
+          title={`Priority: ${priorityLabel}`}
+        />
+      )}
+
+      <div className="p-4.5 space-y-3.5">
+        {/* Title and Dropdown Menu Actions */}
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-[12.5px] font-bold text-foreground/95 group-hover:text-foreground leading-snug flex-1 min-w-0 tracking-wide break-words transition-colors">
             {task.title}
           </p>
-          {/* Context menu */}
-          <div data-no-click>
+
+          <div data-no-click className="shrink-0">
             <DropdownMenu>
-              <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent hover:border-white/5 transition-all outline-none">
-                <MoreHorizontal className="h-3.5 w-3.5" />
+              <DropdownMenuTrigger className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 rounded-xl p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/10 dark:hover:bg-white/5 border border-transparent hover:border-white/10 transition-all outline-none min-h-8 min-w-8 flex items-center justify-center cursor-pointer">
+                <MoreHorizontal className="h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36 border border-white/10 bg-surface/90 backdrop-blur-xl p-1 text-xs">
-                <DropdownMenuItem onClick={onClick} className="font-semibold cursor-pointer">Open</DropdownMenuItem>
-                <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400 font-semibold cursor-pointer">Delete</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-36 border border-white/10 bg-surface/90 backdrop-blur-xl p-1 text-xs shadow-xl rounded-xl">
+                <DropdownMenuItem onClick={onClick} className="font-semibold cursor-pointer py-2 hover:bg-white/5 rounded-lg">Open Details</DropdownMenuItem>
+                <DropdownMenuItem onClick={onDelete} className="text-red-400 focus:text-red-400 font-semibold cursor-pointer py-2 hover:bg-red-500/10 rounded-lg">Delete Task</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
 
-        {/* Labels */}
+        {/* Custom Badges (Labels) row */}
         {taskLabels.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {taskLabels.slice(0, 2).map((l) => <LabelBadge key={l.id} label={l} />)}
+          <div className="flex flex-wrap gap-1.5">
+            {taskLabels.slice(0, 2).map((l) => (
+              <LabelBadge key={l.id} label={l} />
+            ))}
             {taskLabels.length > 2 && (
-              <span className="text-[9px] font-bold text-muted-foreground/60 px-1">+{taskLabels.length - 2}</span>
+              <span className="text-[9px] font-black text-muted-foreground/60 bg-white/[0.03] border border-white/5 px-2 py-0.5 rounded-lg select-none">
+                +{taskLabels.length - 2}
+              </span>
             )}
           </div>
         )}
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/5">
-          {/* Assignees */}
-          <div className="flex -space-x-1.5">
+        {/* Footer Area: Avatars & Due Badge */}
+        <div className="flex items-center justify-between pt-3 border-t border-white/5 select-none">
+          {/* Overlapping Assigned Members */}
+          <div className="flex items-center -space-x-1.5">
             {task.assigneeIds.slice(0, 3).map((uid) => {
               const m = memberMap.get(uid);
               const initials = (m?.fullName || m?.username || '?')[0].toUpperCase();
               return (
                 <div
                   key={uid}
-                  className="h-4.5 w-4.5 rounded-full bg-violet-500/10 border border-white/15 flex items-center justify-center text-[7px] font-bold text-violet-400 shadow-sm"
+                  className="h-5 w-5 rounded-full bg-violet-500/10 border border-white/10 hover:border-violet-500/30 flex items-center justify-center text-[8.5px] font-bold text-violet-400 shadow-sm transition-colors cursor-default"
                   title={m?.fullName || m?.username}
                 >
                   {initials}
@@ -99,19 +116,23 @@ export function TaskCard({ task, labels, memberMap, onClick, onDelete, isDraggin
               );
             })}
             {task.assigneeIds.length > 3 && (
-              <div className="h-4.5 w-4.5 rounded-full bg-white/[0.04] border border-white/15 flex items-center justify-center text-[7px] font-bold text-muted-foreground shadow-sm">
+              <div className="h-5 w-5 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-[7.5px] font-bold text-muted-foreground shadow-sm">
                 +{task.assigneeIds.length - 3}
               </div>
             )}
           </div>
 
-          {/* Due date */}
+          {/* Styled Due Date Badge */}
           {due && (
             <span className={cn(
-              'flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border backdrop-blur-md font-mono',
-              isOverdue ? 'bg-red-500/5 border-red-500/20 text-red-400' : isDueToday ? 'bg-amber-500/5 border-amber-500/20 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)]' : 'bg-white/[0.02] border-white/5 text-muted-foreground',
+              'flex items-center gap-1.5 text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border backdrop-blur-md font-mono transition-all duration-300',
+              isOverdue 
+                ? 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.1)]' 
+                : isDueToday 
+                ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)] animate-pulse' 
+                : 'bg-white/[0.03] border-white/5 text-muted-foreground',
             )}>
-              <Calendar className="h-2.5 w-2.5" />
+              <Clock className="h-2.5 w-2.5 opacity-80" />
               {due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
           )}

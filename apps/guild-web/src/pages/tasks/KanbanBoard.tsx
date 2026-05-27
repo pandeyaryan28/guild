@@ -5,7 +5,7 @@ import {
   useDroppable,
   type DragStartEvent, type DragEndEvent,
 } from '@dnd-kit/core';
-import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { ChevronLeft, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { KanbanColumn } from './KanbanColumn';
@@ -28,30 +28,30 @@ function CollapsedDoneColumn({
       ref={setNodeRef}
       onClick={onExpand}
       className={cn(
-        "w-12 h-full flex-shrink-0 flex flex-col items-center justify-between py-4 rounded-2xl border transition-all duration-300 cursor-pointer select-none relative group",
+        "w-14 h-full flex-shrink-0 flex flex-col items-center justify-between py-6 rounded-2xl border transition-all duration-300 cursor-pointer select-none relative group",
         isOver
-          ? "bg-cyan-500/10 border-cyan-500/40 ring-1 ring-cyan-500/20"
-          : "bg-bg-primary/45 border-border-default/50 hover:border-cyan-500/35 hover:bg-cyan-500/[0.02]"
+          ? "bg-cyan-500/10 border-cyan-500/40 ring-1 ring-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.25)]"
+          : "bg-white/[0.015] border-white/5 hover:border-cyan-500/35 hover:bg-cyan-500/[0.02]"
       )}
       title="Expand Completed Tasks"
     >
-      {/* Background Accent Glow on hover */}
-      <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 rounded-2xl pointer-events-none transition-opacity duration-300" />
+      {/* Dynamic Background Accent Glow on hover */}
+      <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 rounded-2xl pointer-events-none transition-opacity duration-300" />
       
       {/* Top Section: Badge and Icon */}
-      <div className="flex flex-col items-center gap-3 relative z-10">
-        <div className="h-7 w-7 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 text-cyan-400 group-hover:scale-105 transition-transform">
-          <CheckCircle2 className="h-4 w-4" />
+      <div className="flex flex-col items-center gap-3 relative z-10 select-none">
+        <div className="h-8 w-8 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 text-cyan-400 group-hover:scale-105 transition-transform duration-350 shadow-sm">
+          <CheckCircle2 className="h-4.5 w-4.5" />
         </div>
-        <span className="text-[10px] font-black text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full">
+        <span className="text-[9.5px] font-black text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-lg font-mono">
           {tasks.length}
         </span>
       </div>
 
       {/* Middle Section: Rotated Vertical Label */}
-      <div className="flex items-center justify-center flex-1 relative z-10 my-4">
+      <div className="flex items-center justify-center flex-1 relative z-10 my-4 select-none">
         <span 
-          className="text-xs font-black text-muted-foreground uppercase tracking-widest select-none pointer-events-none group-hover:text-foreground transition-colors"
+          className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.18em] select-none pointer-events-none group-hover:text-foreground transition-colors duration-300"
           style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
         >
           COMPLETED ARCHIVE
@@ -59,8 +59,8 @@ function CollapsedDoneColumn({
       </div>
 
       {/* Bottom Section: Expand chevron */}
-      <div className="h-7 w-7 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-muted-foreground group-hover:text-foreground group-hover:bg-white/5 transition-all">
-        <ChevronLeft className="h-4 w-4 rotate-180" />
+      <div className="h-8 w-8 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-muted-foreground group-hover:text-foreground group-hover:bg-white/10 transition-all duration-300 min-h-8 min-w-8">
+        <ChevronLeft className="h-4 w-4 rotate-180 transition-transform duration-350 group-hover:translate-x-0.5" />
       </div>
     </div>
   );
@@ -140,7 +140,7 @@ export function KanbanBoard({ columns, allTasks, labels, memberMap, orgId, actor
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-5 h-full pb-4 overflow-x-auto">
+      <div className="flex gap-5 h-full pb-4 overflow-x-auto custom-scrollbar select-none scroll-smooth">
         {STATUSES.map((status) => {
           if (status === 'done' && isDoneCollapsed) {
             return (
