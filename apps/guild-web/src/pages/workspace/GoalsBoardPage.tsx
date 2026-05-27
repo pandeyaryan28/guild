@@ -72,6 +72,11 @@ export function GoalsBoardPage() {
   const { teams, loading: teamsLoading } = useTeams(orgId);
   const members = useOrgMembers(orgId);
 
+  const activeTask = React.useMemo(() => {
+    if (!selectedTask) return null;
+    return tasks.find(t => t.id === selectedTask.id) ?? selectedTask;
+  }, [tasks, selectedTask]);
+
   const actor: ActorInfo = React.useMemo(() => ({
     uid: user?.uid || '',
     name: userProfile?.fullName || user?.displayName || 'Anonymous',
@@ -1115,7 +1120,7 @@ export function GoalsBoardPage() {
 
       {/* ─── Task Inspect & Goal Inspect Drawers ─── */}
       <TaskDetailDrawer
-        task={selectedTask}
+        task={activeTask}
         onClose={() => setSelectedTask(null)}
         orgId={orgId}
         actor={actor}

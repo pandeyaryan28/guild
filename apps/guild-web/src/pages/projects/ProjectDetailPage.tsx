@@ -21,7 +21,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { useProject } from '../../hooks/useProjects';
 import { useMilestones } from '../../hooks/useMilestones';
 import { useTasks } from '../../hooks/useTasks';
+import { useGoals } from '../../hooks/useGoals';
 import { MilestoneRail } from './MilestoneRail';
+import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
 
 import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
 import { useOrgMembers } from '../../hooks/useChat';
@@ -38,6 +40,7 @@ export function ProjectDetailPage() {
   const { milestones } = useMilestones(projectId);
   const { columns, loading: tasksLoading } = useTasks(orgId, projectId ? { projectId } : undefined);
   const members = useOrgMembers(orgId);
+  const { goals } = useGoals(orgId);
 
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [createOpen, setCreateOpen] = React.useState(false);
@@ -100,6 +103,11 @@ export function ProjectDetailPage() {
 
   const activeTasks = React.useMemo(() => allTasks.filter(t => t.status !== 'done'), [allTasks]);
   const completedTasks = React.useMemo(() => allTasks.filter(t => t.status === 'done'), [allTasks]);
+
+  const activeTask = React.useMemo(() => {
+    if (!selectedTask) return null;
+    return allTasks.find(t => t.id === selectedTask.id) ?? selectedTask;
+  }, [allTasks, selectedTask]);
 
   const handleToggleTaskStatus = async (e: React.MouseEvent, task: Task) => {
     e.stopPropagation();
@@ -537,6 +545,16 @@ export function ProjectDetailPage() {
         orgId={orgId}
         actor={actor}
         defaultProjectId={projectId}
+      />
+
+      <TaskDetailDrawer
+        task={activeTask}
+        onClose={() => setSelectedTask(null)}
+        orgId={orgId}
+        actor={actor}
+        members={members}
+        projects={project ? [project] : []}
+        goals={goals}
       />
 
       {/* ─── Premium Glassmorphic Edit Modal ─── */}
