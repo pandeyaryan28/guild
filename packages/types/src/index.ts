@@ -26,6 +26,7 @@ export interface UserProfile {
   managerId?: string | null;
   isManager?: boolean;
   focusStatus?: FocusStatus;
+  availabilityStatus?: 'active' | 'focus' | 'away';
 }
 
 export interface FocusStatus {

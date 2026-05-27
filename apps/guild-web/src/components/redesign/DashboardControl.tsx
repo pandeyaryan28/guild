@@ -62,6 +62,23 @@ export function DashboardControl() {
   const [savingFocus, setSavingFocus] = React.useState(false);
   const [focusSavedNotif, setFocusSavedNotif] = React.useState(false);
 
+  // Status picker states
+  const [statusDropdownOpen, setStatusDropdownOpen] = React.useState(false);
+  const currentStatus = userProfile?.availabilityStatus || 'active';
+  const myInitials = avatarInitials(userProfile?.fullName || userProfile?.username || '?');
+
+  const handleUpdateStatus = async (status: 'active' | 'focus' | 'away') => {
+    if (!userProfile?.uid) return;
+    try {
+      await updateUserProfile(userProfile.uid, {
+        availabilityStatus: status
+      });
+      setStatusDropdownOpen(false);
+    } catch (err) {
+      console.error('Failed to update availability status:', err);
+    }
+  };
+
   React.useEffect(() => {
     if (userProfile?.focusStatus?.text) {
       setFocusInput(userProfile.focusStatus.text);
@@ -200,16 +217,96 @@ export function DashboardControl() {
       
       {/* Top Banner: Greeting & Daily Focus Goal */}
       <header className="aether-glass p-6 space-y-4">
-        <div className="space-y-1">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-            Dashboard
-          </span>
-          <h1 className="text-2xl font-bold text-foreground">
-            {greeting}, {displayName}
-          </h1>
-        </div>
+        <div className="flex items-center gap-3.5">
+          <div className="relative">
+            <button 
+              type="button"
+              onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+              className="w-10 h-10 flex items-center justify-center text-xs font-black text-white rounded-full shrink-0 border border-white/10 relative cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-sm"
+              style={{ background: `hsl(${avatarHue(userProfile?.uid || '')} 55% 45%)` }}
+              title="Click to change your availability status"
+            >
+              {myInitials}
+              {/* Availability status dot indicator */}
+              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-surface dark:bg-zinc-950 flex items-center justify-center shadow-sm">
+                <span className={cn(
+                  "h-2 w-2 rounded-full",
+                  currentStatus === 'focus' ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]" :
+                  currentStatus === 'away' ? "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]" :
+                  "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"
+                )} />
+              </span>
+            </button>
 
-        {/* Daily Goal Input Section */}
+            {/* Custom Premium Availability dropdown */}
+            <AnimatePresence>
+              {statusDropdownOpen && (
+                <>
+                  {/* Backdrop to close click-outside */}
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setStatusDropdownOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    className="absolute left-0 mt-2.5 w-44 aether-glass bg-surface/95 dark:bg-zinc-900/95 p-1 shadow-2xl z-50 rounded-xl"
+                  >
+                    <div className="px-2.5 py-1 text-[8px] font-bold text-muted-foreground uppercase tracking-wider border-b border-white/5 mb-1">
+                      Availability Status
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus('active')}
+                      className={cn(
+                        "w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-all",
+                        currentStatus === 'active' ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <span>Active</span>
+                      {currentStatus === 'active' && <Check className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus('focus')}
+                      className={cn(
+                        "w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-all",
+                        currentStatus === 'focus' ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                      <span>Focus / Muted</span>
+                      {currentStatus === 'focus' && <Check className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus('away')}
+                      className={cn(
+                        "w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-all",
+                        currentStatus === 'away' ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      <span>Away / Idle</span>
+                      {currentStatus === 'away' && <Check className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+              Dashboard
+            </span>
+            <h1 className="text-xl font-bold text-foreground leading-tight">
+              {greeting}, {displayName}
+            </h1>
+          </div>
+        </div>        {/* Daily Goal Input Section */}
         <div className="pt-2 border-t border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 shrink-0">
@@ -416,9 +513,12 @@ export function DashboardControl() {
                     >
                       {initials}
                       {/* Active Indicator dot */}
-                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface flex items-center justify-center shadow-sm">
+                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface dark:bg-zinc-950 flex items-center justify-center shadow-sm">
                         <span className={cn(
                           "h-1.5 w-1.5 rounded-full",
+                          member.availabilityStatus === 'focus' ? "bg-red-500" :
+                          member.availabilityStatus === 'away' ? "bg-amber-500" :
+                          member.availabilityStatus === 'active' ? "bg-emerald-500" :
                           hasFocus ? "bg-emerald-500" : "bg-zinc-300"
                         )} />
                       </span>
