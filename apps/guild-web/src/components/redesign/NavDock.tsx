@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   MessageSquare, 
-  CheckSquare, 
   FileCheck, 
   Users, 
   Settings, 
@@ -50,7 +49,6 @@ export function NavDock() {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/chat', label: 'Chat', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined },
     { path: '/workspace', label: 'Workspace', icon: Trello },
-    { path: '/tasks', label: 'Tasks & Goals', icon: CheckSquare },
     { path: '/requests', label: 'Requests', icon: FileCheck, className: 'hidden md:flex' },
     { path: '/people', label: 'People', icon: Users, className: 'hidden md:flex' },
     { path: '/calendar', label: 'Calendar', icon: Calendar, className: 'hidden md:flex' },
