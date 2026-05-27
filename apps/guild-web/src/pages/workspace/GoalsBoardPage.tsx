@@ -77,6 +77,11 @@ export function GoalsBoardPage() {
     return tasks.find(t => t.id === selectedTask.id) ?? selectedTask;
   }, [tasks, selectedTask]);
 
+  const activeGoal = React.useMemo(() => {
+    if (!selectedGoal) return null;
+    return goals.find(g => g.id === selectedGoal.id) ?? selectedGoal;
+  }, [goals, selectedGoal]);
+
   const actor: ActorInfo = React.useMemo(() => ({
     uid: user?.uid || '',
     name: userProfile?.fullName || user?.displayName || 'Anonymous',
@@ -1130,7 +1135,7 @@ export function GoalsBoardPage() {
       />
 
       <GoalDetailDrawer
-        goal={selectedGoal}
+        goal={activeGoal}
         onClose={() => setSelectedGoal(null)}
         orgId={orgId}
         actor={actor}
