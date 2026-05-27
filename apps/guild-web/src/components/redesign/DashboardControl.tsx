@@ -199,7 +199,7 @@ export function DashboardControl() {
     <div className="max-w-6xl mx-auto space-y-8 py-4 animate-fluid-pop">
       
       {/* Top Banner: Greeting & Daily Focus Goal */}
-      <header className="p-6 bg-surface border border-border-default rounded-xl space-y-4 shadow-sm">
+      <header className="aether-glass p-6 space-y-4">
         <div className="space-y-1">
           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
             Dashboard
@@ -264,7 +264,7 @@ export function DashboardControl() {
         <div className="space-y-8">
           
           {/* Tasks Container */}
-          <section className="p-6 bg-surface border border-border-default rounded-xl space-y-4 shadow-sm">
+          <section className="aether-glass p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-border-subtle pb-3">
               <h2 className="text-sm font-bold text-foreground">My Tasks</h2>
               <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-semibold text-muted-foreground">
@@ -330,7 +330,7 @@ export function DashboardControl() {
                 placeholder="Add a task due today..."
                 value={quickTaskTitle}
                 onChange={(e) => setQuickTaskTitle(e.target.value)}
-                className="flex-1 bg-zinc-50 dark:bg-zinc-900/50 border border-border-default rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-all font-medium"
+                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-all font-medium"
               />
               <button
                 type="submit"
@@ -344,7 +344,7 @@ export function DashboardControl() {
 
           {/* Active Projects Tracker */}
           {activeProject && (
-            <section className="p-6 bg-surface border border-border-default rounded-xl space-y-4 shadow-sm">
+            <section className="aether-glass p-6 space-y-4">
               <div className="flex items-center justify-between border-b border-border-subtle pb-3">
                 <h2 className="text-sm font-bold text-foreground">Projects</h2>
                 <button 
@@ -390,7 +390,7 @@ export function DashboardControl() {
         </div>
 
         {/* Column 2: Teammate Activity (Daily Focus) */}
-        <section className="p-6 bg-surface border border-border-default rounded-xl space-y-4 shadow-sm self-start">
+        <section className="aether-glass p-6 space-y-4 self-start">
           <div className="flex items-center justify-between border-b border-border-subtle pb-3">
             <h2 className="text-sm font-bold text-foreground">Team Focus</h2>
             <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-semibold text-muted-foreground">
@@ -450,7 +450,7 @@ export function DashboardControl() {
         </section>
 
         {/* Column 3: Approvals & Reviews */}
-        <section className="p-6 bg-surface border border-border-default rounded-xl space-y-4 shadow-sm self-start">
+        <section className="aether-glass p-6 space-y-4 self-start">
           <div className="flex items-center justify-between border-b border-border-subtle pb-3">
             <h2 className="text-sm font-bold text-foreground">Approvals</h2>
             {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0) > 0 && (
@@ -471,7 +471,7 @@ export function DashboardControl() {
               
               {/* Approval Requests */}
               {pendingRequests.map((req) => (
-                <div key={req.id} className="p-4 border border-border-default rounded-lg bg-zinc-50/50 dark:bg-zinc-900/20 space-y-3">
+                <div key={req.id} className="p-4 rounded-xl border border-white/5 bg-white/3 dark:bg-black/10 space-y-3">
                   <div>
                     <span className="text-xs font-bold text-foreground block truncate">{req.title}</span>
                     <span className="text-[10px] text-muted-foreground block mt-0.5">Submitted by {req.creatorName}</span>
@@ -489,7 +489,7 @@ export function DashboardControl() {
                       onClick={async () => {
                         await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
                       }}
-                      className="flex-1 py-1 rounded-md border border-border-default hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
+                      className="flex-1 py-1 rounded-md border border-white/10 hover:bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
                     >
                       Reject
                     </button>
@@ -501,7 +501,7 @@ export function DashboardControl() {
               {isManager && reviewTasksForTeam.map((task) => {
                 const assigneeName = task.assigneeIds.map(id => memberMap.get(id)?.fullName).filter(Boolean).join(', ');
                 return (
-                  <div key={task.id} className="p-4 border border-border-default rounded-lg bg-zinc-50/50 dark:bg-zinc-900/20 space-y-3">
+                  <div key={task.id} className="p-4 rounded-xl border border-white/5 bg-white/3 dark:bg-black/10 space-y-3">
                     <div>
                       <span className="text-xs font-bold text-foreground block truncate">{task.title}</span>
                       <span className="text-[10px] text-muted-foreground block mt-0.5">Task review for {assigneeName}</span>
@@ -515,7 +515,7 @@ export function DashboardControl() {
                       </button>
                       <button
                         onClick={() => handleReviewAction(task, 'reject')}
-                        className="flex-1 py-1 rounded-md border border-border-default hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
+                        className="flex-1 py-1 rounded-md border border-white/10 hover:bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
                       >
                         Needs Changes
                       </button>
