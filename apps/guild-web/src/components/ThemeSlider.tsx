@@ -4,7 +4,6 @@
  */
 
 import * as React from 'react';
-import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { cn } from '@/lib/utils';
 
@@ -68,11 +67,6 @@ export function ThemeSlider() {
     : '0 2px 6px rgba(0, 0, 0, 0.12)';
   const knobShadow = `${baseShadow}, 0 0 10px ${glowAmber}, 0 0 12px ${glowCyan}`;
 
-  // Interactive Background Icon Fading
-  const sunOpacity = 0.35 + (1 - themeProgress) * 0.65;
-  const moonOpacity = 0.35 + themeProgress * 0.65;
-  const sunColor = interpolateHex('#e2e8f0', '#f59e0b', 1 - themeProgress); // Muted grey to glowing amber
-  const moonColor = interpolateHex('#e2e8f0', '#06b6d4', themeProgress);    // Muted grey to glowing cyan
 
   // --- Drag & Click Interaction Handlers ---
   const handleStart = (clientX: number) => {
@@ -160,22 +154,7 @@ export function ThemeSlider() {
       }}
       title={`Ambiance Dimmer: ${Math.round(themeProgress * 100)}% Dark Mode`}
     >
-      {/* 2. Interactive Background Landmarked Icons (Knob rests beautifully over these) */}
-      <div 
-        className="absolute left-[3px] top-[3px] w-6 h-6 rounded-full flex items-center justify-center pointer-events-none transition-transform duration-300"
-        style={{ opacity: sunOpacity }}
-      >
-        <Sun className="w-3.5 h-3.5" style={{ color: sunColor }} />
-      </div>
-
-      <div 
-        className="absolute right-[3px] top-[3px] w-6 h-6 rounded-full flex items-center justify-center pointer-events-none transition-transform duration-300"
-        style={{ opacity: moonOpacity }}
-      >
-        <Moon className="w-3.5 h-3.5" style={{ color: moonColor }} />
-      </div>
-
-      {/* 3. Celestial Frosted Glass Bead: Perfect alignment without translation conflicts */}
+      {/* 2. Celestial Frosted Glass Bead: Perfect alignment without translation conflicts */}
       <div
         ref={knobRef}
         onMouseDown={handleMouseDown}
