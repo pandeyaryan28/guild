@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Trello, LayoutList, CheckSquare, Target, Check, Trash2, ChevronDown, Calendar, Terminal, Activity } from 'lucide-react';
+import { Plus, Loader2, Trello, LayoutList, CheckSquare, Target, Check, Trash2, ChevronDown, Calendar, Terminal, Activity, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/useAuth';
