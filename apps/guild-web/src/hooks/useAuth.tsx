@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { onAuthStateChanged, signOut } from '../lib/auth';
-import { getUserById, getOnboardingState, type UserProfile, type OnboardingState } from '../lib/firestore';
+import { getOnboardingState, type UserProfile, type OnboardingState } from '../lib/firestore';
 import { type User } from 'firebase/auth';
+import { onSnapshot, doc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface AuthContextValue {
   user: User | null;
@@ -26,31 +28,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
-      setLoading(true);
+    let unsubscribeProfile: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(async (firebaseUser) => {
+      // Clean up previous profile listener if exists
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+        unsubscribeProfile = null;
+      }
+
       setUser(firebaseUser);
 
       if (firebaseUser) {
+        setLoading(true);
         try {
-          const [profile, onboardingState] = await Promise.all([
-            getUserById(firebaseUser.uid),
-            getOnboardingState(firebaseUser.uid),
-          ]);
-          setUserProfile(profile);
+          // Fetch onboarding state once
+          const onboardingState = await getOnboardingState(firebaseUser.uid);
           setOnboarding(onboardingState);
-        } catch {
+
+          // Subscribe to real-time changes to the user's profile document
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          unsubscribeProfile = onSnapshot(
+            userRef,
+            (snap) => {
+              if (snap.exists()) {
+                setUserProfile(snap.data() as UserProfile);
+              } else {
+                setUserProfile(null);
+              }
+              setLoading(false);
+            },
+            (error) => {
+              console.error('Error listening to user profile in AuthProvider:', error);
+              setLoading(false);
+            }
+          );
+        } catch (error) {
+          console.error('Error in AuthProvider initialization:', error);
           setUserProfile(null);
           setOnboarding(null);
+          setLoading(false);
         }
       } else {
         setUserProfile(null);
         setOnboarding(null);
+        setLoading(false);
       }
-
-      setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+      }
+    };
   }, []);
 
   return (

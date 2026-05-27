@@ -339,7 +339,9 @@ export function PeopleWorkloadTable({
                           <div className="font-bold text-sm text-[--foreground] flex items-center gap-1.5 leading-none">
                             {u.fullName || '—'}
                             {highCompleter && (
-                              <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 shrink-0" title="Star Performer (>=80% Completion)" />
+                              <span title="Star Performer (>=80% Completion)">
+                                <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 shrink-0" />
+                              </span>
                             )}
                           </div>
                           <div className="text-[10px] text-[--muted-foreground] font-mono leading-none mt-1">
