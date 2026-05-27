@@ -16,8 +16,8 @@ interface ThemeContextType {
   mode: 'light' | 'dark';
   setMode: (mode: 'light' | 'dark') => void;
   toggleMode: () => void;
-  themeProgress: number | null;
-  setThemeProgress: (progress: number | null) => void;
+  themeProgress: number;
+  setThemeProgress: (progress: number) => void;
 }
 
 const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
@@ -81,18 +81,31 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return stored ?? 'midnight';
   });
 
-  const [mode, setModeState] = React.useState<'light' | 'dark'>(() => {
-    const stored = localStorage.getItem('guild-mode') as 'light' | 'dark' | null;
-    return stored ?? 'light';
+  // Theme progress is a first-class float state (0 = pure light, 1 = pure dark)
+  const [themeProgress, setThemeProgressState] = React.useState<number>(() => {
+    const storedProgress = localStorage.getItem('guild-theme-progress');
+    if (storedProgress !== null) {
+      const parsed = parseFloat(storedProgress);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    const storedMode = localStorage.getItem('guild-mode');
+    return storedMode === 'dark' ? 1 : 0;
   });
 
-  // Real-time interpolation progress (0 = fully light, 1 = fully dark)
-  const [themeProgress, setThemeProgress] = React.useState<number | null>(null);
+  // Mode is dynamically derived from themeProgress to maintain full compatibility
+  const mode: 'light' | 'dark' = themeProgress >= 0.5 ? 'dark' : 'light';
+
+  const setThemeProgress = React.useCallback((progress: number) => {
+    const clampedProgress = Math.max(0, Math.min(1, progress));
+    setThemeProgressState(clampedProgress);
+    localStorage.setItem('guild-theme-progress', clampedProgress.toString());
+    const nextMode = clampedProgress >= 0.5 ? 'dark' : 'light';
+    localStorage.setItem('guild-mode', nextMode);
+  }, []);
 
   const setMode = React.useCallback((next: 'light' | 'dark') => {
-    setModeState(next);
-    localStorage.setItem('guild-mode', next);
-  }, []);
+    setThemeProgress(next === 'dark' ? 1 : 0);
+  }, [setThemeProgress]);
 
   // Apply theme colors dynamically when selection changes
   React.useEffect(() => {
@@ -100,17 +113,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const theme = getTheme(effectiveThemeId);
     const html = document.documentElement;
 
-    // 1. Determine exact active progress value
-    const activeProgress = themeProgress !== null ? themeProgress : (mode === 'dark' ? 1 : 0);
-
-    // 2. Toggle dark class based on progress threshold
-    if (activeProgress >= 0.5) {
+    // 1. Toggle dark class based on progress threshold
+    if (themeProgress >= 0.5) {
       html.classList.add('dark');
     } else {
       html.classList.remove('dark');
     }
 
-    // 3. Setup core light theme variables
+    // 2. Setup core light theme variables
     const lightVariables: Record<string, string> = {
       '--bg-primary': '#fcfcfd',
       '--bg-secondary': '#f4f4f6',
@@ -133,17 +143,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     let lightAccentForeground = '#ffffff';
 
     if (effectiveThemeId === 'rose-gold') {
-      lightAccent = '#db2777'; // rich deep rose pink
+      lightAccent = '#db2777';
     } else if (effectiveThemeId === 'slate') {
-      lightAccent = '#18181b'; // dark graphite
+      lightAccent = '#18181b';
     } else if (effectiveThemeId === 'forest') {
-      lightAccent = '#059669'; // rich forest green
+      lightAccent = '#059669';
     } else if (effectiveThemeId === 'cobalt') {
-      lightAccent = '#2563eb'; // electric navy blue
+      lightAccent = '#2563eb';
     } else if (effectiveThemeId === 'purple-haze') {
-      lightAccent = '#db2777'; // highly readable pink-magenta
+      lightAccent = '#db2777';
     } else if (effectiveThemeId === 'midnight') {
-      lightAccent = '#6d28d9'; // rich purple-violet
+      lightAccent = '#6d28d9';
     }
 
     lightVariables['--accent'] = lightAccent;
@@ -152,7 +162,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Get dark theme variables
     const darkVariables = { ...theme.variables };
 
-    // 4. Set dynamic theme custom properties from scratch
+    // 3. Clear legacy inline properties
     html.removeAttribute('style');
 
     const interpolatedVariables: Record<string, string> = {};
@@ -163,7 +173,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const lightColor = lightVariables[key] ?? '#ffffff';
       
       // Linearly interpolate color based on current progress
-      interpolatedVariables[key] = interpolateColor(lightColor, darkColor, activeProgress);
+      interpolatedVariables[key] = interpolateColor(lightColor, darkColor, themeProgress);
     });
 
     // Apply color tokens directly to CSS custom properties
@@ -171,28 +181,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       html.style.setProperty(property, color);
     });
 
-    // 5. Keep theme className sync
+    // 4. Keep theme className sync
     html.className = html.className
       .replace(/\btheme-\S+\b/g, '')
       .trim();
     
     html.classList.add(`theme-${effectiveThemeId}`);
-  }, [themeId, mode, themeProgress]);
+  }, [themeId, themeProgress]);
 
   const setTheme = React.useCallback((id: ThemeId) => {
     if (id === 'light') {
       setThemeId('midnight');
-      setMode('light');
+      setThemeProgress(0);
       localStorage.setItem(STORAGE_KEY, 'midnight');
     } else {
       setThemeId(id);
       localStorage.setItem(STORAGE_KEY, id);
     }
-  }, [setMode]);
+  }, [setThemeProgress]);
 
   const toggleMode = React.useCallback(() => {
-    setMode(mode === 'light' ? 'dark' : 'light');
-  }, [mode, setMode]);
+    setThemeProgress(themeProgress >= 0.5 ? 0 : 1);
+  }, [themeProgress, setThemeProgress]);
 
   const currentTheme = React.useMemo(() => getTheme(themeId), [themeId]);
 

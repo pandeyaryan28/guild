@@ -9,33 +9,29 @@ import { useTheme } from '../hooks/useTheme';
 import { cn } from '@/lib/utils';
 
 export function ThemeSlider() {
-  const { mode, setMode, themeProgress, setThemeProgress } = useTheme();
+  const { mode, themeProgress, setThemeProgress } = useTheme();
   
   const trackRef = React.useRef<HTMLDivElement>(null);
   const knobRef = React.useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = React.useState(false);
   const dragStartRef = React.useRef<{ mouseX: number; startProgress: number }>({ mouseX: 0, startProgress: 0 });
 
-  // Use the active theme progress if dragging/snapping, otherwise fallback to standard mode
-  const progress = themeProgress !== null ? themeProgress : (mode === 'dark' ? 1 : 0);
-
   // Track Dimensions
-  const trackWidth = 72; // px
+  const trackWidth = 96; // px
   const knobSize = 24;  // px
   const padding = 4;    // px
-  const maxSlide = trackWidth - knobSize - 2 * padding; // 72 - 24 - 8 = 40px
+  const maxSlide = trackWidth - knobSize - 2 * padding; // 96 - 24 - 8 = 64px
 
   // Calculate the left offset of the knob
-  const knobLeft = padding + progress * maxSlide;
+  const knobLeft = padding + themeProgress * maxSlide;
 
   // Handle Drag Start
   const handleStart = (clientX: number) => {
     setIsDragging(true);
     dragStartRef.current = {
       mouseX: clientX,
-      startProgress: progress,
+      startProgress: themeProgress,
     };
-    setThemeProgress(progress);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -47,13 +43,12 @@ export function ThemeSlider() {
     handleStart(e.touches[0].clientX);
   };
 
-  // Drag and Snap logic inside useEffect for robust window listeners
+  // Drag listeners inside useEffect for robust window-level tracking
   React.useEffect(() => {
     if (!isDragging) return;
 
     const handleMove = (clientX: number) => {
       const deltaX = clientX - dragStartRef.current.mouseX;
-      // Convert pixel delta to progress delta
       const progressDelta = deltaX / maxSlide;
       const newProgress = Math.max(0, Math.min(1, dragStartRef.current.startProgress + progressDelta));
       setThemeProgress(newProgress);
@@ -69,34 +64,6 @@ export function ThemeSlider() {
 
     const handleEnd = () => {
       setIsDragging(false);
-      
-      // Determine snap target
-      const targetProgress = progress >= 0.5 ? 1 : 0;
-      const startProgress = progress;
-      const duration = 240; // ms
-      const startTime = performance.now();
-
-      // Smooth Ease-Out-Quad snap animation
-      const animateSnap = (now: number) => {
-        const elapsed = now - startTime;
-        const p = Math.min(elapsed / duration, 1);
-        
-        // Easing: easeOutQuad
-        const ease = p * (2 - p);
-        const current = startProgress + (targetProgress - startProgress) * ease;
-        
-        setThemeProgress(current);
-
-        if (p < 1) {
-          requestAnimationFrame(animateSnap);
-        } else {
-          // Finished snapping
-          setThemeProgress(null);
-          setMode(targetProgress === 1 ? 'dark' : 'light');
-        }
-      };
-
-      requestAnimationFrame(animateSnap);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -110,9 +77,9 @@ export function ThemeSlider() {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleEnd);
     };
-  }, [isDragging, progress, maxSlide, setThemeProgress, setMode]);
+  }, [isDragging, maxSlide, setThemeProgress]);
 
-  // Click on Track directly triggers a snap toggle
+  // Click on Track directly updates the slider to that exact percentage (fine-tune jumps)
   const handleTrackClick = (e: React.MouseEvent) => {
     if (isDragging) return;
     
@@ -121,29 +88,12 @@ export function ThemeSlider() {
       return;
     }
 
-    const nextMode = mode === 'light' ? 'dark' : 'light';
-    const targetProgress = nextMode === 'dark' ? 1 : 0;
-    const startProgress = progress;
-    const duration = 240;
-    const startTime = performance.now();
-
-    const animateClick = (now: number) => {
-      const elapsed = now - startTime;
-      const p = Math.min(elapsed / duration, 1);
-      const ease = p * (2 - p);
-      const current = startProgress + (targetProgress - startProgress) * ease;
-      
-      setThemeProgress(current);
-
-      if (p < 1) {
-        requestAnimationFrame(animateClick);
-      } else {
-        setThemeProgress(null);
-        setMode(nextMode);
-      }
-    };
-
-    requestAnimationFrame(animateClick);
+    if (trackRef.current) {
+      const rect = trackRef.current.getBoundingClientRect();
+      const clickX = e.clientX - rect.left - padding - knobSize / 2;
+      const newProgress = Math.max(0, Math.min(1, clickX / maxSlide));
+      setThemeProgress(newProgress);
+    }
   };
 
   return (
@@ -156,12 +106,12 @@ export function ThemeSlider() {
         isDragging && "scale-[1.02] border-primary/40 shadow-sm"
       )}
       style={{ width: `${trackWidth}px` }}
-      title={mode === 'light' ? 'Slide to Dark Mode' : 'Slide to Light Mode'}
+      title={`Workspace Ambiance Dimmer: ${Math.round(themeProgress * 100)}% Dark`}
     >
       {/* Background Icons in the track */}
       <div className="absolute inset-0 flex justify-between px-2 items-center text-text-muted/40 pointer-events-none">
-        <Sun className="h-3.5 w-3.5 transition-opacity" style={{ opacity: progress > 0.4 ? 0.3 : 1 }} />
-        <Moon className="h-3.5 w-3.5 transition-opacity" style={{ opacity: progress < 0.6 ? 0.3 : 1 }} />
+        <Sun className="h-3.5 w-3.5 transition-opacity" style={{ opacity: themeProgress > 0.4 ? 0.3 : 1 }} />
+        <Moon className="h-3.5 w-3.5 transition-opacity" style={{ opacity: themeProgress < 0.6 ? 0.3 : 1 }} />
       </div>
 
       {/* Glassmorphic Sliding Orb */}
@@ -186,8 +136,8 @@ export function ThemeSlider() {
         <Sun
           className="absolute h-3 w-3 text-amber-500 pointer-events-none transition-transform"
           style={{
-            opacity: 1 - progress,
-            transform: `rotate(${(1 - progress) * 180}deg) scale(${1 - progress})`,
+            opacity: 1 - themeProgress,
+            transform: `rotate(${(1 - themeProgress) * 180}deg) scale(${1 - themeProgress})`,
           }}
         />
 
@@ -195,8 +145,8 @@ export function ThemeSlider() {
         <Moon
           className="absolute h-3 w-3 text-indigo-300 pointer-events-none transition-transform"
           style={{
-            opacity: progress,
-            transform: `rotate(${progress * 360}deg) scale(${progress})`,
+            opacity: themeProgress,
+            transform: `rotate(${themeProgress * 360}deg) scale(${themeProgress})`,
           }}
         />
       </div>
