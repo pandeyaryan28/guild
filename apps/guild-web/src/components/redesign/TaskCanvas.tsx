@@ -44,7 +44,6 @@ import { useTasks } from '../../hooks/useTasks';
 import { useOrgMembers } from '../../hooks/useChat';
 import { useTeams } from '../../hooks/useTeams';
 
-import { TaskDetailPanel } from '../../pages/tasks/TaskDetailPanel';
 
 import {
   createTask,
@@ -1736,20 +1735,7 @@ export function TaskCanvas() {
         )}
       </AnimatePresence>
 
-      {/* ─── Shared Task Details Overlay Drawer ─── */}
-      {openTask && (
-        <TaskDetailPanel
-          task={openTask}
-          orgId={orgId}
-          actor={actor}
-          authorUsername={userProfile?.username || actor.name}
-          onClose={() => {
-            const copy = new URLSearchParams(searchParams);
-            copy.delete('task');
-            setSearchParams(copy);
-          }}
-        />
-      )}
+
     </div>
   );
 }

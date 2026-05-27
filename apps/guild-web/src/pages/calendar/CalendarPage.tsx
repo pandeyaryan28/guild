@@ -53,7 +53,7 @@ import { useProjects } from '../../hooks/useProjects';
 import { useOrgMembers } from '../../hooks/useChat';
 import { useTaskLabels } from '../../hooks/useTasks';
 import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
-import { TaskDetailPanel } from '../tasks/TaskDetailPanel';
+
 import { moveTask, STATUS_CONFIG, PRIORITY_CONFIG } from '../../lib/tasks';
 import type { Task, TaskPriority, TaskStatus } from '../../lib/tasks';
 import { cn } from '@/lib/utils';
@@ -1329,26 +1329,6 @@ export function CalendarPage() {
 
       </div>
 
-      {/* ── Task Details sliding panel ──────────────────────────────────────── */}
-      <div
-        className={cn(
-          'border-border-default bg-card overflow-hidden transition-all duration-300 ease-in-out border-l flex-shrink-0 z-40',
-          'fixed inset-y-0 right-0 md:relative md:inset-auto',
-          selectedTask 
-            ? 'w-full translate-x-0 md:w-[420px] md:translate-x-0' 
-            : 'w-0 translate-x-full md:w-0 md:translate-x-0'
-        )}
-      >
-        {selectedTask && (
-          <TaskDetailPanel
-            task={selectedTask}
-            onClose={() => setSelectedTask(null)}
-            orgId={orgId}
-            actor={actor}
-            authorUsername={actorName}
-          />
-        )}
-      </div>
 
       {/* ── Day Flyout Agenda Modal (Glassmorphic) ─────────────────────────── */}
       <AnimatePresence>

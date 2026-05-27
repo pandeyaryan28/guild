@@ -33,8 +33,6 @@ import { CalendarPage } from './pages/calendar/CalendarPage';
 
 // Execution OS
 import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
-import { GoalDetailPage } from './pages/tasks/GoalDetailPage';
-import { TasksPage } from './pages/tasks/TasksPage';
 
 // Reports
 import { ReportsPage } from './pages/reports/ReportsPage';
@@ -108,19 +106,6 @@ export default function App() {
             }
           />
 
-          {/* Tasks Board View */}
-          <Route
-            path="/tasks"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <TasksPage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
-
-
           {/* Project detail */}
           <Route
             path="/projects/:projectId"
@@ -128,18 +113,6 @@ export default function App() {
               <ProtectedRoute>
                 <DashboardApp>
                   <ProjectDetailPage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Goal detail */}
-          <Route
-            path="/goals/:goalId"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <GoalDetailPage />
                 </DashboardApp>
               </ProtectedRoute>
             }

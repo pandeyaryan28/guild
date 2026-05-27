@@ -21,7 +21,7 @@ import { useProject } from '../../hooks/useProjects';
 import { useMilestones } from '../../hooks/useMilestones';
 import { useTasks } from '../../hooks/useTasks';
 import { MilestoneRail } from './MilestoneRail';
-import { TaskDetailPanel } from '../tasks/TaskDetailPanel';
+
 import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
 import { useOrgMembers } from '../../hooks/useChat';
 import { moveTask, deleteTask, type Task, type TaskStatus } from '../../lib/tasks';
@@ -524,16 +524,6 @@ export function ProjectDetailPage() {
 
       </div>
 
-      {/* Shared Task Details Overlay Drawer */}
-      {selectedTask && (
-        <TaskDetailPanel
-          task={selectedTask}
-          orgId={orgId}
-          actor={actor}
-          authorUsername={userProfile?.username || actor.name}
-          onClose={() => setSelectedTask(null)}
-        />
-      )}
 
       {/* Create task modal */}
       <CreateTaskModal

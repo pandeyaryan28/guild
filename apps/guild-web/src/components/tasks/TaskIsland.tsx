@@ -2,7 +2,6 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { type Task, type ActorInfo } from '../../lib/tasks';
-import { TaskListRow } from '../../pages/tasks/TaskListRow';
 import { CreateTaskPopup } from './CreateTaskPopup';
 import { useOrgMembers } from '../../hooks/useChat';
 
@@ -206,17 +205,27 @@ export function TaskIsland({
                 </div>
                 <div className="space-y-0.5">
                   {group.tasks.map((task) => (
-                    <TaskListRow
+                    <div
                       key={task.id}
-                      task={task}
-                      orgId={orgId}
-                      actor={actor}
-                      subtasks={subtaskMap[task.id] ?? []}
-                      isSelected={selectedTask?.id === task.id}
-                      onSelect={onSelectTask}
-                      onDelete={onDeleteTask}
-                      memberMap={memberMap}
-                    />
+                      onClick={() => onSelectTask(task)}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-all',
+                        selectedTask?.id === task.id
+                          ? 'bg-primary/5 border-primary/20'
+                          : 'border-transparent hover:bg-bg-secondary/60 hover:border-border-default'
+                      )}
+                    >
+                      <div className="h-4 w-4 rounded-full border-2 border-border-default flex items-center justify-center shrink-0 flex-none" />
+                      <span className="text-sm font-medium text-foreground truncate flex-1">{task.title}</span>
+                      {onDeleteTask && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDeleteTask(task); }}
+                          className="shrink-0 opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-red-400 transition-all"
+                        >
+                          <Plus className="h-3 w-3 rotate-45" />
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>

@@ -8,9 +8,9 @@ import { TeamReportTab } from './TeamReportTab';
 import { ProjectReportTab } from './ProjectReportTab';
 import { DEFAULT_FILTERS } from './types';
 import type { ReportScope, ReportFiltersState } from './types';
-import { TaskDetailPanel } from '../tasks/TaskDetailPanel';
 import { cn } from '@/lib/utils';
 import type { Task } from '../../lib/tasks';
+
 
 export function ReportsPage() {
   const { userProfile } = useAuth();
@@ -81,26 +81,7 @@ export function ReportsPage() {
         </div>
       </div>
 
-      {/* Slide-out Task Detail Drawer */}
-      <div
-        className={cn(
-          'border-border-default bg-card overflow-hidden transition-all duration-300 ease-in-out border-l flex-shrink-0 z-40',
-          'fixed inset-y-0 right-0 md:relative md:inset-auto',
-          selectedTask 
-            ? 'w-full translate-x-0 md:w-[420px] md:translate-x-0 h-full border-l' 
-            : 'w-0 translate-x-full md:w-0 md:translate-x-0'
-        )}
-      >
-        {selectedTask && (
-          <TaskDetailPanel
-            task={selectedTask}
-            onClose={() => setSelectedTask(null)}
-            orgId={orgId}
-            actor={actor}
-            authorUsername={actorName}
-          />
-        )}
-      </div>
+
     </div>
   );
 }
