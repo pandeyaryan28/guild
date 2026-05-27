@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   collection, getDocs, query, orderBy, limit,
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db } from '@guild/firebase';
 import type {
   Organization, UserProfile, Task, Channel, Team, Goal, TaskActivity, Project
 } from '@guild/types';

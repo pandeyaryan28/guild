@@ -4,7 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import {
   doc, getDoc, collection, getDocs, query, where, limit,
 } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { auth, db } from '@guild/firebase';
 import type { UserProfile } from '@guild/types';
 
 export type AdminAuthState =

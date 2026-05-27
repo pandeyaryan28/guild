@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { auth } from '@guild/firebase';
 import type { UserProfile } from '@guild/types';
 import {
   LayoutDashboard,

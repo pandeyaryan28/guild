@@ -7,12 +7,12 @@ import { PeopleWorkloadTable } from '../components/PeopleWorkloadTable';
 import { TeamsHealthTable } from '../components/TeamsHealthTable';
 import { WorkItemsTable } from '../components/WorkItemsTable';
 import { ActivityFeed } from '../components/ActivityFeed';
-import { auth } from '../lib/firebase';
 import {
   updateOrganizationDetails,
   disableGlobalInviteLink,
   getOrCreateGlobalInviteLink,
-  resetGlobalInviteLink
+  resetGlobalInviteLink,
+  auth
 } from '@guild/firebase';
 
 import {
