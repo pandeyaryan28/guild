@@ -20,6 +20,7 @@ interface NotificationPanelProps {
   onMarkUnread: (id: string) => Promise<void>;
   onArchive: (id: string) => Promise<void>;
   onArchiveAllRead: () => Promise<void>;
+  onArchiveAll: () => Promise<void>;
   onMarkAllRead: () => Promise<void>;
   open: boolean;
   onClose: () => void;
@@ -247,6 +248,7 @@ export function NotificationPanel({
   onMarkUnread,
   onArchive,
   onArchiveAllRead,
+  onArchiveAll,
   onMarkAllRead,
   open,
   onClose,
@@ -346,6 +348,17 @@ export function NotificationPanel({
                 >
                   <Archive className="h-3.5 w-3.5" />
                   Clear Read
+                </Button>
+              )}
+              {notifications.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1.5 rounded-lg px-2 text-[10px] font-extrabold text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5"
+                  onClick={onArchiveAll}
+                >
+                  <Archive className="h-3.5 w-3.5" />
+                  Clear All
                 </Button>
               )}
               <Button

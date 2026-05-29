@@ -8,6 +8,7 @@ import {
   archiveNotification,
   markAllRead as dbMarkAllRead,
   archiveAllRead as dbArchiveAllRead,
+  archiveAll as dbArchiveAll,
 } from '../lib/notifications';
 
 interface UseNotificationsReturn {
@@ -19,6 +20,7 @@ interface UseNotificationsReturn {
   markUnread: (id: string) => Promise<void>;
   archive: (id: string) => Promise<void>;
   archiveAllRead: () => Promise<void>;
+  archiveAll: () => Promise<void>;
   markAllAsRead: () => Promise<void>;
   activeToasts: Notification[];
   dismissToast: (id: string) => void;
@@ -113,6 +115,12 @@ export function useNotifications(orgId: string | undefined): UseNotificationsRet
     await dbArchiveAllRead(orgId, user.uid);
   }, [orgId, user?.uid]);
 
+  const archiveAll = React.useCallback(async () => {
+    if (!orgId || !user?.uid) return;
+    await dbArchiveAll(orgId, user.uid);
+    setActiveToasts([]);
+  }, [orgId, user?.uid]);
+
   const markAllAsRead = React.useCallback(async () => {
     if (!orgId || !user?.uid) return;
     await dbMarkAllRead(orgId, user.uid);
@@ -131,6 +139,7 @@ export function useNotifications(orgId: string | undefined): UseNotificationsRet
     markUnread,
     archive,
     archiveAllRead,
+    archiveAll,
     markAllAsRead,
     activeToasts,
     dismissToast,

@@ -19,6 +19,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useUnreadChatCount } from '../../hooks/useChat';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 
@@ -28,11 +29,12 @@ export function MobileNavDock() {
   const { userProfile, logout } = useAuth();
   const { themeId, setTheme, themes } = useTheme();
   const { unreadCount } = useNotifications(userProfile?.organizationId);
+  const unreadChatCount = useUnreadChatCount(userProfile?.organizationId);
   const [showMobileMore, setShowMobileMore] = React.useState(false);
 
   const mainNavItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/chat', label: 'Chat', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined },
+    { path: '/chat', label: 'Chat', icon: MessageSquare, badge: unreadChatCount > 0 ? unreadChatCount : undefined },
     { path: '/workspace', label: 'Workspace', icon: Trello },
     { path: '/requests', label: 'Approvals', icon: FileCheck },
   ];

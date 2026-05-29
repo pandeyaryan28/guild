@@ -100,6 +100,21 @@ export async function archiveAllRead(orgId: string, recipientId: string): Promis
   await batch.commit();
 }
 
+export async function archiveAll(orgId: string, recipientId: string): Promise<void> {
+  const snap = await getDocs(
+    query(
+      collection(db, 'notifications'),
+      where('orgId', '==', orgId),
+      where('recipientId', '==', recipientId),
+      where('archived', '==', false),
+    ),
+  );
+  if (snap.empty) return;
+  const batch = writeBatch(db);
+  snap.docs.forEach((d) => batch.update(d.ref, { archived: true }));
+  await batch.commit();
+}
+
 // ─── Listeners ─────────────────────────────────────────────────────────────────
 
 export function listenToNotifications(

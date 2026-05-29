@@ -112,3 +112,16 @@ export function useOrgMembers(orgId: string | undefined) {
 
   return members;
 }
+
+export function useUnreadChatCount(orgId: string | undefined): number {
+  const { channels, hasUnread } = useChannels(orgId);
+  const { threads, hasUnreadDM } = useDMs(orgId);
+
+  const unreadCount = React.useMemo(() => {
+    const unreadChCount = channels.filter(c => hasUnread(c)).length;
+    const unreadDmCount = threads.filter(t => hasUnreadDM(t)).length;
+    return unreadChCount + unreadDmCount;
+  }, [channels, hasUnread, threads, hasUnreadDM]);
+
+  return unreadCount;
+}

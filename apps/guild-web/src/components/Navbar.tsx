@@ -29,11 +29,26 @@ export function Navbar({ onSearchOpen, onMobileMenuToggle }: NavbarProps) {
     markUnread,
     archive,
     archiveAllRead,
+    archiveAll,
     markAllAsRead,
     activeToasts,
     dismissToast,
   } = useNotifications(orgId);
   const [notifOpen, setNotifOpen] = React.useState(false);
+  const [hasNewUnread, setHasNewUnread] = React.useState(false);
+
+  React.useEffect(() => {
+    if (unreadCount > 0 && !notifOpen) {
+      setHasNewUnread(true);
+    }
+  }, [unreadCount]);
+
+  React.useEffect(() => {
+    if (notifOpen) {
+      setHasNewUnread(false);
+    }
+  }, [notifOpen]);
+
   const { mode, toggleMode } = useTheme();
 
   const isLight = mode === 'light';
@@ -104,11 +119,10 @@ export function Navbar({ onSearchOpen, onMobileMenuToggle }: NavbarProps) {
               )}
             >
               <Bell className="h-4 w-4" />
-              {unreadCount > 0 && (
+              {hasNewUnread && (
                 <span
                   className={cn(
-                    'absolute right-2 top-2 flex h-2 w-2 rounded-full bg-primary ring-2 ring-background',
-                    unreadCount > 0 && 'animate-pulse',
+                    'absolute right-2 top-2 flex h-2 w-2 rounded-full bg-primary ring-2 ring-background animate-pulse',
                   )}
                 />
               )}
@@ -122,6 +136,7 @@ export function Navbar({ onSearchOpen, onMobileMenuToggle }: NavbarProps) {
               onMarkUnread={markUnread}
               onArchive={archive}
               onArchiveAllRead={archiveAllRead}
+              onArchiveAll={archiveAll}
               onMarkAllRead={markAllAsRead}
               open={notifOpen}
               onClose={() => setNotifOpen(false)}

@@ -31,10 +31,24 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
     markUnread,
     archive,
     archiveAllRead,
+    archiveAll,
     markAllAsRead,
     activeToasts,
     dismissToast,
   } = useNotifications(orgId);
+  const [hasNewUnread, setHasNewUnread] = React.useState(false);
+
+  React.useEffect(() => {
+    if (unreadCount > 0 && !notifOpen) {
+      setHasNewUnread(true);
+    }
+  }, [unreadCount]);
+
+  React.useEffect(() => {
+    if (notifOpen) {
+      setHasNewUnread(false);
+    }
+  }, [notifOpen]);
 
   const isLight = mode === 'light';
   const toggleTheme = toggleMode;
@@ -103,7 +117,7 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
                 style={{ borderRadius: '14px' }}
               >
                 <Bell className="w-4 h-4 text-foreground/80" />
-                {unreadCount > 0 && (
+                {hasNewUnread && (
                   <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
@@ -119,6 +133,7 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
                 onMarkUnread={markUnread}
                 onArchive={archive}
                 onArchiveAllRead={archiveAllRead}
+                onArchiveAll={archiveAll}
                 onMarkAllRead={markAllAsRead}
                 open={notifOpen}
                 onClose={() => setNotifOpen(false)}

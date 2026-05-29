@@ -33,10 +33,24 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
     markUnread,
     archive,
     archiveAllRead,
+    archiveAll,
     markAllAsRead,
     activeToasts,
     dismissToast,
   } = useNotifications(orgId);
+  const [hasNewUnread, setHasNewUnread] = React.useState(false);
+
+  React.useEffect(() => {
+    if (unreadCount > 0 && !notifOpen) {
+      setHasNewUnread(true);
+    }
+  }, [unreadCount]);
+
+  React.useEffect(() => {
+    if (notifOpen) {
+      setHasNewUnread(false);
+    }
+  }, [notifOpen]);
 
   // Set page headers
   const getHeaderTitle = () => {
@@ -92,7 +106,7 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
               )}
             >
               <Bell className="w-4 h-4" />
-              {unreadCount > 0 && (
+              {hasNewUnread && (
                 <span className="absolute top-0 right-0 flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
@@ -108,6 +122,7 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
               onMarkUnread={markUnread}
               onArchive={archive}
               onArchiveAllRead={archiveAllRead}
+              onArchiveAll={archiveAll}
               onMarkAllRead={markAllAsRead}
               open={notifOpen}
               onClose={() => setNotifOpen(false)}

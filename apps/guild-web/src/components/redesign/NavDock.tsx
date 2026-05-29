@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { useNotifications } from '../../hooks/useNotifications';
+import { useUnreadChatCount } from '../../hooks/useChat';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 
@@ -24,7 +24,7 @@ export function NavDock() {
   const location = useLocation();
   const { userProfile, logout } = useAuth();
   const { themeId, setTheme, themes } = useTheme();
-  const { unreadCount } = useNotifications(userProfile?.organizationId);
+  const unreadChatCount = useUnreadChatCount(userProfile?.organizationId);
   const [showThemePicker, setShowThemePicker] = React.useState(false);
   const themePickerRef = React.useRef<HTMLDivElement>(null);
 
@@ -44,7 +44,7 @@ export function NavDock() {
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/chat', label: 'Chat', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined },
+    { path: '/chat', label: 'Chat', icon: MessageSquare, badge: unreadChatCount > 0 ? unreadChatCount : undefined },
     { path: '/workspace', label: 'Workspace', icon: Trello },
     { path: '/goals-board', label: 'Goals', icon: Target },
     { path: '/requests', label: 'Requests', icon: FileCheck },
