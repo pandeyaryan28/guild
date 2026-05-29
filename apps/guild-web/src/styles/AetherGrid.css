@@ -180,7 +180,7 @@
 
 .aether-dock-item.active {
   background: var(--aether-primary);
-  color: white;
+  color: var(--accent-foreground, white);
   box-shadow: 0 0 20px var(--aether-primary-glow);
 }
 
