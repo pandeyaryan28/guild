@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // NOTE: consumers must supply these env vars at build time.
@@ -31,6 +31,6 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth    = getAuth(app);
-export const db      = initializeFirestore(app, { experimentalForceLongPolling: true });
+export const db      = getFirestore(app);
 export const storage = getStorage(app);
 export default app;
