@@ -8,6 +8,7 @@ import type { ThemeId, AppTheme } from '@guild/types';
 export interface PremiumTheme extends AppTheme {
   dark: boolean;
   variables: Record<string, string>;
+  lightVariables?: Record<string, string>;
 }
 
 export const THEMES: PremiumTheme[] = [
@@ -114,6 +115,23 @@ export const THEMES: PremiumTheme[] = [
       '--accent': '#fafafa',
       '--accent-foreground': '#09090b',
     },
+    lightVariables: {
+      '--bg-primary': '#f4f4f6',
+      '--bg-secondary': '#ebebef',
+      '--bg-tertiary': '#e2e2e7',
+      '--surface': '#ffffff',
+      '--surface-elevated': '#ffffff',
+      '--surface-hover': '#f0f0f3',
+      '--text-primary': '#18181b',
+      '--text-secondary': '#3f3f46',
+      '--text-muted': '#71717a',
+      '--text-disabled': '#a1a1aa',
+      '--border-default': '#e4e4e7',
+      '--border-strong': '#cbd5e1',
+      '--border-subtle': '#fafafa',
+      '--accent': '#18181b',
+      '--accent-foreground': '#ffffff',
+    },
   },
   {
     id: 'rose-gold',
@@ -139,6 +157,23 @@ export const THEMES: PremiumTheme[] = [
       '--border-subtle': '#130c0f',
       '--accent': '#fda4af',
       '--accent-foreground': '#4c0519',
+    },
+    lightVariables: {
+      '--bg-primary': '#faf6f6',
+      '--bg-secondary': '#f3ebeb',
+      '--bg-tertiary': '#ebdada',
+      '--surface': '#ffffff',
+      '--surface-elevated': '#ffffff',
+      '--surface-hover': '#fdfafb',
+      '--text-primary': '#372023',
+      '--text-secondary': '#5c3e42',
+      '--text-muted': '#96767a',
+      '--text-disabled': '#c8b4b6',
+      '--border-default': '#ebdada',
+      '--border-strong': '#d1b2b5',
+      '--border-subtle': '#fdf9f9',
+      '--accent': '#db2777',
+      '--accent-foreground': '#ffffff',
     },
   },
   {

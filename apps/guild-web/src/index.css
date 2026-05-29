@@ -297,3 +297,50 @@
   .text-\[8px\]   { font-size: 9px !important; }
   .text-\[9px\]   { font-size: 10px !important; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   PREMIUM DYNAMIC CONTRAST OVERRIDES
+   Guarantees that text, elements, and icons are perfectly visible when placed
+   inside primary/accent background containers for light-accent themes like Slate.
+───────────────────────────────────────────────────────────────────────────── */
+.bg-primary, 
+.bg-accent, 
+[class*="bg-primary"], 
+[class*="bg-accent"] {
+  /* Dynamic text-color container inheritance */
+  --text-primary: var(--accent-foreground) !important;
+  --text-secondary: color-mix(in srgb, var(--accent-foreground) 85%, transparent) !important;
+  --text-muted: color-mix(in srgb, var(--accent-foreground) 65%, transparent) !important;
+  --text-disabled: color-mix(in srgb, var(--accent-foreground) 45%, transparent) !important;
+  --color-foreground: var(--accent-foreground) !important;
+  --foreground: var(--accent-foreground) !important;
+}
+
+/* Override elements explicitly hardcoded with static white/black text classes */
+.bg-primary.text-white,
+.bg-accent.text-white,
+[class*="bg-primary"].text-white,
+[class*="bg-accent"].text-white,
+.bg-primary .text-white,
+.bg-accent .text-white,
+[class*="bg-primary"] .text-white,
+[class*="bg-accent"] .text-white {
+  color: var(--accent-foreground) !important;
+}
+
+.bg-primary.text-black,
+.bg-accent.text-black,
+[class*="bg-primary"].text-black,
+[class*="bg-accent"].text-black,
+.bg-primary .text-black,
+.bg-accent .text-black,
+[class*="bg-primary"] .text-black,
+[class*="bg-accent"] .text-black {
+  color: var(--accent-foreground) !important;
+}
+
+/* Ensure active/focus indicators inherit correctly */
+[class*="bg-primary"] svg,
+[class*="bg-accent"] svg {
+  color: currentColor !important;
+}

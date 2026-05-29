@@ -121,7 +121,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 2. Setup core light theme variables
-    const lightVariables: Record<string, string> = {
+    const baseLightVariables: Record<string, string> = {
       '--bg-primary': '#fcfcfd',
       '--bg-secondary': '#f4f4f6',
       '--bg-tertiary': '#eaeaf0',
@@ -156,8 +156,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       lightAccent = '#6d28d9';
     }
 
-    lightVariables['--accent'] = lightAccent;
-    lightVariables['--accent-foreground'] = lightAccentForeground;
+    baseLightVariables['--accent'] = lightAccent;
+    baseLightVariables['--accent-foreground'] = lightAccentForeground;
+
+    // Merge base light variables with theme custom light variables (if defined)
+    const lightVariables = {
+      ...baseLightVariables,
+      ...(theme.lightVariables ?? {})
+    };
 
     // Get dark theme variables
     const darkVariables = { ...theme.variables };
