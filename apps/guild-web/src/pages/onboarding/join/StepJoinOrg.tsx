@@ -150,7 +150,8 @@ export function StepJoinOrg({ data, updateData }: Props) {
                     onChange={(e) => { setSlugInput(e.target.value.toLowerCase()); setOrg(null); setError(''); }}
                     onKeyDown={(e) => e.key === 'Enter' && searchBySlug()}
                     placeholder="acme-corp"
-                    className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-18 pr-4 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                    style={{ paddingLeft: '84px' }}
+                    className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pr-4 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
                   />
                 </div>
                 <button

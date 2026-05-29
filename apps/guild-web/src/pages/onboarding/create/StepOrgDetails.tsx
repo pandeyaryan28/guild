@@ -148,7 +148,8 @@ export function StepOrgDetails({ data, updateData }: Props) {
                 onChange={(e) => { setSlug(e.target.value.toLowerCase()); setSlugAvailable(null); }}
                 placeholder="acme-corp"
                 required
-                className={`w-full h-10 rounded-xl border bg-surface/50 dark:bg-white/5 pl-18 pr-10 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 ${
+                style={{ paddingLeft: '84px' }}
+                className={`w-full h-10 rounded-xl border bg-surface/50 dark:bg-white/5 pr-10 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 ${
                   slugStatus === true ? 'border-emerald-500/50 focus:border-emerald-500/50 focus:ring-emerald-500/20' : slugStatus === false ? 'border-destructive/50 focus:border-destructive/50 focus:ring-destructive/20' : 'border-border-default/60'
                 }`}
               />
