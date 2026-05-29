@@ -226,6 +226,13 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
         } else {
           approverName = rawMentions[0];
         }
+      } else if (message.dmId) {
+        const parts = message.dmId.split('_');
+        approverId = parts.find((p) => p !== message.senderId) ?? '';
+        const approverUser = members.find(m => m.uid === approverId);
+        if (approverUser) {
+          approverName = approverUser.fullName;
+        }
       }
 
       const rId = (message as any).requestId;
