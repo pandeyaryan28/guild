@@ -1,0 +1,29 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // User profile images: Only the authenticated user themselves can write; any authenticated user can read profiles.
+    match /profileImages/{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Organization photos: Any authenticated user can read; users belonging to that organization can write.
+    match /organizationPhotos/{orgId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.organizationId == orgId;
+    }
+    
+    // Message attachments: Any authenticated user can read and write.
+    match /messageAttachments/{chatId}/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Entity attachments: Any authenticated user can read and write.
+    match /attachments/{entityType}/{entityId}/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+  }
+}
