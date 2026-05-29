@@ -45,6 +45,10 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "archived",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
