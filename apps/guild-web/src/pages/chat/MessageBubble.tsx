@@ -5,19 +5,27 @@ import { cn } from '@/lib/utils';
 import { type Message } from '../../lib/chat';
 import { editMessage, deleteMessage } from '../../lib/chat';
 import { MediaLightbox } from './MediaLightbox';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { updateRequestStatus } from '../../lib/requests';
 
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
   isGrouped: boolean; // true = hide avatar + name (consecutive from same sender)
   members: Array<{ uid: string; fullName: string; username: string; photoURL?: string }>;
+  orgId?: string;
+  currentUser?: { uid: string; displayName: string } | null;
 }
 
-function parseMentions(body: string) {
+function parseMentions(body: string, isOwn: boolean) {
   const parts = body.split(/(@\w+)/g);
   return parts.map((part, i) =>
     part.startsWith('@') ? (
-      <span key={i} className="text-primary font-semibold bg-primary/10 rounded px-0.5">
+      <span key={i} className={cn(
+        "font-semibold rounded px-0.5",
+        isOwn ? "text-white bg-white/25" : "text-primary bg-primary/10"
+      )}>
         {part}
       </span>
     ) : (
@@ -51,7 +59,7 @@ function getSenderColor(username: string) {
   return colors[index];
 }
 
-export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, isGrouped, members, orgId, currentUser }: MessageBubbleProps) {
   const sender = members.find((m) => m.uid === message.senderId);
   const photoURL = sender?.photoURL;
 
@@ -60,6 +68,33 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
   const [editBody, setEditBody] = React.useState(message.body);
   const [saving, setSaving] = React.useState(false);
   const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
+
+  const [realtimeRequestStatus, setRealtimeRequestStatus] = React.useState<string | null>(null);
+  const [realtimeGoalStatus, setRealtimeGoalStatus] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const rId = (message as any).requestId;
+    if (!rId) return;
+
+    const unsub = onSnapshot(doc(db, 'requests', rId), (snap) => {
+      if (snap.exists()) {
+        setRealtimeRequestStatus(snap.data().status);
+      }
+    });
+    return () => unsub();
+  }, [message]);
+
+  React.useEffect(() => {
+    const gId = (message as any).goalId;
+    if (!gId) return;
+
+    const unsub = onSnapshot(doc(db, 'goals', gId), (snap) => {
+      if (snap.exists()) {
+        setRealtimeGoalStatus(snap.data().status);
+      }
+    });
+    return () => unsub();
+  }, [message]);
 
   const handleEdit = async () => {
     if (!editBody.trim() || editBody === message.body) { setEditing(false); return; }
@@ -138,6 +173,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
     if (isGoalCommand) {
       const args = message.body.trim().slice(5).trim();
       const goalTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
+      const displayStatus = realtimeGoalStatus || (message as any).goalStatus || 'active';
 
       return (
         <div className="mt-1.5 max-w-lg rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4 shadow-md shadow-emerald-500/5 backdrop-blur-sm transition-all hover:bg-emerald-500/12 group-hover:border-emerald-500/30 text-left">
@@ -146,8 +182,15 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
               <Target className="h-4 w-4 shrink-0" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/95">Goal</span>
             </div>
-            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
-              Active
+            <span className={cn(
+              "rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+              displayStatus === 'completed'
+                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                : displayStatus === 'cancelled'
+                ? 'border-zinc-500/20 bg-zinc-500/10 text-zinc-400'
+                : 'border-cyan-500/20 bg-cyan-500/10 text-cyan-400'
+            )}>
+              {displayStatus}
             </span>
           </div>
 
@@ -164,11 +207,65 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
       const rawMentions = message.body.match(/@\w+/g) || [];
       
       let approverName = 'Approver';
+      let approverId = '';
       if (rawMentions.length > 0) {
         const username = rawMentions[0].slice(1);
         const approverUser = members.find(m => m.username === username);
-        approverName = approverUser ? approverUser.fullName : rawMentions[0];
+        if (approverUser) {
+          approverName = approverUser.fullName;
+          approverId = approverUser.uid;
+        } else {
+          approverName = rawMentions[0];
+        }
       }
+
+      const rId = (message as any).requestId;
+      const displayStatus = realtimeRequestStatus || (message as any).requestStatus || 'pending';
+      const isApprover = currentUser && approverId === currentUser.uid;
+
+      const handleApprove = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!rId || !orgId || !currentUser) return;
+        setSaving(true);
+        try {
+          await updateRequestStatus(
+            rId,
+            orgId,
+            'approved',
+            currentUser.uid,
+            currentUser.displayName || 'Approver',
+            message.senderId,
+            requestTitle,
+            'Approved via chat discussion.'
+          );
+        } catch (err) {
+          console.error('Failed to approve request:', err);
+        } finally {
+          setSaving(false);
+        }
+      };
+
+      const handleReject = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!rId || !orgId || !currentUser) return;
+        setSaving(true);
+        try {
+          await updateRequestStatus(
+            rId,
+            orgId,
+            'rejected',
+            currentUser.uid,
+            currentUser.displayName || 'Approver',
+            message.senderId,
+            requestTitle,
+            'Rejected via chat discussion.'
+          );
+        } catch (err) {
+          console.error('Failed to reject request:', err);
+        } finally {
+          setSaving(false);
+        }
+      };
 
       return (
         <div className="mt-1.5 max-w-lg rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-amber-500/5 p-4 shadow-md shadow-amber-500/5 backdrop-blur-sm transition-all hover:bg-amber-500/12 group-hover:border-amber-500/30 text-left">
@@ -177,8 +274,15 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
               <ClipboardList className="h-4 w-4 shrink-0" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500/95">Request</span>
             </div>
-            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
-              Pending
+            <span className={cn(
+              "rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+              displayStatus === 'approved' 
+                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                : displayStatus === 'rejected'
+                ? 'border-red-500/20 bg-red-500/10 text-red-400'
+                : 'border-amber-500/20 bg-amber-500/10 text-amber-400'
+            )}>
+              {displayStatus}
             </span>
           </div>
 
@@ -186,9 +290,29 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
             {requestTitle}
           </div>
           
-          <div className="mt-2 text-[10px] text-text-muted flex items-center gap-1.5">
-            <span>Approver:</span>
-            <span className="font-semibold text-foreground bg-white/5 rounded px-1.5 py-0.5">{approverName}</span>
+          <div className="mt-2.5 text-[10px] text-text-muted flex items-center justify-between gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span>Approver:</span>
+              <span className="font-semibold text-foreground bg-white/5 rounded px-1.5 py-0.5">{approverName}</span>
+            </div>
+            {isApprover && displayStatus === 'pending' && (
+              <div className="flex items-center gap-1.5 mt-1 sm:mt-0">
+                <button
+                  onClick={handleApprove}
+                  disabled={saving}
+                  className="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-bold transition-all text-[9px] flex items-center gap-0.5 cursor-pointer border border-emerald-500/10"
+                >
+                  <Check className="h-2.5 w-2.5" /> Approve
+                </button>
+                <button
+                  onClick={handleReject}
+                  disabled={saving}
+                  className="px-2 py-0.5 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold transition-all text-[9px] flex items-center gap-0.5 cursor-pointer border border-red-500/10"
+                >
+                  <X className="h-2.5 w-2.5" /> Reject
+                </button>
+              </div>
+            )}
           </div>
         </div>
       );
@@ -196,7 +320,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
 
     return (
       <p className={cn('text-sm leading-relaxed', message.deleted && 'italic text-text-muted')}>
-        {parseMentions(message.body)}
+        {parseMentions(message.body, isOwn)}
         {message.editedAt && !message.deleted && (
           <span className="ml-1.5 text-[10px] text-text-muted">(edited)</span>
         )}
@@ -364,36 +488,41 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
         isOwn ? 'items-end' : 'items-start'
       )}>
         {/* Name and metadata */}
-        {!isGrouped && (
+        {!isGrouped && !isOwn && (
           <div className="flex items-baseline gap-2 mb-1 px-1">
-            {!isOwn ? (
-              <>
-                <span className={cn('text-xs', getSenderColor(message.senderUsername))}>
-                  {message.senderName}
-                </span>
-                <span className="text-[9px] text-text-muted">
-                  @{message.senderUsername}
-                </span>
-              </>
-            ) : (
-              <span className="text-xs font-semibold text-primary/80">You</span>
-            )}
+            <span className={cn('text-xs', getSenderColor(message.senderUsername))}>
+              {message.senderName}
+            </span>
+            <span className="text-[9px] text-text-muted">
+              @{message.senderUsername}
+            </span>
             <span className="text-[9px] text-text-muted">{formatTime(message.createdAt as any)}</span>
           </div>
         )}
 
         {/* Message bubble styling */}
         <div className={cn(
-          'relative rounded-2xl px-4 py-2.5 shadow-sm text-sm leading-relaxed border transition-all text-left',
-          isOwn 
-            ? 'bg-primary/10 border-primary/20 dark:bg-primary/20 dark:border-primary/25 rounded-tr-none text-foreground'
-            : 'bg-surface border-border-default/60 rounded-tl-none text-foreground',
+          !(isTaskCommand || isGoalCommand || isRequestCommand)
+            ? cn(
+                'relative rounded-2xl px-4 py-2.5 shadow-sm text-sm leading-relaxed border transition-all text-left',
+                isOwn 
+                  ? 'bg-gradient-to-br from-primary via-primary to-primary/95 border-transparent rounded-tr-none text-primary-foreground shadow-md shadow-primary/10'
+                  : 'bg-surface border-border-default/60 rounded-tl-none text-foreground'
+              )
+            : 'relative text-left',
           isGrouped && isOwn && 'rounded-tr-2xl',
           isGrouped && !isOwn && 'rounded-tl-2xl'
         )}>
           {renderMessageContent()}
           {renderAttachments()}
         </div>
+
+        {/* Small own timestamp below bubble if not consecutive */}
+        {!isGrouped && isOwn && !(isTaskCommand || isGoalCommand || isRequestCommand) && (
+          <div className="mt-1 px-1.5 flex items-center justify-end text-[9px] text-text-muted/75 font-mono">
+            {formatTime(message.createdAt as any)}
+          </div>
+        )}
       </div>
 
       {/* Action Bar (Edit/Delete options) */}

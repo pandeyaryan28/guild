@@ -118,7 +118,7 @@ export function MessageArea({
       }
 
       try {
-        await createGoal({
+        const goalId = await createGoal({
           orgId,
           title: goalTitle,
           description: channelId 
@@ -135,9 +135,9 @@ export function MessageArea({
 
         // Send the original message body as typed
         if (channelId) {
-          await sendChannelMessage({ ...base, body, channelId });
+          await sendChannelMessage({ ...base, body, channelId, goalId, goalStatus: 'active' } as any);
         } else if (dmId) {
-          await sendDMMessage({ ...base, body, dmId });
+          await sendDMMessage({ ...base, body, dmId, goalId, goalStatus: 'active' } as any);
         }
       } catch (err) {
         console.error('Failed to create goal via /goal command:', err);
@@ -169,7 +169,7 @@ export function MessageArea({
       }
 
       try {
-        await createRequest({
+        const requestId = await createRequest({
           orgId,
           creatorId: currentUser.uid,
           creatorName: base.senderName,
@@ -186,9 +186,9 @@ export function MessageArea({
 
         // Send the original message body as typed
         if (channelId) {
-          await sendChannelMessage({ ...base, body, channelId });
+          await sendChannelMessage({ ...base, body, channelId, requestId, requestStatus: 'pending' } as any);
         } else if (dmId) {
-          await sendDMMessage({ ...base, body, dmId });
+          await sendDMMessage({ ...base, body, dmId, requestId, requestStatus: 'pending' } as any);
         }
       } catch (err) {
         console.error('Failed to create request via /request command:', err);
@@ -241,7 +241,7 @@ export function MessageArea({
         }
 
         // Create the task
-        await createTask({
+        const taskId = await createTask({
           orgId,
           title: taskTitle,
           description: channelId 
@@ -258,9 +258,9 @@ export function MessageArea({
 
         // Send the original message body as typed
         if (channelId) {
-          await sendChannelMessage({ ...base, body, channelId });
+          await sendChannelMessage({ ...base, body, channelId, taskId } as any);
         } else if (dmId) {
-          await sendDMMessage({ ...base, body, dmId });
+          await sendDMMessage({ ...base, body, dmId, taskId } as any);
         }
       } catch (err) {
         console.error('Failed to create task via /task command:', err);
@@ -367,6 +367,8 @@ export function MessageArea({
         messages={messages}
         currentUserId={currentUser?.uid ?? ''}
         members={members.map((m) => ({ uid: m.uid, fullName: m.fullName, username: m.username, photoURL: m.photoURL }))}
+        orgId={orgId}
+        currentUser={currentUser}
       />
 
       {/* Input */}
