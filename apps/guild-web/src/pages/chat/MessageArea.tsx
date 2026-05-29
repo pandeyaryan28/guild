@@ -12,6 +12,8 @@ import { db } from '../../lib/firebase';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { type Channel } from '../../lib/chat';
 import { createTask } from '../../lib/tasks';
+import { createGoal } from '../../lib/goals';
+import { createRequest } from '../../lib/requests';
 import { InviteChannelMembersModal } from '../../components/chat/InviteChannelMembersModal';
 import { ChannelSettingsModal } from '../../components/chat/ChannelSettingsModal';
 import { type MessageAttachment } from '@guild/types';
@@ -101,6 +103,105 @@ export function MessageArea({
     };
 
     const trimmed = body.trim();
+    if (trimmed.startsWith('/goal')) {
+      const commandArgs = trimmed.slice(5).trim();
+      let goalTitle = commandArgs.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
+
+      if (!goalTitle) {
+        const usageText = `**Usage**: \`/goal <goal title>\``;
+        if (channelId) {
+          await sendChannelMessage({ ...base, body: usageText, channelId });
+        } else if (dmId) {
+          await sendDMMessage({ ...base, body: usageText, dmId });
+        }
+        return;
+      }
+
+      try {
+        await createGoal({
+          orgId,
+          title: goalTitle,
+          description: channelId 
+            ? `Goal created via channel discussion by ${base.senderName}.`
+            : `Goal created via Direct Message chat by ${base.senderName}.`,
+          actor: {
+            uid: currentUser.uid,
+            name: base.senderName,
+          },
+          ownerId: currentUser.uid,
+          horizon: 'short_term',
+          recurrence: 'none',
+        });
+
+        // Send the original message body as typed
+        if (channelId) {
+          await sendChannelMessage({ ...base, body, channelId });
+        } else if (dmId) {
+          await sendDMMessage({ ...base, body, dmId });
+        }
+      } catch (err) {
+        console.error('Failed to create goal via /goal command:', err);
+        const errorBody = `**Error**: Failed to create goal: "${goalTitle}". Please try again.`;
+        if (channelId) {
+          await sendChannelMessage({ ...base, body: errorBody, channelId });
+        } else if (dmId) {
+          await sendDMMessage({ ...base, body: errorBody, dmId });
+        }
+      }
+      return;
+    }
+
+    if (trimmed.startsWith('/request')) {
+      const commandArgs = trimmed.slice(8).trim();
+      let requestTitle = commandArgs.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
+
+      const approverId = mentions[0];
+      const approver = approverId ? members.find((m) => m.uid === approverId) : null;
+
+      if (!requestTitle || !approver) {
+        const usageText = `**Usage**: \`/request <request title> @approver\``;
+        if (channelId) {
+          await sendChannelMessage({ ...base, body: usageText, channelId });
+        } else if (dmId) {
+          await sendDMMessage({ ...base, body: usageText, dmId });
+        }
+        return;
+      }
+
+      try {
+        await createRequest({
+          orgId,
+          creatorId: currentUser.uid,
+          creatorName: base.senderName,
+          creatorUsername: base.senderUsername,
+          approverId: approver.uid,
+          approverName: approver.fullName,
+          approverUsername: approver.username,
+          type: 'other',
+          title: requestTitle,
+          description: channelId 
+            ? `Request submitted via channel discussion by ${base.senderName}.`
+            : `Request submitted via Direct Message chat by ${base.senderName}.`,
+        });
+
+        // Send the original message body as typed
+        if (channelId) {
+          await sendChannelMessage({ ...base, body, channelId });
+        } else if (dmId) {
+          await sendDMMessage({ ...base, body, dmId });
+        }
+      } catch (err) {
+        console.error('Failed to create request via /request command:', err);
+        const errorBody = `**Error**: Failed to create request: "${requestTitle}". Please try again.`;
+        if (channelId) {
+          await sendChannelMessage({ ...base, body: errorBody, channelId });
+        } else if (dmId) {
+          await sendDMMessage({ ...base, body: errorBody, dmId });
+        }
+      }
+      return;
+    }
+
     if (trimmed.startsWith('/task')) {
       const commandArgs = trimmed.slice(5).trim();
       

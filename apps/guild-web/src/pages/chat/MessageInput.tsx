@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Send, Loader2, Paperclip, X, File, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MentionDropdown } from './MentionDropdown';
+import { CommandDropdown } from './CommandDropdown';
 import { type UserProfile } from '../../lib/firestore';
 import { uploadMessageAttachment } from '../../lib/storage';
 import { type MessageAttachment } from '@guild/types';
@@ -21,6 +22,8 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
   const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
   const [mentionQuery, setMentionQuery] = React.useState<string | null>(null);
   const [mentionStart, setMentionStart] = React.useState<number>(-1);
+  const [commandQuery, setCommandQuery] = React.useState<string | null>(null);
+  const [commandStart, setCommandStart] = React.useState<number>(-1);
   const [pendingMentions, setPendingMentions] = React.useState<Map<string, string>>(new Map()); // username → uid
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -36,7 +39,7 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (mentionQuery !== null) return; // dropdown is handling Enter
+      if (mentionQuery !== null || commandQuery !== null) return; // dropdowns are handling Enter
       handleSend();
     }
   };
@@ -45,11 +48,24 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
     const val = e.target.value;
     setBody(val);
 
-    // Detect @ trigger
     const cursor = e.target.selectionStart ?? val.length;
     const textBeforeCursor = val.slice(0, cursor);
-    const atMatch = textBeforeCursor.match(/@(\w*)$/);
 
+    // Detect / command trigger at start of message
+    const slashMatch = textBeforeCursor.match(/^\/(\w*)$/);
+    if (slashMatch) {
+      setCommandQuery(slashMatch[1]);
+      setCommandStart(0);
+      setMentionQuery(null);
+      setMentionStart(-1);
+      return;
+    } else {
+      setCommandQuery(null);
+      setCommandStart(-1);
+    }
+
+    // Detect @ trigger
+    const atMatch = textBeforeCursor.match(/@(\w*)$/);
     if (atMatch) {
       setMentionQuery(atMatch[1]);
       setMentionStart(cursor - atMatch[0].length);
@@ -57,6 +73,14 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
       setMentionQuery(null);
       setMentionStart(-1);
     }
+  };
+
+  const insertCommand = (cmdName: string) => {
+    const inserted = `/${cmdName} `;
+    setBody(inserted);
+    setCommandQuery(null);
+    setCommandStart(-1);
+    setTimeout(() => textareaRef.current?.focus(), 0);
   };
 
   const insertMention = (member: UserProfile) => {
@@ -139,6 +163,14 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
           members={members}
           onSelect={insertMention}
           onClose={() => setMentionQuery(null)}
+        />
+      )}
+
+      {commandQuery !== null && (
+        <CommandDropdown
+          query={commandQuery}
+          onSelect={insertCommand}
+          onClose={() => setCommandQuery(null)}
         />
       )}
 

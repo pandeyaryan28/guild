@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
-import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink, Play, Maximize2 } from 'lucide-react';
+import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink, Play, Maximize2, Target, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Message } from '../../lib/chat';
 import { editMessage, deleteMessage } from '../../lib/chat';
@@ -30,6 +30,25 @@ function formatTime(ts: { toDate: () => Date } | undefined) {
   if (!ts) return '';
   const d = ts.toDate();
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function getSenderColor(username: string) {
+  const colors = [
+    'text-red-400 dark:text-red-300 font-bold',
+    'text-amber-500 dark:text-amber-400 font-bold',
+    'text-emerald-500 dark:text-emerald-400 font-bold',
+    'text-cyan-500 dark:text-cyan-400 font-bold',
+    'text-blue-500 dark:text-blue-400 font-bold',
+    'text-indigo-500 dark:text-indigo-400 font-bold',
+    'text-violet-500 dark:text-violet-400 font-bold',
+    'text-pink-500 dark:text-pink-400 font-bold',
+  ];
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
 }
 
 export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBubbleProps) {
@@ -63,6 +82,8 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
     .toUpperCase();
 
   const isTaskCommand = message.body.trim().startsWith('/task') && !message.deleted;
+  const isGoalCommand = message.body.trim().startsWith('/goal') && !message.deleted;
+  const isRequestCommand = message.body.trim().startsWith('/request') && !message.deleted;
 
   const renderMessageContent = () => {
     if (editing) {
@@ -94,29 +115,9 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
     if (isTaskCommand) {
       const args = message.body.trim().slice(5).trim();
       const taskTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
-      const rawMentions = message.body.match(/@\w+/g) || [];
-      const isDM = window.location.pathname.includes('/chat/dm/');
-
-      let assigneeNames = '';
-      let isMultiAssignee = false;
-
-      if (rawMentions.length > 0) {
-        const usernames = rawMentions.map(m => m.slice(1)); // strip '@'
-        const assignedMembers = members.filter(m => usernames.includes(m.username));
-        assigneeNames = assignedMembers.map(m => m.fullName).join(', ') || rawMentions.join(', ');
-        isMultiAssignee = rawMentions.length > 1;
-      } else {
-        if (isDM) {
-          const otherMember = members.find(m => m.uid !== message.senderId);
-          assigneeNames = otherMember ? otherMember.fullName : 'Partner';
-        } else {
-          assigneeNames = 'All channel members';
-          isMultiAssignee = true;
-        }
-      }
 
       return (
-        <div className="mt-1.5 max-w-lg rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4 shadow-md shadow-primary/5 backdrop-blur-sm transition-all hover:bg-primary/12 group-hover:border-primary/30">
+        <div className="mt-1.5 max-w-lg rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4 shadow-md shadow-primary/5 backdrop-blur-sm transition-all hover:bg-primary/12 group-hover:border-primary/30 text-left">
           <div className="flex items-center justify-between gap-4 mb-2.5">
             <div className="flex items-center gap-2 text-primary">
               <CheckSquare className="h-4 w-4 shrink-0" />
@@ -129,6 +130,65 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
 
           <div className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 text-sm font-semibold text-foreground leading-relaxed shadow-inner">
             {taskTitle}
+          </div>
+        </div>
+      );
+    }
+
+    if (isGoalCommand) {
+      const args = message.body.trim().slice(5).trim();
+      const goalTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
+
+      return (
+        <div className="mt-1.5 max-w-lg rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4 shadow-md shadow-emerald-500/5 backdrop-blur-sm transition-all hover:bg-emerald-500/12 group-hover:border-emerald-500/30 text-left">
+          <div className="flex items-center justify-between gap-4 mb-2.5">
+            <div className="flex items-center gap-2 text-emerald-500">
+              <Target className="h-4 w-4 shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/95">Goal</span>
+            </div>
+            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+              Active
+            </span>
+          </div>
+
+          <div className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 text-sm font-semibold text-foreground leading-relaxed shadow-inner">
+            {goalTitle}
+          </div>
+        </div>
+      );
+    }
+
+    if (isRequestCommand) {
+      const args = message.body.trim().slice(8).trim();
+      const requestTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
+      const rawMentions = message.body.match(/@\w+/g) || [];
+      
+      let approverName = 'Approver';
+      if (rawMentions.length > 0) {
+        const username = rawMentions[0].slice(1);
+        const approverUser = members.find(m => m.username === username);
+        approverName = approverUser ? approverUser.fullName : rawMentions[0];
+      }
+
+      return (
+        <div className="mt-1.5 max-w-lg rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-amber-500/5 p-4 shadow-md shadow-amber-500/5 backdrop-blur-sm transition-all hover:bg-amber-500/12 group-hover:border-amber-500/30 text-left">
+          <div className="flex items-center justify-between gap-4 mb-2.5">
+            <div className="flex items-center gap-2 text-amber-500">
+              <ClipboardList className="h-4 w-4 shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500/95">Request</span>
+            </div>
+            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
+              Pending
+            </span>
+          </div>
+
+          <div className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 text-sm font-semibold text-foreground leading-relaxed shadow-inner">
+            {requestTitle}
+          </div>
+          
+          <div className="mt-2 text-[10px] text-text-muted flex items-center gap-1.5">
+            <span>Approver:</span>
+            <span className="font-semibold text-foreground bg-white/5 rounded px-1.5 py-0.5">{approverName}</span>
           </div>
         </div>
       );
@@ -273,55 +333,87 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
 
   return (
     <div
-      className={cn('group relative flex gap-3 px-4 py-0.5 hover:bg-white/[0.02] transition-colors rounded-lg', isGrouped ? 'mt-0' : 'mt-3')}
+      className={cn(
+        'group relative flex w-full gap-3 px-4 py-0.5 transition-colors hover:bg-white/[0.01] rounded-lg',
+        isOwn ? 'justify-end' : 'justify-start',
+        isGrouped ? 'mt-0.5' : 'mt-3.5'
+      )}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Avatar column */}
-      <div className="w-9 shrink-0">
+      {/* Received Message Avatar (Left side) */}
+      {!isOwn && (
+        <div className="w-9 shrink-0 flex items-start justify-center">
+          {!isGrouped ? (
+            <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary/10 text-xs font-bold text-primary border border-primary/20 overflow-hidden shadow-sm shrink-0">
+              {photoURL ? (
+                <img src={photoURL} alt={message.senderName} className="h-full w-full object-cover" />
+              ) : (
+                initials
+              )}
+            </div>
+          ) : (
+            <div className="w-9" />
+          )}
+        </div>
+      )}
+
+      {/* Message Bubble Container */}
+      <div className={cn(
+        'flex flex-col min-w-0 max-w-[70%]',
+        isOwn ? 'items-end' : 'items-start'
+      )}>
+        {/* Name and metadata */}
         {!isGrouped && (
-          <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary/10 text-xs font-bold text-primary border border-primary/20 overflow-hidden">
-            {photoURL ? (
-              <img src={photoURL} alt={message.senderName} className="h-full w-full object-cover" />
+          <div className="flex items-baseline gap-2 mb-1 px-1">
+            {!isOwn ? (
+              <>
+                <span className={cn('text-xs', getSenderColor(message.senderUsername))}>
+                  {message.senderName}
+                </span>
+                <span className="text-[9px] text-text-muted">
+                  @{message.senderUsername}
+                </span>
+              </>
             ) : (
-              initials
+              <span className="text-xs font-semibold text-primary/80">You</span>
             )}
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        {!isGrouped && (
-          <div className="flex items-baseline gap-2 mb-0.5">
-            <span className="text-sm font-semibold text-foreground">{message.senderName}</span>
-            <span className="text-[10px] text-text-muted">
-              @{message.senderUsername}
-            </span>
-            <span className="text-[10px] text-text-muted">{formatTime(message.createdAt as any)}</span>
+            <span className="text-[9px] text-text-muted">{formatTime(message.createdAt as any)}</span>
           </div>
         )}
 
-        {renderMessageContent()}
-        {renderAttachments()}
+        {/* Message bubble styling */}
+        <div className={cn(
+          'relative rounded-2xl px-4 py-2.5 shadow-sm text-sm leading-relaxed border transition-all text-left',
+          isOwn 
+            ? 'bg-primary/10 border-primary/20 dark:bg-primary/20 dark:border-primary/25 rounded-tr-none text-foreground'
+            : 'bg-surface border-border-default/60 rounded-tl-none text-foreground',
+          isGrouped && isOwn && 'rounded-tr-2xl',
+          isGrouped && !isOwn && 'rounded-tl-2xl'
+        )}>
+          {renderMessageContent()}
+          {renderAttachments()}
+        </div>
       </div>
 
-      {/* Action bar */}
+      {/* Action Bar (Edit/Delete options) */}
       {isOwn && !message.deleted && !editing && hovered && (
         <motion.div
-          initial={{ opacity: 0, x: 4 }}
+          initial={{ opacity: 0, x: -4 }}
           animate={{ opacity: 1, x: 0 }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-xl border border-border-default bg-surface backdrop-blur-md px-1.5 py-1 shadow-lg"
+          className="absolute right-full mr-3 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-xl border border-border-default bg-surface backdrop-blur-md px-1.5 py-1 shadow-lg z-10"
         >
           <button
             onClick={() => setEditing(true)}
             className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors"
+            title="Edit message"
           >
             <Pencil className="h-3 w-3" />
           </button>
           <button
             onClick={handleDelete}
             className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title="Delete message"
           >
             <Trash2 className="h-3 w-3" />
           </button>
@@ -330,10 +422,14 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
 
       {/* Grouped timestamp on hover */}
       {isGrouped && hovered && (
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-text-muted">
+        <span className={cn(
+          "absolute top-1/2 -translate-y-1/2 text-[9px] text-text-muted font-mono opacity-80",
+          isOwn ? "right-full mr-3" : "left-full ml-3"
+        )}>
           {formatTime(message.createdAt as any)}
         </span>
       )}
+
       {lightboxIndex !== null && message.files && (
         <MediaLightbox
           isOpen={lightboxIndex !== null}
