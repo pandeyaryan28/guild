@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
-import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink } from 'lucide-react';
+import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink, Play, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Message } from '../../lib/chat';
 import { editMessage, deleteMessage } from '../../lib/chat';
+import { MediaLightbox } from './MediaLightbox';
 
 interface MessageBubbleProps {
   message: Message;
@@ -39,6 +40,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
   const [editing, setEditing] = React.useState(false);
   const [editBody, setEditBody] = React.useState(message.body);
   const [saving, setSaving] = React.useState(false);
+  const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
 
   const handleEdit = async () => {
     if (!editBody.trim() || editBody === message.body) { setEditing(false); return; }
@@ -145,66 +147,93 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
   const renderAttachments = () => {
     if (!message.files || message.files.length === 0 || message.deleted) return null;
 
-    const images = message.files.filter((f) => f.type.startsWith('image/'));
-    const nonImages = message.files.filter((f) => !f.type.startsWith('image/'));
+    const media = message.files.filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));
+    const nonMedia = message.files.filter((f) => !f.type.startsWith('image/') && !f.type.startsWith('video/'));
 
     return (
       <div className="mt-2 flex flex-col gap-2">
-        {/* Images Grid */}
-        {images.length > 0 && (
+        {/* Media Grid (Images and Videos) */}
+        {media.length > 0 && (
           <div className={cn(
             "grid gap-2 max-w-2xl",
-            images.length === 1 ? "grid-cols-1 max-w-md" : "grid-cols-2 sm:grid-cols-3"
+            media.length === 1 ? "grid-cols-1 max-w-md" : "grid-cols-2 sm:grid-cols-3"
           )}>
-            {images.map((file, idx) => (
-              <div
-                key={idx}
-                className="group/img relative rounded-xl overflow-hidden border border-border-default bg-bg-tertiary shadow-sm aspect-video max-h-60 transition-all hover:shadow-md hover:border-primary/20"
-              >
-                <img
-                  src={file.url}
-                  alt={file.name}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover/img:scale-102"
-                  loading="lazy"
-                />
-                {/* Image Actions Overlay on Hover */}
-                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <a
-                    href={file.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-1.5 rounded-lg bg-surface/90 hover:bg-surface text-foreground shadow transition-colors"
-                    title="View Original"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                  <a
-                    href={file.url}
-                    download={file.name}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-1.5 rounded-lg bg-surface/90 hover:bg-surface text-foreground shadow transition-colors"
-                    title="Download"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                  </a>
+            {media.map((file, idx) => {
+              const isImage = file.type.startsWith('image/');
+              const isVideo = file.type.startsWith('video/');
+
+              return (
+                <div
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxIndex(idx);
+                  }}
+                  className="group/img relative rounded-xl overflow-hidden border border-border-default bg-bg-tertiary shadow-sm aspect-video max-h-60 transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
+                >
+                  {isImage ? (
+                    <img
+                      src={file.url}
+                      alt={file.name}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover/img:scale-102"
+                      loading="lazy"
+                    />
+                  ) : (
+                    // Video Preview Card with Play Overlay
+                    <div className="h-full w-full relative flex items-center justify-center bg-zinc-950 dark:bg-black overflow-hidden">
+                      <video
+                        src={file.url}
+                        className="h-full w-full object-cover opacity-75 blur-[0.5px]"
+                        muted
+                        playsInline
+                      />
+                      {/* Translucent glass play overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/img:bg-black/35 transition-colors">
+                        <div className="h-11 w-11 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/20 hover:scale-105 transition-all shadow-lg shadow-black/20">
+                          <Play className="h-5.5 w-5.5 fill-white ml-0.5" />
+                        </div>
+                      </div>
+                      <span className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded text-[8px] font-black tracking-wide bg-black/60 text-white border border-white/5 font-mono uppercase">
+                        Video
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Actions overlay on Hover */}
+                  <div className="absolute inset-0 bg-black/45 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => setLightboxIndex(idx)}
+                      className="p-1.5 rounded-lg bg-surface/90 hover:bg-surface text-foreground shadow transition-colors cursor-pointer"
+                      title="View Fullscreen"
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                    </button>
+                    <a
+                      href={file.url}
+                      download={file.name}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-surface/90 hover:bg-surface text-foreground shadow transition-colors cursor-pointer"
+                      title="Download"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
-        {/* Non-Images List */}
-        {nonImages.length > 0 && (
+        {/* Non-Media List */}
+        {nonMedia.length > 0 && (
           <div className="flex flex-col gap-1.5 max-w-md">
-            {nonImages.map((file, idx) => {
+            {nonMedia.map((file, idx) => {
               let FileIcon = File;
               if (file.type.startsWith('text/') || file.type.includes('pdf')) {
                 FileIcon = FileText;
               } else if (file.type.startsWith('audio/')) {
                 FileIcon = FileAudio;
-              } else if (file.type.startsWith('video/')) {
-                FileIcon = FileVideo;
               }
 
               return (
@@ -304,6 +333,14 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-text-muted">
           {formatTime(message.createdAt as any)}
         </span>
+      )}
+      {lightboxIndex !== null && message.files && (
+        <MediaLightbox
+          isOpen={lightboxIndex !== null}
+          onClose={() => setLightboxIndex(null)}
+          mediaList={message.files.filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'))}
+          initialIndex={lightboxIndex}
+        />
       )}
     </div>
   );
