@@ -13,7 +13,7 @@ import { getOrCreateDM, markChannelRead, markDMRead } from '../../lib/chat';
 import { CreateChannelModal } from '../../components/chat/CreateChannelModal';
 import { NewDMModal } from '../../components/chat/NewDMModal';
 import { MessageArea } from './MessageArea';
-import { ThreadPanel } from './ThreadPanel';
+import { ReplyPanel } from './ReplyPanel';
 import { type UserProfile, getOrgById } from '../../lib/firestore';
 import { type Message } from '../../lib/chat';
 import { RedesignLayout } from '../../components/redesign/Layout';
@@ -234,10 +234,10 @@ export function ChatLayout() {
   const [isMemberPanelCollapsed, setIsMemberPanelCollapsed] = React.useState(false);
   const [showChannelModal, setShowChannelModal] = React.useState(false);
   const [showDMModal, setShowDMModal] = React.useState(false);
-  const [activeThreadMessage, setActiveThreadMessage] = React.useState<Message | null>(null);
+  const [activeDiscussionMessage, setActiveDiscussionMessage] = React.useState<Message | null>(null);
 
   React.useEffect(() => {
-    setActiveThreadMessage(null);
+    setActiveDiscussionMessage(null);
   }, [channelId, dmId]);
 
   const handleChannelCreated = (chId: string) => {
@@ -301,16 +301,16 @@ export function ChatLayout() {
                 members={members}
                 isSidebarCollapsed={isSidebarCollapsed}
                 onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                onOpenThread={setActiveThreadMessage}
+                onOpenDiscussion={setActiveDiscussionMessage}
               />
-              {activeThreadMessage && orgId && (
-                <ThreadPanel
-                  parentMessage={activeThreadMessage}
+              {activeDiscussionMessage && orgId && (
+                <ReplyPanel
+                  parentMessage={activeDiscussionMessage}
                   currentUserId={user?.uid ?? ''}
                   members={members}
                   orgId={orgId}
                   currentUser={user ? { uid: user.uid, displayName: user.displayName ?? '' } : null}
-                  onClose={() => setActiveThreadMessage(null)}
+                  onClose={() => setActiveDiscussionMessage(null)}
                 />
               )}
             </>

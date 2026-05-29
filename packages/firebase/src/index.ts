@@ -15,4 +15,5 @@ export * from './projects';
 export * from './goals';
 export * from './teams';
 export * from './reports';
-export * from './threads';
+export * from './replies';
+

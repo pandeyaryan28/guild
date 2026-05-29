@@ -183,6 +183,12 @@ service cloud.firestore {
       allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
       allow delete: if isOrgMember(resource.data.orgId);
     }
+    match /messageReplies/{docId} {
+      allow read: if isOrgMember(resource.data.orgId);
+      allow create: if isOrgMember(request.resource.data.orgId);
+      allow update: if isOrgMember(resource.data.orgId) && isOrgMember(request.resource.data.orgId);
+      allow delete: if isOrgMember(resource.data.orgId);
+    }
     match /taskActivities/{docId} {
       allow read: if isOrgMember(resource.data.orgId);
       allow create: if isOrgMember(request.resource.data.orgId);

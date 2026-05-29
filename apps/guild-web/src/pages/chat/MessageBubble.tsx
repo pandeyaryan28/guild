@@ -8,7 +8,7 @@ import { MediaLightbox } from './MediaLightbox';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { updateRequestStatus } from '../../lib/requests';
-import { toggleReaction } from '../../lib/threads';
+import { toggleReaction } from '../../lib/replies';
 
 interface MessageBubbleProps {
   message: Message;
@@ -17,7 +17,7 @@ interface MessageBubbleProps {
   members: Array<{ uid: string; fullName: string; username: string; photoURL?: string }>;
   orgId?: string;
   currentUser?: { uid: string; displayName: string } | null;
-  onOpenThread?: (msg: Message) => void;
+  onOpenDiscussion?: (msg: Message) => void;
 }
 
 function parseMentions(body: string, isOwn: boolean) {
@@ -61,7 +61,7 @@ function getSenderColor(username: string) {
   return colors[index];
 }
 
-export function MessageBubble({ message, isOwn, isGrouped, members, orgId, currentUser, onOpenThread }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, isGrouped, members, orgId, currentUser, onOpenDiscussion }: MessageBubbleProps) {
   const sender = members.find((m) => m.uid === message.senderId);
   const photoURL = sender?.photoURL;
 
@@ -506,13 +506,13 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     const replyCount = (message as any).replyCount || 0;
     const lastReplyTime = (message as any).lastReplyAt ? formatTime((message as any).lastReplyAt) : '';
 
-    if (replyCount === 0 || !onOpenThread) return null;
+    if (replyCount === 0 || !onOpenDiscussion) return null;
 
     return (
       <button
         onClick={(e) => {
           e.stopPropagation();
-          onOpenThread(message);
+          onOpenDiscussion(message);
         }}
         className="mt-1.5 flex items-center gap-1.5 text-[10px] text-primary font-bold hover:underline cursor-pointer select-none bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-lg px-2.5 py-1.5 w-fit shadow-sm transition-all"
       >
@@ -646,11 +646,11 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
           </div>
 
           {/* Reply Trigger Button */}
-          {onOpenThread && (
+          {onOpenDiscussion && (
             <button
-              onClick={() => onOpenThread(message)}
+              onClick={() => onOpenDiscussion(message)}
               className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
-              title="Reply in thread"
+              title="Reply to message"
             >
               <MessageSquare className="h-3 w-3" />
             </button>

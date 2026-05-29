@@ -27,7 +27,7 @@ interface MessageAreaProps {
   members: UserProfile[];
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
-  onOpenThread?: (msg: Message) => void;
+  onOpenDiscussion?: (msg: Message) => void;
 }
 
 export function MessageArea({ 
@@ -39,7 +39,7 @@ export function MessageArea({
   members,
   isSidebarCollapsed = false,
   onToggleSidebar,
-  onOpenThread
+  onOpenDiscussion
 }: MessageAreaProps) {
   const navigate = useNavigate();
   const messages = useMessages(channelId, dmId);
@@ -371,7 +371,7 @@ export function MessageArea({
         members={members.map((m) => ({ uid: m.uid, fullName: m.fullName, username: m.username, photoURL: m.photoURL }))}
         orgId={orgId}
         currentUser={currentUser}
-        onOpenThread={onOpenThread}
+        onOpenDiscussion={onOpenDiscussion}
       />
 
       {/* Input */}

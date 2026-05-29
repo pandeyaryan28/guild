@@ -20,7 +20,7 @@
     "./goals": "./src/goals.ts",
     "./teams": "./src/teams.ts",
     "./reports": "./src/reports.ts",
-    "./threads": "./src/threads.ts"
+    "./replies": "./src/replies.ts"
   },
   "peerDependencies": {
     "firebase": ">=11"

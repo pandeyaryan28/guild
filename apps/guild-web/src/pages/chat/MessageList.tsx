@@ -9,7 +9,7 @@ interface MessageListProps {
   members: Array<{ uid: string; fullName: string; username: string; photoURL?: string }>;
   orgId?: string;
   currentUser?: { uid: string; displayName: string } | null;
-  onOpenThread?: (msg: Message) => void;
+  onOpenDiscussion?: (msg: Message) => void;
 }
 
 const GROUP_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
@@ -22,7 +22,7 @@ function formatDateLabel(date: Date): string {
   return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-export function MessageList({ messages, currentUserId, members, orgId, currentUser, onOpenThread }: MessageListProps) {
+export function MessageList({ messages, currentUserId, members, orgId, currentUser, onOpenDiscussion }: MessageListProps) {
   const bottomRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = React.useState(true);
@@ -113,7 +113,7 @@ export function MessageList({ messages, currentUserId, members, orgId, currentUs
             members={members}
             orgId={orgId}
             currentUser={currentUser}
-            onOpenThread={onOpenThread}
+            onOpenDiscussion={onOpenDiscussion}
           />
         ),
       )}

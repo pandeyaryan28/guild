@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { X, Send, Loader2, MessageSquare } from 'lucide-react';
 import { type Message } from '../../lib/chat';
-import { type MessageReply, listenToReplies, addMessageReply } from '../../lib/threads';
+import { type MessageReply, listenToReplies, addMessageReply } from '../../lib/replies';
 import { cn } from '@/lib/utils';
 
-interface ThreadPanelProps {
+interface ReplyPanelProps {
   parentMessage: Message;
   currentUserId: string;
   members: Array<{ uid: string; fullName: string; username: string; photoURL?: string }>;
@@ -38,14 +38,14 @@ function getSenderColor(username: string) {
   return colors[index];
 }
 
-export function ThreadPanel({
+export function ReplyPanel({
   parentMessage,
   currentUserId,
   members,
   orgId,
   currentUser,
   onClose,
-}: ThreadPanelProps) {
+}: ReplyPanelProps) {
   const [replies, setReplies] = React.useState<MessageReply[] | null>(null);
   const [body, setBody] = React.useState('');
   const [sending, setSending] = React.useState(false);
@@ -113,7 +113,7 @@ export function ThreadPanel({
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-default bg-surface/50">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4.5 w-4.5 text-primary" />
-          <h2 className="text-sm font-bold text-foreground">Thread</h2>
+          <h2 className="text-sm font-bold text-foreground">Discussion</h2>
         </div>
         <button
           onClick={onClose}
@@ -123,7 +123,7 @@ export function ThreadPanel({
         </button>
       </div>
 
-      {/* Thread Content */}
+      {/* Discussion Content */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide p-4 flex flex-col gap-4">
         {/* Parent Message Card */}
         <div className="flex gap-3 bg-white/[0.01] hover:bg-white/[0.02] p-2.5 rounded-xl border border-border-default/40">
@@ -166,7 +166,7 @@ export function ThreadPanel({
               <MessageSquare className="h-5 w-5" />
             </div>
             <p className="text-xs font-bold text-foreground">No replies yet</p>
-            <p className="text-[10px] text-text-muted">Be the first to reply in this thread!</p>
+            <p className="text-[10px] text-text-muted">Be the first to reply to this message!</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -233,7 +233,7 @@ export function ThreadPanel({
             value={body}
             onChange={(e) => setBody(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Reply to thread..."
+            placeholder="Reply to message..."
             disabled={sending}
             maxLength={1000}
             rows={1}
