@@ -1,2 +1,2 @@
-// Shim: re-exports from @guild/firebase
-export * from '@guild/firebase/replies';
+// Shim: direct relative import from source to bypass Vite dependency cache
+export * from '../../../../packages/firebase/src/replies';
