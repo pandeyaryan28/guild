@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { NotificationPanel } from './NotificationPanel';
+import { AetherToasts } from './AetherToasts';
 import { useTheme } from '../hooks/useTheme';
 import { ThemeSlider } from './ThemeSlider';
 
@@ -20,7 +21,18 @@ export function Navbar({ onSearchOpen, onMobileMenuToggle }: NavbarProps) {
   const { userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
 
-  const { notifications, unreadCount, markRead, markAllAsRead } = useNotifications(orgId);
+  const {
+    notifications,
+    archivedNotifications,
+    unreadCount,
+    markRead,
+    markUnread,
+    archive,
+    archiveAllRead,
+    markAllAsRead,
+    activeToasts,
+    dismissToast,
+  } = useNotifications(orgId);
   const [notifOpen, setNotifOpen] = React.useState(false);
   const { mode, toggleMode } = useTheme();
 
@@ -104,11 +116,21 @@ export function Navbar({ onSearchOpen, onMobileMenuToggle }: NavbarProps) {
 
             <NotificationPanel
               notifications={notifications}
+              archivedNotifications={archivedNotifications}
               unreadCount={unreadCount}
               onMarkRead={markRead}
+              onMarkUnread={markUnread}
+              onArchive={archive}
+              onArchiveAllRead={archiveAllRead}
               onMarkAllRead={markAllAsRead}
               open={notifOpen}
               onClose={() => setNotifOpen(false)}
+            />
+
+            <AetherToasts
+              activeToasts={activeToasts}
+              onDismiss={dismissToast}
+              onMarkRead={markRead}
             />
           </div>
 

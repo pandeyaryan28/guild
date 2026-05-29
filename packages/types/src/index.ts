@@ -105,30 +105,26 @@ export interface PendingEmailInvite {
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 
-export type NotificationType =
-  | 'mention'
-  | 'task_assigned'
-  | 'task_commented'
-  | 'channel_invite'
-  | 'dm_received';
+export type NotificationCategory = 'inbox' | 'mentions' | 'tasks' | 'requests' | 'system';
 
 export interface Notification {
   id: string;
   orgId: string;
   recipientId: string;
-  type: NotificationType;
-  actorId: string;
-  actorName: string;
-  read: boolean;
-  data: {
-    taskId?: string;
-    taskTitle?: string;
-    channelId?: string;
-    channelName?: string;
-    dmId?: string;
-    messagePreview?: string;
-    commentPreview?: string;
+  category: NotificationCategory;
+  type: string; // e.g. 'dm', 'mention', 'task_assign', 'task_comment', 'request_pending', 'request_approved', 'request_rejected', 'system'
+  urgency: 'low' | 'medium' | 'high';
+  actor: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+    initials: string;
   };
+  title: string;
+  body?: string;
+  link: string; // Target URL for navigation (e.g. '/tasks?task=123')
+  read: boolean;
+  archived: boolean;
   createdAt: Timestamp;
 }
 

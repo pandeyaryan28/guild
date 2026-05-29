@@ -182,9 +182,15 @@ export async function updateAssignees(
   // Notify newly assigned users (fire-and-forget)
   for (const uid of added) {
     createNotification({
-      orgId, recipientId: uid, type: 'task_assigned',
-      actorId: actor.uid, actorName: actor.name,
-      data: { taskId, taskTitle: taskTitle ?? 'a task' },
+      orgId,
+      recipientId: uid,
+      category: 'tasks',
+      type: 'task_assign',
+      urgency: 'medium',
+      actor: { id: actor.uid, name: actor.name },
+      title: `Assigned to Task`,
+      body: `${actor.name} assigned you to: "${taskTitle ?? 'a task'}"`,
+      link: `/tasks?task=${taskId}`,
     }).catch(() => console.error('Failed to send task_assigned notification'));
   }
 }
@@ -241,15 +247,19 @@ export async function addComment(params: {
   );
   const toNotify = new Set([...(params.notifyIds ?? []), ...params.mentions]);
   for (const uid of toNotify) {
-    const type = params.mentions.includes(uid) ? 'mention' as const : 'task_commented' as const;
+    const isMention = params.mentions.includes(uid);
     createNotification({
-      orgId: params.orgId, recipientId: uid, type,
-      actorId: params.authorId, actorName: params.authorName,
-      data: {
-        taskId: params.taskId,
-        taskTitle: params.taskTitle,
-        commentPreview: params.body.slice(0, 100),
-      },
+      orgId: params.orgId,
+      recipientId: uid,
+      category: isMention ? 'mentions' : 'tasks',
+      type: isMention ? 'mention' : 'task_comment',
+      urgency: isMention ? 'high' : 'medium',
+      actor: { id: params.authorId, name: params.authorName },
+      title: isMention 
+        ? `${params.authorName} mentioned you in a comment`
+        : `${params.authorName} commented on task "${params.taskTitle ?? 'a task'}"`,
+      body: params.body.slice(0, 100),
+      link: `/tasks?task=${params.taskId}`,
     }).catch(() => console.error('Failed to send task comment notification'));
   }
   return ref.id;

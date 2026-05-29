@@ -8,6 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { useTheme } from '../../hooks/useTheme';
 import { NotificationPanel } from '../NotificationPanel';
+import { AetherToasts } from '../AetherToasts';
 import { ThemeSlider } from '../ThemeSlider';
 
 interface RedesignLayoutProps {
@@ -22,7 +23,18 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
   const { mode, toggleMode } = useTheme();
   
   const orgId = userProfile?.organizationId;
-  const { notifications, unreadCount, markRead, markAllAsRead } = useNotifications(orgId);
+  const {
+    notifications,
+    archivedNotifications,
+    unreadCount,
+    markRead,
+    markUnread,
+    archive,
+    archiveAllRead,
+    markAllAsRead,
+    activeToasts,
+    dismissToast,
+  } = useNotifications(orgId);
 
   const isLight = mode === 'light';
   const toggleTheme = toggleMode;
@@ -101,11 +113,21 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
 
               <NotificationPanel
                 notifications={notifications}
+                archivedNotifications={archivedNotifications}
                 unreadCount={unreadCount}
                 onMarkRead={markRead}
+                onMarkUnread={markUnread}
+                onArchive={archive}
+                onArchiveAllRead={archiveAllRead}
                 onMarkAllRead={markAllAsRead}
                 open={notifOpen}
                 onClose={() => setNotifOpen(false)}
+              />
+
+              <AetherToasts
+                activeToasts={activeToasts}
+                onDismiss={dismissToast}
+                onMarkRead={markRead}
               />
             </div>
 

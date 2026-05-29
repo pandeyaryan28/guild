@@ -98,10 +98,13 @@ export async function createRequest(params: {
   await createNotification({
     orgId: params.orgId,
     recipientId: params.approverId,
-    type: 'request_received' as any,
-    actorId: params.creatorId,
-    actorName: params.creatorName,
-    data: { requestId: ref.id, requestTitle: params.title } as any,
+    category: 'requests',
+    type: 'request_pending',
+    urgency: 'medium',
+    actor: { id: params.creatorId, name: params.creatorName },
+    title: 'New Approval Request',
+    body: `${params.creatorName} submitted: "${params.title}"`,
+    link: '/requests',
   });
 
   return ref.id;
@@ -127,10 +130,13 @@ export async function updateRequestStatus(
   await createNotification({
     orgId,
     recipientId: creatorId,
-    type: 'request_updated' as any,
-    actorId: approverId,
-    actorName: approverName,
-    data: { requestId, requestTitle, requestStatus: status } as any,
+    category: 'requests',
+    type: status === 'approved' ? 'request_approved' : 'request_rejected',
+    urgency: 'medium',
+    actor: { id: approverId, name: approverName },
+    title: `Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+    body: `Your request "${requestTitle}" was ${status} by ${approverName}`,
+    link: '/requests',
   });
 }
 

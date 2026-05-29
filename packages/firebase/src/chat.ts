@@ -224,9 +224,15 @@ export async function sendChannelMessage(params: {
   });
   for (const uid of params.mentions) {
     createNotification({
-      orgId: params.orgId, recipientId: uid, type: 'mention',
-      actorId: params.senderId, actorName: params.senderName,
-      data: { channelId: params.channelId, messagePreview: preview },
+      orgId: params.orgId,
+      recipientId: uid,
+      category: 'mentions',
+      type: 'mention',
+      urgency: 'high',
+      actor: { id: params.senderId, name: params.senderName },
+      title: `${params.senderName} mentioned you`,
+      body: preview,
+      link: `/chat/c/${params.channelId}`,
     }).catch(() => console.error('Failed to send mention notification'));
   }
   return id;
@@ -268,16 +274,28 @@ export async function sendDMMessage(params: {
   const recipientId = uid1 === params.senderId ? uid2 : uid1;
   if (recipientId) {
     createNotification({
-      orgId: params.orgId, recipientId, type: 'dm_received',
-      actorId: params.senderId, actorName: params.senderName,
-      data: { dmId: params.dmId, messagePreview: preview },
-    }).catch(() => console.error('Failed to send dm_received notification'));
+      orgId: params.orgId,
+      recipientId,
+      category: 'inbox',
+      type: 'dm',
+      urgency: 'medium',
+      actor: { id: params.senderId, name: params.senderName },
+      title: `New message from ${params.senderName}`,
+      body: preview,
+      link: `/chat/dm/${params.dmId}`,
+    }).catch(() => console.error('Failed to send dm notification'));
   }
   for (const uid of params.mentions) {
     createNotification({
-      orgId: params.orgId, recipientId: uid, type: 'mention',
-      actorId: params.senderId, actorName: params.senderName,
-      data: { dmId: params.dmId, messagePreview: preview },
+      orgId: params.orgId,
+      recipientId: uid,
+      category: 'mentions',
+      type: 'mention',
+      urgency: 'high',
+      actor: { id: params.senderId, name: params.senderName },
+      title: `${params.senderName} mentioned you in a DM`,
+      body: preview,
+      link: `/chat/dm/${params.dmId}`,
     }).catch(() => console.error('Failed to send mention notification for dm'));
   }
   return id;
@@ -538,6 +556,8 @@ export async function addChannelMembers(
   inviterName: string
 ): Promise<void> {
   const batch = writeBatch(db);
+  const snap = await getDoc(doc(db, 'channels', channelId));
+  const channelName = snap.exists() ? snap.data().name : '';
 
   for (const uid of memberIds) {
     const memberRef = doc(db, 'channelMembers', `${channelId}_${uid}`);
@@ -551,14 +571,16 @@ export async function addChannelMembers(
     createNotification({
       orgId,
       recipientId: uid,
+      category: 'inbox',
       type: 'channel_invite',
-      actorId: inviterId,
-      actorName: inviterName,
-      data: { channelId },
+      urgency: 'medium',
+      actor: { id: inviterId, name: inviterName },
+      title: `Added to #${channelName || 'channel'}`,
+      body: `${inviterName} invited you to join #${channelName || 'channel'}`,
+      link: `/chat/c/${channelId}`,
     }).catch((e) => console.error('Failed to create channel_invite notification:', e));
   }
 
-  const snap = await getDoc(doc(db, 'channels', channelId));
   if (snap.exists()) {
     batch.update(doc(db, 'channels', channelId), {
       memberCount: (snap.data().memberCount || 0) + memberIds.length,

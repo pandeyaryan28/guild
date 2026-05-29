@@ -7,6 +7,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { MobileNavDock } from './MobileNavDock';
 import { GlobalSearch } from '../GlobalSearch';
 import { NotificationPanel } from '../NotificationPanel';
+import { AetherToasts } from '../AetherToasts';
 import { ThemeSlider } from '../ThemeSlider';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -24,7 +25,18 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
   const { userProfile } = useAuth();
   
   const orgId = userProfile?.organizationId;
-  const { notifications, unreadCount, markRead, markAllAsRead } = useNotifications(orgId);
+  const {
+    notifications,
+    archivedNotifications,
+    unreadCount,
+    markRead,
+    markUnread,
+    archive,
+    archiveAllRead,
+    markAllAsRead,
+    activeToasts,
+    dismissToast,
+  } = useNotifications(orgId);
 
   // Set page headers
   const getHeaderTitle = () => {
@@ -90,11 +102,21 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
 
             <NotificationPanel
               notifications={notifications}
+              archivedNotifications={archivedNotifications}
               unreadCount={unreadCount}
               onMarkRead={markRead}
+              onMarkUnread={markUnread}
+              onArchive={archive}
+              onArchiveAllRead={archiveAllRead}
               onMarkAllRead={markAllAsRead}
               open={notifOpen}
               onClose={() => setNotifOpen(false)}
+            />
+
+            <AetherToasts
+              activeToasts={activeToasts}
+              onDismiss={dismissToast}
+              onMarkRead={markRead}
             />
           </div>
 
