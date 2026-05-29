@@ -94,6 +94,11 @@ export function ProjectDetailPage() {
     return m.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const getMemberPhotoURL = (userId: string) => {
+    const m = memberMap.get(userId);
+    return m?.photoURL || '';
+  };
+
   const getAvatarColor = (userId: string) => {
     const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = [
@@ -351,18 +356,30 @@ export function ProjectDetailPage() {
           <div className="flex items-center gap-3 pt-2.5 border-t border-border-default/20 relative">
             <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Project Team</span>
             <div className="flex items-center -space-x-1.5 overflow-hidden">
-              {(project.memberIds || []).map((uid) => (
-                <div
-                  key={uid}
-                  className={cn(
-                    "w-6 h-6 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0 ring-2 ring-surface/90",
-                    getAvatarColor(uid)
-                  )}
-                  title={memberMap.get(uid)?.fullName || 'Member'}
-                >
-                  {getInitials(uid)}
-                </div>
-              ))}
+              {(project.memberIds || []).map((uid) => {
+                const photoURL = getMemberPhotoURL(uid);
+                const fullName = memberMap.get(uid)?.fullName || 'Member';
+                return photoURL ? (
+                  <img
+                    key={uid}
+                    src={photoURL}
+                    alt={fullName}
+                    className="w-6 h-6 rounded-full object-cover shrink-0 ring-2 ring-surface/90 border border-white/10 dark:border-black/20"
+                    title={fullName}
+                  />
+                ) : (
+                  <div
+                    key={uid}
+                    className={cn(
+                      "w-6 h-6 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0 ring-2 ring-surface/90",
+                      getAvatarColor(uid)
+                    )}
+                    title={fullName}
+                  >
+                    {getInitials(uid)}
+                  </div>
+                );
+              })}
             </div>
             
             <div className="relative">
@@ -405,9 +422,17 @@ export function ProjectDetailPage() {
                               )}
                             >
                               <div className="flex items-center gap-2 min-w-0">
-                                <div className={cn("w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[7px] shrink-0", getAvatarColor(member.uid))}>
-                                  {getInitials(member.uid)}
-                                </div>
+                                {member.photoURL ? (
+                                  <img
+                                    src={member.photoURL}
+                                    alt={member.fullName}
+                                    className="w-5 h-5 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
+                                  />
+                                ) : (
+                                  <div className={cn("w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[7px] shrink-0", getAvatarColor(member.uid))}>
+                                    {getInitials(member.uid)}
+                                  </div>
+                                )}
                                 <span className="truncate">{member.fullName}</span>
                               </div>
                               {isIncluded && <Check className="w-3 h-3 text-indigo-500 shrink-0" />}
@@ -539,9 +564,18 @@ export function ProjectDetailPage() {
 
                         <div className="flex items-center gap-3 shrink-0 ml-2">
                           {task.assigneeIds.length > 0 && (
-                            <div className="w-5.5 h-5.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground" title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}>
-                              {getInitials(task.assigneeIds[0])}
-                            </div>
+                            getMemberPhotoURL(task.assigneeIds[0]) ? (
+                              <img
+                                src={getMemberPhotoURL(task.assigneeIds[0])}
+                                alt={memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}
+                                className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
+                                title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}
+                              />
+                            ) : (
+                              <div className="w-5.5 h-5.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground" title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}>
+                                {getInitials(task.assigneeIds[0])}
+                              </div>
+                            )
                           )}
                           <button
                             onClick={(e) => handleDeleteTaskItem(e, task.id)}
@@ -596,9 +630,18 @@ export function ProjectDetailPage() {
                                 </div>
                                 <div className="flex items-center gap-3 shrink-0 ml-2">
                                   {task.assigneeIds.length > 0 && (
-                                    <div className="w-5.5 h-5.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground">
-                                      {getInitials(task.assigneeIds[0])}
-                                    </div>
+                                    getMemberPhotoURL(task.assigneeIds[0]) ? (
+                                      <img
+                                        src={getMemberPhotoURL(task.assigneeIds[0])}
+                                        alt={memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}
+                                        className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
+                                        title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}
+                                      />
+                                    ) : (
+                                      <div className="w-5.5 h-5.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground" title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}>
+                                        {getInitials(task.assigneeIds[0])}
+                                      </div>
+                                    )
                                   )}
                                   <button
                                     onClick={(e) => handleDeleteTaskItem(e, task.id)}
@@ -648,9 +691,17 @@ export function ProjectDetailPage() {
                   {comments.length > 0 ? (
                     comments.map((comment) => (
                       <div key={comment.id} className="flex items-start gap-3 bg-bg-secondary/30 dark:bg-neutral-850/10 p-3 rounded-2xl border border-border-default/40">
-                        <div className={cn("h-7 w-7 rounded-full border flex items-center justify-center text-[10px] font-bold shrink-0", getAvatarColor(comment.authorId))}>
-                          {getInitials(comment.authorId)}
-                        </div>
+                        {getMemberPhotoURL(comment.authorId) ? (
+                          <img
+                            src={getMemberPhotoURL(comment.authorId)}
+                            alt={comment.authorName}
+                            className="h-7 w-7 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
+                          />
+                        ) : (
+                          <div className={cn("h-7 w-7 rounded-full border flex items-center justify-center text-[10px] font-bold shrink-0", getAvatarColor(comment.authorId))}>
+                            {getInitials(comment.authorId)}
+                          </div>
+                        )}
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] font-bold text-foreground truncate">

@@ -111,12 +111,20 @@ function MemberCard({ member, isSelf, onClick, hasAccess = false }: MemberCardPr
 
       {/* Avatar + name */}
       <div className="flex items-center gap-3">
-        <div
-          className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-lg"
-          style={{ background: `hsl(${hue} 60% 45%)` }}
-        >
-          {initials}
-        </div>
+        {member.photoURL ? (
+          <img
+            src={member.photoURL}
+            alt={member.fullName}
+            className="h-11 w-11 rounded-xl object-cover shrink-0 shadow-lg border border-white/10 dark:border-black/20"
+          />
+        ) : (
+          <div
+            className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-lg"
+            style={{ background: `hsl(${hue} 60% 45%)` }}
+          >
+            {initials}
+          </div>
+        )}
         <div className="overflow-hidden">
           <p className="text-sm font-semibold text-foreground truncate leading-tight">
             {member.fullName}
@@ -337,12 +345,20 @@ function TeamFormModal({ isOpen, onClose, orgId, members, editingTeam }: TeamFor
                         onChange={(e) => handleCheckboxChange(m.uid, e.target.checked)}
                         className="rounded border-border-default bg-surface text-primary focus:ring-primary h-4 w-4 cursor-pointer"
                       />
-                      <div
-                        className="h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-sm"
-                        style={{ background: `hsl(${hue} 60% 45%)` }}
-                      >
-                        {initials}
-                      </div>
+                      {m.photoURL ? (
+                        <img
+                          src={m.photoURL}
+                          alt={m.fullName}
+                          className="h-7 w-7 rounded-lg object-cover shrink-0 shadow-sm border border-white/10 dark:border-black/20"
+                        />
+                      ) : (
+                        <div
+                          className="h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-sm"
+                          style={{ background: `hsl(${hue} 60% 45%)` }}
+                        >
+                          {initials}
+                        </div>
+                      )}
                       <div className="leading-tight">
                         <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
                           {m.fullName}
@@ -745,12 +761,20 @@ export function PeoplePage() {
                           
                           {manager ? (
                             <div className="flex items-center gap-3 p-2.5 rounded-xl border border-amber-500/15 bg-amber-500/5 shadow-sm">
-                              <div
-                                className="h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-md"
-                                style={{ background: `hsl(${managerHue} 60% 45%)` }}
-                              >
-                                {managerInitials}
-                              </div>
+                              {manager.photoURL ? (
+                                <img
+                                  src={manager.photoURL}
+                                  alt={manager.fullName}
+                                  className="h-9 w-9 rounded-lg object-cover shrink-0 shadow-md border border-white/10 dark:border-black/20"
+                                />
+                              ) : (
+                                <div
+                                  className="h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-md"
+                                  style={{ background: `hsl(${managerHue} 60% 45%)` }}
+                                >
+                                  {managerInitials}
+                                </div>
+                              )}
                               <div className="overflow-hidden">
                                 <p className="text-xs font-bold text-foreground truncate">{manager.fullName}</p>
                                 <p className="text-[10px] text-muted-foreground truncate">
@@ -792,12 +816,20 @@ export function PeoplePage() {
                                         : 'hover:bg-accent/20 cursor-default'
                                     }`}
                                   >
-                                    <div
-                                      className="h-6 w-6 rounded-md flex items-center justify-center text-[9px] font-bold text-white shrink-0 shadow-sm"
-                                      style={{ background: `hsl(${subHue} 60% 45%)` }}
-                                    >
-                                      {subInit}
-                                    </div>
+                                    {m.photoURL ? (
+                                      <img
+                                        src={m.photoURL}
+                                        alt={m.fullName}
+                                        className="h-6 w-6 rounded-md object-cover shrink-0 shadow-sm border border-white/10 dark:border-black/20"
+                                      />
+                                    ) : (
+                                      <div
+                                        className="h-6 w-6 rounded-md flex items-center justify-center text-[9px] font-bold text-white shrink-0 shadow-sm"
+                                        style={{ background: `hsl(${subHue} 60% 45%)` }}
+                                      >
+                                        {subInit}
+                                      </div>
+                                    )}
                                     <div className="overflow-hidden flex-1 leading-none">
                                       <p className="text-xs font-semibold text-foreground truncate">{m.fullName}</p>
                                       <p className="text-[9px] text-muted-foreground truncate mt-0.5">@{m.username}</p>

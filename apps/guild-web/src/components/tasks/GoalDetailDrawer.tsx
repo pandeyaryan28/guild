@@ -213,6 +213,11 @@ export function GoalDetailDrawer({
     return m.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const getMemberPhotoURL = (uid: string) => {
+    const m = members.find(mem => mem.uid === uid);
+    return m?.photoURL || '';
+  };
+
   const getTargetDateString = () => {
     if (!goal.targetDate) return '';
     const date = typeof goal.targetDate.toDate === 'function' ? goal.targetDate.toDate() : new Date((goal.targetDate as any).seconds * 1000);
@@ -494,9 +499,17 @@ export function GoalDetailDrawer({
                         {comments.length > 0 ? (
                           comments.map((comment) => (
                             <div key={comment.id} className="flex items-start gap-3 bg-neutral-50/50 dark:bg-neutral-850/15 p-3 rounded-2xl border border-neutral-100 dark:border-neutral-850 animate-fluid-pop">
-                              <div className="h-7 w-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-[10px] font-bold text-accent shrink-0">
-                                {getMemberInitials(comment.authorId)}
-                              </div>
+                              {getMemberPhotoURL(comment.authorId) ? (
+                                <img
+                                  src={getMemberPhotoURL(comment.authorId)}
+                                  alt={comment.authorName}
+                                  className="h-7 w-7 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
+                                />
+                              ) : (
+                                <div className="h-7 w-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-[10px] font-bold text-accent shrink-0">
+                                  {getMemberInitials(comment.authorId)}
+                                </div>
+                              )}
                               <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-center justify-between">
                                   <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-255 truncate">

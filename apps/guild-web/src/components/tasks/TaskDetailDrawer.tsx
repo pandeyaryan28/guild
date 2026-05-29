@@ -171,6 +171,11 @@ export function TaskDetailDrawer({
     return m?.fullName || 'Teammate';
   };
 
+  const getMemberPhotoURL = (uid: string) => {
+    const m = members.find(mem => mem.uid === uid);
+    return m?.photoURL || '';
+  };
+
   const formatTimestamp = (ts: any) => {
     if (!ts) return '';
     const date = typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts.seconds * 1000);
@@ -326,8 +331,12 @@ export function TaskDetailDrawer({
                         {comments.length > 0 ? (
                           comments.map((comment) => (
                             <div key={comment.id} className="flex items-start gap-3 bg-neutral-50/50 dark:bg-neutral-850/15 p-3 rounded-2xl border border-neutral-100 dark:border-neutral-850 animate-fluid-pop">
-                              <div className="h-7 w-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-[10px] font-bold text-accent shrink-0">
-                                {getMemberInitials(comment.authorId)}
+                              <div className="h-7 w-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-[10px] font-bold text-accent shrink-0 overflow-hidden">
+                                {getMemberPhotoURL(comment.authorId) ? (
+                                  <img src={getMemberPhotoURL(comment.authorId)} alt={comment.authorName} className="h-full w-full object-cover" />
+                                ) : (
+                                  getMemberInitials(comment.authorId)
+                                )}
                               </div>
                               <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-center justify-between">
@@ -504,8 +513,12 @@ export function TaskDetailDrawer({
                         )}
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="h-5 w-5 rounded-full bg-accent/15 flex items-center justify-center text-[9px] font-extrabold text-accent shrink-0">
-                            {getMemberInitials(m.uid)}
+                          <div className="h-5 w-5 rounded-full bg-accent/15 flex items-center justify-center text-[9px] font-extrabold text-accent shrink-0 overflow-hidden">
+                            {m.photoURL ? (
+                              <img src={m.photoURL} alt={m.fullName} className="h-full w-full object-cover" />
+                            ) : (
+                              getMemberInitials(m.uid)
+                            )}
                           </div>
                           <span className="text-[11px] font-semibold truncate">
                             {m.fullName || m.username}

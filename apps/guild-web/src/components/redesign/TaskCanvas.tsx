@@ -129,6 +129,11 @@ export function TaskCanvas() {
     return m.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const getMemberPhotoURL = (userId: string) => {
+    const m = memberMap.get(userId);
+    return m?.photoURL || '';
+  };
+
   const getAvatarColor = (userId: string) => {
     const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = [
@@ -1286,9 +1291,18 @@ export function TaskCanvas() {
                                       <div className="flex items-center gap-1.5 shrink-0">
                                         <span className="text-[7.5px] font-mono text-muted-foreground">{goal.progressRollup ?? 0}%</span>
                                         {goal.ownerId && (
-                                          <div className="w-4 h-4 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[7px] text-muted-foreground">
-                                            {getInitials(goal.ownerId)}
-                                          </div>
+                                          getMemberPhotoURL(goal.ownerId) ? (
+                                            <img
+                                              src={getMemberPhotoURL(goal.ownerId)}
+                                              alt={memberMap.get(goal.ownerId)?.fullName || 'Owner'}
+                                              className="w-4 h-4 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
+                                              title={memberMap.get(goal.ownerId)?.fullName || 'Owner'}
+                                            />
+                                          ) : (
+                                            <div className="w-4 h-4 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[7px] text-muted-foreground" title={memberMap.get(goal.ownerId)?.fullName || 'Owner'}>
+                                              {getInitials(goal.ownerId)}
+                                            </div>
+                                          )
                                         )}
                                       </div>
                                     </div>
@@ -1571,9 +1585,17 @@ export function TaskCanvas() {
                           return (
                             <div key={m.uid} className="flex items-center justify-between hover:bg-bg-secondary/40 p-1.5 rounded-lg transition-colors">
                               <div className="flex items-center gap-2">
-                                <div className={cn("w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[7px] shrink-0", getAvatarColor(m.uid))}>
-                                  {getInitials(m.uid)}
-                                </div>
+                                {m.photoURL ? (
+                                  <img
+                                    src={m.photoURL}
+                                    alt={m.fullName || m.username}
+                                    className="w-5 h-5 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
+                                  />
+                                ) : (
+                                  <div className={cn("w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[7px] shrink-0", getAvatarColor(m.uid))}>
+                                    {getInitials(m.uid)}
+                                  </div>
+                                )}
                                 <span className="text-xs text-foreground font-semibold">
                                   {m.fullName || m.username}
                                 </span>
