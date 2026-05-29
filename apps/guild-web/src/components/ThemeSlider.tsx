@@ -58,14 +58,11 @@ export function ThemeSlider() {
   // Interpolated Track Border (smooth blending)
   const trackBorderColor = interpolateHex('#e4e4e7', '#27272a', themeProgress);
 
-  // Dynamic Ambient Shadow for the Celestial Orb
-  // Warm golden amber glow in light mode, deep cyan/indigo space glow in dark mode
-  const glowAmber = `rgba(245, 158, 11, ${(1 - themeProgress) * 0.5})`;
-  const glowCyan = `rgba(6, 182, 212, ${themeProgress * 0.7})`;
+  // Dynamic Ambient Shadow for the Celestial Orb (glowing light removed)
   const baseShadow = themeProgress >= 0.5 
     ? '0 4px 10px rgba(0, 0, 0, 0.45)' 
     : '0 2px 6px rgba(0, 0, 0, 0.12)';
-  const knobShadow = `${baseShadow}, 0 0 10px ${glowAmber}, 0 0 12px ${glowCyan}`;
+  const knobShadow = baseShadow;
 
 
   // --- Drag & Click Interaction Handlers ---

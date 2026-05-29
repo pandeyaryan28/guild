@@ -4,7 +4,7 @@ import {
   User, Bell, Paintbrush, Users, Link2, Building2,
   Check, Loader2, ShieldAlert, Trash2, Crown, ShieldCheck,
   UserMinus, Copy, AlertCircle, Info,
-  Plus, Workflow, MessageSquare, AtSign, CheckSquare, MessagesSquare, UserPlus
+  Plus, Workflow, MessageSquare, AtSign, CheckSquare, MessagesSquare, UserPlus, Camera
 } from 'lucide-react';
 import { createTeam, updateTeam, deleteTeam } from '../../lib/teams';
 import { useTeams } from '../../hooks/useTeams';
@@ -23,6 +23,7 @@ import {
   checkOrgSlugUnique,
   deleteUserProfile
 } from '../../lib/firestore';
+import { uploadProfileImage, uploadOrganizationPhoto } from '../../lib/storage';
 import { useOrgMembers } from '../../hooks/useChat';
 import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
@@ -342,10 +343,52 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
   const [errors, setErrors] = React.useState<FormError>({});
   const [generalError, setGeneralError] = React.useState<string | null>(null);
 
+  // Profile photo states
+  const [uploadingPhoto, setUploadingPhoto] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   // Profile deletion states
   const [deletingProfile, setDeletingProfile] = React.useState(false);
   const [confirmUsername, setConfirmUsername] = React.useState('');
   const [profileDeleteError, setProfileDeleteError] = React.useState<string | null>(null);
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Profile photo must be less than 5MB.");
+      return;
+    }
+    setUploadingPhoto(true);
+    setGeneralError(null);
+    try {
+      const url = await uploadProfileImage(profile.uid, file);
+      await updateUserProfile(profile.uid, { photoURL: url });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      console.error("Failed to upload photo:", err);
+      setGeneralError(err.message || "Failed to upload profile photo.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!confirm("Are you sure you want to remove your profile photo?")) return;
+    setUploadingPhoto(true);
+    setGeneralError(null);
+    try {
+      await updateUserProfile(profile.uid, { photoURL: "" });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      console.error("Failed to remove photo:", err);
+      setGeneralError(err.message || "Failed to remove profile photo.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const handleDeleteProfile = async () => {
     if (confirmUsername !== profile.username) {
@@ -424,6 +467,75 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
     <div className="space-y-6 text-left">
       <div>
         <h2 className="text-sm font-bold text-foreground">My Profile</h2>
+      </div>
+
+      {/* Premium Profile Photo Upload Block */}
+      <div className="flex flex-col sm:flex-row items-center gap-5 p-5 rounded-3xl border border-white/5 bg-white/[0.015] dark:bg-white/[0.005] shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] backdrop-blur-md">
+        <div className="relative group shrink-0">
+          <div
+            onClick={() => !uploadingPhoto && fileInputRef.current?.click()}
+            className="h-20 w-20 rounded-full flex items-center justify-center font-black text-white text-xl relative overflow-hidden shadow-lg border-2 border-white/15 cursor-pointer select-none transition-all hover:border-accent group-hover:scale-102"
+            style={{
+              background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.2) c h) 100%)`
+            }}
+          >
+            <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
+            {profile.photoURL ? (
+              <img src={profile.photoURL} alt={fullName} className="h-full w-full object-cover" />
+            ) : (
+              fullName ? fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?'
+            )}
+
+            {/* Hover Camera Overlay */}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-1 text-white">
+              <Camera className="h-4 w-4" />
+              <span className="text-[8px] font-black uppercase tracking-wider">Upload</span>
+            </div>
+
+            {/* Uploading Spinner */}
+            {uploadingPhoto && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-accent" />
+              </div>
+            )}
+          </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handlePhotoSelect}
+            accept="image/*"
+            className="hidden"
+          />
+        </div>
+
+        <div className="space-y-1.5 text-center sm:text-left">
+          <h3 className="text-xs font-bold text-foreground">Profile Picture</h3>
+          <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
+            Upload a portrait photo to make it easier for colleagues to recognize you.
+            <br />
+            Supports JPEG, PNG, or WebP under 5MB.
+          </p>
+          <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-wider text-foreground hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer disabled:opacity-50"
+            >
+              Choose Photo
+            </button>
+            {profile.photoURL && (
+              <button
+                type="button"
+                onClick={handleRemovePhoto}
+                disabled={uploadingPhoto}
+                className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg text-[10px] font-black uppercase tracking-wider text-red-400 hover:bg-red-500/20 hover:border-red-500/30 transition-all cursor-pointer disabled:opacity-50"
+              >
+                Remove Photo
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {generalError && (
@@ -890,7 +1002,11 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
                     }}
                   >
                     <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
-                    {member.fullName ? member.fullName[0].toUpperCase() : '?'}
+                    {member.photoURL ? (
+                      <img src={member.photoURL} alt={member.fullName} className="h-full w-full object-cover" />
+                    ) : (
+                      member.fullName ? member.fullName[0].toUpperCase() : '?'
+                    )}
                   </div>
                 </div>
 
@@ -1120,6 +1236,48 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [slugError, setSlugError] = React.useState<string | null>(null);
 
+  // Org logo states
+  const [uploadingLogo, setUploadingLogo] = React.useState(false);
+  const logoInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Workspace logo must be less than 5MB.");
+      return;
+    }
+    setUploadingLogo(true);
+    setError(null);
+    try {
+      const url = await uploadOrganizationPhoto(org.id, file);
+      await updateOrganizationDetails(org.id, { photoURL: url });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      console.error("Failed to upload organization logo:", err);
+      setError(err.message || "Failed to upload workspace logo.");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!confirm("Are you sure you want to remove the Workspace logo?")) return;
+    setUploadingLogo(true);
+    setError(null);
+    try {
+      await updateOrganizationDetails(org.id, { photoURL: "" });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      console.error("Failed to remove logo:", err);
+      setError(err.message || "Failed to remove workspace logo.");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   // Sync state
   React.useEffect(() => {
     setName(org.name || '');
@@ -1191,6 +1349,75 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
       <div className="space-y-6">
         <div>
           <h2 className="text-sm font-bold text-foreground">Workspace General Info</h2>
+        </div>
+
+        {/* Premium Workspace Logo Upload Block */}
+        <div className="flex flex-col sm:flex-row items-center gap-5 p-5 rounded-3xl border border-white/5 bg-white/[0.015] dark:bg-white/[0.005] shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] backdrop-blur-md">
+          <div className="relative group shrink-0">
+            <div
+              onClick={() => !uploadingLogo && logoInputRef.current?.click()}
+              className="h-20 w-20 rounded-full flex items-center justify-center font-black text-white text-xl relative overflow-hidden shadow-lg border-2 border-white/15 cursor-pointer select-none transition-all hover:border-accent group-hover:scale-102"
+              style={{
+                background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.2) c h) 100%)`
+              }}
+            >
+              <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
+              {org.photoURL ? (
+                <img src={org.photoURL} alt={org.name} className="h-full w-full object-cover" />
+              ) : (
+                org.name ? org.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?'
+              )}
+
+              {/* Hover Camera Overlay */}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-1 text-white">
+                <Camera className="h-4 w-4" />
+                <span className="text-[8px] font-black uppercase tracking-wider">Upload</span>
+              </div>
+
+              {/* Uploading Spinner */}
+              {uploadingLogo && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                </div>
+              )}
+            </div>
+            <input
+              type="file"
+              ref={logoInputRef}
+              onChange={handleLogoSelect}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
+
+          <div className="space-y-1.5 text-center sm:text-left">
+            <h3 className="text-xs font-bold text-foreground">Workspace Logo</h3>
+            <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
+              Upload a workspace logo to display across your organization sidebar and dropdowns.
+              <br />
+              Supports JPEG, PNG, or WebP under 5MB.
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
+              <button
+                type="button"
+                onClick={() => logoInputRef.current?.click()}
+                disabled={uploadingLogo}
+                className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-wider text-foreground hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer disabled:opacity-50"
+              >
+                Choose Logo
+              </button>
+              {org.photoURL && (
+                <button
+                  type="button"
+                  onClick={handleRemoveLogo}
+                  disabled={uploadingLogo}
+                  className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg text-[10px] font-black uppercase tracking-wider text-red-400 hover:bg-red-500/20 hover:border-red-500/30 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Remove Logo
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {error && (

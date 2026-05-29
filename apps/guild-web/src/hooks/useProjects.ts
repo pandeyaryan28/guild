@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { listenToProjects, listenToProject } from '../lib/projects';
-import type { Project } from '../lib/projects';
+import { listenToProjects, listenToProject, listenToProjectComments } from '../lib/projects';
+import type { Project, ProjectComment } from '../lib/projects';
 import { useAuth } from './useAuth';
 
 export function useProjects(orgId: string | undefined) {
@@ -36,4 +36,13 @@ export function useProject(projectId: string | undefined) {
   return { project, loading };
 }
 
-export type { Project };
+export function useProjectComments(projectId: string | null) {
+  const [comments, setComments] = React.useState<ProjectComment[]>([]);
+  React.useEffect(() => {
+    if (!projectId) { setComments([]); return; }
+    return listenToProjectComments(projectId, setComments);
+  }, [projectId]);
+  return comments;
+}
+
+export type { Project, ProjectComment };

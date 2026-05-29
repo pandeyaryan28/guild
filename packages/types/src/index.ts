@@ -27,6 +27,7 @@ export interface UserProfile {
   isManager?: boolean;
   focusStatus?: FocusStatus;
   availabilityStatus?: 'active' | 'focus' | 'away';
+  photoURL?: string;
 }
 
 export interface FocusStatus {
@@ -47,6 +48,7 @@ export interface Organization {
   billingPlan?: 'free' | 'premium' | 'enterprise';
   createdAt: Timestamp;
   globalInviteToken?: string;
+  photoURL?: string;
 }
 
 export interface OrganizationMember {
@@ -144,6 +146,7 @@ export interface Project {
   status: ProjectStatus;
   startDate: Timestamp | null;
   dueDate: Timestamp | null;
+  files?: MessageAttachment[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -174,6 +177,7 @@ export interface Goal {
   updatedAt: Timestamp;
   completedAt?: Timestamp | null;
   projectId?: string | null;
+  files?: MessageAttachment[];
 
   // Chronology features
   horizon: GoalHorizon;
@@ -225,6 +229,7 @@ export interface Task {
   labelIds: string[];
   dueDate: Timestamp | null;
   orderIndex: number;
+  files?: MessageAttachment[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
   completedAt?: Timestamp | null;
@@ -243,6 +248,35 @@ export interface TaskComment {
   authorUsername: string;
   body: string;
   mentions: string[];
+  files?: MessageAttachment[];
+  createdAt: Timestamp;
+  editedAt?: Timestamp;
+}
+
+export interface GoalComment {
+  id: string;
+  goalId: string;
+  orgId: string;
+  authorId: string;
+  authorName: string;
+  authorUsername: string;
+  body: string;
+  mentions: string[];
+  files?: MessageAttachment[];
+  createdAt: Timestamp;
+  editedAt?: Timestamp;
+}
+
+export interface ProjectComment {
+  id: string;
+  projectId: string;
+  orgId: string;
+  authorId: string;
+  authorName: string;
+  authorUsername: string;
+  body: string;
+  mentions: string[];
+  files?: MessageAttachment[];
   createdAt: Timestamp;
   editedAt?: Timestamp;
 }
@@ -295,6 +329,13 @@ export interface ChannelMember {
   lastRead?: Timestamp;
 }
 
+export interface MessageAttachment {
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+}
+
 export interface Message {
   id: string;
   channelId?: string;
@@ -308,6 +349,7 @@ export interface Message {
   createdAt: Timestamp;
   editedAt?: Timestamp;
   deleted?: boolean;
+  files?: MessageAttachment[];
 }
 
 export interface DirectMessageThread {

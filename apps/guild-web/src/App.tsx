@@ -38,6 +38,10 @@ import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
 // Reports
 import { ReportsPage } from './pages/reports/ReportsPage';
 
+// Responsive Controllers
+import { useDeviceType } from './hooks/useDeviceType';
+import { MobileApp } from './components/mobile/MobileApp';
+
 function DashboardApp({ children }: { children?: React.ReactNode }) {
   return (
     <RedesignLayout>
@@ -46,158 +50,170 @@ function DashboardApp({ children }: { children?: React.ReactNode }) {
   );
 }
 
+function AppContent() {
+  const deviceType = useDeviceType();
+
+  if (deviceType === 'mobile') {
+    return <MobileApp />;
+  }
+
+  return (
+    <Routes>
+      {/* Public auth routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+
+      {/* Onboarding — requires auth, but not completed onboarding */}
+      <Route path="/onboarding/*" element={<OnboardingRoot />} />
+
+      {/* Protected dashboard routes */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <DashboardApp />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Chat routes — fully independent layout */}
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <ChatLayout />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chat/c/:channelId"
+        element={
+          <ProtectedRoute>
+            <ChatLayout />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chat/dm/:dmId"
+        element={
+          <ProtectedRoute>
+            <ChatLayout />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Workspace — standalone full-page layout (like /chat) */}
+      <Route
+        path="/workspace"
+        element={
+          <ProtectedRoute>
+            <RedesignLayout>
+              <TaskCanvas />
+            </RedesignLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Goals & Tasks Board */}
+      <Route
+        path="/goals-board"
+        element={
+          <ProtectedRoute>
+            <RedesignLayout>
+              <GoalsBoardPage />
+            </RedesignLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Project detail */}
+      <Route
+        path="/projects/:projectId"
+        element={
+          <ProtectedRoute>
+            <DashboardApp>
+              <ProjectDetailPage />
+            </DashboardApp>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Requests */}
+      <Route
+        path="/requests"
+        element={
+          <ProtectedRoute>
+            <DashboardApp>
+              <RequestsPage />
+            </DashboardApp>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* People */}
+      <Route
+        path="/people"
+        element={
+          <ProtectedRoute>
+            <DashboardApp>
+              <PeoplePage />
+            </DashboardApp>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Settings */}
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <DashboardApp>
+              <SettingsPage />
+            </DashboardApp>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Reports */}
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <DashboardApp>
+              <ReportsPage />
+            </DashboardApp>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Calendar */}
+      <Route
+        path="/calendar"
+        element={
+          <ProtectedRoute>
+            <DashboardApp>
+              <CalendarPage />
+            </DashboardApp>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Invite join redirect */}
+      <Route path="/join" element={<Navigate to="/onboarding/join/find" replace />} />
+      <Route path="/join/:token" element={<JoinInvitePage />} />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
       <AuthProvider>
-        <Routes>
-          {/* Public auth routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-
-          {/* Onboarding — requires auth, but not completed onboarding */}
-          <Route path="/onboarding/*" element={<OnboardingRoot />} />
-
-          {/* Protected dashboard routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <DashboardApp />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Chat routes — fully independent layout */}
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute>
-                <ChatLayout />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chat/c/:channelId"
-            element={
-              <ProtectedRoute>
-                <ChatLayout />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chat/dm/:dmId"
-            element={
-              <ProtectedRoute>
-                <ChatLayout />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Workspace — standalone full-page layout (like /chat) */}
-          <Route
-            path="/workspace"
-            element={
-              <ProtectedRoute>
-                <RedesignLayout>
-                  <TaskCanvas />
-                </RedesignLayout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Goals & Tasks Board */}
-          <Route
-            path="/goals-board"
-            element={
-              <ProtectedRoute>
-                <RedesignLayout>
-                  <GoalsBoardPage />
-                </RedesignLayout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Project detail */}
-          <Route
-            path="/projects/:projectId"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <ProjectDetailPage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Requests */}
-          <Route
-            path="/requests"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <RequestsPage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* People */}
-          <Route
-            path="/people"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <PeoplePage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Settings */}
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <SettingsPage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Reports */}
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <ReportsPage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Calendar */}
-          <Route
-            path="/calendar"
-            element={
-              <ProtectedRoute>
-                <DashboardApp>
-                  <CalendarPage />
-                </DashboardApp>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Invite join redirect */}
-          <Route path="/join" element={<Navigate to="/onboarding/join/find" replace />} />
-          <Route path="/join/:token" element={<JoinInvitePage />} />
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AppContent />
       </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

@@ -50,8 +50,12 @@ export function MemberPanel({ members, currentUserId, onStartDM, isCollapsed = f
                 onClick={() => !isYou && onStartDM(m)}
               >
                 <div className="relative">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-xs font-bold text-primary border border-primary/15">
-                    {initials}
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-xs font-bold text-primary border border-primary/15 overflow-hidden">
+                    {m.photoURL ? (
+                      <img src={m.photoURL} alt={m.fullName} className="h-full w-full object-cover" />
+                    ) : (
+                      initials
+                    )}
                   </div>
                   <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
                 </div>

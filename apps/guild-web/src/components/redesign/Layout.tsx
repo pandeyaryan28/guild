@@ -48,7 +48,7 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
       <NavDock />
 
       {/* 3. Main Workspace Container */}
-      <div className="flex-1 flex flex-col min-w-0 pl-4 pr-4 pt-4 pb-24 md:pl-[120px] md:pr-6 md:py-5 z-10 overflow-hidden relative h-screen">
+      <div className="flex-1 flex flex-col min-w-0 pl-[120px] pr-6 py-5 z-10 overflow-hidden relative h-screen">
         
         {/* Top Spatial Control Nav */}
         <header className="flex h-10 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0">
@@ -60,8 +60,8 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
             >
               Guild
             </span>
-            <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider hidden sm:inline">
+            <div className="h-4 w-[1px] bg-white/10" />
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               {location.pathname === '/' ? 'Workspace Control' : location.pathname.split('/')[1]}
             </span>
           </div>
@@ -71,12 +71,12 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
             {/* Elegant Glass Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="aether-glass h-10 w-10 sm:w-[220px] px-0 sm:px-4 flex items-center justify-center sm:justify-start gap-3 text-left transition-all hover:bg-white/10 hover:border-white/20 active:scale-98 shadow-sm cursor-pointer"
+              className="aether-glass h-10 w-[220px] px-4 flex items-center justify-start gap-3 text-left transition-all hover:bg-white/10 hover:border-white/20 active:scale-98 shadow-sm cursor-pointer"
               style={{ borderRadius: '14px' }}
             >
-              <Search className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-foreground/80 sm:text-muted-foreground shrink-0" />
-              <span className="text-[11px] text-muted-foreground/80 flex-1 truncate hidden sm:inline">Search...</span>
-              <span className="flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground/60 border border-white/10 rounded px-1 py-0.2 shrink-0 hidden sm:flex">
+              <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <span className="text-[11px] text-muted-foreground/80 flex-1 truncate">Search...</span>
+              <span className="flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground/60 border border-white/10 rounded px-1 py-0.2 shrink-0 flex">
                 <Command className="w-2.5 h-2.5" />K
               </span>
             </button>

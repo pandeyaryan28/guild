@@ -3,15 +3,20 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, Check, Calendar, User, Tag, 
   Trash2, Plus, Target, ChevronRight,
-  ListTodo, Loader2, Link2, Sparkles
+  ListTodo, Loader2, Link2, Sparkles, MessageSquare, Send, Paperclip
 } from 'lucide-react';
-import { updateGoal, type Goal, type GoalStatus } from '../../lib/goals';
+import { updateGoal, addGoalComment, updateGoalAttachments, type Goal, type GoalStatus } from '../../lib/goals';
 
 type GoalHorizon = 'short_term' | 'long_term';
 import { 
   createTask, moveTask, deleteTask, 
   STATUS_CONFIG, STATUSES, type Task, type TaskStatus, type ActorInfo 
 } from '../../lib/tasks';
+import { useGoalComments } from '../../hooks/useGoals';
+import { AttachmentSection } from './AttachmentSection';
+import { AttachmentInput } from './AttachmentInput';
+import { type MessageAttachment } from '@guild/types';
+import { uploadEntityAttachment } from '../../lib/storage';
 import { cn } from '@/lib/utils';
 
 interface GoalDetailDrawerProps {
@@ -41,6 +46,43 @@ export function GoalDetailDrawer({
   const [isEditingDesc, setIsEditingDesc] = React.useState(false);
   const [inlineTaskTitle, setInlineTaskTitle] = React.useState('');
   const [showCompletedTasks, setShowCompletedTasks] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<'tasks' | 'comments'>('tasks');
+  const [commentBody, setCommentBody] = React.useState('');
+  const [commentFiles, setCommentFiles] = React.useState<File[]>([]);
+  const [uploadingCommentFiles, setUploadingCommentFiles] = React.useState(false);
+
+  const comments = useGoalComments(goal?.id || null);
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentBody.trim() && commentFiles.length === 0) return;
+    setUploadingCommentFiles(true);
+    try {
+      let uploaded: MessageAttachment[] = [];
+      if (commentFiles.length > 0) {
+        uploaded = await Promise.all(
+          commentFiles.map(file => uploadEntityAttachment('comments', goal.id, file))
+        );
+      }
+      
+      await addGoalComment({
+        goalId: goal.id,
+        orgId,
+        authorId: actor.uid,
+        authorName: actor.name,
+        authorUsername: actor.name.toLowerCase().replace(/\s+/g, ''),
+        body: commentBody.trim(),
+        mentions: [],
+        files: uploaded
+      });
+      setCommentBody('');
+      setCommentFiles([]);
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    } finally {
+      setUploadingCommentFiles(false);
+    }
+  };
 
   React.useEffect(() => {
     if (goal) {
@@ -177,6 +219,12 @@ export function GoalDetailDrawer({
     return date.toISOString().split('T')[0];
   };
 
+  const formatTimestamp = (ts: any) => {
+    if (!ts) return '';
+    const date = typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts.seconds * 1000);
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex justify-end overflow-hidden select-none pointer-events-none">
@@ -288,113 +336,256 @@ export function GoalDetailDrawer({
                 )}
               </div>
 
-              {/* Linked Tasks checklist section */}
-              <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 flex items-center gap-1.5">
+              {/* Goal Media & Files */}
+              <div className="pt-2">
+                <AttachmentSection
+                  entityType="goals"
+                  entityId={goal.id}
+                  files={goal.files}
+                  onAttachmentsChanged={async (updatedFiles) => {
+                    try {
+                      await updateGoalAttachments(goal.id, updatedFiles);
+                    } catch (err) {
+                      console.error("Failed to update goal attachments:", err);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Tabs for Feed: Checklist vs Discussion */}
+              <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex flex-col flex-grow min-h-[300px]">
+                <div className="flex border-b border-neutral-100 dark:border-neutral-800 mb-4 flex-shrink-0">
+                  <button
+                    onClick={() => setActiveTab('tasks')}
+                    className={cn(
+                      "pb-2 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5",
+                      activeTab === 'tasks'
+                        ? "border-accent text-neutral-800 dark:text-neutral-200"
+                        : "border-transparent text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                    )}
+                  >
                     <ListTodo className="w-3.5 h-3.5" />
-                    <span>Linked Tasks Checklist ({activeTasks.length})</span>
-                  </h3>
+                    <span>Checklist ({activeTasks.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('comments')}
+                    className={cn(
+                      "pb-2 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5",
+                      activeTab === 'comments'
+                        ? "border-accent text-neutral-800 dark:text-neutral-200"
+                        : "border-transparent text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                    )}
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Discussion ({comments.length})</span>
+                  </button>
                 </div>
 
-                {/* Inline task adder inside drawer */}
-                <form onSubmit={handleInlineTaskSubmit} className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Add dynamic task to checklist..."
-                    value={inlineTaskTitle}
-                    onChange={(e) => setInlineTaskTitle(e.target.value)}
-                    className="flex-1 bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:border-accent/40 shadow-inner font-semibold"
-                  />
-                  <button
-                    type="submit"
-                    className="px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-850 hover:bg-neutral-200 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 transition-all cursor-pointer shadow-sm"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </form>
-
-                {/* Checklist lists */}
-                <div className="space-y-2 max-h-[320px] overflow-y-auto scrollbar-thin pr-1">
-                  {/* Active checklist */}
-                  {activeTasks.length > 0 ? (
-                    activeTasks.map(task => (
-                      <div
-                        key={task.id}
-                        onClick={() => onSelectTask?.(task)}
-                        className="flex items-center justify-between p-3 rounded-xl bg-neutral-50/40 dark:bg-neutral-850/10 hover:bg-neutral-50 dark:hover:bg-neutral-850/30 border border-neutral-100 dark:border-neutral-850/50 hover:border-accent/30 transition-all cursor-pointer group shadow-sm"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div
-                            onClick={(e) => handleToggleTaskStatus(e, task)}
-                            className="h-4.5 w-4.5 rounded-full border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 flex items-center justify-center shrink-0 transition-colors cursor-pointer hover:border-accent"
-                          >
-                            <div className="h-1.5 w-1.5 rounded-full bg-transparent" />
-                          </div>
-                          <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 truncate">
-                            {task.title}
-                          </span>
-                        </div>
+                <div className="flex-grow flex flex-col overflow-hidden min-h-[220px]">
+                  {activeTab === 'tasks' ? (
+                    <div className="space-y-4">
+                      {/* Inline task adder inside drawer */}
+                      <form onSubmit={handleInlineTaskSubmit} className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Add dynamic task to checklist..."
+                          value={inlineTaskTitle}
+                          onChange={(e) => setInlineTaskTitle(e.target.value)}
+                          className="flex-1 bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:border-accent/40 shadow-inner font-semibold"
+                        />
                         <button
-                          onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                          className="text-neutral-400 hover:text-red-400 p-0.5 cursor-pointer opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                          type="submit"
+                          className="px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-850 hover:bg-neutral-200 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 transition-all cursor-pointer shadow-sm"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Plus className="w-4 h-4" />
                         </button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="py-6 text-center text-xs text-neutral-400 italic bg-neutral-50/20 dark:bg-neutral-850/5 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800">
-                      No active tasks in checklist.
-                    </div>
-                  )}
+                      </form>
 
-                  {/* Completed tasks accordion */}
-                  {completedTasks.length > 0 && (
-                    <div className="space-y-2 pt-2">
-                      <button
-                        onClick={() => setShowCompletedTasks(!showCompletedTasks)}
-                        className="w-full flex items-center justify-between p-2 rounded-xl bg-neutral-100/50 dark:bg-neutral-850/30 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200/50 dark:border-neutral-800/40 text-[10px] text-neutral-500 font-bold transition-all cursor-pointer"
-                      >
-                        <span>Completed Tasks ({completedTasks.length})</span>
-                        <ChevronRight className={cn("w-3.5 h-3.5 transition-transform", showCompletedTasks ? "rotate-90" : "")} />
-                      </button>
-                      <AnimatePresence>
-                        {showCompletedTasks && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden space-y-2"
-                          >
-                            {completedTasks.map(task => (
-                              <div
-                                key={task.id}
-                                onClick={() => onSelectTask?.(task)}
-                                className="flex items-center justify-between p-3 rounded-xl bg-neutral-50/20 dark:bg-neutral-850/5 border border-neutral-100/60 dark:border-neutral-850/30 opacity-60 hover:opacity-90 transition-all cursor-pointer"
+                      {/* Checklist lists */}
+                      <div className="space-y-2 max-h-[320px] overflow-y-auto scrollbar-thin pr-1">
+                        {/* Active checklist */}
+                        {activeTasks.length > 0 ? (
+                          activeTasks.map(task => (
+                            <div
+                              key={task.id}
+                              onClick={() => onSelectTask?.(task)}
+                              className="flex items-center justify-between p-3 rounded-xl bg-neutral-50/40 dark:bg-neutral-850/10 hover:bg-neutral-50 dark:hover:bg-neutral-850/30 border border-neutral-100 dark:border-neutral-850/50 hover:border-accent/30 transition-all cursor-pointer group shadow-sm"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div
+                                  onClick={(e) => handleToggleTaskStatus(e, task)}
+                                  className="h-4.5 w-4.5 rounded-full border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 flex items-center justify-center shrink-0 transition-colors cursor-pointer hover:border-accent"
+                                >
+                                  <div className="h-1.5 w-1.5 rounded-full bg-transparent" />
+                                </div>
+                                <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 truncate">
+                                  {task.title}
+                                </span>
+                              </div>
+                              <button
+                                onClick={(e) => handleDeleteTaskItem(e, task.id)}
+                                className="text-neutral-400 hover:text-red-400 p-0.5 cursor-pointer opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                               >
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <div
-                                    onClick={(e) => handleToggleTaskStatus(e, task)}
-                                    className="h-4.5 w-4.5 rounded-full border border-cyan-500 bg-cyan-500/10 flex items-center justify-center shrink-0 cursor-pointer"
-                                  >
-                                    <Check className="w-2.5 h-2.5 text-cyan-500" />
-                                  </div>
-                                  <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-450 line-through truncate">
-                                    {task.title}
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="py-6 text-center text-xs text-neutral-400 italic bg-neutral-50/20 dark:bg-neutral-850/5 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800">
+                            No active tasks in checklist.
+                          </div>
+                        )}
+
+                        {/* Completed tasks accordion */}
+                        {completedTasks.length > 0 && (
+                          <div className="space-y-2 pt-2">
+                            <button
+                              onClick={() => setShowCompletedTasks(!showCompletedTasks)}
+                              className="w-full flex items-center justify-between p-2 rounded-xl bg-neutral-100/50 dark:bg-neutral-850/30 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200/50 dark:border-neutral-800/40 text-[10px] text-neutral-500 font-bold transition-all cursor-pointer"
+                            >
+                              <span>Completed Tasks ({completedTasks.length})</span>
+                              <ChevronRight className={cn("w-3.5 h-3.5 transition-transform", showCompletedTasks ? "rotate-90" : "")} />
+                            </button>
+                            <AnimatePresence>
+                              {showCompletedTasks && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  className="overflow-hidden space-y-2"
+                                >
+                                  {completedTasks.map(task => (
+                                    <div
+                                      key={task.id}
+                                      onClick={() => onSelectTask?.(task)}
+                                      className="flex items-center justify-between p-3 rounded-xl bg-neutral-50/20 dark:bg-neutral-850/5 border border-neutral-100/60 dark:border-neutral-850/30 opacity-60 hover:opacity-90 transition-all cursor-pointer"
+                                    >
+                                      <div className="flex items-center gap-2.5 min-w-0">
+                                        <div
+                                          onClick={(e) => handleToggleTaskStatus(e, task)}
+                                          className="h-4.5 w-4.5 rounded-full border border-cyan-500 bg-cyan-500/10 flex items-center justify-center shrink-0 cursor-pointer"
+                                        >
+                                          <Check className="w-2.5 h-2.5 text-cyan-500" />
+                                        </div>
+                                        <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-455 line-through truncate">
+                                          {task.title}
+                                        </span>
+                                      </div>
+                                      <button
+                                        onClick={(e) => handleDeleteTaskItem(e, task.id)}
+                                        className="text-neutral-400 hover:text-red-400 p-0.5 cursor-pointer"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    // Discussions / Comments view
+                    <div className="flex flex-col h-full overflow-hidden justify-between">
+                      {/* Comments Thread */}
+                      <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 scrollbar-thin max-h-[240px]">
+                        {comments.length > 0 ? (
+                          comments.map((comment) => (
+                            <div key={comment.id} className="flex items-start gap-3 bg-neutral-50/50 dark:bg-neutral-850/15 p-3 rounded-2xl border border-neutral-100 dark:border-neutral-850 animate-fluid-pop">
+                              <div className="h-7 w-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-[10px] font-bold text-accent shrink-0">
+                                {getMemberInitials(comment.authorId)}
+                              </div>
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-255 truncate">
+                                    {comment.authorName}
+                                  </span>
+                                  <span className="text-[9px] text-neutral-400 font-mono">
+                                    {formatTimestamp(comment.createdAt)}
                                   </span>
                                 </div>
-                                <button
-                                  onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                  className="text-neutral-400 hover:text-red-400 p-0.5 cursor-pointer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                <p className="text-xs text-neutral-600 dark:text-neutral-400 font-semibold leading-relaxed break-words">
+                                  {comment.body}
+                                </p>
+                                
+                                {comment.files && comment.files.length > 0 && (
+                                  <div className="mt-2 space-y-1 max-w-sm">
+                                    {comment.files.map((file, fIdx) => (
+                                      <a
+                                        key={fIdx}
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2 p-1.5 rounded-lg border border-neutral-200/40 dark:border-neutral-800 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[10px] text-accent font-bold truncate transition-colors"
+                                      >
+                                        <Paperclip className="w-3 h-3 text-accent shrink-0" />
+                                        <span className="truncate flex-1">{file.name}</span>
+                                        <span className="text-[8px] text-neutral-400 font-semibold shrink-0">
+                                          {(file.size / 1024).toFixed(1)} KB
+                                        </span>
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                            ))}
-                          </motion.div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="py-8 text-center text-xs text-neutral-400 italic">
+                            No updates or discussions on this goal yet.
+                          </div>
                         )}
-                      </AnimatePresence>
+                      </div>
+
+                      {/* Comment Input */}
+                      <div className="border-t border-neutral-100 dark:border-neutral-800 pt-3 flex-shrink-0 flex flex-col gap-2">
+                        <AttachmentInput
+                          selectedFiles={commentFiles}
+                          onRemove={(idx) => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
+                          onAdd={(files) => setCommentFiles(prev => [...prev, ...Array.from(files)])}
+                        />
+                        <form onSubmit={handleAddComment} className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder={uploadingCommentFiles ? "Uploading attachments..." : "Type an update or comment..."}
+                            value={commentBody}
+                            disabled={uploadingCommentFiles}
+                            onChange={(e) => setCommentBody(e.target.value)}
+                            className="flex-1 bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:border-accent/40 shadow-inner font-semibold disabled:opacity-50"
+                          />
+                          <button
+                            type="button"
+                            disabled={uploadingCommentFiles}
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.multiple = true;
+                              input.onchange = (e) => {
+                                const files = (e.target as HTMLInputElement).files;
+                                if (files) setCommentFiles(prev => [...prev, ...Array.from(files)]);
+                              };
+                              input.click();
+                            }}
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-850 hover:bg-neutral-200 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-500 dark:text-neutral-400 hover:text-neutral-850 dark:hover:text-neutral-200 transition-all cursor-pointer shadow-sm disabled:opacity-50 flex items-center justify-center"
+                            title="Attach Files"
+                          >
+                            <Paperclip className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={uploadingCommentFiles}
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-850 hover:bg-neutral-200 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-355 hover:text-neutral-900 dark:hover:text-neutral-100 transition-all cursor-pointer shadow-sm disabled:opacity-50 flex items-center justify-center"
+                          >
+                            {uploadingCommentFiles ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                            ) : (
+                              <Send className="w-4 h-4" />
+                            )}
+                          </button>
+                        </form>
+                      </div>
                     </div>
                   )}
                 </div>

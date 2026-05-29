@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
-import { Pencil, Trash2, Check, X, CheckSquare, User, Users } from 'lucide-react';
+import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Message } from '../../lib/chat';
 import { editMessage, deleteMessage } from '../../lib/chat';
@@ -9,7 +9,7 @@ interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
   isGrouped: boolean; // true = hide avatar + name (consecutive from same sender)
-  members: Array<{ uid: string; fullName: string; username: string }>;
+  members: Array<{ uid: string; fullName: string; username: string; photoURL?: string }>;
 }
 
 function parseMentions(body: string) {
@@ -32,6 +32,9 @@ function formatTime(ts: { toDate: () => Date } | undefined) {
 }
 
 export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBubbleProps) {
+  const sender = members.find((m) => m.uid === message.senderId);
+  const photoURL = sender?.photoURL;
+
   const [hovered, setHovered] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
   const [editBody, setEditBody] = React.useState(message.body);
@@ -139,6 +142,106 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
     );
   };
 
+  const renderAttachments = () => {
+    if (!message.files || message.files.length === 0 || message.deleted) return null;
+
+    const images = message.files.filter((f) => f.type.startsWith('image/'));
+    const nonImages = message.files.filter((f) => !f.type.startsWith('image/'));
+
+    return (
+      <div className="mt-2 flex flex-col gap-2">
+        {/* Images Grid */}
+        {images.length > 0 && (
+          <div className={cn(
+            "grid gap-2 max-w-2xl",
+            images.length === 1 ? "grid-cols-1 max-w-md" : "grid-cols-2 sm:grid-cols-3"
+          )}>
+            {images.map((file, idx) => (
+              <div
+                key={idx}
+                className="group/img relative rounded-xl overflow-hidden border border-border-default bg-bg-tertiary shadow-sm aspect-video max-h-60 transition-all hover:shadow-md hover:border-primary/20"
+              >
+                <img
+                  src={file.url}
+                  alt={file.name}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover/img:scale-102"
+                  loading="lazy"
+                />
+                {/* Image Actions Overlay on Hover */}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1.5 rounded-lg bg-surface/90 hover:bg-surface text-foreground shadow transition-colors"
+                    title="View Original"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                  <a
+                    href={file.url}
+                    download={file.name}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1.5 rounded-lg bg-surface/90 hover:bg-surface text-foreground shadow transition-colors"
+                    title="Download"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Non-Images List */}
+        {nonImages.length > 0 && (
+          <div className="flex flex-col gap-1.5 max-w-md">
+            {nonImages.map((file, idx) => {
+              let FileIcon = File;
+              if (file.type.startsWith('text/') || file.type.includes('pdf')) {
+                FileIcon = FileText;
+              } else if (file.type.startsWith('audio/')) {
+                FileIcon = FileAudio;
+              } else if (file.type.startsWith('video/')) {
+                FileIcon = FileVideo;
+              }
+
+              return (
+                <div
+                  key={idx}
+                  className="group/file flex items-center gap-3 rounded-xl border border-border-default bg-surface/40 hover:bg-surface/80 backdrop-blur-sm px-3 py-2 shadow-sm transition-all hover:border-primary/25 hover:shadow-md"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/5 text-primary border border-primary/10">
+                    <FileIcon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold text-foreground truncate group-hover/file:text-primary transition-colors">
+                      {file.name}
+                    </p>
+                    <p className="text-[9px] text-text-muted font-medium">
+                      {(file.size / 1024).toFixed(1)} KB · {file.type.split('/')[1]?.toUpperCase() || 'FILE'}
+                    </p>
+                  </div>
+                  <a
+                    href={file.url}
+                    download={file.name}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-foreground hover:bg-bg-tertiary border border-transparent hover:border-border-default transition-all"
+                    title="Download File"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div
       className={cn('group relative flex gap-3 px-4 py-0.5 hover:bg-white/[0.02] transition-colors rounded-lg', isGrouped ? 'mt-0' : 'mt-3')}
@@ -148,8 +251,12 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
       {/* Avatar column */}
       <div className="w-9 shrink-0">
         {!isGrouped && (
-          <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary/10 text-xs font-bold text-primary border border-primary/20">
-            {initials}
+          <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary/10 text-xs font-bold text-primary border border-primary/20 overflow-hidden">
+            {photoURL ? (
+              <img src={photoURL} alt={message.senderName} className="h-full w-full object-cover" />
+            ) : (
+              initials
+            )}
           </div>
         )}
       </div>
@@ -167,6 +274,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members }: MessageBub
         )}
 
         {renderMessageContent()}
+        {renderAttachments()}
       </div>
 
       {/* Action bar */}

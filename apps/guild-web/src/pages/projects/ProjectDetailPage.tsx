@@ -12,13 +12,16 @@ import {
   FolderGit,
   Clock,
   X,
-  Lock
+  Lock,
+  MessageSquare,
+  Paperclip,
+  Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../../hooks/useAuth';
-import { useProject } from '../../hooks/useProjects';
+import { useProject, useProjectComments } from '../../hooks/useProjects';
 import { useMilestones } from '../../hooks/useMilestones';
 import { useTasks } from '../../hooks/useTasks';
 import { useGoals } from '../../hooks/useGoals';
@@ -28,7 +31,11 @@ import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
 import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
 import { useOrgMembers } from '../../hooks/useChat';
 import { moveTask, deleteTask, type Task, type TaskStatus } from '../../lib/tasks';
-import { updateProject } from '../../lib/projects';
+import { updateProject, addProjectComment, updateProjectAttachments } from '../../lib/projects';
+import { AttachmentSection } from '../../components/tasks/AttachmentSection';
+import { AttachmentInput } from '../../components/tasks/AttachmentInput';
+import { uploadEntityAttachment } from '../../lib/storage';
+import { type MessageAttachment } from '@guild/types';
 
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -45,6 +52,13 @@ export function ProjectDetailPage() {
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [showCompleted, setShowCompleted] = React.useState(false);
+
+  const [showComments, setShowComments] = React.useState(false);
+  const [commentBody, setCommentBody] = React.useState('');
+  const [commentFiles, setCommentFiles] = React.useState<File[]>([]);
+  const [uploadingCommentFiles, setUploadingCommentFiles] = React.useState(false);
+
+  const comments = useProjectComments(projectId || null);
 
   const [isEditing, setIsEditing] = React.useState(false);
   const [editName, setEditName] = React.useState('');
@@ -170,6 +184,44 @@ export function ProjectDetailPage() {
     }
   };
 
+  const formatTimestamp = (ts: any) => {
+    if (!ts) return '';
+    const date = typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts.seconds * 1000);
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentBody.trim() && commentFiles.length === 0) return;
+    if (!project) return;
+    setUploadingCommentFiles(true);
+    try {
+      let uploaded: MessageAttachment[] = [];
+      if (commentFiles.length > 0) {
+        uploaded = await Promise.all(
+          commentFiles.map(file => uploadEntityAttachment('comments', project.id, file))
+        );
+      }
+      
+      await addProjectComment({
+        projectId: project.id,
+        orgId,
+        authorId: actor.uid,
+        authorName: actor.name,
+        authorUsername: actor.name.toLowerCase().replace(/\s+/g, ''),
+        body: commentBody.trim(),
+        mentions: [],
+        files: uploaded
+      });
+      setCommentBody('');
+      setCommentFiles([]);
+    } catch (err) {
+      console.error('Failed to add project comment:', err);
+    } finally {
+      setUploadingCommentFiles(false);
+    }
+  };
+
   if (!orgId) return null;
 
   if (projectLoading) {
@@ -267,11 +319,25 @@ export function ProjectDetailPage() {
               </button>
 
               <button
+                onClick={() => setShowComments(!showComments)}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 h-9 rounded-xl border px-3.5 transition-all active:scale-90 shrink-0 cursor-pointer text-xs font-bold",
+                  showComments
+                    ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                    : "border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground"
+                )}
+                title="Project Discussion"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="hidden md:inline">Discussion ({comments.length})</span>
+              </button>
+
+              <button
                 onClick={() => setIsEditing(!isEditing)}
                 className={cn(
                   "w-9 h-9 rounded-xl border flex items-center justify-center transition-all active:scale-90 shrink-0 cursor-pointer",
                   isEditing
-                    ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                    ? "border-indigo-500 bg-indigo-500/10 text-indigo-650 dark:text-indigo-400"
                     : "border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground"
                 )}
                 title="Project Settings"
@@ -357,181 +423,326 @@ export function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Scrollable Spatial Canvas */}
-        <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-6">
+        {/* Split container for canvas & sidebar */}
+        <div className="flex-1 flex overflow-hidden min-h-0 relative">
           
-          {/* Progress overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Left side: Scrollable Spatial Canvas */}
+          <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-6">
             
-            {/* Completion rate card */}
-            <div className="p-4 rounded-xl border border-border-default/60 bg-bg-secondary/20 flex flex-col justify-between gap-3 shadow-sm">
-              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Execution Progress</span>
-              <div className="space-y-1.5">
+            {/* Progress overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              {/* Completion rate card */}
+              <div className="p-4 rounded-xl border border-border-default/60 bg-bg-secondary/20 flex flex-col justify-between gap-3 shadow-sm">
+                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Execution Progress</span>
+                <div className="space-y-1.5">
+                  <div className="flex items-end justify-between">
+                    <span className="text-xl font-black font-mono text-foreground leading-none">{progressRate}%</span>
+                    <span className="text-[9px] text-muted-foreground font-semibold">({completedTasks.length}/{allTasks.length} Completed)</span>
+                  </div>
+                  <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
+                    <div className="bg-indigo-555 h-full rounded-full transition-all duration-500" style={{ width: `${progressRate}%`, backgroundColor: 'var(--accent)' }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Milestones brief card */}
+              <div className="p-4 rounded-xl border border-border-default/60 bg-bg-secondary/20 flex flex-col justify-between gap-3 shadow-sm">
+                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Milestones Hub</span>
                 <div className="flex items-end justify-between">
-                  <span className="text-xl font-black font-mono text-foreground leading-none">{progressRate}%</span>
-                  <span className="text-[9px] text-muted-foreground font-semibold">({completedTasks.length}/{allTasks.length} Completed)</span>
-                </div>
-                <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
-                  <div className="bg-indigo-555 h-full rounded-full transition-all duration-500" style={{ width: `${progressRate}%`, backgroundColor: 'var(--accent)' }} />
+                  <div className="flex flex-col">
+                    <span className="text-xl font-black font-mono text-foreground leading-none">
+                      {milestones.filter(m => m.completed).length}
+                    </span>
+                    <span className="text-[8px] text-muted-foreground mt-1 font-semibold">Completed Milestones</span>
+                  </div>
+                  <span className="text-[9px] text-muted-foreground font-semibold">Total Milestones: {milestones.length}</span>
                 </div>
               </div>
+
+              {/* Active Task density */}
+              <div className="p-4 rounded-xl border border-border-default/60 bg-bg-secondary/20 flex flex-col justify-between gap-3 shadow-sm">
+                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Operational Workload</span>
+                <div className="flex items-end justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-xl font-black font-mono text-foreground leading-none">
+                      {activeTasks.length}
+                    </span>
+                    <span className="text-[8px] text-muted-foreground mt-1 font-semibold">Active execution items</span>
+                  </div>
+                  <span className="text-[9px] text-muted-foreground font-semibold">Workload density: {activeTasks.length > 5 ? 'High' : 'Normal'}</span>
+                </div>
+              </div>
+              
             </div>
 
-            {/* Milestones brief card */}
-            <div className="p-4 rounded-xl border border-border-default/60 bg-bg-secondary/20 flex flex-col justify-between gap-3 shadow-sm">
-              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Milestones Hub</span>
-              <div className="flex items-end justify-between">
-                <div className="flex flex-col">
-                  <span className="text-xl font-black font-mono text-foreground leading-none">
-                    {milestones.filter(m => m.completed).length}
-                  </span>
-                  <span className="text-[8px] text-muted-foreground mt-1 font-semibold">Completed Milestones</span>
-                </div>
-                <span className="text-[9px] text-muted-foreground font-semibold">Total Milestones: {milestones.length}</span>
+            {/* Milestone Rail widget */}
+            {projectId && (
+              <div className="rounded-xl border border-border-default bg-bg-secondary/10 shadow-sm overflow-hidden">
+                <MilestoneRail projectId={projectId} orgId={orgId} milestones={milestones} />
               </div>
+            )}
+
+            {/* Project Media & Files */}
+            <div className="pt-2">
+              <AttachmentSection
+                entityType="projects"
+                entityId={project.id}
+                files={project.files}
+                onAttachmentsChanged={async (updatedFiles) => {
+                  try {
+                    await updateProjectAttachments(project.id, updatedFiles);
+                  } catch (err) {
+                    console.error("Failed to update project attachments:", err);
+                  }
+                }}
+              />
             </div>
 
-            {/* Active Task density */}
-            <div className="p-4 rounded-xl border border-border-default/60 bg-bg-secondary/20 flex flex-col justify-between gap-3 shadow-sm">
-              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Operational Workload</span>
-              <div className="flex items-end justify-between">
-                <div className="flex flex-col">
-                  <span className="text-xl font-black font-mono text-foreground leading-none">
-                    {activeTasks.length}
-                  </span>
-                  <span className="text-[8px] text-muted-foreground mt-1 font-semibold">Active execution items</span>
+            {/* Tasks Stack */}
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-650 dark:text-indigo-400 flex items-center gap-1.5 border-b border-border-default/45 pb-2">
+                <Clock className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
+                <span>Project Tasks Stack</span>
+              </h3>
+
+              {tasksLoading ? (
+                <div className="flex py-12 justify-center">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
-                <span className="text-[9px] text-muted-foreground font-semibold">Workload density: {activeTasks.length > 5 ? 'High' : 'Normal'}</span>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Render active tasks list */}
+                  {activeTasks.length > 0 ? (
+                    activeTasks.map(task => (
+                      <div
+                        key={task.id}
+                        onClick={() => setSelectedTask(task)}
+                        className="flex items-center justify-between p-3.5 rounded-xl bg-surface/50 hover:bg-surface border border-border-default hover:border-border-default/80 transition-all cursor-pointer group shadow-sm"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            onClick={(e) => handleToggleTaskStatus(e, task)}
+                            className="h-4 w-4 rounded-full border border-border-default bg-bg-primary/50 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:border-indigo-555"
+                          >
+                            <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-indigo-500/50" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-xs font-bold block text-foreground truncate">{task.title}</span>
+                            {task.dueDate && (
+                              <span className="text-[8px] font-mono font-semibold text-muted-foreground mt-0.5 block">
+                                Due: {new Date(task.dueDate instanceof Date ? task.dueDate : (task.dueDate as any).seconds * 1000).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0 ml-2">
+                          {task.assigneeIds.length > 0 && (
+                            <div className="w-5.5 h-5.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground" title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}>
+                              {getInitials(task.assigneeIds[0])}
+                            </div>
+                          )}
+                          <button
+                            onClick={(e) => handleDeleteTaskItem(e, task.id)}
+                            className="text-muted-foreground hover:text-red-400 p-1 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-8 rounded-xl border border-dashed border-border-default bg-bg-secondary/10 flex flex-col items-center justify-center text-center">
+                      <p className="text-[10px] text-muted-foreground italic">No active project tasks.</p>
+                    </div>
+                  )}
+
+                  {/* Collapsible Completed Tasks Archive */}
+                  {completedTasks.length > 0 && (
+                    <div className="space-y-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowCompleted(!showCompleted)}
+                        className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
+                      >
+                        <span>Completed Tasks ({completedTasks.length})</span>
+                        <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompleted ? "rotate-180" : "")} />
+                      </button>
+                      <AnimatePresence>
+                        {showCompleted && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden space-y-2"
+                          >
+                            {completedTasks.map(task => (
+                              <div
+                                key={task.id}
+                                onClick={() => setSelectedTask(task)}
+                                className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/20 border border-border-subtle/50 transition-all cursor-pointer opacity-50 hover:opacity-85 shadow-sm"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div
+                                    onClick={(e) => handleToggleTaskStatus(e, task)}
+                                    className="h-4 w-4 rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                                  >
+                                    <Check className="w-2.5 h-2.5" />
+                                  </div>
+                                  <span className="text-xs truncate font-normal text-muted-foreground line-through">
+                                    {task.title}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0 ml-2">
+                                  {task.assigneeIds.length > 0 && (
+                                    <div className="w-5.5 h-5.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground">
+                                      {getInitials(task.assigneeIds[0])}
+                                    </div>
+                                  )}
+                                  <button
+                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
+                                    className="text-muted-foreground hover:text-red-400 transition-colors"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            
+
           </div>
 
-          {/* Milestone Rail widget */}
-          {projectId && (
-            <div className="rounded-xl border border-border-default bg-bg-secondary/10 shadow-sm overflow-hidden">
-              <MilestoneRail projectId={projectId} orgId={orgId} milestones={milestones} />
-            </div>
-          )}
+          {/* Right side: Collapsible Comments Sidebar */}
+          <AnimatePresence>
+            {showComments && (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 340, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="w-[340px] shrink-0 border-l border-border-default/45 bg-surface/10 dark:bg-surface/5 flex flex-col h-full overflow-hidden"
+              >
+                <div className="flex items-center justify-between p-4 border-b border-border-default/45 flex-shrink-0">
+                  <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-indigo-500" />
+                    Project Discussion
+                  </span>
+                  <button
+                    onClick={() => setShowComments(false)}
+                    className="p-1 rounded-lg border border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
 
-          {/* Tasks Stack */}
-          <div className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-650 dark:text-indigo-400 flex items-center gap-1.5 border-b border-border-default/45 pb-2">
-              <Clock className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
-              <span>Project Tasks Stack</span>
-            </h3>
-
-            {tasksLoading ? (
-              <div className="flex py-12 justify-center">
-                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {/* Render active tasks list */}
-                {activeTasks.length > 0 ? (
-                  activeTasks.map(task => (
-                    <div
-                      key={task.id}
-                      onClick={() => setSelectedTask(task)}
-                      className="flex items-center justify-between p-3.5 rounded-xl bg-surface/50 hover:bg-surface border border-border-default hover:border-border-default/80 transition-all cursor-pointer group shadow-sm"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          onClick={(e) => handleToggleTaskStatus(e, task)}
-                          className="h-4 w-4 rounded-full border border-border-default bg-bg-primary/50 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:border-indigo-555"
-                        >
-                          <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-indigo-500/50" />
+                {/* Comments List */}
+                <div className="flex-grow overflow-y-auto p-4 space-y-4 aether-scroll">
+                  {comments.length > 0 ? (
+                    comments.map((comment) => (
+                      <div key={comment.id} className="flex items-start gap-3 bg-bg-secondary/30 dark:bg-neutral-850/10 p-3 rounded-2xl border border-border-default/40">
+                        <div className={cn("h-7 w-7 rounded-full border flex items-center justify-center text-[10px] font-bold shrink-0", getAvatarColor(comment.authorId))}>
+                          {getInitials(comment.authorId)}
                         </div>
-                        <div className="min-w-0">
-                          <span className="text-xs font-bold block text-foreground truncate">{task.title}</span>
-                          {task.dueDate && (
-                            <span className="text-[8px] font-mono font-semibold text-muted-foreground mt-0.5 block">
-                              Due: {new Date(task.dueDate instanceof Date ? task.dueDate : (task.dueDate as any).seconds * 1000).toLocaleDateString()}
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-foreground truncate">
+                              {comment.authorName}
                             </span>
+                            <span className="text-[9px] text-muted-foreground font-mono">
+                              {formatTimestamp(comment.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground font-semibold leading-relaxed break-words">
+                            {comment.body}
+                          </p>
+                          
+                          {comment.files && comment.files.length > 0 && (
+                            <div className="mt-2 space-y-1 max-w-sm">
+                              {comment.files.map((file, fIdx) => (
+                                <a
+                                  key={fIdx}
+                                  href={file.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-2 p-1.5 rounded-lg border border-border-default bg-surface/55 hover:bg-bg-secondary text-[10px] text-accent font-bold truncate transition-colors"
+                                >
+                                  <Paperclip className="w-3 h-3 text-accent shrink-0" />
+                                  <span className="truncate flex-1">{file.name}</span>
+                                  <span className="text-[8px] text-muted-foreground font-semibold shrink-0">
+                                    {(file.size / 1024).toFixed(1)} KB
+                                  </span>
+                                </a>
+                              ))}
+                            </div>
                           )}
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-3 shrink-0 ml-2">
-                        {task.assigneeIds.length > 0 && (
-                          <div className="w-5.5 h-5.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground" title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}>
-                            {getInitials(task.assigneeIds[0])}
-                          </div>
-                        )}
-                        <button
-                          onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                          className="text-muted-foreground hover:text-red-400 p-1 transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center text-xs text-muted-foreground italic">
+                      No discussions on this project yet. Start the conversation!
                     </div>
-                  ))
-                ) : (
-                  <div className="py-8 rounded-xl border border-dashed border-border-default bg-bg-secondary/10 flex flex-col items-center justify-center text-center">
-                    <p className="text-[10px] text-muted-foreground italic">No active project tasks.</p>
-                  </div>
-                )}
+                  )}
+                </div>
 
-                {/* Collapsible Completed Tasks Archive */}
-                {completedTasks.length > 0 && (
-                  <div className="space-y-2 pt-2">
+                {/* Comment Input */}
+                <div className="p-4 border-t border-border-default/45 bg-surface/20 flex-shrink-0 flex flex-col gap-2">
+                  <AttachmentInput
+                    selectedFiles={commentFiles}
+                    onRemove={(idx) => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
+                    onAdd={(files) => setCommentFiles(prev => [...prev, ...Array.from(files)])}
+                  />
+                  <form onSubmit={handleAddComment} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder={uploadingCommentFiles ? "Uploading files..." : "Send an update..."}
+                      value={commentBody}
+                      disabled={uploadingCommentFiles}
+                      onChange={(e) => setCommentBody(e.target.value)}
+                      className="flex-1 bg-bg-primary/50 border border-border-default rounded-xl px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-bg-primary focus:border-indigo-500/50 shadow-inner font-semibold disabled:opacity-50"
+                    />
                     <button
                       type="button"
-                      onClick={() => setShowCompleted(!showCompleted)}
-                      className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
+                      disabled={uploadingCommentFiles}
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.multiple = true;
+                        input.onchange = (e) => {
+                          const files = (e.target as HTMLInputElement).files;
+                          if (files) setCommentFiles(prev => [...prev, ...Array.from(files)]);
+                        };
+                        input.click();
+                      }}
+                      className="p-2 bg-bg-secondary hover:bg-bg-secondary/80 border border-border-default rounded-xl text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0"
+                      title="Attach Files"
                     >
-                      <span>Completed Tasks ({completedTasks.length})</span>
-                      <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompleted ? "rotate-180" : "")} />
+                      <Paperclip className="w-4 h-4" />
                     </button>
-                    <AnimatePresence>
-                      {showCompleted && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden space-y-2"
-                        >
-                          {completedTasks.map(task => (
-                            <div
-                              key={task.id}
-                              onClick={() => setSelectedTask(task)}
-                              className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/20 border border-border-subtle/50 transition-all cursor-pointer opacity-50 hover:opacity-85 shadow-sm"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div
-                                  onClick={(e) => handleToggleTaskStatus(e, task)}
-                                  className="h-4 w-4 rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
-                                >
-                                  <Check className="w-2.5 h-2.5" />
-                                </div>
-                                <span className="text-xs truncate font-normal text-muted-foreground line-through">
-                                  {task.title}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-3 shrink-0 ml-2">
-                                {task.assigneeIds.length > 0 && (
-                                  <div className="w-5.5 h-5.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground">
-                                    {getInitials(task.assigneeIds[0])}
-                                  </div>
-                                )}
-                                <button
-                                  onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                  className="text-muted-foreground hover:text-red-400 transition-colors"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </motion.div>
+                    <button
+                      type="submit"
+                      disabled={uploadingCommentFiles}
+                      className="p-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl text-indigo-600 dark:text-indigo-405 hover:text-indigo-755 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0"
+                    >
+                      {uploadingCommentFiles ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                      ) : (
+                        <Send className="w-4 h-4" />
                       )}
-                    </AnimatePresence>
-                  </div>
-                )}
-              </div>
+                    </button>
+                  </form>
+                </div>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
 
         </div>
 

@@ -118,10 +118,14 @@ export function MemberProfileDrawer({ isOpen, member, onClose, tasks, teams }: M
           {/* Profile Overview */}
           <div className="flex items-center gap-4 p-4 rounded-2xl border border-border-default/60 bg-accent/5">
             <div
-              className="h-16 w-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-lg shrink-0"
+              className="h-16 w-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-lg shrink-0 overflow-hidden"
               style={{ background: `hsl(${hue} 60% 45%)` }}
             >
-              {initials}
+              {member.photoURL ? (
+                <img src={member.photoURL} alt={member.fullName} className="h-full w-full object-cover" />
+              ) : (
+                initials
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <h4 className="text-base font-bold text-foreground truncate leading-tight">{member.fullName}</h4>

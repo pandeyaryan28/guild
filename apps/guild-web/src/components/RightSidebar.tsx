@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from '../hooks/useAuth';
 import { useOrgMembers } from '../hooks/useChat';
 import { useTasks } from '../hooks/useTasks';
@@ -104,6 +104,11 @@ export function RightSidebar() {
     const name = getMemberName(uid);
     return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
   };
+  const getMemberPhotoURL = (uid: string) => {
+    if (!uid) return undefined;
+    const m = members.find((mem) => mem.uid === uid);
+    return m?.photoURL;
+  };
 
   const STATUS_LABEL: Record<string, string> = {
     todo: 'created',
@@ -143,6 +148,9 @@ export function RightSidebar() {
                   return (
                     <div key={member.uid} className="relative group cursor-pointer" title={member.fullName}>
                       <Avatar className="h-8 w-8 border-2 border-border-default group-hover:border-primary transition-colors">
+                        {member.photoURL && (
+                          <AvatarImage src={member.photoURL} alt={member.fullName} />
+                        )}
                         <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
                           {initials}
                         </AvatarFallback>
@@ -195,6 +203,9 @@ export function RightSidebar() {
                     onClick={() => navigate(`/tasks?task=${task.id}`)}
                   >
                     <Avatar className="h-6 w-6 border border-border-default shrink-0">
+                      {getMemberPhotoURL(actor) && (
+                        <AvatarImage src={getMemberPhotoURL(actor)} alt={getMemberName(actor)} />
+                      )}
                       <AvatarFallback className="text-[10px] bg-zinc-800">{getMemberInitials(actor)}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col gap-0.5 overflow-hidden">

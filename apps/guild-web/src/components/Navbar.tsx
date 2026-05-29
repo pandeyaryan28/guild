@@ -3,7 +3,7 @@ import {
   Bell, HelpCircle, Command, Plus, Search, Moon, Sun, Menu,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -136,6 +136,9 @@ export function Navbar({ onSearchOpen, onMobileMenuToggle }: NavbarProps) {
               </span>
             </div>
             <Avatar className="h-8 w-8 border border-border-default shadow-sm transition-transform group-hover:scale-105 active:scale-95">
+              {userProfile?.photoURL && (
+                <AvatarImage src={userProfile.photoURL} alt={displayName} />
+              )}
               <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
                 {initials}
               </AvatarFallback>

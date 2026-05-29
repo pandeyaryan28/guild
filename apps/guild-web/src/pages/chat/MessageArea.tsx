@@ -14,6 +14,7 @@ import { type Channel } from '../../lib/chat';
 import { createTask } from '../../lib/tasks';
 import { InviteChannelMembersModal } from '../../components/chat/InviteChannelMembersModal';
 import { ChannelSettingsModal } from '../../components/chat/ChannelSettingsModal';
+import { type MessageAttachment } from '@guild/types';
 
 interface MessageAreaProps {
   channelId: string | null;
@@ -91,7 +92,7 @@ export function MessageArea({
     if (dmId) markDMRead(dmId, currentUser.uid);
   }, [channelId, dmId, currentUser?.uid, messages?.length, orgId]);
 
-  const handleSend = async (body: string, mentions: string[]) => {
+  const handleSend = async (body: string, mentions: string[], files?: MessageAttachment[]) => {
     if (!currentUser || !orgId) return;
     const base = {
       orgId,
@@ -100,6 +101,7 @@ export function MessageArea({
       senderUsername: profile?.username ?? 'user',
       body,
       mentions,
+      files,
     };
 
     const trimmed = body.trim();
@@ -283,7 +285,7 @@ export function MessageArea({
       <MessageList
         messages={messages}
         currentUserId={currentUser?.uid ?? ''}
-        members={members.map((m) => ({ uid: m.uid, fullName: m.fullName, username: m.username }))}
+        members={members.map((m) => ({ uid: m.uid, fullName: m.fullName, username: m.username, photoURL: m.photoURL }))}
       />
 
       {/* Input */}
@@ -298,6 +300,7 @@ export function MessageArea({
         }
         members={members}
         disabled={!currentUser || !orgId || !canPost}
+        chatId={channelId || dmId || ''}
       />
 
       {/* Modals */}

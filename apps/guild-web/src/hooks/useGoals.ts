@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { listenToGoals, listenToGoal } from '../lib/goals';
-import type { Goal } from '../lib/goals';
+import { listenToGoals, listenToGoal, listenToGoalComments } from '../lib/goals';
+import type { Goal, GoalComment } from '../lib/goals';
 
 export function useGoals(orgId: string | undefined) {
   const [goals, setGoals] = React.useState<Goal[]>([]);
@@ -34,4 +34,13 @@ export function useGoal(goalId: string | undefined) {
   return { goal, loading };
 }
 
-export type { Goal };
+export function useGoalComments(goalId: string | null) {
+  const [comments, setComments] = React.useState<GoalComment[]>([]);
+  React.useEffect(() => {
+    if (!goalId) { setComments([]); return; }
+    return listenToGoalComments(goalId, setComments);
+  }, [goalId]);
+  return comments;
+}
+
+export type { Goal, GoalComment };

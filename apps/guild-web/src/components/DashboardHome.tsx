@@ -715,7 +715,11 @@ export function DashboardHome() {
                       style={{ background: `hsl(${avatarHue(member.uid)} 65% 45%)` }}
                       title={`${member.fullName} ${hasFocus ? `· Focus: ${member.focusStatus!.text}` : ''}`}
                     >
-                      {initials}
+                      {member.photoURL ? (
+                        <img src={member.photoURL} alt={member.fullName} className="h-full w-full object-cover rounded-full" />
+                      ) : (
+                        initials
+                      )}
                       {/* Premium breathing green status light */}
                       <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-surface border-2 border-surface flex items-center justify-center shadow-md">
                         <span className={cn(
@@ -828,8 +832,12 @@ export function DashboardHome() {
                     {/* Glowing timeline dot */}
                     <div className="absolute -left-[14.5px] top-1.5 h-2 w-2 rounded-full border border-surface bg-border-default/80 group-hover:bg-primary group-hover:shadow-[0_0_4px_#3b82f6] transition-all" />
                     
-                    <div className="h-6 w-6 rounded bg-gradient-to-br from-bg-tertiary to-surface border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground group-hover:border-primary/20 transition-all shrink-0">
-                      {getMemberInitials(actor)}
+                    <div className="h-6 w-6 rounded bg-gradient-to-br from-bg-tertiary to-surface border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground group-hover:border-primary/20 transition-all shrink-0 overflow-hidden">
+                      {memberMap.get(actor)?.photoURL ? (
+                        <img src={memberMap.get(actor)!.photoURL} alt={getMemberName(actor)} className="h-full w-full object-cover" />
+                      ) : (
+                        getMemberInitials(actor)
+                      )}
                     </div>
                     <div className="min-w-0">
                       <p className="text-muted-foreground/95 font-medium">

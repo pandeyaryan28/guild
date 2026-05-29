@@ -19,7 +19,7 @@ export function AdminLayout({ profile, children }: AdminLayoutProps) {
       <Sidebar profile={profile} activeSection={activeSection} onNavigate={setActiveSection} />
 
       {/* 3. Main Workspace Container */}
-      <div className="flex-1 flex flex-col min-w-0 pl-4 pr-4 pt-4 pb-24 md:pl-[120px] md:pr-6 md:py-5 z-10 overflow-hidden relative h-screen">
+      <div className="flex-1 flex flex-col min-w-0 pl-[120px] pr-6 py-5 z-10 overflow-hidden relative h-screen">
         
         {/* Top Spatial Control Nav Header */}
         <header className="flex h-10 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0">
@@ -30,8 +30,8 @@ export function AdminLayout({ profile, children }: AdminLayoutProps) {
             >
               Guild HQ
             </span>
-            <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
-            <span className="text-xs font-bold text-[--text-secondary] uppercase tracking-wider hidden sm:inline">
+            <div className="h-4 w-[1px] bg-white/10" />
+            <span className="text-xs font-bold text-[--text-secondary] uppercase tracking-wider">
               Administrative Control Centre
             </span>
           </div>
@@ -39,7 +39,7 @@ export function AdminLayout({ profile, children }: AdminLayoutProps) {
 
         {/* 4. Elegant macOS Floating frosted-glass scroll canvas */}
         <div className="flex-1 overflow-hidden relative aether-glass shadow-2xl">
-          <main className="absolute inset-0 overflow-y-auto aether-scroll p-4 md:p-6">
+          <main className="absolute inset-0 overflow-y-auto aether-scroll p-6">
             {children(activeSection)}
           </main>
         </div>

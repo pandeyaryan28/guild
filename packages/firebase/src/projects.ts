@@ -4,7 +4,7 @@ import {
   Timestamp, collectionGroup,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Project, ProjectStatus, Milestone, ActorInfo } from '@guild/types';
+import type { Project, ProjectStatus, Milestone, ActorInfo, MessageAttachment, ProjectComment } from '@guild/types';
 
 // ─── Projects ─────────────────────────────────────────────────────────────────
 
@@ -132,4 +132,36 @@ export function listenToMilestones(
   );
 }
 
-export type { Project, Milestone, ProjectStatus };
+export async function updateProjectAttachments(
+  projectId: string,
+  files: MessageAttachment[]
+): Promise<void> {
+  await updateDoc(doc(db, 'projects', projectId), { files, updatedAt: serverTimestamp() });
+}
+
+export async function addProjectComment(params: {
+  projectId: string; orgId: string; authorId: string;
+  authorName: string; authorUsername: string;
+  body: string; mentions: string[];
+  files?: MessageAttachment[];
+}): Promise<string> {
+  const ref = doc(collection(db, 'projectComments'));
+  await setDoc(ref, { id: ref.id, ...params, createdAt: serverTimestamp() });
+  return ref.id;
+}
+
+export function listenToProjectComments(
+  projectId: string,
+  cb: (comments: ProjectComment[]) => void
+): () => void {
+  return onSnapshot(
+    query(collection(db, 'projectComments'), where('projectId', '==', projectId), orderBy('createdAt', 'asc')),
+    (snap) => cb(snap.docs.map((d) => d.data() as ProjectComment)),
+  );
+}
+
+export async function deleteProjectComment(commentId: string): Promise<void> {
+  await deleteDoc(doc(db, 'projectComments', commentId));
+}
+
+export type { Project, Milestone, ProjectStatus, ProjectComment };

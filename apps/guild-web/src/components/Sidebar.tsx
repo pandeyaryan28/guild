@@ -45,6 +45,7 @@ import { useChannels } from "../hooks/useChat";
 import { useNotifications } from "../hooks/useNotifications";
 import { useRequests } from "../hooks/useRequests";
 import { getOrgById } from "../lib/firestore";
+import { Organization } from "@guild/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,14 +127,16 @@ export function Sidebar() {
 
   const [collapsed, setCollapsed] = React.useState(false);
   const [isChannelsOpen, setIsChannelsOpen] = React.useState(false);
-  const [orgName, setOrgName] = React.useState<string>("");
+  const [localOrg, setLocalOrg] = React.useState<Organization | null>(null);
 
-  // Fetch org name
+  // Fetch org details
   React.useEffect(() => {
     if (!orgId) return;
-    getOrgById(orgId).then((org) => { if (org) setOrgName(org.name); });
+    getOrgById(orgId).then((org) => { if (org) setLocalOrg(org); });
   }, [orgId]);
 
+  const orgName = localOrg?.name || "";
+  const orgPhotoURL = localOrg?.photoURL;
   const orgInitial = (orgName || "G")[0].toUpperCase();
 
   const handleLogout = async () => {
@@ -162,8 +165,12 @@ export function Sidebar() {
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <div className="flex h-9 w-9 mx-auto items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-[11px] font-black text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer select-none">
-                      {orgInitial}
+                    <div className="flex h-9 w-9 mx-auto items-center justify-center rounded-lg overflow-hidden bg-gradient-to-br from-primary to-primary/60 text-[11px] font-black text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer select-none border border-white/10">
+                      {orgPhotoURL ? (
+                        <img src={orgPhotoURL} alt={orgName} className="h-full w-full object-cover" />
+                      ) : (
+                        orgInitial
+                      )}
                     </div>
                   }
                 />
@@ -191,8 +198,12 @@ export function Sidebar() {
                     )}
                   >
                     <div className="flex items-center gap-2 overflow-hidden">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-[10px] font-black text-primary-foreground shadow-lg shadow-primary/30">
-                        {orgInitial}
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg overflow-hidden bg-gradient-to-br from-primary to-primary/60 text-[10px] font-black text-primary-foreground shadow-lg shadow-primary/30 border border-white/10">
+                        {orgPhotoURL ? (
+                          <img src={orgPhotoURL} alt={orgName} className="h-full w-full object-cover" />
+                        ) : (
+                          orgInitial
+                        )}
                       </div>
                       <div className="flex flex-col items-start leading-none overflow-hidden text-left">
                         <span className="text-xs font-extrabold text-foreground truncate max-w-[110px]">
@@ -208,8 +219,12 @@ export function Sidebar() {
                     className="w-[200px] border-border-default/40 bg-surface/90 backdrop-blur-xl"
                   >
                     <DropdownMenuItem className="gap-2 font-semibold">
-                      <div className="h-5 w-5 rounded bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
-                        {orgInitial}
+                      <div className="h-5 w-5 rounded overflow-hidden bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary border border-white/5">
+                        {orgPhotoURL ? (
+                          <img src={orgPhotoURL} alt={orgName} className="h-full w-full object-cover" />
+                        ) : (
+                          orgInitial
+                        )}
                       </div>
                       {orgName}
                     </DropdownMenuItem>

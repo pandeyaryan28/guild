@@ -6,7 +6,7 @@ import {
 import { db } from './firebase';
 import { createNotification } from './notifications';
 import type {
-  Channel, ChannelMember, Message, DirectMessageThread,
+  Channel, ChannelMember, Message, DirectMessageThread, MessageAttachment,
 } from '@guild/types';
 
 // ─── Default Channels ─────────────────────────────────────────────────────────
@@ -195,19 +195,38 @@ export async function sendChannelMessage(params: {
   channelId: string; orgId: string;
   senderId: string; senderName: string; senderUsername: string;
   body: string; mentions: string[];
+  files?: MessageAttachment[];
 }): Promise<string> {
   const msgRef = doc(collection(db, 'messages'));
   const id = msgRef.id;
-  await setDoc(msgRef, { id, ...params, createdAt: serverTimestamp(), deleted: false });
+  await setDoc(msgRef, {
+    id,
+    ...params,
+    files: params.files || [],
+    createdAt: serverTimestamp(),
+    deleted: false,
+  });
+
+  let preview = params.body ? params.body.slice(0, 100) : '';
+  if (!preview && params.files && params.files.length > 0) {
+    const count = params.files.length;
+    const isImage = params.files[0].type.startsWith('image/');
+    if (count === 1) {
+      preview = isImage ? 'Sent an image' : `Sent a file: ${params.files[0].name}`;
+    } else {
+      preview = `Shared ${count} files`;
+    }
+  }
+
   await updateDoc(doc(db, 'channels', params.channelId), {
     lastMessageAt: serverTimestamp(),
-    lastMessagePreview: params.body.slice(0, 100),
+    lastMessagePreview: preview,
   });
   for (const uid of params.mentions) {
     createNotification({
       orgId: params.orgId, recipientId: uid, type: 'mention',
       actorId: params.senderId, actorName: params.senderName,
-      data: { channelId: params.channelId, messagePreview: params.body.slice(0, 100) },
+      data: { channelId: params.channelId, messagePreview: preview },
     }).catch(() => console.error('Failed to send mention notification'));
   }
   return id;
@@ -217,12 +236,31 @@ export async function sendDMMessage(params: {
   dmId: string; orgId: string;
   senderId: string; senderName: string; senderUsername: string;
   body: string; mentions: string[];
+  files?: MessageAttachment[];
 }): Promise<string> {
   const msgRef = doc(collection(db, 'messages'));
   const id = msgRef.id;
-  await setDoc(msgRef, { id, ...params, createdAt: serverTimestamp(), deleted: false });
+  await setDoc(msgRef, {
+    id,
+    ...params,
+    files: params.files || [],
+    createdAt: serverTimestamp(),
+    deleted: false,
+  });
+
+  let preview = params.body ? params.body.slice(0, 100) : '';
+  if (!preview && params.files && params.files.length > 0) {
+    const count = params.files.length;
+    const isImage = params.files[0].type.startsWith('image/');
+    if (count === 1) {
+      preview = isImage ? 'Sent an image' : `Sent a file: ${params.files[0].name}`;
+    } else {
+      preview = `Shared ${count} files`;
+    }
+  }
+
   await updateDoc(doc(db, 'directMessages', params.dmId), {
-    lastMessage: params.body.slice(0, 100),
+    lastMessage: preview,
     lastMessageAt: serverTimestamp(),
     lastSenderId: params.senderId,
   });
@@ -232,14 +270,14 @@ export async function sendDMMessage(params: {
     createNotification({
       orgId: params.orgId, recipientId, type: 'dm_received',
       actorId: params.senderId, actorName: params.senderName,
-      data: { dmId: params.dmId, messagePreview: params.body.slice(0, 100) },
+      data: { dmId: params.dmId, messagePreview: preview },
     }).catch(() => console.error('Failed to send dm_received notification'));
   }
   for (const uid of params.mentions) {
     createNotification({
       orgId: params.orgId, recipientId: uid, type: 'mention',
       actorId: params.senderId, actorName: params.senderName,
-      data: { dmId: params.dmId, messagePreview: params.body.slice(0, 100) },
+      data: { dmId: params.dmId, messagePreview: preview },
     }).catch(() => console.error('Failed to send mention notification for dm'));
   }
   return id;

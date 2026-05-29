@@ -8,6 +8,7 @@ import { createNotification } from './notifications';
 import type {
   Task, TaskStatus, TaskPriority, TaskComment,
   TaskActivity, TaskLabel, ActivityType, ActorInfo,
+  MessageAttachment,
 } from '@guild/types';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -227,6 +228,7 @@ export async function addComment(params: {
   taskId: string; orgId: string; authorId: string;
   authorName: string; authorUsername: string;
   body: string; mentions: string[];
+  files?: MessageAttachment[];
   notifyIds?: string[];
   taskTitle?: string;
 }): Promise<string> {
@@ -259,6 +261,13 @@ export async function editComment(commentId: string, newBody: string): Promise<v
 
 export async function deleteComment(commentId: string): Promise<void> {
   await deleteDoc(doc(db, 'taskComments', commentId));
+}
+
+export async function updateTaskAttachments(
+  taskId: string,
+  files: MessageAttachment[]
+): Promise<void> {
+  await updateDoc(doc(db, 'tasks', taskId), { files, updatedAt: serverTimestamp() });
 }
 
 // ─── Labels ───────────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Goal, GoalStatus, GoalHorizon, GoalRecurrence, ActorInfo } from '@guild/types';
+import type { Goal, GoalStatus, GoalHorizon, GoalRecurrence, ActorInfo, MessageAttachment, GoalComment } from '@guild/types';
 
 // ─── Goals ────────────────────────────────────────────────────────────────────
 
@@ -89,4 +89,36 @@ export async function deleteGoal(goalId: string): Promise<void> {
   await deleteDoc(doc(db, 'goals', goalId));
 }
 
-export type { Goal, GoalStatus };
+export async function updateGoalAttachments(
+  goalId: string,
+  files: MessageAttachment[]
+): Promise<void> {
+  await updateDoc(doc(db, 'goals', goalId), { files, updatedAt: serverTimestamp() });
+}
+
+export async function addGoalComment(params: {
+  goalId: string; orgId: string; authorId: string;
+  authorName: string; authorUsername: string;
+  body: string; mentions: string[];
+  files?: MessageAttachment[];
+}): Promise<string> {
+  const ref = doc(collection(db, 'goalComments'));
+  await setDoc(ref, { id: ref.id, ...params, createdAt: serverTimestamp() });
+  return ref.id;
+}
+
+export function listenToGoalComments(
+  goalId: string,
+  cb: (comments: GoalComment[]) => void
+): () => void {
+  return onSnapshot(
+    query(collection(db, 'goalComments'), where('goalId', '==', goalId), orderBy('createdAt', 'asc')),
+    (snap) => cb(snap.docs.map((d) => d.data() as GoalComment)),
+  );
+}
+
+export async function deleteGoalComment(commentId: string): Promise<void> {
+  await deleteDoc(doc(db, 'goalComments', commentId));
+}
+
+export type { Goal, GoalStatus, GoalComment };

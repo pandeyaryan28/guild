@@ -3,17 +3,23 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, Check, Calendar, User, Tag, 
   Trash2, Send, Clock, AlertCircle, Play, 
-  ChevronRight, Sparkles, MessageSquare, ListTodo 
+  ChevronRight, Sparkles, MessageSquare, ListTodo,
+  Paperclip, File, FileText, FileAudio, FileVideo, Download, ExternalLink,
+  Loader2
 } from 'lucide-react';
 import { 
   updateTask, moveTask, updatePriority, 
   updateAssignees, updateDueDate, updateLabels, 
-  addComment,
+  addComment, updateTaskAttachments,
   STATUS_CONFIG, PRIORITY_CONFIG, STATUSES,
   type Task, type TaskStatus, type TaskPriority, type ActorInfo 
 } from '../../lib/tasks';
 import { useTaskComments, useTaskActivities } from '../../hooks/useTasks';
 import { cn } from '@/lib/utils';
+import { AttachmentSection } from './AttachmentSection';
+import { AttachmentInput } from './AttachmentInput';
+import { type MessageAttachment } from '@guild/types';
+import { uploadEntityAttachment } from '../../lib/storage';
 
 interface TaskDetailDrawerProps {
   task: Task | null;
@@ -37,6 +43,8 @@ export function TaskDetailDrawer({
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [commentBody, setCommentBody] = React.useState('');
+  const [commentFiles, setCommentFiles] = React.useState<File[]>([]);
+  const [uploadingCommentFiles, setUploadingCommentFiles] = React.useState(false);
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [isEditingDesc, setIsEditingDesc] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'comments' | 'activity'>('comments');
@@ -122,8 +130,16 @@ export function TaskDetailDrawer({
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentBody.trim()) return;
+    if (!commentBody.trim() && commentFiles.length === 0) return;
+    setUploadingCommentFiles(true);
     try {
+      let uploaded: MessageAttachment[] = [];
+      if (commentFiles.length > 0) {
+        uploaded = await Promise.all(
+          commentFiles.map(file => uploadEntityAttachment('comments', task.id, file))
+        );
+      }
+
       await addComment({
         taskId: task.id,
         orgId,
@@ -132,11 +148,15 @@ export function TaskDetailDrawer({
         authorUsername: actor.name.toLowerCase().replace(/\s+/g, ''),
         body: commentBody.trim(),
         mentions: [],
-        taskTitle: task.title
+        taskTitle: task.title,
+        files: uploaded
       });
       setCommentBody('');
+      setCommentFiles([]);
     } catch (err) {
       console.error('Failed to add comment:', err);
+    } finally {
+      setUploadingCommentFiles(false);
     }
   };
 
@@ -253,6 +273,22 @@ export function TaskDetailDrawer({
                 )}
               </div>
 
+              {/* Task Media & Files */}
+              <div className="pt-2">
+                <AttachmentSection
+                  entityType="tasks"
+                  entityId={task.id}
+                  files={task.files}
+                  onAttachmentsChanged={async (updatedFiles) => {
+                    try {
+                      await updateTaskAttachments(task.id, updatedFiles);
+                    } catch (err) {
+                      console.error("Failed to update task attachments:", err);
+                    }
+                  }}
+                />
+              </div>
+
               {/* Tabs for Feed */}
               <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex flex-col flex-grow min-h-[300px]">
                 <div className="flex border-b border-neutral-100 dark:border-neutral-800 mb-4 flex-shrink-0">
@@ -289,7 +325,7 @@ export function TaskDetailDrawer({
                       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 scrollbar-thin max-h-[240px]">
                         {comments.length > 0 ? (
                           comments.map((comment) => (
-                            <div key={comment.id} className="flex items-start gap-3 bg-neutral-50/50 dark:bg-neutral-850/15 p-3 rounded-2xl border border-neutral-100 dark:border-neutral-850">
+                            <div key={comment.id} className="flex items-start gap-3 bg-neutral-50/50 dark:bg-neutral-850/15 p-3 rounded-2xl border border-neutral-100 dark:border-neutral-850 animate-fluid-pop">
                               <div className="h-7 w-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-[10px] font-bold text-accent shrink-0">
                                 {getMemberInitials(comment.authorId)}
                               </div>
@@ -305,6 +341,26 @@ export function TaskDetailDrawer({
                                 <p className="text-xs text-neutral-600 dark:text-neutral-400 font-semibold leading-relaxed break-words">
                                   {comment.body}
                                 </p>
+                                
+                                {comment.files && comment.files.length > 0 && (
+                                  <div className="mt-2 space-y-1 max-w-sm">
+                                    {comment.files.map((file, fIdx) => (
+                                      <a
+                                        key={fIdx}
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2 p-1.5 rounded-lg border border-neutral-200/40 dark:border-neutral-800 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[10px] text-accent font-bold truncate transition-colors"
+                                      >
+                                        <Paperclip className="w-3 h-3 text-accent shrink-0" />
+                                        <span className="truncate flex-1">{file.name}</span>
+                                        <span className="text-[8px] text-neutral-400 font-semibold shrink-0">
+                                          {(file.size / 1024).toFixed(1)} KB
+                                        </span>
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           ))
@@ -316,21 +372,52 @@ export function TaskDetailDrawer({
                       </div>
 
                       {/* Comment Input */}
-                      <form onSubmit={handleAddComment} className="flex gap-2 border-t border-neutral-100 dark:border-neutral-800 pt-3 flex-shrink-0">
-                        <input
-                          type="text"
-                          placeholder="Type an update or comment..."
-                          value={commentBody}
-                          onChange={(e) => setCommentBody(e.target.value)}
-                          className="flex-1 bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:border-accent/40 shadow-inner font-semibold"
+                      <div className="border-t border-neutral-100 dark:border-neutral-800 pt-3 flex-shrink-0 flex flex-col gap-2">
+                        <AttachmentInput
+                          selectedFiles={commentFiles}
+                          onRemove={(idx) => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
+                          onAdd={(files) => setCommentFiles(prev => [...prev, ...Array.from(files)])}
                         />
-                        <button
-                          type="submit"
-                          className="p-2.5 bg-neutral-100 dark:bg-neutral-850 hover:bg-neutral-200 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 transition-all cursor-pointer shadow-sm"
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
-                      </form>
+                        <form onSubmit={handleAddComment} className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder={uploadingCommentFiles ? "Uploading attachments..." : "Type an update or comment..."}
+                            value={commentBody}
+                            disabled={uploadingCommentFiles}
+                            onChange={(e) => setCommentBody(e.target.value)}
+                            className="flex-1 bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:border-accent/40 shadow-inner font-semibold disabled:opacity-50"
+                          />
+                          <button
+                            type="button"
+                            disabled={uploadingCommentFiles}
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.multiple = true;
+                              input.onchange = (e) => {
+                                const files = (e.target as HTMLInputElement).files;
+                                if (files) setCommentFiles(prev => [...prev, ...Array.from(files)]);
+                              };
+                              input.click();
+                            }}
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-850 hover:bg-neutral-200 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-500 dark:text-neutral-400 hover:text-neutral-850 dark:hover:text-neutral-200 transition-all cursor-pointer shadow-sm disabled:opacity-50 flex items-center justify-center"
+                            title="Attach Files"
+                          >
+                            <Paperclip className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={uploadingCommentFiles}
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-850 hover:bg-neutral-200 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-350 hover:text-neutral-900 dark:hover:text-neutral-100 transition-all cursor-pointer shadow-sm disabled:opacity-50 flex items-center justify-center"
+                          >
+                            {uploadingCommentFiles ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                            ) : (
+                              <Send className="w-4 h-4" />
+                            )}
+                          </button>
+                        </form>
+                      </div>
                     </div>
                   ) : (
                     // Activity Log

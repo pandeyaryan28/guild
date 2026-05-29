@@ -4,6 +4,8 @@ import { useAdminData } from './hooks/useAdminData';
 import { AdminLayout } from './components/AdminLayout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { useDeviceType } from './hooks/useDeviceType';
+import { MobileAdminApp } from './components/mobile/MobileAdminApp';
 
 // ─── Loading Spinner ──────────────────────────────────────────────────────────
 function FullPageSpinner() {
@@ -57,6 +59,12 @@ function UnauthorizedScreen({ email }: { email: string }) {
 
 // ─── Authorized Shell ─────────────────────────────────────────────────────────
 function AuthorizedApp({ profile }: { profile: ReturnType<typeof useAdminAuth> & { status: 'authorized' } }) {
+  const deviceType = useDeviceType();
+
+  if (deviceType === 'mobile') {
+    return <MobileAdminApp profile={profile.profile} />;
+  }
+
   const data = useAdminData();
   return (
     <AdminLayout profile={profile.profile}>
