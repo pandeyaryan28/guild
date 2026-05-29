@@ -570,21 +570,103 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
           </div>
         )}
 
-        {/* Message bubble styling */}
-        <div className={cn(
-          !(isTaskCommand || isGoalCommand || isRequestCommand)
-            ? cn(
-                'relative rounded-2xl px-4 py-2.5 shadow-sm text-sm leading-relaxed border transition-all text-left',
-                isOwn 
-                  ? 'bg-gradient-to-br from-primary via-primary to-primary/95 border-transparent rounded-tr-none text-primary-foreground shadow-md shadow-primary/10'
-                  : 'bg-surface border-border-default/60 rounded-tl-none text-foreground'
-              )
-            : 'relative text-left',
-          isGrouped && isOwn && 'rounded-tr-2xl',
-          isGrouped && !isOwn && 'rounded-tl-2xl'
-        )}>
-          {renderMessageContent()}
-          {renderAttachments()}
+        {/* Relative wrapper for bubble + action bar */}
+        <div className="relative w-fit max-w-full group/bubble">
+          {/* Message bubble styling */}
+          <div className={cn(
+            !(isTaskCommand || isGoalCommand || isRequestCommand)
+              ? cn(
+                  'relative rounded-2xl px-4 py-2.5 shadow-sm text-sm leading-relaxed border transition-all text-left',
+                  isOwn 
+                    ? 'bg-gradient-to-br from-primary via-primary to-primary/95 border-transparent rounded-tr-none text-primary-foreground shadow-md shadow-primary/10'
+                    : 'bg-surface border-border-default/60 rounded-tl-none text-foreground'
+                )
+              : 'relative text-left',
+            isGrouped && isOwn && 'rounded-tr-2xl',
+            isGrouped && !isOwn && 'rounded-tl-2xl'
+          )}>
+            {renderMessageContent()}
+            {renderAttachments()}
+          </div>
+
+          {/* Action Bar (Reactions, Reply, Edit, Delete) */}
+          {!message.deleted && !editing && hovered && (
+            <motion.div
+              initial={{ opacity: 0, x: isOwn ? -4 : 4 }}
+              animate={{ opacity: 1, x: 0 }}
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-xl border border-border-default bg-surface backdrop-blur-md px-1.5 py-1 shadow-lg z-30",
+                isOwn ? "right-full mr-2" : "left-full ml-2"
+              )}
+            >
+              {/* Reaction Trigger Button */}
+              <div className="relative flex">
+                <button
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className={cn(
+                    "flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer",
+                    showEmojiPicker && "bg-bg-tertiary text-foreground"
+                  )}
+                  title="Add reaction"
+                >
+                  <Smile className="h-3.5 w-3.5" />
+                </button>
+                
+                {/* Reaction Popover Dropdeck */}
+                {showEmojiPicker && (
+                  <div className={cn(
+                    "absolute bottom-full mb-2 bg-surface border border-border-default rounded-xl shadow-2xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100",
+                    isOwn ? "right-0" : "left-0"
+                  )}>
+                    {['👍', '❤️', '🔥', '😂', '🎉', '🚀'].map(emoji => (
+                      <button
+                        key={emoji}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (currentUser) toggleReaction(message.id, emoji, currentUser.uid);
+                          setShowEmojiPicker(false);
+                        }}
+                        className="text-base p-1.5 hover:bg-bg-tertiary rounded transition-colors cursor-pointer"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Reply Trigger Button */}
+              {onOpenDiscussion && (
+                <button
+                  onClick={() => onOpenDiscussion(message)}
+                  className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+                  title="Reply to message"
+                >
+                  <MessageSquare className="h-3 w-3" />
+                </button>
+              )}
+
+              {/* Edit/Delete options for own messages */}
+              {isOwn && (
+                <>
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+                    title="Edit message"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                    title="Delete message"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </>
+              )}
+            </motion.div>
+          )}
         </div>
 
         {/* Emojis reactions and replies list */}
@@ -598,85 +680,6 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
           </div>
         )}
       </div>
-
-      {/* Action Bar (Reactions, Reply, Edit, Delete) */}
-      {!message.deleted && !editing && hovered && (
-        <motion.div
-          initial={{ opacity: 0, x: isOwn ? -4 : 4 }}
-          animate={{ opacity: 1, x: 0 }}
-          className={cn(
-            "absolute top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-xl border border-border-default bg-surface backdrop-blur-md px-1.5 py-1 shadow-lg z-10",
-            isOwn ? "right-full mr-3" : "left-full ml-3"
-          )}
-        >
-          {/* Reaction Trigger Button */}
-          <div className="relative flex">
-            <button
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className={cn(
-                "flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer",
-                showEmojiPicker && "bg-bg-tertiary text-foreground"
-              )}
-              title="Add reaction"
-            >
-              <Smile className="h-3.5 w-3.5" />
-            </button>
-            
-            {/* Reaction Popover Dropdeck */}
-            {showEmojiPicker && (
-              <div className={cn(
-                "absolute bottom-full mb-2 bg-surface border border-border-default rounded-xl shadow-2xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100",
-                isOwn ? "right-0" : "left-0"
-              )}>
-                {['👍', '❤️', '🔥', '😂', '🎉', '🚀'].map(emoji => (
-                  <button
-                    key={emoji}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (currentUser) toggleReaction(message.id, emoji, currentUser.uid);
-                      setShowEmojiPicker(false);
-                    }}
-                    className="text-base p-1.5 hover:bg-bg-tertiary rounded transition-colors cursor-pointer"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Reply Trigger Button */}
-          {onOpenDiscussion && (
-            <button
-              onClick={() => onOpenDiscussion(message)}
-              className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
-              title="Reply to message"
-            >
-              <MessageSquare className="h-3 w-3" />
-            </button>
-          )}
-
-          {/* Edit/Delete options for own messages */}
-          {isOwn && (
-            <>
-              <button
-                onClick={() => setEditing(true)}
-                className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
-                title="Edit message"
-              >
-                <Pencil className="h-3 w-3" />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                title="Delete message"
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </>
-          )}
-        </motion.div>
-      )}
 
       {/* Grouped timestamp on hover */}
       {isGrouped && hovered && (
