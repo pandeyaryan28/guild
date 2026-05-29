@@ -114,6 +114,10 @@ export function OnboardingRoot() {
     return <Navigate to="/login" replace />;
   }
 
+  if (!user.emailVerified) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   return (
     <div className="min-h-screen w-full bg-background relative overflow-hidden">
       {/* Background glow */}

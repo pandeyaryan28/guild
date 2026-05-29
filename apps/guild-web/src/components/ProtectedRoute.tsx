@@ -26,6 +26,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (!user.emailVerified) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   if (!onboarding?.completed) {
     return <Navigate to="/onboarding" replace />;
   }

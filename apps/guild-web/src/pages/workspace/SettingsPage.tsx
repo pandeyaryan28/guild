@@ -11,6 +11,7 @@ import { useTeams } from '../../hooks/useTeams';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { THEMES } from '../../lib/themes';
+import { sendPasswordReset } from '../../lib/auth';
 import {
   updateUserProfile,
   updateUserRole,
@@ -401,6 +402,42 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
   const [errors, setErrors] = React.useState<FormError>({});
   const [generalError, setGeneralError] = React.useState<string | null>(null);
 
+  // Password reset states
+  const [resetLoading, setResetLoading] = React.useState(false);
+  const [resetCooldown, setResetCooldown] = React.useState(0);
+  const [resetMessage, setResetMessage] = React.useState('');
+  const [resetMessageType, setResetMessageType] = React.useState<'success' | 'error'>('success');
+
+  // Password reset cooldown countdown
+  React.useEffect(() => {
+    if (resetCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResetCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resetCooldown]);
+
+  const handleSendPasswordReset = async () => {
+    if (resetCooldown > 0) return;
+    setResetLoading(true);
+    setResetMessage('');
+    try {
+      await sendPasswordReset(profile.email);
+      setResetCooldown(60);
+      setResetMessageType('success');
+      setResetMessage('Reset email sent.');
+    } catch (err: any) {
+      setResetMessageType('error');
+      if (err?.code === 'auth/too-many-requests') {
+        setResetMessage('Too many requests. Please wait.');
+      } else {
+        setResetMessage('Failed to send link.');
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   // Profile photo states
   const [uploadingPhoto, setUploadingPhoto] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -697,6 +734,39 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               value={profile.email}
               className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-white/[0.005] text-xs text-muted-foreground cursor-not-allowed outline-none font-semibold"
             />
+          </div>
+
+          {/* Password Security Block */}
+          <div className="space-y-1.5 flex flex-col justify-end">
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">
+                Account Password
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleSendPasswordReset}
+                  disabled={resetLoading || resetCooldown > 0}
+                  className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-foreground text-[11px] font-bold hover:bg-white/10 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 h-10"
+                >
+                  {resetLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                  ) : resetCooldown > 0 ? (
+                    <span>Reset Link Sent ({resetCooldown}s)</span>
+                  ) : (
+                    <span>Reset Password</span>
+                  )}
+                </button>
+                {resetMessage && (
+                  <span className={cn(
+                    "text-[10px] font-bold transition-all",
+                    resetMessageType === 'success' ? "text-emerald-400" : "text-red-400"
+                  )}>
+                    {resetMessage}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

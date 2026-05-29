@@ -5,6 +5,9 @@ import {
   onAuthStateChanged as firebaseOnAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
+  sendEmailVerification as firebaseSendEmailVerification,
+  reload as firebaseReload,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   type User,
 } from 'firebase/auth';
 import { auth } from './firebase';
@@ -24,6 +27,18 @@ export async function signInWithGoogle() {
 
 export async function signOut() {
   return firebaseSignOut(auth);
+}
+
+export async function sendVerificationEmail(user: User) {
+  return firebaseSendEmailVerification(user);
+}
+
+export async function reloadUser(user: User) {
+  return firebaseReload(user);
+}
+
+export async function sendPasswordReset(email: string) {
+  return firebaseSendPasswordResetEmail(auth, email);
 }
 
 export function getCurrentUser(): User | null {

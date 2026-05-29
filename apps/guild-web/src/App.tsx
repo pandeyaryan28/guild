@@ -12,6 +12,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 // Auth pages
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
 
 // Onboarding
 import { OnboardingRoot } from './pages/onboarding/OnboardingRoot';
@@ -62,6 +63,7 @@ function AppContent() {
       {/* Public auth routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
 
       {/* Onboarding — requires auth, but not completed onboarding */}
       <Route path="/onboarding/*" element={<OnboardingRoot />} />

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Eye, EyeOff, Loader2, Mail, Lock, Zap, Sun, Moon } from 'lucide-react';
-import { signUpWithEmail, signInWithGoogle } from '../lib/auth';
+import { signUpWithEmail, signInWithGoogle, sendVerificationEmail } from '../lib/auth';
 import { getAdditionalUserInfo } from 'firebase/auth';
 import { setOnboardingState } from '../lib/firestore';
 import { useAuth } from '../hooks/useAuth';
@@ -53,7 +53,13 @@ export function SignupPage() {
         step: 0,
         path: null,
       });
-      navigate('/onboarding', { replace: true });
+      // Send verification email immediately
+      try {
+        await sendVerificationEmail(credential.user);
+      } catch (emailErr) {
+        console.error('Failed to send verification email on signup:', emailErr);
+      }
+      navigate('/verify-email', { replace: true });
     } catch (err: any) {
       const code = err?.code || '';
       if (code === 'auth/email-already-in-use') {
