@@ -105,7 +105,11 @@ export function MessageArea({
     };
 
     const trimmed = body.trim();
-    if (trimmed.startsWith('/goal')) {
+    const isGoal = /^\/goal(\s|$)/.test(trimmed);
+    const isRequest = /^\/request(\s|$)/.test(trimmed);
+    const isTask = /^\/task(\s|$)/.test(trimmed);
+
+    if (isGoal) {
       const commandArgs = trimmed.slice(5).trim();
       let goalTitle = commandArgs.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
 
@@ -153,11 +157,17 @@ export function MessageArea({
       return;
     }
 
-    if (trimmed.startsWith('/request')) {
+    if (isRequest) {
       const commandArgs = trimmed.slice(8).trim();
       let requestTitle = commandArgs.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
 
-      const approverId = mentions[0];
+      // Extract raw mentions from the body and look up their user IDs
+      const rawMentions = (trimmed.match(/@\w+/g) || [])
+        .map((m) => m.slice(1))
+        .map((uname) => members.find((m) => m.username.toLowerCase() === uname.toLowerCase())?.uid)
+        .filter((id): id is string => !!id);
+
+      const approverId = rawMentions[0] || mentions[0];
       const approver = approverId ? members.find((m) => m.uid === approverId) : null;
 
       if (!requestTitle || !approver) {
@@ -204,7 +214,7 @@ export function MessageArea({
       return;
     }
 
-    if (trimmed.startsWith('/task')) {
+    if (isTask) {
       const commandArgs = trimmed.slice(5).trim();
       
       // Clean task title by removing @username patterns
@@ -226,8 +236,17 @@ export function MessageArea({
       try {
         let assigneeIds: string[] = [];
 
-        if (mentions.length > 0) {
-          assigneeIds = mentions;
+        // Extract raw mentions from the body and look up their user IDs
+        const textMentions = (trimmed.match(/@\w+/g) || [])
+          .map((m) => m.slice(1))
+          .map((uname) => members.find((m) => m.username.toLowerCase() === uname.toLowerCase())?.uid)
+          .filter((id): id is string => !!id);
+
+        // Combine mentions resolved by both methods (dropdown + manual)
+        const combinedMentions = Array.from(new Set([...mentions, ...textMentions]));
+
+        if (combinedMentions.length > 0) {
+          assigneeIds = combinedMentions;
         } else {
           if (dmId) {
             const parts = dmId.split('_');

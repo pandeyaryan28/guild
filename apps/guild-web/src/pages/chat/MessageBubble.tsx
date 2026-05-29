@@ -125,9 +125,9 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     .slice(0, 2)
     .toUpperCase();
 
-  const isTaskCommand = message.body.trim().startsWith('/task') && !message.deleted;
-  const isGoalCommand = message.body.trim().startsWith('/goal') && !message.deleted;
-  const isRequestCommand = message.body.trim().startsWith('/request') && !message.deleted;
+  const isTaskCommand = /^\/task(\s|$)/.test(message.body.trim()) && !message.deleted;
+  const isGoalCommand = /^\/goal(\s|$)/.test(message.body.trim()) && !message.deleted;
+  const isRequestCommand = /^\/request(\s|$)/.test(message.body.trim()) && !message.deleted;
 
   const renderMessageContent = () => {
     if (editing) {
