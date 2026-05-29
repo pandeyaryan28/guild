@@ -18,10 +18,12 @@ import { RedesignLayout } from '../../components/redesign/Layout';
 interface RedesignChatSidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
+  onOpenChannelModal: () => void;
+  onOpenDMModal: () => void;
 }
 
 // Beautiful Glassmorphic Left Chat Directory Pane
-function RedesignChatSidebar({ isCollapsed, onToggle }: RedesignChatSidebarProps) {
+function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpenDMModal }: RedesignChatSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userProfile } = useAuth();
@@ -32,8 +34,6 @@ function RedesignChatSidebar({ isCollapsed, onToggle }: RedesignChatSidebarProps
   const members = useOrgMembers(orgId);
 
   const [orgName, setOrgName] = React.useState('');
-  const [showChannelModal, setShowChannelModal] = React.useState(false);
-  const [showDMModal, setShowDMModal] = React.useState(false);
   const [channelsOpen, setChannelsOpen] = React.useState(true);
   const [dmsOpen, setDmsOpen] = React.useState(true);
 
@@ -44,16 +44,6 @@ function RedesignChatSidebar({ isCollapsed, onToggle }: RedesignChatSidebarProps
   }, [orgId]);
 
   const currentPath = location.pathname;
-
-  const handleChannelCreated = (channelId: string) => {
-    setShowChannelModal(false);
-    navigate(`/chat/c/${channelId}`);
-  };
-
-  const handleDMCreated = (dmId: string) => {
-    setShowDMModal(false);
-    navigate(`/chat/dm/${dmId}`);
-  };
 
   const getDMName = (participants: string[]) => {
     const otherId = participants.find((p) => p !== user?.uid) ?? '';
@@ -107,7 +97,7 @@ function RedesignChatSidebar({ isCollapsed, onToggle }: RedesignChatSidebarProps
               Channels
             </span>
             <button
-              onClick={(e) => { e.stopPropagation(); setShowChannelModal(true); }}
+              onClick={(e) => { e.stopPropagation(); onOpenChannelModal(); }}
               className="flex h-5 w-5 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -174,7 +164,7 @@ function RedesignChatSidebar({ isCollapsed, onToggle }: RedesignChatSidebarProps
               Direct Messages
             </span>
             <button
-              onClick={(e) => { e.stopPropagation(); setShowDMModal(true); }}
+              onClick={(e) => { e.stopPropagation(); onOpenDMModal(); }}
               className="flex h-5 w-5 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -224,13 +214,6 @@ function RedesignChatSidebar({ isCollapsed, onToggle }: RedesignChatSidebarProps
         </div>
 
       </div>
-
-      {showChannelModal && orgId && (
-        <CreateChannelModal orgId={orgId} onClose={() => setShowChannelModal(false)} onCreated={handleChannelCreated} />
-      )}
-      {showDMModal && orgId && (
-        <NewDMModal orgId={orgId} members={members} onClose={() => setShowDMModal(false)} onDMCreated={handleDMCreated} />
-      )}
     </aside>
   );
 }
@@ -241,8 +224,22 @@ export function ChatLayout() {
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
   const members = useOrgMembers(orgId);
+  const { teams } = useTeams(orgId);
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => window.innerWidth < 1024);
+  const [isMemberPanelCollapsed, setIsMemberPanelCollapsed] = React.useState(false);
+  const [showChannelModal, setShowChannelModal] = React.useState(false);
+  const [showDMModal, setShowDMModal] = React.useState(false);
+
+  const handleChannelCreated = (chId: string) => {
+    setShowChannelModal(false);
+    navigate(`/chat/c/${chId}`);
+  };
+
+  const handleDMCreated = (dId: string) => {
+    setShowDMModal(false);
+    navigate(`/chat/dm/${dId}`);
+  };
 
   const handleStartDM = async (member: UserProfile) => {
     if (!user || !orgId) return;
@@ -278,6 +275,8 @@ export function ChatLayout() {
         <RedesignChatSidebar
           isCollapsed={isSidebarCollapsed}
           onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          onOpenChannelModal={() => setShowChannelModal(true)}
+          onOpenDMModal={() => setShowDMModal(true)}
         />
 
         {/* Message Thread Workspace */}
@@ -317,6 +316,13 @@ export function ChatLayout() {
           )}
         </div>
       </div>
+
+      {showChannelModal && orgId && (
+        <CreateChannelModal orgId={orgId} onClose={() => setShowChannelModal(false)} onCreated={handleChannelCreated} />
+      )}
+      {showDMModal && orgId && (
+        <NewDMModal orgId={orgId} members={members} onClose={() => setShowDMModal(false)} onDMCreated={handleDMCreated} />
+      )}
     </RedesignLayout>
   );
 }
