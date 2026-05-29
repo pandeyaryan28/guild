@@ -8,6 +8,7 @@ import { useNavigate, useParams, NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/useAuth';
 import { useChannels, useDMs, useOrgMembers } from '../../hooks/useChat';
+import { useTeams } from '../../hooks/useTeams';
 import { getOrCreateDM, markChannelRead, markDMRead } from '../../lib/chat';
 import { CreateChannelModal } from '../../components/chat/CreateChannelModal';
 import { NewDMModal } from '../../components/chat/NewDMModal';

@@ -417,6 +417,47 @@ export function Sidebar() {
             </NavLink>
           </div>
 
+          {/* User Profile Card */}
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <div className="relative h-8 w-8 rounded-full overflow-hidden border border-white/10 mx-auto cursor-pointer shadow-md mt-1 mb-1">
+                    {userProfile?.photoURL ? (
+                      <img src={userProfile.photoURL} alt={userProfile.fullName || 'User'} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                        {(userProfile?.fullName || 'U')[0].toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                }
+              />
+              <TooltipContent side="right" className="border border-border-default/50 bg-surface backdrop-blur-md">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold">{userProfile?.fullName}</span>
+                  <span className="text-[9px] text-text-muted">@{userProfile?.username}</span>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.02] dark:bg-white/[0.01] border border-white/5 shadow-inner mt-1 mb-1">
+              <div className="relative h-8 w-8 rounded-full overflow-hidden border border-white/10 shrink-0">
+                {userProfile?.photoURL ? (
+                  <img src={userProfile.photoURL} alt={userProfile.fullName || 'User'} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                    {(userProfile?.fullName || 'U')[0].toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col min-w-0 leading-none">
+                <span className="text-xs font-extrabold text-foreground truncate">{userProfile?.fullName}</span>
+                <span className="text-[9px] text-text-muted mt-1 truncate">@{userProfile?.username || 'user'}</span>
+              </div>
+            </div>
+          )}
+
           {!collapsed && <Separator className="bg-border/25" />}
 
           {/* Footer row */}

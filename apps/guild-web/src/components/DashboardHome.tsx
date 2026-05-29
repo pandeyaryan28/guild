@@ -424,16 +424,38 @@ export function DashboardHome() {
       {/* Visually Stunning Header */}
       <header className="relative space-y-8 z-10">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-primary/20 bg-primary/5 text-primary">
-            Workspace Hub
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border-default/20 pb-4">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-primary/20 bg-primary/5 text-primary">
+                Workspace Hub
+              </div>
+              <motion.h1 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground"
+              >
+                {greeting}, {displayName}
+              </motion.h1>
+            </div>
+
+            {/* Premium User Portrait welcome indicator */}
+            <div className="flex items-center gap-3 bg-surface/50 border border-border-default/45 p-3 rounded-2xl shadow-lg backdrop-blur-md shrink-0">
+              <div className="relative h-14 w-14 rounded-2xl overflow-hidden border border-white/10 shrink-0 shadow-inner">
+                {userProfile?.photoURL ? (
+                  <img src={userProfile.photoURL} alt={userProfile.fullName || 'User'} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-lg font-bold text-primary">
+                    {(userProfile?.fullName || 'U')[0].toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col min-w-0 pr-2 leading-tight">
+                <span className="text-sm font-extrabold text-foreground">{userProfile?.fullName}</span>
+                <span className="text-[10px] text-text-muted mt-1">@{userProfile?.username || 'user'}</span>
+                <span className="text-[9px] font-black uppercase text-primary mt-1.5 tracking-wider">{userProfile?.role}</span>
+              </div>
+            </div>
           </div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground"
-          >
-            {greeting}, {displayName}
-          </motion.h1>
           
           {/* Custom Metric Pills */}
           <div className="flex flex-wrap items-center gap-2.5 pt-2">

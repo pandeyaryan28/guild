@@ -52,6 +52,64 @@ function useInviteLinks(orgId: string | undefined) {
   return { links, loading };
 }
 
+// ─── Client-side Image Compression Helper ────────────────────────────────────
+const compressImage = (file: File, maxWidth = 250, maxHeight = 250, quality = 0.85): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate new dimensions maintaining aspect ratio
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
+
 // ─── Settings Page ────────────────────────────────────────────────────────────
 export function SettingsPage() {
   const { user, userProfile, logout } = useAuth();
@@ -362,7 +420,15 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
     setUploadingPhoto(true);
     setGeneralError(null);
     try {
-      const url = await uploadProfileImage(profile.uid, file);
+      let fileToUpload = file;
+      if (file.type.startsWith('image/')) {
+        try {
+          fileToUpload = await compressImage(file, 250, 250, 0.85);
+        } catch (compressErr) {
+          console.warn("Image compression failed, using original file:", compressErr);
+        }
+      }
+      const url = await uploadProfileImage(profile.uid, fileToUpload);
       await updateUserProfile(profile.uid, { photoURL: url });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -1250,7 +1316,15 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
     setUploadingLogo(true);
     setError(null);
     try {
-      const url = await uploadOrganizationPhoto(org.id, file);
+      let fileToUpload = file;
+      if (file.type.startsWith('image/')) {
+        try {
+          fileToUpload = await compressImage(file, 250, 250, 0.85);
+        } catch (compressErr) {
+          console.warn("Logo compression failed, using original file:", compressErr);
+        }
+      }
+      const url = await uploadOrganizationPhoto(org.id, fileToUpload);
       await updateOrganizationDetails(org.id, { photoURL: url });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
