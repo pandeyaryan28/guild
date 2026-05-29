@@ -167,7 +167,14 @@ export function MessageArea({
         .map((uname) => members.find((m) => m.username.toLowerCase() === uname.toLowerCase())?.uid)
         .filter((id): id is string => !!id);
 
-      const approverId = rawMentions[0] || mentions[0];
+      let approverId = rawMentions[0] || mentions[0];
+
+      // If no approver is explicitly mentioned and we are in a DM, default to the DM partner
+      if (!approverId && dmId && currentUser) {
+        const parts = dmId.split('_');
+        approverId = parts.find((p) => p !== currentUser.uid) ?? '';
+      }
+
       const approver = approverId ? members.find((m) => m.uid === approverId) : null;
 
       if (!requestTitle || !approver) {
