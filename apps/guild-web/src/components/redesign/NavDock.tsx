@@ -68,11 +68,15 @@ export function NavDock() {
           <div 
             onClick={() => navigate('/settings')}
             className="w-10 h-10 rounded-full bg-indigo-500/10 border-2 border-white/20 dark:border-white/5 flex items-center justify-center font-bold text-xs text-white hover:scale-105 active:scale-95 transition-all shadow-md"
-            style={{
+            style={!userProfile?.photoURL ? {
               background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
-            }}
+            } : undefined}
           >
-            {userProfile?.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'U'}
+            {userProfile?.photoURL ? (
+              <img src={userProfile.photoURL} alt={userProfile.fullName || 'User'} className="h-full w-full object-cover rounded-full" />
+            ) : (
+              userProfile?.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'U'
+            )}
           </div>
           <div className="aether-dock-item-tooltip">
             {userProfile?.fullName || 'Your Profile'}

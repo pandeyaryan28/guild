@@ -170,10 +170,14 @@ export function MobileDashboard() {
               <button 
                 type="button"
                 onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                className="w-11 h-11 flex items-center justify-center text-xs font-black text-white rounded-full border-2 border-white/20 relative shadow-inner cursor-pointer"
+                className="w-11 h-11 flex items-center justify-center rounded-full border-2 border-white/20 relative shadow-inner cursor-pointer"
                 style={{ background: `hsl(${avatarHue(userProfile?.uid || '')} 55% 45%)` }}
               >
-                {myInitials}
+                {userProfile?.photoURL ? (
+                  <img src={userProfile.photoURL} alt={userProfile.fullName || 'User'} className="h-full w-full object-cover rounded-full" />
+                ) : (
+                  <span className="text-xs font-black text-white">{myInitials}</span>
+                )}
                 <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-surface dark:bg-zinc-950 flex items-center justify-center shadow-sm">
                   <span className={cn(
                     "h-2 w-2 rounded-full",
@@ -419,10 +423,14 @@ export function MobileDashboard() {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[9px] text-white border border-white/10 shrink-0"
+                      className="w-8 h-8 rounded-full flex items-center justify-center border border-white/10 shrink-0"
                       style={{ background: `hsl(${avatarHue(otherUid || '')} 55% 45%)` }}
                     >
-                      {avatarInitials(name)}
+                      {otherMember?.photoURL ? (
+                        <img src={otherMember.photoURL} alt={name} className="h-full w-full object-cover rounded-full" />
+                      ) : (
+                        <span className="font-extrabold text-[9px] text-white">{avatarInitials(name)}</span>
+                      )}
                     </div>
                     <div className="min-w-0">
                       <span className="text-xs font-black text-foreground block truncate">{name}</span>
@@ -477,10 +485,14 @@ export function MobileDashboard() {
               title={member.fullName}
             >
               <div 
-                className="w-10 h-10 flex items-center justify-center text-xs font-bold text-white rounded-full border border-white/10 relative"
+                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/10 relative"
                 style={{ background: `hsl(${avatarHue(member.uid)} 55% 45%)` }}
               >
-                {avatarInitials(member.fullName || '')}
+                {member.photoURL ? (
+                  <img src={member.photoURL} alt={member.fullName} className="h-full w-full object-cover rounded-full" />
+                ) : (
+                  <span className="text-xs font-bold text-white">{avatarInitials(member.fullName || '')}</span>
+                )}
                 <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface dark:bg-zinc-950 flex items-center justify-center shadow-sm">
                   <span className={cn(
                     "h-1.5 w-1.5 rounded-full",
