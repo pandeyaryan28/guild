@@ -13,7 +13,9 @@ import { getOrCreateDM, markChannelRead, markDMRead } from '../../lib/chat';
 import { CreateChannelModal } from '../../components/chat/CreateChannelModal';
 import { NewDMModal } from '../../components/chat/NewDMModal';
 import { MessageArea } from './MessageArea';
+import { ThreadPanel } from './ThreadPanel';
 import { type UserProfile, getOrgById } from '../../lib/firestore';
+import { type Message } from '../../lib/chat';
 import { RedesignLayout } from '../../components/redesign/Layout';
 
 interface RedesignChatSidebarProps {
@@ -232,6 +234,11 @@ export function ChatLayout() {
   const [isMemberPanelCollapsed, setIsMemberPanelCollapsed] = React.useState(false);
   const [showChannelModal, setShowChannelModal] = React.useState(false);
   const [showDMModal, setShowDMModal] = React.useState(false);
+  const [activeThreadMessage, setActiveThreadMessage] = React.useState<Message | null>(null);
+
+  React.useEffect(() => {
+    setActiveThreadMessage(null);
+  }, [channelId, dmId]);
 
   const handleChannelCreated = (chId: string) => {
     setShowChannelModal(false);
@@ -284,16 +291,29 @@ export function ChatLayout() {
         {/* Message Thread Workspace */}
         <div className="flex-1 flex min-w-0 aether-glass bg-white/2 border border-white/5 overflow-hidden">
           {hasContent ? (
-            <MessageArea
-              channelId={channelId ?? null}
-              dmId={dmId ?? null}
-              orgId={orgId}
-              currentUser={user ? { uid: user.uid, displayName: user.displayName ?? '' } : null}
-              profile={userProfile}
-              members={members}
-              isSidebarCollapsed={isSidebarCollapsed}
-              onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            />
+            <>
+              <MessageArea
+                channelId={channelId ?? null}
+                dmId={dmId ?? null}
+                orgId={orgId}
+                currentUser={user ? { uid: user.uid, displayName: user.displayName ?? '' } : null}
+                profile={userProfile}
+                members={members}
+                isSidebarCollapsed={isSidebarCollapsed}
+                onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                onOpenThread={setActiveThreadMessage}
+              />
+              {activeThreadMessage && orgId && (
+                <ThreadPanel
+                  parentMessage={activeThreadMessage}
+                  currentUserId={user?.uid ?? ''}
+                  members={members}
+                  orgId={orgId}
+                  currentUser={user ? { uid: user.uid, displayName: user.displayName ?? '' } : null}
+                  onClose={() => setActiveThreadMessage(null)}
+                />
+              )}
+            </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20 relative">
               {isSidebarCollapsed && (

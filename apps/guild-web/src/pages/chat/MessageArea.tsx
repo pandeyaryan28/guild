@@ -10,7 +10,7 @@ import { MessageInput } from './MessageInput';
 import { type UserProfile } from '../../lib/firestore';
 import { db } from '../../lib/firebase';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { type Channel } from '../../lib/chat';
+import { type Channel, type Message } from '../../lib/chat';
 import { createTask } from '../../lib/tasks';
 import { createGoal } from '../../lib/goals';
 import { createRequest } from '../../lib/requests';
@@ -27,6 +27,7 @@ interface MessageAreaProps {
   members: UserProfile[];
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
+  onOpenThread?: (msg: Message) => void;
 }
 
 export function MessageArea({ 
@@ -37,7 +38,8 @@ export function MessageArea({
   profile, 
   members,
   isSidebarCollapsed = false,
-  onToggleSidebar
+  onToggleSidebar,
+  onOpenThread
 }: MessageAreaProps) {
   const navigate = useNavigate();
   const messages = useMessages(channelId, dmId);
@@ -369,6 +371,7 @@ export function MessageArea({
         members={members.map((m) => ({ uid: m.uid, fullName: m.fullName, username: m.username, photoURL: m.photoURL }))}
         orgId={orgId}
         currentUser={currentUser}
+        onOpenThread={onOpenThread}
       />
 
       {/* Input */}

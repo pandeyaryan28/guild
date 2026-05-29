@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
-import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink, Play, Maximize2, Target, ClipboardList } from 'lucide-react';
+import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink, Play, Maximize2, Target, ClipboardList, Smile, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Message } from '../../lib/chat';
 import { editMessage, deleteMessage } from '../../lib/chat';
@@ -8,6 +8,7 @@ import { MediaLightbox } from './MediaLightbox';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { updateRequestStatus } from '../../lib/requests';
+import { toggleReaction } from '../../lib/threads';
 
 interface MessageBubbleProps {
   message: Message;
@@ -16,6 +17,7 @@ interface MessageBubbleProps {
   members: Array<{ uid: string; fullName: string; username: string; photoURL?: string }>;
   orgId?: string;
   currentUser?: { uid: string; displayName: string } | null;
+  onOpenThread?: (msg: Message) => void;
 }
 
 function parseMentions(body: string, isOwn: boolean) {
@@ -59,7 +61,7 @@ function getSenderColor(username: string) {
   return colors[index];
 }
 
-export function MessageBubble({ message, isOwn, isGrouped, members, orgId, currentUser }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, isGrouped, members, orgId, currentUser, onOpenThread }: MessageBubbleProps) {
   const sender = members.find((m) => m.uid === message.senderId);
   const photoURL = sender?.photoURL;
 
@@ -68,6 +70,13 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
   const [editBody, setEditBody] = React.useState(message.body);
   const [saving, setSaving] = React.useState(false);
   const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!hovered) {
+      setShowEmojiPicker(false);
+    }
+  }, [hovered]);
 
   const [realtimeRequestStatus, setRealtimeRequestStatus] = React.useState<string | null>(null);
   const [realtimeGoalStatus, setRealtimeGoalStatus] = React.useState<string | null>(null);
@@ -455,6 +464,67 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     );
   };
 
+  const renderReactions = () => {
+    const reactions = (message as any).reactions || {};
+    const reactionEntries = Object.entries(reactions);
+    if (reactionEntries.length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap gap-1 mt-1.5">
+        {reactionEntries.map(([emoji, userIds]) => {
+          if (!userIds || (userIds as string[]).length === 0) return null;
+          const hasReacted = currentUser && (userIds as string[]).includes(currentUser.uid);
+          const reactorNames = (userIds as string[])
+            .map(uid => members.find(m => m.uid === uid)?.fullName || 'Someone')
+            .join(', ');
+
+          return (
+            <button
+              key={emoji}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (currentUser) toggleReaction(message.id, emoji, currentUser.uid);
+              }}
+              title={`Reacted by: ${reactorNames}`}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs border transition-all cursor-pointer select-none",
+                hasReacted
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-surface hover:bg-bg-tertiary border-border-default text-text-muted"
+              )}
+            >
+              <span>{emoji}</span>
+              <span className="text-[10px] font-bold">{(userIds as string[]).length}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderReplySummary = () => {
+    const replyCount = (message as any).replyCount || 0;
+    const lastReplyTime = (message as any).lastReplyAt ? formatTime((message as any).lastReplyAt) : '';
+
+    if (replyCount === 0 || !onOpenThread) return null;
+
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenThread(message);
+        }}
+        className="mt-1.5 flex items-center gap-1.5 text-[10px] text-primary font-bold hover:underline cursor-pointer select-none bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-lg px-2.5 py-1.5 w-fit shadow-sm transition-all"
+      >
+        <MessageSquare className="h-3 w-3 shrink-0" />
+        <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+        {lastReplyTime && (
+          <span className="text-[8px] text-text-muted font-normal">Last reply {lastReplyTime}</span>
+        )}
+      </button>
+    );
+  };
+
   return (
     <div
       className={cn(
@@ -517,6 +587,10 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
           {renderAttachments()}
         </div>
 
+        {/* Emojis reactions and replies list */}
+        {renderReactions()}
+        {renderReplySummary()}
+
         {/* Small own timestamp below bubble if not consecutive */}
         {!isGrouped && isOwn && !(isTaskCommand || isGoalCommand || isRequestCommand) && (
           <div className="mt-1 px-1.5 flex items-center justify-end text-[9px] text-text-muted/75 font-mono">
@@ -525,27 +599,82 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
         )}
       </div>
 
-      {/* Action Bar (Edit/Delete options) */}
-      {isOwn && !message.deleted && !editing && hovered && (
+      {/* Action Bar (Reactions, Reply, Edit, Delete) */}
+      {!message.deleted && !editing && hovered && (
         <motion.div
-          initial={{ opacity: 0, x: -4 }}
+          initial={{ opacity: 0, x: isOwn ? -4 : 4 }}
           animate={{ opacity: 1, x: 0 }}
-          className="absolute right-full mr-3 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-xl border border-border-default bg-surface backdrop-blur-md px-1.5 py-1 shadow-lg z-10"
+          className={cn(
+            "absolute top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-xl border border-border-default bg-surface backdrop-blur-md px-1.5 py-1 shadow-lg z-10",
+            isOwn ? "right-full mr-3" : "left-full ml-3"
+          )}
         >
-          <button
-            onClick={() => setEditing(true)}
-            className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors"
-            title="Edit message"
-          >
-            <Pencil className="h-3 w-3" />
-          </button>
-          <button
-            onClick={handleDelete}
-            className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            title="Delete message"
-          >
-            <Trash2 className="h-3 w-3" />
-          </button>
+          {/* Reaction Trigger Button */}
+          <div className="relative flex">
+            <button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer",
+                showEmojiPicker && "bg-bg-tertiary text-foreground"
+              )}
+              title="Add reaction"
+            >
+              <Smile className="h-3.5 w-3.5" />
+            </button>
+            
+            {/* Reaction Popover Dropdeck */}
+            {showEmojiPicker && (
+              <div className={cn(
+                "absolute bottom-full mb-2 bg-surface border border-border-default rounded-xl shadow-2xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100",
+                isOwn ? "right-0" : "left-0"
+              )}>
+                {['👍', '❤️', '🔥', '😂', '🎉', '🚀'].map(emoji => (
+                  <button
+                    key={emoji}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (currentUser) toggleReaction(message.id, emoji, currentUser.uid);
+                      setShowEmojiPicker(false);
+                    }}
+                    className="text-base p-1.5 hover:bg-bg-tertiary rounded transition-colors cursor-pointer"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Reply Trigger Button */}
+          {onOpenThread && (
+            <button
+              onClick={() => onOpenThread(message)}
+              className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+              title="Reply in thread"
+            >
+              <MessageSquare className="h-3 w-3" />
+            </button>
+          )}
+
+          {/* Edit/Delete options for own messages */}
+          {isOwn && (
+            <>
+              <button
+                onClick={() => setEditing(true)}
+                className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+                title="Edit message"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                title="Delete message"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </>
+          )}
         </motion.div>
       )}
 
