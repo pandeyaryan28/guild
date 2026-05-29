@@ -11,7 +11,6 @@ import { useChannels, useDMs, useOrgMembers } from '../../hooks/useChat';
 import { getOrCreateDM, markChannelRead, markDMRead } from '../../lib/chat';
 import { CreateChannelModal } from '../../components/chat/CreateChannelModal';
 import { NewDMModal } from '../../components/chat/NewDMModal';
-import { MemberPanel } from './MemberPanel';
 import { MessageArea } from './MessageArea';
 import { type UserProfile, getOrgById } from '../../lib/firestore';
 import { RedesignLayout } from '../../components/redesign/Layout';
@@ -244,7 +243,6 @@ export function ChatLayout() {
   const members = useOrgMembers(orgId);
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => window.innerWidth < 1024);
-  const [isMemberPanelCollapsed, setIsMemberPanelCollapsed] = React.useState(false);
 
   const handleStartDM = async (member: UserProfile) => {
     if (!user || !orgId) return;
@@ -285,32 +283,16 @@ export function ChatLayout() {
         {/* Message Thread Workspace */}
         <div className="flex-1 flex min-w-0 aether-glass bg-white/2 border border-white/5 overflow-hidden">
           {hasContent ? (
-            <>
-              <MessageArea
-                channelId={channelId ?? null}
-                dmId={dmId ?? null}
-                orgId={orgId}
-                currentUser={user ? { uid: user.uid, displayName: user.displayName ?? '' } : null}
-                profile={userProfile}
-                members={members}
-                isSidebarCollapsed={isSidebarCollapsed}
-                onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                isMemberPanelCollapsed={isMemberPanelCollapsed}
-                onToggleMemberPanel={() => setIsMemberPanelCollapsed(!isMemberPanelCollapsed)}
-              />
-              <div className={cn(
-                "hidden xl:block transition-all duration-300 ease-in-out h-full overflow-hidden",
-                isMemberPanelCollapsed ? "w-0 border-l-0" : "border-l border-white/5 w-[260px]"
-              )}>
-                <MemberPanel
-                  members={members}
-                  currentUserId={user?.uid ?? ''}
-                  onStartDM={handleStartDM}
-                  isCollapsed={isMemberPanelCollapsed}
-                  onToggle={() => setIsMemberPanelCollapsed(!isMemberPanelCollapsed)}
-                />
-              </div>
-            </>
+            <MessageArea
+              channelId={channelId ?? null}
+              dmId={dmId ?? null}
+              orgId={orgId}
+              currentUser={user ? { uid: user.uid, displayName: user.displayName ?? '' } : null}
+              profile={userProfile}
+              members={members}
+              isSidebarCollapsed={isSidebarCollapsed}
+              onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20 relative">
               {isSidebarCollapsed && (
