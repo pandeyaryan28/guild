@@ -46,14 +46,9 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
 
   const currentPath = location.pathname;
 
-  const getDMName = (participants: string[]) => {
+  const getDMMember = (participants: string[]) => {
     const otherId = participants.find((p) => p !== user?.uid) ?? '';
-    const m = members.find((m) => m.uid === otherId);
-    return m?.fullName ?? 'Unknown';
-  };
-  const getDMInitials = (participants: string[]) => {
-    const name = getDMName(participants);
-    return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+    return members.find((m) => m.uid === otherId);
   };
 
   return (
@@ -176,8 +171,10 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
             {dmThreads.map((thread) => {
               const isActive = currentPath === `/chat/dm/${thread.id}`;
               const unread = hasUnreadDM(thread);
-              const dmInitials = getDMInitials(thread.participants);
-              const dmName = getDMName(thread.participants);
+              const otherMember = getDMMember(thread.participants);
+              const dmName = otherMember?.fullName ?? 'Unknown';
+              const dmPhotoURL = otherMember?.photoURL;
+              const dmInitials = dmName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
               
               if (!dmsOpen && !isActive && !unread) return null;
 
@@ -196,9 +193,13 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
                   )}
                 >
                   <div className="relative h-5 w-5 shrink-0">
-                    <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-black border", isActive ? "bg-white/20 border-white/20 text-white" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400")}>
-                      {dmInitials}
-                    </div>
+                    {dmPhotoURL ? (
+                      <img src={dmPhotoURL} alt={dmName} className="h-5 w-5 rounded-full object-cover" />
+                    ) : (
+                      <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-black border", isActive ? "bg-white/20 border-white/20 text-white" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400")}>
+                        {dmInitials}
+                      </div>
+                    )}
                   </div>
                   <span className="flex-1 truncate">{dmName}</span>
                   {unread && !isActive && (
