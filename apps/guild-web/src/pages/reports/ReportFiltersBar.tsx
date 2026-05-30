@@ -39,7 +39,7 @@ export function ReportFiltersBar({ filters, onChange }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2 px-6 py-3 border-b border-border-default bg-background/60 backdrop-blur-sm">
       {/* Date presets */}
-      <div className="flex items-center gap-1 rounded-lg border border-border-default bg-card p-1">
+      <div className="flex items-center gap-1 rounded-lg aether-glass p-1">
         {DATE_PRESETS.map((p) => (
           <button
             key={p.value}
@@ -59,7 +59,7 @@ export function ReportFiltersBar({ filters, onChange }: Props) {
       {/* Custom date range */}
       {filters.datePreset === 'custom' && (
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 rounded-lg border border-border-default bg-card px-3 py-1.5">
+          <div className="flex items-center gap-1.5 rounded-lg aether-glass px-3 py-1.5">
             <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
             <input
               type="date"
@@ -69,7 +69,7 @@ export function ReportFiltersBar({ filters, onChange }: Props) {
             />
           </div>
           <span className="text-xs text-muted-foreground">to</span>
-          <div className="flex items-center gap-1.5 rounded-lg border border-border-default bg-card px-3 py-1.5">
+          <div className="flex items-center gap-1.5 rounded-lg aether-glass px-3 py-1.5">
             <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
             <input
               type="date"
@@ -88,7 +88,7 @@ export function ReportFiltersBar({ filters, onChange }: Props) {
         <select
           value={filters.status}
           onChange={(e) => set('status', e.target.value as ReportFiltersState['status'])}
-          className="appearance-none rounded-lg border border-border-default bg-card pl-3 pr-7 py-1.5 text-xs font-medium text-foreground outline-none cursor-pointer hover:border-primary/50 transition-colors"
+          className="appearance-none rounded-lg aether-glass-input pl-3 pr-7 py-1.5 text-xs font-medium text-foreground outline-none cursor-pointer transition-colors"
         >
           {STATUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -102,7 +102,7 @@ export function ReportFiltersBar({ filters, onChange }: Props) {
         <select
           value={filters.priority}
           onChange={(e) => set('priority', e.target.value as ReportFiltersState['priority'])}
-          className="appearance-none rounded-lg border border-border-default bg-card pl-3 pr-7 py-1.5 text-xs font-medium text-foreground outline-none cursor-pointer hover:border-primary/50 transition-colors"
+          className="appearance-none rounded-lg aether-glass-input pl-3 pr-7 py-1.5 text-xs font-medium text-foreground outline-none cursor-pointer transition-colors"
         >
           {PRIORITY_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>

@@ -30,14 +30,14 @@ export function ReportTasksList({
   const navigate = useNavigate();
   if (tasks.length === 0) {
     return (
-      <div className="rounded-xl border border-border-default bg-card p-6 text-center">
+      <div className="rounded-xl aether-glass p-6 text-center">
         <p className="text-sm text-muted-foreground">No tasks found matching this criteria.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-border-default bg-card overflow-hidden shadow-sm">
+    <div className="rounded-xl aether-glass overflow-hidden shadow-sm">
       <div className="border-b border-border-default bg-surface/50 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-primary" />

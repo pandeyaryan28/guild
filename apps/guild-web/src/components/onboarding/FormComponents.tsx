@@ -37,7 +37,7 @@ export function TextInput({ icon: Icon, suffix, isValid, isChecking, className, 
       <input
         {...props}
         className={cn(
-          'w-full h-11 rounded-xl border bg-bg-tertiary text-sm text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all',
+          'w-full h-11 rounded-xl aether-glass-input text-sm text-foreground placeholder:text-text-muted/60 transition-all',
           Icon ? 'pl-11' : 'pl-4',
           suffix ? 'pr-10' : 'pr-4',
           isValid === true && 'border-emerald-500/50 bg-emerald-500/5',
@@ -64,12 +64,12 @@ export function SelectInput({ placeholder, children, className, ...props }: Sele
     <select
       {...props}
       className={cn(
-        'w-full h-11 rounded-xl border border-border-default bg-bg-tertiary px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all appearance-none',
+        'w-full h-11 rounded-xl aether-glass-input px-4 text-sm text-foreground transition-all appearance-none',
         className
       )}
     >
       {placeholder && (
-        <option value="" disabled className="bg-card text-muted-foreground">
+        <option value="" disabled className="aether-glass text-muted-foreground">
           {placeholder}
         </option>
       )}
@@ -81,7 +81,7 @@ export function SelectInput({ placeholder, children, className, ...props }: Sele
 // Placeholder - will be replaced by actual component
 export function OnboardingCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-border-default bg-surface backdrop-blur-xl p-8 shadow-2xl shadow-black/30">
+    <div className="rounded-2xl aether-glass-elevated p-8 shadow-2xl shadow-black/30">
       {children}
     </div>
   );

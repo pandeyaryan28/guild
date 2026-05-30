@@ -86,7 +86,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg mx-4 rounded-xl border border-border-default bg-card shadow-2xl">
+      <div className="relative z-10 w-full max-w-lg mx-4 rounded-xl aether-glass-elevated shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border-default">
           <h2 className="text-sm font-semibold text-foreground">Create Task</h2>
@@ -114,7 +114,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add a description…"
               rows={3}
-              className="w-full resize-none rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-foreground placeholder:text-text-muted outline-none focus:border-primary/50 transition-colors"
+              className="w-full resize-none rounded-lg aether-glass-input px-3 py-2 text-sm text-foreground placeholder:text-text-muted/60 outline-none transition-colors"
             />
 
             {/* Meta row */}
@@ -169,7 +169,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="rounded-lg border border-border-default bg-bg-primary px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
+                className="rounded-lg aether-glass-input px-3 py-1.5 text-sm text-foreground outline-none transition-colors"
               />
             </div>
 
@@ -223,7 +223,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
                     onChange={(e) => setNewLabelName(e.target.value)}
                     placeholder="Label name"
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateLabel(); } }}
-                    className="flex-1 rounded border border-border-default bg-bg-primary px-2 py-1 text-xs text-foreground outline-none"
+                    className="flex-1 rounded aether-glass-input px-2 py-1 text-xs text-foreground outline-none"
                   />
                   <div className="flex gap-1">
                     {LABEL_COLORS.map((c) => (

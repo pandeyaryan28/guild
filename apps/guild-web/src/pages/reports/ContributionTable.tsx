@@ -10,7 +10,7 @@ interface Props {
 export function ContributionTable({ members, loading }: Props) {
   if (loading) {
     return (
-      <div className="rounded-xl border border-border-default bg-card overflow-hidden">
+      <div className="rounded-xl aether-glass overflow-hidden">
         <div className="p-5 space-y-3">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="h-8 rounded bg-accent/20 animate-pulse" />
@@ -22,14 +22,14 @@ export function ContributionTable({ members, loading }: Props) {
 
   if (members.length === 0) {
     return (
-      <div className="rounded-xl border border-border-default bg-card p-8 text-center">
+      <div className="rounded-xl aether-glass p-8 text-center">
         <p className="text-xs text-muted-foreground">No team member data available.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-border-default bg-card overflow-hidden">
+    <div className="rounded-xl aether-glass overflow-hidden">
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-border-default">

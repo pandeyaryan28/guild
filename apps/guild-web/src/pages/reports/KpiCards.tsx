@@ -36,13 +36,9 @@ function KpiCard({ card, delay }: { card: KpiCardData; delay: number }) {
       transition={{ delay, duration: 0.3 }}
       onClick={card.onClick}
       className={cn(
-        "relative rounded-xl border p-5 transition-all duration-200 group text-left",
-        card.onClick 
-          ? "cursor-pointer hover:border-primary/40 hover:bg-surface hover:shadow-lg hover:shadow-black/10" 
-          : "border-border-default bg-card hover:border-primary/30 hover:bg-surface hover:shadow-lg hover:shadow-black/10",
-        card.active 
-          ? "ring-2 ring-primary border-primary bg-surface/50 shadow-md shadow-primary/5" 
-          : ""
+        "relative rounded-xl p-5 transition-all duration-200 group text-left aether-glass",
+        card.onClick && "cursor-pointer aether-glass-interactive",
+        card.active && "ring-2 ring-primary border-primary bg-surface/50 shadow-md shadow-primary/5"
       )}
     >
       <div className="flex items-start justify-between mb-3">

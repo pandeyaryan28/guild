@@ -218,7 +218,7 @@ export function ProjectReportTab({
             <select
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
-              className="appearance-none rounded-lg border border-border-default bg-card pl-3 pr-8 py-2 text-sm font-medium text-foreground outline-none cursor-pointer hover:border-primary/50 transition-colors min-w-[200px]"
+              className="appearance-none rounded-lg aether-glass-input pl-3 pr-8 py-2 text-sm font-medium text-foreground outline-none cursor-pointer transition-colors min-w-[200px]"
             >
               {myProjects.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -260,7 +260,7 @@ export function ProjectReportTab({
 
           {/* Members involved */}
           {memberProfiles.length > 0 && (
-            <div className="rounded-xl border border-border-default bg-card p-5">
+            <div className="rounded-xl aether-glass p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
                 Members Involved
               </p>

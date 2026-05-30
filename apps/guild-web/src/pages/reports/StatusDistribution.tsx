@@ -16,7 +16,7 @@ export function StatusDistribution({ data, title = 'Status Breakdown' }: Props) 
   if (total === 0) return null;
 
   return (
-    <div className="rounded-xl border border-border-default bg-card p-5">
+    <div className="rounded-xl aether-glass p-5">
       <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">{title}</p>
 
       {/* Stacked bar */}

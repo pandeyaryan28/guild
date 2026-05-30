@@ -114,7 +114,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto w-full max-w-2xl rounded-2xl border border-border-default bg-card shadow-2xl shadow-black/50 overflow-hidden"
+          className="pointer-events-auto w-full max-w-2xl rounded-2xl aether-glass-elevated shadow-2xl shadow-black/50 overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border-default px-6 py-5">
@@ -155,7 +155,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                         'relative flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all',
                         isActive
                           ? 'border-primary/60 bg-primary/8 shadow-lg shadow-primary/10'
-                          : 'border-border-default bg-bg-tertiary hover:border-border-default hover:bg-bg-tertiary',
+                          : 'bg-transparent border-transparent aether-glass-interactive',
                       )}
                     >
                       {/* Color swatch */}
@@ -202,7 +202,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                 initial={{ opacity: 0.6, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
-                className="flex-1 rounded-xl border border-border-default overflow-hidden"
+                className="flex-1 rounded-xl aether-glass overflow-hidden"
                 style={{ minHeight: '220px' }}
               >
                 <ThemePreview themeId={previewId} isLight={isLight} />
