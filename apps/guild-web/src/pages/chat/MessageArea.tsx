@@ -8,6 +8,9 @@ import { sendChannelMessage, sendDMMessage, markChannelRead, markDMRead } from '
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { type UserProfile } from '../../lib/firestore';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { enqueueOfflineMessage, syncOfflineMessages } from '../../lib/offlineSync';
+import { AnimatePresence, motion } from 'motion/react';
 import { db } from '../../lib/firebase';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { type Channel, type Message } from '../../lib/chat';
@@ -48,6 +51,19 @@ export function MessageArea({
   const [channel, setChannel] = React.useState<Channel | null>(null);
   const [showInviteModal, setShowInviteModal] = React.useState(false);
   const [showSettingsModal, setShowSettingsModal] = React.useState(false);
+
+  // PWA Offline Message Sync Hooks
+  const isOnline = useOnlineStatus();
+  const [offlineToast, setOfflineToast] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (isOnline && currentUser && orgId) {
+      syncOfflineMessages((msg) => {
+        setOfflineToast(`Synced offline message: "${msg.body.slice(0, 15)}..."`);
+        setTimeout(() => setOfflineToast(null), 3500);
+      }).catch(err => console.error("Failed to sync offline messages", err));
+    }
+  }, [isOnline, currentUser, orgId]);
 
   // Find channel info
   React.useEffect(() => {
@@ -103,6 +119,23 @@ export function MessageArea({
       mentions,
       files,
     };
+
+    if (!isOnline) {
+      enqueueOfflineMessage({
+        channelId: channelId || undefined,
+        dmId: dmId || undefined,
+        orgId,
+        senderId: currentUser.uid,
+        senderName: base.senderName,
+        senderUsername: base.senderUsername,
+        body,
+        mentions,
+        files,
+      });
+      setOfflineToast("Operating offline. Message queued for automatic sync.");
+      setTimeout(() => setOfflineToast(null), 4000);
+      return;
+    }
 
     const trimmed = body.trim();
     const isGoal = /^\/goal(\s|$)/.test(trimmed);
@@ -455,6 +488,23 @@ export function MessageArea({
           }}
         />
       )}
+
+      {/* Offline Messaging Indicator Toast */}
+      <AnimatePresence>
+        {offlineToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[9995] pointer-events-none px-4"
+          >
+            <div className="aether-glass px-4 py-2.5 rounded-full border border-amber-500/25 bg-amber-950/60 backdrop-blur-md text-amber-300 font-extrabold text-[10px] tracking-widest shadow-2xl flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping shrink-0" />
+              <span>{offlineToast.toUpperCase()}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

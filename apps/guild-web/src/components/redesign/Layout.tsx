@@ -10,6 +10,8 @@ import { useTheme } from '../../hooks/useTheme';
 import { NotificationPanel } from '../NotificationPanel';
 import { AetherToasts } from '../AetherToasts';
 import { ThemeSlider } from '../ThemeSlider';
+import { OfflineIndicator } from '../pwa/OfflineIndicator';
+import { PwaInstallPrompt } from '../pwa/PwaInstallPrompt';
 
 interface RedesignLayoutProps {
   children: React.ReactNode;
@@ -67,6 +69,10 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
 
   return (
     <div className="aether-app-container flex min-h-screen w-full overflow-hidden select-none bg-background">
+      {/* PWA State Managers */}
+      <OfflineIndicator />
+      <PwaInstallPrompt />
+
       {/* 1. Shifting Aurora Mesh Layer in the Background */}
       <div className="aether-aurora" />
 

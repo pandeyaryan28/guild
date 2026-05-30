@@ -4,12 +4,14 @@ import {
   User, Bell, Paintbrush, Users, Link2, Building2,
   Check, Loader2, ShieldAlert, Trash2, Crown, ShieldCheck,
   UserMinus, Copy, AlertCircle, Info,
-  Plus, Workflow, MessageSquare, AtSign, CheckSquare, MessagesSquare, UserPlus, Camera
+  Plus, Workflow, MessageSquare, AtSign, CheckSquare, MessagesSquare, UserPlus, Camera,
+  Download, Share2
 } from 'lucide-react';
 import { createTeam, updateTeam, deleteTeam } from '../../lib/teams';
 import { useTeams } from '../../hooks/useTeams';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
+import { usePwaInstall } from '../../hooks/usePwaInstall';
 import { THEMES } from '../../lib/themes';
 import { sendPasswordReset } from '../../lib/auth';
 import {
@@ -115,6 +117,7 @@ const compressImage = (file: File, maxWidth = 250, maxHeight = 250, quality = 0.
 export function SettingsPage() {
   const { user, userProfile, logout } = useAuth();
   const { themeId, setTheme } = useTheme();
+  const { isInstallable, isStandalone, install } = usePwaInstall();
   
   // Real-time user profile listener
   const [localProfile, setLocalProfile] = React.useState<UserProfile | null>(null);
@@ -268,6 +271,24 @@ export function SettingsPage() {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* Dynamic PWA Install CTA (Desktop only) */}
+          {isInstallable && !isStandalone && (
+            <div className="hidden md:flex flex-col gap-2.5 p-3.5 mt-auto rounded-2xl bg-primary/5 border border-primary/10 relative overflow-hidden shrink-0">
+              <div className="absolute -right-6 -top-6 w-16 h-16 rounded-full bg-primary/10 blur-xl pointer-events-none" />
+              <div className="flex items-center gap-2 z-10">
+                <Download className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-foreground leading-none">Desktop App</span>
+              </div>
+              <p className="text-[9.5px] text-muted-foreground leading-normal mt-0.5 z-10 font-semibold">Run in a dedicated borderless workspace.</p>
+              <button
+                onClick={install}
+                className="w-full py-2 rounded-xl bg-primary hover:bg-primary/95 text-white text-[9px] font-black tracking-widest transition-all active:scale-98 cursor-pointer shadow-md z-10"
+              >
+                INSTALL APP
+              </button>
             </div>
           )}
         </div>

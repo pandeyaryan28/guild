@@ -11,10 +11,14 @@ import {
   ChevronRight,
   TrendingUp,
   FileCheck,
-  UserCheck
+  UserCheck,
+  Download,
+  X,
+  Share2
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from '../../../hooks/useAuth';
+import { usePwaInstall } from '../../../hooks/usePwaInstall';
 import { useTasks } from '../../../hooks/useTasks';
 import { useOrgMembers, useChannels, useDMs } from '../../../hooks/useChat';
 import { useRequests } from '../../../hooks/useRequests';
@@ -30,6 +34,7 @@ export function MobileDashboard() {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
+  const { isInstallable, isStandalone, isDismissed, isIOS, install, dismiss } = usePwaInstall();
 
   const { tasks, loading: tasksLoading } = useTasks(orgId);
   const { teams } = useTeams(orgId);
@@ -162,6 +167,55 @@ export function MobileDashboard() {
   return (
     <div className="flex flex-col space-y-5 animate-fluid-pop pb-6">
       
+      {/* Mobile PWA Install Prompter CTA */}
+      <AnimatePresence>
+        {isInstallable && !isStandalone && !isDismissed && (
+          <motion.div
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="aether-glass p-4 flex flex-col gap-3 border border-primary/20 bg-primary/5 shadow-md relative overflow-hidden"
+            style={{ borderRadius: '16px' }}
+          >
+            <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
+            
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+                  <Download className="w-4.5 h-4.5 text-white animate-pulse" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">Install Guild</h3>
+                  <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">Add to home screen for immersive, native full-screen flow and persistent offline sync.</p>
+                </div>
+              </div>
+              
+              <button
+                onClick={dismiss}
+                title="Dismiss"
+                className="h-6 w-6 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all cursor-pointer shrink-0 ml-2"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {isIOS ? (
+              <div className="text-[9px] font-bold text-muted-foreground flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-2 rounded-xl justify-center">
+                <Share2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span>Tap Safari Share &rarr; <b>"Add to Home Screen"</b></span>
+              </div>
+            ) : (
+              <button
+                onClick={install}
+                className="w-full py-2 rounded-xl bg-primary hover:bg-primary/95 text-white text-[10px] font-black tracking-widest transition-all active:scale-95 cursor-pointer shadow-md"
+              >
+                INSTALL APP
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 1. Mobile Friendly Greeting and Active Profile Status Panel */}
       <div className="aether-glass p-5 flex flex-col gap-4 bg-white/2 border border-white/5 shadow-lg">
         <div className="flex items-center justify-between">

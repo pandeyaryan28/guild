@@ -5,9 +5,10 @@
 
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './hooks/useAuth';
+import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { usePushNotifications } from './hooks/usePushNotifications';
 
 // Auth pages
 import { LoginPage } from './pages/LoginPage';
@@ -52,6 +53,17 @@ function DashboardApp({ children }: { children?: React.ReactNode }) {
 
 function AppContent() {
   const deviceType = useDeviceType();
+  const { user } = useAuth();
+  const { permission, requestPermission } = usePushNotifications();
+
+  React.useEffect(() => {
+    if (user && permission === 'default') {
+      const timer = setTimeout(() => {
+        requestPermission();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, permission, requestPermission]);
 
   if (deviceType === 'mobile') {
     return <MobileApp />;

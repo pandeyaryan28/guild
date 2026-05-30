@@ -11,10 +11,14 @@ import {
   CheckCircle2,
   AlertCircle,
   MessageSquare,
-  Hash
+  Hash,
+  Download,
+  X,
+  Share2
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from '../../hooks/useAuth';
+import { usePwaInstall } from '../../hooks/usePwaInstall';
 import { useTasks } from '../../hooks/useTasks';
 import { useOrgMembers, useChannels, useDMs } from '../../hooks/useChat';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -52,6 +56,7 @@ export function DashboardControl() {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
+  const { isInstallable, isStandalone, isDismissed, isIOS, install, dismiss } = usePwaInstall();
 
   const [org, setOrg] = React.useState<Organization | null>(null);
   const [loadingOrg, setLoadingOrg] = React.useState(true);
@@ -259,6 +264,55 @@ export function DashboardControl() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 py-4 animate-fluid-pop">
       
+      {/* Dynamic PWA Install Prompter CTA */}
+      <AnimatePresence>
+        {isInstallable && !isStandalone && !isDismissed && (
+          <motion.div
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="aether-glass p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-primary/20 bg-primary/5 shadow-md relative overflow-hidden"
+            style={{ borderRadius: '16px' }}
+          >
+            <div className="absolute -right-10 -top-10 w-32 h-32 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
+            
+            <div className="flex items-center gap-3.5 z-10 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+                <Download className="w-4 h-4 text-white animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">Install Guild</h3>
+                <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">Run in a borderless window for instant access, real-time operations, and flawless offline work.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 z-10 shrink-0 self-end sm:self-auto">
+              {isIOS ? (
+                <div className="text-[9px] font-bold text-muted-foreground flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
+                  <Share2 className="w-3 h-3 text-primary shrink-0" />
+                  <span>Tap Safari Share &rarr; <b>"Add to Home Screen"</b></span>
+                </div>
+              ) : (
+                <button
+                  onClick={install}
+                  className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-[10px] font-black tracking-wider transition-all shadow-md active:scale-98 cursor-pointer"
+                >
+                  INSTALL APP
+                </button>
+              )}
+
+              <button
+                onClick={dismiss}
+                title="Dismiss"
+                className="h-7 w-7 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Top Banner: Greeting & Daily Focus Goal */}
       <header className="aether-glass p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

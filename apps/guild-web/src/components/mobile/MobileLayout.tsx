@@ -11,6 +11,8 @@ import { AetherToasts } from '../AetherToasts';
 import { ThemeSlider } from '../ThemeSlider';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { OfflineIndicator } from '../pwa/OfflineIndicator';
+import { PwaInstallPrompt } from '../pwa/PwaInstallPrompt';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -68,11 +70,15 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
 
   return (
     <div className="aether-app-container flex flex-col h-[100dvh] w-full overflow-hidden select-none bg-background relative">
+      {/* PWA State Managers */}
+      <OfflineIndicator />
+      <PwaInstallPrompt />
+
       {/* 1. Shifting Aurora Mesh Layer */}
       <div className="aether-aurora" />
 
       {/* 2. Top Spatial mobile control bar */}
-      <header className="flex h-14 w-full items-center justify-between px-5 shrink-0 z-30 border-b border-white/5 bg-surface/40 backdrop-blur-md">
+      <header className="flex h-[calc(3.5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] w-full items-center justify-between px-5 shrink-0 z-30 border-b border-white/5 bg-surface/40 backdrop-blur-md">
         {/* Brand */}
         <div className="flex items-center gap-2">
           <span 

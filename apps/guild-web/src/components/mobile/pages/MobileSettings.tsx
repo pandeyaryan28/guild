@@ -8,16 +8,20 @@ import {
   Lock, 
   ShieldAlert,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Download,
+  Share2
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
+import { usePwaInstall } from '../../../hooks/usePwaInstall';
 import { cn } from '@/lib/utils';
 
 export function MobileSettings() {
   const navigate = useNavigate();
   const { userProfile, logout } = useAuth();
   const { themeId, setTheme, themes } = useTheme();
+  const { isInstallable, isStandalone, install } = usePwaInstall();
 
   const handleLogout = async () => {
     await logout();
@@ -52,6 +56,34 @@ export function MobileSettings() {
         </div>
       </div>
 
+      {/* Mobile Settings Install PWA App Panel */}
+      {isInstallable && !isStandalone && (
+        <div className="aether-glass p-5 space-y-4 bg-primary/5 border border-primary/20 shadow-md">
+          <div className="flex items-center gap-2 border-b border-primary/20 pb-2.5">
+            <Download className="w-4 h-4 text-primary animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Dedicated Application</span>
+          </div>
+          
+          <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
+            Install Guild on your mobile home screen to enjoy zero browser chrome, optimized safe areas, and seamless offline updates.
+          </p>
+
+          {isIOS ? (
+            <div className="text-[9px] font-bold text-muted-foreground flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-2 rounded-xl justify-center">
+              <Share2 className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span>Tap Safari Share &rarr; <b>"Add to Home Screen"</b></span>
+            </div>
+          ) : (
+            <button
+              onClick={install}
+              className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white text-[10px] font-black tracking-widest transition-all active:scale-95 cursor-pointer shadow-md"
+            >
+              INSTALL APP NOW
+            </button>
+          )}
+        </div>
+      )}
+ 
       {/* Cosmic Theme selector Panel */}
       <div className="aether-glass p-5 space-y-4 bg-white/2 border border-white/5">
         <div className="flex items-center gap-2 border-b border-white/5 pb-2.5">
