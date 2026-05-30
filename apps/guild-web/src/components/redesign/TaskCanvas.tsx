@@ -420,7 +420,7 @@ export function TaskCanvas() {
       
       {/* ─── 1. Left Collapsible Workspace Sidebar ─── */}
       <div className={cn(
-        "hidden xl:flex flex-col justify-between shrink-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl p-4 shadow-lg backdrop-blur-xl transition-all duration-300 ease-in-out",
+        "hidden xl:flex flex-col justify-between shrink-0 aether-glass p-4 shadow-lg transition-all duration-300 ease-in-out",
         isSidebarCollapsed ? "w-16" : "w-60"
       )}>
         
@@ -547,7 +547,7 @@ export function TaskCanvas() {
       </div>
 
       {/* ─── 2. Expanded Vertical Viewport Main Canvas ─── */}
-      <div className="flex-grow flex flex-col min-h-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl overflow-hidden shadow-2xl z-10 relative">
+      <div className="flex-grow flex flex-col min-h-0 aether-glass overflow-hidden shadow-2xl z-10 relative">
         
         {/* Mobile Navigation Segmented Control */}
         <div className="xl:hidden flex items-center justify-between p-3 border-b border-border-default/45 bg-white/[0.02] dark:bg-white/[0.003] backdrop-blur-md shrink-0 gap-2 select-none">
@@ -653,7 +653,7 @@ export function TaskCanvas() {
                         return (
                           <div
                             key={goal.id}
-                            className="bg-surface/50 border border-border-default rounded-2xl p-3.5 sm:p-4.5 space-y-3 sm:space-y-4 hover:border-cyan-500/30 hover:bg-surface transition-all shadow-sm"
+                            className="aether-glass aether-glass-interactive p-3.5 sm:p-4.5 space-y-3 sm:space-y-4"
                           >
                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                               <div>
@@ -858,7 +858,7 @@ export function TaskCanvas() {
                                 return (
                                   <div
                                     key={goal.id}
-                                    className="bg-surface/50 border border-border-default rounded-2xl p-3.5 sm:p-4.5 space-y-3 sm:space-y-4 hover:border-cyan-500/30 hover:bg-surface transition-all shadow-sm opacity-70 hover:opacity-100"
+                                    className="aether-glass aether-glass-interactive p-3.5 sm:p-4.5 space-y-3 sm:space-y-4 opacity-70 hover:opacity-100"
                                   >
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                                       <div>
@@ -1076,7 +1076,7 @@ export function TaskCanvas() {
                             return (
                               <div
                                 key={goal.id}
-                                className="bg-surface/50 border border-border-default rounded-2xl p-3.5 sm:p-4.5 space-y-3 sm:space-y-4 hover:border-cyan-500/30 hover:bg-surface transition-all shadow-sm"
+                                className="aether-glass aether-glass-interactive p-3.5 sm:p-4.5 space-y-3 sm:space-y-4"
                               >
                                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                                   <div>
@@ -1261,7 +1261,7 @@ export function TaskCanvas() {
                             <div
                               key={task.id}
                               onClick={() => setSearchParams({ task: task.id })}
-                              className="flex items-center justify-between p-3 rounded-xl bg-surface/50 hover:bg-surface border border-border-default transition-all cursor-pointer group shadow-sm"
+                              className="aether-glass aether-glass-interactive flex items-center justify-between p-3 cursor-pointer group"
                             >
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <div
@@ -1321,7 +1321,7 @@ export function TaskCanvas() {
                                     <div
                                       key={task.id}
                                       onClick={() => setSearchParams({ task: task.id })}
-                                      className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/20 border border-border-subtle/50 transition-all cursor-pointer opacity-50 hover:opacity-85 shadow-sm"
+                                      className="aether-glass aether-glass-interactive flex items-center justify-between p-3 cursor-pointer opacity-50 hover:opacity-85"
                                     >
                                       <div className="flex items-center gap-2.5 min-w-0">
                                         <div
@@ -1368,7 +1368,7 @@ export function TaskCanvas() {
                           <div
                             key={task.id}
                             onClick={() => setSearchParams({ task: task.id })}
-                            className="flex flex-col gap-3 p-3.5 rounded-2xl bg-amber-500/[0.03] border border-amber-500/20 hover:bg-amber-500/[0.05] transition-all cursor-pointer shadow-sm"
+                            className="aether-glass aether-glass-interactive flex flex-col gap-3 p-3.5 cursor-pointer"
                           >
                             <div className="min-w-0">
                               <span className="text-[11px] truncate font-bold text-foreground block">
@@ -1418,7 +1418,7 @@ export function TaskCanvas() {
                           <div
                             key={task.id}
                             onClick={() => setSearchParams({ task: task.id })}
-                            className="flex items-center justify-between p-3 rounded-xl bg-surface/50 hover:bg-surface border border-border-default transition-all cursor-pointer group shadow-sm"
+                            className="aether-glass aether-glass-interactive flex items-center justify-between p-3 cursor-pointer"
                           >
                             <div className="min-w-0">
                               <span className="text-[11px] truncate font-semibold block text-foreground">
@@ -1512,7 +1512,7 @@ export function TaskCanvas() {
                       return (
                         <div
                           key={project.id}
-                          className="bg-surface/50 border border-border-default rounded-2xl p-5 space-y-4 hover:border-indigo-500/20 hover:bg-surface transition-all shadow-sm flex flex-col justify-between"
+                          className="aether-glass aether-glass-interactive p-5 space-y-4 flex flex-col justify-between"
                         >
                           <div className="space-y-3">
                             {/* Card Header */}
@@ -1701,7 +1701,7 @@ export function TaskCanvas() {
                               return (
                                 <div
                                   key={project.id}
-                                  className="bg-surface/50 border border-border-default rounded-2xl p-5 space-y-4 hover:border-indigo-500/20 hover:bg-surface transition-all shadow-sm flex flex-col justify-between opacity-70 hover:opacity-100"
+                                  className="aether-glass aether-glass-interactive p-5 space-y-4 flex flex-col justify-between opacity-70 hover:opacity-100"
                                 >
                                   <div className="space-y-3">
                                     {/* Card Header */}
@@ -1900,7 +1900,7 @@ export function TaskCanvas() {
                         <Lock className="w-3 h-3 text-amber-500 shrink-0" />
                         <span>Select Project Team Members</span>
                       </label>
-                      <div className="max-h-40 overflow-y-auto border border-border-default rounded-xl p-2.5 space-y-1.5 aether-scroll bg-surface/50">
+                      <div className="max-h-40 overflow-y-auto aether-glass-input p-2.5 space-y-1.5 aether-scroll">
                         {members.filter(m => m.uid !== actor.uid).map(m => {
                           const isChecked = projectForm.memberIds.includes(m.uid);
                           return (

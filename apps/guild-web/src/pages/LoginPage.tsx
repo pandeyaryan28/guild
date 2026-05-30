@@ -115,7 +115,7 @@ export function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="aether-glass w-full p-8 shadow-2xl relative overflow-hidden border border-border-default/30">
+        <div className="aether-glass-elevated w-full p-8 shadow-2xl relative overflow-hidden">
           {/* Subtle inside grid accent */}
           <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
 
@@ -142,7 +142,7 @@ export function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   required
-                  className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                  className="w-full h-10 aether-glass-input pl-10 pr-4 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
                 />
               </div>
             </div>
@@ -162,7 +162,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-10 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                  className="w-full h-10 aether-glass-input pl-10 pr-10 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
                 />
                 <button
                   type="button"
@@ -218,7 +218,7 @@ export function LoginPage() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isSubmitting}
-              className="w-full h-10 rounded-xl bg-surface/60 border border-border-default hover:bg-surface/80 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10 text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50"
+              className="w-full h-10 aether-glass border border-white/10 hover:bg-white/5 text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50"
             >
               <svg className="h-3.5 w-3.5" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                 <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>

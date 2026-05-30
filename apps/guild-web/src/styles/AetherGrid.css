@@ -116,24 +116,90 @@
 /* Custom Glassmorphic Panels */
 .aether-glass {
   background: var(--aether-glass-bg);
-  backdrop-filter: blur(40px) saturate(1.8);
-  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  backdrop-filter: blur(28px) saturate(2.0);
+  -webkit-backdrop-filter: blur(28px) saturate(2.0);
   border: 1px solid var(--aether-glass-border);
   border-top-color: var(--aether-glass-border-inner);
   border-left-color: var(--aether-glass-border-inner);
   border-radius: var(--aether-radius);
   box-shadow: var(--aether-glass-shadow);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Elevated Glass (Popovers, Dialogs, dropdowns) */
+.aether-glass-elevated {
+  background: oklch(from var(--bg-primary) calc(l - 0.02) c h / 80%);
+  backdrop-filter: blur(40px) saturate(2.2);
+  -webkit-backdrop-filter: blur(40px) saturate(2.2);
+  border: 1px solid oklch(from var(--accent) 0.95 0.04 h / 28%);
+  border-top-color: oklch(1 0 0 / 25%);
+  border-left-color: oklch(1 0 0 / 25%);
+  border-radius: calc(var(--aether-radius) * 0.85);
+  box-shadow: 0 24px 64px 0 rgba(0, 0, 0, 0.16),
+              0 0 1px 0 oklch(from var(--accent) l c h / 16%),
+              inset 0 1px 0 0 oklch(1 0 0 / 10%);
+}
+.dark .aether-glass-elevated {
+  background: oklch(from var(--bg-primary) calc(l + 0.08) c h / 80%);
+  border: 1px solid oklch(from var(--accent) 0.95 0.04 h / 20%);
+  border-top-color: oklch(1 0 0 / 12%);
+  border-left-color: oklch(1 0 0 / 12%);
+  box-shadow: 0 32px 80px 0 rgba(0, 0, 0, 0.35),
+              0 0 1px 0 oklch(from var(--accent) l c h / 20%),
+              inset 0 1px 0 0 oklch(1 0 0 / 6%);
+}
+
+/* Hover-Elevated Interactive Glass Cards */
+.aether-glass-interactive {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
 .aether-glass-interactive:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.08), var(--aether-glass-shadow);
-  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-3px) scale(1.015);
+  background: oklch(from var(--bg-primary) calc(l - 0.02) c h / 78%);
+  box-shadow: 0 20px 48px 0 rgba(0, 0, 0, 0.12),
+              0 0 1px 0 oklch(from var(--accent) l c h / 16%),
+              var(--aether-glass-shadow);
+  border-color: oklch(from var(--accent) 0.95 0.05 h / 35%);
+}
+.dark .aether-glass-interactive:hover {
+  background: oklch(from var(--bg-primary) calc(l + 0.06) c h / 82%);
+  box-shadow: 0 24px 56px 0 rgba(0, 0, 0, 0.32),
+              0 0 1px 0 oklch(from var(--accent) l c h / 25%),
+              var(--aether-glass-shadow);
+  border-color: oklch(from var(--accent) 0.95 0.05 h / 24%);
+}
+.aether-glass-interactive:active {
+  transform: translateY(-0.5px) scale(0.995);
+  transition-duration: 100ms;
 }
 
-.aether-glass-interactive:active {
-  transform: translateY(0px);
+/* Translucent Glass Inputs */
+.aether-glass-input {
+  background: oklch(from var(--bg-primary) calc(l - 0.02) c h / 45%);
+  border: 1px solid oklch(from var(--text-primary) l c h / 12%);
+  border-radius: 12px;
+  color: var(--text-primary);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dark .aether-glass-input {
+  background: oklch(from var(--bg-primary) calc(l + 0.05) c h / 35%);
+  border-color: oklch(from var(--text-primary) l c h / 8%);
+}
+.aether-glass-input:focus {
+  background: oklch(from var(--bg-primary) calc(l - 0.01) c h / 80%);
+  border-color: oklch(from var(--accent) l c h / 55%);
+  box-shadow: 0 0 0 4px oklch(from var(--accent) l c h / 12%),
+              inset 0 1px 1px 0 oklch(from var(--text-primary) l c h / 4%);
+  outline: none;
+}
+.dark .aether-glass-input:focus {
+  background: oklch(from var(--bg-primary) calc(l + 0.08) c h / 75%);
 }
 
 /* macOS-Style Floating Dock */

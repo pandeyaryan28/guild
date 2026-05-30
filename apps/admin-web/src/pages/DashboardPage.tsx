@@ -487,7 +487,7 @@ export function DashboardPage({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* Top Overdue Hotspots (Users) */}
-            <div className="glass border border-[--border] rounded-2xl p-5 space-y-4">
+            <div className="aether-glass aether-glass-interactive p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-[--border] pb-2.5">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-red-400 flex items-center gap-1.5">
                   <AlertTriangle className="w-4 h-4 text-red-400 animate-pulse" />
@@ -514,7 +514,7 @@ export function DashboardPage({
             </div>
 
             {/* Top Overdue Hotspots (Teams) */}
-            <div className="glass border border-[--border] rounded-2xl p-5 space-y-4">
+            <div className="aether-glass aether-glass-interactive p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-[--border] pb-2.5">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-red-400 flex items-center gap-1.5">
                   <ShieldAlert className="w-4 h-4 text-red-400 animate-pulse" />
@@ -736,7 +736,7 @@ export function DashboardPage({
       {activeSection === 'settings' && (
         <div className="space-y-8 animate-fade-up">
           {/* Org Selector at the top if there are multiple orgs */}
-          <div className="glass border border-[--border] rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="aether-glass p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <h3 className="text-sm font-bold uppercase tracking-wider text-[--muted-foreground] flex items-center gap-2">
                 <Crown className="w-4 h-4 text-amber-400" />
@@ -766,7 +766,7 @@ export function DashboardPage({
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* 1. Organization Properties Form Card */}
-            <div className="glass border border-[--border] rounded-2xl p-5 space-y-6 flex flex-col justify-between">
+            <div className="aether-glass aether-glass-interactive p-5 space-y-6 flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-[--border] pb-3">
                   <h3 className="text-sm font-bold uppercase tracking-wider text-[--muted-foreground] flex items-center gap-2">
@@ -789,8 +789,7 @@ export function DashboardPage({
                         required
                         value={orgFormName}
                         onChange={e => setOrgFormName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl text-xs font-semibold bg-black/15 border border-[--border] text-[--foreground]
-                                   placeholder:text-[--muted-foreground]/40 focus:border-[--ring] outline-none transition-all shadow-inner"
+                        className="w-full px-4 py-3 aether-glass-input text-xs font-semibold placeholder:text-[--muted-foreground]/40 focus:outline-none transition-all"
                         placeholder="Enter organization name"
                       />
                     </div>
@@ -803,8 +802,7 @@ export function DashboardPage({
                         <select
                           value={orgFormIndustry}
                           onChange={e => setOrgFormIndustry(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl text-xs font-semibold bg-black/15 border border-[--border] text-[--foreground]
-                                     focus:border-[--ring] outline-none transition-all cursor-pointer shadow-inner"
+                          className="w-full px-4 py-3 aether-glass-input text-xs font-semibold focus:outline-none transition-all cursor-pointer"
                         >
                           <option value="" className="bg-[--background]">Select Industry</option>
                           <option value="Tech" className="bg-[--background]">Tech / Software</option>
@@ -824,8 +822,7 @@ export function DashboardPage({
                         <select
                           value={orgFormCompanySize}
                           onChange={e => setOrgFormCompanySize(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl text-xs font-semibold bg-black/15 border border-[--border] text-[--foreground]
-                                     focus:border-[--ring] outline-none transition-all cursor-pointer shadow-inner"
+                          className="w-full px-4 py-3 aether-glass-input text-xs font-semibold focus:outline-none transition-all cursor-pointer"
                         >
                           <option value="" className="bg-[--background]">Select Size</option>
                           <option value="1-10" className="bg-[--background]">1-10 Employees</option>
@@ -862,7 +859,7 @@ export function DashboardPage({
             </div>
 
             {/* 2. Global Invitation Control Center Card */}
-            <div className="glass border border-[--border] rounded-2xl p-5 space-y-6 flex flex-col justify-between">
+            <div className="aether-glass aether-glass-interactive p-5 space-y-6 flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-[--border] pb-3">
                   <h3 className="text-sm font-bold uppercase tracking-wider text-[--muted-foreground] flex items-center gap-2">
@@ -887,7 +884,7 @@ export function DashboardPage({
                           type="text"
                           readOnly
                           value={globalInviteLink}
-                          className="flex-1 px-4 py-3 rounded-xl text-xs font-mono font-medium bg-black/30 border border-[--border] text-[--muted-foreground] outline-none shadow-inner"
+                          className="flex-1 px-4 py-3 aether-glass-input text-xs font-mono font-medium outline-none"
                         />
                         <button
                           onClick={handleSettingsCopyLink}

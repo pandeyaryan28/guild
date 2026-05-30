@@ -300,7 +300,7 @@ export function DashboardControl() {
                       initial={{ opacity: 0, y: 8, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      className="absolute left-0 mt-2.5 w-44 aether-glass bg-surface/95 dark:bg-zinc-900/95 p-1 shadow-2xl z-50 rounded-xl"
+                      className="absolute left-0 mt-2.5 w-44 aether-glass-elevated p-1 shadow-2xl z-50"
                     >
                       <div className="px-2.5 py-1 text-[8px] font-bold text-muted-foreground uppercase tracking-wider border-b border-white/5 mb-1">
                         Availability Status
@@ -460,7 +460,7 @@ export function DashboardControl() {
         <div className="space-y-8">
           
           {/* Tasks Container */}
-          <section className="aether-glass p-6 space-y-4">
+          <section className="aether-glass aether-glass-interactive p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-border-subtle pb-3">
               <h2 className="text-sm font-bold text-foreground">My Tasks</h2>
               <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-semibold text-muted-foreground">
@@ -526,7 +526,7 @@ export function DashboardControl() {
                 placeholder="Add a task due today..."
                 value={quickTaskTitle}
                 onChange={(e) => setQuickTaskTitle(e.target.value)}
-                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-all font-medium"
+                className="flex-1 aether-glass-input px-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none font-medium"
               />
               <button
                 type="submit"
@@ -539,7 +539,7 @@ export function DashboardControl() {
           </section>
 
           {/* Approvals & Reviews Section */}
-          <section className="aether-glass p-6 space-y-4">
+          <section className="aether-glass aether-glass-interactive p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-border-subtle pb-3">
               <h2 className="text-sm font-bold text-foreground">Approvals</h2>
               {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0) > 0 && (
@@ -623,7 +623,7 @@ export function DashboardControl() {
         <div className="space-y-8">
           
           {/* Team Focus Section */}
-          <section className="aether-glass p-6 space-y-4 self-start">
+          <section className="aether-glass aether-glass-interactive p-6 space-y-4 self-start">
             <div className="flex items-center justify-between border-b border-border-subtle pb-3">
               <h2 className="text-sm font-bold text-foreground">Team Focus</h2>
               <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-semibold text-muted-foreground">
@@ -690,7 +690,7 @@ export function DashboardControl() {
           </section>
 
           {/* New Messages Section */}
-          <section className="aether-glass p-6 space-y-4">
+          <section className="aether-glass aether-glass-interactive p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-border-subtle pb-3">
               <h2 className="text-sm font-bold text-foreground">New Messages</h2>
               {unreadChannels.length + unreadDMs.length > 0 && (

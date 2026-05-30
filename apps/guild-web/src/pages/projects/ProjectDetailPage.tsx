@@ -96,6 +96,15 @@ export function ProjectDetailPage() {
     return m.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const getMemberName = (userId: string) => {
+    const m = memberMap.get(userId);
+    return m?.fullName || m?.username || 'Teammate';
+  };
+
+  const getMemberInitials = (userId: string) => {
+    return getInitials(userId);
+  };
+
   const getMemberPhotoURL = (userId: string) => {
     const m = memberMap.get(userId);
     return m?.photoURL || '';
