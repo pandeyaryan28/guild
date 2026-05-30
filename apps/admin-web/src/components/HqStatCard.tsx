@@ -12,10 +12,10 @@ interface HqStatCardProps {
 export function HqStatCard({ label, value, icon, color, sub, className = '' }: HqStatCardProps) {
   return (
     <div
-      className={`glass rounded-2xl p-5 card-hover animate-fade-up border border-[--border] ${className}`}
+      className={`aether-glass aether-glass-interactive p-5 animate-fade-up ${className}`}
       style={{
-        borderColor: `${color}25`,
-        boxShadow: `0 4px 20px -2px oklch(from ${color} 0.1 0.05 h / 8%)`
+        borderColor: `oklch(from ${color} 0.85 0.08 h / 25%)`,
+        boxShadow: `0 1px 2px 0 rgba(0, 0, 0, 0.04), 0 12px 32px -4px oklch(from ${color} 0.15 0.02 h / 8%), inset 0 1px 0 0 oklch(from ${color} 0.95 0.06 h / 20%)`
       }}
     >
       <div className="flex items-start justify-between mb-3">
@@ -46,7 +46,7 @@ export function HqStatCard({ label, value, icon, color, sub, className = '' }: H
       <p className="text-xs font-medium text-[--muted-foreground] mt-1">{label}</p>
       
       {sub && (
-        <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-[--border] opacity-75">
+        <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-white/10 dark:border-white/5 opacity-75">
           <p className="text-[10px] font-medium text-[--muted-foreground] truncate">
             {sub}
           </p>

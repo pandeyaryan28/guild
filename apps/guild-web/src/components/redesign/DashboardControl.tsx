@@ -271,7 +271,7 @@ export function DashboardControl() {
             initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="aether-glass p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-primary/20 bg-primary/5 shadow-md relative overflow-hidden"
+            className="aether-glass p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-white/5 dark:border-white/5 bg-white/[0.03] dark:bg-black/[0.15] shadow-lg relative overflow-hidden"
             style={{ borderRadius: '16px' }}
           >
             <div className="absolute -right-10 -top-10 w-32 h-32 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
@@ -460,9 +460,9 @@ export function DashboardControl() {
           )}
         </div>
         {/* Daily Goal Input Section */}
-        <div className="pt-2 border-t border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="pt-2 border-t border-white/10 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 shrink-0">
+            <div className="p-2 rounded-lg border border-white/10 dark:border-white/5 bg-white/5 text-muted-foreground shrink-0">
               <Target className="w-4 h-4" />
             </div>
             <div className="flex-1">
@@ -515,9 +515,9 @@ export function DashboardControl() {
           
           {/* Tasks Container */}
           <section className="aether-glass aether-glass-interactive p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+            <div className="flex items-center justify-between border-b border-white/10 dark:border-white/5 pb-3">
               <h2 className="text-sm font-bold text-foreground">My Tasks</h2>
-              <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-semibold text-muted-foreground">
+              <span className="px-2 py-0.5 rounded-md border border-white/10 dark:border-white/5 bg-white/5 text-[10px] font-bold text-muted-foreground">
                 {myTasks.length} active
               </span>
             </div>
@@ -529,10 +529,10 @@ export function DashboardControl() {
                 <span className="text-xs text-muted-foreground font-medium">Loading tasks...</span>
               </div>
             ) : myTasks.length === 0 ? (
-              <div className="py-8 text-center border border-dashed border-border-default rounded-lg bg-zinc-50/50 dark:bg-zinc-900/30">
+              <div className="py-8 text-center border border-dashed border-white/10 dark:border-white/5 rounded-2xl bg-white/[0.01] dark:bg-black/[0.1] backdrop-blur-sm">
                 <Check className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
-                <span className="text-xs font-semibold text-foreground block">All tasks completed</span>
-                <span className="text-[10px] text-muted-foreground mt-0.5 block">You are fully cleared for today.</span>
+                <span className="text-xs font-bold text-foreground block">All tasks completed</span>
+                <span className="text-[10px] text-muted-foreground/80 mt-0.5 block">You are fully cleared for today.</span>
               </div>
             ) : (
               <div className="space-y-1">
@@ -543,13 +543,13 @@ export function DashboardControl() {
                   return (
                     <div 
                       key={task.id}
-                      className="group flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all border border-transparent hover:border-border-subtle"
+                      className="group flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 transition-all border border-transparent hover:border-white/10"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <button
                           onClick={() => handleToggleComplete(task)}
                           disabled={isCompleting}
-                          className="w-4 h-4 rounded-md border border-border-strong flex items-center justify-center hover:border-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all shrink-0 cursor-pointer"
+                          className="w-4 h-4 rounded-md border border-white/20 dark:border-white/15 flex items-center justify-center hover:border-foreground hover:bg-white/10 dark:hover:bg-white/10 transition-all shrink-0 cursor-pointer"
                         >
                           {isCompleting ? (
                             <Loader2 className="w-2.5 h-2.5 animate-spin text-muted-foreground" />
@@ -594,27 +594,27 @@ export function DashboardControl() {
 
           {/* Approvals & Reviews Section */}
           <section className="aether-glass aether-glass-interactive p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+            <div className="flex items-center justify-between border-b border-white/10 dark:border-white/5 pb-3">
               <h2 className="text-sm font-bold text-foreground">Approvals</h2>
               {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0) > 0 && (
-                <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400 text-[10px] font-semibold">
+                <span className="px-2 py-0.5 rounded-md border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
                   {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0)} pending
                 </span>
               )}
             </div>
 
             {(pendingRequests.length === 0 && (!isManager || reviewTasksForTeam.length === 0)) ? (
-              <div className="py-8 text-center bg-zinc-50/50 dark:bg-zinc-900/30 border border-dashed border-border-default rounded-lg bg-white/1">
+              <div className="py-8 text-center bg-white/[0.01] dark:bg-black/[0.1] border border-dashed border-white/10 dark:border-white/5 rounded-2xl backdrop-blur-sm">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
-                <span className="text-xs font-semibold text-foreground block">Approvals Cleared</span>
-                <span className="text-[10px] text-muted-foreground mt-0.5 block">No pending requests require your sign-off.</span>
+                <span className="text-xs font-bold text-foreground block">Approvals Cleared</span>
+                <span className="text-[10px] text-muted-foreground/80 mt-0.5 block">No pending requests require your sign-off.</span>
               </div>
             ) : (
               <div className="space-y-4">
                 
                 {/* Approval Requests */}
                 {pendingRequests.map((req) => (
-                  <div key={req.id} className="p-4 rounded-xl border border-white/5 bg-white/3 dark:bg-black/10 space-y-3">
+                  <div key={req.id} className="p-4 rounded-2xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-sm space-y-3">
                     <div>
                       <span className="text-xs font-bold text-foreground block truncate">{req.title}</span>
                       <span className="text-[10px] text-muted-foreground block mt-0.5">Submitted by {req.creatorName}</span>
@@ -624,7 +624,7 @@ export function DashboardControl() {
                         onClick={async () => {
                           await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
                         }}
-                        className="flex-1 py-1 rounded-md bg-foreground text-background text-[10px] font-bold hover:bg-foreground/90 transition-all cursor-pointer shadow-sm"
+                        className="flex-1 py-1.5 rounded-xl bg-gradient-to-b from-indigo-500/90 to-indigo-600/90 hover:brightness-105 text-white text-[10px] font-bold border-t border-white/20 shadow-md active:scale-98 transition-all cursor-pointer"
                       >
                         Approve
                       </button>
@@ -632,7 +632,7 @@ export function DashboardControl() {
                         onClick={async () => {
                           await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
                         }}
-                        className="flex-1 py-1 rounded-md border border-white/10 hover:bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
+                        className="flex-1 py-1.5 rounded-xl border border-white/10 hover:bg-white/10 bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
                       >
                         Reject
                       </button>
@@ -644,7 +644,7 @@ export function DashboardControl() {
                 {isManager && reviewTasksForTeam.map((task) => {
                   const assigneeName = task.assigneeIds.map(id => memberMap.get(id)?.fullName).filter(Boolean).join(', ');
                   return (
-                    <div key={task.id} className="p-4 rounded-xl border border-white/5 bg-white/3 dark:bg-black/10 space-y-3">
+                    <div key={task.id} className="p-4 rounded-2xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-sm space-y-3">
                       <div>
                         <span className="text-xs font-bold text-foreground block truncate">{task.title}</span>
                         <span className="text-[10px] text-muted-foreground block mt-0.5">Task review for {assigneeName}</span>
@@ -652,13 +652,13 @@ export function DashboardControl() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleReviewAction(task, 'approve')}
-                          className="flex-1 py-1 rounded-md bg-foreground text-background text-[10px] font-bold hover:bg-foreground/90 transition-all cursor-pointer shadow-sm"
+                          className="flex-1 py-1.5 rounded-xl bg-gradient-to-b from-indigo-500/90 to-indigo-600/90 hover:brightness-105 text-white text-[10px] font-bold border-t border-white/20 shadow-md active:scale-98 transition-all cursor-pointer"
                         >
                           Approve
                         </button>
                         <button
                           onClick={() => handleReviewAction(task, 'reject')}
-                          className="flex-1 py-1 rounded-md border border-white/10 hover:bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
+                          className="flex-1 py-1.5 rounded-xl border border-white/10 hover:bg-white/10 bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
                         >
                           Needs Changes
                         </button>
@@ -678,9 +678,9 @@ export function DashboardControl() {
           
           {/* Team Focus Section */}
           <section className="aether-glass aether-glass-interactive p-6 space-y-4 self-start">
-            <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+            <div className="flex items-center justify-between border-b border-white/10 dark:border-white/5 pb-3">
               <h2 className="text-sm font-bold text-foreground">Team Focus</h2>
-              <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-semibold text-muted-foreground">
+              <span className="px-2 py-0.5 rounded-md border border-white/10 dark:border-white/5 bg-white/5 text-[10px] font-bold text-muted-foreground">
                 {teammates.length} members
               </span>
             </div>
@@ -694,7 +694,7 @@ export function DashboardControl() {
                   const initials = avatarInitials(member.fullName || member.username || '?');
                   
                   return (
-                    <div key={member.uid} className="flex items-start gap-3 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors">
+                    <div key={member.uid} className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
                       
                       {/* Teammate Icon */}
                       <div 
@@ -745,10 +745,10 @@ export function DashboardControl() {
 
           {/* New Messages Section */}
           <section className="aether-glass aether-glass-interactive p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+            <div className="flex items-center justify-between border-b border-white/10 dark:border-white/5 pb-3">
               <h2 className="text-sm font-bold text-foreground">New Messages</h2>
               {unreadChannels.length + unreadDMs.length > 0 && (
-                <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400 text-[10px] font-semibold">
+                <span className="px-2 py-0.5 rounded-md border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
                   {unreadChannels.length + unreadDMs.length} unread
                 </span>
               )}

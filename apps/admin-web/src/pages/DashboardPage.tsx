@@ -436,7 +436,7 @@ export function DashboardPage({
         <button
           onClick={refresh}
           className="flex items-center gap-2 self-start sm:self-center px-4 py-2 rounded-xl text-xs font-semibold
-                     border border-[--border] text-[--muted-foreground] bg-black/10 hover:bg-black/30
+                     border border-white/10 dark:border-white/5 text-[--muted-foreground] bg-black/10 hover:bg-black/30
                      hover:text-[--foreground] hover:border-[--ring] transition-all cursor-pointer shadow-sm"
         >
           <RefreshCw className="w-3.5 h-3.5" />
@@ -451,7 +451,7 @@ export function DashboardPage({
           
           {/* Overview Date Filter */}
           <div className="flex justify-end">
-            <div className="flex items-center bg-[--input] border border-[--border] p-0.5 rounded-xl text-[10px] font-semibold">
+            <div className="flex items-center bg-white/[0.02] dark:bg-black/[0.15] border border-white/10 dark:border-white/5 p-0.5 rounded-xl text-[10px] font-semibold">
               {[
                 { value: '7d', label: '7 Days' },
                 { value: '30d', label: '30 Days' },
@@ -488,7 +488,7 @@ export function DashboardPage({
             
             {/* Top Overdue Hotspots (Users) */}
             <div className="aether-glass aether-glass-interactive p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-[--border] pb-2.5">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-red-400 flex items-center gap-1.5">
                   <AlertTriangle className="w-4 h-4 text-red-400 animate-pulse" />
                   Needs Attention: Overloaded Users
@@ -515,7 +515,7 @@ export function DashboardPage({
 
             {/* Top Overdue Hotspots (Teams) */}
             <div className="aether-glass aether-glass-interactive p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-[--border] pb-2.5">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-red-400 flex items-center gap-1.5">
                   <ShieldAlert className="w-4 h-4 text-red-400 animate-pulse" />
                   Needs Attention: Lagging Teams
@@ -752,7 +752,7 @@ export function DashboardPage({
               <select
                 value={activeOrg?.id || ''}
                 onChange={e => setSelectedOrgId(e.target.value)}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-black/20 border border-[--border] text-[--foreground]
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-white/[0.02] dark:bg-black/[0.15] border border-white/10 dark:border-white/5 text-[--foreground]
                            focus:border-[--ring] outline-none cursor-pointer w-64 shadow-inner"
               >
                 {orgs.map(o => (
@@ -768,7 +768,7 @@ export function DashboardPage({
             {/* 1. Organization Properties Form Card */}
             <div className="aether-glass aether-glass-interactive p-5 space-y-6 flex flex-col justify-between">
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-[--border] pb-3">
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
                   <h3 className="text-sm font-bold uppercase tracking-wider text-[--muted-foreground] flex items-center gap-2">
                     <Building className="w-4.5 h-4.5 text-[--primary]" />
                     Organization Properties
@@ -845,8 +845,8 @@ export function DashboardPage({
                       <button
                         type="submit"
                         disabled={isSavingOrg}
-                        className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[--primary] text-[--primary-foreground]
-                                   hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all cursor-pointer shadow-md select-none shrink-0"
+                        className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-b from-indigo-500/90 to-indigo-600/90 hover:brightness-105 border-t border-white/20 text-white
+                                   active:scale-[0.98] disabled:opacity-50 disabled:scale-100 transition-all cursor-pointer shadow-md select-none shrink-0"
                       >
                         {isSavingOrg ? 'Saving Workspace...' : 'Save Changes'}
                       </button>
@@ -861,7 +861,7 @@ export function DashboardPage({
             {/* 2. Global Invitation Control Center Card */}
             <div className="aether-glass aether-glass-interactive p-5 space-y-6 flex flex-col justify-between">
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-[--border] pb-3">
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
                   <h3 className="text-sm font-bold uppercase tracking-wider text-[--muted-foreground] flex items-center gap-2">
                     <Key className="w-4.5 h-4.5 text-[--primary]" />
                     Global Invitation Gateway
@@ -888,7 +888,7 @@ export function DashboardPage({
                         />
                         <button
                           onClick={handleSettingsCopyLink}
-                          className="h-11 px-4 rounded-xl text-xs font-bold border border-[--border] bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-[--foreground] flex items-center gap-1.5 cursor-pointer shadow-sm"
+                          className="h-11 px-4 rounded-xl text-xs font-bold border border-white/10 dark:border-white/5 bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-[--foreground] flex items-center gap-1.5 cursor-pointer shadow-sm"
                         >
                           <Copy className="w-3.5 h-3.5" />
                           {copiedLink ? 'Copied!' : 'Copy'}
@@ -899,7 +899,7 @@ export function DashboardPage({
                         <button
                           onClick={handleSettingsResetLink}
                           disabled={isGeneratingLink}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border border-[--border] text-[--muted-foreground] bg-black/10 hover:bg-black/25 active:scale-95 transition-all cursor-pointer shadow-inner"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border border-white/10 dark:border-white/5 text-[--muted-foreground] bg-black/10 hover:bg-black/25 active:scale-95 transition-all cursor-pointer shadow-inner"
                         >
                           <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingLink ? 'animate-spin' : ''}`} />
                           Reset invite token
@@ -919,7 +919,7 @@ export function DashboardPage({
                       <button
                         onClick={handleSettingsGenerateLink}
                         disabled={isGeneratingLink}
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold bg-[--primary] text-[--primary-foreground] hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-lg select-none"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold bg-gradient-to-b from-indigo-500/90 to-indigo-600/90 hover:brightness-105 border-t border-white/20 text-white active:scale-95 transition-all cursor-pointer shadow-lg select-none"
                       >
                         <Key className="w-4 h-4" />
                         {isGeneratingLink ? 'Activating Gateway...' : 'Activate Global Invitation Link'}

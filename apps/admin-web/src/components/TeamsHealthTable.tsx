@@ -335,10 +335,10 @@ export function TeamsHealthTable({
 
       {/* ─── TAB 1: SQUADS & HIERARCHY ────────────────────────────────────────── */}
       {activeTab === 'squads' && (
-        <div className="overflow-x-auto rounded-2xl border border-[--border] bg-black/10 select-none">
+        <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-black/10 select-none">
           <table className="w-full text-xs border-collapse">
             <thead>
-              <tr className="border-b border-[--border] text-[10px] font-extrabold uppercase tracking-wider text-[--muted-foreground]" style={{ background: 'oklch(from var(--muted) l c h / 30%)' }}>
+              <tr className="border-b border-white/5 text-[10px] font-extrabold uppercase tracking-wider text-[--muted-foreground]" style={{ background: 'oklch(from var(--muted) l c h / 30%)' }}>
                 <th className="w-10"></th>
                 <th className="text-left px-5 py-4">Squad Name</th>
                 <th className="text-left px-4 py-4">Squad Manager / Lead</th>

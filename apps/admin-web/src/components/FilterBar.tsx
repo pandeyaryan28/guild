@@ -46,7 +46,7 @@ export function FilterBar({
   hasActiveFilters = false,
 }: FilterBarProps) {
   return (
-    <div className="glass rounded-2xl p-4 border border-[--border] space-y-3 animate-fade-up">
+    <div className="glass rounded-2xl p-4 space-y-3 animate-fade-up">
       <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
         
         {/* Search Input */}
@@ -60,7 +60,7 @@ export function FilterBar({
               value={searchValue}
               onChange={e => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full pl-9 pr-8 py-2 rounded-xl text-xs bg-[--input] text-[--foreground] border border-[--border] 
+              className="w-full pl-9 pr-8 py-2 rounded-xl text-xs bg-white/[0.02] dark:bg-black/[0.15] text-[--foreground] border border-white/10 dark:border-white/5 
                          focus:outline-none focus:border-[--primary] focus:ring-1 focus:ring-[--primary] transition-all"
             />
             {searchValue && (
@@ -82,7 +82,7 @@ export function FilterBar({
               <select
                 value={filter.value}
                 onChange={e => filter.onChange(e.target.value)}
-                className="appearance-none bg-[--input] text-[--foreground] border border-[--border] px-3.5 py-2 pr-8 rounded-xl
+                className="appearance-none bg-white/[0.02] dark:bg-black/[0.15] text-[--foreground] border border-white/10 dark:border-white/5 px-3.5 py-2 pr-8 rounded-xl
                            focus:outline-none focus:border-[--primary] transition-all font-medium min-w-[110px]"
               >
                 {filter.options.map(opt => (
@@ -101,7 +101,7 @@ export function FilterBar({
 
           {/* Date range filters */}
           {dateRanges.length > 0 && onDateRangeChange && (
-            <div className="flex items-center bg-[--input] border border-[--border] p-0.5 rounded-xl text-[10px] font-semibold">
+            <div className="flex items-center bg-white/[0.02] dark:bg-black/[0.15] border border-white/10 dark:border-white/5 p-0.5 rounded-xl text-[10px] font-semibold">
               {dateRanges.map(range => {
                 const active = activeDateRange === range.value;
                 return (

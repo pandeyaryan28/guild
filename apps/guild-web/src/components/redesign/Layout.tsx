@@ -68,7 +68,7 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
   }, []);
 
   return (
-    <div className="aether-app-container flex min-h-screen w-full overflow-hidden select-none bg-background">
+    <div className="aether-app-container flex min-h-screen w-full overflow-hidden select-none">
       {/* PWA State Managers */}
       <OfflineIndicator />
       <PwaInstallPrompt />
@@ -82,17 +82,24 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
       {/* 3. Main Workspace Container */}
       <div className="flex-1 flex flex-col min-w-0 pl-[120px] pr-6 py-5 z-10 overflow-hidden relative h-screen">
         
-        {/* Top Spatial Control Nav */}
-        <header className="flex h-10 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0">
-          {/* Logo & Section Title */}
-          <div className="flex items-center gap-3">
+        {/* Top Spatial Control Nav - macOS Floating Window Titlebar Capsule */}
+        <header className="flex h-14 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0 px-6 aether-glass shadow-md" style={{ borderRadius: '18px' }}>
+          {/* Logo & Section Title with macOS Dots */}
+          <div className="flex items-center gap-4">
+            {/* macOS Window Controls */}
+            <div className="flex items-center gap-1.5 shrink-0 select-none">
+              <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] opacity-80" />
+              <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] opacity-80" />
+              <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] opacity-80" />
+            </div>
+            <div className="h-4 w-[1px] bg-white/10 mx-1 shrink-0" />
             <span 
               className="text-lg font-black tracking-tight text-gradient uppercase bg-gradient-to-r from-violet-500 to-indigo-500"
               style={{ letterSpacing: '0.1em' }}
             >
               Guild
             </span>
-            <div className="h-4 w-[1px] bg-white/10" />
+            <div className="h-4 w-[1px] bg-white/10 shrink-0" />
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               {location.pathname === '/' ? 'Workspace Control' : location.pathname.split('/')[1]}
             </span>
@@ -108,7 +115,7 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
             >
               <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               <span className="text-[11px] text-muted-foreground/80 flex-1 truncate">Search...</span>
-              <span className="flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground/60 border border-white/10 rounded px-1 py-0.2 shrink-0 flex">
+              <span className="flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground/60 border border-white/10 rounded px-1 py-0.2 shrink-0">
                 <Command className="w-2.5 h-2.5" />K
               </span>
             </button>
@@ -117,7 +124,7 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
             <div className="relative">
               <button
                 onClick={() => setNotifOpen(!notifOpen)}
-                className={`aether-glass h-10 w-10 flex items-center justify-center relative hover:scale-105 active:scale-95 transition-all shadow-sm ${
+                className={`aether-glass h-10 w-10 flex items-center justify-center relative hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer ${
                   notifOpen ? 'bg-white/10 border-white/20' : ''
                 }`}
                 style={{ borderRadius: '14px' }}

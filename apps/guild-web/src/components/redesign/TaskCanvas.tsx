@@ -1384,7 +1384,7 @@ export function TaskCanvas() {
                                     e.stopPropagation();
                                     await handleUpdateTaskStatus(task, 'done');
                                 }}
-                                className="flex-1 py-1 bg-foreground hover:bg-foreground/90 text-background font-bold rounded-lg text-[9px] transition-all cursor-pointer"
+                                className="flex-1 py-1.5 bg-gradient-to-b from-indigo-500/90 to-indigo-600/90 hover:brightness-105 text-white font-bold rounded-xl text-[9px] border-t border-white/20 transition-all cursor-pointer shadow-md active:scale-98"
                               >
                                 Approve
                               </button>
@@ -1393,7 +1393,7 @@ export function TaskCanvas() {
                                     e.stopPropagation();
                                     await handleUpdateTaskStatus(task, 'todo');
                                 }}
-                                className="flex-1 py-1 border border-border-default hover:bg-bg-secondary text-foreground font-bold rounded-lg text-[9px] transition-all cursor-pointer"
+                                className="flex-1 py-1.5 border border-white/10 hover:bg-white/10 bg-white/5 text-foreground font-bold rounded-xl text-[9px] transition-all cursor-pointer"
                               >
                                 Reject
                               </button>

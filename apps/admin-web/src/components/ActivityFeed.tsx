@@ -150,7 +150,7 @@ export function ActivityFeed({
         message = (
           <span>
             commented on <strong className="text-[--foreground]">{taskTitle}</strong>:{' '}
-            <em className="text-[--muted-foreground] block mt-1 pl-3.5 border-l border-[--border]">
+            <em className="text-[--muted-foreground] block mt-1 pl-3.5 border-l border-white/10 dark:border-white/5">
               "{preview.length > 80 ? `${preview.slice(0, 80)}...` : preview}"
             </em>
           </span>
@@ -203,8 +203,8 @@ export function ActivityFeed({
   }
 
   return (
-    <div className="glass rounded-2xl p-5 border border-[--border] space-y-6">
-      <div className="flex items-center justify-between border-b border-[--border] pb-3">
+    <div className="glass rounded-2xl p-5 space-y-6">
+      <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <h3 className="text-sm font-bold uppercase tracking-wider text-[--muted-foreground]">
           Recent System Activity Feed
         </h3>
@@ -218,7 +218,7 @@ export function ActivityFeed({
           No audit logs or task activity matched the current query.
         </div>
       ) : (
-        <div className="relative border-l border-[--border] ml-3 pl-6 space-y-6 py-2">
+        <div className="relative border-l border-white/10 dark:border-white/5 ml-3 pl-6 space-y-6 py-2">
           {filteredActivities.map((act, index) => {
             const { icon, message, bgColor, actorName } = renderEventDetails(act);
             
