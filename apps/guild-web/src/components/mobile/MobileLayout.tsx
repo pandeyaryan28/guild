@@ -58,7 +58,6 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
     if (path === '/') return 'Dashboard';
     if (path.startsWith('/chat')) return 'Chat Spaces';
     if (path === '/workspace') return 'Workspace';
-    if (path === '/goals-board') return 'Goals & Vision';
     if (path === '/requests') return 'Approvals';
     if (path === '/settings') return 'Settings';
     if (path === '/people') return 'Team';

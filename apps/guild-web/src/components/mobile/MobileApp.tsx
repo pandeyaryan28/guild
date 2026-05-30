@@ -8,8 +8,6 @@ import { MobileRequests } from './pages/MobileRequests';
 import { MobileSettings } from './pages/MobileSettings';
 import { ProtectedRoute } from '../ProtectedRoute';
 
-// Decoupled responsive page components imported from standard pages directory
-import { GoalsBoardPage } from '../../pages/workspace/GoalsBoardPage';
 import { PeoplePage } from '../../pages/people/PeoplePage';
 import { CalendarPage } from '../../pages/calendar/CalendarPage';
 import { ReportsPage } from '../../pages/reports/ReportsPage';
@@ -70,17 +68,6 @@ export function MobileApp() {
         }
       />
 
-      {/* Register Goals & Vision Space for mobile */}
-      <Route
-        path="/goals-board"
-        element={
-          <ProtectedRoute>
-            <MobileLayout>
-              <GoalsBoardPage />
-            </MobileLayout>
-          </ProtectedRoute>
-        }
-      />
 
       {/* Register Project detail view for mobile */}
       <Route

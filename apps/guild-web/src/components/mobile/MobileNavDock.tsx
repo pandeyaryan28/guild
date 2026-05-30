@@ -7,7 +7,6 @@ import {
   FileCheck, 
   Menu,
   X,
-  Target,
   Users,
   Calendar,
   BarChart3,
@@ -40,7 +39,6 @@ export function MobileNavDock() {
   ];
 
   const secondaryNavLinks = [
-    { path: '/goals-board', label: 'Goals', icon: Target },
     { path: '/people', label: 'People', icon: Users },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
     { path: '/reports', label: 'Reports', icon: BarChart3 },

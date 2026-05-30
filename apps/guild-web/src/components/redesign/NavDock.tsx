@@ -10,8 +10,7 @@ import {
   BarChart3, 
   Palette, 
   LogOut,
-  Trello,
-  Target
+  Trello
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
@@ -46,7 +45,6 @@ export function NavDock() {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/chat', label: 'Chat', icon: MessageSquare, badge: unreadChatCount > 0 ? unreadChatCount : undefined },
     { path: '/workspace', label: 'Workspace', icon: Trello },
-    { path: '/goals-board', label: 'Goals', icon: Target },
     { path: '/requests', label: 'Requests', icon: FileCheck },
     { path: '/people', label: 'People', icon: Users },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
