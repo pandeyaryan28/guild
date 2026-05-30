@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
-import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink, Play, Maximize2, Target, ClipboardList, Smile, MessageSquare } from 'lucide-react';
+import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink, Play, Maximize2, Target, ClipboardList, Smile, MessageSquare, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Message } from '../../lib/chat';
 import { editMessage, deleteMessage } from '../../lib/chat';
@@ -8,7 +8,7 @@ import { MediaLightbox } from './MediaLightbox';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { updateRequestStatus } from '../../lib/requests';
-import { toggleReaction } from '../../lib/replies';
+import { toggleReaction, addMessageReply, listenToReplies, type MessageReply } from '../../lib/replies';
 
 interface MessageBubbleProps {
   message: Message;
@@ -72,11 +72,51 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
   const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
 
+  const [isRepliesExpanded, setIsRepliesExpanded] = React.useState(false);
+  const [replies, setReplies] = React.useState<MessageReply[] | null>(null);
+  const [replyBody, setReplyBody] = React.useState('');
+  const [replySending, setReplySending] = React.useState(false);
+  const replyTextareaRef = React.useRef<HTMLTextAreaElement>(null);
+
   React.useEffect(() => {
     if (!hovered) {
       setShowEmojiPicker(false);
     }
   }, [hovered]);
+
+  React.useEffect(() => {
+    if (!isRepliesExpanded) {
+      setReplies(null);
+      return;
+    }
+    const unsub = listenToReplies(message.id, (data) => {
+      setReplies(data);
+    });
+    return () => unsub();
+  }, [isRepliesExpanded, message.id]);
+
+  const handleSendReply = async () => {
+    const trimmed = replyBody.trim();
+    if (!trimmed || replySending || !currentUser || !orgId) return;
+    setReplySending(true);
+
+    try {
+      await addMessageReply({
+        messageId: message.id,
+        orgId,
+        senderId: currentUser.uid,
+        senderName: currentUser.displayName || 'User',
+        senderUsername: members.find((m) => m.uid === currentUser.uid)?.username || 'user',
+        body: trimmed,
+      });
+      setReplyBody('');
+      setTimeout(() => replyTextareaRef.current?.focus(), 50);
+    } catch (err) {
+      console.error('Failed to add inline reply:', err);
+    } finally {
+      setReplySending(false);
+    }
+  };
 
   const [realtimeRequestStatus, setRealtimeRequestStatus] = React.useState<string | null>(null);
   const [realtimeGoalStatus, setRealtimeGoalStatus] = React.useState<string | null>(null);
@@ -513,22 +553,140 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     const replyCount = (message as any).replyCount || 0;
     const lastReplyTime = (message as any).lastReplyAt ? formatTime((message as any).lastReplyAt) : '';
 
-    if (replyCount === 0 || !onOpenDiscussion) return null;
+    if (replyCount === 0) return null;
 
     return (
       <button
         onClick={(e) => {
           e.stopPropagation();
-          onOpenDiscussion(message);
+          setIsRepliesExpanded(!isRepliesExpanded);
         }}
-        className="mt-1.5 flex items-center gap-1.5 text-[10px] text-primary font-bold hover:underline cursor-pointer select-none bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-lg px-2.5 py-1.5 w-fit shadow-sm transition-all"
+        className={cn(
+          "mt-1.5 flex items-center gap-1.5 text-[10px] font-bold cursor-pointer select-none border rounded-lg px-2.5 py-1.5 w-fit shadow-sm transition-all",
+          isRepliesExpanded
+            ? "bg-primary/10 border-primary/25 text-primary"
+            : "bg-primary/5 border-primary/10 text-primary hover:bg-primary/10"
+        )}
       >
         <MessageSquare className="h-3 w-3 shrink-0" />
         <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
-        {lastReplyTime && (
+        {isRepliesExpanded ? (
+          <span className="text-[8px] text-text-muted font-normal ml-0.5">(click to collapse)</span>
+        ) : lastReplyTime ? (
           <span className="text-[8px] text-text-muted font-normal">Last reply {lastReplyTime}</span>
-        )}
+        ) : null}
       </button>
+    );
+  };
+
+  const renderInlineReplies = () => {
+    if (!isRepliesExpanded) return null;
+
+    return (
+      <div className="mt-3.5 w-full flex flex-col gap-3.5 border-l-2 border-primary/25 dark:border-primary/40 pl-4.5 ml-1.5 mb-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
+        {/* Replies List */}
+        {replies === null ? (
+          <div className="flex items-center gap-2 py-2 pl-1.5">
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary/60" />
+            <p className="text-[10px] text-text-muted font-medium">Loading replies...</p>
+          </div>
+        ) : replies.length > 0 ? (
+          <div className="flex flex-col gap-3 w-full max-w-xl">
+            {replies.map((reply) => {
+              const replySender = members.find((m) => m.uid === reply.senderId);
+              const replyPhotoURL = replySender?.photoURL;
+              const replyInitials = reply.senderName
+                .split(' ')
+                .map((n) => n[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase();
+
+              const isOwnReply = reply.senderId === (currentUser?.uid ?? '');
+
+              return (
+                <div key={reply.id} className="flex gap-2.5 items-start group/reply">
+                  {/* Reply Sender Avatar */}
+                  <div className="h-6.5 w-6.5 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-[8px] font-bold text-primary border border-primary/15 shrink-0 overflow-hidden shadow-sm mt-0.5">
+                    {replyPhotoURL ? (
+                      <img src={replyPhotoURL} alt={reply.senderName} className="h-full w-full object-cover" />
+                    ) : (
+                      replyInitials
+                    )}
+                  </div>
+                  
+                  {/* Reply Bubble content */}
+                  <div className="flex-1 min-w-0 flex flex-col items-start">
+                    <div className="flex items-baseline gap-1.5 flex-wrap px-0.5">
+                      <span className={cn('text-[10px] font-bold', isOwnReply ? 'text-primary/90' : getSenderColor(reply.senderUsername))}>
+                        {isOwnReply ? 'You' : reply.senderName}
+                      </span>
+                      <span className="text-[8.5px] text-text-muted font-medium">@{reply.senderUsername}</span>
+                      <span className="text-[8px] text-text-muted font-mono ml-1">{formatTime(reply.createdAt as any)}</span>
+                    </div>
+                    <div className="mt-0.5 rounded-xl px-3 py-1.5 text-xs bg-surface/50 border border-border-default/50 leading-relaxed text-foreground select-text break-words w-fit max-w-full shadow-inner hover:border-primary/15 hover:bg-surface/85 transition-all">
+                      {reply.body}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-[10px] text-text-muted italic pl-1.5 py-1">No replies yet. Be the first to add a comment!</p>
+        )}
+
+        {/* Reply Input Box */}
+        {currentUser && orgId && (
+          <div className="w-full max-w-xl mt-1 flex gap-2.5 items-start">
+            {/* Current user mini-initials avatar */}
+            <div className="h-6.5 w-6.5 rounded-full bg-primary/10 flex items-center justify-center text-[8px] font-bold text-primary border border-primary/15 shrink-0 overflow-hidden mt-1 shadow-sm">
+              {currentUser.displayName ? (
+                currentUser.displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+              ) : (
+                'U'
+              )}
+            </div>
+
+            {/* Input textarea and send button */}
+            <div className="flex-1 flex items-end gap-1.5 rounded-xl border border-border-default bg-surface/80 dark:bg-surface/65 backdrop-blur-xs px-2.5 py-1.5 shadow-inner focus-within:border-primary/45 transition-colors">
+              <textarea
+                ref={replyTextareaRef}
+                value={replyBody}
+                onChange={(e) => setReplyBody(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendReply();
+                  }
+                }}
+                placeholder="Write a comment..."
+                disabled={replySending}
+                maxLength={1000}
+                rows={1}
+                className="flex-1 resize-none bg-transparent text-xs text-foreground placeholder:text-text-muted focus:outline-none disabled:opacity-50 leading-relaxed scrollbar-hide py-0.5 min-h-[18px]"
+                style={{ maxHeight: '80px' }}
+              />
+              <button
+                onClick={handleSendReply}
+                disabled={!replyBody.trim() || replySending}
+                className={cn(
+                  'flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-lg transition-all border cursor-pointer',
+                  replyBody.trim() && !replySending
+                    ? 'bg-primary text-primary-foreground border-transparent shadow shadow-primary/20 hover:bg-primary/95'
+                    : 'bg-bg-tertiary text-text-muted border-border-default cursor-not-allowed'
+                )}
+              >
+                {replySending ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -643,15 +801,16 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
               </div>
 
               {/* Reply Trigger Button */}
-              {onOpenDiscussion && (
-                <button
-                  onClick={() => onOpenDiscussion(message)}
-                  className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
-                  title="Reply to message"
-                >
-                  <MessageSquare className="h-3 w-3" />
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  setIsRepliesExpanded(true);
+                  setTimeout(() => replyTextareaRef.current?.focus(), 100);
+                }}
+                className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+                title="Reply to message"
+              >
+                <MessageSquare className="h-3 w-3" />
+              </button>
 
               {/* Edit/Delete options for own messages */}
               {isOwn && (
@@ -679,6 +838,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
         {/* Emojis reactions and replies list */}
         {renderReactions()}
         {renderReplySummary()}
+        {renderInlineReplies()}
 
         {/* Small own timestamp below bubble if not consecutive */}
         {!isGrouped && isOwn && !(isTaskCommand || isGoalCommand || isRequestCommand) && (

@@ -113,8 +113,27 @@ export function MessageArea({
       const commandArgs = trimmed.slice(5).trim();
       let goalTitle = commandArgs.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
 
-      if (!goalTitle) {
-        const usageText = `**Usage**: \`/goal <goal title>\``;
+      // Extract raw mentions from the body and look up their user IDs
+      const textMentions = (trimmed.match(/@\w+/g) || [])
+        .map((m) => m.slice(1))
+        .map((uname) => members.find((m) => m.username.toLowerCase() === uname.toLowerCase())?.uid)
+        .filter((id): id is string => !!id);
+
+      const combinedMentions = Array.from(new Set([...mentions, ...textMentions]));
+
+      let ownerId = currentUser.uid;
+      if (dmId) {
+        const parts = dmId.split('_');
+        const otherId = parts.find((p) => p !== currentUser.uid) ?? currentUser.uid;
+        ownerId = combinedMentions[0] || otherId;
+      } else if (channelId) {
+        ownerId = combinedMentions[0] || '';
+      }
+
+      if (!goalTitle || (channelId && !ownerId)) {
+        const usageText = channelId
+          ? `**Usage**: \`/goal <goal title> @username\``
+          : `**Usage**: \`/goal <goal title>\``;
         if (channelId) {
           await sendChannelMessage({ ...base, body: usageText, channelId });
         } else if (dmId) {
@@ -134,7 +153,7 @@ export function MessageArea({
             uid: currentUser.uid,
             name: base.senderName,
           },
-          ownerId: currentUser.uid,
+          ownerId,
           horizon: 'short_term',
           recurrence: 'none',
         });

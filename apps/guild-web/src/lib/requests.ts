@@ -1,5 +1,5 @@
 import {
-  collection, doc, setDoc, updateDoc,
+  collection, doc, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot,
   serverTimestamp, Timestamp,
 } from 'firebase/firestore';
@@ -136,6 +136,30 @@ export async function updateRequestStatus(
     actor: { id: approverId, name: approverName },
     title: `Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
     body: `Your request "${requestTitle}" was ${status} by ${approverName}`,
+    link: '/requests',
+  });
+}
+
+export async function deleteRequest(requestId: string): Promise<void> {
+  await deleteDoc(doc(db, 'requests', requestId));
+}
+
+export async function sendRequestReminder(params: {
+  orgId: string;
+  creatorId: string;
+  creatorName: string;
+  approverId: string;
+  title: string;
+}): Promise<void> {
+  await createNotification({
+    orgId: params.orgId,
+    recipientId: params.approverId,
+    category: 'requests',
+    type: 'request_pending',
+    urgency: 'high',
+    actor: { id: params.creatorId, name: params.creatorName },
+    title: 'Reminder: Approval Request',
+    body: `${params.creatorName} is waiting for review on: "${params.title}"`,
     link: '/requests',
   });
 }

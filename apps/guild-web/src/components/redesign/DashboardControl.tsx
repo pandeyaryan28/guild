@@ -23,8 +23,9 @@ import { useTeams } from '../../hooks/useTeams';
 import { useProjects } from '../../hooks/useProjects';
 import { updateRequestStatus } from '../../lib/requests';
 import { type Task, moveTask, createTask } from '../../lib/tasks';
-import { updateUserProfile, type UserProfile } from '../../lib/firestore';
-import { Timestamp } from 'firebase/firestore';
+import { updateUserProfile, type UserProfile, type Organization } from '../../lib/firestore';
+import { Timestamp, doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 import { avatarInitials, avatarHue } from '../MemberProfileDrawer';
 import { cn } from '@/lib/utils';
 
@@ -51,6 +52,35 @@ export function DashboardControl() {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
+
+  const [org, setOrg] = React.useState<Organization | null>(null);
+  const [loadingOrg, setLoadingOrg] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!orgId) {
+      setOrg(null);
+      setLoadingOrg(false);
+      return;
+    }
+    setLoadingOrg(true);
+    const unsub = onSnapshot(
+      doc(db, 'organizations', orgId),
+      (snap) => {
+        if (snap.exists()) {
+          setOrg({ ...snap.data(), id: snap.id } as Organization);
+        } else {
+          setOrg(null);
+        }
+        setLoadingOrg(false);
+      },
+      (err) => {
+        console.error('Failed to load organization in DashboardControl:', err);
+        setOrg(null);
+        setLoadingOrg(false);
+      }
+    );
+    return unsub;
+  }, [orgId]);
 
   const { tasks, loading: tasksLoading } = useTasks(orgId);
   const { teams } = useTeams(orgId);
@@ -231,100 +261,151 @@ export function DashboardControl() {
       
       {/* Top Banner: Greeting & Daily Focus Goal */}
       <header className="aether-glass p-6 space-y-4">
-        <div className="flex items-center gap-3.5">
-          <div className="relative">
-            <button 
-              type="button"
-              onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-              className="w-10 h-10 flex items-center justify-center rounded-full shrink-0 border border-white/10 relative cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-sm"
-              style={{ background: `hsl(${avatarHue(userProfile?.uid || '')} 55% 45%)` }}
-              title="Click to change your availability status"
-            >
-              {userProfile?.photoURL ? (
-                <img src={userProfile.photoURL} alt={userProfile.fullName || 'User'} className="h-full w-full object-cover rounded-full" />
-              ) : (
-                <span className="text-xs font-black text-white">{myInitials}</span>
-              )}
-              {/* Availability status dot indicator */}
-              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-surface dark:bg-zinc-950 flex items-center justify-center shadow-sm">
-                <span className={cn(
-                  "h-2 w-2 rounded-full",
-                  currentStatus === 'focus' ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]" :
-                  currentStatus === 'away' ? "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]" :
-                  "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"
-                )} />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="relative">
+              <button 
+                type="button"
+                onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                className="w-10 h-10 flex items-center justify-center rounded-full shrink-0 border border-white/10 relative cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-sm"
+                style={{ background: `hsl(${avatarHue(userProfile?.uid || '')} 55% 45%)` }}
+                title="Click to change your availability status"
+              >
+                {userProfile?.photoURL ? (
+                  <img src={userProfile.photoURL} alt={userProfile.fullName || 'User'} className="h-full w-full object-cover rounded-full" />
+                ) : (
+                  <span className="text-xs font-black text-white">{myInitials}</span>
+                )}
+                {/* Availability status dot indicator */}
+                <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-surface dark:bg-zinc-950 flex items-center justify-center shadow-sm">
+                  <span className={cn(
+                    "h-2 w-2 rounded-full",
+                    currentStatus === 'focus' ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]" :
+                    currentStatus === 'away' ? "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]" :
+                    "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"
+                  )} />
+                </span>
+              </button>
+
+              {/* Custom Premium Availability dropdown */}
+              <AnimatePresence>
+                {statusDropdownOpen && (
+                  <>
+                    {/* Backdrop to close click-outside */}
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setStatusDropdownOpen(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      className="absolute left-0 mt-2.5 w-44 aether-glass bg-surface/95 dark:bg-zinc-900/95 p-1 shadow-2xl z-50 rounded-xl"
+                    >
+                      <div className="px-2.5 py-1 text-[8px] font-bold text-muted-foreground uppercase tracking-wider border-b border-white/5 mb-1">
+                        Availability Status
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateStatus('active')}
+                        className={cn(
+                          "w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-all",
+                          currentStatus === 'active' ? "text-foreground" : "text-muted-foreground"
+                        )}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        <span>Active</span>
+                        {currentStatus === 'active' && <Check className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateStatus('focus')}
+                        className={cn(
+                          "w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-all",
+                          currentStatus === 'focus' ? "text-foreground" : "text-muted-foreground"
+                        )}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                        <span>Focus / Muted</span>
+                        {currentStatus === 'focus' && <Check className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateStatus('away')}
+                        className={cn(
+                          "w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-all",
+                          currentStatus === 'away' ? "text-foreground" : "text-muted-foreground"
+                        )}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        <span>Away / Idle</span>
+                        {currentStatus === 'away' && <Check className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                Dashboard
               </span>
-            </button>
-
-            {/* Custom Premium Availability dropdown */}
-            <AnimatePresence>
-              {statusDropdownOpen && (
-                <>
-                  {/* Backdrop to close click-outside */}
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setStatusDropdownOpen(false)}
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                    className="absolute left-0 mt-2.5 w-44 aether-glass bg-surface/95 dark:bg-zinc-900/95 p-1 shadow-2xl z-50 rounded-xl"
-                  >
-                    <div className="px-2.5 py-1 text-[8px] font-bold text-muted-foreground uppercase tracking-wider border-b border-white/5 mb-1">
-                      Availability Status
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateStatus('active')}
-                      className={cn(
-                        "w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-all",
-                        currentStatus === 'active' ? "text-foreground" : "text-muted-foreground"
-                      )}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      <span>Active</span>
-                      {currentStatus === 'active' && <Check className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateStatus('focus')}
-                      className={cn(
-                        "w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-all",
-                        currentStatus === 'focus' ? "text-foreground" : "text-muted-foreground"
-                      )}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                      <span>Focus / Muted</span>
-                      {currentStatus === 'focus' && <Check className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateStatus('away')}
-                      className={cn(
-                        "w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-all",
-                        currentStatus === 'away' ? "text-foreground" : "text-muted-foreground"
-                      )}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      <span>Away / Idle</span>
-                      {currentStatus === 'away' && <Check className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
-                    </button>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
+              <h1 className="text-xl font-bold text-foreground leading-tight">
+                {greeting}, {displayName}
+              </h1>
+            </div>
           </div>
 
-          <div className="space-y-0.5">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-              Dashboard
-            </span>
-            <h1 className="text-xl font-bold text-foreground leading-tight">
-              {greeting}, {displayName}
-            </h1>
-          </div>
-        </div>        {/* Daily Goal Input Section */}
+          {/* Active Organization Workspace Badge */}
+          {loadingOrg ? (
+            <div className="h-12 w-32 flex items-center justify-center bg-white/[0.02] border border-white/5 rounded-2xl animate-pulse shrink-0">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+            </div>
+          ) : org && (
+            <div 
+              onClick={() => navigate('/settings')}
+              className="flex items-center gap-3 p-2.5 rounded-2xl border border-white/5 bg-white/[0.02] dark:bg-white/[0.01] hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-sm group select-none shrink-0 self-start sm:self-auto"
+            >
+              <div className="relative">
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-xs border-2 border-white/10 relative overflow-hidden transition-all group-hover:scale-105 animate-fluid-pop"
+                  style={!org.photoURL ? {
+                    background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
+                  } : undefined}
+                >
+                  {org.photoURL ? (
+                    <img src={org.photoURL} alt={org.name} className="h-full w-full object-cover" />
+                  ) : (
+                    org.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'O'
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-0.5 pr-1.5">
+                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/80 block">
+                  Active Workspace
+                </span>
+                <h3 className="text-xs font-bold text-foreground group-hover:text-accent transition-colors leading-tight">
+                  {org.name}
+                </h3>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {org.billingPlan && (
+                    <span className="px-1.5 py-0.2 rounded bg-accent/10 border border-accent/20 text-[7px] font-extrabold uppercase tracking-wider text-accent" style={{ color: 'var(--accent)' }}>
+                      {org.billingPlan}
+                    </span>
+                  )}
+                  {org.industry && (
+                    <span className="text-[9px] text-muted-foreground font-semibold">
+                      • {org.industry}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Daily Goal Input Section */}
         <div className="pt-2 border-t border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 shrink-0">

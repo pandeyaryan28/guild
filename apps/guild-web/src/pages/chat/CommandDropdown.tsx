@@ -12,7 +12,7 @@ export interface CommandItem {
 
 const COMMANDS: CommandItem[] = [
   { name: 'task', description: 'Create and assign a task', syntax: '/task <title> [@users]', icon: CheckSquare },
-  { name: 'goal', description: 'Create a personal or team goal', syntax: '/goal <title>', icon: Target },
+  { name: 'goal', description: 'Create and assign a goal', syntax: '/goal <title> [@user]', icon: Target },
   { name: 'request', description: 'Submit a request to an approver', syntax: '/request <title> @approver', icon: ClipboardList },
 ];
 

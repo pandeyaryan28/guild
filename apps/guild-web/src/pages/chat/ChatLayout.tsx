@@ -13,8 +13,7 @@ import { getOrCreateDM, markChannelRead, markDMRead } from '../../lib/chat';
 import { CreateChannelModal } from '../../components/chat/CreateChannelModal';
 import { NewDMModal } from '../../components/chat/NewDMModal';
 import { MessageArea } from './MessageArea';
-import { ReplyPanel } from './ReplyPanel';
-import { type UserProfile, getOrgById } from '../../lib/firestore';
+import { type UserProfile, getOrgById, type Organization } from '../../lib/firestore';
 import { type Message } from '../../lib/chat';
 import { RedesignLayout } from '../../components/redesign/Layout';
 
@@ -36,14 +35,14 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
   const { threads: dmThreads, hasUnreadDM } = useDMs(orgId);
   const members = useOrgMembers(orgId);
 
-  const [orgName, setOrgName] = React.useState('');
+  const [localOrg, setLocalOrg] = React.useState<Organization | null>(null);
   const [channelsOpen, setChannelsOpen] = React.useState(true);
   const [dmsOpen, setDmsOpen] = React.useState(true);
 
-  // Fetch org name
+  // Fetch organization
   React.useEffect(() => {
     if (!orgId) return;
-    getOrgById(orgId).then((org) => { if (org) setOrgName(org.name); });
+    getOrgById(orgId).then((org) => { if (org) setLocalOrg(org); });
   }, [orgId]);
 
   const currentPath = location.pathname;
@@ -61,11 +60,17 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
     )}>
       {/* Workspace Branding Header */}
       <div className="flex items-center gap-2.5 border-b border-white/5 px-4 py-4 select-none">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/30">
-          <span className="text-[10px] font-black text-white">G</span>
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/30 relative overflow-hidden border border-white/10 shrink-0">
+          {localOrg?.photoURL ? (
+            <img src={localOrg.photoURL} alt={localOrg.name} className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-[10px] font-black text-white">
+              {localOrg?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'G'}
+            </span>
+          )}
         </div>
         <div className="min-w-0 flex-1">
-          <span className="text-xs font-bold text-foreground block truncate">{orgName || 'Guild'}</span>
+          <span className="text-xs font-bold text-foreground block truncate">{localOrg?.name || 'Guild'}</span>
           <span className="text-[9px] text-muted-foreground font-semibold block mt-0.5">Workspace</span>
         </div>
         <button
@@ -234,11 +239,6 @@ export function ChatLayout() {
   const [isMemberPanelCollapsed, setIsMemberPanelCollapsed] = React.useState(false);
   const [showChannelModal, setShowChannelModal] = React.useState(false);
   const [showDMModal, setShowDMModal] = React.useState(false);
-  const [activeDiscussionMessage, setActiveDiscussionMessage] = React.useState<Message | null>(null);
-
-  React.useEffect(() => {
-    setActiveDiscussionMessage(null);
-  }, [channelId, dmId]);
 
   const handleChannelCreated = (chId: string) => {
     setShowChannelModal(false);
@@ -301,18 +301,7 @@ export function ChatLayout() {
                 members={members}
                 isSidebarCollapsed={isSidebarCollapsed}
                 onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                onOpenDiscussion={setActiveDiscussionMessage}
               />
-              {activeDiscussionMessage && orgId && (
-                <ReplyPanel
-                  parentMessage={activeDiscussionMessage}
-                  currentUserId={user?.uid ?? ''}
-                  members={members}
-                  orgId={orgId}
-                  currentUser={user ? { uid: user.uid, displayName: user.displayName ?? '' } : null}
-                  onClose={() => setActiveDiscussionMessage(null)}
-                />
-              )}
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20 relative">
