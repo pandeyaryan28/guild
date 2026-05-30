@@ -54,16 +54,21 @@ function DashboardApp({ children }: { children?: React.ReactNode }) {
 function AppContent() {
   const deviceType = useDeviceType();
   const { user } = useAuth();
-  const { permission, requestPermission } = usePushNotifications();
+  const { permission, requestPermission, syncPushSubscription } = usePushNotifications();
 
   React.useEffect(() => {
-    if (user && permission === 'default') {
+    if (!user) return;
+    
+    if (permission === 'default') {
       const timer = setTimeout(() => {
-        requestPermission();
+        requestPermission(user.uid);
       }, 4000);
       return () => clearTimeout(timer);
+    } else if (permission === 'granted') {
+      // Re-sync subscription endpoint in background in case database was cleared
+      syncPushSubscription(user.uid);
     }
-  }, [user, permission, requestPermission]);
+  }, [user, permission, requestPermission, syncPushSubscription]);
 
   if (deviceType === 'mobile') {
     return <MobileApp />;

@@ -56,6 +56,22 @@ export async function createNotification(params: {
     archived: false,
     createdAt: serverTimestamp(),
   });
+
+  // Proactively dispatch background OS-level Universal Push Notification via Vercel serverless API
+  if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
+    fetch('/api/send-push', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recipientId: params.recipientId,
+        title: params.title,
+        body: params.body || '',
+        link: params.link,
+      }),
+    }).catch((e) => console.error('Failed to dispatch background WebPush notifications via serverless API', e));
+  }
 }
 
 // ─── Update Statuses ─────────────────────────────────────────────────────────
