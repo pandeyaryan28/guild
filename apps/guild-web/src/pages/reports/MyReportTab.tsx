@@ -2,34 +2,43 @@ import * as React from 'react';
 import {
   CheckSquare, Clock, AlertTriangle, Target, TrendingUp, Loader2,
 } from 'lucide-react';
-import { getMyReport, getRecentActivity } from '../../lib/reports';
-import type { RecentActivityItem } from '../../lib/reports';
+import { getMyReport } from '../../lib/reports';
 import { KpiCards } from './KpiCards';
 import type { KpiCardData } from './KpiCards';
 import { StatusDistribution } from './StatusDistribution';
-import { ActivityTable } from './ActivityTable';
 import type { ReportFiltersState } from './types';
+import type { Task } from '../../lib/tasks';
+import type { Project } from '../../lib/projects';
+import type { Goal } from '../../lib/goals';
 import { useTasks } from '../../hooks/useTasks';
 import { ReportTasksList } from './ReportTasksList';
-import type { Task } from '../../lib/tasks';
 
 interface Props {
   orgId: string;
   userId: string;
   filters: ReportFiltersState;
   onSelectTask: (task: Task) => void;
+  projects: Project[];
+  goals: Goal[];
+  onSelectGoal: (goal: Goal) => void;
 }
 
 type KpiType = 'assigned' | 'completed' | 'in_progress' | 'overdue';
 
-export function MyReportTab({ orgId, userId, filters, onSelectTask }: Props) {
+export function MyReportTab({
+  orgId,
+  userId,
+  filters,
+  onSelectTask,
+  projects,
+  goals,
+  onSelectGoal,
+}: Props) {
   const [data, setData] = React.useState<{
     assigned: number; completed: number; inProgress: number; overdue: number;
     completionRate: number; goalsTotal: number; goalsCompleted: number; goalsActive: number;
   } | null>(null);
-  const [activities, setActivities] = React.useState<RecentActivityItem[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [actLoading, setActLoading] = React.useState(true);
   const [selectedKpi, setSelectedKpi] = React.useState<KpiType | null>(null);
 
   // Load real-time tasks to display list matching KPI selection
@@ -93,12 +102,7 @@ export function MyReportTab({ orgId, userId, filters, onSelectTask }: Props) {
     }).then((d) => { setData(d); setLoading(false); }).catch(() => setLoading(false));
   }, [orgId, userId, filters.datePreset, filters.customFrom, filters.customTo, filters.status, filters.priority]);
 
-  React.useEffect(() => {
-    setActLoading(true);
-    getRecentActivity(orgId, 'user', userId).then((a) => {
-      setActivities(a); setActLoading(false);
-    }).catch(() => setActLoading(false));
-  }, [orgId, userId]);
+
 
   if (loading) {
     return (
@@ -166,21 +170,14 @@ export function MyReportTab({ orgId, userId, filters, onSelectTask }: Props) {
           title={listTitle}
           onSelectTask={onSelectTask}
           orgId={orgId}
+          projects={projects}
+          goals={goals}
+          onSelectGoal={onSelectGoal}
         />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <StatusDistribution data={statusData} title="Task Status" />
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
-            Recent Activity
-          </p>
-          <ActivityTable
-            activities={activities}
-            loading={actLoading}
-            emptyText="No personal activity yet"
-          />
-        </div>
       </div>
     </div>
   );

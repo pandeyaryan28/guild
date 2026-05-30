@@ -8,8 +8,14 @@ import { TeamReportTab } from './TeamReportTab';
 import { ProjectReportTab } from './ProjectReportTab';
 import { DEFAULT_FILTERS } from './types';
 import type { ReportScope, ReportFiltersState } from './types';
-import { cn } from '@/lib/utils';
 import type { Task } from '../../lib/tasks';
+import type { Goal } from '../../lib/goals';
+import { useOrgMembers } from '../../hooks/useChat';
+import { useProjects } from '../../hooks/useProjects';
+import { useGoals } from '../../hooks/useGoals';
+import { useTasks } from '../../hooks/useTasks';
+import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
+import { GoalDetailDrawer } from '../../components/tasks/GoalDetailDrawer';
 
 
 export function ReportsPage() {
@@ -21,6 +27,12 @@ export function ReportsPage() {
   const [activeScope, setActiveScope] = React.useState<ReportScope>('my');
   const [filters, setFilters] = React.useState<ReportFiltersState>(DEFAULT_FILTERS);
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
+  const [selectedGoal, setSelectedGoal] = React.useState<Goal | null>(null);
+
+  const members = useOrgMembers(orgId || '');
+  const { projects } = useProjects(orgId || '');
+  const { goals } = useGoals(orgId || '');
+  const { tasks } = useTasks(orgId || '');
 
   const actor = React.useMemo(() => ({
     uid: userProfile?.uid || '',
@@ -70,16 +82,60 @@ export function ReportsPage() {
         {/* Tab Content */}
         <div className="p-6">
           {activeScope === 'my' && (
-            <MyReportTab orgId={orgId} userId={userId} filters={filters} onSelectTask={setSelectedTask} />
+            <MyReportTab
+              orgId={orgId}
+              userId={userId}
+              filters={filters}
+              onSelectTask={setSelectedTask}
+              projects={projects}
+              goals={goals}
+              onSelectGoal={setSelectedGoal}
+            />
           )}
           {activeScope === 'team' && isManager && (
-            <TeamReportTab orgId={orgId} managerId={userId} filters={filters} onSelectTask={setSelectedTask} />
+            <TeamReportTab
+              orgId={orgId}
+              managerId={userId}
+              filters={filters}
+              onSelectTask={setSelectedTask}
+              projects={projects}
+              goals={goals}
+              onSelectGoal={setSelectedGoal}
+            />
           )}
           {activeScope === 'project' && (
-            <ProjectReportTab orgId={orgId} userId={userId} filters={filters} onSelectTask={setSelectedTask} />
+            <ProjectReportTab
+              orgId={orgId}
+              userId={userId}
+              filters={filters}
+              onSelectTask={setSelectedTask}
+              projects={projects}
+              goals={goals}
+              onSelectGoal={setSelectedGoal}
+            />
           )}
         </div>
       </div>
+
+      <TaskDetailDrawer
+        task={selectedTask}
+        onClose={() => setSelectedTask(null)}
+        orgId={orgId}
+        actor={actor}
+        members={members}
+        projects={projects}
+        goals={goals}
+      />
+
+      <GoalDetailDrawer
+        goal={selectedGoal}
+        onClose={() => setSelectedGoal(null)}
+        orgId={orgId}
+        actor={actor}
+        members={members}
+        projects={projects}
+        tasks={tasks}
+      />
 
 
     </div>

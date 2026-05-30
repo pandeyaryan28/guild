@@ -4,15 +4,30 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { moveTask, PRIORITY_CONFIG, STATUS_CONFIG } from '../../lib/tasks';
 import type { Task } from '../../lib/tasks';
+import { useNavigate } from 'react-router-dom';
+import type { Project } from '../../lib/projects';
+import type { Goal } from '../../lib/goals';
 
 interface Props {
   tasks: Task[];
   title: string;
   onSelectTask: (task: Task) => void;
   orgId: string;
+  projects?: Project[];
+  goals?: Goal[];
+  onSelectGoal?: (goal: Goal) => void;
 }
 
-export function ReportTasksList({ tasks, title, onSelectTask, orgId }: Props) {
+export function ReportTasksList({
+  tasks,
+  title,
+  onSelectTask,
+  orgId,
+  projects,
+  goals,
+  onSelectGoal,
+}: Props) {
+  const navigate = useNavigate();
   if (tasks.length === 0) {
     return (
       <div className="rounded-xl border border-border-default bg-card p-6 text-center">
@@ -37,6 +52,8 @@ export function ReportTasksList({ tasks, title, onSelectTask, orgId }: Props) {
           const isOverdue = task.dueDate && task.status !== 'done' && task.dueDate.toDate() < new Date();
           const priority = PRIORITY_CONFIG[task.priority];
           const status = STATUS_CONFIG[task.status];
+          const taskProject = projects?.find((p) => p.id === task.projectId);
+          const taskGoal = goals?.find((g) => g.id === task.goalId);
 
           return (
             <div
@@ -79,6 +96,32 @@ export function ReportTasksList({ tasks, title, onSelectTask, orgId }: Props) {
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                {/* Project Badge */}
+                {taskProject && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/projects/${taskProject.id}`);
+                    }}
+                    className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-indigo-500/25 text-indigo-650 dark:text-indigo-400 bg-indigo-500/[0.04] hover:bg-indigo-500/10 cursor-pointer transition-colors"
+                  >
+                    {taskProject.name}
+                  </span>
+                )}
+
+                {/* Goal Badge */}
+                {taskGoal && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectGoal?.(taskGoal);
+                    }}
+                    className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-cyan-500/25 text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04] hover:bg-cyan-500/10 cursor-pointer transition-colors"
+                  >
+                    Goal: {taskGoal.title}
+                  </span>
+                )}
+
                 {/* Priority Badge */}
                 {task.priority !== 'none' && (
                   <span

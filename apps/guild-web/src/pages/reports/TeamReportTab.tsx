@@ -1,40 +1,50 @@
 import * as React from 'react';
 import { Users, CheckSquare, Clock, AlertTriangle, Target, Loader2 } from 'lucide-react';
-import { getManagerTeamReport, getRecentActivity } from '../../lib/reports';
-import type { RecentActivityItem, MemberContribution } from '../../lib/reports';
+import { getManagerTeamReport } from '../../lib/reports';
+import type { MemberContribution } from '../../lib/reports';
 import { getUserById } from '../../lib/firestore';
 import { listenToManagedTeams } from '../../lib/teams';
 import { KpiCards } from './KpiCards';
 import type { KpiCardData } from './KpiCards';
 import { StatusDistribution } from './StatusDistribution';
 import { ContributionTable } from './ContributionTable';
-import { ActivityTable } from './ActivityTable';
 import type { ReportFiltersState } from './types';
 import type { UserProfile } from '../../lib/firestore';
 import type { Team } from '@guild/types';
 import { useTasks } from '../../hooks/useTasks';
 import { ReportTasksList } from './ReportTasksList';
 import type { Task } from '../../lib/tasks';
+import type { Project } from '../../lib/projects';
+import type { Goal } from '../../lib/goals';
 
 interface Props {
   orgId: string;
   managerId: string;
   filters: ReportFiltersState;
   onSelectTask: (task: Task) => void;
+  projects: Project[];
+  goals: Goal[];
+  onSelectGoal: (goal: Goal) => void;
 }
 
 type KpiType = 'assigned' | 'completed' | 'in_progress' | 'overdue';
 
-export function TeamReportTab({ orgId, managerId, filters, onSelectTask }: Props) {
+export function TeamReportTab({
+  orgId,
+  managerId,
+  filters,
+  onSelectTask,
+  projects,
+  goals,
+  onSelectGoal,
+}: Props) {
   const [teams, setTeams] = React.useState<Team[]>([]);
   const [memberProfiles, setMemberProfiles] = React.useState<UserProfile[]>([]);
   const [data, setData] = React.useState<{
     totalTasks: number; completedTasks: number; inProgressTasks: number; overdueTasks: number;
     totalGoals: number; completedGoals: number; members: MemberContribution[];
   } | null>(null);
-  const [activities, setActivities] = React.useState<RecentActivityItem[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [actLoading, setActLoading] = React.useState(true);
   const [selectedKpi, setSelectedKpi] = React.useState<KpiType | null>(null);
 
   // Load real-time tasks to display list matching KPI selection
@@ -128,15 +138,7 @@ export function TeamReportTab({ orgId, managerId, filters, onSelectTask }: Props
     setSelectedKpi(null); // Reset selection when filters or profiles change
   }, [orgId, managerId, memberProfiles, filters.datePreset, filters.customFrom, filters.customTo, filters.status, filters.priority]);
 
-  // Fetch recent team activity
-  React.useEffect(() => {
-    const memberIds = memberProfiles.map((m) => m.uid);
-    if (memberIds.length === 0) return;
-    setActLoading(true);
-    getRecentActivity(orgId, 'team', managerId, memberIds)
-      .then((a) => { setActivities(a); setActLoading(false); })
-      .catch(() => setActLoading(false));
-  }, [orgId, managerId, memberProfiles]);
+
 
   if (teams.length === 0 && !loading) {
     return (
@@ -215,6 +217,9 @@ export function TeamReportTab({ orgId, managerId, filters, onSelectTask }: Props
           title={listTitle}
           onSelectTask={onSelectTask}
           orgId={orgId}
+          projects={projects}
+          goals={goals}
+          onSelectGoal={onSelectGoal}
         />
       )}
 
@@ -227,12 +232,7 @@ export function TeamReportTab({ orgId, managerId, filters, onSelectTask }: Props
           <ContributionTable members={data.members} />
         </div>
       </div>
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
-          Team Activity
-        </p>
-        <ActivityTable activities={activities} loading={actLoading} emptyText="No team activity yet" />
-      </div>
+
     </div>
   );
 }

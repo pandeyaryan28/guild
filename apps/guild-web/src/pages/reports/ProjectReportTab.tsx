@@ -1,31 +1,44 @@
 import * as React from 'react';
 import {
-  FolderKanban, CheckSquare, Clock, AlertTriangle, TrendingUp, Loader2, ChevronDown,
+  FolderKanban, CheckSquare, Clock, AlertTriangle, TrendingUp, Loader2, ChevronDown, ArrowRight,
 } from 'lucide-react';
-import { getProjectReport, getRecentActivity } from '../../lib/reports';
-import type { RecentActivityItem } from '../../lib/reports';
+import { useNavigate } from 'react-router-dom';
+import { getProjectReport } from '../../lib/reports';
 import { getUserById } from '../../lib/firestore';
 import { useProjects } from '../../hooks/useProjects';
 import { KpiCards } from './KpiCards';
 import type { KpiCardData } from './KpiCards';
 import { StatusDistribution } from './StatusDistribution';
-import { ActivityTable } from './ActivityTable';
 import type { ReportFiltersState } from './types';
 import type { UserProfile } from '../../lib/firestore';
 import { useTasks } from '../../hooks/useTasks';
 import { ReportTasksList } from './ReportTasksList';
 import type { Task } from '../../lib/tasks';
+import type { Project } from '../../lib/projects';
+import type { Goal } from '../../lib/goals';
 
 interface Props {
   orgId: string;
   userId: string;
   filters: ReportFiltersState;
   onSelectTask: (task: Task) => void;
+  projects: Project[];
+  goals: Goal[];
+  onSelectGoal: (goal: Goal) => void;
 }
 
 type KpiType = 'assigned' | 'completed' | 'in_progress' | 'overdue';
 
-export function ProjectReportTab({ orgId, userId, filters, onSelectTask }: Props) {
+export function ProjectReportTab({
+  orgId,
+  userId,
+  filters,
+  onSelectTask,
+  projects: allProjectsProp,
+  goals,
+  onSelectGoal,
+}: Props) {
+  const navigate = useNavigate();
   const { projects, loading: projLoading } = useProjects(orgId);
   const [selectedProjectId, setSelectedProjectId] = React.useState<string>('');
   const [data, setData] = React.useState<{
@@ -33,9 +46,7 @@ export function ProjectReportTab({ orgId, userId, filters, onSelectTask }: Props
     overdueTasks: number; completionRate: number; memberIds: string[];
   } | null>(null);
   const [memberProfiles, setMemberProfiles] = React.useState<UserProfile[]>([]);
-  const [activities, setActivities] = React.useState<RecentActivityItem[]>([]);
   const [loading, setLoading] = React.useState(false);
-  const [actLoading, setActLoading] = React.useState(false);
   const [selectedKpi, setSelectedKpi] = React.useState<KpiType | null>(null);
 
   // Load real-time tasks to display list matching KPI selection
@@ -125,14 +136,7 @@ export function ProjectReportTab({ orgId, userId, filters, onSelectTask }: Props
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.memberIds.join(',')]);
 
-  // Fetch project activity
-  React.useEffect(() => {
-    if (!selectedProjectId) return;
-    setActLoading(true);
-    getRecentActivity(orgId, 'project', selectedProjectId)
-      .then((a) => { setActivities(a); setActLoading(false); })
-      .catch(() => setActLoading(false));
-  }, [orgId, selectedProjectId]);
+
 
   if (projLoading) {
     return (
@@ -205,22 +209,33 @@ export function ProjectReportTab({ orgId, userId, filters, onSelectTask }: Props
   return (
     <div className="space-y-6">
       {/* Project selector */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-          <FolderKanban className="h-4 w-4 text-primary" />
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-3">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+            <FolderKanban className="h-4 w-4 text-primary" />
+          </div>
+          <div className="relative">
+            <select
+              value={selectedProjectId}
+              onChange={(e) => setSelectedProjectId(e.target.value)}
+              className="appearance-none rounded-lg border border-border-default bg-card pl-3 pr-8 py-2 text-sm font-medium text-foreground outline-none cursor-pointer hover:border-primary/50 transition-colors min-w-[200px]"
+            >
+              {myProjects.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          </div>
         </div>
-        <div className="relative">
-          <select
-            value={selectedProjectId}
-            onChange={(e) => setSelectedProjectId(e.target.value)}
-            className="appearance-none rounded-lg border border-border-default bg-card pl-3 pr-8 py-2 text-sm font-medium text-foreground outline-none cursor-pointer hover:border-primary/50 transition-colors min-w-[200px]"
+        {selectedProjectId && (
+          <button
+            onClick={() => navigate(`/projects/${selectedProjectId}`)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm"
           >
-            {myProjects.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        </div>
+            <span>Go to Project Page</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -237,6 +252,9 @@ export function ProjectReportTab({ orgId, userId, filters, onSelectTask }: Props
               title={listTitle}
               onSelectTask={onSelectTask}
               orgId={orgId}
+              projects={allProjectsProp}
+              goals={goals}
+              onSelectGoal={onSelectGoal}
             />
           )}
 
@@ -261,16 +279,6 @@ export function ProjectReportTab({ orgId, userId, filters, onSelectTask }: Props
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <StatusDistribution data={statusData} title="Task Status" />
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
-                Recent Activity
-              </p>
-              <ActivityTable
-                activities={activities}
-                loading={actLoading}
-                emptyText="No project activity yet"
-              />
-            </div>
           </div>
         </>
       ) : null}
