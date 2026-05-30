@@ -2,7 +2,7 @@ import * as React from 'react';
 import { db } from '../lib/firebase';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 
-const VAPID_PUBLIC_KEY = 'BO6D3MKcWyBQygcdqxwbp8b72UxFNODMTcKe2nk3Grz1928hhFhKQtXUb7NPKYZVj208MoVD4sClmQSFMuY0s7w';
+const VAPID_PUBLIC_KEY = 'BLA5LxMq9q_LRmLD941wmpjEVoPI5KECTF44ySo0X3TpF5Y2NooH-YtLrJ35ymlvIGw7WUrOjThyVggGhiZODJg';
 
 /**
  * Utility helper to convert Base64 VAPID Public key to a Uint8Array.
