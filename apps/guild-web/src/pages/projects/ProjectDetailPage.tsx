@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Timestamp } from 'firebase/firestore';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Plus,
@@ -15,7 +15,9 @@ import {
   Lock,
   MessageSquare,
   Paperclip,
-  Send
+  Send,
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -41,6 +43,7 @@ export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { user, userProfile } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const orgId = userProfile?.organizationId;
   const { project, loading: projectLoading } = useProject(projectId);
@@ -49,7 +52,6 @@ export function ProjectDetailPage() {
   const members = useOrgMembers(orgId);
   const { goals } = useGoals(orgId);
 
-  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [showCompleted, setShowCompleted] = React.useState(false);
 
@@ -77,7 +79,7 @@ export function ProjectDetailPage() {
   }, [project, isEditing]);
 
   const actor = React.useMemo(
-    () => ({ uid: user?.uid ?? '', name: userProfile?.fullName || user?.displayName || 'Unknown' }),
+    () => ({ uid: user?.uid ?? '', name: userProfile?.fullName || user?.displayName || 'Teammate' }),
     [user, userProfile],
   );
 
@@ -90,25 +92,13 @@ export function ProjectDetailPage() {
 
   const getInitials = (userId: string) => {
     const m = memberMap.get(userId);
-    if (!m) return 'U';
+    if (!m) return '?';
     return m.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
   const getMemberPhotoURL = (userId: string) => {
     const m = memberMap.get(userId);
     return m?.photoURL || '';
-  };
-
-  const getAvatarColor = (userId: string) => {
-    const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const colors = [
-      'bg-indigo-500/10 border-indigo-500/25 text-indigo-650 dark:text-indigo-400',
-      'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400',
-      'bg-sky-500/10 border-sky-500/25 text-sky-600 dark:text-sky-400',
-      'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400',
-      'bg-pink-500/10 border-pink-500/25 text-pink-600 dark:text-pink-400',
-    ];
-    return colors[hash % colors.length];
   };
 
   const allTasks = React.useMemo(() => {
@@ -123,10 +113,12 @@ export function ProjectDetailPage() {
   const activeTasks = React.useMemo(() => allTasks.filter(t => t.status !== 'done'), [allTasks]);
   const completedTasks = React.useMemo(() => allTasks.filter(t => t.status === 'done'), [allTasks]);
 
+  // Synchronize dynamic active task detail from search param URL queries
+  const openTaskId = searchParams.get('task');
   const activeTask = React.useMemo(() => {
-    if (!selectedTask) return null;
-    return allTasks.find(t => t.id === selectedTask.id) ?? selectedTask;
-  }, [allTasks, selectedTask]);
+    if (!openTaskId) return null;
+    return allTasks.find(t => t.id === openTaskId) ?? null;
+  }, [allTasks, openTaskId]);
 
   const handleToggleTaskStatus = async (e: React.MouseEvent, task: Task) => {
     e.stopPropagation();
@@ -257,56 +249,55 @@ export function ProjectDetailPage() {
   return (
     <div className="h-full w-full bg-transparent p-1.5 flex flex-col min-h-0 overflow-hidden gap-5">
       
-      {/* ─── Premium Glassmorphic Obsidian Card ─── */}
+      {/* Premium Glassmorphic Card Panel */}
       <div className="flex-1 min-h-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-10 relative">
         
-        {/* Header Section */}
-        <div className="p-6 border-b border-border-default/45 flex flex-col gap-4 shrink-0 bg-surface/10">
+        {/* Obsidian Glassmorphic Header */}
+        <div className="p-6 border-b border-border-default/45 flex flex-col gap-4 shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur">
           <div className="flex items-center justify-between shrink-0 flex-wrap gap-4">
             <div className="flex items-center gap-4 min-w-0 flex-1">
               <button
                 onClick={() => navigate('/workspace')}
-                className="w-9 h-9 rounded-xl border border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-90 shrink-0"
+                className="w-9 h-9 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-850 flex items-center justify-center transition-all active:scale-90 shrink-0 shadow-xs"
                 title="Return to Workspace"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
               
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <button
                     onClick={handleToggleProjectStatus}
                     className={cn(
                       "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
                       project.status === 'completed'
-                        ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
-                        : "border-border-default bg-bg-primary/50 hover:border-indigo-500"
+                        ? "border-indigo-500 bg-indigo-500/10 text-indigo-650 dark:text-indigo-400"
+                        : "border-neutral-300 dark:border-neutral-700 bg-transparent hover:border-indigo-500"
                     )}
                     title={project.status === 'completed' ? "Mark Project Active" : "Mark Project Completed"}
                   >
                     {project.status === 'completed' ? (
-                      <Check className="w-3.5 h-3.5" />
+                      <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                     ) : (
                       <FolderGit className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
                     )}
                   </button>
-                  <h1 className={cn("text-sm font-black tracking-tight truncate flex items-center gap-1.5", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground")}>
-                    <Lock className="w-4 h-4 text-amber-500 shrink-0" />
+                  <h1 className={cn("text-base font-black tracking-tight truncate flex items-center gap-1.5", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-neutral-850 dark:text-neutral-100")}>
                     <span>{project.name}</span>
-                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-amber-500/25 text-amber-600 dark:text-amber-400 bg-amber-500/[0.04] leading-none ml-2">
-                      Secure Initiative
+                    <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-indigo-500/20 text-indigo-555 bg-indigo-500/5 leading-none ml-2">
+                      Project context
                     </span>
                   </h1>
                 </div>
                 {project.description && (
-                  <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl font-medium leading-relaxed truncate">{project.description}</p>
+                  <p className="text-[11px] text-neutral-500 mt-1 max-w-2xl font-semibold leading-relaxed truncate">{project.description}</p>
                 )}
               </div>
             </div>
 
             <div className="flex items-center gap-3 shrink-0 ml-auto">
-              {/* Meta dates */}
-              <div className="flex flex-col gap-0.5 text-right font-mono text-[8px] text-muted-foreground hidden sm:flex">
+              {/* Chronological start and due parameters */}
+              <div className="flex flex-col gap-0.5 text-right font-mono text-[9px] text-neutral-400 dark:text-neutral-500 hidden sm:flex font-bold">
                 {project.startDate && (
                   <span>Start: {new Date(project.startDate instanceof Date ? project.startDate : (project.startDate as any).seconds * 1000).toLocaleDateString()}</span>
                 )}
@@ -317,19 +308,19 @@ export function ProjectDetailPage() {
               
               <button
                 onClick={() => setCreateOpen(true)}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.05] hover:bg-indigo-500/[0.08] text-indigo-600 dark:text-indigo-405 px-4 py-2 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm"
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.05] hover:bg-indigo-500/[0.08] text-indigo-650 dark:text-indigo-400 px-4 py-2 h-9 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Add Task</span>
               </button>
 
               <button
                 onClick={() => setShowComments(!showComments)}
                 className={cn(
-                  "flex items-center justify-center gap-1.5 h-9 rounded-xl border px-3.5 transition-all active:scale-90 shrink-0 cursor-pointer text-xs font-bold",
+                  "flex items-center justify-center gap-1.5 h-9 rounded-xl border px-3.5 transition-all active:scale-90 shrink-0 cursor-pointer text-xs font-bold shadow-xs",
                   showComments
-                    ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
-                    : "border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground"
+                    ? "border-primary bg-primary/[0.08] text-primary"
+                    : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 dark:text-neutral-400"
                 )}
                 title="Project Discussion"
               >
@@ -340,10 +331,10 @@ export function ProjectDetailPage() {
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className={cn(
-                  "w-9 h-9 rounded-xl border flex items-center justify-center transition-all active:scale-90 shrink-0 cursor-pointer",
+                  "w-9 h-9 rounded-xl border flex items-center justify-center transition-all active:scale-90 shrink-0 cursor-pointer shadow-xs",
                   isEditing
-                    ? "border-indigo-500 bg-indigo-500/10 text-indigo-650 dark:text-indigo-400"
-                    : "border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground"
+                    ? "border-primary bg-primary/[0.08] text-primary"
+                    : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 dark:text-neutral-400"
                 )}
                 title="Project Settings"
               >
@@ -352,28 +343,25 @@ export function ProjectDetailPage() {
             </div>
           </div>
 
-          {/* Project Members Row */}
-          <div className="flex items-center gap-3 pt-2.5 border-t border-border-default/20 relative">
-            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Project Team</span>
+          {/* Project Members popover control */}
+          <div className="flex items-center gap-3 py-3 px-6 bg-white/[0.01] border-t border-neutral-100 dark:border-neutral-850 relative">
+            <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Project Team</span>
             <div className="flex items-center -space-x-1.5 overflow-hidden">
               {(project.memberIds || []).map((uid) => {
                 const photoURL = getMemberPhotoURL(uid);
-                const fullName = memberMap.get(uid)?.fullName || 'Member';
+                const fullName = getMemberName(uid);
                 return photoURL ? (
                   <img
                     key={uid}
                     src={photoURL}
                     alt={fullName}
-                    className="w-6 h-6 rounded-full object-cover shrink-0 ring-2 ring-surface/90 border border-white/10 dark:border-black/20"
+                    className="w-6 h-6 rounded-full object-cover shrink-0 ring-2 ring-white dark:ring-neutral-900 border border-neutral-150/40"
                     title={fullName}
                   />
                 ) : (
                   <div
                     key={uid}
-                    className={cn(
-                      "w-6 h-6 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0 ring-2 ring-surface/90",
-                      getAvatarColor(uid)
-                    )}
+                    className="w-6 h-6 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0 ring-2 ring-white dark:ring-neutral-900"
                     title={fullName}
                   >
                     {getInitials(uid)}
@@ -385,7 +373,7 @@ export function ProjectDetailPage() {
             <div className="relative">
               <button
                 onClick={() => setShowMemberPicker(!showMemberPicker)}
-                className="w-6 h-6 rounded-full border border-dashed border-border-default hover:border-indigo-500 bg-bg-primary/50 text-muted-foreground hover:text-indigo-500 flex items-center justify-center transition-all cursor-pointer"
+                className="w-6 h-6 rounded-full border border-dashed border-neutral-300 dark:border-neutral-700 hover:border-primary bg-transparent text-neutral-400 hover:text-primary flex items-center justify-center transition-all cursor-pointer"
                 title="Manage Members"
               >
                 <Plus className="w-3 h-3" />
@@ -402,10 +390,10 @@ export function ProjectDetailPage() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute left-0 mt-2 w-56 max-h-60 overflow-y-auto rounded-xl border border-border-default bg-surface/95 dark:bg-surface/90 backdrop-blur-md p-2 shadow-xl z-50 aether-scroll"
+                      className="absolute left-0 mt-2 w-56 max-h-60 overflow-y-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-900/90 backdrop-blur-md p-2 shadow-xl z-50 scrollbar-thin"
                     >
-                      <div className="px-2 py-1.5 border-b border-border-default/45 mb-1.5">
-                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">Assign Members</span>
+                      <div className="px-2 py-1.5 border-b border-neutral-100 dark:border-neutral-800 mb-1.5">
+                        <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Assign Teammate</span>
                       </div>
                       <div className="space-y-0.5">
                         {members.map((member) => {
@@ -415,10 +403,10 @@ export function ProjectDetailPage() {
                               key={member.uid}
                               onClick={() => handleToggleProjectMember(member.uid)}
                               className={cn(
-                                "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[10px] font-semibold text-left transition-colors cursor-pointer",
+                                "w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[10px] font-semibold text-left transition-all cursor-pointer",
                                 isIncluded 
-                                  ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" 
-                                  : "hover:bg-bg-secondary text-foreground"
+                                  ? "bg-primary/10 text-primary" 
+                                  : "hover:bg-neutral-50 dark:hover:bg-neutral-850/50 text-foreground"
                               )}
                             >
                               <div className="flex items-center gap-2 min-w-0">
@@ -426,16 +414,16 @@ export function ProjectDetailPage() {
                                   <img
                                     src={member.photoURL}
                                     alt={member.fullName}
-                                    className="w-5 h-5 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
+                                    className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
                                   />
                                 ) : (
-                                  <div className={cn("w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[7px] shrink-0", getAvatarColor(member.uid))}>
+                                  <div className="w-5.5 h-5.5 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[7px] text-primary shrink-0">
                                     {getInitials(member.uid)}
                                   </div>
                                 )}
                                 <span className="truncate">{member.fullName}</span>
                               </div>
-                              {isIncluded && <Check className="w-3 h-3 text-indigo-500 shrink-0" />}
+                              {isIncluded && <Check className="w-3 h-3 text-primary shrink-0 stroke-[2.5]" />}
                             </button>
                           );
                         })}
@@ -448,68 +436,68 @@ export function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Split container for canvas & sidebar */}
+        {/* Spatial project canvas block */}
         <div className="flex-1 flex overflow-hidden min-h-0 relative">
           
-          {/* Left side: Scrollable Spatial Canvas */}
-          <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-6">
+          {/* Main Execution Column */}
+          <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-6">
             
-            {/* Progress overview */}
+            {/* KPI metric Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
-              {/* Completion rate card */}
-              <div className="p-4 rounded-xl border border-border-default/60 bg-bg-secondary/20 flex flex-col justify-between gap-3 shadow-sm">
-                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Execution Progress</span>
+              {/* Execution Progress */}
+              <div className="p-4.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-850/5 flex flex-col justify-between gap-3 shadow-xs">
+                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Project Rollup</span>
                 <div className="space-y-1.5">
                   <div className="flex items-end justify-between">
-                    <span className="text-xl font-black font-mono text-foreground leading-none">{progressRate}%</span>
-                    <span className="text-[9px] text-muted-foreground font-semibold">({completedTasks.length}/{allTasks.length} Completed)</span>
+                    <span className="text-lg font-black font-mono text-neutral-800 dark:text-neutral-100 leading-none">{progressRate}%</span>
+                    <span className="text-[10px] text-neutral-450 dark:text-neutral-400 font-bold">({completedTasks.length}/{allTasks.length} Completed)</span>
                   </div>
-                  <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
-                    <div className="bg-indigo-555 h-full rounded-full transition-all duration-500" style={{ width: `${progressRate}%`, backgroundColor: 'var(--accent)' }} />
+                  <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-primary h-full rounded-full transition-all duration-500 ease-out" style={{ width: `${progressRate}%` }} />
                   </div>
                 </div>
               </div>
 
-              {/* Milestones brief card */}
-              <div className="p-4 rounded-xl border border-border-default/60 bg-bg-secondary/20 flex flex-col justify-between gap-3 shadow-sm">
-                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Milestones Hub</span>
+              {/* Milestones Hub */}
+              <div className="p-4.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-850/5 flex flex-col justify-between gap-3 shadow-xs">
+                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Milestones Hub</span>
                 <div className="flex items-end justify-between">
                   <div className="flex flex-col">
-                    <span className="text-xl font-black font-mono text-foreground leading-none">
+                    <span className="text-lg font-black font-mono text-neutral-800 dark:text-neutral-100 leading-none">
                       {milestones.filter(m => m.completed).length}
                     </span>
-                    <span className="text-[8px] text-muted-foreground mt-1 font-semibold">Completed Milestones</span>
+                    <span className="text-[9px] text-neutral-450 dark:text-neutral-400 mt-1.5 font-bold">Completed Milestones</span>
                   </div>
-                  <span className="text-[9px] text-muted-foreground font-semibold">Total Milestones: {milestones.length}</span>
+                  <span className="text-[10px] text-neutral-400 dark:text-neutral-550 font-bold">Total: {milestones.length}</span>
                 </div>
               </div>
 
-              {/* Active Task density */}
-              <div className="p-4 rounded-xl border border-border-default/60 bg-bg-secondary/20 flex flex-col justify-between gap-3 shadow-sm">
-                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Operational Workload</span>
+              {/* Workload card */}
+              <div className="p-4.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-850/5 flex flex-col justify-between gap-3 shadow-xs">
+                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Workload Density</span>
                 <div className="flex items-end justify-between">
                   <div className="flex flex-col">
-                    <span className="text-xl font-black font-mono text-foreground leading-none">
+                    <span className="text-lg font-black font-mono text-neutral-800 dark:text-neutral-100 leading-none">
                       {activeTasks.length}
                     </span>
-                    <span className="text-[8px] text-muted-foreground mt-1 font-semibold">Active execution items</span>
+                    <span className="text-[9px] text-neutral-450 dark:text-neutral-400 mt-1.5 font-bold">Active checklist items</span>
                   </div>
-                  <span className="text-[9px] text-muted-foreground font-semibold">Workload density: {activeTasks.length > 5 ? 'High' : 'Normal'}</span>
+                  <span className="text-[10px] text-neutral-400 dark:text-neutral-555 font-bold">Density: {activeTasks.length > 5 ? 'High workload' : 'Normal'}</span>
                 </div>
               </div>
               
             </div>
 
-            {/* Milestone Rail widget */}
+            {/* Milestones timeline */}
             {projectId && (
-              <div className="rounded-xl border border-border-default bg-bg-secondary/10 shadow-sm overflow-hidden">
+              <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/20 dark:bg-neutral-850/5 shadow-xs overflow-hidden">
                 <MilestoneRail projectId={projectId} orgId={orgId} milestones={milestones} />
               </div>
             )}
 
-            {/* Project Media & Files */}
-            <div className="pt-2">
+            {/* Project File Attachments */}
+            <div>
               <AttachmentSection
                 entityType="projects"
                 entityId={project.id}
@@ -524,11 +512,11 @@ export function ProjectDetailPage() {
               />
             </div>
 
-            {/* Tasks Stack */}
+            {/* Tasks checklist card */}
             <div className="space-y-4">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-650 dark:text-indigo-400 flex items-center gap-1.5 border-b border-border-default/45 pb-2">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-500 flex items-center gap-1.5 border-b border-neutral-100 dark:border-neutral-850 pb-2">
                 <Clock className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
-                <span>Project Tasks Stack</span>
+                <span>Project Tasks checklist</span>
               </h3>
 
               {tasksLoading ? (
@@ -537,25 +525,25 @@ export function ProjectDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {/* Render active tasks list */}
+                  {/* Render active tasks checklist cards */}
                   {activeTasks.length > 0 ? (
                     activeTasks.map(task => (
                       <div
                         key={task.id}
-                        onClick={() => setSelectedTask(task)}
-                        className="flex items-center justify-between p-3.5 rounded-xl bg-surface/50 hover:bg-surface border border-border-default hover:border-border-default/80 transition-all cursor-pointer group shadow-sm"
+                        onClick={() => setSearchParams({ task: task.id })}
+                        className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group shadow-xs cursor-pointer"
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <button
                             onClick={(e) => handleToggleTaskStatus(e, task)}
-                            className="h-4 w-4 rounded-full border border-border-default bg-bg-primary/50 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:border-indigo-555"
+                            className="h-4.5 w-4.5 rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-primary bg-transparent flex items-center justify-center shrink-0 cursor-pointer"
                           >
-                            <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-indigo-500/50" />
-                          </div>
+                            <div className="h-1.5 w-1.5 rounded-full bg-transparent hover:bg-primary/50" />
+                          </button>
                           <div className="min-w-0">
-                            <span className="text-xs font-bold block text-foreground truncate">{task.title}</span>
+                            <span className="text-xs font-bold block text-neutral-800 dark:text-neutral-250 truncate">{task.title}</span>
                             {task.dueDate && (
-                              <span className="text-[8px] font-mono font-semibold text-muted-foreground mt-0.5 block">
+                              <span className="text-[9px] font-mono font-bold text-neutral-400 dark:text-neutral-500 mt-0.5 block">
                                 Due: {new Date(task.dueDate instanceof Date ? task.dueDate : (task.dueDate as any).seconds * 1000).toLocaleDateString()}
                               </span>
                             )}
@@ -567,19 +555,19 @@ export function ProjectDetailPage() {
                             getMemberPhotoURL(task.assigneeIds[0]) ? (
                               <img
                                 src={getMemberPhotoURL(task.assigneeIds[0])}
-                                alt={memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}
-                                className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
-                                title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}
+                                alt={getMemberName(task.assigneeIds[0])}
+                                className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
+                                title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
                               />
                             ) : (
-                              <div className="w-5.5 h-5.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground" title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}>
+                                <div className="w-5.5 h-5.5 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
                                 {getInitials(task.assigneeIds[0])}
                               </div>
                             )
                           )}
                           <button
                             onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                            className="text-muted-foreground hover:text-red-400 p-1 transition-colors opacity-0 group-hover:opacity-100"
+                            className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -587,21 +575,21 @@ export function ProjectDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="py-8 rounded-xl border border-dashed border-border-default bg-bg-secondary/10 flex flex-col items-center justify-center text-center">
-                      <p className="text-[10px] text-muted-foreground italic">No active project tasks.</p>
+                    <div className="py-8 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/10 dark:bg-neutral-850/5 flex flex-col items-center justify-center text-center">
+                      <p className="text-[10px] text-neutral-450 dark:text-neutral-500 italic">No active project tasks.</p>
                     </div>
                   )}
 
-                  {/* Collapsible Completed Tasks Archive */}
+                  {/* Completed tasks accordion */}
                   {completedTasks.length > 0 && (
                     <div className="space-y-2 pt-2">
                       <button
                         type="button"
                         onClick={() => setShowCompleted(!showCompleted)}
-                        className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
+                        className="w-full border border-neutral-150 dark:border-neutral-850 bg-neutral-50/30 dark:bg-neutral-850/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-neutral-550 dark:text-neutral-400 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/40 transition-colors font-bold tracking-wide shadow-xs"
                       >
                         <span>Completed Tasks ({completedTasks.length})</span>
-                        <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompleted ? "rotate-180" : "")} />
+                        <ChevronDown className={cn("w-3.5 h-3.5 transition-transform text-neutral-400", showCompleted ? "rotate-180" : "")} />
                       </button>
                       <AnimatePresence>
                         {showCompleted && (
@@ -614,17 +602,17 @@ export function ProjectDetailPage() {
                             {completedTasks.map(task => (
                               <div
                                 key={task.id}
-                                onClick={() => setSelectedTask(task)}
-                                className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/20 border border-border-subtle/50 transition-all cursor-pointer opacity-50 hover:opacity-85 shadow-sm"
+                                onClick={() => setSearchParams({ task: task.id })}
+                                className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/15 dark:bg-neutral-850/5 border border-neutral-150/40 dark:border-neutral-800/30 opacity-60 hover:opacity-90 transition-all cursor-pointer shadow-xs"
                               >
-                                <div className="flex items-center gap-3 min-w-0">
-                                  <div
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <button
                                     onClick={(e) => handleToggleTaskStatus(e, task)}
-                                    className="h-4 w-4 rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                                    className="h-4.5 w-4.5 rounded-full border border-cyan-500 bg-cyan-500/10 flex items-center justify-center shrink-0 cursor-pointer"
                                   >
-                                    <Check className="w-2.5 h-2.5" />
-                                  </div>
-                                  <span className="text-xs truncate font-normal text-muted-foreground line-through">
+                                    <Check className="w-2.5 h-2.5 text-cyan-500 stroke-[3]" />
+                                  </button>
+                                  <span className="text-xs truncate font-semibold text-neutral-400 dark:text-neutral-500 line-through">
                                     {task.title}
                                   </span>
                                 </div>
@@ -633,19 +621,19 @@ export function ProjectDetailPage() {
                                     getMemberPhotoURL(task.assigneeIds[0]) ? (
                                       <img
                                         src={getMemberPhotoURL(task.assigneeIds[0])}
-                                        alt={memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}
-                                        className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
-                                        title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}
+                                        alt={getMemberName(task.assigneeIds[0])}
+                                        className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
+                                        title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
                                       />
                                     ) : (
-                                      <div className="w-5.5 h-5.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[8px] text-muted-foreground" title={`Assigned to ${memberMap.get(task.assigneeIds[0])?.fullName || 'Member'}`}>
+                                      <div className="w-5.5 h-5.5 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
                                         {getInitials(task.assigneeIds[0])}
                                       </div>
                                     )
                                   )}
                                   <button
                                     onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="text-muted-foreground hover:text-red-400 transition-colors"
+                                    className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all cursor-pointer"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -663,7 +651,7 @@ export function ProjectDetailPage() {
 
           </div>
 
-          {/* Right side: Collapsible Comments Sidebar */}
+          {/* Right side: Slide-Out Discussions Overlay */}
           <AnimatePresence>
             {showComments && (
               <motion.div
@@ -671,47 +659,43 @@ export function ProjectDetailPage() {
                 animate={{ width: 340, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="w-[340px] shrink-0 border-l border-border-default/45 bg-surface/10 dark:bg-surface/5 flex flex-col h-full overflow-hidden"
+                className="w-[340px] shrink-0 border-l border-neutral-200 dark:border-neutral-850 bg-neutral-50/30 dark:bg-neutral-900/10 backdrop-blur-md flex flex-col h-full overflow-hidden"
               >
-                <div className="flex items-center justify-between p-4 border-b border-border-default/45 flex-shrink-0">
-                  <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground flex items-center gap-1.5">
+                <div className="flex items-center justify-between p-4 border-b border-neutral-150 dark:border-neutral-850 flex-shrink-0">
+                  <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500 flex items-center gap-1.5">
                     <MessageSquare className="w-3.5 h-3.5 text-indigo-500" />
                     Project Discussion
                   </span>
                   <button
                     onClick={() => setShowComments(false)}
-                    className="p-1 rounded-lg border border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
+                    className="p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-850 flex items-center justify-center transition-all cursor-pointer shadow-xs"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {/* Comments List */}
-                <div className="flex-grow overflow-y-auto p-4 space-y-4 aether-scroll">
+                <div className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-thin">
                   {comments.length > 0 ? (
                     comments.map((comment) => (
-                      <div key={comment.id} className="flex items-start gap-3 bg-bg-secondary/30 dark:bg-neutral-850/10 p-3 rounded-2xl border border-border-default/40">
-                        {getMemberPhotoURL(comment.authorId) ? (
-                          <img
-                            src={getMemberPhotoURL(comment.authorId)}
-                            alt={comment.authorName}
-                            className="h-7 w-7 rounded-full object-cover shrink-0 border border-white/10 dark:border-black/20"
-                          />
-                        ) : (
-                          <div className={cn("h-7 w-7 rounded-full border flex items-center justify-center text-[10px] font-bold shrink-0", getAvatarColor(comment.authorId))}>
-                            {getInitials(comment.authorId)}
-                          </div>
-                        )}
+                      <div key={comment.id} className="flex items-start gap-3 bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 p-3.5 rounded-2xl shadow-xs">
+                        <div className="h-7.5 w-7.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 overflow-hidden shadow-sm">
+                          {getMemberPhotoURL(comment.authorId) ? (
+                            <img src={getMemberPhotoURL(comment.authorId)} alt={comment.authorName} className="h-full w-full object-cover" />
+                          ) : (
+                            getMemberInitials(comment.authorId)
+                          )}
+                        </div>
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-bold text-foreground truncate">
+                            <span className="text-[11px] font-bold text-neutral-850 dark:text-neutral-200 truncate">
                               {comment.authorName}
                             </span>
-                            <span className="text-[9px] text-muted-foreground font-mono">
+                            <span className="text-[9px] text-neutral-400 dark:text-neutral-550 font-mono">
                               {formatTimestamp(comment.createdAt)}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground font-semibold leading-relaxed break-words">
+                          <p className="text-xs text-neutral-650 dark:text-neutral-350 font-semibold leading-relaxed break-words">
                             {comment.body}
                           </p>
                           
@@ -723,11 +707,11 @@ export function ProjectDetailPage() {
                                   href={file.url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="flex items-center gap-2 p-1.5 rounded-lg border border-border-default bg-surface/55 hover:bg-bg-secondary text-[10px] text-accent font-bold truncate transition-colors"
+                                  className="flex items-center gap-2 p-1.5 rounded-lg border border-neutral-200/40 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 text-[10px] text-primary font-bold truncate transition-colors shadow-xs"
                                 >
-                                  <Paperclip className="w-3 h-3 text-accent shrink-0" />
+                                  <Paperclip className="w-3 h-3 text-primary shrink-0" />
                                   <span className="truncate flex-1">{file.name}</span>
-                                  <span className="text-[8px] text-muted-foreground font-semibold shrink-0">
+                                  <span className="text-[8px] text-neutral-400 font-semibold shrink-0">
                                     {(file.size / 1024).toFixed(1)} KB
                                   </span>
                                 </a>
@@ -738,14 +722,14 @@ export function ProjectDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="py-12 text-center text-xs text-muted-foreground italic">
+                    <div className="py-12 text-center text-xs text-neutral-400 dark:text-neutral-500 italic">
                       No discussions on this project yet. Start the conversation!
                     </div>
                   )}
                 </div>
 
                 {/* Comment Input */}
-                <div className="p-4 border-t border-border-default/45 bg-surface/20 flex-shrink-0 flex flex-col gap-2">
+                <div className="p-4 border-t border-neutral-150 dark:border-neutral-850 bg-neutral-50/50 dark:bg-neutral-900/30 flex-shrink-0 flex flex-col gap-2">
                   <AttachmentInput
                     selectedFiles={commentFiles}
                     onRemove={(idx) => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
@@ -754,11 +738,11 @@ export function ProjectDetailPage() {
                   <form onSubmit={handleAddComment} className="flex gap-2">
                     <input
                       type="text"
-                      placeholder={uploadingCommentFiles ? "Uploading files..." : "Send an update..."}
+                      placeholder={uploadingCommentFiles ? "Uploading attachment files..." : "Add comment here..."}
                       value={commentBody}
                       disabled={uploadingCommentFiles}
                       onChange={(e) => setCommentBody(e.target.value)}
-                      className="flex-1 bg-bg-primary/50 border border-border-default rounded-xl px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-bg-primary focus:border-indigo-500/50 shadow-inner font-semibold disabled:opacity-50"
+                      className="flex-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 py-2 text-xs text-neutral-850 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold disabled:opacity-50"
                     />
                     <button
                       type="button"
@@ -769,22 +753,22 @@ export function ProjectDetailPage() {
                         input.multiple = true;
                         input.onchange = (e) => {
                           const files = (e.target as HTMLInputElement).files;
-                          if (files) setCommentFiles(prev => [...prev, ...Array.from(files)]);
+                           if (files) setCommentFiles(prev => [...prev, ...Array.from(files)]);
                         };
                         input.click();
                       }}
-                      className="p-2 bg-bg-secondary hover:bg-bg-secondary/80 border border-border-default rounded-xl text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0"
-                      title="Attach Files"
+                      className="p-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-500 dark:text-neutral-450 hover:text-neutral-850 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0 shadow-xs"
+                      title="Attach File"
                     >
                       <Paperclip className="w-4 h-4" />
                     </button>
                     <button
                       type="submit"
                       disabled={uploadingCommentFiles}
-                      className="p-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl text-indigo-600 dark:text-indigo-405 hover:text-indigo-755 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0"
+                      className="p-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-350 hover:text-neutral-850 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0 shadow-xs"
                     >
                       {uploadingCommentFiles ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
                       ) : (
                         <Send className="w-4 h-4" />
                       )}
@@ -809,9 +793,10 @@ export function ProjectDetailPage() {
         defaultProjectId={projectId}
       />
 
+      {/* Redesigned Task Detail drawer driven dynamically by search parameters */}
       <TaskDetailDrawer
         task={activeTask}
-        onClose={() => setSelectedTask(null)}
+        onClose={() => setSearchParams((prev) => { prev.delete('task'); return prev; })}
         orgId={orgId}
         actor={actor}
         members={members}
@@ -819,35 +804,35 @@ export function ProjectDetailPage() {
         goals={goals}
       />
 
-      {/* ─── Premium Glassmorphic Edit Modal ─── */}
+      {/* Security edit Settings Dialog */}
       <AnimatePresence>
         {isEditing && (
           <>
-            {/* Dark glass backdrop overlay */}
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsEditing(false)}
-              className="fixed inset-0 bg-background/80 dark:bg-black/60 backdrop-blur-sm z-[100]"
+              className="fixed inset-0 bg-neutral-950/20 dark:bg-neutral-950/60 backdrop-blur-sm z-[100]"
             />
-            {/* Modal Box */}
+            {/* Dialog Container */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6 rounded-2xl border border-border-default/85 bg-surface/95 dark:bg-surface/90 backdrop-blur-md shadow-2xl z-[101] flex flex-col gap-4 max-h-[90vh] overflow-y-auto aether-scroll"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xl z-[101] flex flex-col gap-4 max-h-[90vh] overflow-y-auto scrollbar-thin"
             >
-              <div className="flex items-center justify-between border-b border-border-default/45 pb-3">
+              <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-850 pb-3">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 shrink-0">
-                    <Lock className="w-4 h-4 text-amber-500 drop-shadow-[0_0_4px_rgba(245,158,11,0.2)]" />
+                    <Lock className="w-4 h-4 text-amber-500" />
                   </div>
-                  <h3 className="text-sm font-black text-foreground">Configure Secure Project</h3>
+                  <h3 className="text-sm font-black text-neutral-850 dark:text-neutral-100">Project settings</h3>
                 </div>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="w-7 h-7 rounded-lg border border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground flex items-center justify-center transition-all cursor-pointer"
+                  className="w-7 h-7 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-850 flex items-center justify-center transition-all cursor-pointer shadow-xs"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -860,30 +845,30 @@ export function ProjectDetailPage() {
                     <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                     <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Strict Security Active</span>
                   </div>
-                  <p className="text-[9px] text-muted-foreground leading-relaxed">
+                  <p className="text-[9px] text-neutral-500 leading-relaxed font-semibold">
                     This project is strictly private and secure. Only assigned project members can view the initiative, milestones, and its linked tasks/goals.
                   </p>
                 </div>
 
                 {/* Name */}
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Project Name</label>
+                  <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Project Name</label>
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-indigo-500/30"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-transparent text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-primary/50 transition-all"
                     placeholder="Enter project name..."
                   />
                 </div>
 
                 {/* Description */}
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Project Description</label>
+                  <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Project Description</label>
                   <textarea
                     value={editDesc}
                     onChange={(e) => setEditDesc(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-indigo-500/30 h-20 resize-none leading-relaxed"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-transparent text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-primary/50 transition-all h-20 resize-none leading-relaxed"
                     placeholder="Describe what this project entails..."
                   />
                 </div>
@@ -891,39 +876,39 @@ export function ProjectDetailPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {/* Start Date */}
                   <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Start Date</label>
+                    <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Start Date</label>
                     <input
                       type="date"
                       value={editStartDate}
                       onChange={(e) => setEditStartDate(e.target.value)}
-                      className="w-full px-3 py-1.5 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-indigo-500/30"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-transparent text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-primary/50 transition-all"
                     />
                   </div>
 
                   {/* Due Date */}
                   <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Due Date</label>
+                    <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Due Date</label>
                     <input
                       type="date"
                       value={editDueDate}
                       onChange={(e) => setEditDueDate(e.target.value)}
-                      className="w-full px-3 py-1.5 rounded-xl border border-border-default bg-bg-primary/50 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-indigo-500/30"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-transparent text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-primary/50 transition-all"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Actions Footer */}
-              <div className="flex items-center justify-end gap-2.5 border-t border-border-default/45 pt-4 mt-2">
+              <div className="flex items-center justify-end gap-2.5 border-t border-neutral-100 dark:border-neutral-850 pt-4 mt-2">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-xs font-bold text-foreground transition-all cursor-pointer"
+                  className="px-4 py-2 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-850 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveProject}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md"
+                  className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-xl text-xs font-bold hover:bg-neutral-850 dark:hover:bg-neutral-100 transition-all cursor-pointer shadow-md"
                 >
                   Save Changes
                 </button>

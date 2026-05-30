@@ -346,6 +346,31 @@ export function listenToLabels(orgId: string, cb: (labels: TaskLabel[]) => void)
   );
 }
 
+export function listenToTask(taskId: string, cb: (task: Task | null) => void): () => void {
+  return onSnapshot(doc(db, 'tasks', taskId), (snap) => {
+    cb(snap.exists() ? (snap.data() as Task) : null);
+  });
+}
+
+export function listenToSubtasks(
+  parentTaskId: string,
+  cb: (tasks: Task[]) => void,
+): () => void {
+  const q = query(
+    collection(db, 'tasks'),
+    where('parentTaskId', '==', parentTaskId)
+  );
+  return onSnapshot(q, (snap) => {
+    const list = snap.docs.map((d) => d.data() as Task);
+    list.sort((a, b) => {
+      const aTime = a.createdAt?.seconds || 0;
+      const bTime = b.createdAt?.seconds || 0;
+      return aTime - bTime;
+    });
+    cb(list);
+  });
+}
+
 export type {
   Task, TaskStatus, TaskPriority, TaskComment,
   TaskActivity, TaskLabel, ActivityType, ActorInfo,

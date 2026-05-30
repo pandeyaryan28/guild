@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {
   listenToTasks, listenToComments, listenToActivities, listenToLabels,
+  listenToTask, listenToSubtasks,
   type Task, type TaskComment, type TaskActivity, type TaskLabel, type TaskStatus,
   type TaskScopeFilter,
   STATUSES,
@@ -62,4 +63,22 @@ export function useTaskLabels(orgId: string | undefined) {
     return listenToLabels(orgId, setLabels);
   }, [orgId]);
   return labels;
+}
+
+export function useSingleTask(taskId: string | null) {
+  const [task, setTask] = React.useState<Task | null>(null);
+  React.useEffect(() => {
+    if (!taskId) { setTask(null); return; }
+    return listenToTask(taskId, setTask);
+  }, [taskId]);
+  return task;
+}
+
+export function useSubtasks(parentTaskId: string | null) {
+  const [subtasks, setSubtasks] = React.useState<Task[]>([]);
+  React.useEffect(() => {
+    if (!parentTaskId) { setSubtasks([]); return; }
+    return listenToSubtasks(parentTaskId, setSubtasks);
+  }, [parentTaskId]);
+  return subtasks;
 }
