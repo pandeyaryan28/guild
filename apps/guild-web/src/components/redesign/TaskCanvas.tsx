@@ -52,6 +52,7 @@ import {
   createTask,
   moveTask,
   deleteTask,
+  addComment,
   STATUS_CONFIG,
   STATUSES,
   PRIORITY_CONFIG
@@ -84,6 +85,19 @@ export function TaskCanvas() {
   const [completedGoalsExpanded, setCompletedGoalsExpanded] = React.useState<Record<string, boolean>>({});
   const [showCompletedMySpaceGoals, setShowCompletedMySpaceGoals] = React.useState(false);
   const [showCompletedProjects, setShowCompletedProjects] = React.useState(false);
+
+  // Toast and Send Back Workflow States
+  const [toastMessage, setToastMessage] = React.useState<string | null>(null);
+  const [sendBackTaskId, setSendBackTaskId] = React.useState<string | null>(null);
+  const [sendBackComment, setSendBackComment] = React.useState<string>('');
+  const [isSendingBack, setIsSendingBack] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   // Filters State
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -365,7 +379,22 @@ export function TaskCanvas() {
     e.stopPropagation();
     if (!orgId) return;
     const oldStatus = task.status;
-    const newStatus: TaskStatus = oldStatus === 'done' ? 'todo' : 'done';
+    let newStatus: TaskStatus = 'todo';
+    
+    if (oldStatus === 'todo') {
+      newStatus = 'in_progress';
+    } else if (oldStatus === 'in_progress') {
+      newStatus = 'review';
+    } else if (oldStatus === 'review') {
+      if (task.creatorId !== user?.uid) {
+        setToastMessage("Only the creator of this task can approve it from In Review.");
+        return;
+      }
+      newStatus = 'done';
+    } else if (oldStatus === 'done') {
+      newStatus = 'todo';
+    }
+
     try {
       await moveTask(task.id, orgId, newStatus, task.orderIndex || 1000, oldStatus, actor);
     } catch (err) {
@@ -375,10 +404,52 @@ export function TaskCanvas() {
 
   const handleUpdateTaskStatus = async (task: Task, newStatus: TaskStatus) => {
     if (!orgId) return;
+    if (newStatus === 'done' && task.status === 'review' && task.creatorId !== user?.uid) {
+      setToastMessage("Only the creator of this task can approve it from In Review.");
+      return;
+    }
     try {
       await moveTask(task.id, orgId, newStatus, task.orderIndex || 1000, task.status, actor);
     } catch (err) {
       console.error('Failed to update task status:', err);
+    }
+  };
+
+  const handleSendBackTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sendBackTaskId || !orgId || !sendBackComment.trim() || isSendingBack) return;
+    setIsSendingBack(true);
+    
+    const taskObj = tasks.find(t => t.id === sendBackTaskId);
+    if (!taskObj) {
+      setIsSendingBack(false);
+      return;
+    }
+
+    try {
+      // 1. Move status back to 'in_progress'
+      await moveTask(taskObj.id, orgId, 'in_progress', taskObj.orderIndex || 1000, taskObj.status, actor);
+      
+      // 2. Add review comment
+      await addComment({
+        taskId: taskObj.id,
+        orgId,
+        authorId: actor.uid,
+        authorName: actor.name,
+        authorUsername: actor.name.toLowerCase().replace(/\s+/g, ''),
+        body: `[Review Feedback] ${sendBackComment.trim()}`,
+        mentions: taskObj.assigneeIds || [],
+        taskTitle: taskObj.title,
+      });
+
+      // 3. Clear state and show toast
+      setSendBackTaskId(null);
+      setSendBackComment('');
+      setToastMessage("Task sent back to assignee with feedback.");
+    } catch (err) {
+      console.error('Failed to send task back with review:', err);
+    } finally {
+      setIsSendingBack(false);
     }
   };
 
@@ -456,21 +527,44 @@ export function TaskCanvas() {
       >
         <div className="flex items-center gap-3.5 min-w-0">
           {/* Checkbox toggle status */}
-          <button
-            onClick={(e) => handleToggleTaskStatus(e, task)}
-            className={cn(
-              "h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-              isCompleted
-                ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : "border-border-default bg-bg-primary/50 hover:border-accent/60"
-            )}
-          >
-            {isCompleted ? (
-              <Check className="w-2.5 h-2.5" />
+          {task.status === 'review' ? (
+            task.creatorId === user?.uid ? (
+              <button
+                onClick={(e) => handleToggleTaskStatus(e, task)}
+                className="h-4 w-4 rounded-full border border-amber-500 bg-amber-500/[0.04] text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:border-emerald-500 hover:bg-emerald-500/10 group/btn"
+                title="Approve Task (Mark Done)"
+              >
+                <div className="h-1.5 w-1.5 rounded-full bg-amber-500 group-hover/btn:bg-emerald-500 transition-colors" />
+              </button>
             ) : (
-              <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-accent/40" />
-            )}
-          </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setToastMessage("Only the creator of this task can approve it from In Review.");
+                }}
+                className="h-4 w-4 rounded-full border border-amber-500/30 bg-amber-500/[0.02] text-amber-500/50 dark:text-amber-500/30 flex items-center justify-center shrink-0 cursor-pointer hover:border-amber-500/60 transition-colors"
+                title="Creator approval required"
+              >
+                <Lock className="w-2 h-2 text-amber-500/70" />
+              </button>
+            )
+          ) : (
+            <button
+              onClick={(e) => handleToggleTaskStatus(e, task)}
+              className={cn(
+                "h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                isCompleted
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "border-border-default bg-bg-primary/50 hover:border-accent/60"
+              )}
+            >
+              {isCompleted ? (
+                <Check className="w-2.5 h-2.5" />
+              ) : (
+                <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-accent/40" />
+              )}
+            </button>
+          )}
           
           <div className="min-w-0 flex flex-col gap-0.5">
             <span className={cn(
@@ -515,6 +609,20 @@ export function TaskCanvas() {
             <span className="text-[8px] font-mono text-muted-foreground bg-bg-secondary rounded px-2 py-0.5 border border-border-default/60">
               {new Date((task.dueDate as any).seconds * 1000).toLocaleDateString()}
             </span>
+          )}
+
+          {/* Send Back with review feedback */}
+          {task.status === 'review' && task.creatorId === user?.uid && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSendBackTaskId(task.id);
+              }}
+              className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/5 dark:bg-amber-500/10 hover:bg-amber-500/10 dark:hover:bg-amber-500/20 border border-amber-500/20 rounded-lg transition-all active:scale-95 cursor-pointer shrink-0"
+              title="Send back with review feedback"
+            >
+              Send Back
+            </button>
           )}
 
           {/* Quick status change inside list view */}
@@ -644,6 +752,20 @@ export function TaskCanvas() {
               </span>
             )}
 
+            {/* Send Back with review feedback */}
+            {task.status === 'review' && task.creatorId === user?.uid && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSendBackTaskId(task.id);
+                }}
+                className="px-2 py-1 text-[8px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/5 dark:bg-amber-500/10 hover:bg-amber-500/10 dark:hover:bg-amber-500/20 border border-amber-500/20 rounded-md transition-all active:scale-95 cursor-pointer shrink-0"
+                title="Send back with review feedback"
+              >
+                Send Back
+              </button>
+            )}
+
             {/* Quick Mover Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -666,6 +788,11 @@ export function TaskCanvas() {
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUpdateTaskStatus(task, 'done'); }} className="gap-2 font-semibold text-xs text-emerald-400 focus:text-emerald-500 focus:bg-emerald-500/10 cursor-pointer">
                   Done
                 </DropdownMenuItem>
+                {task.status === 'review' && task.creatorId === user?.uid && (
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSendBackTaskId(task.id); }} className="gap-2 font-semibold text-xs text-amber-500 focus:text-amber-600 focus:bg-amber-500/10 cursor-pointer border-t border-border-default/45 mt-1 pt-1">
+                    Send Back Feedback
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={(e) => handleDeleteTaskItem(e, task.id)} className="gap-2 font-semibold text-xs text-red-500 focus:text-red-600 focus:bg-red-500/10 cursor-pointer border-t border-border-default/45 mt-1">
                   Delete
                 </DropdownMenuItem>
@@ -950,16 +1077,16 @@ export function TaskCanvas() {
                       <div className="h-4 w-px bg-border-default/60 shrink-0" />
 
                       {/* Tasks vs Goals Segmented Tabs */}
-                      <div className="flex bg-bg-secondary/40 border border-border-default/45 p-0.5 rounded-xl shrink-0">
+                      <div className="flex bg-bg-secondary/80 dark:bg-bg-secondary/40 border border-border-default/60 p-0.5 rounded-xl shrink-0">
                         <button
                           onClick={() => {
                             setActiveTab('tasks');
                           }}
                           className={cn(
-                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border",
                             activeTab === 'tasks'
-                              ? "bg-bg-primary border border-border-default/60 text-foreground dark:text-white shadow-sm"
-                              : "border border-transparent text-muted-foreground hover:text-foreground"
+                              ? "bg-accent border-accent text-white shadow-md font-extrabold"
+                              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/65"
                           )}
                         >
                           Tasks
@@ -969,10 +1096,10 @@ export function TaskCanvas() {
                             setActiveTab('goals');
                           }}
                           className={cn(
-                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border",
                             activeTab === 'goals'
-                              ? "bg-bg-primary border border-border-default/60 text-foreground dark:text-white shadow-sm"
-                              : "border border-transparent text-muted-foreground hover:text-foreground"
+                              ? "bg-accent border-accent text-white shadow-md font-extrabold"
+                              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/65"
                           )}
                         >
                           Goals
@@ -982,14 +1109,14 @@ export function TaskCanvas() {
 
                     {/* List vs Kanban Toggle (only for Tasks) */}
                     {activeTab === 'tasks' && (
-                      <div className="flex bg-bg-secondary/40 border border-border-default/45 p-0.5 rounded-xl shrink-0 self-end md:self-auto">
+                      <div className="flex bg-bg-secondary/80 dark:bg-bg-secondary/40 border border-border-default/60 p-0.5 rounded-xl shrink-0 self-end md:self-auto">
                         <button
                           onClick={() => setViewMode('list')}
                           className={cn(
-                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border",
                             viewMode === 'list'
-                              ? "bg-bg-primary border border-border-default/60 text-foreground dark:text-white shadow-sm"
-                              : "border border-transparent text-muted-foreground hover:text-foreground"
+                              ? "bg-accent border-accent text-white shadow-md font-extrabold"
+                              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/65"
                           )}
                         >
                           List
@@ -997,10 +1124,10 @@ export function TaskCanvas() {
                         <button
                           onClick={() => setViewMode('kanban')}
                           className={cn(
-                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border",
                             viewMode === 'kanban'
-                              ? "bg-bg-primary border border-border-default/60 text-foreground dark:text-white shadow-sm"
-                              : "border border-transparent text-muted-foreground hover:text-foreground"
+                              ? "bg-accent border-accent text-white shadow-md font-extrabold"
+                              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/65"
                           )}
                         >
                           Kanban
@@ -2138,6 +2265,100 @@ export function TaskCanvas() {
           setSearchParams({ task: task.id });
         }}
       />
+
+      {/* ─── Custom Floating Warning Toast ─── */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-6 right-6 z-[100] flex items-center gap-2.5 bg-neutral-900/95 dark:bg-white/95 text-white dark:text-neutral-900 border border-white/10 dark:border-neutral-200/50 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur max-w-sm select-none"
+          >
+            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+            <span className="text-xs font-bold leading-tight">{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── Custom Send Back Review Modal ─── */}
+      <AnimatePresence>
+        {sendBackTaskId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSendBackTaskId(null)}
+              className="absolute inset-0 bg-neutral-950/40 backdrop-blur-xs"
+            />
+            
+            {/* Modal Body */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4 overflow-hidden z-10"
+            >
+              <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800">
+                <span className="text-xs font-black uppercase tracking-wider text-amber-500">
+                  Request Task Revision
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSendBackTaskId(null)}
+                  className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-400 hover:text-neutral-600 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-1.5">
+                <h4 className="text-xs font-bold text-foreground truncate">
+                  Task: {tasks.find(t => t.id === sendBackTaskId)?.title}
+                </h4>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  Provide feedback to the assignee detailing what revisions or corrections are needed before approval.
+                </p>
+              </div>
+
+              <form onSubmit={handleSendBackTask} className="space-y-4">
+                <textarea
+                  value={sendBackComment}
+                  onChange={(e) => setSendBackComment(e.target.value)}
+                  placeholder="Describe necessary changes..."
+                  rows={4}
+                  required
+                  autoFocus
+                  className="w-full bg-neutral-50 dark:bg-neutral-950/40 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-3.5 py-3 text-xs text-foreground placeholder:text-neutral-400 focus:border-accent/60 outline-none resize-none font-semibold transition-all"
+                />
+                
+                <div className="flex items-center justify-end gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                  <button
+                    type="button"
+                    onClick={() => setSendBackTaskId(null)}
+                    className="px-4 py-2 border border-border-default/60 hover:bg-bg-secondary text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!sendBackComment.trim() || isSendingBack}
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-amber-500/10 active:scale-98"
+                  >
+                    {isSendingBack ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      "Send Feedback"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

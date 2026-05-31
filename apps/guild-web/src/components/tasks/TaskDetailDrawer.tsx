@@ -53,6 +53,19 @@ export function TaskDetailDrawer({
   const [newSubtaskTitle, setNewSubtaskTitle] = React.useState('');
   const [isAddingSubtask, setIsAddingSubtask] = React.useState(false);
 
+  // Toast and Send Back states
+  const [toastMessage, setToastMessage] = React.useState<string | null>(null);
+  const [isSendBackOpen, setIsSendBackOpen] = React.useState(false);
+  const [sendBackText, setSendBackText] = React.useState('');
+  const [isSubmittingSendBack, setIsSubmittingSendBack] = React.useState(false);
+
+  React.useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
   // Firestore Subscriptions
   const comments = useTaskComments(task?.id || null);
   const activities = useTaskActivities(task?.id || null);
@@ -101,6 +114,10 @@ export function TaskDetailDrawer({
   };
 
   const handleStatusChange = async (newStatus: TaskStatus) => {
+    if (newStatus === 'done' && task.status === 'review' && task.creatorId !== actor.uid) {
+      setToastMessage("Only the creator of this task can approve it from In Review.");
+      return;
+    }
     try {
       await moveTask(task.id, orgId, newStatus, task.orderIndex, task.status, actor);
     } catch (err) {
@@ -392,6 +409,104 @@ export function TaskDetailDrawer({
             {/* Left Column: Title, Description, Subtasks, Activity */}
             <div className="flex-1 flex flex-col min-w-0 border-r border-neutral-100 dark:border-neutral-850 overflow-y-auto scrollbar-thin p-6 space-y-6">
               
+              {/* Creator/Assigner Review & Approval Banner */}
+              {task.status === 'review' && task.creatorId === actor.uid && (
+                <div className="bg-amber-500/[0.04] dark:bg-amber-500/[0.06] border border-amber-500/25 rounded-2xl p-4.5 space-y-3.5 relative overflow-hidden shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="h-7 w-7 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shrink-0 shadow-xs">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-amber-500">
+                        Review Approval Request
+                      </h4>
+                      <p className="text-[11px] text-neutral-600 dark:text-neutral-350 leading-relaxed font-semibold">
+                        This task has been submitted for review. Please inspect the revisions and approve it, or send it back with comments.
+                      </p>
+                    </div>
+                  </div>
+
+                  {!isSendBackOpen ? (
+                    <div className="flex items-center gap-3.5 pt-1.5 border-t border-amber-500/10">
+                      <button
+                        onClick={() => handleStatusChange('done')}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-500/10"
+                      >
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        Approve Task
+                      </button>
+                      <button
+                        onClick={() => setIsSendBackOpen(true)}
+                        className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold rounded-xl active:scale-95 transition-all cursor-pointer"
+                      >
+                        Request Revisions
+                      </button>
+                    </div>
+                  ) : (
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!sendBackText.trim() || isSubmittingSendBack) return;
+                        setIsSubmittingSendBack(true);
+                        try {
+                          await moveTask(task.id, orgId, 'in_progress', task.orderIndex, task.status, actor);
+                          await addComment({
+                            taskId: task.id,
+                            orgId,
+                            authorId: actor.uid,
+                            authorName: actor.name,
+                            authorUsername: actor.name.toLowerCase().replace(/\s+/g, ''),
+                            body: `[Review Feedback] ${sendBackText.trim()}`,
+                            mentions: task.assigneeIds || [],
+                            taskTitle: task.title
+                          });
+                          setIsSendBackOpen(false);
+                          setSendBackText('');
+                          setToastMessage("Task sent back with revisions requested.");
+                        } catch (err) {
+                          console.error("Failed to request changes:", err);
+                        } finally {
+                          setIsSubmittingSendBack(false);
+                        }
+                      }}
+                      className="space-y-3 pt-2.5 border-t border-amber-500/10"
+                    >
+                      <textarea
+                        value={sendBackText}
+                        onChange={(e) => setSendBackText(e.target.value)}
+                        placeholder="Detail what revisions or corrections are needed..."
+                        rows={3}
+                        required
+                        className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-neutral-450 focus:border-amber-500/50 outline-none resize-none font-semibold transition-all"
+                      />
+                      <div className="flex items-center gap-2.5 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsSendBackOpen(false);
+                            setSendBackText('');
+                          }}
+                          className="px-3.5 py-1.5 border border-border-default/60 hover:bg-bg-secondary text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={!sendBackText.trim() || isSubmittingSendBack}
+                          className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white text-[11px] font-bold rounded-lg transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                        >
+                          {isSubmittingSendBack ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            "Send Back"
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
+
               {/* Title Field with satisfy focus */}
               <div className="space-y-1">
                 {isEditingTitle ? (
@@ -856,6 +971,21 @@ export function TaskDetailDrawer({
             </div>
 
           </div>
+
+          {/* ─── Floating Warning Toast for Drawer ─── */}
+          <AnimatePresence>
+            {toastMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                className="absolute bottom-6 right-6 z-[100] flex items-center gap-2.5 bg-neutral-900/95 dark:bg-white/95 text-white dark:text-neutral-900 border border-white/10 dark:border-neutral-200/50 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur max-w-sm select-none"
+              >
+                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                <span className="text-xs font-bold leading-tight">{toastMessage}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </motion.div>
       </div>
