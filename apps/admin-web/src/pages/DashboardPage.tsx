@@ -74,6 +74,7 @@ export function DashboardPage({
   
   // ─── STATE FOR OVERVIEW ──────────────────────────────────────────────────
   const [overviewDateRange, setOverviewDateRange] = useState<string>('30d');
+  const [activeCardTab, setActiveCardTab] = useState<'projects' | 'requests' | 'work' | 'available_members'>('projects');
 
   // ─── STATES FOR DRAWER CANVASES ──────────────────────────────────────────
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -256,135 +257,92 @@ export function DashboardPage({
   const activeMembers = users.filter(u => u.organizationId).length;
   const totalOrgs = orgs.length;
   
-  // Date Range Filtering for Completed Tasks
-  const now = new Date();
-  const cutoffDate = 
-    overviewDateRange === '7d' ? subDays(now, 7) :
-    overviewDateRange === '30d' ? subDays(now, 30) :
-    overviewDateRange === '90d' ? subDays(now, 90) : null;
+  const now = useMemo(() => new Date(), []);
 
-  const completedTasksAll = tasks.filter(t => t.status === 'done');
-  const completedTasksInRange = completedTasksAll.filter(t => {
-    if (!cutoffDate || !t.updatedAt) return true;
-    try {
-      return t.updatedAt.toDate() >= cutoffDate;
-    } catch {
-      return true;
-    }
-  });
+  // Filter tasks & goals in-flight
+  const activeTasksCount = tasks.filter(t => t.status !== 'done').length;
+  const activeGoalsCount = goals.filter(g => g.status !== 'completed').length;
+  const activeProjectsCount = projects.filter(p => p.status !== 'completed').length;
+  const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
 
-  const doneGoalsCount = goals.filter(g => g.status === 'completed').length;
-  const overdueTasksCount = tasks.filter(t => {
-    if (t.status === 'done' || !t.dueDate) return false;
-    try { return t.dueDate.toDate() < now; } catch { return false; }
-  }).length;
-
-  const overdueGoalsCount = goals.filter(g => {
-    if (g.status === 'completed' || !g.targetDate) return false;
-    try { return g.targetDate.toDate() < now; } catch { return false; }
-  }).length;
-
-  const totalOverdue = overdueTasksCount + overdueGoalsCount;
-  
-  // Combined Completion Ratio
-  const totalItemsCount = tasks.length + goals.length;
-  const totalDoneCount = completedTasksAll.length + doneGoalsCount;
-  const completionRate = totalItemsCount > 0 ? Math.round((totalDoneCount / totalItemsCount) * 100) : 0;
-
-  // Average Completion Rate of Projects
-  const projectsWithRates = projects.map(p => {
-    const projectTasks = tasks.filter(t => t.projectId === p.id);
-    const completedTasks = projectTasks.filter(t => t.status === 'done').length;
-    return projectTasks.length > 0 ? Math.round((completedTasks / projectTasks.length) * 100) : 0;
-  });
-  const avgCompletionPct = projectsWithRates.length > 0
-    ? Math.round(projectsWithRates.reduce((a, b) => a + b, 0) / projectsWithRates.length)
-    : 0;
-
-  // OVERVIEW CARDS DATA (5 Premium KPI Cards)
-  const STATS_CARDS = [
-    {
-      label: 'Teammates Load',
-      value: users.length,
-      color: 'oklch(0.62 0.18 265)', // Indigo
-      sub: `${activeMembers} active in organizations`,
-      icon: <Users className="w-5 h-5" />,
-    },
-    {
-      label: 'Squads & Teams',
-      value: teams.length,
-      color: 'oklch(0.65 0.26 300)', // Violet
-      sub: 'Active collaborative squad groups',
-      icon: <Users2 className="w-5 h-5" />,
-    },
-    {
-      label: 'Initiatives (Projects)',
-      value: projects.length,
-      color: 'oklch(0.70 0.19 155)', // Emerald Green
-      sub: `${avgCompletionPct}% average completion rate`,
-      icon: <ClipboardList className="w-5 h-5" />,
-    },
-    {
-      label: 'Operations Hotspots',
-      value: totalOverdue,
-      color: 'oklch(0.65 0.22 25)', // Orange/Crimson
-      sub: `${overdueTasksCount} overdue tasks · ${overdueGoalsCount} overdue goals`,
-      icon: <AlertTriangle className="w-5 h-5 animate-pulse text-red-400" />,
-    },
-    {
-      label: 'Execution Velocity',
-      value: `${completionRate}%`,
-      color: 'oklch(0.68 0.16 235)', // Sky Blue
-      sub: `${totalDoneCount} / ${totalItemsCount} total items completed`,
-      icon: <Percent className="w-5 h-5" />,
-    },
-  ];
-
-
-  // ─── NEEDS ATTENTION: HOTSPOTS BY USER & TEAM ────────────────────────────
-  // 1. Overloaded Users: count overdue tasks assigned to each user
-  const userOverdueCounts: Record<string, number> = {};
-  tasks.forEach(t => {
-    if (t.status !== 'done' && t.dueDate) {
-      try {
-        if (t.dueDate.toDate() < now) {
-          t.assigneeIds?.forEach(uid => {
-            userOverdueCounts[uid] = (userOverdueCounts[uid] || 0) + 1;
-          });
-        }
-      } catch {}
-    }
-  });
-
-  const topOverdueUsers = Object.entries(userOverdueCounts)
-    .map(([uid, count]) => ({
-      name: userMap[uid] || 'Unknown User',
-      count,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  // 2. Overdue hotspots by team
-  const teamOverdueCounts: Record<string, number> = {};
-  teams.forEach(tm => {
-    const teamUids = [tm.managerId, ...tm.memberIds];
+  // Available members calculation (no assigned active tasks or goals)
+  const assignedUserIds = useMemo(() => {
+    const ids = new Set<string>();
     tasks.forEach(t => {
-      if (t.status !== 'done' && t.dueDate) {
-        try {
-          if (t.dueDate.toDate() < now && t.assigneeIds?.some(uid => teamUids.includes(uid))) {
-            teamOverdueCounts[tm.name] = (teamOverdueCounts[tm.name] || 0) + 1;
-          }
-        } catch {}
+      if (t.status !== 'done' && t.assigneeIds) {
+        t.assigneeIds.forEach(id => ids.add(id));
       }
     });
-  });
+    goals.forEach(g => {
+      if (g.status !== 'completed' && g.ownerId) {
+        ids.add(g.ownerId);
+      }
+    });
+    return ids;
+  }, [tasks, goals]);
 
-  const topOverdueTeams = Object.entries(teamOverdueCounts)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+  const availableMembers = useMemo(() => {
+    return users.filter(u => !assignedUserIds.has(u.uid));
+  }, [users, assignedUserIds]);
 
-  // ─── OPTION ARRAYS FOR DROPDOWNS ─────────────────────────────────────────
+  // Combined Completion Ratio
+  const totalItemsCount = tasks.length + goals.length;
+  const totalDoneCount = tasks.filter(t => t.status === 'done').length + goals.filter(g => g.status === 'completed').length;
+  const completionRate = totalItemsCount > 0 ? Math.round((totalDoneCount / totalItemsCount) * 100) : 0;
+
+  // Overdue Members List with Details
+  const overdueMembersList = useMemo(() => {
+    return users.map(u => {
+      const userTasks = tasks.filter(t => t.assigneeIds?.includes(u.uid) && t.status !== 'done');
+      const overdueTasks = userTasks.filter(t => {
+        if (!t.dueDate) return false;
+        try {
+          return t.dueDate.toDate() < now;
+        } catch {
+          return false;
+        }
+      });
+      return {
+        user: u,
+        overdueTasks,
+      };
+    }).filter(item => item.overdueTasks.length > 0);
+  }, [users, tasks, now]);
+
+  // Overdue Teams List with Details
+  const overdueTeamsList = useMemo(() => {
+    return teams.map(team => {
+      const teamUids = [team.managerId, ...team.memberIds];
+      const teamTasks = tasks.filter(t => t.assigneeIds?.some(uid => teamUids.includes(uid)) && t.status !== 'done');
+      const overdueTasks = teamTasks.filter(t => {
+        if (!t.dueDate) return false;
+        try {
+          return t.dueDate.toDate() < now;
+        } catch {
+          return false;
+        }
+      });
+      return {
+        team,
+        overdueTasks,
+      };
+    }).filter(item => item.overdueTasks.length > 0);
+  }, [teams, tasks, now]);
+
+  const getDaysLate = (ts: any) => {
+    if (!ts) return 0;
+    try {
+      const due = ts.toDate();
+      const diff = now.getTime() - due.getTime();
+      return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+    } catch {
+      return 0;
+    }
+  };
+
+
+
+  // Keep dropdown options in case they are referenced in other sections
   const orgOptions = [
     { value: 'all', label: 'All Organizations' },
     ...orgs.map(o => ({ value: o.id, label: o.name }))
@@ -459,129 +417,447 @@ export function DashboardPage({
       {/* ────────────────── SECTION ROUTING ────────────────── */}
 
       {activeSection === 'overview' && (
-        <div className="space-y-8">
-          
-          {/* Overview Date Filter */}
-          <div className="flex justify-end">
-            <div className="flex items-center bg-white/[0.02] dark:bg-white/[0.04] border border-white/10 dark:border-white/5 p-0.5 rounded-xl text-[10px] font-semibold">
-              {[
-                { value: '7d', label: '7 Days' },
-                { value: '30d', label: '30 Days' },
-                { value: '90d', label: '90 Days' },
-                { value: 'all', label: 'All Time' },
-              ].map(d => {
-                const active = overviewDateRange === d.value;
-                return (
-                  <button
-                    key={d.value}
-                    onClick={() => setOverviewDateRange(d.value)}
-                    className="px-3.5 py-1.5 rounded-lg transition-all cursor-pointer"
-                    style={{
-                      background: active ? 'oklch(from var(--primary) l c h / 12%)' : 'transparent',
-                      color: active ? 'var(--primary)' : 'var(--muted-foreground)'
-                    }}
-                  >
-                    {d.label}
-                  </button>
-                );
-              })}
+        <div className="space-y-8 animate-fade-up">
+          {/* ─── ORGANIZATION BANNER ─── */}
+          <div className="relative overflow-hidden rounded-3xl border border-zinc-200 bg-white p-6 lg:p-8 shadow-sm">
+            {/* Soft, professional gradient glows (strictly non-dark) */}
+            <div className="absolute right-0 top-0 w-72 h-72 rounded-full bg-indigo-50/50 filter blur-3xl pointer-events-none -z-10" />
+            <div className="absolute left-1/3 bottom-0 w-64 h-64 rounded-full bg-sky-50/30 filter blur-3xl pointer-events-none -z-10" />
+
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-indigo-50 text-indigo-600 border border-indigo-100">
+                  <Crown className="w-3.5 h-3.5" />
+                  Owner / Administrator Console
+                </div>
+                <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900">
+                  {activeOrg?.name || 'Workspace'}
+                </h2>
+                <p className="text-sm text-zinc-500 max-w-xl">
+                  Welcome to your administrative workspace control deck. Coordinate teams, track active projects, review pending requests, and manage task assignments seamlessly.
+                </p>
+                
+                {/* Org Details badges */}
+                <div className="flex flex-wrap gap-2.5 pt-1 text-xs">
+                  {activeOrg?.industry && (
+                    <span className="px-3 py-1 rounded-xl bg-zinc-50 border border-zinc-100 text-zinc-600">
+                      Sector: <span className="font-semibold text-zinc-900">{activeOrg.industry}</span>
+                    </span>
+                  )}
+                  {activeOrg?.companySize && (
+                    <span className="px-3 py-1 rounded-xl bg-zinc-50 border border-zinc-100 text-zinc-600">
+                      Company Size: <span className="font-semibold text-zinc-900">{activeOrg.companySize}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick stats row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-zinc-50/80 border border-zinc-100/80 divide-x divide-zinc-200/50 lg:min-w-[420px]">
+                <div className="px-3">
+                  <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Members</div>
+                  <div className="text-2xl font-black text-zinc-800 mt-1">{users.length}</div>
+                </div>
+                <div className="px-4">
+                  <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Teams</div>
+                  <div className="text-2xl font-black text-zinc-800 mt-1">{teams.length}</div>
+                </div>
+                <div className="px-4">
+                  <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Projects</div>
+                  <div className="text-2xl font-black text-zinc-800 mt-1">{projects.length}</div>
+                </div>
+                <div className="px-4">
+                  <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Channels</div>
+                  <div className="text-2xl font-black text-zinc-800 mt-1">{channels.length}</div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Grid Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-            {STATS_CARDS.map((s, i) => (
-              <HqStatCard key={s.label} {...s} className={`delay-${i * 100}`} />
-            ))}
+          {/* ─── INTERACTIVE METRIC CARDS ─── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* 1. Active Projects Card */}
+            <div 
+              onClick={() => setActiveCardTab('projects')}
+              className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer relative overflow-hidden select-none bg-white
+                ${activeCardTab === 'projects' 
+                  ? 'border-indigo-500 ring-2 ring-indigo-500/10 shadow-md' 
+                  : 'border-zinc-200/80 hover:border-zinc-300 hover:shadow-sm'
+                }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Active Projects</span>
+                <div className={`p-2 rounded-xl ${activeCardTab === 'projects' ? 'bg-indigo-50 text-indigo-600' : 'bg-zinc-50 text-zinc-400'}`}>
+                  <Briefcase className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-zinc-800">{activeProjectsCount}</span>
+                <span className="text-xs text-zinc-400">currently active</span>
+              </div>
+            </div>
+
+            {/* 2. Pending Requests Card */}
+            <div 
+              onClick={() => setActiveCardTab('requests')}
+              className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer relative overflow-hidden select-none bg-white
+                ${activeCardTab === 'requests' 
+                  ? 'border-indigo-500 ring-2 ring-indigo-500/10 shadow-md' 
+                  : 'border-zinc-200/80 hover:border-zinc-300 hover:shadow-sm'
+                }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Pending Requests</span>
+                <div className={`p-2 rounded-xl ${activeCardTab === 'requests' ? 'bg-indigo-50 text-indigo-600' : 'bg-zinc-50 text-zinc-400'}`}>
+                  <GitPullRequest className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-zinc-800">{pendingRequestsCount}</span>
+                <span className="text-xs text-zinc-400 font-semibold">awaiting approval</span>
+              </div>
+            </div>
+
+            {/* 3. Active Tasks / Goals Card */}
+            <div 
+              onClick={() => setActiveCardTab('work')}
+              className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer relative overflow-hidden select-none bg-white
+                ${activeCardTab === 'work' 
+                  ? 'border-indigo-500 ring-2 ring-indigo-500/10 shadow-md' 
+                  : 'border-zinc-200/80 hover:border-zinc-300 hover:shadow-sm'
+                }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Active Tasks & Goals</span>
+                <div className={`p-2 rounded-xl ${activeCardTab === 'work' ? 'bg-indigo-50 text-indigo-600' : 'bg-zinc-50 text-zinc-400'}`}>
+                  <ClipboardList className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-zinc-800">{activeTasksCount + activeGoalsCount}</span>
+                <span className="text-xs text-zinc-400">items in flight</span>
+              </div>
+            </div>
+
+            {/* 4. Available Members Card */}
+            <div 
+              onClick={() => setActiveCardTab('available_members')}
+              className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer relative overflow-hidden select-none bg-white
+                ${activeCardTab === 'available_members' 
+                  ? 'border-indigo-500 ring-2 ring-indigo-500/10 shadow-md' 
+                  : 'border-zinc-200/80 hover:border-zinc-300 hover:shadow-sm'
+                }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Available Members</span>
+                <div className={`p-2 rounded-xl ${activeCardTab === 'available_members' ? 'bg-indigo-50 text-indigo-600' : 'bg-zinc-50 text-zinc-400'}`}>
+                  <Users className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-zinc-800">{availableMembers.length}</span>
+                <span className="text-xs text-zinc-400 font-semibold">without assignments</span>
+              </div>
+            </div>
           </div>
 
-          {/* Hotspots / Operational Alerts */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            
-            {/* Top Overdue Hotspots (Users) */}
-            <div className="aether-glass aether-glass-interactive p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-red-400 flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4 text-red-400 animate-pulse" />
-                  Needs Attention: Overloaded Users
+          {/* ─── DYNAMIC DETAILS TABLE VIEW ─── */}
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-zinc-700 flex items-center gap-2">
+                {activeCardTab === 'projects' && <Briefcase className="w-4.5 h-4.5 text-indigo-500" />}
+                {activeCardTab === 'requests' && <GitPullRequest className="w-4.5 h-4.5 text-indigo-500" />}
+                {activeCardTab === 'work' && <ClipboardList className="w-4.5 h-4.5 text-indigo-500" />}
+                {activeCardTab === 'available_members' && <Users className="w-4.5 h-4.5 text-indigo-500" />}
+                {activeCardTab === 'projects' && 'Active Projects Directory'}
+                {activeCardTab === 'requests' && 'Pending Workspace Requests'}
+                {activeCardTab === 'work' && 'Active Workloads (Tasks & Goals)'}
+                {activeCardTab === 'available_members' && 'Available Capacity (Unassigned Members)'}
+              </h3>
+              <span className="text-xs font-semibold text-zinc-400">
+                {activeCardTab === 'projects' && `${activeProjectsCount} item(s) found`}
+                {activeCardTab === 'requests' && `${pendingRequestsCount} item(s) found`}
+                {activeCardTab === 'work' && `${activeTasksCount + activeGoalsCount} item(s) found`}
+                {activeCardTab === 'available_members' && `${availableMembers.length} member(s) found`}
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              {activeCardTab === 'projects' && (
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-100 text-[10px] uppercase font-bold text-zinc-400 bg-zinc-50/50 animate-fade-in">
+                      <th className="px-4 py-3">Project Name</th>
+                      <th className="px-4 py-3">Description</th>
+                      <th className="px-4 py-3">Lead Owner</th>
+                      <th className="px-4 py-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100">
+                    {projects.filter(p => p.status !== 'completed').length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="text-center py-8 text-zinc-400 italic">No active projects found in this workspace.</td>
+                      </tr>
+                    ) : (
+                      projects.filter(p => p.status !== 'completed').map(p => (
+                        <tr key={p.id} className="hover:bg-zinc-50/60 transition-colors animate-fade-in">
+                          <td className="px-4 py-3 font-bold text-zinc-800">{p.name}</td>
+                          <td className="px-4 py-3 text-zinc-500 max-w-sm truncate">{p.description || '—'}</td>
+                          <td className="px-4 py-3 text-zinc-600 font-semibold">{userMap[p.ownerId] || '—'}</td>
+                          <td className="px-4 py-3">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wide">
+                              {p.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+
+              {activeCardTab === 'requests' && (
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-100 text-[10px] uppercase font-bold text-zinc-400 bg-zinc-50/50 animate-fade-in">
+                      <th className="px-4 py-3">Requester</th>
+                      <th className="px-4 py-3">Request Details</th>
+                      <th className="px-4 py-3">Type</th>
+                      <th className="px-4 py-3">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100">
+                    {requests.filter(r => r.status === 'pending').length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="text-center py-8 text-zinc-400 italic">No pending requests found in this workspace.</td>
+                      </tr>
+                    ) : (
+                      requests.filter(r => r.status === 'pending').map(r => (
+                        <tr key={r.id} className="hover:bg-zinc-50/60 transition-colors animate-fade-in">
+                          <td className="px-4 py-3 font-bold text-zinc-800">{r.creatorName || 'Unknown User'}</td>
+                          <td className="px-4 py-3 text-zinc-500 max-w-sm truncate">{r.title || '—'}</td>
+                          <td className="px-4 py-3">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100 uppercase tracking-wide">
+                              {r.type?.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-zinc-400 font-mono text-[10px]">
+                            {r.createdAt ? format(r.createdAt.toDate(), "MMM dd, yyyy") : '—'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+
+              {activeCardTab === 'work' && (
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-100 text-[10px] uppercase font-bold text-zinc-400 bg-zinc-50/50 animate-fade-in">
+                      <th className="px-4 py-3">Title</th>
+                      <th className="px-4 py-3">Type</th>
+                      <th className="px-4 py-3">Assignee / Owner</th>
+                      <th className="px-4 py-3">Priority</th>
+                      <th className="px-4 py-3">Target Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100">
+                    {tasks.filter(t => t.status !== 'done').length === 0 && goals.filter(g => g.status !== 'completed').length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-8 text-zinc-400 italic">No active tasks or goals found.</td>
+                      </tr>
+                    ) : (
+                      <>
+                        {tasks.filter(t => t.status !== 'done').map(t => (
+                          <tr key={t.id} className="hover:bg-zinc-50/60 transition-colors animate-fade-in">
+                            <td className="px-4 py-3 font-bold text-zinc-800">{t.title}</td>
+                            <td className="px-4 py-3 text-zinc-400 uppercase font-bold tracking-wider text-[9px]">Task</td>
+                            <td className="px-4 py-3 text-zinc-600">
+                              {t.assigneeIds && t.assigneeIds.map(id => userMap[id] || id).join(', ') || 'Unassigned'}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                t.priority === 'urgent' ? 'bg-red-50 text-red-600 border border-red-100' :
+                                t.priority === 'high' ? 'bg-orange-50 text-orange-600 border border-orange-100' :
+                                t.priority === 'medium' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' :
+                                'bg-zinc-50 text-zinc-600 border border-zinc-100'
+                              }`}>
+                                {t.priority || 'medium'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-zinc-500">
+                              {t.dueDate ? format(t.dueDate.toDate(), "MMM dd, yyyy") : 'No due date'}
+                            </td>
+                          </tr>
+                        ))}
+                        {goals.filter(g => g.status !== 'completed').map(g => (
+                          <tr key={g.id} className="hover:bg-zinc-50/60 transition-colors animate-fade-in">
+                            <td className="px-4 py-3 font-bold text-zinc-800">{g.title}</td>
+                            <td className="px-4 py-3 text-indigo-400 uppercase font-bold tracking-wider text-[9px]">Strategic Goal</td>
+                            <td className="px-4 py-3 text-zinc-600">{userMap[g.ownerId] || '—'}</td>
+                            <td className="px-4 py-3">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase tracking-wide">
+                                Active
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-zinc-500">
+                              {g.targetDate ? format(g.targetDate.toDate(), "MMM dd, yyyy") : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                      </>
+                    )}
+                  </tbody>
+                </table>
+              )}
+
+              {activeCardTab === 'available_members' && (
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-100 text-[10px] uppercase font-bold text-zinc-400 bg-zinc-50/50 animate-fade-in">
+                      <th className="px-4 py-3">Member Name</th>
+                      <th className="px-4 py-3">Username</th>
+                      <th className="px-4 py-3">Designation</th>
+                      <th className="px-4 py-3">Role Badge</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100">
+                    {availableMembers.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="text-center py-8 text-zinc-400 italic">All organization members are currently assigned to tasks or goals.</td>
+                      </tr>
+                    ) : (
+                      availableMembers.map(u => (
+                        <tr key={u.uid} className="hover:bg-zinc-50/60 transition-colors animate-fade-in">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0">
+                                {(u.fullName || u.username || '?').slice(0, 2).toUpperCase()}
+                              </div>
+                              <span className="font-bold text-zinc-800">{u.fullName || '—'}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-zinc-400 font-mono">@{u.username}</td>
+                          <td className="px-4 py-3 text-zinc-500 font-semibold">{u.designation || 'Member'}</td>
+                          <td className="px-4 py-3">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wide">
+                              Available Capacity
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+
+          {/* ─── TWIN OVERDUE TRACKING PANELS ─── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-up">
+            {/* Panel 1: Members with Overdue Tasks */}
+            <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+                <h3 className="text-sm font-extrabold uppercase tracking-wider text-red-600 flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
+                  Members with Overdue Tasks
                 </h3>
-                <span className="text-[10px] font-semibold text-[--muted-foreground]">Overdue hot hotspots</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  {overdueMembersList.length} user(s) late
+                </span>
               </div>
-              <div className="space-y-2">
-                {topOverdueUsers.length === 0 ? (
-                  <p className="text-xs text-[--muted-foreground]/60 italic py-4">No overdue tasks assigned to users! Great job.</p>
+
+              <div className="space-y-3 max-h-[360px] overflow-y-auto aether-scroll pr-1">
+                {overdueMembersList.length === 0 ? (
+                  <div className="text-center py-10 text-zinc-400 italic text-xs">
+                    All members have completed or kept up with their deadlines. Great job!
+                  </div>
                 ) : (
-                  topOverdueUsers.map((user, idx) => (
-                    <div key={user.name} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/10 text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[--foreground]">{idx + 1}. {user.name}</span>
+                  overdueMembersList.map(({ user, overdueTasks }) => (
+                    <div key={user.uid} className="p-4 rounded-2xl bg-zinc-50/50 border border-zinc-100 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs bg-red-50 text-red-500 border border-red-100 shrink-0">
+                            {(user.fullName || user.username || '?').slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-bold text-zinc-800 text-xs leading-none">{user.fullName || '—'}</div>
+                            <div className="text-[10px] text-zinc-400 mt-1 leading-none">@{user.username} · {user.designation || 'Member'}</div>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-red-50 text-red-600 border border-red-100 uppercase tracking-wider">
+                          {overdueTasks.length} Overdue
+                        </span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-500/20 text-red-400">
-                        {user.count} Overdue Tasks
-                      </span>
+
+                      <div className="space-y-1.5 pl-1.5 border-l-2 border-red-200">
+                        {overdueTasks.map(t => (
+                          <div key={t.id} className="flex items-center justify-between text-[11px] text-zinc-600 py-0.5">
+                            <span className="font-semibold truncate max-w-[200px]">{t.title}</span>
+                            <span className="text-[10px] text-red-500 font-bold shrink-0">
+                              ({getDaysLate(t.dueDate)} days late)
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))
                 )}
               </div>
             </div>
 
-            {/* Top Overdue Hotspots (Teams) */}
-            <div className="aether-glass aether-glass-interactive p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-red-400 flex items-center gap-1.5">
-                  <ShieldAlert className="w-4 h-4 text-red-400 animate-pulse" />
-                  Needs Attention: Lagging Teams
+            {/* Panel 2: Teams with Overdue Tasks */}
+            <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+                <h3 className="text-sm font-extrabold uppercase tracking-wider text-red-600 flex items-center gap-1.5">
+                  <ShieldAlert className="w-4 h-4 text-red-500 animate-pulse" />
+                  Teams with Overdue Tasks
                 </h3>
-                <span className="text-[10px] font-semibold text-[--muted-foreground]">Overdue team loads</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  {overdueTeamsList.length} team(s) late
+                </span>
               </div>
-              <div className="space-y-2">
-                {topOverdueTeams.length === 0 ? (
-                  <p className="text-xs text-[--muted-foreground]/60 italic py-4">All teams are perfectly on schedule!</p>
+
+              <div className="space-y-3 max-h-[360px] overflow-y-auto aether-scroll pr-1">
+                {overdueTeamsList.length === 0 ? (
+                  <div className="text-center py-10 text-zinc-400 italic text-xs">
+                    All collaborative teams are fully on schedule. Great work!
+                  </div>
                 ) : (
-                  topOverdueTeams.map((team, idx) => (
-                    <div key={team.name} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/10 text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[--foreground]">{idx + 1}. {team.name} Team</span>
+                  overdueTeamsList.map(({ team, overdueTasks }) => (
+                    <div key={team.id} className="p-4 rounded-2xl bg-zinc-50/50 border border-zinc-100 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-zinc-800 text-xs uppercase tracking-wider">{team.name} Team</div>
+                          <div className="text-[10px] text-zinc-400 mt-1 font-semibold">Manager: {userMap[team.managerId] || '—'}</div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-red-50 text-red-600 border border-red-100 uppercase tracking-wider">
+                          {overdueTasks.length} Overdue
+                        </span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-500/20 text-red-400">
-                        {team.count} Overdue Tasks
-                      </span>
+
+                      <div className="space-y-1.5 pl-1.5 border-l-2 border-red-200">
+                        {overdueTasks.map(t => (
+                          <div key={t.id} className="flex items-center justify-between text-[11px] text-zinc-600 py-0.5">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="font-semibold truncate">{t.title}</span>
+                              <span className="text-[9px] text-zinc-400 truncate">
+                                (Assigned: {t.assigneeIds?.map(id => userMap[id] || id).join(', ')})
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-red-500 font-bold shrink-0 ml-1.5">
+                              ({getDaysLate(t.dueDate)} days late)
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))
                 )}
               </div>
             </div>
-
-            {/* Top Pending Requests Hotspots */}
-            <div className="aether-glass aether-glass-interactive p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
-                  Needs Attention: Pending Requests
-                </h3>
-                <span className="text-[10px] font-semibold text-[--muted-foreground]">Outstanding approvals</span>
-              </div>
-              <div className="space-y-2">
-                {pendingRequests.length === 0 ? (
-                  <p className="text-xs text-[--muted-foreground]/60 italic py-4">All workspace requests have been fully resolved!</p>
-                ) : (
-                  pendingRequests.slice(0, 5).map((req, idx) => (
-                    <div key={req.id} className="flex items-center justify-between p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-xs">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-bold text-[--foreground] truncate">{idx + 1}. {req.creatorName}</span>
-                        <span className="text-[9px] text-[--muted-foreground] font-semibold truncate">({req.title})</span>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-400 uppercase tracking-wide shrink-0">
-                        {req.type.replace('_', ' ')}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
           </div>
-
         </div>
       )}
 
