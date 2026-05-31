@@ -2,7 +2,7 @@ import * as React from 'react';
 import { db } from '../lib/firebase';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 
-const VAPID_PUBLIC_KEY = 'BLA5LxMq9q_LRmLD941wmpjEVoPI5KECTF44ySo0X3TpF5Y2NooH-YtLrJ35ymlvIGw7WUrOjThyVggGhiZODJg';
+const VAPID_PUBLIC_KEY = 'BLrZp1urQa3pn0DUqt8AfPXOrLGHTUZ_gHhxZI7CjjyXQ3b5Xbx2qE2n7pdgE-cY98JIoeJn1Qq16OmgzckmWzw';
 
 /**
  * Converts a URL-safe Base64 VAPID public key into a Uint8Array for the Push API.

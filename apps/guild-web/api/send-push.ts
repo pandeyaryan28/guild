@@ -17,8 +17,8 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // 2. Configure VAPID signatures
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BLA5LxMq9q_LRmLD941wmpjEVoPI5KECTF44ySo0X3TpF5Y2NooH-YtLrJ35ymlvIGw7WUrOjThyVggGhiZODJg';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'HiJvkMMvMLvpIK6JsDMILNQn3Cmv37WLhzV9RWYVA3s';
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BLrZp1urQa3pn0DUqt8AfPXOrLGHTUZ_gHhxZI7CjjyXQ3b5Xbx2qE2n7pdgE-cY98JIoeJn1Qq16OmgzckmWzw';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'M_n8jJxkZLdYFZNqb2WNDH3ZGeaczT8E72wI-3HuMKE';
 const SENDER_EMAIL = process.env.SENDER_EMAIL || 'mailto:support@guildhq.com';
 
 webpush.setVapidDetails(
