@@ -221,7 +221,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
               {(() => {
                 const activeT = THEMES.find((t) => t.id === previewId)!;
                 const activeSwatch = isLight 
-                  ? (previewId === 'rose-gold' ? '#db2777' : previewId === 'slate' ? '#18181b' : activeT.swatch)
+                  ? (previewId === 'rose-gold' ? '#db2777' : activeT.swatch)
                   : activeT.swatch;
                 return (
                   <button

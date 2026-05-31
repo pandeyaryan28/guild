@@ -141,11 +141,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Highly readable premium accents for Light Mode (eliminates low contrast invisibility)
     let lightAccent = '#4f46e5';
     let lightAccentForeground = '#ffffff';
-
     if (effectiveThemeId === 'rose-gold') {
       lightAccent = '#db2777';
-    } else if (effectiveThemeId === 'slate') {
-      lightAccent = '#18181b';
     } else if (effectiveThemeId === 'forest') {
       lightAccent = '#059669';
     } else if (effectiveThemeId === 'cobalt') {
