@@ -120,6 +120,67 @@ export function DashboardPage({
     return requests.filter(r => r.status === 'pending');
   }, [requests]);
 
+  const now = useMemo(() => new Date(), []);
+
+  // Available members calculation (no assigned active tasks or goals)
+  const assignedUserIds = useMemo(() => {
+    const ids = new Set<string>();
+    tasks.forEach(t => {
+      if (t.status !== 'done' && t.assigneeIds) {
+        t.assigneeIds.forEach(id => ids.add(id));
+      }
+    });
+    goals.forEach(g => {
+      if (g.status !== 'completed' && g.ownerId) {
+        ids.add(g.ownerId);
+      }
+    });
+    return ids;
+  }, [tasks, goals]);
+
+  const availableMembers = useMemo(() => {
+    return users.filter(u => !assignedUserIds.has(u.uid));
+  }, [users, assignedUserIds]);
+
+  // Overdue Members List with Details
+  const overdueMembersList = useMemo(() => {
+    return users.map(u => {
+      const userTasks = tasks.filter(t => t.assigneeIds?.includes(u.uid) && t.status !== 'done');
+      const overdueTasks = userTasks.filter(t => {
+        if (!t.dueDate) return false;
+        try {
+          return t.dueDate.toDate() < now;
+        } catch {
+          return false;
+        }
+      });
+      return {
+        user: u,
+        overdueTasks,
+      };
+    }).filter(item => item.overdueTasks.length > 0);
+  }, [users, tasks, now]);
+
+  // Overdue Teams List with Details
+  const overdueTeamsList = useMemo(() => {
+    return teams.map(team => {
+      const teamUids = [team.managerId, ...team.memberIds];
+      const teamTasks = tasks.filter(t => t.assigneeIds?.some(uid => teamUids.includes(uid)) && t.status !== 'done');
+      const overdueTasks = teamTasks.filter(t => {
+        if (!t.dueDate) return false;
+        try {
+          return t.dueDate.toDate() < now;
+        } catch {
+          return false;
+        }
+      });
+      return {
+        team,
+        overdueTasks,
+      };
+    }).filter(item => item.overdueTasks.length > 0);
+  }, [teams, tasks, now]);
+
   // Sync form states and global invite token when activeOrg changes
   useEffect(() => {
     if (activeOrg) {
@@ -257,77 +318,16 @@ export function DashboardPage({
   const activeMembers = users.filter(u => u.organizationId).length;
   const totalOrgs = orgs.length;
   
-  const now = useMemo(() => new Date(), []);
-
   // Filter tasks & goals in-flight
   const activeTasksCount = tasks.filter(t => t.status !== 'done').length;
   const activeGoalsCount = goals.filter(g => g.status !== 'completed').length;
   const activeProjectsCount = projects.filter(p => p.status !== 'completed').length;
   const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
 
-  // Available members calculation (no assigned active tasks or goals)
-  const assignedUserIds = useMemo(() => {
-    const ids = new Set<string>();
-    tasks.forEach(t => {
-      if (t.status !== 'done' && t.assigneeIds) {
-        t.assigneeIds.forEach(id => ids.add(id));
-      }
-    });
-    goals.forEach(g => {
-      if (g.status !== 'completed' && g.ownerId) {
-        ids.add(g.ownerId);
-      }
-    });
-    return ids;
-  }, [tasks, goals]);
-
-  const availableMembers = useMemo(() => {
-    return users.filter(u => !assignedUserIds.has(u.uid));
-  }, [users, assignedUserIds]);
-
   // Combined Completion Ratio
   const totalItemsCount = tasks.length + goals.length;
   const totalDoneCount = tasks.filter(t => t.status === 'done').length + goals.filter(g => g.status === 'completed').length;
   const completionRate = totalItemsCount > 0 ? Math.round((totalDoneCount / totalItemsCount) * 100) : 0;
-
-  // Overdue Members List with Details
-  const overdueMembersList = useMemo(() => {
-    return users.map(u => {
-      const userTasks = tasks.filter(t => t.assigneeIds?.includes(u.uid) && t.status !== 'done');
-      const overdueTasks = userTasks.filter(t => {
-        if (!t.dueDate) return false;
-        try {
-          return t.dueDate.toDate() < now;
-        } catch {
-          return false;
-        }
-      });
-      return {
-        user: u,
-        overdueTasks,
-      };
-    }).filter(item => item.overdueTasks.length > 0);
-  }, [users, tasks, now]);
-
-  // Overdue Teams List with Details
-  const overdueTeamsList = useMemo(() => {
-    return teams.map(team => {
-      const teamUids = [team.managerId, ...team.memberIds];
-      const teamTasks = tasks.filter(t => t.assigneeIds?.some(uid => teamUids.includes(uid)) && t.status !== 'done');
-      const overdueTasks = teamTasks.filter(t => {
-        if (!t.dueDate) return false;
-        try {
-          return t.dueDate.toDate() < now;
-        } catch {
-          return false;
-        }
-      });
-      return {
-        team,
-        overdueTasks,
-      };
-    }).filter(item => item.overdueTasks.length > 0);
-  }, [teams, tasks, now]);
 
   const getDaysLate = (ts: any) => {
     if (!ts) return 0;
