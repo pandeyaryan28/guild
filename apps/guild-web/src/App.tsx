@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -82,7 +82,14 @@ function AppContent() {
     }
   }, [user, permission, requestPermission, syncPushSubscription]);
 
-  if (deviceType === 'mobile') {
+  const location = useLocation();
+  const publicRoutes = ['/login', '/signup', '/verify-email'];
+  const isAuthOrOnboarding = 
+    publicRoutes.includes(location.pathname) || 
+    location.pathname.startsWith('/onboarding') ||
+    location.pathname.startsWith('/join');
+
+  if (deviceType === 'mobile' && !isAuthOrOnboarding) {
     return <MobileApp />;
   }
 

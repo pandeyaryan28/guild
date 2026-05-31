@@ -17,7 +17,13 @@ cleanupOutdatedCaches();
 // 3. Navigation Route for Single Page Application (SPA) client-side routing.
 // This ensures that page refreshes on subroutes (like /chat, /settings)
 // immediately load the cached index.html instead of hitting the network.
-registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
+// We exclude all Firebase Auth and internal hosting paths (which start with /__/)
+// using a denylist, so they can bypass the Service Worker and load correctly.
+registerRoute(
+  new NavigationRoute(createHandlerBoundToURL('/index.html'), {
+    denylist: [/^\/__/],
+  })
+);
 
 // 4. Runtime Caching for Google Fonts Stylesheets
 registerRoute(
