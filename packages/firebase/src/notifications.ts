@@ -1,6 +1,6 @@
 import {
   collection, doc, setDoc, updateDoc, writeBatch,
-  query, where, orderBy, onSnapshot, serverTimestamp, getDocs,
+  query, where, orderBy, onSnapshot, serverTimestamp, getDocs, getDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Notification, NotificationCategory } from '@guild/types';
@@ -57,20 +57,32 @@ export async function createNotification(params: {
     createdAt: serverTimestamp(),
   });
 
-  // Proactively dispatch background OS-level Universal Push Notification via Vercel serverless API
+  // Dispatch OS-level push notification via Vercel serverless function.
+  // We read the recipient's push subscriptions client-side (the calling user is authenticated
+  // so Firestore allows it) and pass them directly to the API — this avoids needing
+  // the Firebase Admin SDK or unauthenticated Firestore reads in the serverless function.
   if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
-    fetch('/api/send-push', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        recipientId: params.recipientId,
-        title: params.title,
-        body: params.body || '',
-        link: params.link,
-      }),
-    }).catch((e) => console.error('Failed to dispatch background WebPush notifications via serverless API', e));
+    (async () => {
+      try {
+        const recipientSnap = await getDoc(doc(db, 'users', params.recipientId));
+        const pushSubscriptions: any[] = recipientSnap.data()?.pushSubscriptions ?? [];
+
+        if (pushSubscriptions.length === 0) return;
+
+        await fetch('/api/send-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscriptions: pushSubscriptions,
+            title: params.title,
+            body: params.body || '',
+            url: params.link,
+          }),
+        });
+      } catch (e) {
+        console.error('[Push] Failed to dispatch OS push notification', e);
+      }
+    })();
   }
 }
 
