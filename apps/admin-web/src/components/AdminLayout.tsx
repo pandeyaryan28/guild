@@ -24,13 +24,6 @@ export function AdminLayout({ profile, children }: AdminLayoutProps) {
         {/* Top Spatial Control Nav Header - macOS Floating Window Titlebar Capsule */}
         <header className="flex h-14 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0 px-6 aether-glass shadow-xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-white/[0.03]" style={{ borderRadius: '24px' }}>
           <div className="flex items-center gap-4">
-            {/* macOS Window Controls */}
-            <div className="flex items-center gap-1.5 shrink-0 select-none">
-              <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] opacity-90 transition-all hover:scale-110 active:opacity-100" />
-              <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] opacity-90 transition-all hover:scale-110 active:opacity-100" />
-              <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] opacity-90 transition-all hover:scale-110 active:opacity-100" />
-            </div>
-            <div className="h-4 w-[1px] bg-white/10 mx-1 shrink-0" />
             <span 
               className="text-lg font-black tracking-wider text-gradient uppercase bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400"
               style={{ letterSpacing: '0.12em' }}
