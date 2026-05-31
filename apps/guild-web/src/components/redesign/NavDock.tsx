@@ -129,7 +129,7 @@ export function NavDock() {
         <div className="w-8 h-[1px] bg-white/10 my-2" />
 
         {/* Theme Toggler Palette Icon */}
-        <div ref={themePickerRef} className="relative">
+        <div ref={themePickerRef} className="aether-dock-item-wrapper">
           <button
             onClick={() => setShowThemePicker(!showThemePicker)}
             className={`aether-dock-item hover:scale-110 active:scale-95 transition-all duration-300 relative ${showThemePicker ? 'text-primary' : ''}`}
@@ -145,7 +145,7 @@ export function NavDock() {
                 initial={{ opacity: 0, scale: 0.9, x: 20 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 0.9, x: 20 }}
-                className="absolute left-16 bottom-0 aether-glass p-4 shadow-2xl z-50 flex flex-col gap-3.5 min-w-[220px] border border-white/10 dark:border-white/5 bg-surface/90 dark:bg-surface/85"
+                className="aether-dock-popover aether-glass p-4 shadow-2xl flex flex-col gap-3.5 border border-white/10 dark:border-white/5 bg-surface/90 dark:bg-surface/85"
                 style={{ borderRadius: '20px' }}
               >
                 <div className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase pb-1 border-b border-white/10">

@@ -247,6 +247,24 @@
   pointer-events: auto;
 }
 
+.aether-dock-item-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.aether-dock-popover {
+  position: absolute;
+  left: 64px;
+  bottom: 0;
+  z-index: 50;
+  min-width: 220px;
+}
+
 .aether-dock-item {
   position: relative;
   width: 48px;
@@ -316,6 +334,13 @@
   .aether-dock-item-tooltip {
     left: 62px;
   }
+  .aether-dock-item-wrapper {
+    width: 42px;
+    height: 42px;
+  }
+  .aether-dock-popover {
+    left: 56px;
+  }
 }
 
 @media (min-width: 769px) and (max-height: 680px) {
@@ -335,6 +360,13 @@
   }
   .aether-dock-item-tooltip {
     left: 54px;
+  }
+  .aether-dock-item-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+  .aether-dock-popover {
+    left: 48px;
   }
 }
 
