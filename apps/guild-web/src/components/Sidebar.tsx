@@ -75,14 +75,14 @@ const NavItem = ({ icon: Icon, label, badge, active, collapsed, onClick }: NavIt
       <div className={cn("flex items-center", collapsed ? "" : "gap-3")}>
         <Icon className={cn(
           "h-4 w-4 shrink-0 transition-transform duration-300",
-          active ? "text-primary" : "text-text-muted group-hover:text-foreground group-hover:scale-105"
+          active ? "text-primary" : "text-text-secondary group-hover:text-foreground group-hover:scale-105"
         )} />
         {!collapsed && <span className="truncate tracking-wide">{label}</span>}
       </div>
       {!collapsed && badge !== undefined && (
         <Badge
           variant="secondary"
-          className="h-5 min-w-[20px] justify-center px-1 text-[9px] bg-primary/15 border border-primary/20 text-primary font-bold shadow-[0_0_8px_color-mix(in_srgb,var(--accent)_15%,transparent)] rounded-lg"
+          className="h-5 min-w-[20px] justify-center px-1 text-[9px] bg-primary text-primary-foreground font-bold shadow-[0_2px_6px_color-mix(in_srgb,var(--accent)_30%,transparent)] border-none rounded-lg"
         >
           {badge}
         </Badge>
@@ -182,7 +182,7 @@ export function Sidebar() {
               <button
                 onClick={() => setCollapsed(false)}
                 title="Expand sidebar"
-                className="h-9 w-9 flex items-center justify-center rounded-xl bg-white/[0.02] border border-white/5 hover:border-primary/25 hover:bg-white/[0.04] text-text-muted hover:text-foreground transition-all duration-300 shadow-md cursor-pointer outline-none"
+                className="h-9 w-9 flex items-center justify-center rounded-xl bg-white/[0.02] border border-white/5 hover:border-primary/25 hover:bg-white/[0.04] text-text-secondary hover:text-foreground transition-all duration-300 shadow-md cursor-pointer outline-none"
               >
                 <PanelLeftOpen className="h-4 w-4" />
               </button>
@@ -212,7 +212,7 @@ export function Sidebar() {
                         <span className="text-[9px] font-bold text-text-muted mt-0.5 tracking-wider uppercase">Premium</span>
                       </div>
                     </div>
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-muted transition-transform duration-300" />
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-secondary transition-transform duration-300" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="start"
@@ -239,7 +239,7 @@ export function Sidebar() {
               <button
                 onClick={() => setCollapsed(true)}
                 title="Collapse sidebar"
-                className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-white/[0.02] border border-white/5 hover:border-primary/25 hover:bg-white/[0.04] text-text-muted hover:text-foreground transition-all duration-300 shadow-lg shadow-black/10 cursor-pointer outline-none"
+                className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-white/[0.02] border border-white/5 hover:border-primary/25 hover:bg-white/[0.04] text-text-secondary hover:text-foreground transition-all duration-300 shadow-lg shadow-black/10 cursor-pointer outline-none"
               >
                 <PanelLeftClose className="h-4 w-4" />
               </button>
@@ -319,7 +319,7 @@ export function Sidebar() {
                             )
                           }
                         >
-                          <Hash className="h-3 w-3 shrink-0 group-hover:text-primary transition-colors text-text-muted" />
+                          <Hash className={cn("h-3.5 w-3.5 shrink-0 transition-colors", isActive ? "text-primary" : "text-text-secondary group-hover:text-foreground")} />
                           <span className="flex-1 truncate tracking-wide">{ch.name}</span>
                           {unread && (
                             <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
@@ -477,7 +477,7 @@ export function Sidebar() {
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <button className="text-text-muted hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-white/[0.04] outline-none border border-transparent hover:border-white/5 cursor-pointer">
+                    <button className="text-text-secondary hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-white/[0.04] outline-none border border-transparent hover:border-white/5 cursor-pointer">
                       <Terminal className="h-3.5 w-3.5" />
                     </button>
                   }
@@ -489,7 +489,7 @@ export function Sidebar() {
                   render={
                     <button
                       onClick={handleLogout}
-                      className="text-text-muted hover:text-destructive transition-colors p-1.5 rounded-lg hover:bg-destructive/10 outline-none border border-transparent hover:border-destructive/10 cursor-pointer"
+                      className="text-text-secondary hover:text-destructive transition-colors p-1.5 rounded-lg hover:bg-destructive/10 outline-none border border-transparent hover:border-destructive/10 cursor-pointer"
                     >
                       <LogOut className="h-3.5 w-3.5" />
                     </button>
