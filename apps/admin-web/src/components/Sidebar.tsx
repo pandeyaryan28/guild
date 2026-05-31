@@ -5,7 +5,7 @@ import type { UserProfile } from '@guild/types';
 import {
   LayoutDashboard,
   Users,
-  Users2,
+  Workflow,
   ClipboardList,
   GitPullRequest,
   LogOut,
@@ -34,7 +34,7 @@ const NAV = [
   {
     id: 'teams',
     label: 'Teams',
-    icon: Users2,
+    icon: Workflow,
   },
   {
     id: 'work',
