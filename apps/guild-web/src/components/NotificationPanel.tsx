@@ -625,7 +625,7 @@ export function NotificationPanel({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: -6 }}
           transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-          className="fixed sm:absolute top-20 sm:top-full sm:mt-3 left-4 right-4 sm:left-auto sm:right-0 z-50 w-[calc(100vw-32px)] sm:w-[380px] max-w-[calc(100vw-32px)] origin-top-right overflow-hidden rounded-2xl aether-glass border border-border-default bg-surface-elevated/95 shadow-2xl backdrop-blur-3xl flex flex-col h-[520px] max-h-[calc(100vh-100px)]"
+          className="fixed top-[80px] sm:top-[96px] right-4 left-4 sm:left-auto sm:right-6 z-50 w-[calc(100vw-32px)] sm:w-[380px] max-w-[calc(100vw-32px)] origin-top-right overflow-hidden rounded-2xl aether-glass border border-border-default bg-surface-elevated/95 shadow-2xl backdrop-blur-3xl flex flex-col h-[520px] max-h-[calc(100vh-100px)]"
         >
           {/* Header Section */}
           <div className="flex items-center justify-between border-b border-border-default/45 px-4 py-3 shrink-0">
