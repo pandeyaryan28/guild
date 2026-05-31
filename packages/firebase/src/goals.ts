@@ -108,12 +108,25 @@ export async function addGoalComment(params: {
 }
 
 export function listenToGoalComments(
+  orgId: string,
   goalId: string,
   cb: (comments: GoalComment[]) => void
 ): () => void {
   return onSnapshot(
-    query(collection(db, 'goalComments'), where('goalId', '==', goalId), orderBy('createdAt', 'asc')),
-    (snap) => cb(snap.docs.map((d) => d.data() as GoalComment)),
+    query(
+      collection(db, 'goalComments'),
+      where('orgId', '==', orgId),
+      where('goalId', '==', goalId)
+    ),
+    (snap) => {
+      const list = snap.docs.map((d) => d.data() as GoalComment);
+      list.sort((a, b) => {
+        const t1 = a.createdAt?.seconds || 0;
+        const t2 = b.createdAt?.seconds || 0;
+        return t1 - t2;
+      });
+      cb(list);
+    }
   );
 }
 

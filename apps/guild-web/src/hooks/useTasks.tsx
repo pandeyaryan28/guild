@@ -6,6 +6,7 @@ import {
   type TaskScopeFilter,
   STATUSES,
 } from '../lib/tasks';
+import { useAuth } from './useAuth';
 
 export function useTasks(orgId: string | undefined, scope?: TaskScopeFilter) {
   const [tasks, setTasks] = React.useState<Task[]>([]);
@@ -39,11 +40,13 @@ export function useTasks(orgId: string | undefined, scope?: TaskScopeFilter) {
 
 
 export function useTaskComments(taskId: string | null) {
+  const { userProfile } = useAuth();
+  const orgId = userProfile?.organizationId;
   const [comments, setComments] = React.useState<TaskComment[]>([]);
   React.useEffect(() => {
-    if (!taskId) { setComments([]); return; }
-    return listenToComments(taskId, setComments);
-  }, [taskId]);
+    if (!taskId || !orgId) { setComments([]); return; }
+    return listenToComments(orgId, taskId, setComments);
+  }, [taskId, orgId]);
   return comments;
 }
 

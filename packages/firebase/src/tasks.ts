@@ -325,10 +325,22 @@ export function listenToTasks(
   return onSnapshot(q, (snap) => cb(snap.docs.map((d) => d.data() as Task)));
 }
 
-export function listenToComments(taskId: string, cb: (comments: TaskComment[]) => void): () => void {
+export function listenToComments(orgId: string, taskId: string, cb: (comments: TaskComment[]) => void): () => void {
   return onSnapshot(
-    query(collection(db, 'taskComments'), where('taskId', '==', taskId), orderBy('createdAt', 'asc')),
-    (snap) => cb(snap.docs.map((d) => d.data() as TaskComment)),
+    query(
+      collection(db, 'taskComments'),
+      where('orgId', '==', orgId),
+      where('taskId', '==', taskId)
+    ),
+    (snap) => {
+      const list = snap.docs.map((d) => d.data() as TaskComment);
+      list.sort((a, b) => {
+        const t1 = a.createdAt?.seconds || 0;
+        const t2 = b.createdAt?.seconds || 0;
+        return t1 - t2;
+      });
+      cb(list);
+    }
   );
 }
 

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { listenToGoals, listenToGoal, listenToGoalComments } from '../lib/goals';
 import type { Goal, GoalComment } from '../lib/goals';
+import { useAuth } from './useAuth';
 
 export function useGoals(orgId: string | undefined) {
   const [goals, setGoals] = React.useState<Goal[]>([]);
@@ -35,11 +36,13 @@ export function useGoal(goalId: string | undefined) {
 }
 
 export function useGoalComments(goalId: string | null) {
+  const { userProfile } = useAuth();
+  const orgId = userProfile?.organizationId;
   const [comments, setComments] = React.useState<GoalComment[]>([]);
   React.useEffect(() => {
-    if (!goalId) { setComments([]); return; }
-    return listenToGoalComments(goalId, setComments);
-  }, [goalId]);
+    if (!goalId || !orgId) { setComments([]); return; }
+    return listenToGoalComments(orgId, goalId, setComments);
+  }, [goalId, orgId]);
   return comments;
 }
 

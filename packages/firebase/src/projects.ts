@@ -151,12 +151,25 @@ export async function addProjectComment(params: {
 }
 
 export function listenToProjectComments(
+  orgId: string,
   projectId: string,
   cb: (comments: ProjectComment[]) => void
 ): () => void {
   return onSnapshot(
-    query(collection(db, 'projectComments'), where('projectId', '==', projectId), orderBy('createdAt', 'asc')),
-    (snap) => cb(snap.docs.map((d) => d.data() as ProjectComment)),
+    query(
+      collection(db, 'projectComments'),
+      where('orgId', '==', orgId),
+      where('projectId', '==', projectId)
+    ),
+    (snap) => {
+      const list = snap.docs.map((d) => d.data() as ProjectComment);
+      list.sort((a, b) => {
+        const t1 = a.createdAt?.seconds || 0;
+        const t2 = b.createdAt?.seconds || 0;
+        return t1 - t2;
+      });
+      cb(list);
+    }
   );
 }
 

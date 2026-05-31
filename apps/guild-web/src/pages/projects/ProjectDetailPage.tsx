@@ -17,7 +17,8 @@ import {
   Paperclip,
   Send,
   Sparkles,
-  HelpCircle
+  HelpCircle,
+  Target
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -29,6 +30,7 @@ import { useTasks } from '../../hooks/useTasks';
 import { useGoals } from '../../hooks/useGoals';
 import { MilestoneRail } from './MilestoneRail';
 import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
+import { GoalDetailDrawer } from '../../components/tasks/GoalDetailDrawer';
 
 import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
 import { useOrgMembers } from '../../hooks/useChat';
@@ -128,6 +130,17 @@ export function ProjectDetailPage() {
     if (!openTaskId) return null;
     return allTasks.find(t => t.id === openTaskId) ?? null;
   }, [allTasks, openTaskId]);
+
+  // Filter goals for the current project and parse active goal details
+  const projectGoals = React.useMemo(() => {
+    return goals.filter(g => g.projectId === projectId);
+  }, [goals, projectId]);
+
+  const openGoalId = searchParams.get('goal');
+  const activeGoal = React.useMemo(() => {
+    if (!openGoalId) return null;
+    return goals.find(g => g.id === openGoalId) ?? null;
+  }, [goals, openGoalId]);
 
   const handleToggleTaskStatus = async (e: React.MouseEvent, task: Task) => {
     e.stopPropagation();
@@ -256,18 +269,18 @@ export function ProjectDetailPage() {
   const progressRate = allTasks.length > 0 ? Math.round((completedTasks.length / allTasks.length) * 100) : 0;
 
   return (
-    <div className="h-full w-full bg-transparent p-1.5 flex flex-col min-h-0 overflow-hidden gap-5">
+    <div className="h-full w-full bg-transparent p-3 flex flex-col min-h-0 overflow-hidden gap-5">
       
       {/* Premium Glassmorphic Card Panel */}
-      <div className="flex-1 min-h-0 border border-border-default/80 bg-surface/50 dark:bg-surface/30 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-10 relative">
+      <div className="flex-1 min-h-0 border border-neutral-200/40 dark:border-neutral-800/40 bg-white/40 dark:bg-neutral-900/35 backdrop-blur-xl rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col z-10 relative">
         
         {/* Obsidian Glassmorphic Header */}
-        <div className="p-6 border-b border-border-default/45 flex flex-col gap-4 shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur">
+        <div className="p-6 border-b border-neutral-200/45 dark:border-neutral-800/45 flex flex-col gap-4 shrink-0 bg-white/30 dark:bg-neutral-950/20 backdrop-blur-md">
           <div className="flex items-center justify-between shrink-0 flex-wrap gap-4">
             <div className="flex items-center gap-4 min-w-0 flex-1">
               <button
                 onClick={() => navigate('/workspace')}
-                className="w-9 h-9 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-850 flex items-center justify-center transition-all active:scale-90 shrink-0 shadow-xs"
+                className="w-10 h-10 rounded-2xl border border-neutral-200/70 dark:border-neutral-800/80 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-350 flex items-center justify-center transition-all hover:scale-105 active:scale-95 shrink-0 shadow-sm"
                 title="Return to Workspace"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -278,10 +291,10 @@ export function ProjectDetailPage() {
                   <button
                     onClick={handleToggleProjectStatus}
                     className={cn(
-                      "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                      "w-7 h-7 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer hover:scale-105 active:scale-95",
                       project.status === 'completed'
-                        ? "border-indigo-500 bg-indigo-500/10 text-indigo-650 dark:text-indigo-400"
-                        : "border-neutral-300 dark:border-neutral-700 bg-transparent hover:border-indigo-500"
+                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "border-neutral-300 dark:border-neutral-700 bg-white/50 dark:bg-neutral-900/50 hover:border-indigo-500"
                     )}
                     title={project.status === 'completed' ? "Mark Project Active" : "Mark Project Completed"}
                   >
@@ -293,8 +306,8 @@ export function ProjectDetailPage() {
                   </button>
                   <h1 className={cn("text-base font-black tracking-tight truncate flex items-center gap-1.5", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-neutral-850 dark:text-neutral-100")}>
                     <span>{project.name}</span>
-                    <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-indigo-500/20 text-indigo-555 bg-indigo-500/5 leading-none ml-2">
-                      Project context
+                    <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-indigo-555/20 text-indigo-650 dark:text-indigo-400 bg-indigo-500/5 leading-none ml-2">
+                      Project
                     </span>
                   </h1>
                 </div>
@@ -306,18 +319,18 @@ export function ProjectDetailPage() {
 
             <div className="flex items-center gap-3 shrink-0 ml-auto">
               {/* Chronological start and due parameters */}
-              <div className="flex flex-col gap-0.5 text-right font-mono text-[9px] text-neutral-400 dark:text-neutral-500 hidden sm:flex font-bold">
+              <div className="flex flex-col gap-0.5 text-right font-mono text-[9px] text-neutral-450 dark:text-neutral-500 hidden sm:flex font-bold">
                 {project.startDate && (
-                  <span>Start: {new Date(project.startDate instanceof Date ? project.startDate : (project.startDate as any).seconds * 1000).toLocaleDateString()}</span>
+                  <span>Start Date: {new Date(project.startDate instanceof Date ? project.startDate : (project.startDate as any).seconds * 1000).toLocaleDateString()}</span>
                 )}
                 {project.dueDate && (
-                  <span>Due: {new Date(project.dueDate instanceof Date ? project.dueDate : (project.dueDate as any).seconds * 1000).toLocaleDateString()}</span>
+                  <span>Due Date: {new Date(project.dueDate instanceof Date ? project.dueDate : (project.dueDate as any).seconds * 1000).toLocaleDateString()}</span>
                 )}
               </div>
               
               <button
                 onClick={() => setCreateOpen(true)}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.05] hover:bg-indigo-500/[0.08] text-indigo-650 dark:text-indigo-400 px-4 py-2 h-9 text-xs font-bold tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs"
+                className="flex items-center justify-center gap-1.5 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/15 text-indigo-650 dark:text-indigo-400 px-4 py-2 h-10 text-xs font-bold tracking-wide transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Add Task</span>
@@ -326,24 +339,24 @@ export function ProjectDetailPage() {
               <button
                 onClick={() => setShowComments(!showComments)}
                 className={cn(
-                  "flex items-center justify-center gap-1.5 h-9 rounded-xl border px-3.5 transition-all active:scale-90 shrink-0 cursor-pointer text-xs font-bold shadow-xs",
+                  "flex items-center justify-center gap-1.5 h-10 rounded-2xl border px-4 transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer text-xs font-bold shadow-sm",
                   showComments
-                    ? "border-primary bg-primary/[0.08] text-primary"
-                    : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 dark:text-neutral-400"
+                    ? "border-indigo-555 bg-indigo-500/10 text-indigo-650 dark:text-indigo-400"
+                    : "border-neutral-200/70 dark:border-neutral-800 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-450"
                 )}
                 title="Project Discussion"
               >
                 <MessageSquare className="h-4 w-4" />
-                <span className="hidden md:inline">Discussion ({comments.length})</span>
+                <span>Discussion ({comments.length})</span>
               </button>
 
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className={cn(
-                  "w-9 h-9 rounded-xl border flex items-center justify-center transition-all active:scale-90 shrink-0 cursor-pointer shadow-xs",
+                  "w-10 h-10 rounded-2xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer shadow-sm",
                   isEditing
-                    ? "border-primary bg-primary/[0.08] text-primary"
-                    : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 dark:text-neutral-400"
+                    ? "border-indigo-555 bg-indigo-500/10 text-indigo-650 dark:text-indigo-400"
+                    : "border-neutral-200/70 dark:border-neutral-800 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-450"
                 )}
                 title="Project Settings"
               >
@@ -353,8 +366,8 @@ export function ProjectDetailPage() {
           </div>
 
           {/* Project Members popover control */}
-          <div className="flex items-center gap-3 py-3 px-6 bg-white/[0.01] border-t border-neutral-100 dark:border-neutral-850 relative">
-            <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Project Team</span>
+          <div className="flex items-center gap-3 py-3 px-6 bg-white/[0.01] border-t border-neutral-200/20 dark:border-neutral-800/30 relative">
+            <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Members</span>
             <div className="flex items-center -space-x-1.5 overflow-hidden">
               {(project.memberIds || []).map((uid) => {
                 const photoURL = getMemberPhotoURL(uid);
@@ -364,13 +377,13 @@ export function ProjectDetailPage() {
                     key={uid}
                     src={photoURL}
                     alt={fullName}
-                    className="w-6 h-6 rounded-full object-cover shrink-0 ring-2 ring-white dark:ring-neutral-900 border border-neutral-150/40"
+                    className="w-6 h-6 rounded-full object-cover shrink-0 ring-2 ring-white dark:ring-neutral-900 border border-neutral-150/40 hover:scale-110 transition-transform"
                     title={fullName}
                   />
                 ) : (
                   <div
                     key={uid}
-                    className="w-6 h-6 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0 ring-2 ring-white dark:ring-neutral-900"
+                    className="w-6 h-6 rounded-full border border-indigo-500/20 bg-indigo-500/10 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0 ring-2 ring-white dark:ring-neutral-900 hover:scale-110 transition-transform"
                     title={fullName}
                   >
                     {getInitials(uid)}
@@ -382,7 +395,7 @@ export function ProjectDetailPage() {
             <div className="relative">
               <button
                 onClick={() => setShowMemberPicker(!showMemberPicker)}
-                className="w-6 h-6 rounded-full border border-dashed border-neutral-300 dark:border-neutral-700 hover:border-primary bg-transparent text-neutral-400 hover:text-primary flex items-center justify-center transition-all cursor-pointer"
+                className="w-6 h-6 rounded-full border border-dashed border-neutral-350 dark:border-neutral-700 hover:border-indigo-500 hover:text-indigo-500 bg-transparent text-neutral-400 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
                 title="Manage Members"
               >
                 <Plus className="w-3 h-3" />
@@ -399,10 +412,10 @@ export function ProjectDetailPage() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute left-0 mt-2 w-56 max-h-60 overflow-y-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-900/90 backdrop-blur-md p-2 shadow-xl z-50 scrollbar-thin"
+                      className="absolute left-0 mt-2 w-56 max-h-60 overflow-y-auto rounded-2xl border border-neutral-200/50 dark:border-neutral-800/50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl p-2 shadow-xl z-50 scrollbar-thin"
                     >
-                      <div className="px-2 py-1.5 border-b border-neutral-100 dark:border-neutral-800 mb-1.5">
-                        <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Assign Teammate</span>
+                      <div className="px-2 py-1.5 border-b border-neutral-100 dark:border-neutral-800/80 mb-1.5">
+                        <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Choose Members</span>
                       </div>
                       <div className="space-y-0.5">
                         {members.map((member) => {
@@ -414,7 +427,7 @@ export function ProjectDetailPage() {
                               className={cn(
                                 "w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[10px] font-semibold text-left transition-all cursor-pointer",
                                 isIncluded 
-                                  ? "bg-primary/10 text-primary" 
+                                  ? "bg-indigo-500/10 text-indigo-650 dark:text-indigo-400" 
                                   : "hover:bg-neutral-50 dark:hover:bg-neutral-850/50 text-foreground"
                               )}
                             >
@@ -455,44 +468,51 @@ export function ProjectDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
               {/* Execution Progress */}
-              <div className="p-4.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-850/5 flex flex-col justify-between gap-3 shadow-xs">
-                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Project Rollup</span>
+              <div className="p-4.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/40 bg-gradient-to-br from-white/30 to-white/10 dark:from-neutral-900/30 dark:to-neutral-900/10 flex flex-col justify-between gap-3 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
+                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-450 dark:text-neutral-500">Project Progress</span>
                 <div className="space-y-1.5">
                   <div className="flex items-end justify-between">
-                    <span className="text-lg font-black font-mono text-neutral-800 dark:text-neutral-100 leading-none">{progressRate}%</span>
+                    <span className="text-lg font-black font-mono text-neutral-850 dark:text-neutral-100 leading-none">{progressRate}%</span>
                     <span className="text-[10px] text-neutral-450 dark:text-neutral-400 font-bold">({completedTasks.length}/{allTasks.length} Completed)</span>
                   </div>
-                  <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-primary h-full rounded-full transition-all duration-500 ease-out" style={{ width: `${progressRate}%` }} />
+                  <div className="w-full bg-neutral-200/70 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_12px_rgba(99,102,241,0.3)]" style={{ width: `${progressRate}%` }} />
                   </div>
                 </div>
               </div>
 
               {/* Milestones Hub */}
-              <div className="p-4.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-850/5 flex flex-col justify-between gap-3 shadow-xs">
-                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Milestones Hub</span>
+              <div className="p-4.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/40 bg-gradient-to-br from-white/30 to-white/10 dark:from-neutral-900/30 dark:to-neutral-900/10 flex flex-col justify-between gap-3 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
+                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-450 dark:text-neutral-500">Milestones</span>
                 <div className="flex items-end justify-between">
                   <div className="flex flex-col">
-                    <span className="text-lg font-black font-mono text-neutral-800 dark:text-neutral-100 leading-none">
+                    <span className="text-lg font-black font-mono text-neutral-850 dark:text-neutral-100 leading-none">
                       {milestones.filter(m => m.completed).length}
                     </span>
-                    <span className="text-[9px] text-neutral-450 dark:text-neutral-400 mt-1.5 font-bold">Completed Milestones</span>
+                    <span className="text-[9px] text-neutral-450 dark:text-neutral-400 mt-1.5 font-bold">Completed</span>
                   </div>
-                  <span className="text-[10px] text-neutral-400 dark:text-neutral-550 font-bold">Total: {milestones.length}</span>
+                  <span className="text-[10px] text-neutral-450 dark:text-neutral-550 font-bold">Total: {milestones.length}</span>
                 </div>
               </div>
 
               {/* Workload card */}
-              <div className="p-4.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-850/5 flex flex-col justify-between gap-3 shadow-xs">
-                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Workload Density</span>
+              <div className="p-4.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/40 bg-gradient-to-br from-white/30 to-white/10 dark:from-neutral-900/30 dark:to-neutral-900/10 flex flex-col justify-between gap-3 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
+                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-450 dark:text-neutral-500">Tasks Left</span>
                 <div className="flex items-end justify-between">
                   <div className="flex flex-col">
-                    <span className="text-lg font-black font-mono text-neutral-800 dark:text-neutral-100 leading-none">
+                    <span className="text-lg font-black font-mono text-neutral-850 dark:text-neutral-100 leading-none">
                       {activeTasks.length}
                     </span>
-                    <span className="text-[9px] text-neutral-450 dark:text-neutral-400 mt-1.5 font-bold">Active checklist items</span>
+                    <span className="text-[9px] text-neutral-450 dark:text-neutral-400 mt-1.5 font-bold">Active tasks</span>
                   </div>
-                  <span className="text-[10px] text-neutral-400 dark:text-neutral-555 font-bold">Density: {activeTasks.length > 5 ? 'High workload' : 'Normal'}</span>
+                  <span className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-full border leading-none",
+                    activeTasks.length > 5 
+                      ? "border-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-400" 
+                      : "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
+                  )}>
+                    {activeTasks.length > 5 ? 'Busy' : 'On Track'}
+                  </span>
                 </div>
               </div>
               
@@ -521,141 +541,230 @@ export function ProjectDetailPage() {
               />
             </div>
 
-            {/* Tasks checklist card */}
-            <div className="space-y-4">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-500 flex items-center gap-1.5 border-b border-neutral-100 dark:border-neutral-850 pb-2">
-                <Clock className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
-                <span>Project Tasks checklist</span>
-              </h3>
+            {/* Interactive Grid: Tasks & Goals checklists */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
+              {/* Column 1: Tasks Checklist */}
+              <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10 backdrop-blur-xs space-y-4 flex flex-col justify-between">
+                <div className="space-y-4 flex-1">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-500 flex items-center gap-1.5 border-b border-neutral-200/20 dark:border-neutral-800/30 pb-2">
+                    <Clock className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
+                    <span>Tasks</span>
+                  </h3>
 
-              {tasksLoading ? (
-                <div className="flex py-12 justify-center">
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {/* Render active tasks checklist cards */}
-                  {activeTasks.length > 0 ? (
-                    activeTasks.map(task => (
-                      <div
-                        key={task.id}
-                        onClick={() => setSearchParams({ task: task.id })}
-                        className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group shadow-xs cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <button
-                            onClick={(e) => handleToggleTaskStatus(e, task)}
-                            className="h-4.5 w-4.5 rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-primary bg-transparent flex items-center justify-center shrink-0 cursor-pointer"
-                          >
-                            <div className="h-1.5 w-1.5 rounded-full bg-transparent hover:bg-primary/50" />
-                          </button>
-                          <div className="min-w-0">
-                            <span className="text-xs font-bold block text-neutral-800 dark:text-neutral-250 truncate">{task.title}</span>
-                            {task.dueDate && (
-                              <span className="text-[9px] font-mono font-bold text-neutral-400 dark:text-neutral-500 mt-0.5 block">
-                                Due: {new Date(task.dueDate instanceof Date ? task.dueDate : (task.dueDate as any).seconds * 1000).toLocaleDateString()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 shrink-0 ml-2">
-                          {task.assigneeIds.length > 0 && (
-                            getMemberPhotoURL(task.assigneeIds[0]) ? (
-                              <img
-                                src={getMemberPhotoURL(task.assigneeIds[0])}
-                                alt={getMemberName(task.assigneeIds[0])}
-                                className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
-                                title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
-                              />
-                            ) : (
-                                <div className="w-5.5 h-5.5 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
-                                {getInitials(task.assigneeIds[0])}
-                              </div>
-                            )
-                          )}
-                          <button
-                            onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                            className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
+                  {tasksLoading ? (
+                    <div className="flex py-12 justify-center">
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    </div>
                   ) : (
-                    <div className="py-8 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/10 dark:bg-neutral-850/5 flex flex-col items-center justify-center text-center">
-                      <p className="text-[10px] text-neutral-450 dark:text-neutral-500 italic">No active project tasks.</p>
-                    </div>
-                  )}
-
-                  {/* Completed tasks accordion */}
-                  {completedTasks.length > 0 && (
-                    <div className="space-y-2 pt-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowCompleted(!showCompleted)}
-                        className="w-full border border-neutral-150 dark:border-neutral-850 bg-neutral-50/30 dark:bg-neutral-850/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-neutral-550 dark:text-neutral-400 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/40 transition-colors font-bold tracking-wide shadow-xs"
-                      >
-                        <span>Completed Tasks ({completedTasks.length})</span>
-                        <ChevronDown className={cn("w-3.5 h-3.5 transition-transform text-neutral-400", showCompleted ? "rotate-180" : "")} />
-                      </button>
-                      <AnimatePresence>
-                        {showCompleted && (
+                    <div className="space-y-2">
+                      {/* Render active tasks checklist cards */}
+                      {activeTasks.length > 0 ? (
+                        activeTasks.map(task => (
                           <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden space-y-2"
+                            key={task.id}
+                            onClick={() => setSearchParams({ task: task.id })}
+                            whileHover={{ y: -1, scale: 1.005 }}
+                            className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group shadow-xs cursor-pointer"
                           >
-                            {completedTasks.map(task => (
-                              <div
-                                key={task.id}
-                                onClick={() => setSearchParams({ task: task.id })}
-                                className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/15 dark:bg-neutral-850/5 border border-neutral-150/40 dark:border-neutral-800/30 opacity-60 hover:opacity-90 transition-all cursor-pointer shadow-xs"
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <button
+                                onClick={(e) => handleToggleTaskStatus(e, task)}
+                                className="h-5 w-5 rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-indigo-500 bg-white/50 dark:bg-neutral-900/50 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
                               >
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <button
-                                    onClick={(e) => handleToggleTaskStatus(e, task)}
-                                    className="h-4.5 w-4.5 rounded-full border border-cyan-500 bg-cyan-500/10 flex items-center justify-center shrink-0 cursor-pointer"
-                                  >
-                                    <Check className="w-2.5 h-2.5 text-cyan-500 stroke-[3]" />
-                                  </button>
-                                  <span className="text-xs truncate font-semibold text-neutral-400 dark:text-neutral-500 line-through">
-                                    {task.title}
+                                <div className="h-2 w-2 rounded-full bg-transparent hover:bg-indigo-500/50 transition-colors" />
+                              </button>
+                              <div className="min-w-0">
+                                <span className="text-xs font-bold block text-neutral-850 dark:text-neutral-200 group-hover:text-indigo-500 transition-colors truncate">{task.title}</span>
+                                {task.dueDate && (
+                                  <span className="text-[9px] font-semibold text-neutral-450 dark:text-neutral-500 mt-1 block">
+                                    Due: {new Date(task.dueDate instanceof Date ? task.dueDate : (task.dueDate as any).seconds * 1000).toLocaleDateString()}
                                   </span>
-                                </div>
-                                <div className="flex items-center gap-3 shrink-0 ml-2">
-                                  {task.assigneeIds.length > 0 && (
-                                    getMemberPhotoURL(task.assigneeIds[0]) ? (
-                                      <img
-                                        src={getMemberPhotoURL(task.assigneeIds[0])}
-                                        alt={getMemberName(task.assigneeIds[0])}
-                                        className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
-                                        title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
-                                      />
-                                    ) : (
-                                      <div className="w-5.5 h-5.5 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
-                                        {getInitials(task.assigneeIds[0])}
-                                      </div>
-                                    )
-                                  )}
-                                  <button
-                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all cursor-pointer"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
+                                )}
                               </div>
-                            ))}
+                            </div>
+
+                            <div className="flex items-center gap-3 shrink-0 ml-2">
+                              {task.assigneeIds.length > 0 && (
+                                getMemberPhotoURL(task.assigneeIds[0]) ? (
+                                  <img
+                                    src={getMemberPhotoURL(task.assigneeIds[0])}
+                                    alt={getMemberName(task.assigneeIds[0])}
+                                    className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
+                                    title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
+                                  />
+                                ) : (
+                                  <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
+                                    {getInitials(task.assigneeIds[0])}
+                                  </div>
+                                )
+                              )}
+                              <button
+                                onClick={(e) => handleDeleteTaskItem(e, task.id)}
+                                className="p-1.5 rounded-lg border border-transparent text-neutral-400 hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </motion.div>
-                        )}
-                      </AnimatePresence>
+                        ))
+                      ) : (
+                        <div className="py-12 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/10 dark:bg-neutral-850/5 flex flex-col items-center justify-center text-center">
+                          <p className="text-[10px] text-neutral-450 dark:text-neutral-500 italic">No active tasks.</p>
+                        </div>
+                      )}
+
+                      {/* Completed tasks accordion */}
+                      {completedTasks.length > 0 && (
+                        <div className="space-y-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowCompleted(!showCompleted)}
+                            className="w-full border border-neutral-200/60 dark:border-neutral-800 bg-white/40 dark:bg-neutral-900/40 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-neutral-500 hover:text-neutral-700 dark:text-neutral-450 transition-all font-bold tracking-wide shadow-xs"
+                          >
+                            <span>Completed Tasks ({completedTasks.length})</span>
+                            <ChevronDown className={cn("w-3.5 h-3.5 transition-transform text-neutral-450", showCompleted ? "rotate-180" : "")} />
+                          </button>
+                          <AnimatePresence>
+                            {showCompleted && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden space-y-2"
+                              >
+                                {completedTasks.map(task => (
+                                  <div
+                                    key={task.id}
+                                    onClick={() => setSearchParams({ task: task.id })}
+                                    className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/15 dark:bg-neutral-850/5 border border-neutral-200/30 dark:border-neutral-800/20 opacity-60 hover:opacity-90 transition-all cursor-pointer shadow-xs"
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <button
+                                        onClick={(e) => handleToggleTaskStatus(e, task)}
+                                        className="h-5 w-5 rounded-full border border-emerald-500 bg-emerald-500/10 flex items-center justify-center shrink-0 cursor-pointer"
+                                      >
+                                        <Check className="w-2.5 h-2.5 text-emerald-500 stroke-[3]" />
+                                      </button>
+                                      <span className="text-xs truncate font-semibold text-neutral-450 dark:text-neutral-500 line-through">
+                                        {task.title}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-3 shrink-0 ml-2">
+                                      {task.assigneeIds.length > 0 && (
+                                        getMemberPhotoURL(task.assigneeIds[0]) ? (
+                                          <img
+                                            src={getMemberPhotoURL(task.assigneeIds[0])}
+                                            alt={getMemberName(task.assigneeIds[0])}
+                                            className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
+                                            title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
+                                          />
+                                        ) : (
+                                          <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
+                                            {getInitials(task.assigneeIds[0])}
+                                          </div>
+                                        )
+                                      )}
+                                      <button
+                                        onClick={(e) => handleDeleteTaskItem(e, task.id)}
+                                        className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all cursor-pointer"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
+
+              {/* Column 2: Goals */}
+              <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10 backdrop-blur-xs space-y-4 flex flex-col justify-between">
+                <div className="space-y-4 flex-1">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1.5 border-b border-neutral-200/20 dark:border-neutral-800/30 pb-2">
+                    <Target className="w-3.5 h-3.5 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
+                    <span>Goals</span>
+                  </h3>
+
+                  <div className="space-y-2">
+                    {projectGoals.length > 0 ? (
+                      projectGoals.map(goal => (
+                        <motion.div
+                          key={goal.id}
+                          onClick={() => setSearchParams((prev) => { prev.set('goal', goal.id); return prev; })}
+                          whileHover={{ y: -1, scale: 1.005 }}
+                          className="flex flex-col p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group shadow-xs cursor-pointer gap-2"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <span className="text-xs font-bold block text-neutral-850 dark:text-neutral-205 group-hover:text-emerald-500 transition-colors truncate">
+                                {goal.title}
+                              </span>
+                              {goal.targetDate && (
+                                <span className="text-[9px] font-semibold text-neutral-450 dark:text-neutral-500 mt-1 block">
+                                  Due: {new Date(goal.targetDate instanceof Date ? goal.targetDate : (goal.targetDate as any).seconds * 1000).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 shrink-0">
+                              {/* Goal Status Badge */}
+                              <span className={cn(
+                                "text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded leading-none border",
+                                goal.status === 'completed'
+                                  ? "border-emerald-500/20 text-emerald-650 bg-emerald-500/5 dark:text-emerald-400"
+                                  : "border-indigo-500/20 text-indigo-650 bg-indigo-500/5 dark:text-indigo-400"
+                              )}>
+                                {goal.status}
+                              </span>
+                              {/* Goal Owner Avatar */}
+                              {goal.ownerId && (
+                                getMemberPhotoURL(goal.ownerId) ? (
+                                  <img
+                                    src={getMemberPhotoURL(goal.ownerId)}
+                                    alt={getMemberName(goal.ownerId)}
+                                    className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
+                                    title={`Owner: ${getMemberName(goal.ownerId)}`}
+                                  />
+                                ) : (
+                                  <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Owner: ${getMemberName(goal.ownerId)}`}>
+                                    {getInitials(goal.ownerId)}
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Progress bar inside goal card */}
+                          <div className="space-y-1 mt-0.5">
+                            <div className="flex items-center justify-between text-[8px] font-bold text-neutral-450">
+                              <span>Progress</span>
+                              <span className="font-mono">{goal.progressRollup ?? 0}%</span>
+                            </div>
+                            <div className="w-full bg-neutral-100 dark:bg-neutral-800 h-1 rounded-full overflow-hidden">
+                              <div 
+                                className="bg-gradient-to-r from-emerald-555 to-teal-500 h-full rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(16,185,129,0.3)]" 
+                                style={{ width: `${goal.progressRollup ?? 0}%` }} 
+                              />
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="py-12 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-850 bg-neutral-50/10 dark:bg-neutral-850/5 flex flex-col items-center justify-center text-center">
+                        <p className="text-[10px] text-neutral-450 dark:text-neutral-500 italic">No goals linked to this project.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
             </div>
 
           </div>
@@ -668,16 +777,16 @@ export function ProjectDetailPage() {
                 animate={{ width: 340, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="w-[340px] shrink-0 border-l border-neutral-200 dark:border-neutral-850 bg-neutral-50/30 dark:bg-neutral-900/10 backdrop-blur-md flex flex-col h-full overflow-hidden"
+                className="w-[340px] shrink-0 border-l border-neutral-200/40 dark:border-neutral-800/45 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl flex flex-col h-full overflow-hidden"
               >
-                <div className="flex items-center justify-between p-4 border-b border-neutral-150 dark:border-neutral-850 flex-shrink-0">
-                  <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500 flex items-center gap-1.5">
+                <div className="flex items-center justify-between p-4 border-b border-neutral-200/40 dark:border-neutral-800/45 flex-shrink-0">
+                  <span className="text-[10px] uppercase tracking-widest font-black text-neutral-450 dark:text-neutral-500 flex items-center gap-1.5">
                     <MessageSquare className="w-3.5 h-3.5 text-indigo-500" />
-                    Project Discussion
+                    Discussion
                   </span>
                   <button
                     onClick={() => setShowComments(false)}
-                    className="p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-850 flex items-center justify-center transition-all cursor-pointer shadow-xs"
+                    className="p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-855 flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -687,8 +796,8 @@ export function ProjectDetailPage() {
                 <div className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-thin">
                   {comments.length > 0 ? (
                     comments.map((comment) => (
-                      <div key={comment.id} className="flex items-start gap-3 bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 p-3.5 rounded-2xl shadow-xs">
-                        <div className="h-7.5 w-7.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 overflow-hidden shadow-sm">
+                      <div key={comment.id} className="flex items-start gap-3 bg-white/60 dark:bg-neutral-950/40 border border-neutral-200/45 dark:border-neutral-800/40 p-3.5 rounded-2xl shadow-xs hover:shadow-sm hover:border-neutral-250 transition-all duration-300">
+                        <div className="h-7.5 w-7.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-650 dark:text-indigo-400 shrink-0 overflow-hidden shadow-xs">
                           {getMemberPhotoURL(comment.authorId) ? (
                             <img src={getMemberPhotoURL(comment.authorId)} alt={comment.authorName} className="h-full w-full object-cover" />
                           ) : (
@@ -700,7 +809,7 @@ export function ProjectDetailPage() {
                             <span className="text-[11px] font-bold text-neutral-850 dark:text-neutral-200 truncate">
                               {comment.authorName}
                             </span>
-                            <span className="text-[9px] text-neutral-400 dark:text-neutral-550 font-mono">
+                            <span className="text-[8px] text-neutral-450 dark:text-neutral-550 font-mono">
                               {formatTimestamp(comment.createdAt)}
                             </span>
                           </div>
@@ -716,11 +825,11 @@ export function ProjectDetailPage() {
                                   href={file.url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="flex items-center gap-2 p-1.5 rounded-lg border border-neutral-200/40 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 text-[10px] text-primary font-bold truncate transition-colors shadow-xs"
+                                  className="flex items-center gap-2 p-2 rounded-xl border border-neutral-200/50 dark:border-neutral-800/60 bg-white/75 dark:bg-neutral-900/70 hover:bg-indigo-50/50 text-[10px] text-indigo-650 dark:text-indigo-400 font-bold truncate transition-colors shadow-sm"
                                 >
-                                  <Paperclip className="w-3 h-3 text-primary shrink-0" />
+                                  <Paperclip className="w-3 h-3 text-indigo-555 shrink-0" />
                                   <span className="truncate flex-1">{file.name}</span>
-                                  <span className="text-[8px] text-neutral-400 font-semibold shrink-0">
+                                  <span className="text-[8px] text-neutral-450 font-semibold shrink-0">
                                     {(file.size / 1024).toFixed(1)} KB
                                   </span>
                                 </a>
@@ -731,14 +840,14 @@ export function ProjectDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="py-12 text-center text-xs text-neutral-400 dark:text-neutral-500 italic">
-                      No discussions on this project yet. Start the conversation!
+                    <div className="py-12 text-center text-xs text-neutral-450 dark:text-neutral-500 italic">
+                      No discussions yet. Start the conversation!
                     </div>
                   )}
                 </div>
 
                 {/* Comment Input */}
-                <div className="p-4 border-t border-neutral-150 dark:border-neutral-850 bg-neutral-50/50 dark:bg-neutral-900/30 flex-shrink-0 flex flex-col gap-2">
+                <div className="p-4 border-t border-neutral-200/40 dark:border-neutral-800/40 bg-white/40 dark:bg-neutral-950/20 flex-shrink-0 flex flex-col gap-2">
                   <AttachmentInput
                     selectedFiles={commentFiles}
                     onRemove={(idx) => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
@@ -747,11 +856,11 @@ export function ProjectDetailPage() {
                   <form onSubmit={handleAddComment} className="flex gap-2">
                     <input
                       type="text"
-                      placeholder={uploadingCommentFiles ? "Uploading attachment files..." : "Add comment here..."}
+                      placeholder={uploadingCommentFiles ? "Uploading files..." : "Write a comment..."}
                       value={commentBody}
                       disabled={uploadingCommentFiles}
                       onChange={(e) => setCommentBody(e.target.value)}
-                      className="flex-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 py-2 text-xs text-neutral-850 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold disabled:opacity-50"
+                      className="flex-1 bg-white/60 dark:bg-neutral-950/60 border border-neutral-200/60 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 placeholder:text-neutral-450 outline-none hover:border-neutral-350 dark:hover:border-neutral-750 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all font-semibold disabled:opacity-50 shadow-xs"
                     />
                     <button
                       type="button"
@@ -766,7 +875,7 @@ export function ProjectDetailPage() {
                         };
                         input.click();
                       }}
-                      className="p-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-500 dark:text-neutral-450 hover:text-neutral-850 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0 shadow-xs"
+                      className="p-2.5 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 border border-neutral-200/60 dark:border-neutral-800/80 rounded-xl text-neutral-500 hover:text-neutral-700 dark:text-neutral-450 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0 shadow-sm"
                       title="Attach File"
                     >
                       <Paperclip className="w-4 h-4" />
@@ -774,10 +883,10 @@ export function ProjectDetailPage() {
                     <button
                       type="submit"
                       disabled={uploadingCommentFiles}
-                      className="p-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-350 hover:text-neutral-850 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0 shadow-xs"
+                      className="p-2.5 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 border border-neutral-200/60 dark:border-neutral-800/80 rounded-xl text-neutral-600 hover:text-indigo-500 dark:text-neutral-350 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0 shadow-sm"
                     >
                       {uploadingCommentFiles ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                        <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
                       ) : (
                         <Send className="w-4 h-4" />
                       )}
@@ -813,6 +922,17 @@ export function ProjectDetailPage() {
         goals={goals}
       />
 
+      {/* Redesigned Goal Detail drawer driven dynamically by search parameters */}
+      <GoalDetailDrawer
+        goal={activeGoal}
+        onClose={() => setSearchParams((prev) => { prev.delete('goal'); return prev; })}
+        orgId={orgId}
+        actor={actor}
+        members={members}
+        projects={project ? [project] : []}
+        tasks={allTasks}
+      />
+
       {/* Security edit Settings Dialog */}
       <AnimatePresence>
         {isEditing && (
@@ -830,18 +950,18 @@ export function ProjectDetailPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xl z-[101] flex flex-col gap-4 max-h-[90vh] overflow-y-auto scrollbar-thin"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6 rounded-3xl border border-neutral-200/50 dark:border-neutral-800/40 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl shadow-2xl z-[101] flex flex-col gap-4 max-h-[90vh] overflow-y-auto scrollbar-thin"
             >
-              <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-850 pb-3">
+              <div className="flex items-center justify-between border-b border-neutral-200/40 dark:border-neutral-800/60 pb-3">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 shrink-0">
                     <Lock className="w-4 h-4 text-amber-500" />
                   </div>
-                  <h3 className="text-sm font-black text-neutral-850 dark:text-neutral-100">Project settings</h3>
+                  <h3 className="text-sm font-black text-neutral-850 dark:text-neutral-100">Project Details</h3>
                 </div>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="w-7 h-7 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-850 flex items-center justify-center transition-all cursor-pointer shadow-xs"
+                  className="w-8 h-8 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-805 text-neutral-500 hover:text-neutral-850 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -849,75 +969,75 @@ export function ProjectDetailPage() {
 
               <div className="space-y-4">
                 {/* Security Active Notice */}
-                <div className="p-3 bg-amber-500/[0.03] border border-amber-500/15 rounded-xl space-y-1.5">
+                <div className="p-3.5 bg-amber-500/[0.03] border border-amber-500/15 rounded-xl space-y-1.5">
                   <div className="flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Strict Security Active</span>
+                    <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Private Project</span>
                   </div>
-                  <p className="text-[9px] text-neutral-500 leading-relaxed font-semibold">
-                    This project is strictly private and secure. Only assigned project members can view the initiative, milestones, and its linked tasks/goals.
+                  <p className="text-[10px] text-neutral-500 leading-relaxed font-semibold">
+                    Only members invited to this project can view its milestones, tasks, and discussions.
                   </p>
                 </div>
 
                 {/* Name */}
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Project Name</label>
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-transparent text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-primary/50 transition-all"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-neutral-400 shadow-xs"
                     placeholder="Enter project name..."
                   />
                 </div>
 
                 {/* Description */}
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Project Description</label>
                   <textarea
                     value={editDesc}
                     onChange={(e) => setEditDesc(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-transparent text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-primary/50 transition-all h-20 resize-none leading-relaxed"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all h-24 resize-none leading-relaxed placeholder:text-neutral-400 shadow-xs"
                     placeholder="Describe what this project entails..."
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   {/* Start Date */}
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Start Date</label>
                     <input
                       type="date"
                       value={editStartDate}
                       onChange={(e) => setEditStartDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-transparent text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-primary/50 transition-all"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-850 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-xs"
                     />
                   </div>
 
                   {/* Due Date */}
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Due Date</label>
                     <input
                       type="date"
                       value={editDueDate}
                       onChange={(e) => setEditDueDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-transparent text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-primary/50 transition-all"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-855 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-xs"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Actions Footer */}
-              <div className="flex items-center justify-end gap-2.5 border-t border-neutral-100 dark:border-neutral-850 pt-4 mt-2">
+              <div className="flex items-center justify-end gap-2.5 border-t border-neutral-200/40 dark:border-neutral-800/60 pt-4 mt-2">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-850 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                  className="px-4 py-2 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-550 hover:text-neutral-850 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveProject}
-                  className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-xl text-xs font-bold hover:bg-neutral-850 dark:hover:bg-neutral-100 transition-all cursor-pointer shadow-md"
+                  className="px-4 py-2 bg-indigo-650 dark:bg-indigo-500 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md shadow-indigo-600/10"
                 >
                   Save Changes
                 </button>

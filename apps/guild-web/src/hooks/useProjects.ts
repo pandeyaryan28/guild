@@ -37,11 +37,13 @@ export function useProject(projectId: string | undefined) {
 }
 
 export function useProjectComments(projectId: string | null) {
+  const { userProfile } = useAuth();
+  const orgId = userProfile?.organizationId;
   const [comments, setComments] = React.useState<ProjectComment[]>([]);
   React.useEffect(() => {
-    if (!projectId) { setComments([]); return; }
-    return listenToProjectComments(projectId, setComments);
-  }, [projectId]);
+    if (!projectId || !orgId) { setComments([]); return; }
+    return listenToProjectComments(orgId, projectId, setComments);
+  }, [projectId, orgId]);
   return comments;
 }
 
