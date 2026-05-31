@@ -1025,7 +1025,12 @@ export function TaskCanvas() {
             </div>
           </div>
         ) : (
-          <div className="h-full w-full overflow-y-auto aether-scroll p-4 lg:p-6 space-y-6">
+          <div className={cn(
+            "h-full w-full p-4 lg:p-6 space-y-6 aether-scroll",
+            viewMode === 'kanban' && activeTab === 'tasks' && activeSection !== 'projects'
+              ? "overflow-hidden flex flex-col"
+              : "overflow-y-auto"
+          )}>
             
             {/* ━━━━━━ Redesigned Workspace: Tasks and Goals Tabs ━━━━━━ */}
             {(activeSection === 'my-space' || activeSection === 'my-team') && (() => {

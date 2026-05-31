@@ -38,10 +38,10 @@
 }
 
 .dark {
-  /* Frosted White Satin Glass (Dark Theme - clean, vibrant, high-contrast) */
-  --aether-glass-bg: oklch(1 0 0 / 7.5%);
-  --aether-glass-border: oklch(from var(--accent) 0.96 0.03 h / 12%);
-  --aether-glass-border-inner: oklch(1 0 0 / 14%);
+  /* Frosted Tinted Satin Glass (Dark Theme - clean, vibrant, high-contrast) */
+  --aether-glass-bg: oklch(from var(--accent) 0.98 0.02 h / 11%);
+  --aether-glass-border: oklch(from var(--accent) 0.96 0.04 h / 16%);
+  --aether-glass-border-inner: oklch(1 0 0 / 18%);
   --aether-glass-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.18), 
                          0 20px 48px -8px oklch(0 0 0 / 35%),
                          inset 0 1px 0 0 var(--aether-glass-border-inner);
@@ -449,19 +449,34 @@
 .task-glass-card.priority-low::before { background: var(--aether-secondary); }
 
 /* Unified Fluid Scrollbars */
+.aether-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
 .aether-scroll::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 .aether-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 .aether-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 99px;
+  background: oklch(from var(--text-primary) l c h / 12%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
 }
 .aether-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: oklch(from var(--text-primary) l c h / 24%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.aether-scroll::-webkit-scrollbar-thumb:active {
+  background: oklch(from var(--text-primary) l c h / 36%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 /* Animations */
