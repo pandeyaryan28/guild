@@ -26,7 +26,7 @@ interface NotificationPanelProps {
   onClose: () => void;
 }
 
-type TabType = 'all' | 'mentions' | 'tasks' | 'approvals' | 'archive';
+type TabType = 'all' | 'unread' | 'archive';
 
 // ─── Metadata per event type ──────────────────────────────────────────────────
 
@@ -124,16 +124,20 @@ function NotifRow({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
       exit={{ opacity: 0, x: 8 }}
       transition={{ duration: 0.18 }}
       className={cn(
-        'group relative flex w-full items-start gap-3 rounded-2xl p-3 text-left transition-all border border-transparent select-none cursor-pointer',
+        'group relative flex w-full items-start gap-3.5 rounded-2xl p-3 text-left transition-all border select-none cursor-pointer',
         n.read
-          ? 'bg-transparent text-muted-foreground hover:bg-white/[0.02] hover:border-white/5'
-          : 'bg-primary/5 border-primary/10 hover:bg-primary/8 hover:border-primary/15',
+          ? 'bg-transparent border-transparent text-muted-foreground hover:bg-white/[0.02] hover:border-white/5'
+          : 'bg-white/[0.02] border-white/5 shadow-inner'
       )}
+      style={!n.read ? {
+        background: 'linear-gradient(90deg, oklch(from var(--accent) l c h / 5%) 0%, transparent 100%)',
+        borderColor: 'oklch(from var(--accent) l c h / 12%)'
+      } : undefined}
       onClick={handleRowClick}
     >
       {/* Dynamic urgency color indicator */}
@@ -176,9 +180,12 @@ function NotifRow({
       </div>
 
       {/* Text Content */}
-      <div className="min-w-0 flex-1 pr-6 select-text">
+      <div className="min-w-0 flex-1 pr-14 select-text">
         <div className="flex items-center gap-1.5 leading-none">
-          <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground/80">
+          <span 
+            className="text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground/80 transition-colors"
+            style={!n.read ? { color: 'oklch(from var(--accent) calc(l + 0.1) c h)' } : undefined}
+          >
             {meta.label}
           </span>
           <span className="text-[10px] text-text-muted select-none">•</span>
@@ -201,16 +208,22 @@ function NotifRow({
 
       {/* Right control status indicator (when not hovered) */}
       {!n.read && (
-        <div className="mt-3.5 h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_6px_var(--accent)] group-hover:opacity-0 transition-opacity" />
+        <div 
+          className="mt-3.5 h-2 w-2 shrink-0 rounded-full md:group-hover:opacity-0 transition-all duration-200"
+          style={{
+            backgroundColor: 'var(--accent)',
+            boxShadow: '0 0 8px var(--accent)'
+          }}
+        />
       )}
 
-      {/* Hover action toolbar tray */}
-      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
+      {/* Hover action toolbar tray - Permanently visible & subtle on mobile, scales on desktop */}
+      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-all md:opacity-0 md:group-hover:opacity-100 opacity-80 md:scale-95 md:group-hover:scale-100">
         <Button
           variant="ghost"
           size="icon"
           title={n.read ? 'Mark as unread' : 'Mark as read'}
-          className="h-7 w-7 rounded-lg bg-surface/90 border border-white/10 text-muted-foreground hover:text-foreground shadow-sm"
+          className="h-7 w-7 rounded-lg bg-surface/90 dark:bg-zinc-900/90 border border-white/10 text-muted-foreground hover:text-foreground shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
           onClick={(e) => {
             e.stopPropagation();
             if (n.read) onMarkUnread(n.id);
@@ -224,7 +237,7 @@ function NotifRow({
             variant="ghost"
             size="icon"
             title="Archive"
-            className="h-7 w-7 rounded-lg bg-surface/90 border border-white/10 text-muted-foreground hover:text-foreground shadow-sm"
+            className="h-7 w-7 rounded-lg bg-surface/90 dark:bg-zinc-900/90 border border-white/10 text-muted-foreground hover:text-foreground shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={(e) => {
               e.stopPropagation();
               onArchive(n.id);
@@ -275,18 +288,8 @@ export function NotificationPanel({
   // Tab calculations
   const filteredNotifications = React.useMemo(() => {
     if (activeTab === 'archive') return archivedNotifications;
-
-    switch (activeTab) {
-      case 'mentions':
-        return notifications.filter((n) => n.category === 'mentions');
-      case 'tasks':
-        return notifications.filter((n) => n.category === 'tasks');
-      case 'approvals':
-        return notifications.filter((n) => n.category === 'requests');
-      case 'all':
-      default:
-        return notifications;
-    }
+    if (activeTab === 'unread') return notifications.filter((n) => !n.read);
+    return notifications;
   }, [activeTab, notifications, archivedNotifications]);
 
   function handleNavigate(link: string) {
@@ -295,10 +298,8 @@ export function NotificationPanel({
   }
 
   const TABS: { id: TabType; label: string; count?: number }[] = [
-    { id: 'all', label: 'All', count: notifications.length },
-    { id: 'mentions', label: 'Mentions', count: notifications.filter((n) => n.category === 'mentions').length },
-    { id: 'tasks', label: 'Tasks', count: notifications.filter((n) => n.category === 'tasks').length },
-    { id: 'approvals', label: 'Approvals', count: notifications.filter((n) => n.category === 'requests').length },
+    { id: 'all', label: 'Inbox', count: notifications.length },
+    { id: 'unread', label: 'Unread', count: notifications.filter((n) => !n.read).length },
     { id: 'archive', label: 'Archive', count: archivedNotifications.length },
   ];
 
@@ -311,17 +312,24 @@ export function NotificationPanel({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: -6 }}
           transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-          className="absolute right-0 top-full z-50 mt-2 w-[400px] origin-top-right overflow-hidden rounded-2xl aether-glass border border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/95 shadow-2xl backdrop-blur-3xl flex flex-col h-[520px]"
+          className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-32px)] sm:w-[380px] max-w-[calc(100vw-32px)] origin-top-right overflow-hidden rounded-2xl aether-glass border border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/95 shadow-2xl backdrop-blur-3xl flex flex-col h-[520px] max-h-[80vh]"
         >
           {/* Header section */}
           <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+            <div className="flex items-center gap-2 select-none">
+              <div className="h-7 w-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary" style={{ color: 'var(--accent)' }}>
                 <Bell className="h-4 w-4" />
               </div>
               <span className="text-sm font-extrabold text-foreground">Notifications</span>
               {unreadCount > 0 && (
-                <span className="rounded-full bg-primary/15 border border-primary/20 px-2 py-0.5 text-[9px] font-black text-primary shadow-[0_0_8px_rgba(var(--accent),0.1)] animate-pulse">
+                <span 
+                  className="rounded-full px-2 py-0.5 text-[9px] font-black shadow-[0_0_8px_rgba(var(--accent),0.1)] animate-pulse"
+                  style={{
+                    backgroundColor: 'oklch(from var(--accent) l c h / 15%)',
+                    border: '1px solid oklch(from var(--accent) l c h / 20%)',
+                    color: 'var(--accent)'
+                  }}
+                >
                   {unreadCount} new
                 </span>
               )}
@@ -331,43 +339,33 @@ export function NotificationPanel({
               {unreadCount > 0 && (
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1.5 rounded-lg px-2 text-[10px] font-extrabold text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5"
+                  size="icon"
+                  title="Mark all as read"
+                  className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5 transition-all duration-200"
                   onClick={onMarkAllRead}
                 >
-                  <CheckCheck className="h-3.5 w-3.5" />
-                  Mark Read
+                  <CheckCheck className="h-4 w-4" />
                 </Button>
               )}
               {notifications.some((n) => n.read) && (
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1.5 rounded-lg px-2 text-[10px] font-extrabold text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5"
+                  size="icon"
+                  title="Archive read notifications"
+                  className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5 transition-all duration-200"
                   onClick={onArchiveAllRead}
                 >
-                  <Archive className="h-3.5 w-3.5" />
-                  Clear Read
-                </Button>
-              )}
-              {notifications.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1.5 rounded-lg px-2 text-[10px] font-extrabold text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5"
-                  onClick={onArchiveAll}
-                >
-                  <Archive className="h-3.5 w-3.5" />
-                  Clear All
+                  <Archive className="h-4 w-4" />
                 </Button>
               )}
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5"
+                title="Close"
+                className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5 transition-all duration-200"
                 onClick={onClose}
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -381,8 +379,8 @@ export function NotificationPanel({
                   key={tab.id}
                   type="button"
                   className={cn(
-                    'relative px-2.5 py-1 text-[10px] font-extrabold rounded-lg tracking-wider transition-all select-none cursor-pointer outline-none shrink-0',
-                    active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.02]',
+                    'relative px-3 py-1.5 text-[10px] font-extrabold rounded-lg tracking-wider transition-all select-none cursor-pointer outline-none shrink-0',
+                    active ? 'text-foreground font-black' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.02]',
                   )}
                   onClick={() => setActiveTab(tab.id)}
                 >
@@ -397,7 +395,18 @@ export function NotificationPanel({
                   <span className="flex items-center gap-1">
                     {tab.label}
                     {tab.count !== undefined && tab.count > 0 && (
-                      <span className="text-[8px] opacity-60 font-semibold">({tab.count})</span>
+                      <span 
+                        className="text-[8.5px] font-extrabold px-1.5 py-0.5 rounded-full"
+                        style={active ? {
+                          backgroundColor: 'oklch(from var(--accent) l c h / 12%)',
+                          color: 'var(--accent)'
+                        } : {
+                          backgroundColor: 'rgba(255,255,255,0.05)',
+                          color: 'var(--text-muted)'
+                        }}
+                      >
+                        {tab.count}
+                      </span>
                     )}
                   </span>
                 </button>
@@ -416,7 +425,14 @@ export function NotificationPanel({
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="flex flex-col items-center justify-center py-20 px-8 text-center h-full select-none"
                 >
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 dark:bg-white/[0.02] shadow-inner text-text-muted/65 animate-bounce-subtle">
+                  <div 
+                    className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border shadow-inner animate-bounce-subtle"
+                    style={{
+                      backgroundColor: 'oklch(from var(--accent) l c h / 8%)',
+                      borderColor: 'oklch(from var(--accent) l c h / 15%)',
+                      color: 'var(--accent)'
+                    }}
+                  >
                     <BellOff className="h-5 w-5" />
                   </div>
                   <h4 className="text-xs font-extrabold text-foreground leading-normal">
