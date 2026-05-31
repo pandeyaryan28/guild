@@ -105,6 +105,10 @@ export function DashboardPage({
     return orgs.find(o => o.id === selectedOrgId) || orgs.find(o => o.id === currentUser?.organizationId) || orgs[0];
   }, [selectedOrgId, orgs, currentUser]);
 
+  const pendingRequests = useMemo(() => {
+    return requests.filter(r => r.status === 'pending');
+  }, [requests]);
+
   // Sync form states and global invite token when activeOrg changes
   useEffect(() => {
     if (activeOrg) {
@@ -325,10 +329,6 @@ export function DashboardPage({
       icon: <Percent className="w-5 h-5" />,
     },
   ];
-
-  const pendingRequests = useMemo(() => {
-    return requests.filter(r => r.status === 'pending');
-  }, [requests]);
 
 
   // ─── NEEDS ATTENTION: HOTSPOTS BY USER & TEAM ────────────────────────────
