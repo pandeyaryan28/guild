@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
+import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching';
+import { registerRoute, NavigationRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
@@ -13,6 +13,11 @@ precacheAndRoute(self.__WB_MANIFEST || []);
 
 // 2. Clean up old caches
 cleanupOutdatedCaches();
+
+// 3. Navigation Route for Single Page Application (SPA) client-side routing.
+// This ensures that page refreshes on subroutes (like /chat, /settings)
+// immediately load the cached index.html instead of hitting the network.
+registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
 
 // 4. Runtime Caching for Google Fonts Stylesheets
 registerRoute(

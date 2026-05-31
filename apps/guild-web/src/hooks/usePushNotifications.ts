@@ -33,9 +33,11 @@ async function waitForActiveController(registration: ServiceWorkerRegistration):
   // Otherwise wait for the controller to change (new SW claims all clients).
   await new Promise<void>((resolve) => {
     const timeout = setTimeout(() => {
-      // Timeout: reload the page so the new SW takes control.
-      window.location.reload();
-    }, 5000);
+      // Timeout: DO NOT reload the page! Just log a warning and resolve.
+      // Reloading here breaks hard refreshes (Ctrl+Shift+R) and causes infinite reload loops.
+      console.warn('[Push] Service worker did not claim control in time. Proceeding gracefully.');
+      resolve();
+    }, 2000);
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       clearTimeout(timeout);
@@ -92,6 +94,13 @@ export function usePushNotifications() {
       // Without this, pushManager.subscribe() fails with AbortError because
       // the push service rejects subscriptions from non-controlling SWs.
       await waitForActiveController(registration);
+
+      // If still not controlling (e.g. after a hard refresh where SW is intentionally bypassed),
+      // exit early to prevent AbortError from pushManager.subscribe().
+      if (!navigator.serviceWorker.controller) {
+        console.warn('[Push] Service worker is not controlling this page (e.g. after a hard refresh). Skipping push sync.');
+        return;
+      }
 
       // Step 3: Get existing subscription or create a new one.
       let subscription = await registration.pushManager.getSubscription();
