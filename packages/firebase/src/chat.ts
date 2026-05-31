@@ -2,7 +2,7 @@ import {
   collection, doc, setDoc, addDoc, updateDoc,
   getDoc, query, where, orderBy, onSnapshot,
   serverTimestamp, Timestamp, writeBatch, deleteDoc,
-  limit, limitToLast, getDocs, endBefore, QueryDocumentSnapshot, DocumentData,
+  limit, getDocs, startAfter, QueryDocumentSnapshot, DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notifications';
@@ -498,7 +498,8 @@ const PAGE_SIZE = 50;
 
 /**
  * Streams the latest PAGE_SIZE messages in real-time.
- * Calls cb with (messages, oldestDoc) — oldestDoc is the cursor for fetchOlderMessages.
+ * Uses orderBy DESC + limit then reverses in JS — works with existing ASC indexes.
+ * Calls cb with (messages asc-ordered, oldestDoc cursor).
  */
 export function listenToLatestMessages(
   id: string,
@@ -510,20 +511,24 @@ export function listenToLatestMessages(
     query(
       collection(db, 'messages'),
       where(field, '==', id),
-      orderBy('createdAt', 'asc'),
-      limitToLast(PAGE_SIZE),
+      orderBy('createdAt', 'desc'),
+      limit(PAGE_SIZE),
     ),
     (snap) => {
-      const msgs = snap.docs.map((d) => d.data() as Message);
-      const oldest = snap.docs[0] ?? null;
+      // docs arrive newest-first; reverse to get chronological order for display
+      const reversed = [...snap.docs].reverse();
+      const msgs = reversed.map((d) => d.data() as Message);
+      // The oldest doc in the window is the last in the DESC result (first reversed)
+      const oldest = reversed[0] ?? null;
       cb(msgs, oldest);
     },
   );
 }
 
 /**
- * One-shot fetch of PAGE_SIZE messages before `cursorDoc`.
- * Returns [messages, newOldestDoc, hasMore].
+ * One-shot fetch of PAGE_SIZE messages older than `cursorDoc`.
+ * Uses orderBy DESC + startAfter (cursor is the oldest doc from previous window).
+ * Returns [messages asc-ordered, newOldestDoc, hasMore].
  */
 export async function fetchOlderMessages(
   id: string,
@@ -535,13 +540,15 @@ export async function fetchOlderMessages(
     query(
       collection(db, 'messages'),
       where(field, '==', id),
-      orderBy('createdAt', 'asc'),
-      endBefore(cursorDoc),
-      limitToLast(PAGE_SIZE),
+      orderBy('createdAt', 'desc'),
+      startAfter(cursorDoc),
+      limit(PAGE_SIZE),
     ),
   );
-  const msgs = snap.docs.map((d) => d.data() as Message);
-  const newOldest = snap.docs[0] ?? null;
+  // snap.docs is newest-first within this older batch; reverse for display
+  const reversed = [...snap.docs].reverse();
+  const msgs = reversed.map((d) => d.data() as Message);
+  const newOldest = reversed[0] ?? null;
   const hasMore = snap.docs.length === PAGE_SIZE;
   return [msgs, newOldest, hasMore];
 }
