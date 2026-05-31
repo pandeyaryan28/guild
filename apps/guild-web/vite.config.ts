@@ -19,7 +19,12 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         injectRegister: 'auto',
         injectManifest: {
-          globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2,json}'],
+          // Exclude .js files in the root (like push-sw.js) from the precache manifest.
+          // Workbox precaches JS files by fetching them via importScripts(), which the browser
+          // forbids after a service worker has already been installed. Push notification
+          // handling is already embedded inside sw.ts itself — push-sw.js is not needed.
+          globPatterns: ['**/*.{css,html,png,svg,ico,woff2,json}', 'assets/**/*.js'],
+          globIgnores: ['push-sw.js', 'sw.js'],
         },
         manifest: {
           name: 'Guild - Team Operations Platform',
