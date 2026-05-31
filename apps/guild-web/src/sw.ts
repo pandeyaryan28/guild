@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
 
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { registerRoute, NavigationRoute } from 'workbox-routing';
-import { CacheFirst, NetworkOnly } from 'workbox-strategies';
+import { registerRoute } from 'workbox-routing';
+import { CacheFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
@@ -13,14 +13,6 @@ precacheAndRoute(self.__WB_MANIFEST || []);
 
 // 2. Clean up old caches
 cleanupOutdatedCaches();
-
-// 3. SPA Routing Fallback (behaves like NavigationRoute / index.html fallback)
-// This ensures that when user is offline or goes to any URL, it loads index.html
-try {
-  // We can let Workbox navigate to index.html automatically or handle routing fallback
-} catch (e) {
-  console.error('Failed to configure navigation route', e);
-}
 
 // 4. Runtime Caching for Google Fonts Stylesheets
 registerRoute(
@@ -114,7 +106,12 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   );
 });
 
-// Immediately claim clients so the PWA takes control without waiting for a reload
+// Immediately skip waiting so the new SW activates without a reload
 self.addEventListener('install', () => {
   self.skipWaiting();
+});
+
+// Claim all open clients immediately so push subscriptions bind to the correct (new) SW
+self.addEventListener('activate', (event: ExtendableEvent) => {
+  event.waitUntil(self.clients.claim());
 });

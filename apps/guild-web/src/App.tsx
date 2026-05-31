@@ -58,15 +58,27 @@ function AppContent() {
 
   React.useEffect(() => {
     if (!user) return;
-    
+
     if (permission === 'default') {
+      // Delay the permission prompt to give the SW time to fully install, activate,
+      // and claim this client. Attempting pushManager.subscribe() too early (while
+      // navigator.serviceWorker.controller === null) causes AbortError.
       const timer = setTimeout(() => {
         requestPermission(user.uid);
-      }, 4000);
+      }, 6000);
       return () => clearTimeout(timer);
     } else if (permission === 'granted') {
-      // Re-sync subscription endpoint in background in case database was cleared
-      syncPushSubscription(user.uid);
+      // Re-sync subscription in background — wait for the SW controller to be set
+      // first so we don't hit the AbortError on hard refreshes / first loads.
+      const sync = async () => {
+        if ('serviceWorker' in navigator) {
+          await navigator.serviceWorker.ready;
+          // Give the SW controller a moment to be set after ready resolves
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+        syncPushSubscription(user.uid);
+      };
+      sync();
     }
   }, [user, permission, requestPermission, syncPushSubscription]);
 

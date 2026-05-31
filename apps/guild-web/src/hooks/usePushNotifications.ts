@@ -5,19 +5,43 @@ import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 const VAPID_PUBLIC_KEY = 'BLA5LxMq9q_LRmLD941wmpjEVoPI5KECTF44ySo0X3TpF5Y2NooH-YtLrJ35ymlvIGw7WUrOjThyVggGhiZODJg';
 
 /**
- * Utility helper to convert Base64 VAPID Public key to a Uint8Array.
+ * Converts a URL-safe Base64 VAPID public key into a Uint8Array for the Push API.
  */
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
   return outputArray;
+}
+
+/**
+ * Waits until the service worker is both active AND controlling this page.
+ * This is critical: navigator.serviceWorker.ready resolves when a SW is active,
+ * but it may not be controlling the page yet (controller === null). Subscribing
+ * to push while controller === null causes `AbortError: push service error`.
+ *
+ * We wait for a controllerchange event with a 5-second timeout fallback (reload).
+ */
+async function waitForActiveController(registration: ServiceWorkerRegistration): Promise<void> {
+  // If already controlling this page, we're good.
+  if (navigator.serviceWorker.controller) return;
+
+  // Otherwise wait for the controller to change (new SW claims all clients).
+  await new Promise<void>((resolve) => {
+    const timeout = setTimeout(() => {
+      // Timeout: reload the page so the new SW takes control.
+      window.location.reload();
+    }, 5000);
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      clearTimeout(timeout);
+      resolve();
+    }, { once: true });
+  });
 }
 
 export function usePushNotifications() {
@@ -27,7 +51,7 @@ export function usePushNotifications() {
     }
     return 'default';
   });
-  
+
   const [isSubscribing, setIsSubscribing] = React.useState(false);
   const [subscriptionError, setSubscriptionError] = React.useState<string | null>(null);
   const [isBraveBlocked, setIsBraveBlocked] = React.useState(false);
@@ -42,9 +66,16 @@ export function usePushNotifications() {
     return window.matchMedia('(display-mode: standalone)').matches;
   }, []);
 
-  // Sync / Register active subscription in Firestore
+  /**
+   * Syncs the push subscription for the given userId.
+   * Safe to call multiple times — reuses an existing subscription if one exists.
+   */
   const syncPushSubscription = React.useCallback(async (userId: string) => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    if (
+      typeof window === 'undefined' ||
+      !('serviceWorker' in navigator) ||
+      !('PushManager' in window)
+    ) {
       console.warn('Push messaging is not supported in this browser context');
       return;
     }
@@ -52,37 +83,51 @@ export function usePushNotifications() {
     setIsSubscribing(true);
     setSubscriptionError(null);
     setIsBraveBlocked(false);
+
     try {
+      // Step 1: Wait for the service worker to be fully active.
       const registration = await navigator.serviceWorker.ready;
-      
-      // Get existing subscription or create new one
+
+      // Step 2: Wait until this SW is actually controlling the page.
+      // Without this, pushManager.subscribe() fails with AbortError because
+      // the push service rejects subscriptions from non-controlling SWs.
+      await waitForActiveController(registration);
+
+      // Step 3: Get existing subscription or create a new one.
       let subscription = await registration.pushManager.getSubscription();
-      
+
       if (!subscription) {
-        const convertedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+        const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: convertedKey
+          applicationServerKey,
         });
-        console.log('Successfully subscribed browser to Web Push service');
+        console.log('[Push] New push subscription created');
+      } else {
+        console.log('[Push] Reusing existing push subscription');
       }
 
-      // Save subscription object to Firestore
+      // Step 4: Persist the subscription object in Firestore.
       const subscriptionJSON = subscription.toJSON();
       const userRef = doc(db, 'users', userId);
-      
       await updateDoc(userRef, {
-        pushSubscriptions: arrayUnion(subscriptionJSON)
+        pushSubscriptions: arrayUnion(subscriptionJSON),
       });
-      
-      console.log('Saved push subscription details inside user profile');
+
+      console.log('[Push] Subscription saved to Firestore');
     } catch (err: any) {
-      console.error('Failed to broker browser push subscription', err);
-      
+      console.error('[Push] Failed to broker browser push subscription', err);
+
       const isBrave = typeof navigator !== 'undefined' && 'brave' in navigator;
       if (isBrave && (err.name === 'AbortError' || err.message?.includes('push service error'))) {
         setIsBraveBlocked(true);
-        setSubscriptionError('Brave blocked push service registration. Please enable Google Services for push messaging in brave://settings/privacy.');
+        setSubscriptionError(
+          'Brave blocked push service registration. Enable Google Services in brave://settings/privacy.'
+        );
+      } else if (err.name === 'AbortError') {
+        setSubscriptionError(
+          'Push subscription failed — the service worker may still be loading. Please reload the page and try again.'
+        );
       } else {
         setSubscriptionError(err.message || 'Push registration failed');
       }
@@ -91,26 +136,29 @@ export function usePushNotifications() {
     }
   }, []);
 
-  const requestPermission = React.useCallback(async (userId?: string) => {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      console.warn('This browser does not support desktop notifications');
-      return 'default';
-    }
-
-    try {
-      const result = await Notification.requestPermission();
-      setPermission(result);
-      
-      if (result === 'granted' && userId) {
-        await syncPushSubscription(userId);
+  const requestPermission = React.useCallback(
+    async (userId?: string) => {
+      if (typeof window === 'undefined' || !('Notification' in window)) {
+        console.warn('This browser does not support desktop notifications');
+        return 'default';
       }
-      
-      return result;
-    } catch (e) {
-      console.error('Error requesting notification permission', e);
-      return 'default';
-    }
-  }, [syncPushSubscription]);
+
+      try {
+        const result = await Notification.requestPermission();
+        setPermission(result);
+
+        if (result === 'granted' && userId) {
+          await syncPushSubscription(userId);
+        }
+
+        return result;
+      } catch (e) {
+        console.error('Error requesting notification permission', e);
+        return 'default';
+      }
+    },
+    [syncPushSubscription]
+  );
 
   React.useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -127,6 +175,10 @@ export function usePushNotifications() {
     isBraveBlocked,
     isIOS,
     isStandalone,
-    isSupported: typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window
+    isSupported:
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window,
   };
 }
