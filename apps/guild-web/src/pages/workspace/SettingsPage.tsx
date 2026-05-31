@@ -218,8 +218,9 @@ export function SettingsPage() {
                       onClick={() => setActiveTab(tab.id)}
                       className={cn(
                         "flex w-auto md:w-full items-center gap-3 px-3 py-2 md:py-2.5 rounded-xl text-[11px] font-bold transition-all relative group select-none cursor-pointer shrink-0",
-                        isActive ? "text-white" : "text-muted-foreground hover:text-foreground"
+                        isActive ? "" : "text-muted-foreground hover:text-foreground"
                       )}
+                      style={isActive ? { color: 'var(--accent)' } : undefined}
                     >
                       {isActive && (
                         <motion.div
@@ -254,8 +255,9 @@ export function SettingsPage() {
                       onClick={() => setActiveTab(tab.id)}
                       className={cn(
                         "flex w-auto md:w-full items-center gap-3 px-3 py-2 md:py-2.5 rounded-xl text-[11px] font-bold transition-all relative group select-none cursor-pointer shrink-0",
-                        isActive ? "text-white" : "text-muted-foreground hover:text-foreground"
+                        isActive ? "" : "text-muted-foreground hover:text-foreground"
                       )}
+                      style={isActive ? { color: 'var(--accent)' } : undefined}
                     >
                       {isActive && (
                         <motion.div

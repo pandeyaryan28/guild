@@ -72,8 +72,9 @@ export function MobileNavDock() {
               onClick={() => navigate(item.path)}
               className={cn(
                 "relative flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all cursor-pointer",
-                isActive ? "text-white" : "text-muted-foreground/80 hover:text-foreground"
+                isActive ? "" : "text-muted-foreground/80 hover:text-foreground"
               )}
+              style={isActive ? { color: 'var(--accent-foreground)' } : undefined}
             >
               {/* Highlight background blob */}
               {isActive && (

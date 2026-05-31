@@ -95,8 +95,9 @@ export function NavDock() {
                 onClick={() => navigate(item.path)}
                 className={cn(
                   "aether-dock-item relative cursor-pointer",
-                  isActive ? "text-white" : "text-foreground/75 hover:text-foreground"
+                  isActive ? "" : "text-foreground/75 hover:text-foreground"
                 )}
+                style={isActive ? { color: 'var(--accent-foreground)' } : undefined}
               >
                 {isActive && (
                   <motion.div
