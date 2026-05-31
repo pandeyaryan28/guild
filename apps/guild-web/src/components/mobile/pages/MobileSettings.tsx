@@ -21,7 +21,7 @@ export function MobileSettings() {
   const navigate = useNavigate();
   const { userProfile, logout } = useAuth();
   const { themeId, setTheme, themes } = useTheme();
-  const { isInstallable, isStandalone, install } = usePwaInstall();
+  const { isInstallable, isStandalone, isIOS, install } = usePwaInstall();
 
   const handleLogout = async () => {
     await logout();

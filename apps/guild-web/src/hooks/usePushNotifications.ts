@@ -29,6 +29,18 @@ export function usePushNotifications() {
   });
   
   const [isSubscribing, setIsSubscribing] = React.useState(false);
+  const [subscriptionError, setSubscriptionError] = React.useState<string | null>(null);
+  const [isBraveBlocked, setIsBraveBlocked] = React.useState(false);
+
+  const isIOS = React.useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  }, []);
+
+  const isStandalone = React.useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(display-mode: standalone)').matches;
+  }, []);
 
   // Sync / Register active subscription in Firestore
   const syncPushSubscription = React.useCallback(async (userId: string) => {
@@ -38,6 +50,8 @@ export function usePushNotifications() {
     }
 
     setIsSubscribing(true);
+    setSubscriptionError(null);
+    setIsBraveBlocked(false);
     try {
       const registration = await navigator.serviceWorker.ready;
       
@@ -62,8 +76,16 @@ export function usePushNotifications() {
       });
       
       console.log('Saved push subscription details inside user profile');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to broker browser push subscription', err);
+      
+      const isBrave = typeof navigator !== 'undefined' && 'brave' in navigator;
+      if (isBrave && (err.name === 'AbortError' || err.message?.includes('push service error'))) {
+        setIsBraveBlocked(true);
+        setSubscriptionError('Brave blocked push service registration. Please enable Google Services for push messaging in brave://settings/privacy.');
+      } else {
+        setSubscriptionError(err.message || 'Push registration failed');
+      }
     } finally {
       setIsSubscribing(false);
     }
@@ -101,6 +123,10 @@ export function usePushNotifications() {
     requestPermission,
     syncPushSubscription,
     isSubscribing,
+    subscriptionError,
+    isBraveBlocked,
+    isIOS,
+    isStandalone,
     isSupported: typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window
   };
 }

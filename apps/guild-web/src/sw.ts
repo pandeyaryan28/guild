@@ -69,7 +69,7 @@ self.addEventListener('push', (event: PushEvent) => {
   }
 
   const title = data.title || 'Guild Operational Sync';
-  const options: NotificationOptions = {
+  const options: any = {
     body: data.body || 'You have a new operational alert.',
     icon: '/icon-192.png',
     badge: '/favicon.png',
