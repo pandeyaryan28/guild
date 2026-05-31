@@ -5,17 +5,31 @@ import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 
 if ('serviceWorker' in navigator) {
-  // Unregister any stale/broken service workers from previous deploys.
-  // This ensures users who have a broken cached SW (e.g., with the old importScripts
-  // error) get a clean slate. The VitePWA registerSW call below will install the
-  // correct new SW immediately afterward.
+  // Clean up any stale or deprecated service worker registrations.
+  // We carefully avoid unregistering a service worker that is currently installing or waiting,
+  // preventing a race condition where the new SW is destroyed before it has a chance to activate.
   navigator.serviceWorker.getRegistrations().then((registrations) => {
-    // If there's already a registration but it has no active worker,
-    // it's stuck in a broken install/waiting state — clean it up.
     for (const reg of registrations) {
-      if (!reg.active || reg.active.scriptURL.includes('push-sw')) {
+      const activeUrl = reg.active?.scriptURL || '';
+      const installingUrl = reg.installing?.scriptURL || '';
+      const waitingUrl = reg.waiting?.scriptURL || '';
+
+      // 1. Unregister if it is the old deprecated standalone push service worker
+      if (
+        activeUrl.includes('push-sw') ||
+        installingUrl.includes('push-sw') ||
+        waitingUrl.includes('push-sw')
+      ) {
         reg.unregister().then(() => {
-          console.log('[SW] Cleaned up stale/broken service worker registration');
+          console.log('[SW] Cleaned up deprecated push-sw service worker');
+        });
+        continue;
+      }
+
+      // 2. Unregister only if the registration is entirely empty (has no active, installing, or waiting worker)
+      if (!reg.active && !reg.installing && !reg.waiting) {
+        reg.unregister().then(() => {
+          console.log('[SW] Cleaned up empty/broken service worker registration');
         });
       }
     }
