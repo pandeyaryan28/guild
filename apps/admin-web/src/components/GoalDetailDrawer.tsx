@@ -171,7 +171,7 @@ export function GoalDetailDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-            className="relative w-full max-w-lg h-screen bg-white/80 dark:bg-zinc-950/80 backdrop-blur-3xl border-l border-white/10 dark:border-zinc-800/50 shadow-2xl flex flex-col justify-between"
+            className="relative w-full max-w-lg h-screen bg-white/80 dark:bg-white/[0.03] backdrop-blur-3xl border-l border-white/10 dark:border-white/5 shadow-2xl flex flex-col justify-between"
           >
             {/* Header controls */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-zinc-800/50 shrink-0">
@@ -238,9 +238,9 @@ export function GoalDetailDrawer({
                     onChange={(e) => handleStatusChange(e.target.value as GoalStatus)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer"
                   >
-                    <option value="active" className="bg-zinc-950 text-cyan-400 font-semibold">Active</option>
-                    <option value="completed" className="bg-zinc-950 text-emerald-400 font-semibold">Completed</option>
-                    <option value="cancelled" className="bg-zinc-950 text-rose-400 font-semibold">Cancelled</option>
+                    <option value="active" className="bg-[--surface] text-cyan-400 font-semibold">Active</option>
+                    <option value="completed" className="bg-[--surface] text-emerald-400 font-semibold">Completed</option>
+                    <option value="cancelled" className="bg-[--surface] text-rose-400 font-semibold">Cancelled</option>
                   </select>
                 </div>
 
@@ -252,8 +252,8 @@ export function GoalDetailDrawer({
                     onChange={(e) => handleHorizonChange(e.target.value as GoalHorizon)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer"
                   >
-                    <option value="short_term" className="bg-zinc-950 text-[--foreground]">Short Term</option>
-                    <option value="long_term" className="bg-zinc-950 text-[--foreground]">Long Term</option>
+                    <option value="short_term" className="bg-[--surface] text-[--foreground]">Short Term</option>
+                    <option value="long_term" className="bg-[--surface] text-[--foreground]">Long Term</option>
                   </select>
                 </div>
               </div>
@@ -273,7 +273,7 @@ export function GoalDetailDrawer({
                   >
                     <option value="">Unscoped (No project)</option>
                     {projects.map(proj => (
-                      <option key={proj.id} value={proj.id} className="bg-zinc-950 text-[--foreground]">
+                      <option key={proj.id} value={proj.id} className="bg-[--surface] text-[--foreground]">
                         {proj.name}
                       </option>
                     ))}
@@ -293,7 +293,7 @@ export function GoalDetailDrawer({
                   >
                     <option value="">Choose owner lead...</option>
                     {users.map(u => (
-                      <option key={u.uid} value={u.uid} className="bg-zinc-950 text-[--foreground]">
+                      <option key={u.uid} value={u.uid} className="bg-[--surface] text-[--foreground]">
                         {u.fullName || u.username} ({u.designation || 'Member'})
                       </option>
                     ))}

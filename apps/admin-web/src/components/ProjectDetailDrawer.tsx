@@ -169,7 +169,7 @@ export function ProjectDetailDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-            className="relative w-full max-w-lg h-screen bg-white/80 dark:bg-zinc-950/80 backdrop-blur-3xl border-l border-white/10 dark:border-zinc-800/50 shadow-2xl flex flex-col justify-between"
+            className="relative w-full max-w-lg h-screen bg-white/80 dark:bg-white/[0.03] backdrop-blur-3xl border-l border-white/10 dark:border-white/5 shadow-2xl flex flex-col justify-between"
           >
             {/* Header controls */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-zinc-800/50 shrink-0">
@@ -240,10 +240,10 @@ export function ProjectDetailDrawer({
                     onChange={(e) => handleStatusChange(e.target.value as ProjectStatus)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer"
                   >
-                    <option value="active" className="bg-zinc-950 text-emerald-400 font-semibold">Active</option>
-                    <option value="paused" className="bg-zinc-950 text-amber-400 font-semibold">Paused</option>
-                    <option value="completed" className="bg-zinc-950 text-blue-450 font-semibold">Completed</option>
-                    <option value="archived" className="bg-zinc-950 text-zinc-500 font-semibold">Archived</option>
+                    <option value="active" className="bg-[--surface] text-emerald-400 font-semibold">Active</option>
+                    <option value="paused" className="bg-[--surface] text-amber-400 font-semibold">Paused</option>
+                    <option value="completed" className="bg-[--surface] text-blue-450 font-semibold">Completed</option>
+                    <option value="archived" className="bg-[--surface] text-zinc-500 font-semibold">Archived</option>
                   </select>
                 </div>
 
@@ -260,7 +260,7 @@ export function ProjectDetailDrawer({
                   >
                     <option value="">Choose project lead...</option>
                     {users.map(u => (
-                      <option key={u.uid} value={u.uid} className="bg-zinc-950 text-[--foreground]">
+                      <option key={u.uid} value={u.uid} className="bg-[--surface] text-[--foreground]">
                         {u.fullName || u.username} ({u.designation || 'Member'})
                       </option>
                     ))}

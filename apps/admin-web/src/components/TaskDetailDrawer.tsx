@@ -212,7 +212,7 @@ export function TaskDetailDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-            className="relative w-full max-w-lg h-screen bg-white/80 dark:bg-zinc-950/80 backdrop-blur-3xl border-l border-white/10 dark:border-zinc-800/50 shadow-2xl flex flex-col justify-between"
+            className="relative w-full max-w-lg h-screen bg-white/80 dark:bg-white/[0.03] backdrop-blur-3xl border-l border-white/10 dark:border-white/5 shadow-2xl flex flex-col justify-between"
           >
             {/* Header controls */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-zinc-800/50 shrink-0">
@@ -266,10 +266,10 @@ export function TaskDetailDrawer({
                       onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
                       className={`w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer`}
                     >
-                      <option value="todo" className="bg-zinc-950 text-zinc-300">Todo</option>
-                      <option value="in_progress" className="bg-zinc-950 text-blue-400">In Progress</option>
-                      <option value="review" className="bg-zinc-950 text-amber-400">In Review</option>
-                      <option value="done" className="bg-zinc-950 text-emerald-400">Done</option>
+                      <option value="todo" className="bg-[--surface] text-zinc-300">Todo</option>
+                      <option value="in_progress" className="bg-[--surface] text-blue-400">In Progress</option>
+                      <option value="review" className="bg-[--surface] text-amber-400">In Review</option>
+                      <option value="done" className="bg-[--surface] text-emerald-400">Done</option>
                     </select>
                   </div>
                 </div>
@@ -282,11 +282,11 @@ export function TaskDetailDrawer({
                     onChange={(e) => handlePriorityChange(e.target.value as TaskPriority)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer"
                   >
-                    <option value="none" className="bg-zinc-950 text-zinc-400">None</option>
-                    <option value="low" className="bg-zinc-950 text-sky-400">Low</option>
-                    <option value="medium" className="bg-zinc-950 text-amber-400">Medium</option>
-                    <option value="high" className="bg-zinc-950 text-orange-400">High</option>
-                    <option value="urgent" className="bg-zinc-950 text-rose-500">Urgent</option>
+                    <option value="none" className="bg-[--surface] text-zinc-400">None</option>
+                    <option value="low" className="bg-[--surface] text-sky-400">Low</option>
+                    <option value="medium" className="bg-[--surface] text-amber-400">Medium</option>
+                    <option value="high" className="bg-[--surface] text-orange-400">High</option>
+                    <option value="urgent" className="bg-[--surface] text-rose-500">Urgent</option>
                   </select>
                 </div>
               </div>
@@ -306,7 +306,7 @@ export function TaskDetailDrawer({
                   >
                     <option value="">Unscoped (No project)</option>
                     {projects.map(proj => (
-                      <option key={proj.id} value={proj.id} className="bg-zinc-950 text-[--foreground]">
+                      <option key={proj.id} value={proj.id} className="bg-[--surface] text-[--foreground]">
                         {proj.name}
                       </option>
                     ))}
@@ -326,7 +326,7 @@ export function TaskDetailDrawer({
                   >
                     <option value="">Unlinked (No goal)</option>
                     {goals.map(gl => (
-                      <option key={gl.id} value={gl.id} className="bg-zinc-950 text-[--foreground]">
+                      <option key={gl.id} value={gl.id} className="bg-[--surface] text-[--foreground]">
                         {gl.title}
                       </option>
                     ))}

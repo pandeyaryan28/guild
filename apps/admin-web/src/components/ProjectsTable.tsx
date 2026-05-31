@@ -382,7 +382,7 @@ export function ProjectsTable({
                   className="w-full px-4 py-3 aether-glass-input text-xs font-semibold focus:outline-none cursor-pointer"
                 >
                   {users.map(u => (
-                    <option key={u.uid} value={u.uid} className="bg-zinc-950 text-[--foreground]">
+                    <option key={u.uid} value={u.uid} className="bg-[--surface] text-[--foreground]">
                       {u.fullName || u.username} ({u.designation || 'Member'})
                     </option>
                   ))}
@@ -443,7 +443,7 @@ export function ProjectsTable({
                   className="w-full px-4 py-3 aether-glass-input text-xs font-semibold focus:outline-none cursor-pointer"
                 >
                   {orgs.map(o => (
-                    <option key={o.id} value={o.id} className="bg-zinc-950 text-[--foreground]">
+                    <option key={o.id} value={o.id} className="bg-[--surface] text-[--foreground]">
                       {o.name}
                     </option>
                   ))}
