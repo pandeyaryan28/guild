@@ -71,6 +71,12 @@ export function TaskCanvas() {
   const [activeSection, setActiveSection] = React.useState<'my-space' | 'my-team' | 'projects'>('my-space');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
   
+  // Workspace tabs and views redesign state
+  const [activeTab, setActiveTab] = React.useState<'tasks' | 'goals'>('tasks');
+  const [viewMode, setViewMode] = React.useState<'list' | 'kanban'>('list');
+  const [selectedTeamId, setSelectedTeamId] = React.useState<string>('');
+  const [showDoneTasks, setShowDoneTasks] = React.useState<boolean>(false);
+
   // Collapsed states for completed tasks sections
   const [showCompletedMySpace, setShowCompletedMySpace] = React.useState(false);
   const [showCompletedMyTeam, setShowCompletedMyTeam] = React.useState(false);
@@ -102,6 +108,29 @@ export function TaskCanvas() {
   const { tasks, loading: tasksLoading } = useTasks(orgId);
   const { teams, loading: teamsLoading } = useTeams(orgId);
   const members = useOrgMembers(orgId);
+
+  // Teams Selector and Permissions Logic
+  const visibleTeams = React.useMemo(() => {
+    const isOrgAdmin = userProfile?.role === 'owner' || userProfile?.role === 'admin';
+    if (isOrgAdmin) return teams;
+    return teams.filter(t => t.managerId === user?.uid || t.memberIds.includes(user?.uid || ''));
+  }, [teams, user?.uid, userProfile?.role]);
+
+  const selectedTeam = React.useMemo(() => {
+    return visibleTeams.find(t => t.id === selectedTeamId) || visibleTeams[0] || null;
+  }, [visibleTeams, selectedTeamId]);
+
+  const isTeamManager = React.useMemo(() => {
+    if (!selectedTeam) return false;
+    const isOrgAdmin = userProfile?.role === 'owner' || userProfile?.role === 'admin';
+    return isOrgAdmin || selectedTeam.managerId === user?.uid;
+  }, [selectedTeam, user?.uid, userProfile?.role]);
+
+  React.useEffect(() => {
+    if (visibleTeams.length > 0 && !selectedTeamId) {
+      setSelectedTeamId(visibleTeams[0].id);
+    }
+  }, [visibleTeams, selectedTeamId]);
 
   // Task Drawer context
   const [searchParams, setSearchParams] = useSearchParams();
@@ -154,43 +183,96 @@ export function TaskCanvas() {
     return new Date(task.dueDate as any);
   }, []);
 
-  // Filter Tasks
-  const filteredTasks = React.useMemo(() => {
-    return tasks.filter((t) => {
-      // 1. Precise logic scoping:
-      const isAdminOrOwner = userProfile?.role === 'owner' || userProfile?.role === 'admin';
-      const isAssignedToMe = t.assigneeIds.includes(user?.uid || '');
-      const isAssignedByMe = t.creatorId === user?.uid; // tasks that he/she assigned to others
+  // ─── Scoped Tasks & Goals Filtering ───
 
-      // Check if user is the manager of the team this task is assigned to
-      const isManagedTeamTask = teams.some(team => 
-        team.managerId === user?.uid && 
-        t.assigneeIds.some(uid => team.memberIds.includes(uid))
-      );
-
-      if (!isAdminOrOwner && !isAssignedToMe && !isAssignedByMe && !isManagedTeamTask) {
-        return false;
-      }
-
-      // 2. UI Criteria:
+  // 1. My Space Workspace Memos
+  const mySpaceTasks = React.useMemo(() => {
+    return tasks.filter(t => {
+      // Must be assigned to me
+      if (!t.assigneeIds.includes(user?.uid || '')) return false;
+      // Don't show subtasks directly in list/kanban
       if (t.parentTaskId) return false;
+      // Filters
       if (searchQuery.trim() && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (selectedProjectId !== 'all' && t.projectId !== selectedProjectId) return false;
-      if (selectedAssigneeId !== 'all' && !t.assigneeIds.includes(selectedAssigneeId)) return false;
       if (selectedPriority !== 'all' && t.priority !== selectedPriority) return false;
       return true;
     });
-  }, [tasks, teams, user?.uid, userProfile?.role, searchQuery, selectedProjectId, selectedAssigneeId, selectedPriority]);
+  }, [tasks, user?.uid, searchQuery, selectedProjectId, selectedPriority]);
 
-  // Filter Goals
-  const filteredGoals = React.useMemo(() => {
-    return goals.filter((g) => {
+  const mySpaceGoals = React.useMemo(() => {
+    return goals.filter(g => {
+      // Must be owned by me
+      if (g.ownerId !== user?.uid) return false;
+      // Filters
       if (searchQuery.trim() && !g.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (selectedProjectId !== 'all' && g.projectId !== selectedProjectId) return false;
       if (selectedAssigneeId !== 'all' && g.ownerId !== selectedAssigneeId) return false;
       return true;
     });
-  }, [goals, searchQuery, selectedProjectId, selectedAssigneeId]);
+  }, [goals, user?.uid, searchQuery, selectedProjectId, selectedAssigneeId]);
+
+  // 2. My Team Workspace Memos
+  const teamTasks = React.useMemo(() => {
+    if (!selectedTeam) return [];
+    
+    // Team member UIDs (including manager)
+    const teamUids = Array.from(new Set([selectedTeam.managerId, ...selectedTeam.memberIds]));
+
+    return tasks.filter(t => {
+      if (t.parentTaskId) return false;
+
+      // Filters
+      if (searchQuery.trim() && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedProjectId !== 'all' && t.projectId !== selectedProjectId) return false;
+      if (selectedPriority !== 'all' && t.priority !== selectedPriority) return false;
+
+      if (isTeamManager) {
+        // Manager views all tasks assigned to team members
+        return t.assigneeIds.some(uid => teamUids.includes(uid));
+      } else {
+        // Non-manager views only tasks they assigned to others in the team
+        return t.creatorId === user?.uid && t.assigneeIds.some(uid => uid !== user?.uid && teamUids.includes(uid));
+      }
+    });
+  }, [tasks, selectedTeam, isTeamManager, user?.uid, searchQuery, selectedProjectId, selectedPriority]);
+
+  const teamGoals = React.useMemo(() => {
+    if (!selectedTeam) return [];
+    
+    const teamUids = Array.from(new Set([selectedTeam.managerId, ...selectedTeam.memberIds]));
+
+    return goals.filter(g => {
+      if (searchQuery.trim() && !g.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedProjectId !== 'all' && g.projectId !== selectedProjectId) return false;
+
+      if (isTeamManager) {
+        // Manager views all goals owned by team members
+        return teamUids.includes(g.ownerId);
+      } else {
+        // Non-manager views goals owned by others in the team that are either:
+        // - Associated with a project owned by the user
+        // - Or have tasks under them created by the current user
+        const isTeammateOwner = g.ownerId !== user?.uid && teamUids.includes(g.ownerId);
+        if (!isTeammateOwner) return false;
+        
+        const linkedProj = projects.find(p => p.id === g.projectId);
+        const isProjectOwner = linkedProj && linkedProj.ownerId === user?.uid;
+        if (isProjectOwner) return true;
+
+        const hasMyCreatedTasks = tasks.some(t => t.goalId === g.id && t.creatorId === user?.uid);
+        return hasMyCreatedTasks;
+      }
+    });
+  }, [goals, selectedTeam, isTeamManager, user?.uid, projects, tasks, searchQuery, selectedProjectId]);
+
+  // General project mappings
+  const activeProjects = React.useMemo(() => projects.filter(p => p.status !== 'completed' && p.status !== 'archived'), [projects]);
+  const completedProjects = React.useMemo(() => projects.filter(p => p.status === 'completed'), [projects]);
+
+  const toggleGoalCompletedTasks = (goalId: string) => {
+    setCompletedGoalsExpanded(prev => ({ ...prev, [goalId]: !prev[goalId] }));
+  };
 
   // Pre-fill action triggers for scrollable slide-over drawer
   const triggerAddGoal = (projectId: string) => {
@@ -353,57 +435,247 @@ export function TaskCanvas() {
     }
   };
 
-  const toggleGoalCompletedTasks = (goalId: string) => {
-    setCompletedGoalsExpanded(prev => ({ ...prev, [goalId]: !prev[goalId] }));
+  // ─── Render Helpers ───
+
+  const renderTaskListRow = (task: Task) => {
+    const isCompleted = task.status === 'done';
+    const linkedProj = projects.find(p => p.id === task.projectId);
+    const linkedGoal = goals.find(g => g.id === task.goalId);
+    const assigneeId = task.assigneeIds[0];
+
+    return (
+      <div
+        key={task.id}
+        onClick={() => setSearchParams({ task: task.id })}
+        className={cn(
+          "flex items-center justify-between p-3.5 rounded-2xl transition-all cursor-pointer group shadow-sm",
+          isCompleted 
+            ? "bg-bg-primary/20 border border-border-subtle/40 opacity-55 hover:opacity-85" 
+            : "bg-surface/50 hover:bg-surface border border-border-default"
+        )}
+      >
+        <div className="flex items-center gap-3.5 min-w-0">
+          {/* Checkbox toggle status */}
+          <button
+            onClick={(e) => handleToggleTaskStatus(e, task)}
+            className={cn(
+              "h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+              isCompleted
+                ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "border-border-default bg-bg-primary/50 hover:border-accent/60"
+            )}
+          >
+            {isCompleted ? (
+              <Check className="w-2.5 h-2.5" />
+            ) : (
+              <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-accent/40" />
+            )}
+          </button>
+          
+          <div className="min-w-0 flex flex-col gap-0.5">
+            <span className={cn(
+              "text-xs truncate font-bold text-foreground block",
+              isCompleted && "line-through decoration-muted-foreground/40 font-semibold"
+            )}>
+              {task.title}
+            </span>
+            
+            {/* Tag metadata row */}
+            <div className="flex flex-wrap items-center gap-2 mt-0.5">
+              {task.priority !== 'none' && (
+                <span 
+                  className="text-[7.5px] uppercase font-bold tracking-wider font-mono"
+                  style={{ color: PRIORITY_CONFIG[task.priority].color }}
+                >
+                  {task.priority}
+                </span>
+              )}
+              {linkedProj && (
+                <span className="text-[7.5px] font-black uppercase tracking-wider text-accent">
+                  • {linkedProj.name}
+                </span>
+              )}
+              {linkedGoal && (
+                <span className="text-[7.5px] font-black uppercase tracking-wider text-cyan-500">
+                  • {linkedGoal.title}
+                </span>
+              )}
+              {activeSection === 'my-team' && assigneeId && (
+                <span className="text-[7.5px] font-bold text-muted-foreground">
+                  • Assigned to: {memberMap.get(assigneeId)?.fullName || 'Teammate'}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right side options */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          {task.dueDate && (
+            <span className="text-[8px] font-mono text-muted-foreground bg-bg-secondary rounded px-2 py-0.5 border border-border-default/60">
+              {new Date((task.dueDate as any).seconds * 1000).toLocaleDateString()}
+            </span>
+          )}
+
+          {/* Quick status change inside list view */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              onClick={(e) => e.stopPropagation()}
+              className="p-1 rounded-lg border border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all cursor-pointer outline-none shrink-0"
+              title="Move Task"
+            >
+              <SlidersHorizontal className="w-3 h-3" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="border-border-default/40 bg-surface/90 backdrop-blur-xl p-1 min-w-[120px]">
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUpdateTaskStatus(task, 'todo'); }} className="gap-2 font-semibold text-xs text-zinc-400 focus:text-zinc-500 focus:bg-zinc-500/10 cursor-pointer">
+                To Do
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUpdateTaskStatus(task, 'in_progress'); }} className="gap-2 font-semibold text-xs text-blue-400 focus:text-blue-500 focus:bg-blue-500/10 cursor-pointer">
+                In Progress
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUpdateTaskStatus(task, 'review'); }} className="gap-2 font-semibold text-xs text-amber-400 focus:text-amber-500 focus:bg-amber-500/10 cursor-pointer">
+                Review
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUpdateTaskStatus(task, 'done'); }} className="gap-2 font-semibold text-xs text-emerald-400 focus:text-emerald-500 focus:bg-emerald-500/10 cursor-pointer">
+                Done
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <button
+            onClick={(e) => handleDeleteTaskItem(e, task.id)}
+            className="text-muted-foreground hover:text-red-400 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 p-1 shrink-0 cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    );
   };
 
-  // Segmenting Tasks & Goals (My Space vs. My Team)
-  const myTasks = React.useMemo(() => {
-    return filteredTasks.filter(t => t.assigneeIds.includes(actor.uid));
-  }, [filteredTasks, actor.uid]);
+  const renderKanbanCard = (task: Task) => {
+    const isCompleted = task.status === 'done';
+    const linkedProj = projects.find(p => p.id === task.projectId);
+    const linkedGoal = goals.find(g => g.id === task.goalId);
+    const assigneeId = task.assigneeIds[0];
 
-  const myGoals = React.useMemo(() => {
-    return filteredGoals.filter(g => g.ownerId === actor.uid);
-  }, [filteredGoals, actor.uid]);
+    return (
+      <div
+        key={task.id}
+        onClick={() => setSearchParams({ task: task.id })}
+        className={cn(
+          "aether-glass aether-glass-interactive p-4 space-y-3 relative group/card cursor-pointer flex flex-col justify-between select-none shadow-sm",
+          isCompleted && "opacity-60 hover:opacity-90"
+        )}
+      >
+        <div className="space-y-2">
+          {/* Project & Goal Tags */}
+          <div className="flex flex-wrap gap-1">
+            {linkedProj && (
+              <span className="text-[7.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default/45 text-accent bg-accent/[0.04]">
+                {linkedProj.name}
+              </span>
+            )}
+            {linkedGoal && (
+              <span className="text-[7.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default/45 text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04]">
+                {linkedGoal.title}
+              </span>
+            )}
+          </div>
 
-  const teamGoals = React.useMemo(() => {
-    const isLead = userProfile?.role === 'owner' || userProfile?.role === 'admin';
-    return filteredGoals.filter(g => {
-      if (isLead) return true;
-      return teams.some(t => t.managerId === user?.uid && t.memberIds.includes(g.ownerId));
-    });
-  }, [filteredGoals, teams, user?.uid, userProfile?.role]);
+          {/* Task Title */}
+          <h4 className={cn(
+            "text-xs font-bold text-foreground leading-snug group-hover/card:text-accent transition-colors break-words",
+            isCompleted && "line-through decoration-muted-foreground/30 font-semibold"
+          )}>
+            {task.title}
+          </h4>
 
-  const teamTasks = React.useMemo(() => {
-    const isLead = userProfile?.role === 'owner' || userProfile?.role === 'admin';
-    return filteredTasks.filter(t => {
-      if (isLead) return true;
-      return t.assigneeIds.some(uid => teams.some(team => team.managerId === user?.uid && team.memberIds.includes(uid)));
-    });
-  }, [filteredTasks, teams, user?.uid, userProfile?.role]);
+          {/* Task Description snippet */}
+          {task.description && (
+            <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
+              {task.description}
+            </p>
+          )}
+        </div>
 
-  const activeGoals = React.useMemo(() => myGoals.filter(g => g.status !== 'completed'), [myGoals]);
-  const completedGoals = React.useMemo(() => myGoals.filter(g => g.status === 'completed'), [myGoals]);
+        <div className="pt-2.5 border-t border-border-default/45 flex items-center justify-between gap-2 shrink-0">
+          {/* Assignee Avatar & Due Date */}
+          <div className="flex items-center gap-2 min-w-0">
+            {assigneeId ? (
+              getMemberPhotoURL(assigneeId) ? (
+                <img
+                  src={getMemberPhotoURL(assigneeId)}
+                  alt={memberMap.get(assigneeId)?.fullName || 'Teammate'}
+                  className="w-4.5 h-4.5 rounded-full object-cover border border-white/10 dark:border-black/20 shrink-0"
+                  title={memberMap.get(assigneeId)?.fullName || 'Teammate'}
+                />
+              ) : (
+                <div className={cn("w-4.5 h-4.5 rounded-full border flex items-center justify-center font-bold text-[7px] shrink-0", getAvatarColor(assigneeId))} title={memberMap.get(assigneeId)?.fullName || 'Teammate'}>
+                  {getInitials(assigneeId)}
+                </div>
+              )
+            ) : (
+              <div className="w-4.5 h-4.5 rounded-full bg-bg-secondary border border-border-default flex items-center justify-center font-bold text-[7px] text-muted-foreground shrink-0">
+                U
+              </div>
+            )}
 
-  const activeProjects = React.useMemo(() => projects.filter(p => p.status !== 'completed' && p.status !== 'archived'), [projects]);
-  const completedProjects = React.useMemo(() => projects.filter(p => p.status === 'completed'), [projects]);
+            {task.dueDate && (
+              <span className="text-[8px] font-mono text-muted-foreground flex items-center gap-0.5 truncate">
+                <Clock className="w-2.5 h-2.5 shrink-0" />
+                {new Date((task.dueDate as any).seconds * 1000).toLocaleDateString()}
+              </span>
+            )}
+          </div>
 
-  const assignedTasks = React.useMemo(() => {
-    return filteredTasks.filter(t => t.creatorId === actor.uid && !t.assigneeIds.includes(actor.uid));
-  }, [filteredTasks, actor.uid]);
+          {/* Actions Dropdown / Priority Badge */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {task.priority !== 'none' && (
+              <span
+                className="text-[7.5px] uppercase font-bold tracking-wider font-mono px-1.5 py-0.5 rounded"
+                style={{
+                  backgroundColor: `${PRIORITY_CONFIG[task.priority].color}15`,
+                  color: PRIORITY_CONFIG[task.priority].color,
+                  border: `1px solid ${PRIORITY_CONFIG[task.priority].color}30`
+                }}
+              >
+                {task.priority}
+              </span>
+            )}
 
-  const reviewTasks = React.useMemo(() => {
-    return filteredTasks.filter(t => t.creatorId === actor.uid && t.status === 'review');
-  }, [filteredTasks, actor.uid]);
-
-  const standaloneTasks = React.useMemo(() => {
-    return filteredTasks.filter(t => !t.projectId && !t.goalId);
-  }, [filteredTasks]);
-
-  // Project tasks list for My Team Project Tasks view
-  const projectTasksList = React.useMemo(() => {
-    return filteredTasks.filter(t => !!t.projectId);
-  }, [filteredTasks]);
+            {/* Quick Mover Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                onClick={(e) => e.stopPropagation()}
+                className="p-1 rounded-lg border border-border-default/60 hover:bg-bg-secondary text-muted-foreground hover:text-foreground transition-all cursor-pointer outline-none shrink-0"
+                title="Move Task"
+              >
+                <SlidersHorizontal className="w-3 h-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="border-border-default/40 bg-surface/90 backdrop-blur-xl p-1 min-w-[120px]">
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUpdateTaskStatus(task, 'todo'); }} className="gap-2 font-semibold text-xs text-zinc-400 focus:text-zinc-500 focus:bg-zinc-500/10 cursor-pointer">
+                  To Do
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUpdateTaskStatus(task, 'in_progress'); }} className="gap-2 font-semibold text-xs text-blue-400 focus:text-blue-500 focus:bg-blue-500/10 cursor-pointer">
+                  In Progress
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUpdateTaskStatus(task, 'review'); }} className="gap-2 font-semibold text-xs text-amber-400 focus:text-amber-500 focus:bg-amber-500/10 cursor-pointer">
+                  Review
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUpdateTaskStatus(task, 'done'); }} className="gap-2 font-semibold text-xs text-emerald-400 focus:text-emerald-500 focus:bg-emerald-500/10 cursor-pointer">
+                  Done
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => handleDeleteTaskItem(e, task.id)} className="gap-2 font-semibold text-xs text-red-500 focus:text-red-600 focus:bg-red-500/10 cursor-pointer border-t border-border-default/45 mt-1">
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const isLoading = tasksLoading || goalsLoading || projectsLoading;
 
@@ -628,443 +900,123 @@ export function TaskCanvas() {
         ) : (
           <div className="h-full w-full overflow-y-auto aether-scroll p-4 lg:p-6 space-y-6">
             
-            {/* ━━━━━━ Section A: My Space ━━━━━━ */}
-            {activeSection === 'my-space' && (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-                
-                <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5">
-                    <Target className="w-3.5 h-3.5 text-cyan-500 shrink-0 drop-shadow-[0_0_4px_rgba(6,182,212,0.2)]" />
-                    <span>My Goals</span>
-                  </h3>
-                  <div className="space-y-4">
-                    {activeGoals.length > 0 ? (
-                      activeGoals.map(goal => {
-                        const goalTasks = tasks.filter(t => t.goalId === goal.id);
-                        
-                        // Separate active and completed tasks
-                        const activeGoalTasks = goalTasks.filter(t => t.status !== 'done');
-                        const completedGoalTasks = goalTasks.filter(t => t.status === 'done');
-                        
-                        const progress = goal.progressRollup ?? 0;
-                        const linkedProj = projects.find(p => p.id === goal.projectId);
-                        const isCompletedExpanded = !!completedGoalsExpanded[goal.id];
+            {/* ━━━━━━ Redesigned Workspace: Tasks and Goals Tabs ━━━━━━ */}
+            {(activeSection === 'my-space' || activeSection === 'my-team') && (() => {
+              // Select active dataset based on section
+              const currentTasks = activeSection === 'my-space' ? mySpaceTasks : teamTasks;
+              const currentGoals = activeSection === 'my-space' ? mySpaceGoals : teamGoals;
 
-                        return (
-                          <div
-                            key={goal.id}
-                            className="aether-glass aether-glass-interactive p-3.5 sm:p-4.5 space-y-3 sm:space-y-4"
+              // Group tasks by status
+              const todoTasks = currentTasks.filter(t => t.status === 'todo');
+              const inProgressTasks = currentTasks.filter(t => t.status === 'in_progress');
+              const reviewTasksList = currentTasks.filter(t => t.status === 'review');
+              const doneTasksList = currentTasks.filter(t => t.status === 'done');
+
+              const activeGoals = currentGoals.filter(g => g.status !== 'completed');
+              const completedGoals = currentGoals.filter(g => g.status === 'completed');
+
+              return (
+                <div className="space-y-6">
+                  {/* ─── A. Premium Header Controls ─── */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border-default/45 select-none">
+                    <div className="flex flex-wrap items-center gap-3.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {activeSection === 'my-space' ? (
+                          <Sparkles className="w-5 h-5 text-cyan-500 drop-shadow-[0_0_4px_rgba(6,182,212,0.3)] shrink-0" />
+                        ) : (
+                          <Workflow className="w-5 h-5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.3)] shrink-0" />
+                        )}
+                        <h2 className="text-xs font-black uppercase tracking-widest text-foreground truncate">
+                          {activeSection === 'my-space' ? 'Personal Space' : 'Team Workspace'}
+                        </h2>
+                      </div>
+                      
+                      {/* Team Dropdown Selector */}
+                      {activeSection === 'my-team' && visibleTeams.length > 0 && (
+                        <div className="relative shrink-0">
+                          <select
+                            value={selectedTeamId}
+                            onChange={(e) => setSelectedTeamId(e.target.value)}
+                            className="bg-surface/60 border border-border-default rounded-xl px-3 py-1.5 text-xs text-foreground font-semibold outline-none cursor-pointer hover:bg-surface transition-all"
                           >
-                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                              <div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04]">
-                                    {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
-                                  </span>
-                                  {linkedProj && (
-                                    <span 
-                                      onClick={(e) => { e.stopPropagation(); navigate(`/projects/${linkedProj.id}`); }}
-                                      className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-accent bg-accent/[0.04] cursor-pointer hover:bg-accent/[0.08] transition-colors" 
-                                      style={{ color: 'var(--accent)' }}
-                                    >
-                                      {linkedProj.name}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 mt-2.5">
-                                  <button
-                                    onClick={(e) => handleToggleGoalStatus(e, goal)}
-                                    className={cn(
-                                      "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                      goal.status === 'completed'
-                                        ? "border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
-                                        : "border-border-default bg-bg-primary/50 hover:border-cyan-500"
-                                    )}
-                                    title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
-                                  >
-                                    {goal.status === 'completed' ? (
-                                      <Check className="w-2 h-2" />
-                                    ) : (
-                                      <div className="h-1 w-1 rounded-full bg-transparent hover:bg-cyan-500/50" />
-                                    )}
-                                  </button>
-                                  <h4 
-                                    onClick={() => setSearchParams({ goal: goal.id })}
-                                    className={cn(
-                                      "text-xs font-bold hover:text-cyan-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
-                                      goal.status === 'completed' ? "text-muted-foreground line-through decoration-cyan-500/50" : "text-foreground"
-                                    )}
-                                  >
-                                    {goal.title}
-                                  </h4>
-                                </div>
-                                {goal.description && <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>}
-                              </div>
-                              <div className="flex items-center gap-2 shrink-0 sm:self-start mt-2 sm:mt-0">
-                                {goal.targetDate && (
-                                  <span className="text-[8px] text-muted-foreground font-mono bg-bg-secondary border border-border-default rounded px-2 py-0.5">
-                                    {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}
-                                  </span>
-                                )}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSearchParams({ goal: goal.id });
-                                  }}
-                                  className="text-muted-foreground hover:text-accent p-1 transition-colors"
-                                  title="Goal Settings"
-                                >
-                                  <Settings className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={(e) => handleDeleteGoalItem(e, goal.id)}
-                                  className="text-muted-foreground hover:text-red-400 p-1 transition-colors"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Progress rollup */}
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-[9px] text-muted-foreground font-semibold">
-                                <span>Goal Rollup Progress</span>
-                                <span>{progress}% ({completedGoalTasks.length}/{goalTasks.length} tasks)</span>
-                              </div>
-                              <div className="w-full bg-bg-secondary rounded-full h-1.5 overflow-hidden">
-                                <div className="bg-cyan-500 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
-                              </div>
-                            </div>
-
-                            {/* Nested Tasks list */}
-                            <div className="space-y-1.5 pt-3.5 border-t border-border-default/45">
-                              {/* Render Active tasks */}
-                              {activeGoalTasks.map(task => (
-                                <div
-                                  key={task.id}
-                                  onClick={() => setSearchParams({ task: task.id })}
-                                  className="flex items-center justify-between p-2 rounded-xl bg-bg-primary/30 hover:bg-bg-secondary/60 border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
-                                >
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <div
-                                      onClick={(e) => handleToggleTaskStatus(e, task)}
-                                      className="h-3.5 w-3.5 rounded-full border border-border-default bg-bg-primary/50 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:border-accent/60"
-                                    >
-                                      <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-accent/40" />
-                                    </div>
-                                    <span className="text-[11px] truncate font-semibold text-foreground">
-                                      {task.title}
-                                    </span>
-                                  </div>
-                                  <button
-                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="text-muted-foreground hover:text-red-400 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              ))}
-
-                              {/* Collapsible Completed Tasks */}
-                              {completedGoalTasks.length > 0 && (
-                                <div className="space-y-1.5 pt-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleGoalCompletedTasks(goal.id)}
-                                    className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2 cursor-pointer flex items-center justify-between text-[9px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
-                                  >
-                                    <span>Completed Tasks ({completedGoalTasks.length})</span>
-                                    <ChevronDown className={cn("w-3 h-3 transition-transform", isCompletedExpanded ? "rotate-180" : "")} />
-                                  </button>
-                                  <AnimatePresence>
-                                    {isCompletedExpanded && (
-                                      <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        className="overflow-hidden space-y-1.5"
-                                      >
-                                        {completedGoalTasks.map(task => (
-                                          <div
-                                            key={task.id}
-                                            onClick={() => setSearchParams({ task: task.id })}
-                                            className="flex items-center justify-between p-2 rounded-xl bg-bg-primary/10 border border-border-subtle/40 transition-all cursor-pointer opacity-50 hover:opacity-80"
-                                          >
-                                            <div className="flex items-center gap-2 min-w-0">
-                                              <div
-                                                onClick={(e) => handleToggleTaskStatus(e, task)}
-                                                className="h-3.5 w-3.5 rounded-full border border-cyan-500/50 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
-                                              >
-                                                <Check className="w-2.5 h-2.5" />
-                                              </div>
-                                              <span className="text-[11px] truncate font-normal text-muted-foreground line-through">
-                                                {task.title}
-                                              </span>
-                                            </div>
-                                            <button
-                                              onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                              className="text-muted-foreground hover:text-red-400 transition-colors"
-                                            >
-                                              <X className="w-3.5 h-3.5" />
-                                            </button>
-                                          </div>
-                                        ))}
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                </div>
-                              )}
-
-                              <button
-                                onClick={() => triggerAddTask(goal.id, goal.projectId)}
-                                className="text-[9px] text-muted-foreground hover:text-foreground font-bold flex items-center gap-1 pt-1.5"
-                              >
-                                <Plus className="w-3 h-3" /> Add Task
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="py-8 rounded-2xl border border-dashed border-border-default bg-bg-secondary/20 flex flex-col items-center justify-center text-center">
-                        <p className="text-[10px] text-muted-foreground italic">No active goals assigned to you.</p>
-                      </div>
-                    )}
-
-                    {/* Collapsible Completed Goals Archive */}
-                    {completedGoals.length > 0 && (
-                      <div className="space-y-2 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => setShowCompletedMySpaceGoals(!showCompletedMySpaceGoals)}
-                          className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
-                        >
-                          <span>Completed Goals ({completedGoals.length})</span>
-                          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompletedMySpaceGoals ? "rotate-180" : "")} />
-                        </button>
-                        <AnimatePresence>
-                          {showCompletedMySpaceGoals && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden space-y-4"
-                            >
-                              {completedGoals.map(goal => {
-                                const goalTasks = tasks.filter(t => t.goalId === goal.id);
-                                const progress = goal.progressRollup ?? 0;
-                                const linkedProj = projects.find(p => p.id === goal.projectId);
-
-                                return (
-                                  <div
-                                    key={goal.id}
-                                    className="aether-glass aether-glass-interactive p-3.5 sm:p-4.5 space-y-3 sm:space-y-4 opacity-70 hover:opacity-100"
-                                  >
-                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                                      <div>
-                                        <div className="flex flex-wrap items-center gap-2">
-                                          <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04]">
-                                            {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
-                                          </span>
-                                          {linkedProj && (
-                                            <span 
-                                              onClick={(e) => { e.stopPropagation(); navigate(`/projects/${linkedProj.id}`); }}
-                                              className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-accent bg-accent/[0.04] cursor-pointer hover:bg-accent/[0.08] transition-colors" 
-                                              style={{ color: 'var(--accent)' }}
-                                            >
-                                              {linkedProj.name}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <div className="flex items-center gap-2 mt-2.5">
-                                          <button
-                                            onClick={(e) => handleToggleGoalStatus(e, goal)}
-                                            className={cn(
-                                              "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
-                                              goal.status === 'completed'
-                                                ? "border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
-                                                : "border-border-default bg-bg-primary/50 hover:border-cyan-500"
-                                            )}
-                                            title={goal.status === 'completed' ? "Mark Goal Active" : "Mark Goal Completed"}
-                                          >
-                                            {goal.status === 'completed' ? (
-                                              <Check className="w-2 h-2" />
-                                            ) : (
-                                              <div className="h-1 w-1 rounded-full bg-transparent hover:bg-cyan-500/50" />
-                                            )}
-                                          </button>
-                                          <h4 
-                                            onClick={() => setSearchParams({ goal: goal.id })}
-                                            className={cn(
-                                              "text-xs font-bold hover:text-cyan-500 cursor-pointer transition-colors truncate min-w-0 flex-1",
-                                              goal.status === 'completed' ? "text-muted-foreground line-through decoration-cyan-500/50" : "text-foreground"
-                                            )}
-                                          >
-                                            {goal.title}
-                                          </h4>
-                                        </div>
-                                        {goal.description && <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>}
-                                      </div>
-                                      <div className="flex items-center gap-2 shrink-0 sm:self-start mt-2 sm:mt-0">
-                                        {goal.targetDate && (
-                                          <span className="text-[8px] text-muted-foreground font-mono bg-bg-secondary border border-border-default rounded px-2 py-0.5">
-                                            {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}
-                                          </span>
-                                        )}
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSearchParams({ goal: goal.id });
-                                          }}
-                                          className="text-muted-foreground hover:text-accent p-1 transition-colors"
-                                          title="Goal Settings"
-                                        >
-                                          <Settings className="w-3.5 h-3.5" />
-                                        </button>
-                                        <button
-                                          onClick={(e) => handleDeleteGoalItem(e, goal.id)}
-                                          className="text-muted-foreground hover:text-red-400 p-1 transition-colors"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Column 2: Tasks */}
-                <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-sky-500 shrink-0 drop-shadow-[0_0_4px_rgba(14,165,233,0.2)]" />
-                    <span>Tasks</span>
-                  </h3>
-                  <div className="space-y-2">
-                    {/* Filter active action tasks */}
-                    {myTasks.filter(t => t.status !== 'done').length > 0 ? (
-                      myTasks.filter(t => t.status !== 'done').map(task => (
-                        <div
-                          key={task.id}
-                          onClick={() => setSearchParams({ task: task.id })}
-                          className="flex items-center justify-between p-3 rounded-xl bg-surface/50 hover:bg-surface border border-border-default transition-all cursor-pointer group shadow-sm"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div
-                              onClick={(e) => handleToggleTaskStatus(e, task)}
-                              className="h-3.5 w-3.5 rounded-full border border-border-default bg-bg-primary/50 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:border-accent/60"
-                            >
-                              <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-accent/40" />
-                            </div>
-                            <div className="min-w-0">
-                              <span className="text-[11px] truncate font-semibold block text-foreground">
-                                {task.title}
-                              </span>
-                              {task.priority !== 'none' && (
-                                <span className="text-[7px] uppercase font-bold tracking-wider font-mono text-muted-foreground mt-0.5 block">
-                                  Priority: {task.priority}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {task.dueDate && (
-                              <span className="text-[8px] font-mono text-muted-foreground bg-bg-secondary rounded px-1.5 py-0.5 border border-border-default">
-                                {new Date((task.dueDate as any).seconds * 1000).toLocaleDateString()}
-                              </span>
-                            )}
-                            <button
-                              onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                              className="text-muted-foreground hover:text-red-400 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                            {visibleTeams.map(t => (
+                              <option key={t.id} value={t.id} className="bg-surface font-semibold text-xs">{t.name}</option>
+                            ))}
+                          </select>
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-[10px] text-muted-foreground italic text-center py-6">No active tasks assigned to you.</p>
-                    )}
+                      )}
 
-                    {/* Collapsible Completed Action Tasks */}
-                    {myTasks.filter(t => t.status === 'done').length > 0 && (
-                      <div className="space-y-2 pt-2">
+                      {/* Divider */}
+                      <div className="h-4 w-px bg-border-default/60 shrink-0" />
+
+                      {/* Tasks vs Goals Segmented Tabs */}
+                      <div className="flex bg-bg-secondary/40 border border-border-default/45 p-0.5 rounded-xl shrink-0">
                         <button
-                          type="button"
-                          onClick={() => setShowCompletedMySpace(!showCompletedMySpace)}
-                          className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
-                        >
-                          <span>Completed Tasks ({myTasks.filter(t => t.status === 'done').length})</span>
-                          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompletedMySpace ? "rotate-180" : "")} />
-                        </button>
-                        <AnimatePresence>
-                          {showCompletedMySpace && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden space-y-2"
-                            >
-                              {myTasks.filter(t => t.status === 'done').map(task => (
-                                <div
-                                  key={task.id}
-                                  onClick={() => setSearchParams({ task: task.id })}
-                                  className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/20 border border-border-subtle/50 transition-all cursor-pointer opacity-50 hover:opacity-85 shadow-sm"
-                                >
-                                  <div className="flex items-center gap-2.5 min-w-0">
-                                    <div
-                                      onClick={(e) => handleToggleTaskStatus(e, task)}
-                                      className="h-3.5 w-3.5 rounded-full border border-cyan-500/50 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
-                                    >
-                                      <Check className="w-2.5 h-2.5" />
-                                    </div>
-                                    <span className="text-[11px] truncate font-normal text-muted-foreground line-through">
-                                      {task.title}
-                                    </span>
-                                  </div>
-                                  <button
-                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="text-muted-foreground hover:text-red-400 transition-colors"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              ))}
-                            </motion.div>
+                          onClick={() => {
+                            setActiveTab('tasks');
+                          }}
+                          className={cn(
+                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                            activeTab === 'tasks'
+                              ? "bg-bg-primary border border-border-default/60 text-foreground dark:text-white shadow-sm"
+                              : "border border-transparent text-muted-foreground hover:text-foreground"
                           )}
-                        </AnimatePresence>
+                        >
+                          Tasks
+                        </button>
+                        <button
+                          onClick={() => {
+                            setActiveTab('goals');
+                          }}
+                          className={cn(
+                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                            activeTab === 'goals'
+                              ? "bg-bg-primary border border-border-default/60 text-foreground dark:text-white shadow-sm"
+                              : "border border-transparent text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          Goals
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* List vs Kanban Toggle (only for Tasks) */}
+                    {activeTab === 'tasks' && (
+                      <div className="flex bg-bg-secondary/40 border border-border-default/45 p-0.5 rounded-xl shrink-0 self-end md:self-auto">
+                        <button
+                          onClick={() => setViewMode('list')}
+                          className={cn(
+                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                            viewMode === 'list'
+                              ? "bg-bg-primary border border-border-default/60 text-foreground dark:text-white shadow-sm"
+                              : "border border-transparent text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          List
+                        </button>
+                        <button
+                          onClick={() => setViewMode('kanban')}
+                          className={cn(
+                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                            viewMode === 'kanban'
+                              ? "bg-bg-primary border border-border-default/60 text-foreground dark:text-white shadow-sm"
+                              : "border border-transparent text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          Kanban
+                        </button>
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
-            )}
 
-              {/* ━━━━━━ Section B: My Team ━━━━━━ */}
-            {activeSection === 'my-team' && (() => {
-              const isTeamLead = userProfile?.role === 'owner' || userProfile?.role === 'admin' || userProfile?.role === 'manager';
+                  {/* ─── B. Main Content Areas ─── */}
 
-              if (isTeamLead) {
-                const activeTeamGoals = teamGoals.filter(g => g.status !== 'completed');
-                const completedTeamGoals = teamGoals.filter(g => g.status === 'completed');
-
-                return (
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-                    {/* Team Goals Column */}
-                    <div className="space-y-4">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5">
-                        <Target className="w-3.5 h-3.5 text-cyan-500 shrink-0 drop-shadow-[0_0_4px_rgba(6,182,212,0.2)]" />
-                        <span>Team Goals</span>
-                      </h3>
-                      <div className="space-y-4">
-                        {activeTeamGoals.length > 0 ? (
-                          activeTeamGoals.map(goal => {
+                  {/* ━━━ Case 1: Goals Tab ━━━ */}
+                  {activeTab === 'goals' && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+                        {activeGoals.length > 0 ? (
+                          activeGoals.map(goal => {
                             const goalTasks = tasks.filter(t => t.goalId === goal.id);
                             const activeGoalTasks = goalTasks.filter(t => t.status !== 'done');
                             const completedGoalTasks = goalTasks.filter(t => t.status === 'done');
@@ -1076,10 +1028,10 @@ export function TaskCanvas() {
                             return (
                               <div
                                 key={goal.id}
-                                className="aether-glass aether-glass-interactive p-3.5 sm:p-4.5 space-y-3 sm:space-y-4"
+                                className="aether-glass aether-glass-interactive p-4.5 space-y-4"
                               >
                                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                                  <div>
+                                  <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
                                       <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04]">
                                         {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
@@ -1094,6 +1046,7 @@ export function TaskCanvas() {
                                         </span>
                                       )}
                                     </div>
+                                    
                                     <div className="flex items-center gap-2 mt-2.5">
                                       <button
                                         onClick={(e) => handleToggleGoalStatus(e, goal)}
@@ -1116,29 +1069,22 @@ export function TaskCanvas() {
                                         {goal.title}
                                       </h4>
                                     </div>
-                                    <p className="text-[9px] text-muted-foreground mt-1 font-semibold flex items-center gap-1">
-                                      Owner: {owner?.fullName || 'Teammate'}
-                                    </p>
-                                    {goal.description && <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{goal.description}</p>}
+
+                                    {activeSection === 'my-team' && (
+                                      <p className="text-[9px] text-muted-foreground mt-1 font-semibold">
+                                        Teammate: {owner?.fullName || 'Teammate'}
+                                      </p>
+                                    )}
+
+                                    {goal.description && <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">{goal.description}</p>}
                                   </div>
+
                                   <div className="flex items-center gap-2 shrink-0 sm:self-start mt-2 sm:mt-0">
                                     {goal.targetDate && (
                                       <span className="text-[8px] text-muted-foreground font-mono bg-bg-secondary border border-border-default rounded px-2 py-0.5">
                                         {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}
                                       </span>
                                     )}
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); setSearchParams({ goal: goal.id }); }}
-                                      className="text-muted-foreground hover:text-accent p-1 transition-colors"
-                                    >
-                                      <Settings className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={(e) => handleDeleteGoalItem(e, goal.id)}
-                                      className="text-muted-foreground hover:text-red-400 p-1 transition-colors"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
                                   </div>
                                 </div>
 
@@ -1149,7 +1095,7 @@ export function TaskCanvas() {
                                     <span>{progress}% ({completedGoalTasks.length}/{goalTasks.length} tasks)</span>
                                   </div>
                                   <div className="w-full bg-bg-secondary rounded-full h-1.5 overflow-hidden">
-                                    <div className="bg-cyan-500 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+                                    <div className="bg-cyan-505 h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: '#06b6d4' }} />
                                   </div>
                                 </div>
 
@@ -1190,7 +1136,7 @@ export function TaskCanvas() {
                                         className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2 cursor-pointer flex items-center justify-between text-[9px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
                                       >
                                         <span>Completed Tasks ({completedGoalTasks.length})</span>
-                                        <ChevronDown className={cn("w-3 h-3 transition-transform", isCompletedExpanded ? "rotate-180" : "")} />
+                                        <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", isCompletedExpanded ? "rotate-180" : "")} />
                                       </button>
                                       <AnimatePresence>
                                         {isCompletedExpanded && (
@@ -1204,7 +1150,7 @@ export function TaskCanvas() {
                                               <div
                                                 key={task.id}
                                                 onClick={() => setSearchParams({ task: task.id })}
-                                                className="flex items-center justify-between p-2 rounded-xl bg-bg-primary/10 border border-border-subtle/40 transition-all cursor-pointer opacity-50 hover:opacity-80"
+                                                className="flex items-center justify-between p-2 rounded-xl bg-bg-primary/10 border border-border-subtle/40 transition-all cursor-pointer opacity-50 hover:opacity-85 shadow-sm"
                                               >
                                                 <div className="flex items-center gap-2 min-w-0">
                                                   <div
@@ -1242,248 +1188,274 @@ export function TaskCanvas() {
                             );
                           })
                         ) : (
-                          <div className="py-8 rounded-2xl border border-dashed border-border-default bg-bg-secondary/20 flex flex-col items-center justify-center text-center">
-                            <p className="text-[10px] text-muted-foreground italic">No active team goals.</p>
+                          <div className="xl:col-span-2 py-12 rounded-2xl border border-dashed border-border-default bg-bg-secondary/20 flex flex-col items-center justify-center text-center">
+                            <p className="text-[10px] text-muted-foreground italic">No active goals found in this view.</p>
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    {/* Team Tasks Column */}
-                    <div className="space-y-4">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
-                        <Zap className="w-3.5 h-3.5 text-sky-500 shrink-0 drop-shadow-[0_0_4px_rgba(14,165,233,0.2)]" />
-                        <span>Team Tasks</span>
-                      </h3>
-                      <div className="space-y-2">
-                        {teamTasks.filter(t => t.status !== 'done').length > 0 ? (
-                          teamTasks.filter(t => t.status !== 'done').map(task => (
-                            <div
-                              key={task.id}
-                              onClick={() => setSearchParams({ task: task.id })}
-                              className="aether-glass aether-glass-interactive flex items-center justify-between p-3 cursor-pointer group"
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div
-                                  onClick={(e) => handleToggleTaskStatus(e, task)}
-                                  className="h-3.5 w-3.5 rounded-full border border-border-default bg-bg-primary/50 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:border-accent/60"
-                                >
-                                  <div className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-accent/40" />
-                                </div>
-                                <div className="min-w-0">
-                                  <span className="text-[11px] truncate font-semibold block text-foreground">
-                                    {task.title}
-                                  </span>
-                                  <span className="text-[7.5px] uppercase font-bold tracking-wider font-mono text-muted-foreground mt-0.5 block">
-                                    Assignee: {task.assigneeIds.map(uid => memberMap.get(uid)?.fullName || 'Teammate').join(', ')}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                {task.dueDate && (
-                                  <span className="text-[8px] font-mono text-muted-foreground bg-bg-secondary rounded px-1.5 py-0.5 border border-border-default">
-                                    {new Date((task.dueDate as any).seconds * 1000).toLocaleDateString()}
-                                  </span>
-                                )}
-                                <button
-                                  onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                  className="text-muted-foreground hover:text-red-400 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-[10px] text-muted-foreground italic text-center py-6">No active team tasks.</p>
-                        )}
-
-                        {/* Collapsible Completed Team Tasks */}
-                        {teamTasks.filter(t => t.status === 'done').length > 0 && (
-                          <div className="space-y-2 pt-2">
-                            <button
-                              type="button"
-                              onClick={() => setShowCompletedMyTeam(!showCompletedMyTeam)}
-                              className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
-                            >
-                              <span>Completed Team Tasks ({teamTasks.filter(t => t.status === 'done').length})</span>
-                              <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompletedMyTeam ? "rotate-180" : "")} />
-                            </button>
-                            <AnimatePresence>
-                              {showCompletedMyTeam && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: 'auto', opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  className="overflow-hidden space-y-2"
-                                >
-                                  {teamTasks.filter(t => t.status === 'done').map(task => (
-                                    <div
-                                      key={task.id}
-                                      onClick={() => setSearchParams({ task: task.id })}
-                                      className="aether-glass aether-glass-interactive flex items-center justify-between p-3 cursor-pointer opacity-50 hover:opacity-85"
-                                    >
-                                      <div className="flex items-center gap-2.5 min-w-0">
-                                        <div
-                                          onClick={(e) => handleToggleTaskStatus(e, task)}
-                                          className="h-3.5 w-3.5 rounded-full border border-cyan-500/50 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
-                                        >
-                                          <Check className="w-2.5 h-2.5" />
-                                        </div>
-                                        <span className="text-[11px] truncate font-normal text-muted-foreground line-through">
-                                          {task.title}
-                                        </span>
-                                      </div>
-                                      <button
-                                        onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                        className="text-muted-foreground hover:text-red-400 transition-colors"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
-                                  ))}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              // Standard member: render Delegated Workspace
-              return (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-                  {/* Column 1: Pending Reviews */}
-                  <div className="space-y-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-                      <Hourglass className="w-3.5 h-3.5 text-amber-500 shrink-0 drop-shadow-[0_0_4px_rgba(245,158,11,0.2)] animate-pulse" />
-                      <span>Pending Reviews</span>
-                    </h3>
-                    <div className="space-y-2">
-                      {reviewTasks.length > 0 ? (
-                        reviewTasks.map(task => (
-                          <div
-                            key={task.id}
-                            onClick={() => setSearchParams({ task: task.id })}
-                            className="aether-glass aether-glass-interactive flex flex-col gap-3 p-3.5 cursor-pointer"
-                          >
-                            <div className="min-w-0">
-                              <span className="text-[11px] truncate font-bold text-foreground block">
-                                {task.title}
-                              </span>
-                              <p className="text-[8px] text-muted-foreground mt-0.5 font-semibold">
-                                Submitted by: {task.assigneeIds.map(uid => memberMap.get(uid)?.fullName || 'Member').join(', ')}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={async (e) => {
-                                    e.stopPropagation();
-                                    await handleUpdateTaskStatus(task, 'done');
-                                }}
-                                className="flex-1 py-1.5 bg-gradient-to-b from-indigo-500/90 to-indigo-600/90 hover:brightness-105 text-white font-bold rounded-xl text-[9px] border-t border-white/20 transition-all cursor-pointer shadow-md active:scale-98"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={async (e) => {
-                                    e.stopPropagation();
-                                    await handleUpdateTaskStatus(task, 'todo');
-                                }}
-                                className="flex-1 py-1.5 border border-white/10 hover:bg-white/10 bg-white/5 text-foreground font-bold rounded-xl text-[9px] transition-all cursor-pointer"
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-[10px] text-muted-foreground italic text-center py-6">No reviews pending.</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Column 2: Delegated Tasks */}
-                  <div className="space-y-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-purple-650 dark:text-purple-400 flex items-center gap-1.5">
-                      <Workflow className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400 shrink-0 drop-shadow-[0_0_4px_rgba(168,85,247,0.2)]" />
-                      <span>Delegated Tasks</span>
-                    </h3>
-                    <div className="space-y-2">
-                      {assignedTasks.filter(t => t.status !== 'done').length > 0 ? (
-                        assignedTasks.filter(t => t.status !== 'done').map(task => (
-                          <div
-                            key={task.id}
-                            onClick={() => setSearchParams({ task: task.id })}
-                            className="aether-glass aether-glass-interactive flex items-center justify-between p-3 cursor-pointer"
-                          >
-                            <div className="min-w-0">
-                              <span className="text-[11px] truncate font-semibold block text-foreground">
-                                {task.title}
-                              </span>
-                              <span className="text-[7px] uppercase font-bold tracking-wider font-mono text-purple-650 dark:text-purple-450 mt-0.5 block">
-                                Delegate: {task.assigneeIds.map(uid => memberMap.get(uid)?.fullName || 'Member').join(', ')}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                              <span className="px-1.5 py-0.5 bg-bg-secondary border border-border-default rounded text-[8px] font-bold text-text-secondary capitalize">
-                                {task.status.replace('_', ' ')}
-                              </span>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-[10px] text-muted-foreground italic text-center py-6">No active delegated tasks.</p>
-                      )}
-
-                      {/* Collapsible Completed Delegated Tasks */}
-                      {assignedTasks.filter(t => t.status === 'done').length > 0 && (
+                      {/* Collapsible Completed Goals Archive */}
+                      {completedGoals.length > 0 && (
                         <div className="space-y-2 pt-2">
                           <button
                             type="button"
-                            onClick={() => setShowCompletedMyTeam(!showCompletedMyTeam)}
+                            onClick={() => setShowCompletedMySpaceGoals(!showCompletedMySpaceGoals)}
                             className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
                           >
-                            <span>Completed Delegated ({assignedTasks.filter(t => t.status === 'done').length})</span>
-                            <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompletedMyTeam ? "rotate-180" : "")} />
+                            <span>Completed Goals ({completedGoals.length})</span>
+                            <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showCompletedMySpaceGoals ? "rotate-180" : "")} />
                           </button>
                           <AnimatePresence>
-                            {showCompletedMyTeam && (
+                            {showCompletedMySpaceGoals && (
                               <motion.div
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden space-y-2"
+                                className="overflow-hidden grid grid-cols-1 xl:grid-cols-2 gap-6 mt-4"
                               >
-                                {assignedTasks.filter(t => t.status === 'done').map(task => (
-                                  <div
-                                    key={task.id}
-                                    onClick={() => setSearchParams({ task: task.id })}
-                                    className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/20 border border-border-subtle/50 transition-all cursor-pointer opacity-50 hover:opacity-85 shadow-sm"
-                                  >
-                                    <div className="min-w-0">
-                                      <span className="text-[11px] truncate font-normal block text-muted-foreground line-through">
-                                        {task.title}
-                                      </span>
-                                      <span className="text-[7px] uppercase font-bold tracking-wider font-mono text-muted-foreground mt-0.5 block">
-                                        Delegate: {task.assigneeIds.map(uid => memberMap.get(uid)?.fullName || 'Member').join(', ')}
-                                      </span>
+                                {completedGoals.map(goal => {
+                                  return (
+                                    <div
+                                      key={goal.id}
+                                      className="aether-glass p-3.5 sm:p-4.5 space-y-3 opacity-70 hover:opacity-100"
+                                    >
+                                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                        <div>
+                                          <div className="flex flex-wrap items-center gap-2">
+                                            <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-border-default text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.04]">
+                                              {goal.horizon === 'short_term' ? 'Short Term' : 'Long Term'}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-2 mt-2.5">
+                                            <button
+                                              onClick={(e) => handleToggleGoalStatus(e, goal)}
+                                              className="h-3.5 w-3.5 rounded-full border border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                                            >
+                                              <Check className="w-2 h-2" />
+                                            </button>
+                                            <h4 
+                                              onClick={() => setSearchParams({ goal: goal.id })}
+                                              className="text-xs font-bold text-muted-foreground line-through decoration-cyan-500/50 hover:text-cyan-500 cursor-pointer transition-colors"
+                                            >
+                                              {goal.title}
+                                            </h4>
+                                          </div>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <span className="px-1.5 py-0.5 bg-bg-secondary border border-border-default rounded text-[8px] font-bold text-text-secondary capitalize">
-                                      Done
-                                    </span>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </motion.div>
                             )}
                           </AnimatePresence>
                         </div>
                       )}
                     </div>
-                  </div>
+                  )}
+
+                  {/* ━━━ Case 2: Tasks Tab ━━━ */}
+                  {activeTab === 'tasks' && (
+                    <div className="space-y-6">
+                      
+                      {/* ─── Sub-Case 2.1: Tasks List View ─── */}
+                      {viewMode === 'list' && (
+                        <div className="space-y-6">
+                          
+                          {/* Todo list */}
+                          <div className="space-y-3">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2 select-none">
+                              <span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />
+                              <span>To Do ({todoTasks.length})</span>
+                            </h4>
+                            <div className="space-y-2">
+                              {todoTasks.length > 0 ? (
+                                todoTasks.map(task => renderTaskListRow(task))
+                              ) : (
+                                <p className="text-[10px] text-muted-foreground italic py-3 pl-4">No tasks to do.</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* In Progress list */}
+                          <div className="space-y-3">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-550 flex items-center gap-2 select-none" style={{ color: 'var(--accent)' }}>
+                              <span className="h-1.5 w-1.5 rounded-full bg-blue-550" style={{ backgroundColor: 'var(--accent)' }} />
+                              <span>In Progress ({inProgressTasks.length})</span>
+                            </h4>
+                            <div className="space-y-2">
+                              {inProgressTasks.length > 0 ? (
+                                inProgressTasks.map(task => renderTaskListRow(task))
+                              ) : (
+                                <p className="text-[10px] text-muted-foreground italic py-3 pl-4">No tasks in progress.</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Review list */}
+                          <div className="space-y-3">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-2 select-none">
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                              <span>In Review ({reviewTasksList.length})</span>
+                            </h4>
+                            <div className="space-y-2">
+                              {reviewTasksList.length > 0 ? (
+                                reviewTasksList.map(task => renderTaskListRow(task))
+                              ) : (
+                                <p className="text-[10px] text-muted-foreground italic py-3 pl-4">No tasks in review.</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Collapsible Done list */}
+                          {doneTasksList.length > 0 && (
+                            <div className="space-y-2 pt-4 border-t border-border-default/45">
+                              <button
+                                type="button"
+                                onClick={() => setShowDoneTasks(!showDoneTasks)}
+                                className="w-full border border-border-default/45 bg-bg-secondary/20 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:bg-bg-secondary/40 transition-colors font-bold tracking-wide"
+                              >
+                                <span className="flex items-center gap-1.5 text-emerald-500">
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                  Completed Tasks ({doneTasksList.length})
+                                </span>
+                                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showDoneTasks ? "rotate-180" : "")} />
+                              </button>
+                              <AnimatePresence>
+                                {showDoneTasks && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden space-y-2 pt-2"
+                                  >
+                                    {doneTasksList.map(task => renderTaskListRow(task))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* ─── Sub-Case 2.2: Tasks Kanban View ─── */}
+                      {viewMode === 'kanban' && (
+                        <div className="flex h-[calc(100vh-220px)] w-full overflow-x-auto aether-scroll select-none pb-4 gap-4 items-start">
+                          
+                          {/* Kanban Column: Todo */}
+                          <div className="flex flex-col w-72 shrink-0 max-h-full bg-bg-secondary/20 border border-border-default/40 rounded-2xl p-3">
+                            <div className="flex items-center justify-between mb-3.5 px-1 shrink-0">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                                <span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />
+                                <span>To Do</span>
+                              </span>
+                              <span className="text-[9px] font-bold text-muted-foreground bg-bg-secondary border border-border-default px-2 py-0.5 rounded-full font-mono">
+                                {todoTasks.length}
+                              </span>
+                            </div>
+                            <div className="flex-1 overflow-y-auto space-y-3 pr-0.5 aether-scroll min-h-[150px]">
+                              {todoTasks.map(task => renderKanbanCard(task))}
+                              {todoTasks.length === 0 && (
+                                <p className="text-[10px] text-muted-foreground italic text-center py-6">No tasks</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Kanban Column: In Progress */}
+                          <div className="flex flex-col w-72 shrink-0 max-h-full bg-bg-secondary/20 border border-border-default/40 rounded-2xl p-3">
+                            <div className="flex items-center justify-between mb-3.5 px-1 shrink-0">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-blue-550 flex items-center gap-2" style={{ color: 'var(--accent)' }}>
+                                <span className="h-1.5 w-1.5 rounded-full bg-blue-550" style={{ backgroundColor: 'var(--accent)' }} />
+                                <span>In Progress</span>
+                              </span>
+                              <span className="text-[9px] font-bold text-muted-foreground bg-bg-secondary border border-border-default px-2 py-0.5 rounded-full font-mono">
+                                {inProgressTasks.length}
+                              </span>
+                            </div>
+                            <div className="flex-1 overflow-y-auto space-y-3 pr-0.5 aether-scroll min-h-[150px]">
+                              {inProgressTasks.map(task => renderKanbanCard(task))}
+                              {inProgressTasks.length === 0 && (
+                                <p className="text-[10px] text-muted-foreground italic text-center py-6">No tasks</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Kanban Column: Review */}
+                          <div className="flex flex-col w-72 shrink-0 max-h-full bg-bg-secondary/20 border border-border-default/40 rounded-2xl p-3">
+                            <div className="flex items-center justify-between mb-3.5 px-1 shrink-0">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-2">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                <span>Review</span>
+                              </span>
+                              <span className="text-[9px] font-bold text-muted-foreground bg-bg-secondary border border-border-default px-2 py-0.5 rounded-full font-mono">
+                                {reviewTasksList.length}
+                              </span>
+                            </div>
+                            <div className="flex-1 overflow-y-auto space-y-3 pr-0.5 aether-scroll min-h-[150px]">
+                              {reviewTasksList.map(task => renderKanbanCard(task))}
+                              {reviewTasksList.length === 0 && (
+                                <p className="text-[10px] text-muted-foreground italic text-center py-6">No tasks</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Collapsible Done Column */}
+                          <AnimatePresence mode="wait">
+                            {!showDoneTasks ? (
+                              /* ─── Compact Vertical Done Strip ─── */
+                              <motion.button
+                                key="collapsed-done"
+                                initial={{ opacity: 0, width: 0 }}
+                                animate={{ opacity: 1, width: 44 }}
+                                exit={{ opacity: 0, width: 0 }}
+                                type="button"
+                                onClick={() => setShowDoneTasks(true)}
+                                className="flex flex-col items-center justify-between py-5 bg-emerald-500/[0.02] border border-dashed border-emerald-500/25 rounded-2xl shrink-0 h-[calc(100vh-220px)] cursor-pointer hover:bg-emerald-500/[0.04] hover:border-emerald-500/40 transition-all select-none gap-4"
+                                title="Expand Completed Column"
+                              >
+                                <CheckCircle className="w-4 h-4 text-emerald-500" />
+                                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-500 [writing-mode:vertical-lr] rotate-180">
+                                  Done Column ({doneTasksList.length})
+                                </span>
+                                <ChevronRight className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                              </motion.button>
+                            ) : (
+                              /* ─── Full-width Done Column ─── */
+                              <motion.div
+                                key="expanded-done"
+                                initial={{ opacity: 0, width: 0 }}
+                                animate={{ opacity: 1, width: 288 }}
+                                exit={{ opacity: 0, width: 0 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                                className="flex flex-col w-72 shrink-0 max-h-full bg-emerald-500/[0.01] border border-emerald-500/20 rounded-2xl p-3"
+                              >
+                                <div className="flex items-center justify-between mb-3.5 px-1 shrink-0">
+                                  <button
+                                    onClick={() => setShowDoneTasks(false)}
+                                    className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1.5 hover:underline cursor-pointer"
+                                  >
+                                    <X className="w-3 h-3 text-emerald-500 shrink-0" />
+                                    <span>Completed</span>
+                                  </button>
+                                  <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">
+                                    {doneTasksList.length}
+                                  </span>
+                                </div>
+                                <div className="flex-1 overflow-y-auto space-y-3 pr-0.5 aether-scroll min-h-[150px]">
+                                  {doneTasksList.map(task => renderKanbanCard(task))}
+                                  {doneTasksList.length === 0 && (
+                                    <p className="text-[10px] text-muted-foreground italic text-center py-6">No completed tasks</p>
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                        </div>
+                      )}
+
+                    </div>
+                  )}
+
                 </div>
               );
             })()}
