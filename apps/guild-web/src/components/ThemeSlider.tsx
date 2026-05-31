@@ -118,6 +118,18 @@ export function ThemeSlider() {
     };
   }, [isDragging, maxSlide, setThemeProgress]);
 
+  React.useEffect(() => {
+    const html = document.documentElement;
+    if (isDragging) {
+      html.classList.add('theme-dragging');
+    } else {
+      html.classList.remove('theme-dragging');
+    }
+    return () => {
+      html.classList.remove('theme-dragging');
+    };
+  }, [isDragging]);
+
   const handleTrackClick = (e: React.MouseEvent) => {
     if (isDragging) return;
     

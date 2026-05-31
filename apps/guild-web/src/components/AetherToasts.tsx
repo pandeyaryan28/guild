@@ -48,50 +48,50 @@ interface AetherToastsProps {
 const META_MAP: Record<string, { icon: React.ElementType; color: string; label: string; glow: string }> = {
   mention: {
     icon: AtSign,
-    color: 'text-violet-400 bg-violet-500/10 border-violet-500/20',
-    glow: 'shadow-[0_0_15px_rgba(139,92,246,0.15)]',
+    color: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 border border-violet-500/20',
+    glow: 'shadow-[0_0_15px_color-mix(in_srgb,var(--accent)_15%,transparent)]',
     label: 'Mention',
   },
   dm: {
     icon: User,
-    color: 'text-pink-400 bg-pink-500/10 border-pink-500/20',
-    glow: 'shadow-[0_0_15px_rgba(236,72,153,0.15)]',
+    color: 'text-pink-600 dark:text-pink-400 bg-pink-500/10 border border-pink-500/20',
+    glow: 'shadow-[0_0_15px_color-mix(in_srgb,var(--accent)_15%,transparent)]',
     label: 'Direct Message',
   },
   channel_invite: {
     icon: Hash,
-    color: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
-    glow: 'shadow-[0_0_15px_rgba(56,189,248,0.15)]',
+    color: 'text-sky-600 dark:text-sky-400 bg-sky-500/10 border border-sky-500/20',
+    glow: 'shadow-[0_0_15px_color-mix(in_srgb,var(--accent)_15%,transparent)]',
     label: 'Invite',
   },
   task_assign: {
     icon: CheckSquare,
-    color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]',
+    color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20',
+    glow: 'shadow-[0_0_15px_color-mix(in_srgb,var(--accent)_15%,transparent)]',
     label: 'Task Assigned',
   },
   task_comment: {
     icon: MessageSquare,
-    color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]',
+    color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20',
+    glow: 'shadow-[0_0_15px_color-mix(in_srgb,var(--accent)_15%,transparent)]',
     label: 'Comment',
   },
   request_pending: {
     icon: Layers,
-    color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]',
+    color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20',
+    glow: 'shadow-[0_0_15px_color-mix(in_srgb,var(--accent)_15%,transparent)]',
     label: 'Approval Pending',
   },
   request_approved: {
     icon: Layers,
-    color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]',
+    color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20',
+    glow: 'shadow-[0_0_15px_color-mix(in_srgb,var(--accent)_15%,transparent)]',
     label: 'Request Approved',
   },
   request_rejected: {
     icon: Layers,
-    color: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
-    glow: 'shadow-[0_0_15px_rgba(239,68,68,0.15)]',
+    color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20',
+    glow: 'shadow-[0_0_15px_color-mix(in_srgb,var(--accent)_15%,transparent)]',
     label: 'Request Rejected',
   },
 };
@@ -137,7 +137,7 @@ export function AetherToasts({ activeToasts, onDismiss, onMarkRead }: AetherToas
               animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
               exit={{ opacity: 0, scale: 0.85, y: -20, transition: { duration: 0.2 } }}
               transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-              className="pointer-events-auto border border-white/10 dark:border-white/5 rounded-3xl p-4.5 bg-zinc-950/80 backdrop-blur-3xl shadow-[0_15px_45px_rgba(0,0,0,0.7)] flex gap-4 relative overflow-hidden group/toast cursor-pointer hover:border-white/20 hover:scale-[1.01] active:scale-[0.98] transition-all"
+              className="pointer-events-auto border border-border-default rounded-3xl p-4.5 bg-surface-elevated/85 backdrop-blur-3xl shadow-[0_15px_45px_rgba(0,0,0,0.25)] flex gap-4 relative overflow-hidden group/toast cursor-pointer hover:border-border-strong hover:scale-[1.01] active:scale-[0.98] transition-all text-foreground"
               onClick={() => handleToastClick(toast)}
             >
               {/* Highlight background accent flare */}
@@ -186,7 +186,7 @@ export function AetherToasts({ activeToasts, onDismiss, onMarkRead }: AetherToas
               {/* Toast message text */}
               <div className="flex-1 min-w-0 pr-6">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest leading-none">
+                  <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">
                     {meta.label}
                   </span>
                   {toast.urgency === 'high' && (
@@ -195,11 +195,11 @@ export function AetherToasts({ activeToasts, onDismiss, onMarkRead }: AetherToas
                     </span>
                   )}
                 </div>
-                <h4 className="text-xs font-black text-white truncate mt-2 leading-snug">
+                <h4 className="text-xs font-black text-foreground truncate mt-2 leading-snug">
                   {toast.title}
                 </h4>
                 {toast.body && (
-                  <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                  <p className="text-[11px] text-text-secondary mt-1 line-clamp-2 leading-relaxed">
                     {toast.body}
                   </p>
                 )}
@@ -208,7 +208,7 @@ export function AetherToasts({ activeToasts, onDismiss, onMarkRead }: AetherToas
               {/* Close toast button */}
               <button
                 type="button"
-                className="absolute top-3.5 right-3.5 h-6.5 w-6.5 flex items-center justify-center rounded-xl text-zinc-500 hover:bg-white/5 hover:text-white border border-transparent hover:border-white/5 opacity-0 group-hover/toast:opacity-100 transition-all outline-none"
+                className="absolute top-3.5 right-3.5 h-6.5 w-6.5 flex items-center justify-center rounded-xl text-text-muted hover:bg-surface-hover hover:text-foreground border border-transparent hover:border-border-default/45 opacity-0 group-hover/toast:opacity-100 transition-all outline-none"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDismiss(toast.id);

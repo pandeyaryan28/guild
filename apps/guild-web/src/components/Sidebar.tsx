@@ -68,7 +68,7 @@ const NavItem = ({ icon: Icon, label, badge, active, collapsed, onClick }: NavIt
         "flex w-full items-center rounded-xl text-xs font-semibold transition-all duration-300 ease-out relative group select-none",
         collapsed ? "justify-center px-0 py-2.5 h-9" : "justify-between px-3.5 py-2.5 h-10",
         active
-          ? "bg-gradient-to-r from-primary/12 via-primary/3 to-transparent text-foreground border-l-2 border-primary shadow-[0_0_12px_rgba(var(--accent),0.05)]"
+          ? "bg-gradient-to-r from-primary/12 via-primary/3 to-transparent text-foreground border-l-2 border-primary shadow-[0_0_12px_color-mix(in_srgb,var(--accent)_5%,transparent)]"
           : "text-muted-foreground hover:bg-white/[0.03] hover:text-foreground hover:translate-x-0.5 border-l-2 border-transparent"
       )}
     >
@@ -82,14 +82,14 @@ const NavItem = ({ icon: Icon, label, badge, active, collapsed, onClick }: NavIt
       {!collapsed && badge !== undefined && (
         <Badge
           variant="secondary"
-          className="h-5 min-w-[20px] justify-center px-1 text-[9px] bg-primary/15 border border-primary/20 text-primary font-bold shadow-[0_0_8px_rgba(var(--accent),0.15)] rounded-lg"
+          className="h-5 min-w-[20px] justify-center px-1 text-[9px] bg-primary/15 border border-primary/20 text-primary font-bold shadow-[0_0_8px_color-mix(in_srgb,var(--accent)_15%,transparent)] rounded-lg"
         >
           {badge}
         </Badge>
       )}
       {/* Badge dot in collapsed mode */}
       {collapsed && badge !== undefined && (
-        <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_var(--accent)]" />
+        <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_color-mix(in_srgb,var(--accent)_60%,transparent)]" />
       )}
     </button>
   );

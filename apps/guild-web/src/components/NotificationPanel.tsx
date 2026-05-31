@@ -65,42 +65,42 @@ const synthSound = (type: 'success' | 'click' | 'whoosh') => {
 const META_MAP: Record<string, { icon: React.ElementType; color: string; label: string }> = {
   mention: {
     icon: AtSign,
-    color: 'text-violet-400 bg-violet-400/10 border-violet-500/20 shadow-[0_0_12px_rgba(139,92,246,0.12)]',
+    color: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 border border-violet-500/20 shadow-sm',
     label: 'Mention',
   },
   dm: {
     icon: User,
-    color: 'text-pink-400 bg-pink-400/10 border-pink-500/20 shadow-[0_0_12px_rgba(236,72,153,0.12)]',
+    color: 'text-pink-600 dark:text-pink-400 bg-pink-500/10 border border-pink-500/20 shadow-sm',
     label: 'Direct Message',
   },
   channel_invite: {
     icon: Hash,
-    color: 'text-sky-400 bg-sky-400/10 border-sky-500/20 shadow-[0_0_12px_rgba(56,189,248,0.12)]',
+    color: 'text-sky-600 dark:text-sky-400 bg-sky-500/10 border border-sky-500/20 shadow-sm',
     label: 'Invite',
   },
   task_assign: {
     icon: CheckSquare,
-    color: 'text-emerald-400 bg-emerald-400/10 border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.12)]',
+    color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-sm',
     label: 'Assignment',
   },
   task_comment: {
     icon: MessageSquare,
-    color: 'text-amber-400 bg-amber-400/10 border-amber-500/20 shadow-[0_0_12px_rgba(245,158,11,0.12)]',
+    color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 shadow-sm',
     label: 'Comment',
   },
   request_pending: {
     icon: Layers,
-    color: 'text-amber-400 bg-amber-400/10 border-amber-500/20 shadow-[0_0_12px_rgba(245,158,11,0.12)]',
+    color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 shadow-sm',
     label: 'Approval Request',
   },
   request_approved: {
     icon: CheckCircle2,
-    color: 'text-emerald-400 bg-emerald-400/10 border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.12)]',
+    color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-sm',
     label: 'Approved',
   },
   request_rejected: {
     icon: X,
-    color: 'text-rose-400 bg-rose-500/10 border-rose-500/20 shadow-[0_0_12px_rgba(239,68,68,0.12)]',
+    color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 shadow-sm',
     label: 'Rejected',
   },
 };
@@ -145,7 +145,7 @@ function NotifRow({
 }) {
   const meta = META_MAP[n.type] || {
     icon: Bell,
-    color: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20 shadow-[0_0_12px_rgba(161,161,170,0.1)]',
+    color: 'text-zinc-500 dark:text-zinc-400 bg-zinc-500/10 border border-zinc-500/20 shadow-sm',
     label: 'Alert',
   };
   const Icon = meta.icon;
@@ -398,7 +398,7 @@ function NotifRow({
             variant="ghost"
             size="icon"
             title={n.read ? 'Mark as unread' : 'Mark as read'}
-            className="h-7 w-7 rounded-lg bg-surface/90 dark:bg-zinc-900/90 border border-white/10 text-muted-foreground hover:text-foreground shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
+            className="h-7 w-7 rounded-lg bg-surface/90 border border-border-default/40 text-muted-foreground hover:text-foreground shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={(e) => {
               e.stopPropagation();
               synthSound('click');
@@ -625,10 +625,10 @@ export function NotificationPanel({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: -6 }}
           transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-          className="fixed sm:absolute top-20 sm:top-full sm:mt-3 left-4 right-4 sm:left-auto sm:right-0 z-50 w-[calc(100vw-32px)] sm:w-[380px] max-w-[calc(100vw-32px)] origin-top-right overflow-hidden rounded-2xl aether-glass border border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/95 shadow-2xl backdrop-blur-3xl flex flex-col h-[520px] max-h-[calc(100vh-100px)]"
+          className="fixed sm:absolute top-20 sm:top-full sm:mt-3 left-4 right-4 sm:left-auto sm:right-0 z-50 w-[calc(100vw-32px)] sm:w-[380px] max-w-[calc(100vw-32px)] origin-top-right overflow-hidden rounded-2xl aether-glass border border-border-default bg-surface-elevated/95 shadow-2xl backdrop-blur-3xl flex flex-col h-[520px] max-h-[calc(100vh-100px)]"
         >
           {/* Header Section */}
-          <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 shrink-0">
+          <div className="flex items-center justify-between border-b border-border-default/45 px-4 py-3 shrink-0">
             <div className="flex items-center gap-2 select-none">
               <div className="h-7 w-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary" style={{ color: 'var(--accent)' }}>
                 <Bell className="h-4 w-4" />
@@ -636,7 +636,7 @@ export function NotificationPanel({
               <span className="text-sm font-extrabold text-foreground">Notifications</span>
               {unreadCount > 0 && (
                 <span 
-                  className="rounded-full px-2 py-0.5 text-[9px] font-black shadow-[0_0_8px_rgba(var(--accent),0.1)] animate-pulse"
+                  className="rounded-full px-2 py-0.5 text-[9px] font-black shadow-[0_0_8px_color-mix(in_srgb,var(--accent)_20%,transparent)] animate-pulse"
                   style={{
                     backgroundColor: 'oklch(from var(--accent) l c h / 15%)',
                     border: '1px solid oklch(from var(--accent) l c h / 20%)',
@@ -654,8 +654,10 @@ export function NotificationPanel({
                 type="button"
                 title={soundMuted ? "Unmute UI chimes" : "Mute UI chimes"}
                 className={cn(
-                  "h-7 w-7 rounded-lg flex items-center justify-center border text-zinc-400 hover:text-white transition-all cursor-pointer",
-                  soundMuted ? "bg-zinc-900/30 border-white/5" : "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
+                  "h-7 w-7 rounded-lg flex items-center justify-center border text-text-muted hover:text-foreground transition-all cursor-pointer",
+                  soundMuted 
+                    ? "bg-surface-hover/30 border-border-default/40" 
+                    : "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
                 )}
                 onClick={toggleMute}
               >

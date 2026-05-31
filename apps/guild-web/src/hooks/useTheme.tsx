@@ -178,8 +178,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const darkColor = darkVariables[key];
       const lightColor = lightVariables[key] ?? '#ffffff';
       
-      // Linearly interpolate color based on current progress
-      interpolatedVariables[key] = interpolateColor(lightColor, darkColor, themeProgress);
+      // For foreground colors (text, border, icons), use a snapped transition
+      // to avoid low contrast "dissolving" in the middle of light/dark mode
+      const isForeground = key.includes('text') || key.includes('border') || key.includes('foreground');
+      
+      const progress = isForeground 
+        ? (themeProgress >= 0.5 ? 1 : 0) // Snaps to prevent any contrast loss
+        : themeProgress;                  // Smooth linear interpolation for background/surface
+      
+      // Linearly interpolate color based on custom progress
+      interpolatedVariables[key] = interpolateColor(lightColor, darkColor, progress);
     });
 
     // Apply color tokens directly to CSS custom properties

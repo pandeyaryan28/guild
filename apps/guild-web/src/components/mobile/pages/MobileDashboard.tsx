@@ -232,7 +232,7 @@ export function MobileDashboard() {
                 ) : (
                   <span className="text-xs font-black text-white">{myInitials}</span>
                 )}
-                <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-surface dark:bg-zinc-950 flex items-center justify-center shadow-sm">
+                <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-surface flex items-center justify-center shadow-sm">
                   <span className={cn(
                     "h-2 w-2 rounded-full",
                     currentStatus === 'focus' ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]" :
@@ -547,7 +547,7 @@ export function MobileDashboard() {
                 ) : (
                   <span className="text-xs font-bold text-white">{avatarInitials(member.fullName || '')}</span>
                 )}
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface dark:bg-zinc-950 flex items-center justify-center shadow-sm">
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface flex items-center justify-center shadow-sm">
                   <span className={cn(
                     "h-1.5 w-1.5 rounded-full",
                     member.availabilityStatus === 'focus' ? "bg-red-500" :

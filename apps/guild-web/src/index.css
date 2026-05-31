@@ -276,6 +276,12 @@
   perspective: 1000px;
 }
 
+/* Disable transitions entirely during drag to enable raw, latency-free mouse tracking */
+.theme-dragging,
+.theme-dragging * {
+  transition: none !important;
+}
+
 /* GPU Hardware-Acceleration for Glass Backdrop filters */
 .aether-glass, .aether-glass-elevated, .aether-glass-interactive, .aether-glass-input {
   transform: translate3d(0, 0, 0);
