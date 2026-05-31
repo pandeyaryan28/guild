@@ -62,13 +62,13 @@ export function useAdminData(organizationId?: string): AdminDashboardData {
           projectsSnap
         ] = await Promise.all([
           getDoc(orgDocRef),
-          getDocs(query(collection(db, 'users'),         where('organizationId', '==', organizationId), orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'tasks'),         where('orgId', '==', organizationId), orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'channels'),      where('orgId', '==', organizationId), orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'teams'),         where('orgId', '==', organizationId), orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'goals'),         where('orgId', '==', organizationId), orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'taskActivities'), where('orgId', '==', organizationId), orderBy('createdAt', 'desc'), limit(200))),
-          getDocs(query(collection(db, 'projects'),       where('orgId', '==', organizationId), orderBy('createdAt', 'desc'))),
+          getDocs(query(collection(db, 'users'),         where('organizationId', '==', organizationId))),
+          getDocs(query(collection(db, 'tasks'),         where('orgId', '==', organizationId))),
+          getDocs(query(collection(db, 'channels'),      where('orgId', '==', organizationId))),
+          getDocs(query(collection(db, 'teams'),         where('orgId', '==', organizationId))),
+          getDocs(query(collection(db, 'goals'),         where('orgId', '==', organizationId))),
+          getDocs(query(collection(db, 'taskActivities'), where('orgId', '==', organizationId))),
+          getDocs(query(collection(db, 'projects'),       where('orgId', '==', organizationId))),
         ]);
 
         if (cancelled) return;
@@ -77,14 +77,26 @@ export function useAdminData(organizationId?: string): AdminDashboardData {
           ? [{ ...orgSnap.data(), id: orgSnap.id } as Organization]
           : [];
 
+        const getMillis = (ts: any) => {
+          if (!ts) return 0;
+          if (typeof ts.toMillis === 'function') return ts.toMillis();
+          if (typeof ts.toDate === 'function') return ts.toDate().getTime();
+          if (ts.seconds) return ts.seconds * 1000;
+          return 0;
+        };
+
+        const sortByCreatedAtDesc = <T extends { createdAt?: any }>(items: T[]): T[] => {
+          return [...items].sort((a, b) => getMillis(b.createdAt) - getMillis(a.createdAt));
+        };
+
         setOrgs(orgsList);
-        setUsers(usersSnap.docs.map(d => d.data() as UserProfile));
-        setTasks(tasksSnap.docs.map(d => d.data() as Task));
-        setChannels(channelsSnap.docs.map(d => d.data() as Channel));
-        setTeams(teamsSnap.docs.map(d => d.data() as Team));
-        setGoals(goalsSnap.docs.map(d => d.data() as Goal));
-        setActivities(activitiesSnap.docs.map(d => d.data() as TaskActivity));
-        setProjects(projectsSnap.docs.map(d => d.data() as Project));
+        setUsers(sortByCreatedAtDesc(usersSnap.docs.map(d => d.data() as UserProfile)));
+        setTasks(sortByCreatedAtDesc(tasksSnap.docs.map(d => d.data() as Task)));
+        setChannels(sortByCreatedAtDesc(channelsSnap.docs.map(d => d.data() as Channel)));
+        setTeams(sortByCreatedAtDesc(teamsSnap.docs.map(d => d.data() as Team)));
+        setGoals(sortByCreatedAtDesc(goalsSnap.docs.map(d => d.data() as Goal)));
+        setActivities(sortByCreatedAtDesc(activitiesSnap.docs.map(d => d.data() as TaskActivity)).slice(0, 200));
+        setProjects(sortByCreatedAtDesc(projectsSnap.docs.map(d => d.data() as Project)));
       } catch (e: unknown) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load data');
       } finally {
