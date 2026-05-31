@@ -10,7 +10,7 @@ interface MessageListProps {
   orgId?: string;
   currentUser?: { uid: string; displayName: string } | null;
   onOpenDiscussion?: (msg: Message) => void;
-  loadOlderMessages?: () => Promise<void>;
+  loadOlderMessages?: () => void;
   loadingOlder?: boolean;
   hasMore?: boolean;
 }
