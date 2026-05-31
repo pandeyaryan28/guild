@@ -162,7 +162,7 @@ export function GoalDetailDrawer({
             animate={{ opacity: 0.6 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity duration-300"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300"
           />
 
           {/* Canvas Slide Over Panel */}
@@ -171,27 +171,27 @@ export function GoalDetailDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-            className="relative w-full max-w-lg h-screen bg-white/80 dark:bg-white/[0.03] backdrop-blur-3xl border-l border-white/10 dark:border-white/5 shadow-2xl flex flex-col justify-between"
+            className="relative w-full max-w-lg h-screen bg-slate-50 border-l border-zinc-200 shadow-2xl flex flex-col justify-between overflow-hidden z-10 text-zinc-800"
           >
             {/* Header controls */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-zinc-800/50 shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-white shrink-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-[--muted-foreground] px-2 py-0.5 rounded-md border border-white/10 dark:border-white/5 bg-white/5 dark:bg-white/[0.02]">
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-500 px-2 py-0.5 rounded-md border border-zinc-200 bg-zinc-50">
                   Strategic Goal Workspace
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500">ID: {goal.id.slice(0, 8)}</span>
+                <span className="text-[9px] font-mono text-zinc-400">ID: {goal.id.slice(0, 8)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleDelete}
                   title="Delete Goal"
-                  className="h-8 w-8 rounded-full border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 flex items-center justify-center text-red-400 hover:text-red-300 active:scale-95 transition-all cursor-pointer"
+                  className="h-8 w-8 rounded-full border border-red-200 bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-500 hover:text-red-600 active:scale-95 transition-all cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={onClose}
-                  className="h-8 w-8 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-[--muted-foreground] hover:text-[--foreground] active:scale-95 transition-all cursor-pointer"
+                  className="h-8 w-8 rounded-full border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 active:scale-95 transition-all cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -199,16 +199,16 @@ export function GoalDetailDrawer({
             </div>
 
             {/* Scrollable details view */}
-            <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-6">
+            <div className="flex-1 min-h-0 overflow-y-auto aether-scroll p-6 space-y-6 bg-slate-50/50">
               
               {/* Progress meter banner */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 border border-white/10 dark:border-zinc-800/80 flex items-center justify-between shadow-inner">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-50 to-indigo-50 border border-cyan-100/80 flex items-center justify-between shadow-xs">
                 <div className="space-y-0.5">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-cyan-400">Progression Rate</span>
-                  <p className="text-xs text-[--muted-foreground] font-semibold">Synced aggregate completion</p>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-cyan-600">Progression Rate</span>
+                  <p className="text-xs text-zinc-500 font-semibold">Synced aggregate completion</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-extrabold text-sm shadow-sm tabular-nums">
+                  <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-white border border-cyan-200 text-cyan-600 font-extrabold text-sm shadow-sm tabular-nums">
                     {goal.progressRollup ?? 0}%
                   </div>
                 </div>
@@ -216,64 +216,64 @@ export function GoalDetailDrawer({
 
               {/* Editable Title */}
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1">Goal Title</label>
+                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1">Goal Title</label>
                 <input
                   ref={titleRef}
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   onBlur={handleTitleBlur}
-                  className="w-full text-lg font-black tracking-tight text-[--foreground] border-0 border-b border-transparent focus:border-[--ring] rounded-lg px-1 py-1 focus:outline-none bg-transparent hover:bg-white/5 dark:hover:bg-white/[0.02] focus:bg-white/10 dark:focus:bg-white/[0.04] transition-all"
+                  className="w-full text-base font-black tracking-tight text-zinc-800 border border-zinc-200 rounded-xl px-4 py-3 focus:outline-none bg-white hover:bg-zinc-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-xs"
                   placeholder="Goal title..."
                 />
               </div>
 
               {/* Status and Horizon Grid */}
-              <div className="grid grid-cols-2 gap-4 border-t border-white/5 dark:border-zinc-900 pt-5">
+              <div className="grid grid-cols-2 gap-4 border-t border-zinc-200/60 pt-5">
                 {/* Status selector */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1">Status</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1">Status</label>
                   <select
                     value={status}
                     onChange={(e) => handleStatusChange(e.target.value as GoalStatus)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer"
+                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   >
-                    <option value="active" className="bg-[--surface] text-cyan-400 font-semibold">Active</option>
-                    <option value="completed" className="bg-[--surface] text-emerald-400 font-semibold">Completed</option>
-                    <option value="cancelled" className="bg-[--surface] text-rose-400 font-semibold">Cancelled</option>
+                    <option value="active" className="bg-white text-cyan-600 font-semibold">Active</option>
+                    <option value="completed" className="bg-white text-emerald-600 font-semibold">Completed</option>
+                    <option value="cancelled" className="bg-white text-rose-600 font-semibold">Cancelled</option>
                   </select>
                 </div>
 
                 {/* Horizon selector */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1">Horizon Type</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1">Horizon Type</label>
                   <select
                     value={horizon}
                     onChange={(e) => handleHorizonChange(e.target.value as GoalHorizon)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer"
+                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   >
-                    <option value="short_term" className="bg-[--surface] text-[--foreground]">Short Term</option>
-                    <option value="long_term" className="bg-[--surface] text-[--foreground]">Long Term</option>
+                    <option value="short_term" className="bg-white text-zinc-800">Short Term</option>
+                    <option value="long_term" className="bg-white text-zinc-800">Long Term</option>
                   </select>
                 </div>
               </div>
 
               {/* Project binding & Owner Lead */}
-              <div className="grid grid-cols-2 gap-4 border-t border-white/5 dark:border-zinc-900 pt-5">
+              <div className="grid grid-cols-2 gap-4 border-t border-zinc-200/60 pt-5">
                 {/* Project Binder */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1 flex items-center gap-1.5">
-                    <Folder className="w-3.5 h-3.5 text-indigo-400" />
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1 flex items-center gap-1.5">
+                    <Folder className="w-3.5 h-3.5 text-indigo-500" />
                     Project Binder
                   </label>
                   <select
                     value={projectId}
                     onChange={(e) => handleProjectChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer"
+                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   >
                     <option value="">Unscoped (No project)</option>
                     {projects.map(proj => (
-                      <option key={proj.id} value={proj.id} className="bg-[--surface] text-[--foreground]">
+                      <option key={proj.id} value={proj.id} className="bg-white text-zinc-800">
                         {proj.name}
                       </option>
                     ))}
@@ -282,18 +282,18 @@ export function GoalDetailDrawer({
 
                 {/* Owner Lead */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-zinc-500" />
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-zinc-400" />
                     Owner / Lead
                   </label>
                   <select
                     value={ownerId}
                     onChange={(e) => handleOwnerChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer"
+                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   >
                     <option value="">Choose owner lead...</option>
                     {users.map(u => (
-                      <option key={u.uid} value={u.uid} className="bg-[--surface] text-[--foreground]">
+                      <option key={u.uid} value={u.uid} className="bg-white text-zinc-800">
                         {u.fullName || u.username} ({u.designation || 'Member'})
                       </option>
                     ))}
@@ -302,28 +302,28 @@ export function GoalDetailDrawer({
               </div>
 
               {/* Target date deadline */}
-              <div className="space-y-1.5 border-t border-white/5 dark:border-zinc-900 pt-5">
-                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+              <div className="space-y-1.5 border-t border-zinc-200/60 pt-5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-zinc-400" />
                   Target Date Deadline
                 </label>
                 <input
                   type="date"
                   value={targetDate}
                   onChange={(e) => handleTargetDateChange(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all cursor-pointer"
+                  className="w-full px-3.5 py-3 border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                 />
               </div>
 
               {/* Description field */}
-              <div className="space-y-1.5 border-t border-white/5 dark:border-zinc-900 pt-5">
-                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1">Goal Description</label>
+              <div className="space-y-1.5 border-t border-zinc-200/60 pt-5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1">Goal Description</label>
                 <textarea
                   ref={descRef}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   onBlur={handleDescBlur}
-                  className="w-full px-3.5 py-2.5 border border-white/10 dark:border-zinc-800/60 bg-white/[0.05] dark:bg-zinc-900/10 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all min-h-[120px] placeholder:text-zinc-500 resize-none"
+                  className="w-full px-3.5 py-3 border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all min-h-[120px] placeholder:text-zinc-400 resize-none shadow-xs"
                   placeholder="Define the strategic objective, timeline, and targets..."
                 />
               </div>
@@ -331,7 +331,7 @@ export function GoalDetailDrawer({
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-white/[0.02] dark:bg-zinc-900/10 border-t border-white/10 dark:border-zinc-800/50 shrink-0 text-center text-[10px] text-zinc-500 font-semibold tracking-wide">
+            <div className="px-6 py-4 bg-white border-t border-zinc-200 shrink-0 text-center text-[10px] text-zinc-400 font-semibold tracking-wide">
               * Edits auto-save immediately on input selection or clicking out of input fields.
             </div>
           </motion.div>

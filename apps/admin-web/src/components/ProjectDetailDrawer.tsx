@@ -160,7 +160,7 @@ export function ProjectDetailDrawer({
             animate={{ opacity: 0.6 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity duration-300"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300"
           />
 
           {/* Canvas Slide Over Panel */}
@@ -169,27 +169,27 @@ export function ProjectDetailDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-            className="relative w-full max-w-lg h-screen bg-white/80 dark:bg-white/[0.03] backdrop-blur-3xl border-l border-white/10 dark:border-white/5 shadow-2xl flex flex-col justify-between"
+            className="relative w-full max-w-lg h-screen bg-slate-50 border-l border-zinc-200 shadow-2xl flex flex-col justify-between overflow-hidden z-10 text-zinc-800"
           >
             {/* Header controls */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-zinc-800/50 shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-white shrink-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-[--muted-foreground] px-2 py-0.5 rounded-md border border-white/10 dark:border-white/5 bg-white/5 dark:bg-white/[0.02]">
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-500 px-2 py-0.5 rounded-md border border-zinc-200 bg-zinc-50">
                   Pipeline Initiative Workspace
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500">ID: {project.id.slice(0, 8)}</span>
+                <span className="text-[9px] font-mono text-zinc-400">ID: {project.id.slice(0, 8)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleDelete}
                   title="Delete Project"
-                  className="h-8 w-8 rounded-full border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 flex items-center justify-center text-red-400 hover:text-red-300 active:scale-95 transition-all cursor-pointer"
+                  className="h-8 w-8 rounded-full border border-red-200 bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-500 hover:text-red-600 active:scale-95 transition-all cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={onClose}
-                  className="h-8 w-8 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-[--muted-foreground] hover:text-[--foreground] active:scale-95 transition-all cursor-pointer"
+                  className="h-8 w-8 rounded-full border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 active:scale-95 transition-all cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -197,20 +197,20 @@ export function ProjectDetailDrawer({
             </div>
 
             {/* Scrollable details view */}
-            <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-6">
+            <div className="flex-1 min-h-0 overflow-y-auto aether-scroll p-6 space-y-6 bg-slate-50/50">
               
               {/* Progression roll-up dashboard */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-indigo-500/10 border border-white/10 dark:border-zinc-800/80 space-y-3 shadow-inner">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-indigo-50 border border-emerald-100/80 space-y-3 shadow-xs">
                 <div className="flex items-center justify-between text-[10px] font-bold">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400">Progression Rate</span>
-                  <span className="text-[--foreground] tabular-nums font-extrabold">{completionPct}% ({completedTasks}/{projectTasks.length} tasks)</span>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600">Progression Rate</span>
+                  <span className="text-zinc-700 tabular-nums font-extrabold">{completionPct}% ({completedTasks}/{projectTasks.length} tasks)</span>
                 </div>
-                <div className="w-full h-2 bg-white/5 border border-white/5 rounded-full overflow-hidden shrink-0">
+                <div className="w-full h-2 bg-zinc-200/60 border border-zinc-200 rounded-full overflow-hidden shrink-0">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
                       width: `${completionPct}%`,
-                      backgroundColor: completionPct >= 80 ? 'var(--status-done)' : completionPct >= 40 ? 'var(--status-review)' : 'var(--destructive)'
+                      backgroundColor: completionPct >= 80 ? '#10b981' : completionPct >= 40 ? '#f59e0b' : '#ef4444'
                     }}
                   />
                 </div>
@@ -218,49 +218,49 @@ export function ProjectDetailDrawer({
 
               {/* Editable Name */}
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1">Project Name</label>
+                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1">Project Name</label>
                 <input
                   ref={nameRef}
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onBlur={handleNameBlur}
-                  className="w-full text-lg font-black tracking-tight text-[--foreground] border-0 border-b border-transparent focus:border-[--ring] rounded-lg px-1 py-1 focus:outline-none bg-transparent hover:bg-white/5 dark:hover:bg-white/[0.02] focus:bg-white/10 dark:focus:bg-white/[0.04] transition-all"
+                  className="w-full text-base font-black tracking-tight text-zinc-800 border border-zinc-200 rounded-xl px-4 py-3 focus:outline-none bg-white hover:bg-zinc-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-xs"
                   placeholder="Project name..."
                 />
               </div>
 
               {/* Status and Owner Lead */}
-              <div className="grid grid-cols-2 gap-4 border-t border-white/5 dark:border-zinc-900 pt-5">
+              <div className="grid grid-cols-2 gap-4 border-t border-zinc-200/60 pt-5">
                 {/* Status selector */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1">Status</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1">Status</label>
                   <select
                     value={status}
                     onChange={(e) => handleStatusChange(e.target.value as ProjectStatus)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer"
+                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   >
-                    <option value="active" className="bg-[--surface] text-emerald-400 font-semibold">Active</option>
-                    <option value="paused" className="bg-[--surface] text-amber-400 font-semibold">Paused</option>
-                    <option value="completed" className="bg-[--surface] text-blue-450 font-semibold">Completed</option>
-                    <option value="archived" className="bg-[--surface] text-zinc-500 font-semibold">Archived</option>
+                    <option value="active" className="bg-white text-emerald-600 font-semibold">Active</option>
+                    <option value="paused" className="bg-white text-amber-600 font-semibold">Paused</option>
+                    <option value="completed" className="bg-white text-blue-650 font-semibold">Completed</option>
+                    <option value="archived" className="bg-white text-zinc-500 font-semibold">Archived</option>
                   </select>
                 </div>
 
                 {/* Owner Lead */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-zinc-500" />
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-zinc-400" />
                     Owner / Lead
                   </label>
                   <select
                     value={ownerId}
                     onChange={(e) => handleOwnerChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] focus:outline-none transition-all cursor-pointer"
+                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   >
                     <option value="">Choose project lead...</option>
                     {users.map(u => (
-                      <option key={u.uid} value={u.uid} className="bg-[--surface] text-[--foreground]">
+                      <option key={u.uid} value={u.uid} className="bg-white text-zinc-800">
                         {u.fullName || u.username} ({u.designation || 'Member'})
                       </option>
                     ))}
@@ -269,45 +269,45 @@ export function ProjectDetailDrawer({
               </div>
 
               {/* Start Date and Due Date Grid */}
-              <div className="grid grid-cols-2 gap-4 border-t border-white/5 dark:border-zinc-900 pt-5">
+              <div className="grid grid-cols-2 gap-4 border-t border-zinc-200/60 pt-5">
                 {/* Start Date */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-zinc-400" />
                     Start Date
                   </label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => handleStartDateChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all cursor-pointer"
+                    className="w-full px-3.5 py-3 border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   />
                 </div>
 
                 {/* Due Date */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-zinc-400" />
                     Due Date Deadline
                   </label>
                   <input
                     type="date"
                     value={dueDate}
                     onChange={(e) => handleDueDateChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all cursor-pointer"
+                    className="w-full px-3.5 py-3 border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   />
                 </div>
               </div>
 
               {/* Description field */}
-              <div className="space-y-1.5 border-t border-white/5 dark:border-zinc-900 pt-5">
-                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block px-1">Project Description</label>
+              <div className="space-y-1.5 border-t border-zinc-200/60 pt-5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1">Project Description</label>
                 <textarea
                   ref={descRef}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   onBlur={handleDescBlur}
-                  className="w-full px-3.5 py-2.5 border border-white/10 dark:border-zinc-800/60 bg-white/[0.05] dark:bg-zinc-900/10 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all min-h-[120px] placeholder:text-zinc-500 resize-none"
+                  className="w-full px-3.5 py-3 border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all min-h-[120px] placeholder:text-zinc-400 resize-none shadow-xs"
                   placeholder="Define scope, strategic objectives, and target outcomes..."
                 />
               </div>
@@ -315,7 +315,7 @@ export function ProjectDetailDrawer({
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-white/[0.02] dark:bg-zinc-900/10 border-t border-white/10 dark:border-zinc-800/50 shrink-0 text-center text-[10px] text-zinc-500 font-semibold tracking-wide">
+            <div className="px-6 py-4 bg-white border-t border-zinc-200 shrink-0 text-center text-[10px] text-zinc-400 font-semibold tracking-wide">
               * Edits auto-save immediately on input selection or clicking out of input fields.
             </div>
           </motion.div>
