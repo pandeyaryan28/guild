@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  collection, getDocs, query, orderBy, limit,
+  collection, getDocs, query, orderBy, limit, doc, getDoc, where,
 } from 'firebase/firestore';
 import { db } from '@guild/firebase';
 import type {
@@ -25,7 +25,7 @@ export interface AdminDashboardData {
  * One-shot fetch of all collections needed by the admin HQ dashboard.
  * Fetches in parallel for speed. Provides a refresh() to re-fetch.
  */
-export function useAdminData(): AdminDashboardData {
+export function useAdminData(organizationId?: string): AdminDashboardData {
   const [orgs,       setOrgs]       = useState<Organization[]>([]);
   const [users,      setUsers]      = useState<UserProfile[]>([]);
   const [tasks,      setTasks]      = useState<Task[]>([]);
@@ -39,14 +39,20 @@ export function useAdminData(): AdminDashboardData {
   const [tick,       setTick]       = useState(0);
 
   useEffect(() => {
+    if (!organizationId) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     setError(null);
 
     async function fetchAll() {
       try {
+        const orgDocRef = doc(db, 'organizations', organizationId);
         const [
-          orgsSnap,
+          orgSnap,
           usersSnap,
           tasksSnap,
           channelsSnap,
@@ -55,19 +61,23 @@ export function useAdminData(): AdminDashboardData {
           activitiesSnap,
           projectsSnap
         ] = await Promise.all([
-          getDocs(query(collection(db, 'organizations'), orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'users'),         orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'tasks'),         orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'channels'),      orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'teams'),         orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'goals'),         orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'taskActivities'), orderBy('createdAt', 'desc'), limit(200))),
-          getDocs(query(collection(db, 'projects'),       orderBy('createdAt', 'desc'))),
+          getDoc(orgDocRef),
+          getDocs(query(collection(db, 'users'),         where('organizationId', '==', organizationId), orderBy('createdAt', 'desc'))),
+          getDocs(query(collection(db, 'tasks'),         where('orgId', '==', organizationId), orderBy('createdAt', 'desc'))),
+          getDocs(query(collection(db, 'channels'),      where('orgId', '==', organizationId), orderBy('createdAt', 'desc'))),
+          getDocs(query(collection(db, 'teams'),         where('orgId', '==', organizationId), orderBy('createdAt', 'desc'))),
+          getDocs(query(collection(db, 'goals'),         where('orgId', '==', organizationId), orderBy('createdAt', 'desc'))),
+          getDocs(query(collection(db, 'taskActivities'), where('orgId', '==', organizationId), orderBy('createdAt', 'desc'), limit(200))),
+          getDocs(query(collection(db, 'projects'),       where('orgId', '==', organizationId), orderBy('createdAt', 'desc'))),
         ]);
 
         if (cancelled) return;
 
-        setOrgs(orgsSnap.docs.map(d => d.data() as Organization));
+        const orgsList: Organization[] = orgSnap.exists()
+          ? [{ ...orgSnap.data(), id: orgSnap.id } as Organization]
+          : [];
+
+        setOrgs(orgsList);
         setUsers(usersSnap.docs.map(d => d.data() as UserProfile));
         setTasks(tasksSnap.docs.map(d => d.data() as Task));
         setChannels(channelsSnap.docs.map(d => d.data() as Channel));
@@ -84,7 +94,7 @@ export function useAdminData(): AdminDashboardData {
 
     fetchAll();
     return () => { cancelled = true; };
-  }, [tick]);
+  }, [tick, organizationId]);
 
   return {
     orgs, users, tasks, channels, teams, goals, activities, projects, loading, error,

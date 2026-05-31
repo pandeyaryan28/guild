@@ -26,7 +26,7 @@ interface MobileAdminAppProps {
 }
 
 export function MobileAdminApp({ profile }: MobileAdminAppProps) {
-  const data = useAdminData();
+  const data = useAdminData(profile.organizationId);
   const [activeSection, setActiveSection] = useState('overview');
 
   // Overview Date Range

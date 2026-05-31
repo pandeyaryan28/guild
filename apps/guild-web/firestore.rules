@@ -1,9 +1,195 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow authenticated users full read and write access for MVP development
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+
+    // ─── HELPER FUNCTIONS ───────────────────────────────────────────────────
+    
+    // Check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Get the user's profile document data
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Check if the user belongs to the specified organization
+    function isMemberOfOrg(orgId) {
+      return isAuth() && getUserData().organizationId == orgId;
+    }
+
+    // Check if the document belongs to the user's organization
+    function isDocInMyOrg() {
+      return isAuth() && getUserData().organizationId == resource.data.orgId;
+    }
+
+    // Check if the incoming document to be created/written belongs to the user's organization
+    function isNewDocInMyOrg() {
+      return isAuth() && getUserData().organizationId == request.resource.data.orgId;
+    }
+
+    // ─── USER PROFILES & ACCOUNTS ───────────────────────────────────────────
+
+    match /users/{userId} {
+      // Users can read/write their own profile
+      // Users can read other profiles in their same organization
+      allow read: if isAuth() && (
+        request.auth.uid == userId || 
+        getUserData().organizationId == resource.data.organizationId
+      );
+      allow write: if isAuth() && request.auth.uid == userId;
+    }
+
+    match /usernames/{username} {
+      // Publicly readable for uniqueness checking during registration
+      allow read: if true;
+      allow write: if isAuth();
+    }
+
+    match /orgSlugs/{slug} {
+      // Publicly readable for uniqueness checking during org creation
+      allow read: if true;
+      allow write: if isAuth();
+    }
+
+    match /onboardingState/{userId} {
+      // Users can manage their own onboarding state
+      allow read, write: if isAuth() && request.auth.uid == userId;
+    }
+
+    // ─── ORGANIZATIONS & MEMBERSHIP ──────────────────────────────────────────
+
+    match /organizations/{orgId} {
+      // Any authenticated user can create an organization
+      allow create: if isAuth();
+      // Members of the organization can read/update it
+      allow read: if isMemberOfOrg(orgId);
+      // Only owners/admins can update organization details or delete it
+      allow update: if isMemberOfOrg(orgId) && (getUserData().role == 'owner' || getUserData().role == 'admin');
+      allow delete: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
+    }
+
+    match /organizationMembers/{memberId} {
+      // memberId is in format orgId_userId
+      // Members of the organization can read members list
+      allow read: if isAuth() && isMemberOfOrg(resource.data.orgId);
+      // Creating or updating a membership record
+      allow create, update, delete: if isAuth() && (
+        // A user onboarding can add themselves
+        (request.auth.uid == request.resource.data.userId && request.resource.data.role == 'member') ||
+        // Or the owner/admin can manage it
+        (isMemberOfOrg(resource.data.orgId) && (getUserData().role == 'owner' || getUserData().role == 'admin')) ||
+        (isMemberOfOrg(request.resource.data.orgId) && (getUserData().role == 'owner' || getUserData().role == 'admin'))
+      );
+    }
+
+    match /inviteLinks/{token} {
+      // Publicly readable to validate invitations
+      allow read: if true;
+      allow write: if isAuth();
+    }
+
+    match /pendingInvites/{inviteId} {
+      // Authenticated users can read or write pending invites
+      allow read: if isAuth();
+      allow write: if isAuth();
+    }
+
+    // ─── CHANNELS, TEAMS, PROJECTS, GOALS, TASKS & OPERATIONS ────────────────
+
+    // All these collections are partitioned by 'orgId'
+    
+    match /channels/{channelId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /channelMembers/{memberId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /teams/{teamId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /projects/{projectId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      
+      // Subcollection for project milestones
+      match /milestones/{milestoneId} {
+        allow read: if isMemberOfOrg(resource.data.orgId);
+        allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      }
+    }
+
+    match /goals/{goalId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /taskActivities/{activityId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /taskComments/{commentId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /taskLabels/{labelId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /projectComments/{commentId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /goalComments/{commentId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    // ─── CHAT MESSAGES & THREADS ────────────────────────────────────────────
+
+    match /messages/{messageId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /messageReplies/{replyId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /directMessages/{threadId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    match /dmReadState/{stateId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+    // ─── NOTIFICATIONS ──────────────────────────────────────────────────────
+
+    match /notifications/{notificationId} {
+      // Users can read/write notifications addressed to them
+      allow read, write: if isAuth() && request.auth.uid == resource.data.recipientId;
+      // Allow creation of notifications for others in the same organization
+      allow create: if isAuth() && isNewDocInMyOrg();
     }
   }
 }

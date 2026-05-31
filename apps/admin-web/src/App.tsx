@@ -65,7 +65,7 @@ function AuthorizedApp({ profile }: { profile: ReturnType<typeof useAdminAuth> &
     return <MobileAdminApp profile={profile.profile} />;
   }
 
-  const data = useAdminData();
+  const data = useAdminData(profile.profile.organizationId);
   return (
     <AdminLayout profile={profile.profile}>
       {(activeSection) => (
