@@ -128,12 +128,24 @@ service cloud.firestore {
 
     match /goals/{goalId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg();
+      allow update: if isDocInMyOrg();
+      allow delete: if isDocInMyOrg() && (
+        request.auth.uid == resource.data.ownerId ||
+        getUserData().role == 'owner' ||
+        getUserData().role == 'admin'
+      );
     }
 
     match /tasks/{taskId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg();
+      allow update: if isDocInMyOrg();
+      allow delete: if isDocInMyOrg() && (
+        request.auth.uid == resource.data.creatorId ||
+        getUserData().role == 'owner' ||
+        getUserData().role == 'admin'
+      );
     }
 
     match /requests/{requestId} {

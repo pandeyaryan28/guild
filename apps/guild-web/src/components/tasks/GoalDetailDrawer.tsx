@@ -8,7 +8,7 @@ import {
   HelpCircle, RefreshCw, Folder, Share2, AlertCircle
 } from 'lucide-react';
 import { 
-  updateGoal, addGoalComment, updateGoalAttachments, 
+  updateGoal, addGoalComment, updateGoalAttachments, deleteGoal,
   type Goal, type GoalStatus 
 } from '../../lib/goals';
 import { 
@@ -74,6 +74,13 @@ export function GoalDetailDrawer({
   }, [goal]);
 
   if (!goal) return null;
+
+  // Authorization checks: only creator (ownerId) of goal or owner/admin of org can delete
+  const currentUserMember = members.find(m => m.uid === actor.uid);
+  const userRole = currentUserMember?.role || 'member';
+  const isOwnerOrAdmin = userRole === 'owner' || userRole === 'admin';
+  const isCreator = goal.ownerId === actor.uid;
+  const canDelete = isCreator || isOwnerOrAdmin;
 
   const currentProject = projects.find(p => p.id === goal.projectId);
   const goalTasks = tasks.filter(t => t.goalId === goal.id);
@@ -272,6 +279,21 @@ export function GoalDetailDrawer({
     const url = `${window.location.origin}${window.location.pathname}?goal=${goal.id}`;
     navigator.clipboard.writeText(url);
     setToastMessage("Goal link copied!");
+  };
+
+  const handleDeleteGoal = async () => {
+    if (!canDelete) {
+      setToastMessage("Only the creator of this goal or an admin/owner can delete it.");
+      return;
+    }
+    if (confirm("Are you sure you want to delete this goal?")) {
+      try {
+        await deleteGoal(goal.id);
+        onClose();
+      } catch (err) {
+        console.error("Failed to delete goal:", err);
+      }
+    }
   };
 
   const renderHorizonTrigger = (h: GoalHorizon) => {
@@ -477,6 +499,15 @@ export function GoalDetailDrawer({
               >
                 <Share2 className="w-4 h-4" />
               </button>
+              {canDelete && (
+                <button
+                  onClick={handleDeleteGoal}
+                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:border-rose-200/40 hover:bg-rose-50/20 dark:hover:border-rose-900/20 text-neutral-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                  title="Delete Goal"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
               <div className="h-6 w-[1px] bg-neutral-200 dark:bg-neutral-800 mx-1 shrink-0" />
               <button
                 onClick={onClose}

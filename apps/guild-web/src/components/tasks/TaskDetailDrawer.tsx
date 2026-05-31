@@ -82,6 +82,13 @@ export function TaskDetailDrawer({
 
   if (!task) return null;
 
+  // Authorization checks: only creator of task or owner/admin of org can delete
+  const currentUserMember = members.find(m => m.uid === actor.uid);
+  const userRole = currentUserMember?.role || 'member';
+  const isOwnerOrAdmin = userRole === 'owner' || userRole === 'admin';
+  const isCreator = task.creatorId === actor.uid;
+  const canDelete = isCreator || isOwnerOrAdmin;
+
   const currentProject = projects.find(p => p.id === task.projectId);
   const currentGoal = goals.find(g => g.id === task.goalId);
 
@@ -357,6 +364,10 @@ export function TaskDetailDrawer({
   };
 
   const handleDeleteTask = async () => {
+    if (!canDelete) {
+      setToastMessage("Only the creator of this task or an admin/owner can delete it.");
+      return;
+    }
     if (confirm("Are you sure you want to delete this task?")) {
       try {
         await deleteTask(task.id);
@@ -496,13 +507,15 @@ export function TaskDetailDrawer({
               >
                 <Share2 className="w-4 h-4" />
               </button>
-              <button
-                onClick={handleDeleteTask}
-                className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:border-rose-200/40 hover:bg-rose-50/20 dark:hover:border-rose-900/20 text-neutral-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
-                title="Delete Task"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {canDelete && (
+                <button
+                  onClick={handleDeleteTask}
+                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:border-rose-200/40 hover:bg-rose-50/20 dark:hover:border-rose-900/20 text-neutral-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                  title="Delete Task"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
               <div className="h-6 w-[1px] bg-neutral-200 dark:bg-neutral-800 mx-1 shrink-0" />
               <button
                 onClick={onClose}
