@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Bell, CheckCheck, AtSign, CheckSquare, MessageSquare,
   Hash, User, X, BellOff, Check, Undo2,
-  CornerDownRight, Play, CheckCircle2, Volume2, VolumeX, Sparkles,
-  Layers, Loader2, Send, Clock, Trash2
+  CornerDownRight, Play, CheckCircle2, Volume2, VolumeX,
+  Layers, Loader2, Send, Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -65,42 +65,42 @@ const synthSound = (type: 'success' | 'click' | 'whoosh') => {
 const META_MAP: Record<string, { icon: React.ElementType; color: string; label: string }> = {
   mention: {
     icon: AtSign,
-    color: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 border border-violet-500/20 shadow-sm',
+    color: 'text-violet-500 bg-violet-500/10 border-violet-500/20',
     label: 'Mention',
   },
   dm: {
     icon: User,
-    color: 'text-pink-600 dark:text-pink-400 bg-pink-500/10 border border-pink-500/20 shadow-sm',
-    label: 'Direct Message',
+    color: 'text-pink-500 bg-pink-500/10 border-pink-500/20',
+    label: 'Message',
   },
   channel_invite: {
     icon: Hash,
-    color: 'text-sky-600 dark:text-sky-400 bg-sky-500/10 border border-sky-500/20 shadow-sm',
+    color: 'text-sky-500 bg-sky-500/10 border-sky-500/20',
     label: 'Invite',
   },
   task_assign: {
     icon: CheckSquare,
-    color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-sm',
-    label: 'Assignment',
+    color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+    label: 'Assign',
   },
   task_comment: {
     icon: MessageSquare,
-    color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 shadow-sm',
+    color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
     label: 'Comment',
   },
   request_pending: {
     icon: Layers,
-    color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 shadow-sm',
-    label: 'Approval Request',
+    color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+    label: 'Request',
   },
   request_approved: {
     icon: CheckCircle2,
-    color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-sm',
+    color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
     label: 'Approved',
   },
   request_rejected: {
     icon: X,
-    color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 shadow-sm',
+    color: 'text-rose-500 bg-rose-500/10 border-rose-500/20',
     label: 'Rejected',
   },
 };
@@ -111,17 +111,16 @@ function relativeTime(ts: any): string {
   if (!ts?.toDate) return '';
   const diff = Date.now() - ts.toDate().getTime();
   const s = Math.floor(diff / 1000);
-  if (s < 60) return 'just now';
+  if (s < 60) return 'now';
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
+  if (m < 60) return `${m}m`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
+  if (h < 24) return `${h}h`;
   const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d ago`;
-  return ts.toDate().toLocaleDateString();
+  if (d < 7) return `${d}d`;
+  return ts.toDate().toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-// Helper to parse Task ID from link
 function getTaskIdFromLink(link: string): string | null {
   if (!link) return null;
   const match = link.match(/[?&]task=([^&]+)/);
@@ -145,7 +144,7 @@ function NotifRow({
 }) {
   const meta = META_MAP[n.type] || {
     icon: Bell,
-    color: 'text-zinc-500 dark:text-zinc-400 bg-zinc-500/10 border border-zinc-500/20 shadow-sm',
+    color: 'text-zinc-500 bg-zinc-500/10 border-zinc-500/20',
     label: 'Alert',
   };
   const Icon = meta.icon;
@@ -191,17 +190,16 @@ function NotifRow({
       await moveTask(taskId, n.orgId, newStatus, orderIndex, oldStatus, actor);
       
       setActionStatus('success');
-      setActionMessage(newStatus === 'done' ? 'Completed task!' : 'Started task!');
+      setActionMessage(newStatus === 'done' ? 'Completed' : 'Started');
       synthSound('success');
       
       if (!n.read) await onMarkRead(n.id);
-      
-      setTimeout(() => setActionStatus('idle'), 3000);
+      setTimeout(() => setActionStatus('idle'), 2000);
     } catch (err) {
       console.error(err);
       setActionStatus('failed');
-      setActionMessage('Failed to update task');
-      setTimeout(() => setActionStatus('idle'), 3500);
+      setActionMessage('Failed to update');
+      setTimeout(() => setActionStatus('idle'), 2500);
     }
   }
 
@@ -237,7 +235,7 @@ function NotifRow({
       
       if (!n.read) await onMarkRead(n.id);
     } catch (err) {
-      console.error('Failed to submit comment quick reply', err);
+      console.error('Quick reply failed', err);
     } finally {
       setReplyingLoading(false);
     }
@@ -260,8 +258,8 @@ function NotifRow({
       const snap = await getDocs(q);
       if (snap.empty) {
         setActionStatus('failed');
-        setActionMessage('No pending request found');
-        setTimeout(() => setActionStatus('idle'), 3000);
+        setActionMessage('No request found');
+        setTimeout(() => setActionStatus('idle'), 2000);
         return;
       }
       
@@ -280,57 +278,51 @@ function NotifRow({
       );
 
       setActionStatus('success');
-      setActionMessage(status === 'approved' ? 'Request Approved' : 'Request Rejected');
+      setActionMessage(status === 'approved' ? 'Approved' : 'Rejected');
       synthSound('success');
       
       if (!n.read) await onMarkRead(n.id);
-      
-      setTimeout(() => setActionStatus('idle'), 3000);
+      setTimeout(() => setActionStatus('idle'), 2000);
     } catch (err) {
       console.error(err);
       setActionStatus('failed');
-      setActionMessage('Failed to update request');
-      setTimeout(() => setActionStatus('idle'), 3500);
+      setActionMessage('Action failed');
+      setTimeout(() => setActionStatus('idle'), 2500);
     }
   }
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: -6 }}
-      animate={{ opacity: 1, x: 0, y: 0 }}
-      exit={{ opacity: 0, x: 8 }}
-      transition={{ duration: 0.18 }}
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.15 }}
       className={cn(
-        'group relative flex w-full flex-col gap-2 rounded-2xl p-3 text-left transition-all border select-none cursor-pointer',
+        'group relative flex w-full flex-col gap-2 rounded-xl p-3 text-left transition-all border outline-none select-none cursor-pointer',
         n.read
-          ? 'bg-transparent border-transparent text-muted-foreground hover:bg-white/[0.02] hover:border-white/5'
-          : 'bg-white/[0.02] border-white/5 shadow-inner'
+          ? 'bg-transparent border-transparent text-text-muted hover:bg-white/[0.02] dark:hover:bg-white/[0.01]'
+          : 'bg-white/[0.02] border-white/5 shadow-sm'
       )}
-      style={!n.read ? {
-        background: 'linear-gradient(90deg, oklch(from var(--accent) l c h / 5%) 0%, transparent 100%)',
-        borderColor: 'oklch(from var(--accent) l c h / 12%)'
-      } : undefined}
       onClick={handleRowClick}
     >
-      {/* Dynamic urgency color indicator */}
-      <div
-        className={cn(
-          'absolute left-0 top-3 bottom-3 w-1 rounded-r bg-current transition-all opacity-0 group-hover:opacity-100',
-          n.urgency === 'high'
-            ? 'text-rose-500'
-            : n.urgency === 'medium'
-            ? 'text-cyan-500'
-            : 'text-zinc-500',
-        )}
-      />
+      {/* Dynamic Unread Side Glow Accent */}
+      {!n.read && (
+        <div
+          className="absolute left-0 top-3.5 bottom-3.5 w-[3px] rounded-r transition-all"
+          style={{
+            backgroundColor: 'var(--accent)',
+            boxShadow: '0 0 8px var(--accent)'
+          }}
+        />
+      )}
 
       {/* Row core layout */}
-      <div className="flex w-full items-start gap-3.5">
+      <div className="flex w-full items-start gap-3">
         {/* Actor Avatar */}
         <div className="relative shrink-0 select-none">
           <div
-            className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-xs font-black text-white shadow-inner overflow-hidden"
+            className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-[10px] font-black text-white shadow-inner overflow-hidden"
             style={{ background: `hsl(${avatarHue(n.actor.id)} 55% 45%)` }}
           >
             {n.actor.avatarUrl ? (
@@ -343,71 +335,51 @@ function NotifRow({
               n.actor.initials
             )}
           </div>
-          {/* Micro icon badge on bottom-right of avatar */}
-          <div
-            className={cn(
-              'absolute -bottom-1 -right-1 h-4.5 w-4.5 rounded-full border border-surface flex items-center justify-center shrink-0',
-              meta.color,
-            )}
-          >
+          {/* Subtle micro icon indicating type */}
+          <div className={cn(
+            'absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-surface flex items-center justify-center shrink-0 shadow-sm',
+            meta.color
+          )}>
             <Icon className="h-2 w-2" />
           </div>
         </div>
 
         {/* Text Content */}
-        <div className="min-w-0 flex-1 pr-14 select-text">
+        <div className="min-w-0 flex-1 pr-6">
           <div className="flex items-center gap-1.5 leading-none">
-            <span 
-              className="text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground/80 transition-colors"
-              style={!n.read ? { color: 'oklch(from var(--accent) calc(l + 0.1) c h)' } : undefined}
-            >
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
               {meta.label}
             </span>
-            <span className="text-[10px] text-text-muted select-none">•</span>
-            <span className="text-[10px] text-text-muted select-none">{relativeTime(n.createdAt)}</span>
+            <span className="text-[9px] text-text-muted">•</span>
+            <span className="text-[9px] text-text-muted">{relativeTime(n.createdAt)}</span>
           </div>
-          <p
-            className={cn(
-              'text-xs font-bold leading-normal mt-1',
-              n.read ? 'text-foreground/80' : 'text-foreground',
-            )}
-          >
+          <p className={cn(
+            'text-xs font-semibold leading-relaxed mt-1 tracking-wide',
+            n.read ? 'text-foreground/70' : 'text-foreground font-bold'
+          )}>
             {n.title}
           </p>
           {n.body && (
-            <p className="mt-0.5 line-clamp-1 text-[11px] text-text-muted leading-relaxed">
+            <p className="mt-0.5 line-clamp-1 text-[10px] text-text-muted leading-relaxed">
               {n.body}
             </p>
           )}
         </div>
 
-        {/* Right control status indicator (when not hovered) */}
-        {!n.read && actionStatus === 'idle' && (
-          <div 
-            className="mt-3.5 h-2 w-2 shrink-0 rounded-full md:group-hover:opacity-0 transition-all duration-200"
-            style={{
-              backgroundColor: 'var(--accent)',
-              boxShadow: '0 0 8px var(--accent)'
-            }}
-          />
-        )}
-
-        {/* Hover action toolbar tray (Toggle Read Status Only) */}
-        <div className="absolute right-2.5 top-3 flex items-center gap-1 transition-all md:opacity-0 md:group-hover:opacity-100 opacity-80 md:scale-95 md:group-hover:scale-100">
-          <Button
-            variant="ghost"
-            size="icon"
-            title={n.read ? 'Mark as unread' : 'Mark as read'}
-            className="h-7 w-7 rounded-lg bg-surface/90 border border-border-default/40 text-muted-foreground hover:text-foreground shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
+        {/* Action Toggle Read Icon (Appears on Hover) */}
+        <div className="absolute right-3 top-3 flex items-center transition-all md:opacity-0 md:group-hover:opacity-100 opacity-60">
+          <button
             onClick={(e) => {
               e.stopPropagation();
               synthSound('click');
               if (n.read) onMarkUnread(n.id);
               else onMarkRead(n.id);
             }}
+            className="h-6 w-6 rounded-md flex items-center justify-center bg-white/[0.03] border border-white/5 text-text-muted hover:text-foreground hover:scale-105 active:scale-95 transition-all outline-none"
+            title={n.read ? 'Mark as unread' : 'Mark as read'}
           >
-            {n.read ? <Undo2 className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
-          </Button>
+            {n.read ? <Undo2 className="h-3 w-3" /> : <Check className="h-3 w-3" />}
+          </button>
         </div>
       </div>
 
@@ -420,82 +392,70 @@ function NotifRow({
             exit={{ opacity: 0, height: 0 }}
             className="inline-action-element border-t border-white/5 pt-2 flex items-center justify-between"
           >
-            <div className="flex items-center gap-2">
-              {actionStatus === 'loading' && (
-                <Loader2 className="h-3.5 w-3.5 text-cyan-400 animate-spin" />
-              )}
-              {actionStatus === 'success' && (
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-              )}
-              {actionStatus === 'failed' && (
-                <X className="h-3.5 w-3.5 text-rose-400" />
-              )}
-              <span className="text-[10px] font-semibold text-zinc-400">{actionMessage || 'Processing...'}</span>
+            <div className="flex items-center gap-1.5">
+              {actionStatus === 'loading' && <Loader2 className="h-3 w-3 text-cyan-400 animate-spin" />}
+              {actionStatus === 'success' && <CheckCircle2 className="h-3 w-3 text-emerald-400" />}
+              {actionStatus === 'failed' && <X className="h-3 w-3 text-rose-400" />}
+              <span className="text-[10px] font-bold text-text-secondary">{actionMessage}</span>
             </div>
             {actionStatus === 'failed' && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-5 px-1.5 text-[9px] rounded-lg text-zinc-400 hover:text-white"
+              <button 
+                className="text-[9px] font-bold text-text-muted hover:text-foreground outline-none"
                 onClick={() => setActionStatus('idle')}
               >
                 Clear
-              </Button>
+              </button>
             )}
           </motion.div>
         ) : (
           <>
-            {/* Inline Action buttons for leave/expense approvals */}
+            {/* Approval Request Actions */}
             {n.type === 'request_pending' && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="inline-action-element border-t border-white/5 pt-2 flex items-center gap-2"
+                className="inline-action-element border-t border-white/5 pt-2.5 flex items-center gap-2"
               >
-                <Button
-                  size="sm"
-                  className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg px-2.5 h-7 text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-all"
+                <button
+                  className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/15 rounded-lg px-2.5 py-1 text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-all active:scale-95 outline-none cursor-pointer"
                   onClick={() => handleApprovalRequest('approved')}
                 >
-                  <Check className="h-3 w-3" /> Approve
-                </Button>
-                <Button
-                  size="sm"
-                  className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-lg px-2.5 h-7 text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-all"
+                  Approve
+                </button>
+                <button
+                  className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/15 rounded-lg px-2.5 py-1 text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-all active:scale-95 outline-none cursor-pointer"
                   onClick={() => handleApprovalRequest('rejected')}
                 >
-                  <X className="h-3 w-3" /> Reject
-                </Button>
+                  Reject
+                </button>
               </motion.div>
             )}
 
-            {/* Inline Action buttons for task status transitions */}
+            {/* Task Assignments Actions */}
             {n.type === 'task_assign' && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="inline-action-element border-t border-white/5 pt-2 flex items-center gap-2"
+                className="inline-action-element border-t border-white/5 pt-2.5 flex items-center gap-2"
               >
-                <Button
-                  size="sm"
-                  className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 rounded-lg px-2.5 h-7 text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-all"
+                <button
+                  className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/15 rounded-lg px-2.5 py-1 text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-all active:scale-95 outline-none cursor-pointer"
                   onClick={() => handleTaskStatusUpdate('in_progress')}
                 >
-                  <Play className="h-2.5 w-2.5 fill-current" /> Start Task
-                </Button>
-                <Button
-                  size="sm"
-                  className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg px-2.5 h-7 text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-all"
+                  <Play className="h-2.5 w-2.5 fill-current" /> Start
+                </button>
+                <button
+                  className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/15 rounded-lg px-2.5 py-1 text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-all active:scale-95 outline-none cursor-pointer"
                   onClick={() => handleTaskStatusUpdate('done')}
                 >
-                  <CheckCircle2 className="h-3 w-3" /> Complete Task
-                </Button>
+                  Complete
+                </button>
               </motion.div>
             )}
 
-            {/* Quick Comment / DM Reply input */}
+            {/* Quick Chat Reply Actions */}
             {(n.type === 'task_comment' || n.type === 'mention' || n.type === 'dm') && (
-              <div className="inline-action-element border-t border-white/5 pt-1.5">
+              <div className="inline-action-element border-t border-white/5 pt-2">
                 <AnimatePresence initial={false}>
                   {isReplying ? (
                     <motion.form
@@ -508,52 +468,50 @@ function NotifRow({
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          placeholder={n.type === 'dm' ? "Type direct reply..." : "Write quick comment..."}
+                          placeholder={n.type === 'dm' ? "Type reply..." : "Type quick comment..."}
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                           className="flex-1 bg-black/20 dark:bg-white/[0.01] border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-white focus:outline-none focus:border-cyan-500/30"
                           disabled={replyingLoading}
                           autoFocus
                         />
-                        <Button
+                        <button
                           type="submit"
-                          size="icon"
                           disabled={!replyText.trim() || replyingLoading}
-                          className="h-7 w-7 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 shrink-0 shadow-sm transition-all"
+                          className="h-7 w-7 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 shrink-0 shadow-sm transition-all flex items-center justify-center outline-none cursor-pointer"
                         >
                           {replyingLoading ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
                             <Send className="h-3 w-3" />
                           )}
-                        </Button>
+                        </button>
                       </div>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-4 px-1.5 text-[8px] rounded text-zinc-500 hover:text-zinc-300"
+                      <div className="flex items-center justify-end">
+                        <button
+                          type="button"
+                          className="text-[9px] font-bold text-text-muted hover:text-foreground outline-none"
                           onClick={() => {
                             synthSound('click');
                             setIsReplying(false);
                           }}
                         >
                           Cancel
-                        </Button>
+                        </button>
                       </div>
                     </motion.form>
                   ) : (
                     <motion.button
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-cyan-400 transition-colors font-semibold"
+                      className="flex items-center gap-1.5 text-[9px] text-text-muted hover:text-primary transition-colors font-extrabold outline-none"
                       onClick={() => {
                         synthSound('click');
                         setIsReplying(true);
                       }}
                     >
-                      <CornerDownRight className="h-3 w-3 text-zinc-600" />
-                      Quick Reply...
+                      <CornerDownRight className="h-3 w-3 text-text-muted/60" />
+                      Reply...
                     </motion.button>
                   )}
                 </AnimatePresence>
@@ -621,42 +579,27 @@ export function NotificationPanel({
       {open && (
         <motion.div
           ref={panelRef}
-          initial={{ opacity: 0, scale: 0.96, y: -6 }}
+          initial={{ opacity: 0, scale: 0.98, y: -4 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: -6 }}
+          exit={{ opacity: 0, scale: 0.98, y: -4 }}
           transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-          className="absolute top-[calc(100%+14px)] right-0 z-50 w-[calc(100vw-2rem)] sm:w-[380px] max-w-[calc(100vw-2rem)] origin-top-right overflow-hidden rounded-2xl aether-glass border border-border-default bg-surface-elevated/95 shadow-2xl backdrop-blur-3xl flex flex-col h-[520px] max-h-[calc(100vh-120px)]"
+          className="absolute top-[calc(100%+14px)] right-0 z-50 w-[calc(100vw-2rem)] sm:w-[380px] max-w-[calc(100vw-2rem)] origin-top-right overflow-hidden rounded-2xl aether-glass border border-border-default/60 bg-surface-elevated/95 shadow-2xl backdrop-blur-3xl flex flex-col h-[500px] max-h-[calc(100vh-120px)]"
         >
-          {/* Header Section */}
-          <div className="flex items-center justify-between border-b border-border-default/45 px-4 py-3 shrink-0">
-            <div className="flex items-center gap-2 select-none">
-              <div className="h-7 w-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary" style={{ color: 'var(--accent)' }}>
-                <Bell className="h-4 w-4" />
-              </div>
-              <span className="text-sm font-extrabold text-foreground">Notifications</span>
-              {unreadCount > 0 && (
-                <span 
-                  className="rounded-full px-2 py-0.5 text-[9px] font-black shadow-[0_0_8px_color-mix(in_srgb,var(--accent)_20%,transparent)] animate-pulse"
-                  style={{
-                    backgroundColor: 'oklch(from var(--accent) l c h / 15%)',
-                    border: '1px solid oklch(from var(--accent) l c h / 20%)',
-                    color: 'var(--accent)'
-                  }}
-                >
-                  {unreadCount} new
-                </span>
-              )}
-            </div>
+          {/* Header Section — Ultra Minimalist with just "Notifications" */}
+          <div className="flex items-center justify-between border-b border-border-default/40 px-4 py-3.5 shrink-0 select-none">
+            <h3 className="text-sm font-extrabold text-foreground tracking-wide">
+              Notifications
+            </h3>
             
-            <div className="flex items-center gap-1.5">
-              {/* Sound Synthesizer toggle */}
+            <div className="flex items-center gap-1">
+              {/* Compact Frosted Sound toggle */}
               <button
                 type="button"
-                title={soundMuted ? "Unmute UI chimes" : "Mute UI chimes"}
+                title={soundMuted ? "Unmute chimes" : "Mute chimes"}
                 className={cn(
-                  "h-7 w-7 rounded-lg flex items-center justify-center border text-text-muted hover:text-foreground transition-all cursor-pointer",
+                  "h-6 w-6 rounded-md flex items-center justify-center border text-text-muted hover:text-foreground transition-all cursor-pointer outline-none",
                   soundMuted 
-                    ? "bg-surface-hover/30 border-border-default/40" 
+                    ? "bg-transparent border-border-default/35" 
                     : "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
                 )}
                 onClick={toggleMute}
@@ -665,78 +608,67 @@ export function NotificationPanel({
               </button>
 
               {unreadCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <button
+                  type="button"
                   title="Mark all as read"
-                  className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5 transition-all duration-200"
+                  className="h-6 w-6 rounded-md flex items-center justify-center text-text-muted hover:text-foreground hover:bg-white/[0.03] outline-none transition-all cursor-pointer border border-transparent"
                   onClick={() => {
                     synthSound('success');
                     onMarkAllRead();
                   }}
                 >
-                  <CheckCheck className="h-4 w-4" />
-                </Button>
+                  <CheckCheck className="h-3.5 w-3.5" />
+                </button>
               )}
               
-              {/* Simplified Clear All CTA */}
               {notifications.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Clear All Notifications"
-                  className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5 transition-all duration-200"
+                <button
+                  type="button"
+                  title="Clear all"
+                  className="h-6 w-6 rounded-md flex items-center justify-center text-text-muted hover:text-rose-400 hover:bg-rose-500/10 outline-none transition-all cursor-pointer border border-transparent"
                   onClick={() => {
                     synthSound('whoosh');
                     onArchiveAll();
                   }}
                 >
-                  <Trash2 className="h-4 w-4 text-rose-400" />
-                </Button>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               )}
 
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
+                type="button"
                 title="Close"
-                className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer outline-none border border-transparent hover:border-white/5 transition-all duration-200"
+                className="h-6 w-6 rounded-md flex items-center justify-center text-text-muted hover:text-foreground hover:bg-white/[0.03] outline-none transition-all cursor-pointer border border-transparent"
                 onClick={onClose}
               >
-                <X className="h-4 w-4" />
-              </Button>
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
 
-          {/* Notifications List Container */}
-          <div className="flex-1 overflow-y-auto pr-1 select-none custom-scroll-thin bg-black/[0.02] dark:bg-white/[0.005]">
+          {/* Minimalist Notifications List Container */}
+          <div className="flex-1 overflow-y-auto pr-1 custom-scroll-thin bg-black/[0.01] dark:bg-white/[0.002]">
             <AnimatePresence mode="popLayout">
               {notifications.length === 0 ? (
                 <motion.div
-                  key="empty-state"
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  key="empty"
+                  initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
                   className="flex flex-col items-center justify-center py-20 px-8 text-center h-full select-none"
                 >
-                  <div 
-                    className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border shadow-inner animate-bounce-subtle"
-                    style={{
-                      backgroundColor: 'oklch(from var(--accent) l c h / 8%)',
-                      borderColor: 'oklch(from var(--accent) l c h / 15%)',
-                      color: 'var(--accent)'
-                    }}
-                  >
-                    <BellOff className="h-5 w-5" />
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.02] border border-white/5 text-text-muted/40 shadow-inner">
+                    <BellOff className="h-4.5 w-4.5" />
                   </div>
-                  <h4 className="text-xs font-extrabold text-foreground leading-normal">
-                    All caught up!
+                  <h4 className="text-xs font-bold text-foreground">
+                    All caught up
                   </h4>
-                  <p className="mt-1.5 text-[11px] text-text-muted max-w-[220px] leading-relaxed">
-                    No new workspace activity matching this category.
+                  <p className="mt-1 text-[10px] text-text-muted max-w-[200px] leading-relaxed">
+                    No new workspace activity to report.
                   </p>
                 </motion.div>
               ) : (
-                <div className="p-2 space-y-1.5">
+                <div className="p-2.5 space-y-1">
                   {notifications.map((n) => (
                     <NotifRow
                       key={n.id}
