@@ -18,6 +18,9 @@ interface WorkItemsTableProps {
   assigneeFilter: string;
   teamFilter: string;
   orgFilter: string;
+
+  onSelectTask?: (task: Task) => void;
+  onSelectGoal?: (goal: Goal) => void;
 }
 
 export function WorkItemsTable({
@@ -32,6 +35,8 @@ export function WorkItemsTable({
   assigneeFilter,
   teamFilter,
   orgFilter,
+  onSelectTask,
+  onSelectGoal,
 }: WorkItemsTableProps) {
   const [activeTab, setActiveTab] = useState<'tasks' | 'goals'>('tasks');
 
@@ -166,7 +171,8 @@ export function WorkItemsTable({
                   return (
                     <tr
                       key={t.id}
-                      className="transition-colors hover:bg-[--accent]/30 group"
+                      className="transition-colors hover:bg-[--accent]/30 group cursor-pointer"
+                      onClick={() => onSelectTask?.(t)}
                       style={{ background: i % 2 === 0 ? 'transparent' : 'oklch(from var(--card) l c h / 15%)' }}
                     >
                       {/* Title */}
@@ -288,7 +294,8 @@ export function WorkItemsTable({
                   return (
                     <tr
                       key={g.id}
-                      className="transition-colors hover:bg-[--accent]/30 group"
+                      className="transition-colors hover:bg-[--accent]/30 group cursor-pointer"
+                      onClick={() => onSelectGoal?.(g)}
                       style={{ background: i % 2 === 0 ? 'transparent' : 'oklch(from var(--card) l c h / 15%)' }}
                     >
                       {/* Title */}

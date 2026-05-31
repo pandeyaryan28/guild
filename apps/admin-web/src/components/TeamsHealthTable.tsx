@@ -26,6 +26,7 @@ interface TeamsHealthTableProps {
   goals: Goal[];
   orgs: Organization[];
   refresh: () => void;
+  onSelectProject?: (project: Project) => void;
 }
 
 export function TeamsHealthTable({
@@ -35,7 +36,8 @@ export function TeamsHealthTable({
   tasks,
   goals,
   orgs,
-  refresh
+  refresh,
+  onSelectProject
 }: TeamsHealthTableProps) {
   const [activeTab, setActiveTab] = useState<'squads' | 'projects'>('squads');
   const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
@@ -587,7 +589,8 @@ export function TeamsHealthTable({
                 return (
                   <div
                     key={project.id}
-                    className="glass rounded-2xl p-5 border border-white/5 card-hover animate-fade-up flex flex-col justify-between min-h-[180px]"
+                    className="glass rounded-2xl p-5 border border-white/5 card-hover animate-fade-up flex flex-col justify-between min-h-[180px] cursor-pointer"
+                    onClick={() => onSelectProject?.(project)}
                   >
                     {/* Top title and Edit controls */}
                     <div className="space-y-2">

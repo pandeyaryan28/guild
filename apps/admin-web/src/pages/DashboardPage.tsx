@@ -7,6 +7,10 @@ import { PeopleWorkloadTable } from '../components/PeopleWorkloadTable';
 import { TeamsHealthTable } from '../components/TeamsHealthTable';
 import { WorkItemsTable } from '../components/WorkItemsTable';
 import { RequestsMappingTable } from '../components/RequestsMappingTable';
+import { TaskDetailDrawer } from '../components/TaskDetailDrawer';
+import { GoalDetailDrawer } from '../components/GoalDetailDrawer';
+import { ProjectDetailDrawer } from '../components/ProjectDetailDrawer';
+import { AnimatePresence } from 'motion/react';
 import {
   updateOrganizationDetails,
   disableGlobalInviteLink,
@@ -69,6 +73,11 @@ export function DashboardPage({
   
   // ─── STATE FOR OVERVIEW ──────────────────────────────────────────────────
   const [overviewDateRange, setOverviewDateRange] = useState<string>('30d');
+
+  // ─── STATES FOR DRAWER CANVASES ──────────────────────────────────────────
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   // ─── STATES FOR PEOPLE SCREEN ────────────────────────────────────────────
   const [peopleSearch, setPeopleSearch] = useState<string>('');
@@ -632,6 +641,7 @@ export function DashboardPage({
             goals={goals}
             orgs={orgs}
             refresh={refresh}
+            onSelectProject={setSelectedProject}
           />
         </div>
       )}
@@ -711,6 +721,8 @@ export function DashboardPage({
             assigneeFilter={workAssignee}
             teamFilter={workTeam}
             orgFilter={workOrg}
+            onSelectTask={setSelectedTask}
+            onSelectGoal={setSelectedGoal}
           />
         </div>
       )}
@@ -933,6 +945,59 @@ export function DashboardPage({
           </div>
         </div>
       )}
+
+      {/* ─── DETAIL CANVAS DRAWERS ─── */}
+      <AnimatePresence>
+        {selectedTask && (
+          <TaskDetailDrawer
+            isOpen={!!selectedTask}
+            onClose={() => setSelectedTask(null)}
+            task={selectedTask}
+            users={users}
+            projects={projects}
+            goals={goals}
+            actor={{
+              uid: currentUser?.uid || '',
+              name: currentUser?.fullName || currentUser?.username || 'Admin',
+            }}
+            refresh={refresh}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedGoal && (
+          <GoalDetailDrawer
+            isOpen={!!selectedGoal}
+            onClose={() => setSelectedGoal(null)}
+            goal={selectedGoal}
+            users={users}
+            projects={projects}
+            actor={{
+              uid: currentUser?.uid || '',
+              name: currentUser?.fullName || currentUser?.username || 'Admin',
+            }}
+            refresh={refresh}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedProject && (
+          <ProjectDetailDrawer
+            isOpen={!!selectedProject}
+            onClose={() => setSelectedProject(null)}
+            project={selectedProject}
+            users={users}
+            tasks={tasks}
+            actor={{
+              uid: currentUser?.uid || '',
+              name: currentUser?.fullName || currentUser?.username || 'Admin',
+            }}
+            refresh={refresh}
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   );
