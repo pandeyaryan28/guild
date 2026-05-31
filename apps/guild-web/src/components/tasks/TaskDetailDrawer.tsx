@@ -5,7 +5,8 @@ import {
   X, Check, Calendar, User, Tag, 
   Trash2, Send, Clock, AlertCircle, Play, 
   ChevronRight, Sparkles, MessageSquare, ListTodo,
-  Paperclip, Loader2, ListChecks, CheckCircle2, UserPlus, HelpCircle
+  Paperclip, Loader2, ListChecks, CheckCircle2, UserPlus, HelpCircle,
+  Flag, Share2
 } from 'lucide-react';
 import { 
   updateTask, moveTask, updatePriority, 
@@ -348,34 +349,124 @@ export function TaskDetailDrawer({
     }
   };
 
+  // --- Redesign Helpers ---
+  const handleCopyLink = () => {
+    const url = `${window.location.origin}${window.location.pathname}?task=${task.id}`;
+    navigator.clipboard.writeText(url);
+    setToastMessage("Task link copied!");
+  };
+
+  const handleDeleteTask = async () => {
+    if (confirm("Are you sure you want to delete this task?")) {
+      try {
+        await deleteTask(task.id);
+        onClose();
+      } catch (err) {
+        console.error("Failed to delete task:", err);
+      }
+    }
+  };
+
+  const renderStatusTrigger = (s: TaskStatus) => {
+    const config = STATUS_CONFIG[s];
+    const bgColors: Record<TaskStatus, string> = {
+      todo: "bg-neutral-100/80 hover:bg-neutral-200/80 dark:bg-neutral-800/60 dark:hover:bg-neutral-700/60 border-neutral-200/60 dark:border-neutral-800 text-neutral-800 dark:text-neutral-250",
+      in_progress: "bg-blue-50/80 hover:bg-blue-100/80 dark:bg-blue-950/20 dark:hover:bg-blue-950/40 border-blue-150 dark:border-blue-900/40 text-blue-600 dark:text-blue-400",
+      review: "bg-amber-50/80 hover:bg-amber-100/80 dark:bg-amber-950/20 dark:hover:bg-amber-950/40 border-amber-150 dark:border-amber-900/40 text-amber-600 dark:text-amber-400",
+      done: "bg-emerald-50/80 hover:bg-emerald-100/80 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 border-emerald-150 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400"
+    };
+
+    return (
+      <div className={cn("flex items-center justify-between w-full border rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-xs", bgColors[s])}>
+        <div className="flex items-center gap-2.5">
+          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: config.dot }} />
+          <span>{config.label}</span>
+        </div>
+        <ChevronRight className="w-3.5 h-3.5 rotate-90 shrink-0 opacity-60" />
+      </div>
+    );
+  };
+
+  const renderStatusOption = (s: TaskStatus, isSelected: boolean) => {
+    const config = STATUS_CONFIG[s];
+    return (
+      <div className={cn(
+        "flex items-center justify-between w-full px-3.5 py-2.5 text-xs font-bold hover:bg-neutral-50 dark:hover:bg-neutral-800/80 transition-colors",
+        isSelected ? "text-primary bg-primary/[0.03] dark:bg-primary/[0.05]" : "text-neutral-700 dark:text-neutral-350"
+      )}>
+        <div className="flex items-center gap-2.5">
+          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: config.dot }} />
+          <span>{config.label}</span>
+        </div>
+        {isSelected && <Check className="w-4 h-4 text-primary shrink-0 stroke-[2.5]" />}
+      </div>
+    );
+  };
+
+  const renderPriorityTrigger = (p: TaskPriority) => {
+    const config = PRIORITY_CONFIG[p];
+    const borderColors: Record<TaskPriority, string> = {
+      none: "border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-500 dark:text-neutral-450",
+      low: "border-sky-200 dark:border-sky-900/40 bg-sky-50/20 dark:bg-sky-950/10 text-sky-600 dark:text-sky-400",
+      medium: "border-amber-200 dark:border-amber-900/40 bg-amber-50/20 dark:bg-amber-950/10 text-amber-600 dark:text-amber-400",
+      high: "border-orange-200 dark:border-orange-900/40 bg-orange-50/20 dark:bg-orange-950/10 text-orange-600 dark:text-orange-400",
+      urgent: "border-rose-200 dark:border-rose-900/40 bg-rose-50/20 dark:bg-rose-950/10 text-rose-600 dark:text-rose-400"
+    };
+
+    return (
+      <div className={cn("flex items-center justify-between w-full border rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-xs", borderColors[p])}>
+        <div className="flex items-center gap-2.5">
+          <Flag className="w-3.5 h-3.5 shrink-0" style={{ fill: config.color, stroke: config.color }} />
+          <span>{config.label} Priority</span>
+        </div>
+        <ChevronRight className="w-3.5 h-3.5 rotate-90 shrink-0 opacity-60" />
+      </div>
+    );
+  };
+
+  const renderPriorityOption = (p: TaskPriority, isSelected: boolean) => {
+    const config = PRIORITY_CONFIG[p];
+    return (
+      <div className={cn(
+        "flex items-center justify-between w-full px-3.5 py-2.5 text-xs font-bold hover:bg-neutral-50 dark:hover:bg-neutral-800/80 transition-colors",
+        isSelected ? "text-primary bg-primary/[0.03] dark:bg-primary/[0.05]" : "text-neutral-700 dark:text-neutral-350"
+      )}>
+        <div className="flex items-center gap-2.5">
+          <Flag className="w-3.5 h-3.5 shrink-0" style={{ fill: config.color, stroke: config.color }} />
+          <span>{config.label} Priority</span>
+        </div>
+        {isSelected && <Check className="w-4 h-4 text-primary shrink-0 stroke-[2.5]" />}
+      </div>
+    );
+  };
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex justify-end overflow-hidden select-none pointer-events-none">
         
-        {/* Backdrop overlay with elegant blur */}
+        {/* Transparent backdrop with blur */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-neutral-950/20 dark:bg-neutral-950/50 backdrop-blur-xs z-40 pointer-events-auto"
+          className="fixed inset-0 bg-neutral-950/15 dark:bg-neutral-950/45 backdrop-blur-xs z-40 pointer-events-auto"
         />
 
-        {/* Drawer panel with premium spacing, glassmorphic touches, and shadow */}
+        {/* Redesigned drawer panel */}
         <motion.div
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
-          transition={{ type: 'spring', stiffness: 380, damping: 35 }}
-          className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col h-full pointer-events-auto"
+          transition={{ type: 'spring', stiffness: 350, damping: 33 }}
+          className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white/95 dark:bg-neutral-900/95 border-l border-neutral-200/60 dark:border-neutral-800/60 shadow-2xl flex flex-col h-full pointer-events-auto backdrop-blur-xl"
         >
           
-          {/* Premium Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-850 flex-shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4.5 border-b border-neutral-100 dark:border-neutral-850/60 flex-shrink-0 bg-neutral-50/30 dark:bg-neutral-900/30 backdrop-blur-sm">
             <div className="min-w-0 flex-1 mr-4">
               {parentTask ? (
-                // Beautiful breadcrumbs showing hierarchy
-                <div className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-500 font-semibold mb-0.5 truncate">
+                <div className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-500 font-bold mb-0.5 truncate">
                   <span 
                     onClick={() => setSearchParams({ task: parentTask.id })}
                     className="hover:text-primary cursor-pointer transition-colors max-w-[200px] truncate block"
@@ -383,51 +474,70 @@ export function TaskDetailDrawer({
                     {parentTask.title}
                   </span>
                   <ChevronRight className="w-3.5 h-3.5 text-neutral-350 dark:text-neutral-700 shrink-0" />
-                  <span className="text-neutral-500 dark:text-neutral-400 font-bold max-w-[200px] truncate block">
+                  <span className="text-neutral-550 dark:text-neutral-300 font-extrabold max-w-[200px] truncate block">
                     Current task
                   </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500">
-                    Task Parameters
+                  <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/60 px-2 py-0.5 rounded-md">
+                    Task Workspace
                   </span>
                 </div>
               )}
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-850 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-sm"
-            >
-              <X className="w-4 h-4" />
-            </button>
+
+            {/* Quick Actions & Close Buttons */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleCopyLink}
+                className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                title="Copy Link to Task"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleDeleteTask}
+                className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:border-rose-200/40 hover:bg-rose-50/20 dark:hover:border-rose-900/20 text-neutral-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                title="Delete Task"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <div className="h-6 w-[1px] bg-neutral-200 dark:bg-neutral-800 mx-1 shrink-0" />
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Two-Column Split Layout */}
+          {/* Body Content */}
           <div className="flex-grow flex flex-col md:flex-row overflow-hidden min-h-0">
             
-            {/* Left Column: Title, Description, Subtasks, Activity */}
-            <div className="flex-1 flex flex-col min-w-0 border-r border-neutral-100 dark:border-neutral-850 overflow-y-auto scrollbar-thin p-6 space-y-6">
+            {/* Left Workspace Column */}
+            <div className="flex-1 flex flex-col min-w-0 border-r border-neutral-100 dark:border-neutral-850/60 overflow-y-auto scrollbar-thin p-6 space-y-6">
               
-              {/* Creator/Assigner Review & Approval Banner */}
+              {/* Approval revisions block */}
               {task.status === 'review' && task.creatorId === actor.uid && (
-                <div className="bg-amber-500/[0.04] dark:bg-amber-500/[0.06] border border-amber-500/25 rounded-2xl p-4.5 space-y-3.5 relative overflow-hidden shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="h-7 w-7 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shrink-0 shadow-xs">
-                      <Clock className="w-4 h-4" />
+                <div className="bg-amber-500/[0.03] dark:bg-amber-500/[0.05] border border-amber-500/20 rounded-2xl p-4.5 space-y-3.5 relative overflow-hidden shadow-xs">
+                  <div className="flex items-start gap-3.5">
+                    <div className="h-7.5 w-7.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shrink-0 shadow-xs">
+                      <Clock className="w-4.5 h-4.5" />
                     </div>
                     <div className="space-y-1">
                       <h4 className="text-xs font-black uppercase tracking-wider text-amber-500">
                         Review Approval Request
                       </h4>
-                      <p className="text-[11px] text-neutral-600 dark:text-neutral-350 leading-relaxed font-semibold">
+                      <p className="text-[11px] text-neutral-600 dark:text-neutral-400 leading-relaxed font-semibold">
                         This task has been submitted for review. Please inspect the revisions and approve it, or send it back with comments.
                       </p>
                     </div>
                   </div>
 
                   {!isSendBackOpen ? (
-                    <div className="flex items-center gap-3.5 pt-1.5 border-t border-amber-500/10">
+                    <div className="flex items-center gap-3 pt-2.5 border-t border-amber-500/10">
                       <button
                         onClick={() => handleStatusChange('done')}
                         className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-500/10"
@@ -462,7 +572,7 @@ export function TaskDetailDrawer({
                           });
                           setIsSendBackOpen(false);
                           setSendBackText('');
-                          setToastMessage("Task sent back with revisions requested.");
+                          setToastMessage("Revisions requested.");
                         } catch (err) {
                           console.error("Failed to request changes:", err);
                         } finally {
@@ -507,8 +617,8 @@ export function TaskDetailDrawer({
                 </div>
               )}
 
-              {/* Title Field with satisfy focus */}
-              <div className="space-y-1">
+              {/* Title Header */}
+              <div className="space-y-1.5">
                 {isEditingTitle ? (
                   <input
                     type="text"
@@ -517,22 +627,22 @@ export function TaskDetailDrawer({
                     onBlur={handleTitleBlur}
                     onKeyDown={(e) => e.key === 'Enter' && handleTitleBlur()}
                     autoFocus
-                    className="w-full text-lg font-bold text-neutral-850 dark:text-neutral-100 outline-none border-b-2 border-primary/50 bg-transparent pb-1 transition-all"
+                    className="w-full text-xl font-bold text-neutral-850 dark:text-neutral-100 outline-none border-b border-primary bg-transparent pb-1.5 transition-all"
                   />
                 ) : (
                   <h2
                     onClick={() => setIsEditingTitle(true)}
-                    className="text-lg font-bold text-neutral-850 dark:text-neutral-100 cursor-text hover:bg-neutral-50 dark:hover:bg-neutral-850/30 px-2 py-1 rounded-xl border border-transparent hover:border-neutral-200/20 transition-all break-words leading-tight"
+                    className="text-xl font-bold text-neutral-850 dark:text-neutral-100 cursor-text hover:bg-neutral-50/50 dark:hover:bg-neutral-850/20 px-2 py-1 -ml-2 rounded-xl border border-transparent hover:border-neutral-200/30 transition-all break-words leading-tight"
                   >
                     {title || <span className="text-neutral-400 italic font-normal">Untitled Task</span>}
                   </h2>
                 )}
               </div>
 
-              {/* Description box */}
+              {/* Description Pad */}
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-500 px-1">
-                  Details
+                <label className="text-[10px] uppercase font-black tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+                  Task Guidelines & Description
                 </label>
                 {isEditingDesc ? (
                   <textarea
@@ -542,67 +652,65 @@ export function TaskDetailDrawer({
                     rows={4}
                     autoFocus
                     placeholder="Provide expectation details, notes or guidelines..."
-                    className="w-full bg-neutral-50 dark:bg-neutral-850/30 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-4 py-3.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 outline-none focus:border-primary/50 font-semibold resize-none transition-all"
+                    className="w-full bg-neutral-50/50 dark:bg-neutral-850/20 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-4 py-3.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 outline-none focus:border-primary/50 font-semibold resize-none transition-all"
                   />
                 ) : (
                   <div
                     onClick={() => setIsEditingDesc(true)}
-                    className="min-h-16 text-xs text-neutral-650 dark:text-neutral-350 hover:bg-neutral-50 dark:hover:bg-neutral-850/20 px-4 py-3.5 rounded-2xl border border-neutral-150 dark:border-neutral-850 cursor-text transition-all leading-relaxed whitespace-pre-wrap font-semibold"
+                    className="min-h-16 text-xs text-neutral-650 dark:text-neutral-350 hover:bg-neutral-50/50 dark:hover:bg-neutral-850/10 px-4 py-3.5 rounded-2xl border border-neutral-150 dark:border-neutral-850/80 cursor-text transition-all leading-relaxed whitespace-pre-wrap font-semibold"
                   >
-                    {description || <span className="text-neutral-400 italic font-normal">Add descriptive notes or requirements...</span>}
+                    {description || <span className="text-neutral-400 italic font-normal">Add descriptive notes, key requirements or guidelines...</span>}
                   </div>
                 )}
               </div>
 
-              {/* Inline Subtasks Card (Premium addition) */}
-              <div className="bg-neutral-50/50 dark:bg-neutral-850/15 border border-neutral-150 dark:border-neutral-850 rounded-2xl p-4.5 space-y-4">
+              {/* Subtasks checklist area */}
+              <div className="bg-neutral-50/20 dark:bg-neutral-850/10 border border-neutral-150 dark:border-neutral-850/80 rounded-2xl p-4.5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <ListChecks className="w-4 h-4 text-primary" />
-                    <h3 className="text-xs font-bold text-neutral-850 dark:text-neutral-200">Subtasks</h3>
+                    <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200">Subtask Items</h3>
                   </div>
                   {totalSubtasksCount > 0 && (
-                    <span className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-black text-neutral-450 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/80 px-2 py-0.5 rounded-full">
                       {completedSubtasksCount} of {totalSubtasksCount} done
                     </span>
                   )}
                 </div>
 
-                {/* Subtasks Progress Bar */}
+                {/* Subtask Progress indicator */}
                 {totalSubtasksCount > 0 && (
                   <div className="space-y-1">
-                    <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-neutral-200/70 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden shadow-inner">
                       <div 
-                        className="bg-primary h-full rounded-full transition-all duration-500 ease-out" 
+                        className="bg-gradient-to-r from-violet-500 to-indigo-500 h-full rounded-full transition-all duration-500 ease-out shadow-xs" 
                         style={{ width: `${subtaskProgress}%` }}
                       />
                     </div>
                   </div>
                 )}
 
-                {/* Subtask list */}
+                {/* Subtask items card stack */}
                 {subtasks.length > 0 ? (
                   <div className="space-y-2">
                     {subtasks.map((sub) => (
                       <div 
                         key={sub.id}
-                        className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group"
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 hover:shadow-xs transition-all group"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          {/* Animated Checkbox status toggle */}
                           <button
                             onClick={() => handleToggleSubtaskStatus(sub)}
                             className={cn(
-                              "h-4.5 w-4.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                              "h-4.5 w-4.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-2xs",
                               sub.status === 'done' 
                                 ? "bg-primary border-primary text-white" 
-                                : "border-neutral-300 dark:border-neutral-700 hover:border-primary bg-transparent"
+                                : "border-neutral-350 dark:border-neutral-700 hover:border-primary bg-transparent"
                             )}
                           >
                             {sub.status === 'done' && <Check className="w-2.5 h-2.5 stroke-[3.5]" />}
                           </button>
 
-                          {/* Click subtask title to switch context */}
                           <span 
                             onClick={() => setSearchParams({ task: sub.id })}
                             className={cn(
@@ -614,12 +722,11 @@ export function TaskDetailDrawer({
                           </span>
                         </div>
 
-                        {/* Assignee initials and delete buttons on right */}
                         <div className="flex items-center gap-2 shrink-0">
                           {sub.assigneeIds.slice(0, 1).map((uid) => (
                             <div 
                               key={uid} 
-                              className="h-5.5 w-5.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[8px] font-bold text-primary shrink-0 overflow-hidden"
+                              className="h-5.5 w-5.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[8px] font-bold text-primary shrink-0 overflow-hidden shadow-2xs"
                               title={getMemberName(uid)}
                             >
                               {getMemberPhotoURL(uid) ? (
@@ -640,19 +747,19 @@ export function TaskDetailDrawer({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[11px] text-neutral-400 dark:text-neutral-500 italic text-center py-2">
-                    No subtasks added yet. Break task into smaller chunks.
+                  <p className="text-[11px] text-neutral-400 dark:text-neutral-550 italic text-center py-2">
+                    No checklist subtasks. Break this task into smaller steps.
                   </p>
                 )}
 
-                {/* Quick-Add Subtask Form */}
+                {/* Subtask inline creation input */}
                 <form onSubmit={handleAddSubtaskSubmit} className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Add a subtask..."
+                    placeholder="Add a subtask step..."
                     value={newSubtaskTitle}
                     onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                    className="flex-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold"
+                    className="flex-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 py-2 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold"
                   />
                   <button
                     type="submit"
@@ -664,7 +771,7 @@ export function TaskDetailDrawer({
                 </form>
               </div>
 
-              {/* Task Media & Attachments */}
+              {/* Attachments Section */}
               <div>
                 <AttachmentSection
                   entityType="tasks"
@@ -680,45 +787,58 @@ export function TaskDetailDrawer({
                 />
               </div>
 
-              {/* Tabbed Feed: Comments vs. Premium Activity Log */}
+              {/* Discussion & Activity Timelines */}
               <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex flex-col flex-grow min-h-[320px]">
-                <div className="flex border-b border-neutral-150 dark:border-neutral-850 mb-4 flex-shrink-0">
+                <div className="flex border-b border-neutral-150 dark:border-neutral-850/60 mb-4 flex-shrink-0 relative">
                   <button
                     onClick={() => setActiveTab('comments')}
                     className={cn(
-                      "pb-2 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5",
+                      "pb-2 px-4 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 relative z-10",
                       activeTab === 'comments'
-                        ? "border-primary text-neutral-850 dark:text-neutral-200 font-extrabold"
-                        : "border-transparent text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                        ? "text-neutral-900 dark:text-neutral-100 font-black"
+                        : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 font-semibold"
                     )}
                   >
                     <MessageSquare className="w-4 h-4" />
                     <span>Comments ({comments.length})</span>
+                    {activeTab === 'comments' && (
+                      <motion.div 
+                        layoutId="activeTabUnderline" 
+                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" 
+                      />
+                    )}
                   </button>
                   <button
                     onClick={() => setActiveTab('activity')}
                     className={cn(
-                      "pb-2 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5",
+                      "pb-2 px-4 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 relative z-10",
                       activeTab === 'activity'
-                        ? "border-primary text-neutral-850 dark:text-neutral-200 font-extrabold"
-                        : "border-transparent text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                        ? "text-neutral-900 dark:text-neutral-100 font-black"
+                        : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 font-semibold"
                     )}
                   >
                     <ListTodo className="w-4 h-4" />
                     <span>Activity Log ({activities.length})</span>
+                    {activeTab === 'activity' && (
+                      <motion.div 
+                        layoutId="activeTabUnderline" 
+                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" 
+                      />
+                    )}
                   </button>
                 </div>
 
-                {/* Tab content viewports */}
+                {/* Switchable Thread Panels */}
                 <div className="flex-grow flex flex-col overflow-hidden min-h-[220px]">
                   {activeTab === 'comments' ? (
                     <div className="flex flex-col h-full overflow-hidden justify-between">
-                      {/* Comments Thread */}
+                      
+                      {/* Comments view container */}
                       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 scrollbar-thin max-h-[250px]">
                         {comments.length > 0 ? (
                           comments.map((comment) => (
-                            <div key={comment.id} className="flex items-start gap-3 bg-neutral-50/30 dark:bg-neutral-850/10 p-3.5 rounded-2xl border border-neutral-100 dark:border-neutral-850/50">
-                              <div className="h-7.5 w-7.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 overflow-hidden shadow-sm">
+                            <div key={comment.id} className="flex items-start gap-3 bg-neutral-50/30 dark:bg-neutral-850/10 p-3.5 rounded-2xl border border-neutral-100 dark:border-neutral-850/50 hover:shadow-2xs transition-all">
+                              <div className="h-7.5 w-7.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 overflow-hidden shadow-xs">
                                 {getMemberPhotoURL(comment.authorId) ? (
                                   <img src={getMemberPhotoURL(comment.authorId)} alt={comment.authorName} className="h-full w-full object-cover" />
                                 ) : (
@@ -727,26 +847,26 @@ export function TaskDetailDrawer({
                               </div>
                               <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[11px] font-bold text-neutral-850 dark:text-neutral-200 truncate">
+                                  <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 truncate">
                                     {comment.authorName}
                                   </span>
                                   <span className="text-[9px] text-neutral-400 dark:text-neutral-500 font-mono">
                                     {formatTimestamp(comment.createdAt)}
                                   </span>
                                 </div>
-                                <p className="text-xs text-neutral-650 dark:text-neutral-350 font-semibold leading-relaxed break-words">
+                                <p className="text-xs text-neutral-650 dark:text-neutral-300 font-semibold leading-relaxed break-words whitespace-pre-wrap">
                                   {comment.body}
                                 </p>
                                 
                                 {comment.files && comment.files.length > 0 && (
-                                  <div className="mt-2 space-y-1 max-w-sm">
+                                  <div className="mt-2 space-y-1.5 max-w-sm">
                                     {comment.files.map((file, fIdx) => (
                                       <a
                                         key={fIdx}
                                         href={file.url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="flex items-center gap-2 p-1.5 rounded-lg border border-neutral-200/40 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 text-[10px] text-primary font-bold truncate transition-colors shadow-xs"
+                                        className="flex items-center gap-2 p-1.5 rounded-xl border border-neutral-200/40 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 text-[10px] text-primary font-bold truncate transition-colors shadow-2xs"
                                       >
                                         <Paperclip className="w-3 h-3 text-primary shrink-0" />
                                         <span className="truncate flex-1">{file.name}</span>
@@ -761,14 +881,14 @@ export function TaskDetailDrawer({
                             </div>
                           ))
                         ) : (
-                          <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-500 italic">
+                          <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-550 italic">
                             No team comments on this task yet. Add yours below.
                           </div>
                         )}
                       </div>
 
-                      {/* Comment Input Section */}
-                      <div className="border-t border-neutral-150 dark:border-neutral-850 pt-3.5 flex-shrink-0 flex flex-col gap-2">
+                      {/* Comment inputs stack */}
+                      <div className="border-t border-neutral-150 dark:border-neutral-850/60 pt-3.5 flex-shrink-0 flex flex-col gap-2">
                         <AttachmentInput
                           selectedFiles={commentFiles}
                           onRemove={(idx) => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
@@ -777,11 +897,11 @@ export function TaskDetailDrawer({
                         <form onSubmit={handleAddComment} className="flex gap-2">
                           <input
                             type="text"
-                            placeholder={uploadingCommentFiles ? "Uploading attachment files..." : "Add your comment here..."}
+                            placeholder={uploadingCommentFiles ? "Uploading attachments..." : "Add a team comment here..."}
                             value={commentBody}
                             disabled={uploadingCommentFiles}
                             onChange={(e) => setCommentBody(e.target.value)}
-                            className="flex-1 bg-neutral-50 dark:bg-neutral-850/30 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold disabled:opacity-50"
+                            className="flex-1 bg-neutral-50/70 dark:bg-neutral-850/20 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold disabled:opacity-50"
                           />
                           <button
                             type="button"
@@ -796,15 +916,15 @@ export function TaskDetailDrawer({
                               };
                               input.click();
                             }}
-                            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-500 dark:text-neutral-450 hover:text-neutral-800 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center"
-                            title="Attach File"
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-500 dark:text-neutral-450 hover:text-neutral-800 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shadow-2xs"
+                            title="Attach Files"
                           >
                             <Paperclip className="w-4 h-4" />
                           </button>
                           <button
                             type="submit"
                             disabled={uploadingCommentFiles}
-                            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-350 hover:text-neutral-850 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center"
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-350 hover:text-neutral-850 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shadow-2xs"
                           >
                             {uploadingCommentFiles ? (
                               <Loader2 className="w-4 h-4 animate-spin text-primary" />
@@ -816,24 +936,22 @@ export function TaskDetailDrawer({
                       </div>
                     </div>
                   ) : (
-                    // Upgraded Rich Timeline Activity Log
                     <div className="flex-1 overflow-y-auto space-y-0.5 pr-1 scrollbar-thin max-h-[320px] pt-1">
                       {activities.length > 0 ? (
                         activities.map((act) => (
                           <div 
                             key={act.id} 
-                            className="flex items-start gap-4 pb-5 border-l-2 border-neutral-100 dark:border-neutral-800 ml-4.5 pl-6 relative last:border-0"
+                            className="flex items-start gap-4 pb-5 border-l border-neutral-100 dark:border-neutral-800 ml-4.5 pl-6 relative last:border-0"
                           >
-                            {/* Visual background coded indicator */}
                             <div className={cn(
-                              "absolute -left-[15px] top-0 h-7 w-7 rounded-full border flex items-center justify-center shadow-xs shrink-0 bg-white dark:bg-neutral-900",
+                              "absolute -left-[14.5px] top-0 h-7 w-7 rounded-full border flex items-center justify-center shadow-xs shrink-0 bg-white dark:bg-neutral-900 z-10",
                               getActivityColor(act.type)
                             )}>
                               {getActivityIcon(act.type)}
                             </div>
                             <div className="min-w-0 flex-1 space-y-0.5">
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-[11px] font-bold text-neutral-850 dark:text-neutral-200 truncate">
+                                <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-250 truncate">
                                   {act.actorName}
                                 </span>
                                 <span className="text-[9px] text-neutral-400 dark:text-neutral-500 font-mono shrink-0">
@@ -847,7 +965,7 @@ export function TaskDetailDrawer({
                           </div>
                         ))
                       ) : (
-                        <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-500 italic">
+                        <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-550 italic">
                           No audit activities registered yet.
                         </div>
                       )}
@@ -858,47 +976,41 @@ export function TaskDetailDrawer({
 
             </div>
 
-            {/* Right Column: Parameters Dashboard */}
-            <div className="w-full md:w-64 flex-shrink-0 bg-neutral-50/50 dark:bg-neutral-850/10 p-6 space-y-6 flex flex-col overflow-y-auto scrollbar-thin">
+            {/* Right Parameters Dashboard Column */}
+            <div className="w-full md:w-64 flex-shrink-0 bg-neutral-50/20 dark:bg-neutral-900/10 p-6 space-y-5.5 flex flex-col overflow-y-auto scrollbar-thin border-t md:border-t-0 border-neutral-100 dark:border-neutral-850/60">
               
-              {/* Parameter Block: Status */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
-                  Status
+              {/* Status block with custom selector */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+                  Workflow Status
                 </label>
-                <select
+                <CustomDropdown
                   value={task.status}
-                  onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
-                  className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 outline-none cursor-pointer focus:border-primary/50 transition-all font-bold"
-                >
-                  {STATUSES.map(s => (
-                    <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
-                  ))}
-                </select>
+                  onChange={handleStatusChange}
+                  options={STATUSES}
+                  renderTrigger={renderStatusTrigger}
+                  renderOption={renderStatusOption}
+                />
               </div>
 
-              {/* Parameter Block: Priority */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
-                  Priority
+              {/* Priority block with custom selector */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+                  Task Urgency
                 </label>
-                <select
+                <CustomDropdown
                   value={task.priority}
-                  onChange={(e) => handlePriorityChange(e.target.value as TaskPriority)}
-                  className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 outline-none cursor-pointer focus:border-primary/50 transition-all font-bold"
-                >
-                  <option value="none">None</option>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
+                  onChange={handlePriorityChange}
+                  options={['none', 'low', 'medium', 'high', 'urgent']}
+                  renderTrigger={renderPriorityTrigger}
+                  renderOption={renderPriorityOption}
+                />
               </div>
 
-              {/* Parameter Block: Assignee Selector list */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
-                  Assignees
+              {/* Assignees Collaborators block */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+                  Team Assignees
                 </label>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin pr-1">
                   {members.map((m) => {
@@ -908,10 +1020,10 @@ export function TaskDetailDrawer({
                         key={m.uid}
                         onClick={() => handleAssigneeChange(m.uid)}
                         className={cn(
-                          "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left border transition-all cursor-pointer",
+                          "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left border transition-all cursor-pointer shadow-2xs",
                           isAssigned
-                            ? "bg-primary/[0.06] border-primary/25 text-neutral-850 dark:text-white"
-                            : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-50/50"
+                            ? "bg-primary/[0.04] border-primary/25 text-primary dark:text-white"
+                            : "bg-white dark:bg-neutral-900 border-neutral-200/50 dark:border-neutral-800/60 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-250 hover:bg-neutral-50/50"
                         )}
                       >
                         <div className="flex items-center gap-2 min-w-0">
@@ -933,26 +1045,28 @@ export function TaskDetailDrawer({
                 </div>
               </div>
 
-              {/* Parameter Block: Due Date */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 flex items-center gap-1 px-0.5">
+              {/* Due Date picker block */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 flex items-center gap-1 px-0.5">
                   <Calendar className="w-3 h-3 text-primary" />
-                  <span>Due Date</span>
+                  <span>Schedule Due Date</span>
                 </label>
-                <input
-                  type="date"
-                  value={getDueDateString()}
-                  onChange={(e) => handleDueDateChange(e.target.value)}
-                  className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs text-neutral-850 dark:text-neutral-200 outline-none cursor-pointer focus:border-primary/50 transition-all font-mono font-semibold"
-                />
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={getDueDateString()}
+                    onChange={(e) => handleDueDateChange(e.target.value)}
+                    className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl pl-3.5 pr-8 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 outline-none cursor-pointer focus:border-primary/50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all font-mono font-bold shadow-2xs"
+                  />
+                </div>
               </div>
 
-              {/* Connected contextual metadata references */}
-              <div className="space-y-3.5 pt-4.5 border-t border-neutral-150 dark:border-neutral-850">
+              {/* Context connections info tags */}
+              <div className="space-y-3.5 pt-4.5 border-t border-neutral-150 dark:border-neutral-850/60">
                 {currentProject && (
                   <div className="space-y-1">
-                    <span className="text-[9px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block">Project Context</span>
-                    <span className="text-[11px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-500/5 px-2 py-1 border border-indigo-500/10 rounded-xl block truncate">
+                    <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block px-0.5">Project Scope</span>
+                    <span className="text-[11px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-500/[0.04] px-2 py-1.5 border border-indigo-500/10 rounded-xl block truncate shadow-2xs">
                       {currentProject.name}
                     </span>
                   </div>
@@ -960,8 +1074,8 @@ export function TaskDetailDrawer({
 
                 {currentGoal && (
                   <div className="space-y-1">
-                    <span className="text-[9px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block">Focus Goal</span>
-                    <span className="text-[11px] font-bold text-cyan-500 dark:text-cyan-400 bg-cyan-500/5 px-2 py-1 border border-cyan-500/10 rounded-xl block truncate">
+                    <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block px-0.5">Focus Goal Link</span>
+                    <span className="text-[11px] font-bold text-cyan-500 dark:text-cyan-400 bg-cyan-500/[0.04] px-2 py-1.5 border border-cyan-500/10 rounded-xl block truncate shadow-2xs">
                       {currentGoal.title}
                     </span>
                   </div>
@@ -972,16 +1086,16 @@ export function TaskDetailDrawer({
 
           </div>
 
-          {/* ─── Floating Warning Toast for Drawer ─── */}
+          {/* Warning bottom feedback Toast */}
           <AnimatePresence>
             {toastMessage && (
               <motion.div
                 initial={{ opacity: 0, y: 50, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                className="absolute bottom-6 right-6 z-[100] flex items-center gap-2.5 bg-neutral-900/95 dark:bg-white/95 text-white dark:text-neutral-900 border border-white/10 dark:border-neutral-200/50 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur max-w-sm select-none"
+                className="absolute bottom-6 right-6 z-[100] flex items-center gap-2.5 bg-neutral-950/95 dark:bg-white/95 text-white dark:text-neutral-950 border border-white/10 dark:border-neutral-200/50 px-4.5 py-3 rounded-2xl shadow-2xl backdrop-blur-md max-w-sm select-none"
               >
-                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                <AlertCircle className="w-4.5 h-4.5 text-amber-500 shrink-0" />
                 <span className="text-xs font-bold leading-tight">{toastMessage}</span>
               </motion.div>
             )}
@@ -990,5 +1104,66 @@ export function TaskDetailDrawer({
         </motion.div>
       </div>
     </AnimatePresence>
+  );
+}
+
+// Local Custom Dropdown Component
+interface CustomDropdownProps<T extends string> {
+  value: T;
+  onChange: (val: T) => void;
+  options: readonly T[] | T[];
+  renderTrigger: (val: T) => React.ReactNode;
+  renderOption: (val: T, isSelected: boolean) => React.ReactNode;
+  className?: string;
+}
+
+function CustomDropdown<T extends string>({
+  value,
+  onChange,
+  options,
+  renderTrigger,
+  renderOption,
+  className
+}: CustomDropdownProps<T>) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className={cn("relative w-full", className)} ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full text-left focus:outline-none cursor-pointer"
+      >
+        {renderTrigger(value)}
+      </button>
+      {isOpen && (
+        <div className="absolute z-30 w-full mt-1 bg-white dark:bg-neutral-850 border border-neutral-200/70 dark:border-neutral-800 rounded-xl shadow-xl py-1 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => {
+                onChange(opt);
+                setIsOpen(false);
+              }}
+              className="w-full text-left cursor-pointer"
+            >
+              {renderOption(opt, opt === value)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

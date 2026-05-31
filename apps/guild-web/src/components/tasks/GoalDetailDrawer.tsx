@@ -5,7 +5,7 @@ import {
   X, Check, Calendar, User, Tag, 
   Trash2, Plus, Target, ChevronRight,
   ListTodo, Loader2, Link2, Sparkles, MessageSquare, Send, Paperclip,
-  HelpCircle, RefreshCw
+  HelpCircle, RefreshCw, Folder, Share2, AlertCircle
 } from 'lucide-react';
 import { 
   updateGoal, addGoalComment, updateGoalAttachments, 
@@ -55,6 +55,14 @@ export function GoalDetailDrawer({
   const [commentFiles, setCommentFiles] = React.useState<File[]>([]);
   const [uploadingCommentFiles, setUploadingCommentFiles] = React.useState(false);
   const [isAddingTask, setIsAddingTask] = React.useState(false);
+  const [toastMessage, setToastMessage] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   const comments = useGoalComments(goal?.id || null);
 
@@ -259,48 +267,231 @@ export function GoalDetailDrawer({
     return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
+  // --- Redesign Helpers ---
+  const handleCopyLink = () => {
+    const url = `${window.location.origin}${window.location.pathname}?goal=${goal.id}`;
+    navigator.clipboard.writeText(url);
+    setToastMessage("Goal link copied!");
+  };
+
+  const renderHorizonTrigger = (h: GoalHorizon) => {
+    const labels: Record<GoalHorizon, string> = {
+      short_term: "Short Term (Weekly/Monthly)",
+      long_term: "Long Term (Quarterly/Annual)"
+    };
+    return (
+      <div className="flex items-center justify-between w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-xs text-neutral-850 dark:text-neutral-200 hover:border-neutral-350 dark:hover:border-neutral-700">
+        <div className="flex items-center gap-2.5">
+          <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span>{labels[h]}</span>
+        </div>
+        <ChevronRight className="w-3.5 h-3.5 rotate-90 shrink-0 opacity-60" />
+      </div>
+    );
+  };
+
+  const renderHorizonOption = (h: GoalHorizon, isSelected: boolean) => {
+    const labels: Record<GoalHorizon, string> = {
+      short_term: "Short Term (Weekly/Monthly)",
+      long_term: "Long Term (Quarterly/Annual)"
+    };
+    return (
+      <div className={cn(
+        "flex items-center justify-between w-full px-3.5 py-2.5 text-xs font-bold hover:bg-neutral-50 dark:hover:bg-neutral-800/80 transition-colors",
+        isSelected ? "text-primary bg-primary/[0.03] dark:bg-primary/[0.05]" : "text-neutral-700 dark:text-neutral-350"
+      )}>
+        <div className="flex items-center gap-2.5">
+          <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span>{labels[h]}</span>
+        </div>
+        {isSelected && <Check className="w-4 h-4 text-primary shrink-0 stroke-[2.5]" />}
+      </div>
+    );
+  };
+
+  const renderRecurrenceTrigger = (r: GoalRecurrence) => {
+    const labels: Record<GoalRecurrence, string> = {
+      none: "One-time Goal",
+      daily: "Daily Cycle",
+      weekly: "Weekly Cycle",
+      monthly: "Monthly Cycle",
+      custom: "Custom Cycle..."
+    };
+    return (
+      <div className="flex items-center justify-between w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-xs text-neutral-850 dark:text-neutral-200 hover:border-neutral-350 dark:hover:border-neutral-700">
+        <div className="flex items-center gap-2.5">
+          <RefreshCw className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span>{labels[r]}</span>
+        </div>
+        <ChevronRight className="w-3.5 h-3.5 rotate-90 shrink-0 opacity-60" />
+      </div>
+    );
+  };
+
+  const renderRecurrenceOption = (r: GoalRecurrence, isSelected: boolean) => {
+    const labels: Record<GoalRecurrence, string> = {
+      none: "One-time Goal",
+      daily: "Daily Cycle",
+      weekly: "Weekly Cycle",
+      monthly: "Monthly Cycle",
+      custom: "Custom Cycle..."
+    };
+    return (
+      <div className={cn(
+        "flex items-center justify-between w-full px-3.5 py-2.5 text-xs font-bold hover:bg-neutral-50 dark:hover:bg-neutral-800/80 transition-colors",
+        isSelected ? "text-primary bg-primary/[0.03] dark:bg-primary/[0.05]" : "text-neutral-700 dark:text-neutral-350"
+      )}>
+        <div className="flex items-center gap-2.5">
+          <RefreshCw className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span>{labels[r]}</span>
+        </div>
+        {isSelected && <Check className="w-4 h-4 text-primary shrink-0 stroke-[2.5]" />}
+      </div>
+    );
+  };
+
+  const renderProjectTrigger = (pId: string) => {
+    const proj = projects.find(p => p.id === pId);
+    return (
+      <div className="flex items-center justify-between w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-xs text-neutral-850 dark:text-neutral-200 hover:border-neutral-350 dark:hover:border-neutral-700">
+        <div className="flex items-center gap-2.5 truncate">
+          <Folder className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span className="truncate">{proj ? proj.name : "None (Independent Goal)"}</span>
+        </div>
+        <ChevronRight className="w-3.5 h-3.5 rotate-90 shrink-0 opacity-60" />
+      </div>
+    );
+  };
+
+  const renderProjectOption = (pId: string, isSelected: boolean) => {
+    const proj = projects.find(p => p.id === pId);
+    return (
+      <div className={cn(
+        "flex items-center justify-between w-full px-3.5 py-2.5 text-xs font-bold hover:bg-neutral-50 dark:hover:bg-neutral-800/80 transition-colors",
+        isSelected ? "text-primary bg-primary/[0.03] dark:bg-primary/[0.05]" : "text-neutral-700 dark:text-neutral-350"
+      )}>
+        <div className="flex items-center gap-2.5 truncate">
+          <Folder className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span className="truncate">{proj ? proj.name : "None (Independent Goal)"}</span>
+        </div>
+        {isSelected && <Check className="w-4 h-4 text-primary shrink-0 stroke-[2.5]" />}
+      </div>
+    );
+  };
+
+  const renderOwnerTrigger = (oId: string) => {
+    const member = members.find(m => m.uid === oId);
+    return (
+      <div className="flex items-center justify-between w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-xs text-neutral-850 dark:text-neutral-200 hover:border-neutral-350 dark:hover:border-neutral-700">
+        <div className="flex items-center gap-2.5 truncate">
+          {member ? (
+            <>
+              <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-extrabold text-primary shrink-0 overflow-hidden border border-primary/10 shadow-2xs">
+                {member.photoURL ? (
+                  <img src={member.photoURL} alt={member.fullName} className="h-full w-full object-cover" />
+                ) : (
+                  getMemberInitials(member.uid)
+                )}
+              </div>
+              <span className="truncate">{member.fullName || member.username}</span>
+            </>
+          ) : (
+            <>
+              <User className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+              <span className="text-neutral-400">Select owner...</span>
+            </>
+          )}
+        </div>
+        <ChevronRight className="w-3.5 h-3.5 rotate-90 shrink-0 opacity-60" />
+      </div>
+    );
+  };
+
+  const renderOwnerOption = (oId: string, isSelected: boolean) => {
+    const member = members.find(m => m.uid === oId);
+    return (
+      <div className={cn(
+        "flex items-center justify-between w-full px-3.5 py-2.5 text-xs font-bold hover:bg-neutral-50 dark:hover:bg-neutral-800/80 transition-colors",
+        isSelected ? "text-primary bg-primary/[0.03] dark:bg-primary/[0.05]" : "text-neutral-700 dark:text-neutral-350"
+      )}>
+        <div className="flex items-center gap-2.5 truncate">
+          {member ? (
+            <>
+              <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-extrabold text-primary shrink-0 overflow-hidden border border-primary/10">
+                {member.photoURL ? (
+                  <img src={member.photoURL} alt={member.fullName} className="h-full w-full object-cover" />
+                ) : (
+                  getMemberInitials(member.uid)
+                )}
+              </div>
+              <span className="truncate">{member.fullName || member.username}</span>
+            </>
+          ) : (
+            <>
+              <User className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+              <span className="text-neutral-400">Select owner...</span>
+            </>
+          )}
+        </div>
+        {isSelected && <Check className="w-4 h-4 text-primary shrink-0 stroke-[2.5]" />}
+      </div>
+    );
+  };
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex justify-end overflow-hidden select-none pointer-events-none">
         
-        {/* Backdrop Overlay with elegant blur */}
+        {/* Transparent backdrop overlay */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-neutral-950/20 dark:bg-neutral-950/50 backdrop-blur-xs z-40 pointer-events-auto"
+          className="fixed inset-0 bg-neutral-950/15 dark:bg-neutral-950/45 backdrop-blur-xs z-40 pointer-events-auto"
         />
 
-        {/* Drawer Panel */}
+        {/* Redesigned goal drawer panel */}
         <motion.div
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
-          transition={{ type: 'spring', stiffness: 380, damping: 35 }}
-          className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col h-full pointer-events-auto"
+          transition={{ type: 'spring', stiffness: 350, damping: 33 }}
+          className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white/95 dark:bg-neutral-900/95 border-l border-neutral-200/60 dark:border-neutral-800/60 shadow-2xl flex flex-col h-full pointer-events-auto backdrop-blur-xl"
         >
           
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-850 flex-shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur">
+          <div className="flex items-center justify-between px-6 py-4.5 border-b border-neutral-100 dark:border-neutral-850/60 flex-shrink-0 bg-neutral-50/30 dark:bg-neutral-900/30 backdrop-blur-sm">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500">
-                Focus Goal Details
+              <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/60 px-2 py-0.5 rounded-md">
+                Goal Focus Details
               </span>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-850 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-sm"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            
+            {/* Quick action buttons */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleCopyLink}
+                className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                title="Copy Link to Goal"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+              <div className="h-6 w-[1px] bg-neutral-200 dark:bg-neutral-800 mx-1 shrink-0" />
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Two-Column split workspace */}
           <div className="flex-grow flex flex-col md:flex-row overflow-hidden min-h-0">
             
-            {/* Left side: Goal properties, Description, Checklist tasks */}
-            <div className="flex-1 flex flex-col min-w-0 border-r border-neutral-100 dark:border-neutral-850 overflow-y-auto scrollbar-thin p-6 space-y-6">
+            {/* Left side: properties, outcome details, checklist */}
+            <div className="flex-1 flex flex-col min-w-0 border-r border-neutral-100 dark:border-neutral-850/60 overflow-y-auto scrollbar-thin p-6 space-y-6">
               
               {/* Strategic Goal Title with satisfy editor */}
               <div className="space-y-2">
@@ -308,10 +499,10 @@ export function GoalDetailDrawer({
                   <button
                     onClick={handleToggleGoalStatus}
                     className={cn(
-                      "h-5.5 w-5.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
+                      "h-5.5 w-5.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-2xs",
                       goal.status === 'completed'
                         ? "border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
-                        : "border-neutral-300 dark:border-neutral-700 bg-transparent hover:border-cyan-500"
+                        : "border-neutral-350 dark:border-neutral-700 bg-transparent hover:border-cyan-500"
                     )}
                     title={goal.status === 'completed' ? "Mark Goal as Active" : "Mark Goal as Completed"}
                   >
@@ -330,14 +521,14 @@ export function GoalDetailDrawer({
                       onBlur={handleTitleBlur}
                       onKeyDown={(e) => e.key === 'Enter' && handleTitleBlur()}
                       autoFocus
-                      className="w-full text-base font-bold text-neutral-850 dark:text-neutral-100 outline-none border-b-2 border-primary/50 bg-transparent pb-1"
+                      className="w-full text-lg font-bold text-neutral-850 dark:text-neutral-100 outline-none border-b border-primary bg-transparent pb-1"
                     />
                   ) : (
                     <h2
                       onClick={() => setIsEditingTitle(true)}
                       className={cn(
-                        "text-base font-bold cursor-text hover:bg-neutral-50 dark:hover:bg-neutral-850/30 px-2 py-1 rounded-xl border border-transparent hover:border-neutral-200/20 transition-all break-words flex-1 min-w-0 leading-tight",
-                        goal.status === 'completed' ? "text-neutral-400 dark:text-neutral-550 line-through decoration-cyan-500/50" : "text-neutral-850 dark:text-neutral-100"
+                        "text-lg font-bold cursor-text hover:bg-neutral-50/50 dark:hover:bg-neutral-855/20 px-2 py-1 -ml-2 rounded-xl border border-transparent hover:border-neutral-200/30 transition-all break-words flex-1 min-w-0 leading-tight",
+                        goal.status === 'completed' ? "text-neutral-450 dark:text-neutral-500 line-through decoration-cyan-500/50" : "text-neutral-850 dark:text-neutral-100"
                       )}
                     >
                       {title || <span className="text-neutral-400 italic font-normal">Untitled Goal Focus</span>}
@@ -346,10 +537,10 @@ export function GoalDetailDrawer({
                 </div>
               </div>
 
-              {/* Description definition */}
+              {/* Outcome Objectives Description */}
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-500 px-1">
-                  Expected Outcome
+                <label className="text-[10px] uppercase font-black tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+                  Expected Strategic Outcome
                 </label>
                 {isEditingDesc ? (
                   <textarea
@@ -359,19 +550,19 @@ export function GoalDetailDrawer({
                     rows={4}
                     autoFocus
                     placeholder="Describe expected results, outcomes and metrics..."
-                    className="w-full bg-neutral-50 dark:bg-neutral-850/30 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-4 py-3.5 text-xs text-neutral-880 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 outline-none focus:border-primary/50 font-semibold resize-none transition-all"
+                    className="w-full bg-neutral-50/50 dark:bg-neutral-850/20 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-4 py-3.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 outline-none focus:border-primary/50 font-semibold resize-none transition-all"
                   />
                 ) : (
                   <div
                     onClick={() => setIsEditingDesc(true)}
-                    className="min-h-16 text-xs text-neutral-650 dark:text-neutral-350 hover:bg-neutral-50 dark:hover:bg-neutral-850/20 px-4 py-3.5 rounded-2xl border border-neutral-150 dark:border-neutral-850 cursor-text transition-all leading-relaxed whitespace-pre-wrap font-semibold"
+                    className="min-h-16 text-xs text-neutral-650 dark:text-neutral-350 hover:bg-neutral-50/50 dark:hover:bg-neutral-850/10 px-4 py-3.5 rounded-2xl border border-neutral-150 dark:border-neutral-850/80 cursor-text transition-all leading-relaxed whitespace-pre-wrap font-semibold"
                   >
-                    {description || <span className="text-neutral-400 italic font-normal">Define key strategic objectives or target metrics...</span>}
+                    {description || <span className="text-neutral-400 italic font-normal">Define strategic outcome targets, KPIs or focus objectives...</span>}
                   </div>
                 )}
               </div>
 
-              {/* Goal Media & File Attachments */}
+              {/* Goal File Attachments */}
               <div>
                 <AttachmentSection
                   entityType="goals"
@@ -389,30 +580,42 @@ export function GoalDetailDrawer({
 
               {/* Tabbed Feed: Tasks Checklist vs Discussion */}
               <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex flex-col flex-grow min-h-[300px]">
-                <div className="flex border-b border-neutral-150 dark:border-neutral-850 mb-4 flex-shrink-0">
+                <div className="flex border-b border-neutral-150 dark:border-neutral-850/60 mb-4 flex-shrink-0 relative">
                   <button
                     onClick={() => setActiveTab('tasks')}
                     className={cn(
-                      "pb-2 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5",
+                      "pb-2 px-4 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 relative z-10",
                       activeTab === 'tasks'
-                        ? "border-primary text-neutral-850 dark:text-neutral-200 font-extrabold"
-                        : "border-transparent text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                        ? "text-neutral-900 dark:text-neutral-100 font-black"
+                        : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 font-semibold"
                     )}
                   >
                     <ListTodo className="w-4 h-4" />
                     <span>Checklist ({activeTasks.length})</span>
+                    {activeTab === 'tasks' && (
+                      <motion.div 
+                        layoutId="activeTabUnderlineGoal" 
+                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" 
+                      />
+                    )}
                   </button>
                   <button
                     onClick={() => setActiveTab('comments')}
                     className={cn(
-                      "pb-2 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5",
+                      "pb-2 px-4 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 relative z-10",
                       activeTab === 'comments'
-                        ? "border-primary text-neutral-850 dark:text-neutral-200 font-extrabold"
-                        : "border-transparent text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                        ? "text-neutral-900 dark:text-neutral-100 font-black"
+                        : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 font-semibold"
                     )}
                   >
                     <MessageSquare className="w-4 h-4" />
                     <span>Discussion ({comments.length})</span>
+                    {activeTab === 'comments' && (
+                      <motion.div 
+                        layoutId="activeTabUnderlineGoal" 
+                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" 
+                      />
+                    )}
                   </button>
                 </div>
 
@@ -423,10 +626,10 @@ export function GoalDetailDrawer({
                       <form onSubmit={handleInlineTaskSubmit} className="flex gap-2">
                         <input
                           type="text"
-                          placeholder="Add a task to goal checklist..."
+                          placeholder="Add an active task to this goal..."
                           value={inlineTaskTitle}
                           onChange={(e) => setInlineTaskTitle(e.target.value)}
-                          className="flex-1 bg-neutral-50 dark:bg-neutral-850/30 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold"
+                          className="flex-1 bg-neutral-50/70 dark:bg-neutral-850/20 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 placeholder:text-neutral-450 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold"
                         />
                         <button
                           type="submit"
@@ -439,18 +642,19 @@ export function GoalDetailDrawer({
 
                       {/* Checklist sets */}
                       <div className="space-y-2 max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
+                        
                         {/* Active checklist */}
                         {activeTasks.length > 0 ? (
                           <div className="space-y-2">
                             {activeTasks.map(task => (
                               <div
                                 key={task.id}
-                                className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group"
+                                className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 hover:shadow-2xs transition-all group"
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
                                   <button
                                     onClick={(e) => handleToggleTaskStatus(e, task)}
-                                    className="h-4.5 w-4.5 rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-primary bg-transparent flex items-center justify-center shrink-0 cursor-pointer"
+                                    className="h-4.5 w-4.5 rounded-full border border-neutral-350 dark:border-neutral-700 hover:border-primary bg-transparent flex items-center justify-center shrink-0 cursor-pointer shadow-2xs"
                                   >
                                     <div className="h-1.5 w-1.5 rounded-full bg-transparent hover:bg-primary/50" />
                                   </button>
@@ -459,7 +663,7 @@ export function GoalDetailDrawer({
                                       if (onSelectTask) onSelectTask(task);
                                       else setSearchParams({ task: task.id });
                                     }}
-                                    className="text-xs font-semibold cursor-pointer hover:text-primary transition-all truncate text-neutral-800 dark:text-neutral-250"
+                                    className="text-xs font-semibold cursor-pointer hover:text-primary transition-all truncate text-neutral-800 dark:text-neutral-200"
                                   >
                                     {task.title}
                                   </span>
@@ -469,7 +673,7 @@ export function GoalDetailDrawer({
                                   {task.assigneeIds.slice(0, 1).map((uid) => (
                                     <div 
                                       key={uid} 
-                                      className="h-5.5 w-5.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[8px] font-bold text-primary shrink-0 overflow-hidden"
+                                      className="h-5.5 w-5.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[8px] font-bold text-primary shrink-0 overflow-hidden shadow-2xs"
                                       title={getMemberName(uid)}
                                     >
                                       {getMemberPhotoURL(uid) ? (
@@ -481,7 +685,7 @@ export function GoalDetailDrawer({
                                   ))}
                                   <button
                                     onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                                    className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-855 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -491,7 +695,7 @@ export function GoalDetailDrawer({
                           </div>
                         ) : (
                           <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-500 italic bg-neutral-50/20 dark:bg-neutral-850/5 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800">
-                            No active tasks in checklist. Add tasks to drive goal completion.
+                            No active tasks in checklist. Add tasks to drive goal focus success.
                           </div>
                         )}
 
@@ -501,10 +705,10 @@ export function GoalDetailDrawer({
                             <button
                               type="button"
                               onClick={() => setShowCompletedTasks(!showCompletedTasks)}
-                              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-neutral-100/50 dark:bg-neutral-850/30 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200/50 dark:border-neutral-800/40 text-[10px] text-neutral-500 font-bold transition-all cursor-pointer"
+                              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-neutral-100/50 dark:bg-neutral-850/30 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200/50 dark:border-neutral-800/40 text-[10px] text-neutral-500 font-bold transition-all cursor-pointer shadow-2xs"
                             >
-                              <span>Completed Tasks ({completedTasks.length})</span>
-                              <ChevronRight className={cn("w-3.5 h-3.5 transition-transform text-neutral-400", showCompletedTasks ? "rotate-90" : "")} />
+                              <span>Completed Checklist Items ({completedTasks.length})</span>
+                              <ChevronRight className={cn("w-3.5 h-3.5 transition-transform text-neutral-450", showCompletedTasks ? "rotate-90" : "")} />
                             </button>
                             <AnimatePresence>
                               {showCompletedTasks && (
@@ -517,12 +721,12 @@ export function GoalDetailDrawer({
                                   {completedTasks.map(task => (
                                     <div
                                       key={task.id}
-                                      className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/20 dark:bg-neutral-850/5 border border-neutral-150/40 dark:border-neutral-800/30 opacity-60 hover:opacity-90 transition-all"
+                                      className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/20 dark:bg-neutral-850/5 border border-neutral-150/40 dark:border-neutral-800/30 opacity-60 hover:opacity-95 transition-all"
                                     >
                                       <div className="flex items-center gap-2.5 min-w-0">
                                         <button
                                           onClick={(e) => handleToggleTaskStatus(e, task)}
-                                          className="h-4.5 w-4.5 rounded-full border border-cyan-500 bg-cyan-500/10 flex items-center justify-center shrink-0 cursor-pointer"
+                                          className="h-4.5 w-4.5 rounded-full border border-cyan-500 bg-cyan-500/10 flex items-center justify-center shrink-0 cursor-pointer shadow-2xs"
                                         >
                                           <Check className="w-2.5 h-2.5 text-cyan-500 stroke-[3]" />
                                         </button>
@@ -557,8 +761,8 @@ export function GoalDetailDrawer({
                       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 scrollbar-thin max-h-[250px]">
                         {comments.length > 0 ? (
                           comments.map((comment) => (
-                            <div key={comment.id} className="flex items-start gap-3 bg-neutral-50/30 dark:bg-neutral-850/10 p-3.5 rounded-2xl border border-neutral-100 dark:border-neutral-850/50">
-                              <div className="h-7.5 w-7.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 overflow-hidden shadow-sm">
+                            <div key={comment.id} className="flex items-start gap-3 bg-neutral-50/30 dark:bg-neutral-850/10 p-3.5 rounded-2xl border border-neutral-100 dark:border-neutral-850/50 hover:shadow-2xs transition-all">
+                              <div className="h-7.5 w-7.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 overflow-hidden shadow-xs">
                                 {getMemberPhotoURL(comment.authorId) ? (
                                   <img src={getMemberPhotoURL(comment.authorId)} alt={comment.authorName} className="h-full w-full object-cover" />
                                 ) : (
@@ -567,26 +771,26 @@ export function GoalDetailDrawer({
                               </div>
                               <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[11px] font-bold text-neutral-850 dark:text-neutral-200 truncate">
+                                  <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-250 truncate">
                                     {comment.authorName}
                                   </span>
                                   <span className="text-[9px] text-neutral-400 dark:text-neutral-500 font-mono">
                                     {formatTimestamp(comment.createdAt)}
                                   </span>
                                 </div>
-                                <p className="text-xs text-neutral-650 dark:text-neutral-350 font-semibold leading-relaxed break-words">
+                                <p className="text-xs text-neutral-655 dark:text-neutral-300 font-semibold leading-relaxed break-words whitespace-pre-wrap">
                                   {comment.body}
                                 </p>
                                 
                                 {comment.files && comment.files.length > 0 && (
-                                  <div className="mt-2 space-y-1 max-w-sm">
+                                  <div className="mt-2 space-y-1.5 max-w-sm">
                                     {comment.files.map((file, fIdx) => (
                                       <a
                                         key={fIdx}
                                         href={file.url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="flex items-center gap-2 p-1.5 rounded-lg border border-neutral-200/40 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 text-[10px] text-primary font-bold truncate transition-colors shadow-xs"
+                                        className="flex items-center gap-2 p-1.5 rounded-xl border border-neutral-200/40 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 text-[10px] text-primary font-bold truncate transition-colors shadow-2xs"
                                       >
                                         <Paperclip className="w-3 h-3 text-primary shrink-0" />
                                         <span className="truncate flex-1">{file.name}</span>
@@ -601,14 +805,14 @@ export function GoalDetailDrawer({
                             </div>
                           ))
                         ) : (
-                          <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-500 italic">
-                            No goal comments or discussions yet.
+                          <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-550 italic">
+                            No focus comments or discussions yet.
                           </div>
                         )}
                       </div>
 
                       {/* Comment Input */}
-                      <div className="border-t border-neutral-150 dark:border-neutral-850 pt-3.5 flex-shrink-0 flex flex-col gap-2">
+                      <div className="border-t border-neutral-150 dark:border-neutral-850/60 pt-3.5 flex-shrink-0 flex flex-col gap-2">
                         <AttachmentInput
                           selectedFiles={commentFiles}
                           onRemove={(idx) => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
@@ -617,11 +821,11 @@ export function GoalDetailDrawer({
                         <form onSubmit={handleAddComment} className="flex gap-2">
                           <input
                             type="text"
-                            placeholder={uploadingCommentFiles ? "Uploading attachment files..." : "Add your comment here..."}
+                            placeholder={uploadingCommentFiles ? "Uploading attachments..." : "Add your discussion comment here..."}
                             value={commentBody}
                             disabled={uploadingCommentFiles}
                             onChange={(e) => setCommentBody(e.target.value)}
-                            className="flex-1 bg-neutral-50 dark:bg-neutral-855 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-neutral-855 dark:text-neutral-200 placeholder:text-neutral-400 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold disabled:opacity-50"
+                            className="flex-1 bg-neutral-50/70 dark:bg-neutral-850/20 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-neutral-800 dark:text-neutral-250 placeholder:text-neutral-400 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold disabled:opacity-50"
                           />
                           <button
                             type="button"
@@ -636,15 +840,15 @@ export function GoalDetailDrawer({
                               };
                               input.click();
                             }}
-                            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-500 dark:text-neutral-450 hover:text-neutral-800 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center"
-                            title="Attach File"
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-500 dark:text-neutral-450 hover:text-neutral-800 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shadow-2xs"
+                            title="Attach Files"
                           >
                             <Paperclip className="w-4 h-4" />
                           </button>
                           <button
                             type="submit"
                             disabled={uploadingCommentFiles}
-                            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-350 hover:text-neutral-850 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center"
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-350 hover:text-neutral-850 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shadow-2xs"
                           >
                             {uploadingCommentFiles ? (
                               <Loader2 className="w-4 h-4 animate-spin text-primary" />
@@ -662,65 +866,60 @@ export function GoalDetailDrawer({
             </div>
 
             {/* Right side: Parameters block (horizon, recurrence, project, owner, target date) */}
-            <div className="w-full md:w-64 flex-shrink-0 bg-neutral-50/50 dark:bg-neutral-850/10 p-6 space-y-6 flex flex-col overflow-y-auto scrollbar-thin">
+            <div className="w-full md:w-64 flex-shrink-0 bg-neutral-50/20 dark:bg-neutral-900/10 p-6 space-y-5.5 flex flex-col overflow-y-auto scrollbar-thin border-t md:border-t-0 border-neutral-100 dark:border-neutral-850/60">
               
-              {/* Goal Progress Ring Panel */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[10px] text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider px-0.5">
+              {/* Goal Progress rollup card */}
+              <div className="bg-white/80 dark:bg-neutral-900/80 border border-neutral-200/60 dark:border-neutral-800/80 rounded-2xl p-4.5 space-y-2 shadow-xs backdrop-blur-xs">
+                <div className="flex justify-between text-[10px] text-neutral-450 dark:text-neutral-500 font-black uppercase tracking-wider px-0.5">
                   <span>Goal Progress</span>
-                  <span>{progress}%</span>
+                  <span className="text-cyan-500 font-extrabold">{progress}%</span>
                 </div>
-                <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-2 overflow-hidden shadow-inner">
+                <div className="w-full bg-neutral-200/80 dark:bg-neutral-800 rounded-full h-2 overflow-hidden shadow-inner relative">
                   <div 
-                    className="h-full rounded-full transition-all duration-500 ease-out bg-primary"
+                    className="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-cyan-500 to-emerald-500 shadow-xs"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
                 {goalTasks.length > 0 && (
-                  <span className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 block px-0.5">
-                    {activeTasks.length} active · {completedTasks.length} completed
+                  <span className="text-[9px] font-bold text-neutral-450 dark:text-neutral-400 block px-0.5">
+                    {activeTasks.length} active tasks · {completedTasks.length} completed
                   </span>
                 )}
               </div>
 
-              {/* Param: Horizon */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+              {/* Param: Chronology Horizon */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
                   Chronology Horizon
                 </label>
-                <select
+                <CustomDropdown
                   value={goal.horizon}
-                  onChange={(e) => handleHorizonChange(e.target.value as GoalHorizon)}
-                  className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 outline-none cursor-pointer focus:border-primary/50 transition-all font-bold"
-                >
-                  <option value="short_term">Short Term (Weekly/Monthly)</option>
-                  <option value="long_term">Long Term (Quarterly/Annual)</option>
-                </select>
+                  onChange={handleHorizonChange}
+                  options={['short_term', 'long_term']}
+                  renderTrigger={renderHorizonTrigger}
+                  renderOption={renderHorizonOption}
+                />
               </div>
 
-              {/* Param: Repetitive Recurrence (Premium user request) */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5 flex items-center gap-1">
+              {/* Param: Repetitive Recurrence */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5 flex items-center gap-1">
                   <RefreshCw className="w-3 h-3 text-primary" />
                   <span>Goal Recurrence</span>
                 </label>
-                <select
+                <CustomDropdown
                   value={goal.recurrence || 'none'}
-                  onChange={(e) => handleRecurrenceChange(e.target.value as GoalRecurrence)}
-                  className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-neutral-855 dark:text-neutral-200 outline-none cursor-pointer focus:border-primary/50 transition-all font-bold"
-                >
-                  <option value="none">One-time Goal</option>
-                  <option value="daily">Daily Cycle</option>
-                  <option value="weekly">Weekly Cycle</option>
-                  <option value="monthly">Monthly Cycle</option>
-                  <option value="custom">Custom Cycle...</option>
-                </select>
+                  onChange={handleRecurrenceChange}
+                  options={['none', 'daily', 'weekly', 'monthly', 'custom']}
+                  renderTrigger={renderRecurrenceTrigger}
+                  renderOption={renderRecurrenceOption}
+                />
               </div>
 
-              {/* Param: Custom Days Interval (Premium user request) */}
+              {/* Param: Custom Days Interval */}
               {goal.recurrence === 'custom' && (
-                <div className="space-y-2 animate-fade-in">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
                     Repeat Every (Days)
                   </label>
                   <input
@@ -728,49 +927,43 @@ export function GoalDetailDrawer({
                     min={1}
                     value={goal.customDays || ''}
                     onChange={(e) => handleCustomDaysChange(parseInt(e.target.value) || null)}
-                    className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-neutral-850 dark:text-neutral-250 outline-none focus:border-primary/50 font-semibold font-mono"
+                    className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-neutral-850 dark:text-neutral-250 outline-none focus:border-primary/50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all font-semibold font-mono shadow-2xs"
                     placeholder="e.g. 14 for bi-weekly"
                   />
                 </div>
               )}
 
-              {/* Param: Project Association */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+              {/* Param: Connected Project context */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
                   Linked Project
                 </label>
-                <select
+                <CustomDropdown
                   value={goal.projectId || ''}
-                  onChange={(e) => handleProjectChange(e.target.value)}
-                  className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 outline-none cursor-pointer focus:border-primary/50 transition-all font-bold"
-                >
-                  <option value="">None (Independent Goal)</option>
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                  onChange={handleProjectChange}
+                  options={['', ...projects.map(p => p.id)]}
+                  renderTrigger={renderProjectTrigger}
+                  renderOption={renderProjectOption}
+                />
               </div>
 
-              {/* Param: Responsible Owner */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+              {/* Param: Responsible Teammate Owner */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
                   Responsible Owner
                 </label>
-                <select
+                <CustomDropdown
                   value={goal.ownerId || ''}
-                  onChange={(e) => handleOwnerChange(e.target.value)}
-                  className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 outline-none cursor-pointer focus:border-primary/50 transition-all font-bold"
-                >
-                  <option value="">Select teammate...</option>
-                  {members.map(m => (
-                    <option key={m.uid} value={m.uid}>{m.fullName || m.username}</option>
-                  ))}
-                </select>
+                  onChange={handleOwnerChange}
+                  options={['', ...members.map(m => m.uid)]}
+                  renderTrigger={renderOwnerTrigger}
+                  renderOption={renderOwnerOption}
+                />
               </div>
 
               {/* Param: Target Date */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 flex items-center gap-1 px-0.5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 flex items-center gap-1 px-0.5">
                   <Calendar className="w-3.5 h-3.5 text-primary" />
                   <span>Target Date</span>
                 </label>
@@ -778,7 +971,7 @@ export function GoalDetailDrawer({
                   type="date"
                   value={getTargetDateString()}
                   onChange={(e) => handleTargetDateChange(e.target.value)}
-                  className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs text-neutral-850 dark:text-neutral-200 outline-none cursor-pointer focus:border-primary/50 transition-all font-mono font-semibold"
+                  className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-neutral-850 dark:text-neutral-250 outline-none cursor-pointer focus:border-primary/50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all font-mono font-bold shadow-2xs"
                 />
               </div>
 
@@ -786,8 +979,84 @@ export function GoalDetailDrawer({
 
           </div>
 
+          {/* Warning bottom feedback Toast */}
+          <AnimatePresence>
+            {toastMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                className="absolute bottom-6 right-6 z-[100] flex items-center gap-2.5 bg-neutral-950/95 dark:bg-white/95 text-white dark:text-neutral-950 border border-white/10 dark:border-neutral-200/50 px-4.5 py-3 rounded-2xl shadow-2xl backdrop-blur-md max-w-sm select-none"
+              >
+                <AlertCircle className="w-4.5 h-4.5 text-amber-500 shrink-0" />
+                <span className="text-xs font-bold leading-tight">{toastMessage}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
         </motion.div>
       </div>
     </AnimatePresence>
+  );
+}
+
+// Local Custom Dropdown Component
+interface CustomDropdownProps<T extends string> {
+  value: T;
+  onChange: (val: T) => void;
+  options: readonly T[] | T[];
+  renderTrigger: (val: T) => React.ReactNode;
+  renderOption: (val: T, isSelected: boolean) => React.ReactNode;
+  className?: string;
+}
+
+function CustomDropdown<T extends string>({
+  value,
+  onChange,
+  options,
+  renderTrigger,
+  renderOption,
+  className
+}: CustomDropdownProps<T>) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className={cn("relative w-full", className)} ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full text-left focus:outline-none cursor-pointer"
+      >
+        {renderTrigger(value)}
+      </button>
+      {isOpen && (
+        <div className="absolute z-30 w-full mt-1 bg-white dark:bg-neutral-850 border border-neutral-200/70 dark:border-neutral-800 rounded-xl shadow-xl py-1 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => {
+                onChange(opt);
+                setIsOpen(false);
+              }}
+              className="w-full text-left cursor-pointer"
+            >
+              {renderOption(opt, opt === value)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
