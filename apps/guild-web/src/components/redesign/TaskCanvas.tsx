@@ -27,7 +27,8 @@ import {
   PanelLeftOpen,
   CheckCircle,
   AlertOctagon,
-  Lock
+  Lock,
+  Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -871,7 +872,7 @@ export function TaskCanvas() {
               )}
               title="My Team"
             >
-              <Workflow className="w-4 h-4 text-indigo-500 shrink-0" />
+              <Users className="w-4 h-4 text-indigo-500 shrink-0" />
               {!isSidebarCollapsed && <span>My Team</span>}
             </button>
 
@@ -968,7 +969,7 @@ export function TaskCanvas() {
                 activeSection === 'my-team' ? "bg-white/5 border border-white/10 text-foreground" : "text-muted-foreground"
               )}
             >
-              <Workflow className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+              <Users className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
               <span>My Team</span>
             </button>
             <button
@@ -1056,7 +1057,7 @@ export function TaskCanvas() {
                         {activeSection === 'my-space' ? (
                           <Sparkles className="w-5 h-5 text-cyan-500 drop-shadow-[0_0_4px_rgba(6,182,212,0.3)] shrink-0" />
                         ) : (
-                          <Workflow className="w-5 h-5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.3)] shrink-0" />
+                          <Users className="w-5 h-5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.3)] shrink-0" />
                         )}
                         <h2 className="text-xs font-black uppercase tracking-widest text-foreground truncate">
                           {activeSection === 'my-space' ? 'Personal Space' : 'Team Workspace'}
