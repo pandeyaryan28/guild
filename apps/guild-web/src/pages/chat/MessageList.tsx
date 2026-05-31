@@ -50,14 +50,21 @@ export function MessageList({
   const isPrependingRef = React.useRef(false);
 
   // On initial load: jump to bottom immediately (no animation)
+  // isInitialRef must be reset to true whenever messages goes null (channel switch)
   const isInitialRef = React.useRef(true);
   React.useEffect(() => {
-    if (messages !== null && isInitialRef.current) {
+    if (messages === null) {
+      // Channel/DM changed — prepare to scroll on next load
+      isInitialRef.current = true;
+      return;
+    }
+    if (isInitialRef.current) {
       isInitialRef.current = false;
-      const el = containerRef.current;
-      if (el) {
-        el.scrollTop = el.scrollHeight;
-      }
+      // rAF ensures the browser has finished laying out the new messages
+      // before we try to read scrollHeight / call scrollIntoView
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
+      });
     }
   }, [messages]);
 
@@ -74,13 +81,18 @@ export function MessageList({
   // Auto-scroll when new messages arrive and user is at bottom
   const prevMsgCountRef = React.useRef<number>(0);
   React.useEffect(() => {
-    if (!messages) return;
+    if (messages === null) {
+      prevMsgCountRef.current = 0;
+      return;
+    }
     const count = messages.length;
-    const grew = count > prevMsgCountRef.current;
+    const grew = count > prevMsgCountRef.current && !isInitialRef.current;
     prevMsgCountRef.current = count;
 
     if (grew && atBottom && !isPrependingRef.current) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      });
     }
   }, [messages, atBottom]);
 
