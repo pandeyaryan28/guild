@@ -83,25 +83,25 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
       <div className="flex-1 flex flex-col min-w-0 pl-[120px] pr-6 py-5 z-10 overflow-hidden relative h-screen">
         
         {/* Top Spatial Control Nav - macOS Floating Window Titlebar Capsule */}
-        <header className="flex h-14 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0 px-6 aether-glass shadow-md" style={{ borderRadius: '18px' }}>
+        <header className="flex h-14 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0 px-6 aether-glass shadow-xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20" style={{ borderRadius: '24px' }}>
           {/* Logo & Section Title with macOS Dots */}
           <div className="flex items-center gap-4">
             {/* macOS Window Controls */}
             <div className="flex items-center gap-1.5 shrink-0 select-none">
-              <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] opacity-80" />
-              <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] opacity-80" />
-              <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] opacity-80" />
+              <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] opacity-90 transition-all hover:scale-110 active:opacity-100" />
+              <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] opacity-90 transition-all hover:scale-110 active:opacity-100" />
+              <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] opacity-90 transition-all hover:scale-110 active:opacity-100" />
             </div>
             <div className="h-4 w-[1px] bg-white/10 mx-1 shrink-0" />
             <span 
-              className="text-lg font-black tracking-tight text-gradient uppercase bg-gradient-to-r from-violet-500 to-indigo-500"
-              style={{ letterSpacing: '0.1em' }}
+              className="text-lg font-black tracking-wider text-gradient uppercase bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400"
+              style={{ letterSpacing: '0.12em' }}
             >
               Guild
             </span>
             <div className="h-4 w-[1px] bg-white/10 shrink-0" />
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              {location.pathname === '/' ? 'Workspace Control' : location.pathname.split('/')[1]}
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none">
+              {location.pathname === '/' ? 'Workspace Control' : location.pathname.split('/')[2] || location.pathname.split('/')[1]}
             </span>
           </div>
 
@@ -110,12 +110,12 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
             {/* Elegant Glass Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="aether-glass h-10 w-[220px] px-4 flex items-center justify-start gap-3 text-left transition-all hover:bg-white/10 hover:border-white/20 active:scale-98 shadow-sm cursor-pointer"
-              style={{ borderRadius: '14px' }}
+              className="aether-glass h-10 w-[220px] px-4 flex items-center justify-start gap-3 text-left transition-all duration-300 hover:bg-white/12 hover:border-white/20 active:scale-95 shadow-sm border border-white/5 bg-white/5 cursor-pointer"
+              style={{ borderRadius: '16px' }}
             >
               <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              <span className="text-[11px] text-muted-foreground/80 flex-1 truncate">Search...</span>
-              <span className="flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground/60 border border-white/10 rounded px-1 py-0.2 shrink-0">
+              <span className="text-xs font-semibold text-muted-foreground/80 flex-1 truncate">Search everything...</span>
+              <span className="flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground/60 border border-white/10 rounded px-1.5 py-0.5 bg-black/10 shrink-0">
                 <Command className="w-2.5 h-2.5" />K
               </span>
             </button>
@@ -124,16 +124,16 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
             <div className="relative">
               <button
                 onClick={() => setNotifOpen(!notifOpen)}
-                className={`aether-glass h-10 w-10 flex items-center justify-center relative hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer ${
-                  notifOpen ? 'bg-white/10 border-white/20' : ''
+                className={`aether-glass h-10 w-10 flex items-center justify-center relative hover:scale-105 active:scale-95 transition-all duration-300 shadow-md cursor-pointer border border-white/5 bg-white/5 ${
+                  notifOpen ? 'bg-white/12 border-white/25 scale-105' : ''
                 }`}
-                style={{ borderRadius: '14px' }}
+                style={{ borderRadius: '16px' }}
               >
                 <Bell className="w-4 h-4 text-foreground/80" />
                 {hasNewUnread && (
-                  <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                  <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
                   </span>
                 )}
               </button>
@@ -167,7 +167,7 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
         </header>
 
         {/* Scrollable Spatial Canvas */}
-        <div className="flex-1 overflow-hidden relative rounded-2xl w-full">
+        <div className="flex-1 overflow-hidden relative rounded-3xl w-full">
           <main className="absolute inset-0 overflow-y-auto aether-scroll pr-2 pb-6">
             {children}
           </main>

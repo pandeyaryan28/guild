@@ -266,12 +266,21 @@
   animation: float 6s ease-in-out infinite;
 }
 
-/* Smooth theme transitions */
+/* Smooth theme transitions with hardware acceleration triggers */
 :root, .dark, [class*="theme-"] {
   transition:
-    background-color 350ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 350ms cubic-bezier(0.4, 0, 0.2, 1),
-    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 450ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 450ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* GPU Hardware-Acceleration for Glass Backdrop filters */
+.aether-glass, .aether-glass-elevated, .aether-glass-interactive, .aether-glass-input {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 /* Scrollbar hide utility */
