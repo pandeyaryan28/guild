@@ -139,7 +139,7 @@ export function MobileAdminLayout({ profile, activeSection, onNavigate, children
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-              className="fixed bottom-0 left-0 right-0 max-h-[85vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-white/10 px-6 pb-8 pt-2 z-[210] shadow-2xl flex flex-col pointer-events-auto bg-surface/95 dark:bg-surface/90 backdrop-blur-3xl"
+              className="fixed bottom-0 left-0 right-0 max-h-[85vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-white/10 px-6 pb-8 pt-2 z-[210] shadow-2xl flex flex-col pointer-events-auto bg-white/85 dark:bg-white/[0.05] backdrop-blur-3xl"
             >
               <div className="aether-mobile-handle shrink-0 bg-white/10 w-10 h-1.5 rounded-full mx-auto my-3" />
               

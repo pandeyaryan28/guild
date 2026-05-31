@@ -670,7 +670,7 @@ export function TeamsHealthTable({
 
           {/* Modal Container */}
           <div
-            className="w-full max-w-lg overflow-hidden aether-glass border border-white/10 shadow-2xl p-6 relative flex flex-col max-h-[90vh] bg-surface/95 dark:bg-surface/90 backdrop-blur-3xl animate-scale-up"
+            className="w-full max-w-lg overflow-hidden aether-glass border border-white/10 shadow-2xl p-6 relative flex flex-col max-h-[90vh] bg-white/85 dark:bg-white/[0.05] backdrop-blur-3xl animate-scale-up"
             style={{
               animation: 'scale-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
@@ -808,7 +808,7 @@ export function TeamsHealthTable({
 
           {/* Modal Container */}
           <div
-            className="w-full max-w-lg overflow-hidden aether-glass border border-white/10 shadow-2xl p-6 relative flex flex-col max-h-[90vh] bg-surface/95 dark:bg-surface/90 backdrop-blur-3xl animate-scale-up"
+            className="w-full max-w-lg overflow-hidden aether-glass border border-white/10 shadow-2xl p-6 relative flex flex-col max-h-[90vh] bg-white/85 dark:bg-white/[0.05] backdrop-blur-3xl animate-scale-up"
             style={{
               animation: 'scale-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}

@@ -552,7 +552,7 @@ export function RequestsMappingTable({
 
           {/* Frosted Glass Side Drawer */}
           <div
-            className="relative w-full sm:w-[500px] h-full aether-glass border-y-0 border-r-0 border-l border-white/10 shadow-2xl flex flex-col z-10 p-6 overflow-hidden bg-surface/95 dark:bg-surface/90 backdrop-blur-3xl"
+            className="relative w-full sm:w-[500px] h-full aether-glass border-y-0 border-r-0 border-l border-white/10 shadow-2xl flex flex-col z-10 p-6 overflow-hidden bg-white/85 dark:bg-white/[0.05] backdrop-blur-3xl"
             style={{
               animation: 'slide-left 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}

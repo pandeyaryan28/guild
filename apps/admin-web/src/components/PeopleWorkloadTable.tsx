@@ -456,7 +456,7 @@ export function PeopleWorkloadTable({
 
           {/* Frosted Glass Side Sheet */}
           <div
-            className="relative w-full sm:w-[480px] h-full aether-glass border-y-0 border-r-0 border-l border-white/10 shadow-2xl flex flex-col z-10 p-6 overflow-hidden bg-surface/95 dark:bg-surface/90 backdrop-blur-3xl animate-slide-left"
+            className="relative w-full sm:w-[480px] h-full aether-glass border-y-0 border-r-0 border-l border-white/10 shadow-2xl flex flex-col z-10 p-6 overflow-hidden bg-white/85 dark:bg-white/[0.05] backdrop-blur-3xl animate-slide-left"
             style={{
               animation: 'slide-left 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
@@ -464,8 +464,8 @@ export function PeopleWorkloadTable({
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
               <div>
-                <h3 className="text-xs font-black uppercase tracking-wider text-[--foreground]">Manage Directory Profile</h3>
-                <p className="text-[9px] text-[--muted-foreground] mt-0.5 leading-none">Configure permissions and role structures</p>
+                <h3 className="text-xs font-black uppercase tracking-wider text-[--foreground]">Edit Profile</h3>
+                <p className="text-[9px] text-[--muted-foreground] mt-0.5 leading-none">Manage employee profile and platform permissions</p>
               </div>
               <button
                 onClick={() => {
@@ -505,7 +505,7 @@ export function PeopleWorkloadTable({
 
               {/* Form Input fields */}
               <div className="space-y-4">
-                <h5 className="text-[9px] font-black uppercase tracking-widest text-[--muted-foreground]/60 px-1">Metadata details</h5>
+                <h5 className="text-[9px] font-black uppercase tracking-widest text-[--muted-foreground]/60 px-1">Profile Info</h5>
 
                 {/* Full Name */}
                 <div className="space-y-1.5">
@@ -558,35 +558,35 @@ export function PeopleWorkloadTable({
 
               {/* Role hierarchy selection */}
               <div className="space-y-4">
-                <h5 className="text-[9px] font-black uppercase tracking-widest text-[--muted-foreground]/60 px-1">Hierarchy controls</h5>
+                <h5 className="text-[9px] font-black uppercase tracking-widest text-[--muted-foreground]/60 px-1">Role & Reporting</h5>
 
                 {/* Role Switch */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-[--muted-foreground] uppercase tracking-wider px-1">User Privilege Tier</label>
+                  <label className="text-[10px] font-bold text-[--muted-foreground] uppercase tracking-wider px-1">User Role</label>
                   <select
                     value={editRole}
                     onChange={e => setEditRole(e.target.value as UserRole)}
                     className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                   >
-                    <option value="member">Member (Lowest Rank)</option>
-                    <option value="manager">Manager (Mid-Tier Coordinate Lead)</option>
-                    <option value="admin">Admin (System control)</option>
-                    <option value="owner">Owner (Full Workspace control)</option>
+                    <option value="member">Member</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                    <option value="owner">Owner</option>
                   </select>
                   <p className="text-[9px] text-[--muted-foreground] font-semibold mt-1 px-1">
-                    Hierarchy order: Owner &rarr; Admin &rarr; Manager &rarr; Member. Higher ranks inherit dashboard coordinate powers.
+                    Roles define user access privileges: Owner, Admin, Manager, or Member.
                   </p>
                 </div>
 
                 {/* Manager Link */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-[--muted-foreground] uppercase tracking-wider px-1">Reporting Line Manager</label>
+                  <label className="text-[10px] font-bold text-[--muted-foreground] uppercase tracking-wider px-1">Manager</label>
                   <select
                     value={editManagerId}
                     onChange={e => setEditManagerId(e.target.value)}
                     className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                   >
-                    <option value="">No Manager / Self-governing...</option>
+                    <option value="">No Manager</option>
                     {users
                       .filter(u => u.uid !== selectedUser.uid) // anyone else
                       .map(u => (
@@ -600,14 +600,14 @@ export function PeopleWorkloadTable({
 
               {/* Danger Actions Area */}
               <div className="pt-4 border-t border-white/10 space-y-4">
-                <h5 className="text-[9px] font-black uppercase tracking-widest text-red-400 px-1">Deactivation actions</h5>
+                <h5 className="text-[9px] font-black uppercase tracking-widest text-red-400 px-1">Danger Zone</h5>
                 <button
                   type="button"
                   onClick={handleDeactivate}
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/25 hover:border-red-500/40 text-red-400 py-3 text-xs font-black tracking-wide transition-all active:scale-98 cursor-pointer shadow-sm select-none"
                 >
                   <Trash2 className="w-4 h-4 shrink-0" />
-                  Deactivate & Remove from Organization
+                  Remove Member
                 </button>
               </div>
 
@@ -648,7 +648,7 @@ export function PeopleWorkloadTable({
 
           {/* Modal Container Card */}
           <div
-            className="w-full max-w-lg overflow-hidden aether-glass border border-white/10 shadow-2xl p-6 relative flex flex-col max-h-[90vh] bg-surface/95 dark:bg-surface/90 backdrop-blur-3xl animate-scale-up"
+            className="w-full max-w-lg overflow-hidden aether-glass border border-white/10 shadow-2xl p-6 relative flex flex-col max-h-[90vh] bg-white/85 dark:bg-white/[0.05] backdrop-blur-3xl animate-scale-up"
             style={{
               animation: 'scale-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
@@ -657,7 +657,7 @@ export function PeopleWorkloadTable({
             <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[--foreground]">Invite New Workspace Member</h3>
-                <p className="text-[9px] text-[--muted-foreground] mt-0.5 leading-none">Add new employees or generate coordinate tokens</p>
+                <p className="text-[9px] text-[--muted-foreground] mt-0.5 leading-none">Add new employees or generate invite links</p>
               </div>
               <button
                 onClick={() => setIsInviteModalOpen(false)}
@@ -694,28 +694,28 @@ export function PeopleWorkloadTable({
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[--muted-foreground]" />
                     <input
-                      type="email"
-                      required
-                      value={inviteEmail}
-                      onChange={e => setInviteEmail(e.target.value)}
-                      className="w-full pl-9 pr-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all placeholder:text-[--muted-foreground]/60"
-                      placeholder="e.g. employee@company.com"
+                       type="email"
+                       required
+                       value={inviteEmail}
+                       onChange={e => setInviteEmail(e.target.value)}
+                       className="w-full pl-9 pr-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all placeholder:text-[--muted-foreground]/60"
+                       placeholder="e.g. employee@company.com"
                     />
                   </div>
                 </div>
 
                 {/* Role Switch */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-[--muted-foreground] uppercase tracking-wider px-1">Starting Privilege Tier</label>
+                  <label className="text-[10px] font-bold text-[--muted-foreground] uppercase tracking-wider px-1">User Role</label>
                   <select
                     value={inviteRole}
                     onChange={e => setInviteRole(e.target.value as UserRole)}
                     className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                   >
-                    <option value="member">Member (Regular Team Employee)</option>
-                    <option value="manager">Manager (Mid-Tier Coordinate Lead)</option>
-                    <option value="admin">Admin (System operations)</option>
-                    <option value="owner">Owner (Full Workspace owner)</option>
+                    <option value="member">Member</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                    <option value="owner">Owner</option>
                   </select>
                 </div>
 
