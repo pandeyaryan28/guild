@@ -22,7 +22,7 @@ export function AdminLayout({ profile, children }: AdminLayoutProps) {
       <div className="flex-1 flex flex-col min-w-0 pl-[120px] pr-6 py-5 z-10 overflow-hidden relative h-screen">
         
         {/* Top Spatial Control Nav Header - macOS Floating Window Titlebar Capsule */}
-        <header className="flex h-14 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0 px-6 aether-glass shadow-xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20" style={{ borderRadius: '24px' }}>
+        <header className="flex h-14 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0 px-6 aether-glass shadow-xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-white/[0.03]" style={{ borderRadius: '24px' }}>
           <div className="flex items-center gap-4">
             {/* macOS Window Controls */}
             <div className="flex items-center gap-1.5 shrink-0 select-none">
@@ -45,7 +45,7 @@ export function AdminLayout({ profile, children }: AdminLayoutProps) {
         </header>
 
         {/* 4. Elegant macOS Floating scroll canvas with subtle glass borders */}
-        <div className="flex-1 overflow-hidden relative border border-white/10 dark:border-white/5 bg-white/[0.02] dark:bg-black/[0.22] backdrop-blur-xl rounded-3xl shadow-2xl">
+        <div className="flex-1 overflow-hidden relative border border-white/10 dark:border-white/5 bg-white/[0.02] dark:bg-white/[0.05] backdrop-blur-xl rounded-3xl shadow-2xl">
           <main className="absolute inset-0 overflow-y-auto aether-scroll p-6">
             {children(activeSection)}
           </main>

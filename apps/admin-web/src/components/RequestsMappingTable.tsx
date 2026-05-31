@@ -327,7 +327,7 @@ export function RequestsMappingTable({
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-black/25 border border-white/10 dark:border-white/5 text-[--foreground] outline-none cursor-pointer"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-white/[0.04] border border-white/10 dark:border-white/5 text-[--foreground] outline-none cursor-pointer"
             >
               <option value="all" className="bg-[--background]">All Statuses</option>
               <option value="pending" className="bg-[--background]">⌛ Pending</option>
@@ -342,7 +342,7 @@ export function RequestsMappingTable({
             <select
               value={typeFilter}
               onChange={e => setTypeFilter(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-black/25 border border-white/10 dark:border-white/5 text-[--foreground] outline-none cursor-pointer"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-white/[0.04] border border-white/10 dark:border-white/5 text-[--foreground] outline-none cursor-pointer"
             >
               <option value="all" className="bg-[--background]">All Types</option>
               {Object.entries(REQUEST_TYPE_LABELS).map(([val, label]) => (
@@ -357,7 +357,7 @@ export function RequestsMappingTable({
             <select
               value={userFilter}
               onChange={e => setUserFilter(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-black/25 border border-white/10 dark:border-white/5 text-[--foreground] outline-none cursor-pointer"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-white/[0.04] border border-white/10 dark:border-white/5 text-[--foreground] outline-none cursor-pointer"
             >
               {userOptions.map(u => (
                 <option key={u.value} value={u.value} className="bg-[--background]">{u.label}</option>
@@ -371,7 +371,7 @@ export function RequestsMappingTable({
             <select
               value={teamFilter}
               onChange={e => setTeamFilter(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-black/25 border border-white/10 dark:border-white/5 text-[--foreground] outline-none cursor-pointer"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-white/[0.04] border border-white/10 dark:border-white/5 text-[--foreground] outline-none cursor-pointer"
             >
               {teamOptions.map(t => (
                 <option key={t.value} value={t.value} className="bg-[--background]">{t.label}</option>
@@ -385,7 +385,7 @@ export function RequestsMappingTable({
             <select
               value={sortKey}
               onChange={e => setSortKey(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-black/25 border border-white/10 dark:border-white/5 text-[--foreground] outline-none cursor-pointer"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-white/[0.04] border border-white/10 dark:border-white/5 text-[--foreground] outline-none cursor-pointer"
             >
               <option value="latest" className="bg-[--background]">Latest to Oldest</option>
               <option value="oldest" className="bg-[--background]">Oldest to Latest</option>
@@ -397,7 +397,7 @@ export function RequestsMappingTable({
       </div>
 
       {/* ─── REQUESTS DATA CONTAINER ─── */}
-      <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-black/10">
+      <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-white/[0.02] dark:bg-white/[0.02]">
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr className="border-b border-white/5 text-[10px] font-extrabold uppercase tracking-wider text-[--muted-foreground]" style={{ background: 'oklch(from var(--muted) l c h / 30%)' }}>
@@ -613,7 +613,7 @@ export function RequestsMappingTable({
                 <h5 className="text-[9px] font-black uppercase tracking-widest text-[--muted-foreground]/60 px-1">Request Details</h5>
 
                 {/* Title */}
-                <div className="p-3.5 rounded-xl border border-white/5 bg-black/15">
+                <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04]">
                   <div className="text-[9px] font-bold text-[--muted-foreground] uppercase tracking-wider">Request Header</div>
                   <div className="text-sm font-bold text-[--foreground] mt-1">{selectedRequest.title}</div>
                 </div>
@@ -621,7 +621,7 @@ export function RequestsMappingTable({
                 {/* Grid Type & Dates */}
                 <div className="grid grid-cols-2 gap-4">
                   {/* Type */}
-                  <div className="p-3.5 rounded-xl border border-white/5 bg-black/15">
+                  <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04]">
                     <div className="text-[9px] font-bold text-[--muted-foreground] uppercase tracking-wider">Type</div>
                     <div className="flex items-center gap-2 mt-1.5">
                       <RequestTypeIcon type={selectedRequest.type} className="w-4 h-4 shrink-0" />
@@ -630,7 +630,7 @@ export function RequestsMappingTable({
                   </div>
 
                   {/* Window */}
-                  <div className="p-3.5 rounded-xl border border-white/5 bg-black/15">
+                  <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04]">
                     <div className="text-[9px] font-bold text-[--muted-foreground] uppercase tracking-wider">Duration Window</div>
                     <div className="font-bold text-xs text-[--foreground] mt-1.5 tabular-nums">
                       {selectedRequest.startDate ? (
@@ -648,7 +648,7 @@ export function RequestsMappingTable({
                 </div>
 
                 {/* Reason description */}
-                <div className="p-3.5 rounded-xl border border-white/5 bg-black/15 space-y-1.5">
+                <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04] space-y-1.5">
                   <div className="text-[9px] font-bold text-[--muted-foreground] uppercase tracking-wider">Detailed Statement / Reason</div>
                   <div className="text-xs text-[--foreground] font-medium leading-relaxed max-h-36 overflow-y-auto aether-scroll pr-1 whitespace-pre-wrap">
                     {selectedRequest.description || 'No detailed statement provided.'}
@@ -659,7 +659,7 @@ export function RequestsMappingTable({
               {/* Status & Audit timeline details */}
               <div className="space-y-4">
                 <h5 className="text-[9px] font-black uppercase tracking-widest text-[--muted-foreground]/60 px-1">Audit timeline</h5>
-                <div className="p-3.5 rounded-xl border border-white/5 bg-black/15 space-y-3">
+                <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04] space-y-3">
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-semibold text-[--muted-foreground]">Current Status</span>
                     <span
@@ -704,11 +704,11 @@ export function RequestsMappingTable({
                       value={approverNote}
                       onChange={e => setApproverNote(e.target.value)}
                       placeholder="Add an optional explanation or feedback for your decision (approving or rejecting)..."
-                      className="w-full h-24 p-3.5 border border-white/10 bg-black/20 text-xs font-medium text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all resize-none placeholder:text-[--muted-foreground]/40 leading-relaxed"
+                      className="w-full h-24 p-3.5 border border-white/10 bg-white/[0.05] text-xs font-medium text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all resize-none placeholder:text-[--muted-foreground]/40 leading-relaxed"
                       disabled={isSubmittingAction}
                     />
                   ) : (
-                    <div className="p-3.5 rounded-xl border border-white/5 bg-black/15 text-xs font-medium leading-relaxed italic text-[--muted-foreground]">
+                    <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04] text-xs font-medium leading-relaxed italic text-[--muted-foreground]">
                       {selectedRequest.approverNote || 'No additional comments provided.'}
                     </div>
                   )}

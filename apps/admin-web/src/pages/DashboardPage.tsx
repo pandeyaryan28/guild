@@ -438,7 +438,7 @@ export function DashboardPage({
         <button
           onClick={refresh}
           className="flex items-center gap-2 self-start sm:self-center px-4 py-2 rounded-xl text-xs font-semibold
-                     border border-white/10 dark:border-white/5 text-[--muted-foreground] bg-black/10 hover:bg-black/30
+                     border border-white/10 dark:border-white/5 text-[--muted-foreground] bg-white/[0.03] hover:bg-white/[0.08]
                      hover:text-[--foreground] hover:border-[--ring] transition-all cursor-pointer shadow-sm"
         >
           <RefreshCw className="w-3.5 h-3.5" />
@@ -453,7 +453,7 @@ export function DashboardPage({
           
           {/* Overview Date Filter */}
           <div className="flex justify-end">
-            <div className="flex items-center bg-white/[0.02] dark:bg-black/[0.15] border border-white/10 dark:border-white/5 p-0.5 rounded-xl text-[10px] font-semibold">
+            <div className="flex items-center bg-white/[0.02] dark:bg-white/[0.04] border border-white/10 dark:border-white/5 p-0.5 rounded-xl text-[10px] font-semibold">
               {[
                 { value: '7d', label: '7 Days' },
                 { value: '30d', label: '30 Days' },
@@ -750,7 +750,7 @@ export function DashboardPage({
               <select
                 value={activeOrg?.id || ''}
                 onChange={e => setSelectedOrgId(e.target.value)}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-white/[0.02] dark:bg-black/[0.15] border border-white/10 dark:border-white/5 text-[--foreground]
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-white/[0.02] dark:bg-white/[0.04] border border-white/10 dark:border-white/5 text-[--foreground]
                            focus:border-[--ring] outline-none cursor-pointer w-64 shadow-inner"
               >
                 {orgs.map(o => (
@@ -897,7 +897,7 @@ export function DashboardPage({
                         <button
                           onClick={handleSettingsResetLink}
                           disabled={isGeneratingLink}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border border-white/10 dark:border-white/5 text-[--muted-foreground] bg-black/10 hover:bg-black/25 active:scale-95 transition-all cursor-pointer shadow-inner"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border border-white/10 dark:border-white/5 text-[--muted-foreground] bg-white/[0.03] hover:bg-white/[0.08] active:scale-95 transition-all cursor-pointer shadow-inner"
                         >
                           <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingLink ? 'animate-spin' : ''}`} />
                           Reset invite token

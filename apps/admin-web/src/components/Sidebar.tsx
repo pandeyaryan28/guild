@@ -65,7 +65,7 @@ export function Sidebar({ profile, activeSection, onNavigate }: SidebarProps) {
   return (
     <div className="aether-dock-wrapper select-none">
       {/* macOS-Style Floating Dock */}
-      <div className="aether-dock aether-glass flex flex-col items-center gap-3 border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/25 shadow-2xl" style={{ borderRadius: '32px' }}>
+      <div className="aether-dock aether-glass flex flex-col items-center gap-3 border border-white/10 dark:border-white/5 bg-white/5 dark:bg-white/[0.04] shadow-2xl" style={{ borderRadius: '32px' }}>
         
         {/* User Profile Bubble (Avatar) */}
         <div className="relative group cursor-pointer mb-2">

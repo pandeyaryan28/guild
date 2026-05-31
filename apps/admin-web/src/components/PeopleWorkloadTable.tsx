@@ -290,7 +290,7 @@ export function PeopleWorkloadTable({
       </div>
 
       {/* Directory Table */}
-      <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-black/10">
+      <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-white/[0.02] dark:bg-white/[0.02]">
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr className="border-b border-white/5 text-[10px] font-extrabold uppercase tracking-wider text-[--muted-foreground]" style={{ background: 'oklch(from var(--muted) l c h / 30%)' }}>
@@ -428,7 +428,7 @@ export function PeopleWorkloadTable({
                       <button
                         onClick={() => handleOpenManage(u)}
                         className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider
-                                   border border-white/10 dark:border-white/5 text-[--muted-foreground] bg-black/10 hover:bg-black/30
+                                   border border-white/10 dark:border-white/5 text-[--muted-foreground] bg-white/[0.03] hover:bg-white/[0.08]
                                    hover:text-[--foreground] hover:border-[--ring] transition-all cursor-pointer shadow-sm"
                       >
                         Manage
@@ -515,7 +515,7 @@ export function PeopleWorkloadTable({
                     required
                     value={editFullName}
                     onChange={e => setEditFullName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
+                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
                   />
                 </div>
 
@@ -526,7 +526,7 @@ export function PeopleWorkloadTable({
                     type="text"
                     value={editDesignation}
                     onChange={e => setEditDesignation(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
+                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
                     placeholder="e.g. Lead Logistics, Operation Specialist, Member"
                   />
                 </div>
@@ -538,7 +538,7 @@ export function PeopleWorkloadTable({
                     type="text"
                     value={editEmployeeId}
                     onChange={e => setEditEmployeeId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
+                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
                     placeholder="e.g. EMP-1092"
                   />
                 </div>
@@ -550,7 +550,7 @@ export function PeopleWorkloadTable({
                     type="number"
                     value={editAge || ''}
                     onChange={e => setEditAge(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
+                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
                     placeholder="e.g. 28"
                   />
                 </div>
@@ -566,7 +566,7 @@ export function PeopleWorkloadTable({
                   <select
                     value={editRole}
                     onChange={e => setEditRole(e.target.value as UserRole)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
+                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                   >
                     <option value="member">Member (Lowest Rank)</option>
                     <option value="manager">Manager (Mid-Tier Coordinate Lead)</option>
@@ -584,7 +584,7 @@ export function PeopleWorkloadTable({
                   <select
                     value={editManagerId}
                     onChange={e => setEditManagerId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
+                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                   >
                     <option value="">No Manager / Self-governing...</option>
                     {users
@@ -698,7 +698,7 @@ export function PeopleWorkloadTable({
                       required
                       value={inviteEmail}
                       onChange={e => setInviteEmail(e.target.value)}
-                      className="w-full pl-9 pr-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all placeholder:text-[--muted-foreground]/60"
+                      className="w-full pl-9 pr-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all placeholder:text-[--muted-foreground]/60"
                       placeholder="e.g. employee@company.com"
                     />
                   </div>
@@ -710,7 +710,7 @@ export function PeopleWorkloadTable({
                   <select
                     value={inviteRole}
                     onChange={e => setInviteRole(e.target.value as UserRole)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
+                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                   >
                     <option value="member">Member (Regular Team Employee)</option>
                     <option value="manager">Manager (Mid-Tier Coordinate Lead)</option>
@@ -741,7 +741,7 @@ export function PeopleWorkloadTable({
                 {globalInviteLink ? (
                   <div className="space-y-3">
                     {/* Render global link */}
-                    <div className="flex items-center gap-2 p-2 px-3 border border-white/10 bg-black/35 rounded-xl">
+                    <div className="flex items-center gap-2 p-2 px-3 border border-white/10 bg-white/[0.08] rounded-xl">
                       <input
                         type="text"
                         readOnly

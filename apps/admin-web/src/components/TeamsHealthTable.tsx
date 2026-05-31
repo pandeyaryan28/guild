@@ -282,7 +282,7 @@ export function TeamsHealthTable({
       {/* Dynamic Selector Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         {/* Toggle tabs */}
-        <div className="flex items-center bg-black/25 border border-white/5 p-1 rounded-xl text-xs font-semibold shrink-0">
+        <div className="flex items-center bg-white/[0.04] border border-white/5 p-1 rounded-xl text-xs font-semibold shrink-0">
           <button
             onClick={() => setActiveTab('squads')}
             className="px-4 py-2 rounded-lg transition-all cursor-pointer flex items-center gap-2"
@@ -335,7 +335,7 @@ export function TeamsHealthTable({
 
       {/* ─── TAB 1: SQUADS & HIERARCHY ────────────────────────────────────────── */}
       {activeTab === 'squads' && (
-        <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-black/10 select-none">
+        <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-white/[0.02] dark:bg-white/[0.02] select-none">
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="border-b border-white/5 text-[10px] font-extrabold uppercase tracking-wider text-[--muted-foreground]" style={{ background: 'oklch(from var(--muted) l c h / 30%)' }}>
@@ -443,7 +443,7 @@ export function TeamsHealthTable({
                       {/* Expandable Squad Details */}
                       {isExpanded && (
                         <tr>
-                          <td colSpan={8} className="px-6 py-5 bg-black/25 border-y border-white/5">
+                          <td colSpan={8} className="px-6 py-5 bg-white/[0.04] border-y border-white/5">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-up">
                               
                               {/* Member Workload Split */}
@@ -561,7 +561,7 @@ export function TeamsHealthTable({
       {activeTab === 'projects' && (
         <div className="space-y-4 select-none">
           {projects.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center aether-glass bg-black/10 border border-white/5">
+            <div className="flex flex-col items-center justify-center py-20 text-center aether-glass bg-white/[0.02] dark:bg-white/[0.02] border border-white/5">
               <FolderHeart className="h-12 w-12 text-[--muted-foreground] mb-4 opacity-50" />
               <p className="text-base font-bold text-[--foreground]">No active projects</p>
               <p className="text-xs text-[--muted-foreground] mt-1 max-w-sm font-semibold">
@@ -708,7 +708,7 @@ export function TeamsHealthTable({
                   required
                   value={squadName}
                   onChange={e => setSquadName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all placeholder:text-[--muted-foreground]/60"
+                  className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all placeholder:text-[--muted-foreground]/60"
                   placeholder="e.g. Engineering, Operations Group, Logistics Team"
                 />
               </div>
@@ -719,7 +719,7 @@ export function TeamsHealthTable({
                 <textarea
                   value={squadDesc}
                   onChange={e => setSquadDesc(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all min-h-[70px] placeholder:text-[--muted-foreground]/60 resize-none"
+                  className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all min-h-[70px] placeholder:text-[--muted-foreground]/60 resize-none"
                   placeholder="Describe the squad's functional operational scope..."
                 />
               </div>
@@ -731,7 +731,7 @@ export function TeamsHealthTable({
                   value={squadManagerId}
                   required
                   onChange={e => setSquadManagerId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
+                  className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                 >
                   <option value="">Choose reporting manager lead...</option>
                   {users
@@ -747,7 +747,7 @@ export function TeamsHealthTable({
               {/* Squad members checklist */}
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-[--muted-foreground] uppercase tracking-wider px-1"> Roster Squad Members</label>
-                <div className="border border-white/10 bg-black/20 rounded-xl p-3 max-h-[140px] overflow-y-auto space-y-2.5 aether-scroll">
+                <div className="border border-white/10 bg-white/[0.05] rounded-xl p-3 max-h-[140px] overflow-y-auto space-y-2.5 aether-scroll">
                   {users.map(u => (
                     <label key={u.uid} className="flex items-center justify-between cursor-pointer group select-none">
                       <div className="flex items-center gap-3">
@@ -755,7 +755,7 @@ export function TeamsHealthTable({
                           type="checkbox"
                           checked={squadMemberIds.includes(u.uid)}
                           onChange={e => handleSquadCheckboxChange(u.uid, e.target.checked)}
-                          className="rounded border-white/10 bg-black/30 text-[--primary] focus:ring-[--ring] h-4 w-4 cursor-pointer"
+                          className="rounded border-white/10 bg-white/[0.06] text-[--primary] focus:ring-[--ring] h-4 w-4 cursor-pointer"
                         />
                         <div className="leading-tight">
                           <p className="text-xs font-bold text-[--foreground] group-hover:text-[--primary] transition-colors">
@@ -846,7 +846,7 @@ export function TeamsHealthTable({
                   required
                   value={projectName}
                   onChange={e => setProjectName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all placeholder:text-[--muted-foreground]/60"
+                  className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all placeholder:text-[--muted-foreground]/60"
                   placeholder="e.g. Design Redesign, Alpha Deployment, Logistics Q3 Audit"
                 />
               </div>
@@ -857,7 +857,7 @@ export function TeamsHealthTable({
                 <textarea
                   value={projectDesc}
                   onChange={e => setProjectDesc(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all min-h-[70px] placeholder:text-[--muted-foreground]/60 resize-none"
+                  className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all min-h-[70px] placeholder:text-[--muted-foreground]/60 resize-none"
                   placeholder="Describe the project parameters and goals..."
                 />
               </div>
@@ -869,7 +869,7 @@ export function TeamsHealthTable({
                   value={projectOwnerId}
                   required
                   onChange={e => setProjectOwnerId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
+                  className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                 >
                   <option value="">Choose project owner...</option>
                   {users.map(u => (
@@ -886,7 +886,7 @@ export function TeamsHealthTable({
                 <select
                   value={projectStatus}
                   onChange={e => setProjectStatus(e.target.value as ProjectStatus)}
-                  className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
+                  className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                 >
                   <option value="active">Active (Currently tracking)</option>
                   <option value="paused">Paused (On Hold)</option>
@@ -903,7 +903,7 @@ export function TeamsHealthTable({
                     type="date"
                     value={projectStartDate}
                     onChange={e => setProjectStartDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
+                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -912,7 +912,7 @@ export function TeamsHealthTable({
                     type="date"
                     value={projectDueDate}
                     onChange={e => setProjectDueDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-black/20 text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
+                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                   />
                 </div>
               </div>

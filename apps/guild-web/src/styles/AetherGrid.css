@@ -38,8 +38,8 @@
 }
 
 .dark {
-  /* Obsidian Glass (Dark Theme default) */
-  --aether-glass-bg: oklch(from var(--bg-primary) calc(l + 0.03) c h / 22%);
+  /* Frosted White Satin Glass (Dark Theme - clean, vibrant, high-contrast) */
+  --aether-glass-bg: oklch(1 0 0 / 7.5%);
   --aether-glass-border: oklch(from var(--accent) 0.96 0.03 h / 12%);
   --aether-glass-border-inner: oklch(1 0 0 / 14%);
   --aether-glass-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.18), 
