@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { type Message } from '../../lib/chat';
 import { MessageBubble } from './MessageBubble';
-import { Loader2, MessageSquare } from 'lucide-react';
+import { Loader2, MessageSquare, ArrowDown } from 'lucide-react';
 
 interface MessageListProps {
   messages: Message[] | null;
@@ -10,6 +10,9 @@ interface MessageListProps {
   orgId?: string;
   currentUser?: { uid: string; displayName: string } | null;
   onOpenDiscussion?: (msg: Message) => void;
+  loadOlderMessages?: () => Promise<void>;
+  loadingOlder?: boolean;
+  hasMore?: boolean;
 }
 
 const GROUP_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
@@ -22,23 +25,85 @@ function formatDateLabel(date: Date): string {
   return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-export function MessageList({ messages, currentUserId, members, orgId, currentUser, onOpenDiscussion }: MessageListProps) {
-  const bottomRef = React.useRef<HTMLDivElement>(null);
+export function MessageList({
+  messages,
+  currentUserId,
+  members,
+  orgId,
+  currentUser,
+  onOpenDiscussion,
+  loadOlderMessages,
+  loadingOlder = false,
+  hasMore = false,
+}: MessageListProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const [autoScroll, setAutoScroll] = React.useState(true);
+  const bottomRef = React.useRef<HTMLDivElement>(null);
+  const topSentinelRef = React.useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Track whether user is near the bottom for auto-scroll on new messages
+  const [atBottom, setAtBottom] = React.useState(true);
+  const [showScrollBtn, setShowScrollBtn] = React.useState(false);
+
+  // Save scroll position before prepending older messages
+  const prevScrollHeightRef = React.useRef<number>(0);
+  const prevScrollTopRef = React.useRef<number>(0);
+  const isPrependingRef = React.useRef(false);
+
+  // On initial load: jump to bottom immediately (no animation)
+  const isInitialRef = React.useRef(true);
   React.useEffect(() => {
-    if (autoScroll) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages !== null && isInitialRef.current) {
+      isInitialRef.current = false;
+      const el = containerRef.current;
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
     }
-  }, [messages, autoScroll]);
+  }, [messages]);
 
-  const handleScroll = () => {
+  // After older messages are prepended, restore scroll position
+  React.useEffect(() => {
+    if (!isPrependingRef.current) return;
     const el = containerRef.current;
     if (!el) return;
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-    setAutoScroll(atBottom);
+    const newScrollHeight = el.scrollHeight;
+    el.scrollTop = prevScrollTopRef.current + (newScrollHeight - prevScrollHeightRef.current);
+    isPrependingRef.current = false;
+  });
+
+  // Auto-scroll when new messages arrive and user is at bottom
+  const prevMsgCountRef = React.useRef<number>(0);
+  React.useEffect(() => {
+    if (!messages) return;
+    const count = messages.length;
+    const grew = count > prevMsgCountRef.current;
+    prevMsgCountRef.current = count;
+
+    if (grew && atBottom && !isPrependingRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, atBottom]);
+
+  const handleScroll = React.useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const nowAtBottom = distFromBottom < 80;
+    setAtBottom(nowAtBottom);
+    setShowScrollBtn(!nowAtBottom && distFromBottom > 300);
+
+    // Load older messages when near the top
+    if (el.scrollTop < 120 && hasMore && !loadingOlder && !isPrependingRef.current) {
+      prevScrollHeightRef.current = el.scrollHeight;
+      prevScrollTopRef.current = el.scrollTop;
+      isPrependingRef.current = true;
+      loadOlderMessages?.();
+    }
+  }, [hasMore, loadingOlder, loadOlderMessages]);
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   if (messages === null) {
@@ -90,34 +155,66 @@ export function MessageList({ messages, currentUserId, members, orgId, currentUs
   }
 
   return (
-    <div
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="flex-1 overflow-y-auto scrollbar-hide py-4"
-    >
-      {items.map((item, i) =>
-        item.type === 'divider' ? (
-          <div key={`divider-${i}`} className="flex items-center gap-3 px-4 py-3">
-            <div className="flex-1 h-px bg-border/20" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">
-              {item.label}
-            </span>
-            <div className="flex-1 h-px bg-border/20" />
-          </div>
-        ) : (
-          <MessageBubble
-            key={item.msg.id}
-            message={item.msg}
-            isOwn={item.msg.senderId === currentUserId}
-            isGrouped={item.isGrouped}
-            members={members}
-            orgId={orgId}
-            currentUser={currentUser}
-            onOpenDiscussion={onOpenDiscussion}
-          />
-        ),
+    <div className="relative flex flex-1 min-h-0 flex-col">
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto scrollbar-hide py-4"
+      >
+        {/* Load-older sentinel / indicator */}
+        <div ref={topSentinelRef} className="px-4 pb-2 flex flex-col items-center gap-1.5">
+          {loadingOlder && (
+            <div className="flex items-center gap-2 text-text-muted">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary/50" />
+              <span className="text-[10px] font-semibold tracking-wider uppercase">Loading older messages…</span>
+            </div>
+          )}
+          {!hasMore && !loadingOlder && (
+            <div className="flex items-center gap-3 w-full py-2">
+              <div className="flex-1 h-px bg-border/20" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted/60 whitespace-nowrap">
+                Beginning of conversation
+              </span>
+              <div className="flex-1 h-px bg-border/20" />
+            </div>
+          )}
+        </div>
+
+        {items.map((item, i) =>
+          item.type === 'divider' ? (
+            <div key={`divider-${i}`} className="flex items-center gap-3 px-4 py-3">
+              <div className="flex-1 h-px bg-border/20" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                {item.label}
+              </span>
+              <div className="flex-1 h-px bg-border/20" />
+            </div>
+          ) : (
+            <MessageBubble
+              key={item.msg.id}
+              message={item.msg}
+              isOwn={item.msg.senderId === currentUserId}
+              isGrouped={item.isGrouped}
+              members={members}
+              orgId={orgId}
+              currentUser={currentUser}
+              onOpenDiscussion={onOpenDiscussion}
+            />
+          ),
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Scroll-to-bottom FAB */}
+      {showScrollBtn && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute bottom-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition-opacity"
+          title="Scroll to latest"
+        >
+          <ArrowDown className="h-4 w-4" />
+        </button>
       )}
-      <div ref={bottomRef} />
     </div>
   );
 }

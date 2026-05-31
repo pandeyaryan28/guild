@@ -45,7 +45,7 @@ export function MessageArea({
   onOpenDiscussion
 }: MessageAreaProps) {
   const navigate = useNavigate();
-  const messages = useMessages(channelId, dmId);
+  const { messages, loadingOlder, hasMore, loadOlderMessages } = useMessages(channelId, dmId);
   const { channels } = useChannels(orgId);
   const [dmPartnerName, setDmPartnerName] = React.useState('');
   const [channel, setChannel] = React.useState<Channel | null>(null);
@@ -450,6 +450,9 @@ export function MessageArea({
         orgId={orgId}
         currentUser={currentUser}
         onOpenDiscussion={onOpenDiscussion}
+        loadOlderMessages={loadOlderMessages}
+        loadingOlder={loadingOlder}
+        hasMore={hasMore}
       />
 
       {/* Input */}

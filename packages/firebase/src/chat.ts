@@ -2,6 +2,7 @@ import {
   collection, doc, setDoc, addDoc, updateDoc,
   getDoc, query, where, orderBy, onSnapshot,
   serverTimestamp, Timestamp, writeBatch, deleteDoc,
+  limit, limitToLast, getDocs, endBefore, QueryDocumentSnapshot, DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notifications';
@@ -489,6 +490,60 @@ export function listenToDMMessages(
     ),
     (snap) => cb(snap.docs.map((d) => d.data() as Message)),
   );
+}
+
+// ─── Paginated Message Listeners ──────────────────────────────────────────────
+
+const PAGE_SIZE = 50;
+
+/**
+ * Streams the latest PAGE_SIZE messages in real-time.
+ * Calls cb with (messages, oldestDoc) — oldestDoc is the cursor for fetchOlderMessages.
+ */
+export function listenToLatestMessages(
+  id: string,
+  type: 'channel' | 'dm',
+  cb: (msgs: Message[], oldestDoc: QueryDocumentSnapshot<DocumentData> | null) => void,
+): () => void {
+  const field = type === 'channel' ? 'channelId' : 'dmId';
+  return onSnapshot(
+    query(
+      collection(db, 'messages'),
+      where(field, '==', id),
+      orderBy('createdAt', 'asc'),
+      limitToLast(PAGE_SIZE),
+    ),
+    (snap) => {
+      const msgs = snap.docs.map((d) => d.data() as Message);
+      const oldest = snap.docs[0] ?? null;
+      cb(msgs, oldest);
+    },
+  );
+}
+
+/**
+ * One-shot fetch of PAGE_SIZE messages before `cursorDoc`.
+ * Returns [messages, newOldestDoc, hasMore].
+ */
+export async function fetchOlderMessages(
+  id: string,
+  type: 'channel' | 'dm',
+  cursorDoc: QueryDocumentSnapshot<DocumentData>,
+): Promise<[Message[], QueryDocumentSnapshot<DocumentData> | null, boolean]> {
+  const field = type === 'channel' ? 'channelId' : 'dmId';
+  const snap = await getDocs(
+    query(
+      collection(db, 'messages'),
+      where(field, '==', id),
+      orderBy('createdAt', 'asc'),
+      endBefore(cursorDoc),
+      limitToLast(PAGE_SIZE),
+    ),
+  );
+  const msgs = snap.docs.map((d) => d.data() as Message);
+  const newOldest = snap.docs[0] ?? null;
+  const hasMore = snap.docs.length === PAGE_SIZE;
+  return [msgs, newOldest, hasMore];
 }
 
 export function listenToUserDMs(
