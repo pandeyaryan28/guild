@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { format, subDays } from 'date-fns';
-import type { Organization, UserProfile, Task, Channel, Team, Goal, TaskActivity, Project } from '@guild/types';
+import type { Organization, UserProfile, Task, Channel, Team, Goal, Project } from '@guild/types';
 import { HqStatCard } from '../components/HqStatCard';
 import { FilterBar } from '../components/FilterBar';
 import { PeopleWorkloadTable } from '../components/PeopleWorkloadTable';
 import { TeamsHealthTable } from '../components/TeamsHealthTable';
 import { WorkItemsTable } from '../components/WorkItemsTable';
-import { ActivityFeed } from '../components/ActivityFeed';
 import {
   updateOrganizationDetails,
   disableGlobalInviteLink,
@@ -44,7 +43,6 @@ interface DashboardPageProps {
   channels: Channel[];
   teams:    Team[];
   goals:    Goal[];
-  activities: TaskActivity[];
   projects: Project[];
   loading:  boolean;
   error:    string | null;
@@ -59,7 +57,6 @@ export function DashboardPage({
   channels,
   teams,
   goals,
-  activities,
   projects,
   loading,
   error,
@@ -82,10 +79,7 @@ export function DashboardPage({
   const [workTeam, setWorkTeam] = useState<string>('all');
   const [workOrg, setWorkOrg] = useState<string>('all');
 
-  // ─── STATES FOR ACTIVITY SCREEN ──────────────────────────────────────────
-  const [actOrg, setActOrg] = useState<string>('all');
-  const [actUser, setActUser] = useState<string>('all');
-  const [actDate, setActDate] = useState<string>('30d');
+
 
   // ─── STATES FOR SETTINGS SCREEN ──────────────────────────────────────────
   const [selectedOrgId, setSelectedOrgId] = useState<string>('');
@@ -685,53 +679,7 @@ export function DashboardPage({
         </div>
       )}
 
-      {activeSection === 'activity' && (
-        <div className="space-y-6">
-          {/* Filters */}
-          <FilterBar
-            filters={[
-              {
-                id: 'org',
-                label: 'Organization',
-                value: actOrg,
-                options: orgOptions,
-                onChange: setActOrg,
-              },
-              {
-                id: 'user',
-                label: 'User',
-                value: actUser,
-                options: userOptions,
-                onChange: setActUser,
-              },
-            ]}
-            dateRanges={[
-              { value: '7d', label: 'Last 7 Days' },
-              { value: '30d', label: 'Last 30 Days' },
-              { value: 'all', label: 'All Time' },
-            ]}
-            activeDateRange={actDate}
-            onDateRangeChange={setActDate}
-            hasActiveFilters={actOrg !== 'all' || actUser !== 'all' || actDate !== '30d'}
-            onClearFilters={() => {
-              setActOrg('all');
-              setActUser('all');
-              setActDate('30d');
-            }}
-          />
 
-          {/* Timeline Feed */}
-          <ActivityFeed
-            activities={activities}
-            users={users}
-            orgs={orgs}
-            tasks={tasks}
-            orgFilter={actOrg}
-            userFilter={actUser}
-            dateFilter={actDate}
-          />
-        </div>
-      )}
 
       {activeSection === 'settings' && (
         <div className="space-y-8 animate-fade-up">

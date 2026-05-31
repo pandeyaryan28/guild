@@ -77,7 +77,6 @@ function AuthorizedApp({ profile }: { profile: ReturnType<typeof useAdminAuth> &
           channels={data.channels}
           teams={data.teams}
           goals={data.goals}
-          activities={data.activities}
           projects={data.projects}
           loading={data.loading}
           error={data.error}

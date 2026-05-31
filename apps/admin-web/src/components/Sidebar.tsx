@@ -7,7 +7,6 @@ import {
   Users,
   Users2,
   ClipboardList,
-  Activity,
   LogOut,
   Settings
 } from 'lucide-react';
@@ -40,11 +39,6 @@ const NAV = [
     id: 'work',
     label: 'Work (Tasks + Goals)',
     icon: ClipboardList,
-  },
-  {
-    id: 'activity',
-    label: 'Activity Feed',
-    icon: Activity,
   },
   {
     id: 'settings',

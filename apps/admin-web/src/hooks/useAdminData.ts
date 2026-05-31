@@ -4,7 +4,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@guild/firebase';
 import type {
-  Organization, UserProfile, Task, Channel, Team, Goal, TaskActivity, Project
+  Organization, UserProfile, Task, Channel, Team, Goal, Project
 } from '@guild/types';
 
 export interface AdminDashboardData {
@@ -14,7 +14,6 @@ export interface AdminDashboardData {
   channels:   Channel[];
   teams:      Team[];
   goals:      Goal[];
-  activities: TaskActivity[];
   projects:   Project[];
   loading:    boolean;
   error:      string | null;
@@ -32,7 +31,6 @@ export function useAdminData(organizationId?: string): AdminDashboardData {
   const [channels,   setChannels]   = useState<Channel[]>([]);
   const [teams,      setTeams]      = useState<Team[]>([]);
   const [goals,      setGoals]      = useState<Goal[]>([]);
-  const [activities, setActivities] = useState<TaskActivity[]>([]);
   const [projects,   setProjects]   = useState<Project[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState<string | null>(null);
@@ -58,7 +56,6 @@ export function useAdminData(organizationId?: string): AdminDashboardData {
           channelsSnap,
           teamsSnap,
           goalsSnap,
-          activitiesSnap,
           projectsSnap
         ] = await Promise.all([
           getDoc(orgDocRef),
@@ -67,7 +64,6 @@ export function useAdminData(organizationId?: string): AdminDashboardData {
           getDocs(query(collection(db, 'channels'),      where('orgId', '==', organizationId))),
           getDocs(query(collection(db, 'teams'),         where('orgId', '==', organizationId))),
           getDocs(query(collection(db, 'goals'),         where('orgId', '==', organizationId))),
-          getDocs(query(collection(db, 'taskActivities'), where('orgId', '==', organizationId))),
           getDocs(query(collection(db, 'projects'),       where('orgId', '==', organizationId))),
         ]);
 
@@ -95,7 +91,6 @@ export function useAdminData(organizationId?: string): AdminDashboardData {
         setChannels(sortByCreatedAtDesc(channelsSnap.docs.map(d => d.data() as Channel)));
         setTeams(sortByCreatedAtDesc(teamsSnap.docs.map(d => d.data() as Team)));
         setGoals(sortByCreatedAtDesc(goalsSnap.docs.map(d => d.data() as Goal)));
-        setActivities(sortByCreatedAtDesc(activitiesSnap.docs.map(d => d.data() as TaskActivity)).slice(0, 200));
         setProjects(sortByCreatedAtDesc(projectsSnap.docs.map(d => d.data() as Project)));
       } catch (e: unknown) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load data');
@@ -109,7 +104,7 @@ export function useAdminData(organizationId?: string): AdminDashboardData {
   }, [tick, organizationId]);
 
   return {
-    orgs, users, tasks, channels, teams, goals, activities, projects, loading, error,
+    orgs, users, tasks, channels, teams, goals, projects, loading, error,
     refresh: () => setTick(t => t + 1),
   };
 }
