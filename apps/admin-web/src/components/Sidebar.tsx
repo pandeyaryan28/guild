@@ -8,6 +8,7 @@ import {
   UsersRound,
   ClipboardList,
   GitPullRequest,
+  FolderGit2,
   LogOut,
   Settings
 } from 'lucide-react';
@@ -35,6 +36,11 @@ const NAV = [
     id: 'teams',
     label: 'Teams',
     icon: UsersRound,
+  },
+  {
+    id: 'projects',
+    label: 'Projects',
+    icon: FolderGit2,
   },
   {
     id: 'work',

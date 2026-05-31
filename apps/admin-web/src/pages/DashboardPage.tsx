@@ -10,6 +10,7 @@ import { RequestsMappingTable } from '../components/RequestsMappingTable';
 import { TaskDetailDrawer } from '../components/TaskDetailDrawer';
 import { GoalDetailDrawer } from '../components/GoalDetailDrawer';
 import { ProjectDetailDrawer } from '../components/ProjectDetailDrawer';
+import { ProjectsTable } from '../components/ProjectsTable';
 import { AnimatePresence } from 'motion/react';
 import {
   updateOrganizationDetails,
@@ -728,6 +729,24 @@ export function DashboardPage({
       )}
 
 
+
+      {activeSection === 'projects' && (
+        <div className="space-y-6">
+          <ProjectsTable
+            projects={projects}
+            tasks={tasks}
+            users={users}
+            orgs={orgs}
+            onSelectProject={setSelectedProject}
+            refresh={refresh}
+            activeOrgId={activeOrg?.id || currentUser?.organizationId || ''}
+            actor={{
+              uid: currentUser?.uid || '',
+              name: currentUser?.fullName || currentUser?.username || 'Admin',
+            }}
+          />
+        </div>
+      )}
 
       {activeSection === 'requests' && (
         <div className="space-y-6">
