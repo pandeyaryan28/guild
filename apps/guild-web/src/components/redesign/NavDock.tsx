@@ -101,7 +101,8 @@ export function NavDock() {
                 {isActive && (
                   <motion.div
                     layoutId="active-dock-indicator"
-                    className="absolute inset-0 bg-indigo-600 dark:bg-indigo-500 rounded-2xl shadow-[0_4px_16px_oklch(from_var(--primary)_l_c_h_/_28%)] z-0"
+                    className="absolute inset-0 rounded-2xl shadow-[0_4px_16px_oklch(from_var(--accent)_l_c_h_/_25%)] z-0"
+                    style={{ backgroundColor: 'var(--accent)' }}
                     transition={{ type: "spring", stiffness: 130, damping: 15 }}
                   />
                 )}
