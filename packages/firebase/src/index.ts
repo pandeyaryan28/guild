@@ -16,4 +16,6 @@ export * from './goals';
 export * from './teams';
 export * from './reports';
 export * from './replies';
+export * from './requests';
+
 

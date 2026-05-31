@@ -136,6 +136,12 @@ service cloud.firestore {
       allow write: if isNewDocInMyOrg() || isDocInMyOrg();
     }
 
+    match /requests/{requestId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+    }
+
+
     match /taskActivities/{activityId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
       allow write: if isNewDocInMyOrg() || isDocInMyOrg();

@@ -7,6 +7,7 @@ import {
   Users,
   Users2,
   ClipboardList,
+  GitPullRequest,
   LogOut,
   Settings
 } from 'lucide-react';
@@ -39,6 +40,11 @@ const NAV = [
     id: 'work',
     label: 'Work (Tasks + Goals)',
     icon: ClipboardList,
+  },
+  {
+    id: 'requests',
+    label: 'Requests Mapping',
+    icon: GitPullRequest,
   },
   {
     id: 'settings',

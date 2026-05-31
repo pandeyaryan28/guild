@@ -55,6 +55,10 @@ export function MobileAdminApp({ profile }: MobileAdminAppProps) {
 
   const totalOverdue = overdueTasksCount + overdueGoalsCount;
 
+  const pendingRequests = useMemo(() => {
+    return data.requests.filter(r => r.status === 'pending');
+  }, [data.requests]);
+
   const STATS_CARDS = [
     { label: 'Teammates', value: data.users.length, detail: `${activeMembers} active in orgs`, icon: Users, color: 'text-indigo-400' },
     { label: 'Squads & Teams', value: data.teams.length, detail: 'Active squads', icon: Users2, color: 'text-violet-400' },
@@ -120,17 +124,30 @@ export function MobileAdminApp({ profile }: MobileAdminAppProps) {
                 <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Operational Alerts</span>
               </div>
 
-              {totalOverdue === 0 ? (
+              {totalOverdue === 0 && pendingRequests.length === 0 ? (
                 <div className="py-4 text-center">
                   <span className="text-xs font-bold text-emerald-400 block">Workspace on Track</span>
-                  <span className="text-[9px] text-muted-foreground mt-0.5 block">Zero overdue items detected.</span>
+                  <span className="text-[9px] text-muted-foreground mt-0.5 block">Zero overdue items or pending requests.</span>
                 </div>
               ) : (
                 <div className="space-y-2">
+                  {/* Overdue Tasks */}
                   {data.tasks.filter(t => t.status !== 'done' && t.dueDate).slice(0, 3).map((t) => (
-                    <div key={t.id} className="p-3 rounded-xl bg-red-500/5 border border-red-500/10 text-xs flex justify-between items-center">
+                    <div key={t.id} className="p-3 rounded-xl bg-red-500/5 border border-red-500/10 text-xs flex justify-between items-center animate-fade-in">
                       <span className="font-bold text-foreground truncate flex-1 mr-2">{t.title}</span>
                       <span className="text-[8px] font-black px-2 py-0.5 rounded bg-red-500/20 text-red-400 shrink-0">OVERDUE</span>
+                    </div>
+                  ))}
+                  {/* Pending Approvals */}
+                  {pendingRequests.slice(0, 3).map((r) => (
+                    <div key={r.id} className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-xs flex justify-between items-center animate-fade-in">
+                      <div className="flex-1 min-w-0 mr-2">
+                        <span className="font-bold text-foreground block truncate">{r.creatorName}</span>
+                        <span className="text-[9px] text-muted-foreground block truncate mt-0.5">{r.title}</span>
+                      </div>
+                      <span className="text-[8px] font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 shrink-0 uppercase tracking-wide">
+                        {r.type.replace('_', ' ')}
+                      </span>
                     </div>
                   ))}
                 </div>

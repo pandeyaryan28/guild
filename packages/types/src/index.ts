@@ -456,3 +456,54 @@ export interface ProjectReportData {
   completionRate: number;
   memberIds: string[];
 }
+
+// ─── Requests ─────────────────────────────────────────────────────────────────
+
+export type RequestType =
+  | 'sick_leave'
+  | 'work_from_home'
+  | 'time_off'
+  | 'equipment'
+  | 'expense'
+  | 'other';
+
+export type RequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface OrgRequest {
+  id: string;
+  orgId: string;
+  creatorId: string;
+  creatorName: string;
+  creatorUsername: string;
+  approverId: string;
+  approverName: string;
+  approverUsername: string;
+  type: RequestType;
+  title: string;
+  description: string;
+  status: RequestStatus;
+  startDate?: string;   // ISO date string e.g. "2024-06-01"
+  endDate?: string;
+  approverNote?: string | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
+  sick_leave:     'Sick Leave',
+  work_from_home: 'Work From Home',
+  time_off:       'Time Off',
+  equipment:      'Equipment Request',
+  expense:        'Expense Claim',
+  other:          'Other',
+};
+
+export const REQUEST_TYPE_ICONS: Record<RequestType, string> = {
+  sick_leave:     'Stethoscope',
+  work_from_home: 'Home',
+  time_off:       'Calendar',
+  equipment:      'Laptop',
+  expense:        'Receipt',
+  other:          'ClipboardList',
+};
+

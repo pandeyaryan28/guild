@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { format, subDays } from 'date-fns';
-import type { Organization, UserProfile, Task, Channel, Team, Goal, Project } from '@guild/types';
+import type { Organization, UserProfile, Task, Channel, Team, Goal, Project, OrgRequest } from '@guild/types';
 import { HqStatCard } from '../components/HqStatCard';
 import { FilterBar } from '../components/FilterBar';
 import { PeopleWorkloadTable } from '../components/PeopleWorkloadTable';
 import { TeamsHealthTable } from '../components/TeamsHealthTable';
 import { WorkItemsTable } from '../components/WorkItemsTable';
+import { RequestsMappingTable } from '../components/RequestsMappingTable';
 import {
   updateOrganizationDetails,
   disableGlobalInviteLink,
@@ -31,7 +32,8 @@ import {
   Key,
   Copy,
   Briefcase,
-  Trash2
+  Trash2,
+  GitPullRequest
 } from 'lucide-react';
 
 
@@ -44,6 +46,7 @@ interface DashboardPageProps {
   teams:    Team[];
   goals:    Goal[];
   projects: Project[];
+  requests: OrgRequest[];
   loading:  boolean;
   error:    string | null;
   refresh:  () => void;
@@ -58,6 +61,7 @@ export function DashboardPage({
   teams,
   goals,
   projects,
+  requests,
   loading,
   error,
   refresh
@@ -322,6 +326,10 @@ export function DashboardPage({
     },
   ];
 
+  const pendingRequests = useMemo(() => {
+    return requests.filter(r => r.status === 'pending');
+  }, [requests]);
+
 
   // ─── NEEDS ATTENTION: HOTSPOTS BY USER & TEAM ────────────────────────────
   // 1. Overloaded Users: count overdue tasks assigned to each user
@@ -478,7 +486,7 @@ export function DashboardPage({
           </div>
 
           {/* Hotspots / Operational Alerts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             
             {/* Top Overdue Hotspots (Users) */}
             <div className="aether-glass aether-glass-interactive p-5 space-y-4">
@@ -527,6 +535,34 @@ export function DashboardPage({
                       </div>
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-500/20 text-red-400">
                         {team.count} Overdue Tasks
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Top Pending Requests Hotspots */}
+            <div className="aether-glass aether-glass-interactive p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
+                  Needs Attention: Pending Requests
+                </h3>
+                <span className="text-[10px] font-semibold text-[--muted-foreground]">Outstanding approvals</span>
+              </div>
+              <div className="space-y-2">
+                {pendingRequests.length === 0 ? (
+                  <p className="text-xs text-[--muted-foreground]/60 italic py-4">All workspace requests have been fully resolved!</p>
+                ) : (
+                  pendingRequests.slice(0, 5).map((req, idx) => (
+                    <div key={req.id} className="flex items-center justify-between p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-bold text-[--foreground] truncate">{idx + 1}. {req.creatorName}</span>
+                        <span className="text-[9px] text-[--muted-foreground] font-semibold truncate">({req.title})</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-400 uppercase tracking-wide shrink-0">
+                        {req.type.replace('_', ' ')}
                       </span>
                     </div>
                   ))
@@ -675,6 +711,20 @@ export function DashboardPage({
             assigneeFilter={workAssignee}
             teamFilter={workTeam}
             orgFilter={workOrg}
+          />
+        </div>
+      )}
+
+
+
+      {activeSection === 'requests' && (
+        <div className="space-y-6">
+          <RequestsMappingTable
+            requests={requests}
+            users={users}
+            teams={teams}
+            activeOrgId={activeOrg?.id || currentUser?.organizationId || ''}
+            refresh={refresh}
           />
         </div>
       )}
