@@ -125,20 +125,24 @@ export function usePushNotifications() {
 
       console.log('[Push] Subscription saved to Firestore');
     } catch (err: any) {
-      console.error('[Push] Failed to broker browser push subscription', err);
+      const isBrave = typeof navigator !== 'undefined' && ('brave' in navigator || !!(navigator as any).brave?.isBrave);
+      const isPushError = err.name === 'AbortError' || err.message?.includes('push service error');
 
-      const isBrave = typeof navigator !== 'undefined' && 'brave' in navigator;
-      if (isBrave && (err.name === 'AbortError' || err.message?.includes('push service error'))) {
+      if (isBrave && isPushError) {
         setIsBraveBlocked(true);
         setSubscriptionError(
           'Brave blocked push service registration. Enable Google Services in brave://settings/privacy.'
         );
-      } else if (err.name === 'AbortError') {
-        setSubscriptionError(
-          'Push subscription failed — the service worker may still be loading. Please reload the page and try again.'
-        );
+        console.warn('[Push] Brave blocked push service registration (Google Services for push messaging is disabled in brave://settings/privacy).');
       } else {
-        setSubscriptionError(err.message || 'Push registration failed');
+        console.error('[Push] Failed to broker browser push subscription', err);
+        if (err.name === 'AbortError') {
+          setSubscriptionError(
+            'Push subscription failed — the service worker may still be loading. Please reload the page and try again.'
+          );
+        } else {
+          setSubscriptionError(err.message || 'Push registration failed');
+        }
       }
     } finally {
       setIsSubscribing(false);
