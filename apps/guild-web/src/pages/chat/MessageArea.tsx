@@ -377,7 +377,7 @@ export function MessageArea({
   }, [channel, currentUser, profile]);
 
   return (
-    <div className="flex flex-1 min-w-0 flex-col bg-background relative">
+    <div className="flex flex-1 min-w-0 flex-col bg-background relative h-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-border-default bg-surface backdrop-blur-sm px-5 py-3.5 pt-[calc(0.875rem+env(safe-area-inset-top,0px))] md:pt-3.5 shrink-0">
         <button

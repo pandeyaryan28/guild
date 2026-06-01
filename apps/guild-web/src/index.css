@@ -195,7 +195,11 @@
 @layer utilities {
   /* Scrollbar hiding */
   .scrollbar-hide::-webkit-scrollbar { display: none; }
-  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+    -webkit-overflow-scrolling: touch; 
+  }
 
   /* Thin styled scrollbar for chat message list */
   .scrollbar-thin::-webkit-scrollbar { width: 4px; }

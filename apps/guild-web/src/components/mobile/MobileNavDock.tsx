@@ -56,63 +56,65 @@ export function MobileNavDock() {
     : 'U';
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-40 select-none pointer-events-none flex justify-center">
-      {/* Floating Bottom sheet tab bar */}
-      <div 
-        className="aether-glass py-2.5 px-4 flex items-center justify-between w-full max-w-md shadow-2xl pointer-events-auto bg-surface/80 dark:bg-surface/75 backdrop-blur-2xl border border-white/10"
-        style={{ borderRadius: '24px' }}
-      >
-        {mainNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = isPathActive(item.path);
-
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={cn(
-                "relative flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all cursor-pointer",
-                isActive ? "" : "text-muted-foreground/80 hover:text-foreground"
-              )}
-              style={isActive ? { color: 'var(--accent-foreground)' } : undefined}
-            >
-              {/* Highlight background blob */}
-              {isActive && (
-                <motion.div 
-                  layoutId="mobileActiveTab"
-                  className="absolute inset-0 bg-primary rounded-xl shadow-lg shadow-primary/20 z-0"
-                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                />
-              )}
-
-              <span className="relative z-10 flex items-center justify-center">
-                <Icon className="w-5 h-5" />
-                {item.badge !== undefined && (
-                  <span className="absolute -top-1.5 -right-1.5 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
-                  </span>
-                )}
-              </span>
-            </button>
-          );
-        })}
-
-        {/* Menu More Drawer Switcher (Mobile Menu tab) */}
-        <button
-          onClick={() => setShowMobileMore(true)}
-          className={cn(
-            "relative flex items-center justify-center w-12 h-12 rounded-xl transition-all cursor-pointer text-muted-foreground/80 hover:text-foreground"
-          )}
+    <>
+      <div className="fixed bottom-4 left-4 right-4 z-40 select-none pointer-events-none flex justify-center">
+        {/* Floating Bottom sheet tab bar */}
+        <div 
+          className="aether-glass py-2.5 px-4 flex items-center justify-between w-full max-w-md shadow-2xl pointer-events-auto bg-surface/80 dark:bg-surface/75 backdrop-blur-2xl border border-white/10"
+          style={{ borderRadius: '24px' }}
         >
-          <Menu className="w-5 h-5" />
-          {unreadCount > 0 && !mainNavItems.some(i => i.path === '/chat' && i.badge !== undefined) && (
-            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-            </span>
-          )}
-        </button>
+          {mainNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = isPathActive(item.path);
+
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={cn(
+                  "relative flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all cursor-pointer",
+                  isActive ? "" : "text-muted-foreground/80 hover:text-foreground"
+                )}
+                style={isActive ? { color: 'var(--accent-foreground)' } : undefined}
+              >
+                {/* Highlight background blob */}
+                {isActive && (
+                  <motion.div 
+                    layoutId="mobileActiveTab"
+                    className="absolute inset-0 bg-primary rounded-xl shadow-lg shadow-primary/20 z-0"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+
+                <span className="relative z-10 flex items-center justify-center">
+                  <Icon className="w-5 h-5" />
+                  {item.badge !== undefined && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Menu More Drawer Switcher (Mobile Menu tab) */}
+          <button
+            onClick={() => setShowMobileMore(true)}
+            className={cn(
+              "relative flex items-center justify-center w-12 h-12 rounded-xl transition-all cursor-pointer text-muted-foreground/80 hover:text-foreground"
+            )}
+          >
+            <Menu className="w-5 h-5" />
+            {unreadCount > 0 && !mainNavItems.some(i => i.path === '/chat' && i.badge !== undefined) && (
+              <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Premium responsive bottom sheet panel for extra links */}
@@ -134,13 +136,13 @@ export function MobileNavDock() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-              className="fixed bottom-0 left-0 right-0 max-h-[85vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-white/10 px-6 pb-8 pt-2 z-[210] shadow-2xl flex flex-col pointer-events-auto overflow-hidden bg-surface/95 dark:bg-surface/90 backdrop-blur-3xl"
+              className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md h-[70vh] min-h-[500px] max-h-[85vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-white/10 px-6 pb-8 pt-2 z-[210] shadow-2xl flex flex-col pointer-events-auto overflow-hidden bg-surface/95 dark:bg-surface/90 backdrop-blur-3xl"
             >
               {/* Drag Handle Indicator */}
               <div className="aether-mobile-handle shrink-0 bg-white/10 w-10 h-1.5 rounded-full mx-auto my-3" />
               
               {/* Scrollable Container */}
-              <div className="flex-1 overflow-y-auto aether-scroll space-y-6 pb-6 pr-1">
+              <div className="flex-1 overflow-y-auto aether-scroll space-y-6 pb-6 pr-1 animate-fluid-pop">
                 {/* User Profile Header Card */}
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 shadow-inner">
                   <div className="flex items-center gap-3.5 min-w-0">
@@ -242,6 +244,6 @@ export function MobileNavDock() {
           </>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }

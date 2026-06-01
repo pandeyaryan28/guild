@@ -171,7 +171,7 @@ export function MessageList({
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto scrollbar-hide py-4"
+        className="flex-1 overflow-y-auto aether-scroll scrollbar-hide py-4"
       >
         {/* Load-older sentinel / indicator */}
         <div ref={topSentinelRef} className="px-4 pb-2 flex flex-col items-center gap-1.5">
