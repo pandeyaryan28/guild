@@ -104,48 +104,52 @@ export function MobileAdminApp({ profile }: MobileAdminAppProps) {
             {/* KPI grid cards */}
             <div className="grid grid-cols-2 gap-3">
               {STATS_CARDS.map((card) => (
-                <div key={card.label} className="aether-glass p-4 bg-white/2 border border-white/5 flex flex-col justify-between h-28">
+                <div key={card.label} className="aether-glass p-4 bg-gradient-to-br from-white/[0.03] to-white/[0.005] border border-white/5 flex flex-col justify-between h-28 hover:scale-[1.01] hover:border-primary/20 transition-all shadow-md">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">{card.label}</span>
-                    <card.icon className={cn("w-4 h-4 shrink-0", card.color)} />
+                    <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none">{card.label}</span>
+                    <div className="p-1 rounded-lg bg-white/5">
+                      <card.icon className={cn("w-4 h-4 shrink-0", card.color)} />
+                    </div>
                   </div>
-                  <div className="mt-2">
-                    <span className="text-xl font-black text-foreground block">{card.value}</span>
-                    <span className="text-[9px] text-muted-foreground block mt-0.5 leading-none">{card.detail}</span>
+                  <div className="mt-1">
+                    <span className="text-2xl font-black text-foreground block tracking-tight leading-none">{card.value}</span>
+                    <span className="text-[9px] text-muted-foreground font-semibold block mt-1 leading-none">{card.detail}</span>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Overloaded Alert section */}
-            <div className="aether-glass p-5 bg-white/2 border border-white/5 space-y-4">
-              <div className="flex items-center gap-2 border-b border-white/5 pb-2.5">
-                <AlertTriangle className="w-4.5 h-4.5 text-red-400 animate-pulse" />
+            <div className="aether-glass p-5 bg-gradient-to-b from-white/[0.03] to-transparent border border-white/5 space-y-4 shadow-xl">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                <div className="p-1 rounded-lg bg-red-500/10">
+                  <AlertTriangle className="w-4.5 h-4.5 text-red-400 animate-pulse" />
+                </div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Operational Alerts</span>
               </div>
 
               {totalOverdue === 0 && pendingRequests.length === 0 ? (
-                <div className="py-4 text-center">
-                  <span className="text-xs font-bold text-emerald-400 block">Workspace on Track</span>
-                  <span className="text-[9px] text-muted-foreground mt-0.5 block">Zero overdue items or pending requests.</span>
+                <div className="py-6 text-center">
+                  <span className="text-xs font-black text-emerald-400 block uppercase tracking-wider">Workspace on Track</span>
+                  <span className="text-[9px] text-muted-foreground font-semibold mt-1 block">Zero overdue items or pending requests.</span>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {/* Overdue Tasks */}
                   {data.tasks.filter(t => t.status !== 'done' && t.dueDate).slice(0, 3).map((t) => (
-                    <div key={t.id} className="p-3 rounded-xl bg-red-500/5 border border-red-500/10 text-xs flex justify-between items-center animate-fade-in">
-                      <span className="font-bold text-foreground truncate flex-1 mr-2">{t.title}</span>
-                      <span className="text-[8px] font-black px-2 py-0.5 rounded bg-red-500/20 text-red-400 shrink-0">OVERDUE</span>
+                    <div key={t.id} className="p-3.5 rounded-xl bg-red-500/5 border border-red-500/10 text-xs flex justify-between items-center animate-fluid-pop">
+                      <span className="font-extrabold text-foreground truncate flex-1 mr-2">{t.title}</span>
+                      <span className="text-[8px] font-black px-2 py-0.5 rounded bg-red-500/20 text-red-400 shrink-0 tracking-wider">OVERDUE</span>
                     </div>
                   ))}
                   {/* Pending Approvals */}
                   {pendingRequests.slice(0, 3).map((r) => (
-                    <div key={r.id} className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-xs flex justify-between items-center animate-fade-in">
+                    <div key={r.id} className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10 text-xs flex justify-between items-center animate-fluid-pop">
                       <div className="flex-1 min-w-0 mr-2">
-                        <span className="font-bold text-foreground block truncate">{r.creatorName}</span>
-                        <span className="text-[9px] text-muted-foreground block truncate mt-0.5">{r.title}</span>
+                        <span className="font-black text-foreground block truncate">{r.creatorName}</span>
+                        <span className="text-[9px] text-muted-foreground font-semibold block truncate mt-1">{r.title}</span>
                       </div>
-                      <span className="text-[8px] font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 shrink-0 uppercase tracking-wide">
+                      <span className="text-[8px] font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 shrink-0 uppercase tracking-widest">
                         {r.type.replace('_', ' ')}
                       </span>
                     </div>

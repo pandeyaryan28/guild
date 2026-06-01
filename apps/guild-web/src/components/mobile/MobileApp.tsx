@@ -8,10 +8,10 @@ import { MobileRequests } from './pages/MobileRequests';
 import { MobileSettings } from './pages/MobileSettings';
 import { ProtectedRoute } from '../ProtectedRoute';
 
-import { PeoplePage } from '../../pages/people/PeoplePage';
-import { CalendarPage } from '../../pages/calendar/CalendarPage';
-import { ReportsPage } from '../../pages/reports/ReportsPage';
-import { ProjectDetailPage } from '../../pages/projects/ProjectDetailPage';
+import { MobilePeople } from './pages/MobilePeople';
+import { MobileCalendar } from './pages/MobileCalendar';
+import { MobileReports } from './pages/MobileReports';
+import { MobileProjectDetail } from './pages/MobileProjectDetail';
 
 export function MobileApp() {
   return (
@@ -75,7 +75,7 @@ export function MobileApp() {
         element={
           <ProtectedRoute>
             <MobileLayout>
-              <ProjectDetailPage />
+              <MobileProjectDetail />
             </MobileLayout>
           </ProtectedRoute>
         }
@@ -87,7 +87,7 @@ export function MobileApp() {
         element={
           <ProtectedRoute>
             <MobileLayout>
-              <PeoplePage />
+              <MobilePeople />
             </MobileLayout>
           </ProtectedRoute>
         }
@@ -99,7 +99,7 @@ export function MobileApp() {
         element={
           <ProtectedRoute>
             <MobileLayout>
-              <CalendarPage />
+              <MobileCalendar />
             </MobileLayout>
           </ProtectedRoute>
         }
@@ -111,7 +111,7 @@ export function MobileApp() {
         element={
           <ProtectedRoute>
             <MobileLayout>
-              <ReportsPage />
+              <MobileReports />
             </MobileLayout>
           </ProtectedRoute>
         }

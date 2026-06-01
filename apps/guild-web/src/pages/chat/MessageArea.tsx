@@ -379,7 +379,7 @@ export function MessageArea({
   return (
     <div className="flex flex-1 min-w-0 flex-col bg-background relative">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border-default bg-surface backdrop-blur-sm px-5 py-3.5 shrink-0">
+      <div className="flex items-center gap-3 border-b border-border-default bg-surface backdrop-blur-sm px-5 py-3.5 pt-[calc(0.875rem+env(safe-area-inset-top,0px))] md:pt-3.5 shrink-0">
         <button
           onClick={() => navigate('/chat')}
           className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent/40 hover:text-foreground shrink-0 transition-colors"
