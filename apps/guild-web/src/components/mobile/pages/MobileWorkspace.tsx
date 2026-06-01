@@ -11,7 +11,8 @@ import {
   CheckCircle,
   Play,
   RotateCcw,
-  Target
+  Target,
+  Lock
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from '../../../hooks/useAuth';
@@ -51,6 +52,10 @@ export function MobileWorkspace() {
   const filteredTasks = React.useMemo(() => {
     return tasks.filter(t => t.status === activeTab);
   }, [tasks, activeTab]);
+
+  const mySpaceGoals = React.useMemo(() => {
+    return goals.filter(g => g.ownerId === userProfile?.uid);
+  }, [goals, userProfile?.uid]);
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -285,13 +290,24 @@ export function MobileWorkspace() {
                         )}
 
                         {activeTab === 'review' && (
-                          <button
-                            onClick={() => handleMoveStatus(task, 'done')}
-                            className="py-1.5 px-3 rounded-lg bg-emerald-500 text-white text-[10px] font-black flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
-                          >
-                            <Check className="w-3 h-3" />
-                            <span>Approve</span>
-                          </button>
+                          task.creatorId === userProfile?.uid ? (
+                            <button
+                              onClick={() => handleMoveStatus(task, 'done')}
+                              className="py-1.5 px-3 rounded-lg bg-emerald-500 text-white text-[10px] font-black flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
+                            >
+                              <Check className="w-3 h-3" />
+                              <span>Approve</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => alert("Only the creator of this task can approve it from In Review.")}
+                              className="py-1.5 px-3 rounded-lg bg-emerald-500/10 text-emerald-400/50 border border-emerald-500/20 text-[10px] font-black flex items-center gap-1.5 cursor-not-allowed opacity-60"
+                              title="Creator approval required"
+                            >
+                              <Lock className="w-3 h-3" />
+                              <span>Locked</span>
+                            </button>
+                          )
                         )}
                       </div>
                     </motion.div>
@@ -333,7 +349,7 @@ export function MobileWorkspace() {
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 <span className="text-xs text-muted-foreground font-bold">Synchronizing goals...</span>
               </div>
-            ) : goals.length === 0 ? (
+            ) : mySpaceGoals.length === 0 ? (
               <div className="py-12 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-2xl">
                 <Target className="w-8 h-8 text-muted-foreground/35 mx-auto mb-2 animate-pulse" />
                 <span className="text-xs font-black text-foreground block">No Goals Established</span>
@@ -341,7 +357,7 @@ export function MobileWorkspace() {
               </div>
             ) : (
               <div className="space-y-3">
-                {goals.map((goal) => {
+                {mySpaceGoals.map((goal) => {
                   const progress = goal.progressRollup ?? 0;
                   const targetDate = goal.targetDate ? (typeof (goal.targetDate as any).toDate === 'function' ? (goal.targetDate as any).toDate() : new Date((goal.targetDate as any).seconds * 1000)) : null;
 

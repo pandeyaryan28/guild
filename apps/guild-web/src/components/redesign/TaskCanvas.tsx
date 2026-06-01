@@ -490,6 +490,16 @@ export function TaskCanvas() {
 
   const handleToggleGoalStatus = async (e: React.MouseEvent, goal: Goal) => {
     e.stopPropagation();
+    const isAuthorized = 
+      goal.ownerId === user?.uid || 
+      userProfile?.role === 'owner' || 
+      userProfile?.role === 'admin';
+
+    if (!isAuthorized) {
+      setToastMessage("Only the goal owner or an administrator can toggle this goal's status.");
+      return;
+    }
+
     const nextStatus = goal.status === 'completed' ? 'active' : 'completed';
     try {
       await updateGoal(goal.id, { status: nextStatus });

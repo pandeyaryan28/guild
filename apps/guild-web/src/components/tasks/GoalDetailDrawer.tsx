@@ -16,6 +16,7 @@ import {
   STATUS_CONFIG, STATUSES, type Task, type TaskStatus, type ActorInfo 
 } from '../../lib/tasks';
 import { useGoalComments } from '../../hooks/useGoals';
+import { useAuth } from '../../hooks/useAuth';
 import { AttachmentSection } from './AttachmentSection';
 import { AttachmentInput } from './AttachmentInput';
 import { type MessageAttachment, type GoalRecurrence, type GoalHorizon } from '@guild/types';
@@ -43,6 +44,7 @@ export function GoalDetailDrawer({
   tasks,
   onSelectTask
 }: GoalDetailDrawerProps) {
+  const { userProfile } = useAuth();
   const [, setSearchParams] = useSearchParams();
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -161,6 +163,17 @@ export function GoalDetailDrawer({
   };
 
   const handleToggleGoalStatus = async () => {
+    if (!goal) return;
+    const isAuthorized = 
+      goal.ownerId === actor.uid || 
+      userProfile?.role === 'owner' || 
+      userProfile?.role === 'admin';
+
+    if (!isAuthorized) {
+      setToastMessage("Only the goal owner or an administrator can toggle this goal's status.");
+      return;
+    }
+
     const nextStatus: GoalStatus = goal.status === 'completed' ? 'active' : 'completed';
     try {
       await updateGoal(goal.id, { status: nextStatus });
