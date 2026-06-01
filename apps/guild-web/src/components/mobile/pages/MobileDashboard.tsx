@@ -107,9 +107,28 @@ export function MobileDashboard() {
     }
   };
 
+  // Teammates online list (excluding self, strictly showing own team members only)
   const teammates = React.useMemo(() => {
-    return members.filter(m => m.uid !== userProfile?.uid);
-  }, [members, userProfile?.uid]);
+    if (!userProfile?.uid) return [];
+    
+    // Find all teams where the current user is a member OR the manager
+    const myTeamsList = teams.filter(t => 
+      t.memberIds?.includes(userProfile.uid) || t.managerId === userProfile.uid
+    );
+    
+    // Get all unique member UIDs from these teams, plus their managers, excluding the current user
+    const ids = new Set<string>();
+    myTeamsList.forEach(t => {
+      t.memberIds?.forEach(id => {
+        if (id !== userProfile.uid) ids.add(id);
+      });
+      if (t.managerId && t.managerId !== userProfile.uid) {
+        ids.add(t.managerId);
+      }
+    });
+    
+    return members.filter(m => ids.has(m.uid));
+  }, [members, teams, userProfile?.uid]);
 
   const myTasks = React.useMemo(() => {
     if (!userProfile?.uid) return [];
@@ -531,34 +550,38 @@ export function MobileDashboard() {
           </span>
         </div>
 
-        <div className="grid grid-cols-5 gap-2 px-1">
-          {teammates.slice(0, 5).map((member) => (
-            <div 
-              key={member.uid} 
-              className="flex flex-col items-center gap-1.5 relative cursor-pointer"
-              title={member.fullName}
-            >
+        {teammates.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-4 italic">You are not part of any team.</p>
+        ) : (
+          <div className="grid grid-cols-5 gap-2 px-1">
+            {teammates.slice(0, 5).map((member) => (
               <div 
-                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/10 relative"
-                style={{ background: `hsl(${avatarHue(member.uid)} 55% 45%)` }}
+                key={member.uid} 
+                className="flex flex-col items-center gap-1.5 relative cursor-pointer"
+                title={member.fullName}
               >
-                {member.photoURL ? (
-                  <img src={member.photoURL} alt={member.fullName} className="h-full w-full object-cover rounded-full" />
-                ) : (
-                  <span className="text-xs font-bold text-white">{avatarInitials(member.fullName || '')}</span>
-                )}
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface flex items-center justify-center shadow-sm">
-                  <span className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    member.availabilityStatus === 'focus' ? "bg-red-500" :
-                    member.availabilityStatus === 'away' ? "bg-amber-500" :
-                    "bg-emerald-500"
-                  )} />
-                </span>
+                <div 
+                  className="w-10 h-10 flex items-center justify-center rounded-full border border-white/10 relative"
+                  style={{ background: `hsl(${avatarHue(member.uid)} 55% 45%)` }}
+                >
+                  {member.photoURL ? (
+                    <img src={member.photoURL} alt={member.fullName} className="h-full w-full object-cover rounded-full" />
+                  ) : (
+                    <span className="text-xs font-bold text-white">{avatarInitials(member.fullName || '')}</span>
+                  )}
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface flex items-center justify-center shadow-sm">
+                    <span className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      member.availabilityStatus === 'focus' ? "bg-red-500" :
+                      member.availabilityStatus === 'away' ? "bg-amber-500" :
+                      "bg-emerald-500"
+                    )} />
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
     </div>

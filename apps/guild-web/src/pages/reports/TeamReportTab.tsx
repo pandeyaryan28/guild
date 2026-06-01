@@ -39,6 +39,7 @@ export function TeamReportTab({
   onSelectGoal,
 }: Props) {
   const [teams, setTeams] = React.useState<Team[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = React.useState<string>('all');
   const [memberProfiles, setMemberProfiles] = React.useState<UserProfile[]>([]);
   const [data, setData] = React.useState<{
     totalTasks: number; completedTasks: number; inProgressTasks: number; overdueTasks: number;
@@ -68,9 +69,17 @@ export function TeamReportTab({
       .catch(console.error);
   }, [teams]);
 
+  // Memoize member profiles filtered by the selected team
+  const filteredMemberProfiles = React.useMemo(() => {
+    if (selectedTeamId === 'all') return memberProfiles;
+    const targetTeam = teams.find(t => t.id === selectedTeamId);
+    if (!targetTeam) return [];
+    return memberProfiles.filter(m => targetTeam.memberIds?.includes(m.uid));
+  }, [memberProfiles, teams, selectedTeamId]);
+
   const memberIds = React.useMemo(() => {
-    return memberProfiles.map((m) => m.uid);
-  }, [memberProfiles]);
+    return filteredMemberProfiles.map((m) => m.uid);
+  }, [filteredMemberProfiles]);
 
   const teamTasks = React.useMemo(() => {
     if (memberIds.length === 0) return [];
@@ -120,9 +129,13 @@ export function TeamReportTab({
     return '';
   }, [selectedKpi]);
 
-  // Fetch report data when member profiles are ready
+  // Fetch report data when filtered member profiles are ready
   React.useEffect(() => {
-    if (memberProfiles.length === 0) { setLoading(false); return; }
+    if (filteredMemberProfiles.length === 0) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     getManagerTeamReport(
       orgId, managerId,
@@ -133,10 +146,10 @@ export function TeamReportTab({
         status: filters.status,
         priority: filters.priority,
       },
-      memberProfiles,
+      filteredMemberProfiles,
     ).then((d) => { setData(d); setLoading(false); }).catch(() => setLoading(false));
     setSelectedKpi(null); // Reset selection when filters or profiles change
-  }, [orgId, managerId, memberProfiles, filters.datePreset, filters.customFrom, filters.customTo, filters.status, filters.priority]);
+  }, [orgId, managerId, filteredMemberProfiles, filters.datePreset, filters.customFrom, filters.customTo, filters.status, filters.priority]);
 
 
 
@@ -209,6 +222,24 @@ export function TeamReportTab({
 
   return (
     <div className="space-y-6">
+      {teams.length > 1 && (
+        <div className="flex items-center gap-3 bg-white/5 border border-white/10 dark:border-white/5 p-3 rounded-2xl max-w-xs shadow-sm">
+          <label className="text-xs font-bold text-muted-foreground whitespace-nowrap">Filter Team:</label>
+          <select
+            value={selectedTeamId}
+            onChange={(e) => setSelectedTeamId(e.target.value)}
+            className="w-full bg-transparent border-none text-xs font-bold text-foreground focus:ring-0 focus:outline-none cursor-pointer"
+          >
+            <option value="all" className="bg-zinc-900 dark:bg-black text-foreground font-semibold">All Managed Teams</option>
+            {teams.map((t) => (
+              <option key={t.id} value={t.id} className="bg-zinc-900 dark:bg-black text-foreground font-semibold">
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <KpiCards cards={kpis} />
 
       {selectedKpi && (

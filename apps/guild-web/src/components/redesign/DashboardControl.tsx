@@ -165,10 +165,28 @@ export function DashboardControl() {
     }
   };
 
-  // Teammates online list (excluding self)
+  // Teammates online list (excluding self, strictly showing own team members only)
   const teammates = React.useMemo(() => {
-    return members.filter(m => m.uid !== userProfile?.uid);
-  }, [members, userProfile?.uid]);
+    if (!userProfile?.uid) return [];
+    
+    // Find all teams where the current user is a member OR the manager
+    const myTeamsList = teams.filter(t => 
+      t.memberIds?.includes(userProfile.uid) || t.managerId === userProfile.uid
+    );
+    
+    // Get all unique member UIDs from these teams, plus their managers, excluding the current user
+    const ids = new Set<string>();
+    myTeamsList.forEach(t => {
+      t.memberIds?.forEach(id => {
+        if (id !== userProfile.uid) ids.add(id);
+      });
+      if (t.managerId && t.managerId !== userProfile.uid) {
+        ids.add(t.managerId);
+      }
+    });
+    
+    return members.filter(m => ids.has(m.uid));
+  }, [members, teams, userProfile?.uid]);
 
   // Personal tasks
   const myTasks = React.useMemo(() => {
@@ -686,7 +704,7 @@ export function DashboardControl() {
             </div>
 
             {teammates.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6 italic">No teammates connected yet.</p>
+              <p className="text-xs text-muted-foreground text-center py-6 italic">You are not part of any team.</p>
             ) : (
               <div className="space-y-4">
                 {teammates.map((member) => {
