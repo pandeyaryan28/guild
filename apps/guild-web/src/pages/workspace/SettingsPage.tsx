@@ -28,6 +28,7 @@ import {
 } from '../../lib/firestore';
 import { uploadProfileImage, uploadOrganizationPhoto } from '../../lib/storage';
 import { useOrgMembers } from '../../hooks/useChat';
+import { SearchableSelect } from '../../components/SearchableSelect';
 import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { InviteLink, UserProfile, Organization } from '@guild/types';
@@ -1898,20 +1899,18 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Team Lead / Manager</label>
-                  <select
-                    required
+                  <SearchableSelect
                     value={teamManager}
-                    onChange={(e) => setTeamManager(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-bold"
-                  >
-                    <option value="" className="bg-surface font-bold text-foreground">-- Assign Lead --</option>
-                    {members.map((m) => (
-                      <option key={m.uid} value={m.uid} className="bg-surface font-bold text-foreground">
-                        {m.fullName} ({m.designation || 'Member'})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setTeamManager}
+                    options={members.map((m) => ({
+                      value: m.uid,
+                      label: m.fullName || m.username,
+                      detail: m.designation || 'Member',
+                      photoURL: m.photoURL,
+                    }))}
+                    placeholder="-- Assign Lead --"
+                    triggerClassName="border-white/10 bg-white/[0.02] dark:bg-white/[0.01] hover:border-accent/40 font-bold"
+                  />
                 </div>
               </div>
 
@@ -2020,20 +2019,18 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Team Lead / Manager</label>
-                          <select
-                            required
+                          <SearchableSelect
                             value={editManager}
-                            onChange={(e) => setEditManager(e.target.value)}
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-bold"
-                          >
-                            <option value="" className="bg-surface font-bold text-foreground">-- Select Lead --</option>
-                            {members.map((m) => (
-                              <option key={m.uid} value={m.uid} className="bg-surface font-bold text-foreground">
-                                {m.fullName} ({m.designation || 'Member'})
-                              </option>
-                            ))}
-                          </select>
+                            onChange={setEditManager}
+                            options={members.map((m) => ({
+                              value: m.uid,
+                              label: m.fullName || m.username,
+                              detail: m.designation || 'Member',
+                              photoURL: m.photoURL,
+                            }))}
+                            placeholder="-- Select Lead --"
+                            triggerClassName="border-white/10 bg-white/[0.02] dark:bg-white/[0.01] hover:border-accent/40 font-bold"
+                          />
                         </div>
                       </div>
 
@@ -2215,18 +2212,21 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                     {isProcessing ? (
                       <Loader2 className="h-4 w-4 animate-spin text-accent" />
                     ) : (
-                      <select
+                      <SearchableSelect
                         value={m.managerId || 'none'}
-                        onChange={(e) => handleLineManagerChange(m.uid, e.target.value)}
-                        className="bg-white/[0.02] dark:bg-white/[0.01] border border-white/10 text-[11px] font-bold text-foreground rounded-lg px-2.5 py-1.5 outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 transition-all max-w-[170px] truncate cursor-pointer shadow-inner"
-                      >
-                        <option value="none" className="bg-surface font-bold text-foreground">No Manager</option>
-                        {potentialManagers.map((pm) => (
-                          <option key={pm.uid} value={pm.uid} className="bg-surface font-bold text-foreground">
-                            {pm.fullName}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => handleLineManagerChange(m.uid, val)}
+                        options={[
+                          { value: 'none', label: 'No Manager' },
+                          ...potentialManagers.map((pm) => ({
+                            value: pm.uid,
+                            label: pm.fullName || pm.username,
+                            detail: pm.designation || 'Member',
+                            photoURL: pm.photoURL,
+                          })),
+                        ]}
+                        placeholder="No Manager"
+                        triggerClassName="bg-white/[0.02] dark:bg-white/[0.01] border border-white/10 text-[11px] font-bold text-foreground rounded-lg px-2.5 py-1.5 hover:border-accent/40 max-w-[170px] truncate cursor-pointer shadow-inner"
+                      />
                     )}
                   </div>
                 </motion.div>

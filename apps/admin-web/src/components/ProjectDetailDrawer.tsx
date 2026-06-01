@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, Calendar, AlertCircle, Shield, User, Folder, Check, Trash2, Percent, CheckCircle
 } from 'lucide-react';
+import { SearchableSelect } from './SearchableSelect';
 import { 
   db, updateProject, deleteProject
 } from '@guild/firebase';
@@ -253,18 +254,17 @@ export function ProjectDetailDrawer({
                     <User className="w-3.5 h-3.5 text-zinc-400" />
                     Owner / Lead
                   </label>
-                  <select
+                  <SearchableSelect
                     value={ownerId}
-                    onChange={(e) => handleOwnerChange(e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
-                  >
-                    <option value="">Choose project lead...</option>
-                    {users.map(u => (
-                      <option key={u.uid} value={u.uid} className="bg-white text-zinc-800">
-                        {u.fullName || u.username} ({u.designation || 'Member'})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={handleOwnerChange}
+                    options={users.map(u => ({
+                      value: u.uid,
+                      label: u.fullName || u.username,
+                      detail: u.designation || 'Member',
+                      photoURL: u.photoURL
+                    }))}
+                    placeholder="Choose project lead..."
+                  />
                 </div>
               </div>
 

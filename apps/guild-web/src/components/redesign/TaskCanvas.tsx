@@ -47,6 +47,7 @@ import { useOrgMembers } from '../../hooks/useChat';
 import { useTeams } from '../../hooks/useTeams';
 import { TaskDetailDrawer } from '../tasks/TaskDetailDrawer';
 import { GoalDetailDrawer } from '../tasks/GoalDetailDrawer';
+import { SearchableSelect } from '../SearchableSelect';
 
 
 import {
@@ -2096,16 +2097,17 @@ export function TaskCanvas() {
                       </div>
                       <div>
                         <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Assignee Employee</label>
-                        <select
+                        <SearchableSelect
                           value={goalForm.ownerId}
-                          onChange={(e) => setGoalForm({ ...goalForm, ownerId: e.target.value })}
-                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                        >
-                          <option value="" className="bg-surface text-foreground font-semibold">Select Employee...</option>
-                          {members.map(m => (
-                            <option key={m.uid} value={m.uid} className="bg-surface text-foreground font-semibold">{m.fullName || m.username}</option>
-                          ))}
-                        </select>
+                          onChange={(val) => setGoalForm({ ...goalForm, ownerId: val })}
+                          options={members.map(m => ({
+                            value: m.uid,
+                            label: m.fullName || m.username,
+                            detail: m.designation || 'Member',
+                            photoURL: m.photoURL
+                          }))}
+                          placeholder="Select Employee..."
+                        />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -2195,16 +2197,17 @@ export function TaskCanvas() {
                     <div className="grid grid-cols-3 gap-3">
                       <div className="col-span-2">
                         <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Assignee</label>
-                        <select
+                        <SearchableSelect
                           value={taskForm.assigneeId}
-                          onChange={(e) => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
-                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                        >
-                          <option value="" className="bg-surface text-foreground font-semibold">Select Member...</option>
-                          {members.map(m => (
-                            <option key={m.uid} value={m.uid} className="bg-surface text-foreground font-semibold">{m.fullName || m.username}</option>
-                          ))}
-                        </select>
+                          onChange={(val) => setTaskForm({ ...taskForm, assigneeId: val })}
+                          options={members.map(m => ({
+                            value: m.uid,
+                            label: m.fullName || m.username,
+                            detail: m.designation || 'Member',
+                            photoURL: m.photoURL
+                          }))}
+                          placeholder="Select Member..."
+                        />
                       </div>
                       <div>
                         <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Priority</label>

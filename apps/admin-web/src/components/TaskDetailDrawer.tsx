@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  X, Calendar, AlertCircle, Shield, User, Folder, Target, Check, SlidersHorizontal, Trash2
+  X, Calendar, AlertCircle, Shield, User, Folder, Target, Check, SlidersHorizontal, Trash2, Search
 } from 'lucide-react';
 import { 
   db, updateTask, moveTask, updatePriority, updateAssignees, updateDueDate, deleteTask
@@ -54,6 +54,7 @@ export function TaskDetailDrawer({
   const [goalId, setGoalId] = useState<string>('');
   const [dueDate, setDueDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [memberSearch, setMemberSearch] = useState('');
 
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
@@ -356,33 +357,71 @@ export function TaskDetailDrawer({
                     <User className="w-3.5 h-3.5 text-zinc-400" />
                     Assignees Roster
                   </label>
+
+                  {/* Assignees checklist search input */}
+                  <div className="relative mb-2 shrink-0">
+                    <span className="absolute inset-y-0 left-3 flex items-center text-zinc-400 pointer-events-none">
+                      <Search className="h-3.5 w-3.5" />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Search assignees..."
+                      value={memberSearch}
+                      onChange={(e) => setMemberSearch(e.target.value)}
+                      className="w-full pl-9 pr-8 py-2 border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-2xs"
+                    />
+                    {memberSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setMemberSearch('')}
+                        className="absolute inset-y-0 right-2.5 flex items-center text-zinc-400 hover:text-zinc-700 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+
                   <div className="border border-zinc-200 bg-white rounded-xl p-3 max-h-[160px] overflow-y-auto space-y-2.5 aether-scroll shadow-xs">
-                    {users.map(u => {
-                      const isAssigned = assigneeIds.includes(u.uid);
-                      return (
-                        <label key={u.uid} className="flex items-center justify-between cursor-pointer group select-none">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={isAssigned}
-                              onChange={() => handleAssigneeToggle(u.uid)}
-                              className="rounded border-zinc-300 bg-zinc-50 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
-                            />
-                            <div>
-                              <p className="text-xs font-bold text-zinc-800 group-hover:text-indigo-600 transition-colors">
-                                {u.fullName || u.username}
-                              </p>
-                              <p className="text-[9px] text-zinc-400 font-mono">@{u.username}</p>
-                            </div>
-                          </div>
-                          {u.designation && (
-                            <span className="text-[9px] font-semibold text-zinc-500 border border-zinc-200 bg-zinc-50 px-2 py-0.5 rounded">
-                              {u.designation}
-                            </span>
-                          )}
-                        </label>
+                    {(() => {
+                      const filteredUsers = users.filter(u => 
+                        (u.fullName || '').toLowerCase().includes(memberSearch.toLowerCase()) ||
+                        (u.username || '').toLowerCase().includes(memberSearch.toLowerCase()) ||
+                        (u.designation || '').toLowerCase().includes(memberSearch.toLowerCase())
                       );
-                    })}
+
+                      if (filteredUsers.length === 0) {
+                        return (
+                          <p className="text-xs text-zinc-400 italic text-center py-4">No assignees match search</p>
+                        );
+                      }
+
+                      return filteredUsers.map(u => {
+                        const isAssigned = assigneeIds.includes(u.uid);
+                        return (
+                          <label key={u.uid} className="flex items-center justify-between cursor-pointer group select-none">
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                checked={isAssigned}
+                                onChange={() => handleAssigneeToggle(u.uid)}
+                                className="rounded border-zinc-300 bg-zinc-50 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                              />
+                              <div>
+                                <p className="text-xs font-bold text-zinc-800 group-hover:text-indigo-600 transition-colors">
+                                  {u.fullName || u.username}
+                                </p>
+                                <p className="text-[9px] text-zinc-400 font-mono">@{u.username}</p>
+                              </div>
+                            </div>
+                            {u.designation && (
+                              <span className="text-[9px] font-semibold text-zinc-500 border border-zinc-200 bg-zinc-50 px-2 py-0.5 rounded">
+                                {u.designation}
+                              </span>
+                            )}
+                          </label>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               </div>

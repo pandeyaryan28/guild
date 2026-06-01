@@ -57,6 +57,7 @@ import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
 import { moveTask, STATUS_CONFIG, PRIORITY_CONFIG } from '../../lib/tasks';
 import type { Task, TaskPriority, TaskStatus } from '../../lib/tasks';
 import { cn } from '@/lib/utils';
+import { SearchableSelect } from '../../components/SearchableSelect';
 
 // Time Blocking schedule interface with categories
 interface TimeBlock {
@@ -493,19 +494,23 @@ export function CalendarPage() {
                   </select>
                 </div>
 
-                {/* Assignee Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
-                  <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                  <select
+                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-2 py-0.5 hover:border-white/20 focus-within:border-accent/40 transition-all w-full md:w-auto min-w-[150px]">
+                  <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 ml-1" />
+                  <SearchableSelect
                     value={selectedAssigneeId}
-                    onChange={(e) => setSelectedAssigneeId(e.target.value)}
-                    className="w-full bg-transparent text-[11px] font-bold text-foreground outline-none border-none py-1.5 cursor-pointer"
-                  >
-                    <option value="all" className="bg-surface text-foreground font-bold">All Assignees</option>
-                    {members.map((m) => (
-                      <option key={m.uid} value={m.uid} className="bg-surface text-foreground font-bold">{m.fullName || m.username}</option>
-                    ))}
-                  </select>
+                    onChange={setSelectedAssigneeId}
+                    options={[
+                      { value: 'all', label: 'All Assignees' },
+                      ...members.map((m) => ({
+                        value: m.uid,
+                        label: m.fullName || m.username,
+                        detail: m.designation || 'Member',
+                        photoURL: m.photoURL,
+                      })),
+                    ]}
+                    placeholder="All Assignees"
+                    triggerClassName="border-none bg-transparent hover:bg-transparent focus:ring-0 shadow-none px-1 py-1 text-[11px] font-bold"
+                  />
                 </div>
 
                 {/* Priority Filter */}

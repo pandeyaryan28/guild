@@ -11,6 +11,7 @@ import { useOrgMembers } from '../../hooks/useChat';
 import { type UserProfile, type UserRole } from '../../lib/firestore';
 import { getOrgById } from '../../lib/firestore';
 import { InviteModal } from './InviteModal';
+import { SearchableSelect } from '../../components/SearchableSelect';
 import { useTeams, type Team } from '../../hooks/useTeams';
 import { createTeam, updateTeam, deleteTeam } from '../../lib/teams';
 import { useTasks } from '../../hooks/useTasks';
@@ -312,19 +313,18 @@ function TeamFormModal({ isOpen, onClose, orgId, members, editingTeam }: TeamFor
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Team Lead / Manager
             </label>
-            <select
+            <SearchableSelect
               value={managerId}
-              required
-              onChange={(e) => setManagerId(e.target.value)}
-              className="w-full px-3.5 py-2 border border-border-default bg-bg-primary text-sm text-foreground rounded-xl outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
-            >
-              <option value="">Select a Manager...</option>
-              {members.map((m) => (
-                <option key={m.uid} value={m.uid}>
-                  {m.fullName || m.username} ({m.designation || 'Member'})
-                </option>
-              ))}
-            </select>
+              onChange={setManagerId}
+              options={members.map((m) => ({
+                value: m.uid,
+                label: m.fullName || m.username,
+                detail: m.designation || 'Member',
+                photoURL: m.photoURL,
+              }))}
+              placeholder="Select a Manager..."
+              triggerClassName="py-2.5 bg-bg-primary border-border-default hover:border-primary/50 text-sm focus:ring-1 focus:ring-primary/20 text-foreground"
+            />
           </div>
 
           {/* Members Checklist */}

@@ -28,6 +28,7 @@ import { useProject, useProjectComments } from '../../hooks/useProjects';
 import { useTasks } from '../../hooks/useTasks';
 import { useGoals } from '../../hooks/useGoals';
 import { createGoal } from '../../lib/goals';
+import { SearchableSelect } from '../../components/SearchableSelect';
 import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
 import { GoalDetailDrawer } from '../../components/tasks/GoalDetailDrawer';
 
@@ -1189,21 +1190,20 @@ export function ProjectDetailPage() {
                       />
                     </div>
 
-                    {/* Assignee / Owner */}
                     <div className="space-y-1.5">
                       <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Owner</label>
-                      <select
+                      <SearchableSelect
                         value={newGoalOwnerId}
-                        onChange={(e) => setNewGoalOwnerId(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-xs"
-                      >
-                        <option value="">Select owner...</option>
-                        {members.map((member) => (
-                          <option key={member.uid} value={member.uid}>
-                            {member.fullName}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={setNewGoalOwnerId}
+                        options={members.map((member) => ({
+                          value: member.uid,
+                          label: member.fullName || member.username,
+                          detail: member.designation || 'Member',
+                          photoURL: member.photoURL,
+                        }))}
+                        placeholder="Select owner..."
+                        triggerClassName="bg-white/50 dark:bg-neutral-955/40 hover:border-indigo-500/50"
+                      />
                     </div>
                   </div>
                 </div>
