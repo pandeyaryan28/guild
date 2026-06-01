@@ -25,10 +25,9 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../../hooks/useAuth';
 import { useProject, useProjectComments } from '../../hooks/useProjects';
-import { useMilestones } from '../../hooks/useMilestones';
 import { useTasks } from '../../hooks/useTasks';
 import { useGoals } from '../../hooks/useGoals';
-import { MilestoneRail } from './MilestoneRail';
+import { createGoal } from '../../lib/goals';
 import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
 import { GoalDetailDrawer } from '../../components/tasks/GoalDetailDrawer';
 
@@ -49,7 +48,6 @@ export function ProjectDetailPage() {
 
   const orgId = userProfile?.organizationId;
   const { project, loading: projectLoading } = useProject(projectId);
-  const { milestones } = useMilestones(projectId);
   const { columns, loading: tasksLoading } = useTasks(orgId, projectId ? { projectId } : undefined);
   const members = useOrgMembers(orgId);
   const { goals } = useGoals(orgId);
@@ -84,6 +82,36 @@ export function ProjectDetailPage() {
     () => ({ uid: user?.uid ?? '', name: userProfile?.fullName || user?.displayName || 'Teammate' }),
     [user, userProfile],
   );
+
+  const [activeTab, setActiveTab] = React.useState<'overview' | 'tasks' | 'goals'>('overview');
+  const [goalCreateOpen, setGoalCreateOpen] = React.useState(false);
+  const [newGoalTitle, setNewGoalTitle] = React.useState('');
+  const [newGoalDesc, setNewGoalDesc] = React.useState('');
+  const [newGoalTargetDate, setNewGoalTargetDate] = React.useState('');
+  const [newGoalOwnerId, setNewGoalOwnerId] = React.useState('');
+
+  const handleCreateGoalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newGoalTitle.trim() || !orgId) return;
+    try {
+      await createGoal({
+        orgId,
+        title: newGoalTitle.trim(),
+        description: newGoalDesc.trim() || undefined,
+        targetDate: newGoalTargetDate ? new Date(newGoalTargetDate) : null,
+        projectId: projectId ?? null,
+        ownerId: newGoalOwnerId || actor.uid,
+        actor
+      });
+      setNewGoalTitle('');
+      setNewGoalDesc('');
+      setNewGoalTargetDate('');
+      setNewGoalOwnerId('');
+      setGoalCreateOpen(false);
+    } catch (err) {
+      console.error('Failed to create goal:', err);
+    }
+  };
 
   // Member maps and helpers
   const memberMap = React.useMemo(() => {
@@ -467,7 +495,7 @@ export function ProjectDetailPage() {
             {/* KPI metric Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
-              {/* Execution Progress */}
+              {/* Project Progress */}
               <div className="p-4.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/40 bg-gradient-to-br from-white/30 to-white/10 dark:from-neutral-900/30 dark:to-neutral-900/10 flex flex-col justify-between gap-3 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
                 <span className="text-[8px] font-black uppercase tracking-widest text-neutral-450 dark:text-neutral-500">Project Progress</span>
                 <div className="space-y-1.5">
@@ -481,21 +509,21 @@ export function ProjectDetailPage() {
                 </div>
               </div>
 
-              {/* Milestones Hub */}
+              {/* Goals Complete */}
               <div className="p-4.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/40 bg-gradient-to-br from-white/30 to-white/10 dark:from-neutral-900/30 dark:to-neutral-900/10 flex flex-col justify-between gap-3 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
-                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-450 dark:text-neutral-500">Milestones</span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-450 dark:text-neutral-500">Goals Complete</span>
                 <div className="flex items-end justify-between">
                   <div className="flex flex-col">
                     <span className="text-lg font-black font-mono text-neutral-850 dark:text-neutral-100 leading-none">
-                      {milestones.filter(m => m.completed).length}
+                      {projectGoals.filter(g => g.status === 'completed').length}
                     </span>
                     <span className="text-[9px] text-neutral-450 dark:text-neutral-400 mt-1.5 font-bold">Completed</span>
                   </div>
-                  <span className="text-[10px] text-neutral-450 dark:text-neutral-550 font-bold">Total: {milestones.length}</span>
+                  <span className="text-[10px] text-neutral-450 dark:text-neutral-550 font-bold">Total: {projectGoals.length}</span>
                 </div>
               </div>
 
-              {/* Workload card */}
+              {/* Tasks Left */}
               <div className="p-4.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/40 bg-gradient-to-br from-white/30 to-white/10 dark:from-neutral-900/30 dark:to-neutral-900/10 flex flex-col justify-between gap-3 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
                 <span className="text-[8px] font-black uppercase tracking-widest text-neutral-450 dark:text-neutral-500">Tasks Left</span>
                 <div className="flex items-end justify-between">
@@ -518,254 +546,295 @@ export function ProjectDetailPage() {
               
             </div>
 
-            {/* Milestones timeline */}
-            {projectId && (
-              <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/20 dark:bg-neutral-850/5 shadow-xs overflow-hidden">
-                <MilestoneRail projectId={projectId} orgId={orgId} milestones={milestones} />
-              </div>
-            )}
-
-            {/* Project File Attachments */}
-            <div>
-              <AttachmentSection
-                entityType="projects"
-                entityId={project.id}
-                files={project.files}
-                onAttachmentsChanged={async (updatedFiles) => {
-                  try {
-                    await updateProjectAttachments(project.id, updatedFiles);
-                  } catch (err) {
-                    console.error("Failed to update project attachments:", err);
-                  }
-                }}
-              />
+            {/* Segmented Tab Selector */}
+            <div className="flex border-b border-neutral-200/40 dark:border-neutral-800/40 gap-1 pb-1">
+              {(['overview', 'tasks', 'goals'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={cn(
+                    "px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer capitalize relative",
+                    activeTab === tab
+                      ? "text-indigo-600 dark:text-indigo-400 bg-indigo-500/10"
+                      : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/40"
+                  )}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
 
-            {/* Interactive Grid: Tasks & Goals checklists */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Column 1: Tasks Checklist */}
-              <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10 backdrop-blur-xs space-y-4 flex flex-col justify-between">
-                <div className="space-y-4 flex-1">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-500 flex items-center gap-1.5 border-b border-neutral-200/20 dark:border-neutral-800/30 pb-2">
-                    <Clock className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
-                    <span>Tasks</span>
-                  </h3>
-
-                  {tasksLoading ? (
-                    <div className="flex py-12 justify-center">
-                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {/* Render active tasks checklist cards */}
-                      {activeTasks.length > 0 ? (
-                        activeTasks.map(task => (
-                          <motion.div
-                            key={task.id}
-                            onClick={() => setSearchParams({ task: task.id })}
-                            whileHover={{ y: -1, scale: 1.005 }}
-                            className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group shadow-xs cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <button
-                                onClick={(e) => handleToggleTaskStatus(e, task)}
-                                className="h-5 w-5 rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-indigo-500 bg-white/50 dark:bg-neutral-900/50 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
-                              >
-                                <div className="h-2 w-2 rounded-full bg-transparent hover:bg-indigo-500/50 transition-colors" />
-                              </button>
-                              <div className="min-w-0">
-                                <span className="text-xs font-bold block text-neutral-850 dark:text-neutral-200 group-hover:text-indigo-500 transition-colors truncate">{task.title}</span>
-                                {task.dueDate && (
-                                  <span className="text-[9px] font-semibold text-neutral-450 dark:text-neutral-500 mt-1 block">
-                                    Due: {new Date(task.dueDate instanceof Date ? task.dueDate : (task.dueDate as any).seconds * 1000).toLocaleDateString()}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 shrink-0 ml-2">
-                              {task.assigneeIds.length > 0 && (
-                                getMemberPhotoURL(task.assigneeIds[0]) ? (
-                                  <img
-                                    src={getMemberPhotoURL(task.assigneeIds[0])}
-                                    alt={getMemberName(task.assigneeIds[0])}
-                                    className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
-                                    title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
-                                  />
-                                ) : (
-                                  <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
-                                    {getInitials(task.assigneeIds[0])}
-                                  </div>
-                                )
-                              )}
-                              <button
-                                onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                className="p-1.5 rounded-lg border border-transparent text-neutral-400 hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </motion.div>
-                        ))
-                      ) : (
-                        <div className="py-12 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/10 dark:bg-neutral-850/5 flex flex-col items-center justify-center text-center">
-                          <p className="text-[10px] text-neutral-450 dark:text-neutral-500 italic">No active tasks.</p>
-                        </div>
-                      )}
-
-                      {/* Completed tasks accordion */}
-                      {completedTasks.length > 0 && (
-                        <div className="space-y-2 pt-2">
-                          <button
-                            type="button"
-                            onClick={() => setShowCompleted(!showCompleted)}
-                            className="w-full border border-neutral-200/60 dark:border-neutral-800 bg-white/40 dark:bg-neutral-900/40 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-neutral-500 hover:text-neutral-700 dark:text-neutral-450 transition-all font-bold tracking-wide shadow-xs"
-                          >
-                            <span>Completed Tasks ({completedTasks.length})</span>
-                            <ChevronDown className={cn("w-3.5 h-3.5 transition-transform text-neutral-450", showCompleted ? "rotate-180" : "")} />
-                          </button>
-                          <AnimatePresence>
-                            {showCompleted && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden space-y-2"
-                              >
-                                {completedTasks.map(task => (
-                                  <div
-                                    key={task.id}
-                                    onClick={() => setSearchParams({ task: task.id })}
-                                    className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/15 dark:bg-neutral-850/5 border border-neutral-200/30 dark:border-neutral-800/20 opacity-60 hover:opacity-90 transition-all cursor-pointer shadow-xs"
-                                  >
-                                    <div className="flex items-center gap-2.5 min-w-0">
-                                      <button
-                                        onClick={(e) => handleToggleTaskStatus(e, task)}
-                                        className="h-5 w-5 rounded-full border border-emerald-500 bg-emerald-500/10 flex items-center justify-center shrink-0 cursor-pointer"
-                                      >
-                                        <Check className="w-2.5 h-2.5 text-emerald-500 stroke-[3]" />
-                                      </button>
-                                      <span className="text-xs truncate font-semibold text-neutral-450 dark:text-neutral-500 line-through">
-                                        {task.title}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-3 shrink-0 ml-2">
-                                      {task.assigneeIds.length > 0 && (
-                                        getMemberPhotoURL(task.assigneeIds[0]) ? (
-                                          <img
-                                            src={getMemberPhotoURL(task.assigneeIds[0])}
-                                            alt={getMemberName(task.assigneeIds[0])}
-                                            className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
-                                            title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
-                                          />
-                                        ) : (
-                                          <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
-                                            {getInitials(task.assigneeIds[0])}
-                                          </div>
-                                        )
-                                      )}
-                                      <button
-                                        onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                        className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all cursor-pointer"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Column 2: Goals */}
-              <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10 backdrop-blur-xs space-y-4 flex flex-col justify-between">
-                <div className="space-y-4 flex-1">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1.5 border-b border-neutral-200/20 dark:border-neutral-800/30 pb-2">
-                    <Target className="w-3.5 h-3.5 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.2)]" />
-                    <span>Goals</span>
-                  </h3>
-
-                  <div className="space-y-2">
-                    {projectGoals.length > 0 ? (
-                      projectGoals.map(goal => (
-                        <motion.div
-                          key={goal.id}
-                          onClick={() => setSearchParams((prev) => { prev.set('goal', goal.id); return prev; })}
-                          whileHover={{ y: -1, scale: 1.005 }}
-                          className="flex flex-col p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group shadow-xs cursor-pointer gap-2"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <span className="text-xs font-bold block text-neutral-850 dark:text-neutral-205 group-hover:text-emerald-500 transition-colors truncate">
-                                {goal.title}
-                              </span>
-                              {goal.targetDate && (
-                                <span className="text-[9px] font-semibold text-neutral-450 dark:text-neutral-500 mt-1 block">
-                                  Due: {new Date(goal.targetDate instanceof Date ? goal.targetDate : (goal.targetDate as any).seconds * 1000).toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                            
-                            <div className="flex items-center gap-2 shrink-0">
-                              {/* Goal Status Badge */}
-                              <span className={cn(
-                                "text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded leading-none border",
-                                goal.status === 'completed'
-                                  ? "border-emerald-500/20 text-emerald-650 bg-emerald-500/5 dark:text-emerald-400"
-                                  : "border-indigo-500/20 text-indigo-650 bg-indigo-500/5 dark:text-indigo-400"
-                              )}>
-                                {goal.status}
-                              </span>
-                              {/* Goal Owner Avatar */}
-                              {goal.ownerId && (
-                                getMemberPhotoURL(goal.ownerId) ? (
-                                  <img
-                                    src={getMemberPhotoURL(goal.ownerId)}
-                                    alt={getMemberName(goal.ownerId)}
-                                    className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
-                                    title={`Owner: ${getMemberName(goal.ownerId)}`}
-                                  />
-                                ) : (
-                                  <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Owner: ${getMemberName(goal.ownerId)}`}>
-                                    {getInitials(goal.ownerId)}
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Progress bar inside goal card */}
-                          <div className="space-y-1 mt-0.5">
-                            <div className="flex items-center justify-between text-[8px] font-bold text-neutral-450">
-                              <span>Progress</span>
-                              <span className="font-mono">{goal.progressRollup ?? 0}%</span>
-                            </div>
-                            <div className="w-full bg-neutral-100 dark:bg-neutral-800 h-1 rounded-full overflow-hidden">
-                              <div 
-                                className="bg-gradient-to-r from-emerald-555 to-teal-500 h-full rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(16,185,129,0.3)]" 
-                                style={{ width: `${goal.progressRollup ?? 0}%` }} 
-                              />
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <div className="py-12 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-850 bg-neutral-50/10 dark:bg-neutral-850/5 flex flex-col items-center justify-center text-center">
-                        <p className="text-[10px] text-neutral-450 dark:text-neutral-500 italic">No goals linked to this project.</p>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15 }}
+                className="space-y-6"
+              >
+                {activeTab === 'overview' && (
+                  <div className="space-y-6">
+                    {/* Project Description */}
+                    {project.description && (
+                      <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10">
+                        <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-2">Description</h3>
+                        <p className="text-xs text-neutral-600 dark:text-neutral-350 leading-relaxed font-semibold">
+                          {project.description}
+                        </p>
                       </div>
                     )}
-                  </div>
-                </div>
-              </div>
 
-            </div>
+                    {/* Project File Attachments */}
+                    <div>
+                      <AttachmentSection
+                        entityType="projects"
+                        entityId={project.id}
+                        files={project.files}
+                        onAttachmentsChanged={async (updatedFiles) => {
+                          try {
+                            await updateProjectAttachments(project.id, updatedFiles);
+                          } catch (err) {
+                            console.error("Failed to update project attachments:", err);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'tasks' && (
+                  <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10 space-y-4">
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5 border-b border-neutral-200/20 dark:border-neutral-800/30 pb-2">
+                        <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Tasks</span>
+                      </h3>
+
+                      {tasksLoading ? (
+                        <div className="flex py-12 justify-center">
+                          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {/* Render active tasks checklist cards */}
+                          {activeTasks.length > 0 ? (
+                            activeTasks.map(task => (
+                              <motion.div
+                                key={task.id}
+                                onClick={() => setSearchParams({ task: task.id })}
+                                whileHover={{ y: -1, scale: 1.002 }}
+                                className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group shadow-xs cursor-pointer"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <button
+                                    onClick={(e) => handleToggleTaskStatus(e, task)}
+                                    className="h-5 w-5 rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-indigo-500 bg-white/50 dark:bg-neutral-900/50 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                                  >
+                                    <div className="h-2 w-2 rounded-full bg-transparent hover:bg-indigo-500/50 transition-colors" />
+                                  </button>
+                                  <div className="min-w-0">
+                                    <span className="text-xs font-bold block text-neutral-850 dark:text-neutral-200 group-hover:text-indigo-500 transition-colors truncate">{task.title}</span>
+                                    {task.dueDate && (
+                                      <span className="text-[9px] font-semibold text-neutral-450 dark:text-neutral-500 mt-1 block">
+                                        Due: {new Date(task.dueDate instanceof Date ? task.dueDate : (task.dueDate as any).seconds * 1000).toLocaleDateString()}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 shrink-0 ml-2">
+                                  {task.assigneeIds.length > 0 && (
+                                    getMemberPhotoURL(task.assigneeIds[0]) ? (
+                                      <img
+                                        src={getMemberPhotoURL(task.assigneeIds[0])}
+                                        alt={getMemberName(task.assigneeIds[0])}
+                                        className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
+                                        title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
+                                      />
+                                    ) : (
+                                      <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
+                                        {getInitials(task.assigneeIds[0])}
+                                      </div>
+                                    )
+                                  )}
+                                  <button
+                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
+                                    className="p-1.5 rounded-lg border border-transparent text-neutral-400 hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </motion.div>
+                            ))
+                          ) : (
+                            <div className="py-12 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/10 dark:bg-neutral-850/5 flex flex-col items-center justify-center text-center">
+                              <p className="text-[10px] text-neutral-450 dark:text-neutral-500 italic">No active tasks.</p>
+                            </div>
+                          )}
+
+                          {/* Completed tasks accordion */}
+                          {completedTasks.length > 0 && (
+                            <div className="space-y-2 pt-2">
+                              <button
+                                type="button"
+                                onClick={() => setShowCompleted(!showCompleted)}
+                                className="w-full border border-neutral-200/60 dark:border-neutral-800 bg-white/40 dark:bg-neutral-900/40 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-neutral-500 hover:text-neutral-700 dark:text-neutral-450 transition-all font-bold tracking-wide shadow-xs"
+                              >
+                                <span>Completed Tasks ({completedTasks.length})</span>
+                                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform text-neutral-450", showCompleted ? "rotate-180" : "")} />
+                              </button>
+                              <AnimatePresence>
+                                {showCompleted && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden space-y-2"
+                                  >
+                                    {completedTasks.map(task => (
+                                      <div
+                                        key={task.id}
+                                        onClick={() => setSearchParams({ task: task.id })}
+                                        className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/15 dark:bg-neutral-850/5 border border-neutral-200/30 dark:border-neutral-800/20 opacity-60 hover:opacity-90 transition-all cursor-pointer shadow-xs"
+                                      >
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                          <button
+                                            onClick={(e) => handleToggleTaskStatus(e, task)}
+                                            className="h-5 w-5 rounded-full border border-emerald-500 bg-emerald-500/10 flex items-center justify-center shrink-0 cursor-pointer"
+                                          >
+                                            <Check className="w-2.5 h-2.5 text-emerald-500 stroke-[3]" />
+                                          </button>
+                                          <span className="text-xs truncate font-semibold text-neutral-450 dark:text-neutral-500 line-through">
+                                            {task.title}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-3 shrink-0 ml-2">
+                                          {task.assigneeIds.length > 0 && (
+                                            getMemberPhotoURL(task.assigneeIds[0]) ? (
+                                              <img
+                                                src={getMemberPhotoURL(task.assigneeIds[0])}
+                                                alt={getMemberName(task.assigneeIds[0])}
+                                                className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
+                                                title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
+                                              />
+                                            ) : (
+                                              <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
+                                                {getInitials(task.assigneeIds[0])}
+                                              </div>
+                                            )
+                                          )}
+                                          <button
+                                            onClick={(e) => handleDeleteTaskItem(e, task.id)}
+                                            className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all cursor-pointer"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'goals' && (
+                  <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10 space-y-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between border-b border-neutral-200/20 dark:border-neutral-800/30 pb-2">
+                        <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
+                          <Target className="w-3.5 h-3.5 text-emerald-500" />
+                          <span>Goals</span>
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => setGoalCreateOpen(true)}
+                          className="flex items-center justify-center gap-1 px-3 py-1.5 h-8 text-[10px] font-bold rounded-xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-600 dark:text-emerald-450 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                        >
+                          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                          <span>Add Goal</span>
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {projectGoals.length > 0 ? (
+                          projectGoals.map(goal => (
+                            <motion.div
+                              key={goal.id}
+                              onClick={() => setSearchParams((prev) => { prev.set('goal', goal.id); return prev; })}
+                              whileHover={{ y: -1, scale: 1.002 }}
+                              className="flex flex-col p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group shadow-xs cursor-pointer gap-2"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <span className="text-xs font-bold block text-neutral-850 dark:text-neutral-205 group-hover:text-emerald-500 transition-colors truncate">
+                                    {goal.title}
+                                  </span>
+                                  {goal.targetDate && (
+                                    <span className="text-[9px] font-semibold text-neutral-450 dark:text-neutral-500 mt-1 block">
+                                      Due: {new Date(goal.targetDate instanceof Date ? goal.targetDate : (goal.targetDate as any).seconds * 1000).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className={cn(
+                                    "text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded leading-none border",
+                                    goal.status === 'completed'
+                                      ? "border-emerald-500/20 text-emerald-650 bg-emerald-500/5 dark:text-emerald-400"
+                                      : "border-indigo-500/20 text-indigo-650 bg-indigo-500/5 dark:text-indigo-400"
+                                  )}>
+                                    {goal.status}
+                                  </span>
+                                  {goal.ownerId && (
+                                    getMemberPhotoURL(goal.ownerId) ? (
+                                      <img
+                                        src={getMemberPhotoURL(goal.ownerId)}
+                                        alt={getMemberName(goal.ownerId)}
+                                        className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
+                                        title={`Owner: ${getMemberName(goal.ownerId)}`}
+                                      />
+                                    ) : (
+                                      <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Owner: ${getMemberName(goal.ownerId)}`}>
+                                        {getInitials(goal.ownerId)}
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="space-y-1 mt-0.5">
+                                <div className="flex items-center justify-between text-[8px] font-bold text-neutral-450">
+                                  <span>Progress</span>
+                                  <span className="font-mono">{goal.progressRollup ?? 0}%</span>
+                                </div>
+                                <div className="w-full bg-neutral-100 dark:bg-neutral-800 h-1 rounded-full overflow-hidden">
+                                  <div 
+                                    className="bg-gradient-to-r from-emerald-555 to-teal-500 h-full rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(16,185,129,0.3)]" 
+                                    style={{ width: `${goal.progressRollup ?? 0}%` }} 
+                                  />
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))
+                        ) : (
+                          <div className="py-12 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-850 bg-neutral-50/10 dark:bg-neutral-850/5 flex flex-col items-center justify-center text-center">
+                            <p className="text-[10px] text-neutral-450 dark:text-neutral-500 italic">No goals linked to this project.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
 
           </div>
 
@@ -975,7 +1044,7 @@ export function ProjectDetailPage() {
                     <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Private Project</span>
                   </div>
                   <p className="text-[10px] text-neutral-500 leading-relaxed font-semibold">
-                    Only members invited to this project can view its milestones, tasks, and discussions.
+                    Only members invited to this project can view its tasks, goals, and discussions.
                   </p>
                 </div>
 
@@ -1042,6 +1111,120 @@ export function ProjectDetailPage() {
                   Save Changes
                 </button>
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Goal Creation Dialog */}
+      <AnimatePresence>
+        {goalCreateOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setGoalCreateOpen(false)}
+              className="fixed inset-0 bg-neutral-950/20 dark:bg-neutral-950/60 backdrop-blur-sm z-[100]"
+            />
+            {/* Dialog Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6 rounded-3xl border border-neutral-200/50 dark:border-neutral-800/40 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl shadow-2xl z-[101] flex flex-col gap-4 max-h-[90vh] overflow-y-auto scrollbar-thin"
+            >
+              <form onSubmit={handleCreateGoalSubmit} className="space-y-4">
+                <div className="flex items-center justify-between border-b border-neutral-200/40 dark:border-neutral-800/60 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+                      <Target className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <h3 className="text-sm font-black text-neutral-850 dark:text-neutral-100">Add Goal</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setGoalCreateOpen(false)}
+                    className="w-8 h-8 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-805 text-neutral-500 hover:text-neutral-850 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Title */}
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Goal Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={newGoalTitle}
+                      onChange={(e) => setNewGoalTitle(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-neutral-455 shadow-xs"
+                      placeholder="Goal name..."
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Description</label>
+                    <textarea
+                      value={newGoalDesc}
+                      onChange={(e) => setNewGoalDesc(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all h-24 resize-none leading-relaxed placeholder:text-neutral-405 shadow-xs"
+                      placeholder="Details about this goal..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Target Date */}
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Due Date</label>
+                      <input
+                        type="date"
+                        value={newGoalTargetDate}
+                        onChange={(e) => setNewGoalTargetDate(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-850 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-xs"
+                      />
+                    </div>
+
+                    {/* Assignee / Owner */}
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Owner</label>
+                      <select
+                        value={newGoalOwnerId}
+                        onChange={(e) => setNewGoalOwnerId(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-xs"
+                      >
+                        <option value="">Select owner...</option>
+                        {members.map((member) => (
+                          <option key={member.uid} value={member.uid}>
+                            {member.fullName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions Footer */}
+                <div className="flex items-center justify-end gap-2.5 border-t border-neutral-200/40 dark:border-neutral-800/60 pt-4 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setGoalCreateOpen(false)}
+                    className="px-4 py-2 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-550 hover:text-neutral-850 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-emerald-600 dark:bg-emerald-500 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md shadow-emerald-600/10"
+                  >
+                    Create Goal
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </>
         )}
