@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   User, Bell, Paintbrush, Users, Link2, Building2,
   Check, Loader2, ShieldAlert, Trash2, Crown, ShieldCheck,
-  UserMinus, Copy, AlertCircle, Info,
+  UserMinus, Copy, AlertCircle, Info, Mail,
   Plus, Workflow, MessageSquare, AtSign, CheckSquare, MessagesSquare, UserPlus, Camera,
   Download, Share2
 } from 'lucide-react';
@@ -13,7 +13,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
 import { THEMES } from '../../lib/themes';
-import { sendPasswordReset } from '../../lib/auth';
+import { sendPasswordReset, sendDeletionVerificationEmail, isDeletionSignInLink, confirmDeletionSignInLink } from '../../lib/auth';
 import {
   updateUserProfile,
   updateUserRole,
@@ -180,6 +180,14 @@ export function SettingsPage() {
     ];
     return list.filter((t) => t.allowed.includes(role));
   }, [role]);
+
+  // Auto-switch to workspace settings if deletion confirmation link is clicked
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('confirmDelete') === 'true') {
+      setActiveTab('workspace');
+    }
+  }, []);
 
   // Ensure active tab is allowed if role changes
   React.useEffect(() => {
@@ -1396,6 +1404,62 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [slugError, setSlugError] = React.useState<string | null>(null);
 
+  // Secure Deletion States
+  const [emailSending, setEmailSending] = React.useState(false);
+  const [emailSent, setEmailSent] = React.useState(false);
+  const [emailSendError, setEmailSendError] = React.useState<string | null>(null);
+  
+  const [isVerifyingLink, setIsVerifyingLink] = React.useState(false);
+  const [linkVerificationError, setLinkVerificationError] = React.useState<string | null>(null);
+  const [deletionUnlocked, setDeletionUnlocked] = React.useState(false);
+
+  // Intercept the Firebase email action link on mount/redirect
+  React.useEffect(() => {
+    const checkLink = async () => {
+      const url = window.location.href;
+      if (isDeletionSignInLink(url)) {
+        setIsVerifyingLink(true);
+        setLinkVerificationError(null);
+        try {
+          let email = window.localStorage.getItem('emailForSignIn') || profile.email;
+          if (!email) {
+            email = window.prompt('Please enter your email to confirm deletion:') || '';
+          }
+          if (email && email.trim()) {
+            await confirmDeletionSignInLink(email.trim(), url);
+            setDeletionUnlocked(true);
+            // Clean up query parameters so reloading doesn't repeat verification
+            const newUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, document.title, newUrl);
+          } else {
+            setLinkVerificationError('Email verification required.');
+          }
+        } catch (err: any) {
+          console.error('Email link verification failed', err);
+          setLinkVerificationError(err.message || 'Verification link expired or invalid.');
+        } finally {
+          setIsVerifyingLink(false);
+        }
+      }
+    };
+    checkLink();
+  }, [profile.email]);
+
+  const handleSendVerificationEmail = async () => {
+    setEmailSending(true);
+    setEmailSendError(null);
+    try {
+      await sendDeletionVerificationEmail(profile.email, org.id, window.location.origin);
+      window.localStorage.setItem('emailForSignIn', profile.email);
+      setEmailSent(true);
+    } catch (err: any) {
+      console.error('Failed to send verification email:', err);
+      setEmailSendError(err.message || 'Failed to send secure verification link. Please check your network and try again.');
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
   // Org logo states
   const [uploadingLogo, setUploadingLogo] = React.useState(false);
   const logoInputRef = React.useRef<HTMLInputElement>(null);
@@ -1649,44 +1713,141 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
         </form>
       </div>
 
-      {/* Danger Zone Overhaul */}
-      <div className="aether-glass bg-red-500/[0.01] border border-red-500/20 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-4 relative overflow-hidden mt-6">
-        {/* Crimson pulse accent glow */}
-        <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.08] filter blur-xl bg-red-500" />
-        
-        <div className="flex items-start gap-3">
-          <ShieldAlert className="h-5 w-5 text-red-500 shrink-0 mt-0.5 animate-pulse" />
-          <div>
-            <h2 className="text-xs font-black text-red-500 uppercase tracking-wider">Danger Zone</h2>
-            <p className="text-[10px] text-red-500/80 mt-0.5 leading-relaxed font-semibold">
-              Deleting your workspace is a permanent action. All channels, chats, goals, projects, and task records will be permanently erased.
-            </p>
+      {/* Danger Zone Overhaul - STRICTLY Owner Only */}
+      {profile.role === 'owner' && (
+        <div className="aether-glass bg-red-500/[0.015] border border-red-500/25 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-4 relative overflow-hidden mt-6 animate-fluid-pop">
+          {/* Crimson pulse accent glow */}
+          <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.08] filter blur-xl bg-red-500" />
+          
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="h-5 w-5 text-red-500 shrink-0 mt-0.5 animate-pulse" />
+            <div>
+              <h2 className="text-xs font-black text-red-500 uppercase tracking-wider">Danger Zone</h2>
+              <p className="text-[10px] text-red-500/80 mt-0.5 leading-relaxed font-semibold">
+                Deleting your workspace is a permanent action. All channels, chats, goals, projects, and task records will be permanently erased.
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-3 max-w-md">
-          <p className="text-[10px] text-muted-foreground font-semibold">
-            To confirm deletion, please type the workspace name exactly <span className="font-bold text-foreground select-all">"{org.name}"</span> below:
-          </p>
-          <div className="flex items-center gap-3">
-            <input
-              type="text"
-              value={confirmName}
-              onChange={(e) => setConfirmName(e.target.value)}
-              className="flex-1 px-3.5 py-2.5 rounded-xl border border-red-500/20 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold"
-              placeholder="Type workspace name"
-            />
-            <button
-              onClick={handleDelete}
-              disabled={deleting || confirmName !== org.name}
-              className="px-4 py-2.5 bg-red-600 hover:bg-red-650 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
-            >
-              {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-              Delete Workspace
-            </button>
+          <div className="border-t border-red-500/10 pt-4 mt-2">
+            {isVerifyingLink ? (
+              /* A) Verification Loading Spinner */
+              <div className="flex flex-col items-center justify-center py-6 text-center gap-3">
+                <Loader2 className="h-6 w-6 animate-spin text-red-500" />
+                <p className="text-xs font-bold text-foreground">Verifying secure credentials...</p>
+                <p className="text-[10px] text-muted-foreground font-semibold">Confirming your identity link with Firebase Auth.</p>
+              </div>
+            ) : linkVerificationError ? (
+              /* B) Link Verification Error */
+              <div className="space-y-4 max-w-md">
+                <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-2xl flex items-start gap-2.5">
+                  <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Verification Failed:</span>
+                    <p className="text-[10px] opacity-80 mt-0.5 font-semibold">{linkVerificationError}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSendVerificationEmail}
+                  disabled={emailSending}
+                  className="px-4 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-foreground rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {emailSending ? <Loader2 className="h-3.5 w-3.5 animate-spin text-red-500" /> : <Mail className="h-3.5 w-3.5" />}
+                  Request New Verification Link
+                </button>
+              </div>
+            ) : !deletionUnlocked ? (
+              /* C) Not Verified Yet */
+              <div className="space-y-4 max-w-md">
+                {emailSent ? (
+                  /* Sub-state: Email Sent Success banner */
+                  <div className="space-y-3.5">
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-start gap-3">
+                      <Mail className="h-5 w-5 shrink-0 mt-0.5 text-emerald-400 animate-bounce" />
+                      <div>
+                        <span className="font-extrabold text-[11px] uppercase tracking-wide">Sleek Envelope Sent!</span>
+                        <p className="text-[10px] opacity-90 mt-1 leading-relaxed font-semibold">
+                          A secure, cryptographic deletion verification link has been dispatched to <span className="font-bold text-white font-mono">{profile.email}</span>.
+                        </p>
+                        <p className="text-[9px] opacity-75 mt-1 font-semibold">
+                          Please click the link in your email to authenticate this browser session and unlock deletion. You may leave this page open.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSendVerificationEmail}
+                        disabled={emailSending}
+                        className="px-3.5 py-2 border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-muted-foreground hover:text-foreground rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        {emailSending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
+                        Resend Verification Email
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Sub-state: Initial Prompt */
+                  <div className="space-y-3">
+                    <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
+                      To safeguard this organization, deleting requires direct owner identity verification. We will send a secure verification email link directly to the workspace owner account email <span className="font-bold text-foreground font-mono">{profile.email}</span>.
+                    </p>
+                    {emailSendError && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] rounded-xl font-bold flex items-center gap-2">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        <span>{emailSendError}</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={handleSendVerificationEmail}
+                      disabled={emailSending}
+                      className="px-4.5 py-2.5 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30 text-red-400 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 hover:scale-[1.01] active:scale-[0.99]"
+                    >
+                      {emailSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                      Send Deletion Verification Link
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* D) Verification Successful - Confirmed state to complete delete */
+              <div className="space-y-4 max-w-md animate-fluid-pop">
+                <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-start gap-2.5">
+                  <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-400" />
+                  <div>
+                    <span className="font-extrabold uppercase tracking-wider text-[10px]">Owner Identity Verified!</span>
+                    <p className="text-[10px] opacity-90 mt-0.5 leading-relaxed font-semibold">
+                      Your identity as the authentic workspace owner has been successfully cryptographically verified via Firebase Email Link Auth. Deletion is unlocked.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-[10px] text-muted-foreground font-semibold">
+                    To finalize deletion, please type the workspace name exactly <span className="font-bold text-foreground select-all font-mono">"{org.name}"</span> below:
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={confirmName}
+                      onChange={(e) => setConfirmName(e.target.value)}
+                      className="flex-1 px-3.5 py-2.5 rounded-xl border border-red-500/20 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold"
+                      placeholder="Type workspace name exactly"
+                    />
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleting || confirmName !== org.name}
+                      className="px-4.5 py-2.5 bg-red-650 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                      Delete Workspace
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

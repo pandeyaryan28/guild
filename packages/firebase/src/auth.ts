@@ -8,6 +8,9 @@ import {
   sendEmailVerification as firebaseSendEmailVerification,
   reload as firebaseReload,
   sendPasswordResetEmail as firebaseSendPasswordResetEmail,
+  sendSignInLinkToEmail as firebaseSendSignInLinkToEmail,
+  isSignInWithEmailLink as firebaseIsSignInWithEmailLink,
+  signInWithEmailLink as firebaseSignInWithEmailLink,
   type User,
 } from 'firebase/auth';
 import { auth } from './firebase';
@@ -47,6 +50,22 @@ export function getCurrentUser(): User | null {
 
 export function onAuthStateChanged(callback: (user: User | null) => void) {
   return firebaseOnAuthStateChanged(auth, callback);
+}
+
+export async function sendDeletionVerificationEmail(email: string, orgId: string, origin: string) {
+  const actionCodeSettings = {
+    url: `${origin}/settings?confirmDelete=true&orgId=${orgId}`,
+    handleCodeInApp: true,
+  };
+  return firebaseSendSignInLinkToEmail(auth, email, actionCodeSettings);
+}
+
+export function isDeletionSignInLink(url: string): boolean {
+  return firebaseIsSignInWithEmailLink(auth, url);
+}
+
+export async function confirmDeletionSignInLink(email: string, url: string) {
+  return firebaseSignInWithEmailLink(auth, email, url);
 }
 
 export type { User };
