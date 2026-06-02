@@ -506,8 +506,9 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                   ? `Billed annually (${formatMoney(pricing.annualTotal, currency)}/seat/year)`
                   : `Billed monthly (${formatMoney(pricing.monthly, currency)}/seat/month)`}
                 features={[
-                  'Unlimited members',
-                  'Unlimited storage',
+                  'Scale seats as your team grows',
+                  '10 GB workspace storage',
+                  'Access to GuildHQ Admin panel',
                   'Priority support',
                   ...(cycle === 'annual' ? ['🎁 1yr free access to upcoming HR & Accounting'] : []),
                 ]}
