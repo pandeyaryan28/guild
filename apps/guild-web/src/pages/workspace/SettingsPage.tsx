@@ -13,7 +13,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
 import { THEMES } from '../../lib/themes';
-import { sendPasswordReset, sendDeletionVerificationEmail, isDeletionSignInLink, confirmDeletionSignInLink } from '../../lib/auth';
+import { sendPasswordReset, sendDeletionVerificationEmail, isDeletionSignInLink, confirmDeletionSignInLink, reauthenticatePassword, reauthenticateGoogle, getCurrentUser } from '../../lib/auth';
 import {
   updateUserProfile,
   updateUserRole,
@@ -1413,11 +1413,52 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
   const [linkVerificationError, setLinkVerificationError] = React.useState<string | null>(null);
   const [deletionUnlocked, setDeletionUnlocked] = React.useState(false);
 
+  // Choice of Verification Method
+  const [verificationMethod, setVerificationMethod] = React.useState<'none' | 'email-link' | 'password' | 'google'>('none');
+  const [passwordInput, setPasswordInput] = React.useState('');
+  const [reauthError, setReauthError] = React.useState<string | null>(null);
+  const [reauthenticating, setReauthenticating] = React.useState(false);
+
+  // Check user provider
+  const currentUser = getCurrentUser();
+  const isGoogleUser = currentUser?.providerData.some(p => p.providerId === 'google.com') ?? false;
+
+  const handlePasswordReauth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordInput.trim()) return;
+    setReauthenticating(true);
+    setReauthError(null);
+    try {
+      await reauthenticatePassword(passwordInput);
+      setDeletionUnlocked(true);
+    } catch (err: any) {
+      console.error('Password re-authentication failed:', err);
+      setReauthError(err.message || 'Incorrect password. Please try again.');
+    } finally {
+      setReauthenticating(false);
+    }
+  };
+
+  const handleGoogleReauth = async () => {
+    setReauthenticating(true);
+    setReauthError(null);
+    try {
+      await reauthenticateGoogle();
+      setDeletionUnlocked(true);
+    } catch (err: any) {
+      console.error('Google re-authentication failed:', err);
+      setReauthError(err.message || 'Google verification failed. Please try again.');
+    } finally {
+      setReauthenticating(false);
+    }
+  };
+
   // Intercept the Firebase email action link on mount/redirect
   React.useEffect(() => {
     const checkLink = async () => {
       const url = window.location.href;
       if (isDeletionSignInLink(url)) {
+        setVerificationMethod('email-link');
         setIsVerifyingLink(true);
         setLinkVerificationError(null);
         try {
@@ -1763,52 +1804,183 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
             ) : !deletionUnlocked ? (
               /* C) Not Verified Yet */
               <div className="space-y-4 max-w-md">
-                {emailSent ? (
-                  /* Sub-state: Email Sent Success banner */
-                  <div className="space-y-3.5">
-                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-start gap-3">
-                      <Mail className="h-5 w-5 shrink-0 mt-0.5 text-emerald-400 animate-bounce" />
-                      <div>
-                        <span className="font-extrabold text-[11px] uppercase tracking-wide">Sleek Envelope Sent!</span>
-                        <p className="text-[10px] opacity-90 mt-1 leading-relaxed font-semibold">
-                          A secure, cryptographic deletion verification link has been dispatched to <span className="font-bold text-white font-mono">{profile.email}</span>.
-                        </p>
-                        <p className="text-[9px] opacity-75 mt-1 font-semibold">
-                          Please click the link in your email to authenticate this browser session and unlock deletion. You may leave this page open.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
+                {verificationMethod === 'none' ? (
+                  <div className="space-y-3">
+                    <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
+                      To safeguard this organization, deleting requires verifying your owner credentials. Please select a verification method:
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {/* Direct Auth Option */}
                       <button
-                        onClick={handleSendVerificationEmail}
-                        disabled={emailSending}
-                        className="px-3.5 py-2 border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-muted-foreground hover:text-foreground rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                        type="button"
+                        onClick={() => setVerificationMethod(isGoogleUser ? 'google' : 'password')}
+                        className="p-4 rounded-2xl border border-white/5 bg-white/[0.015] hover:bg-white/[0.035] hover:border-white/10 text-left transition-all group flex flex-col justify-between h-28 cursor-pointer"
                       >
-                        {emailSending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
-                        Resend Verification Email
+                        <ShieldCheck className="h-5 w-5 text-accent group-hover:scale-105 transition-transform" style={{ color: 'var(--accent)' }} />
+                        <div>
+                          <p className="text-xs font-black text-foreground">
+                            {isGoogleUser ? 'Verify via Google' : 'Verify via Password'}
+                          </p>
+                          <p className="text-[9px] text-muted-foreground mt-0.5 font-semibold">
+                            Re-authenticate instantly in this window.
+                          </p>
+                        </div>
+                      </button>
+
+                      {/* Email Link Option */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVerificationMethod('email-link');
+                          handleSendVerificationEmail();
+                        }}
+                        className="p-4 rounded-2xl border border-white/5 bg-white/[0.015] hover:bg-white/[0.035] hover:border-white/10 text-left transition-all group flex flex-col justify-between h-28 cursor-pointer"
+                      >
+                        <Mail className="h-5 w-5 text-accent group-hover:scale-105 transition-transform" style={{ color: 'var(--accent)' }} />
+                        <div>
+                          <p className="text-xs font-black text-foreground">Secure Email Link</p>
+                          <p className="text-[9px] text-muted-foreground mt-0.5 font-semibold">
+                            Send a cryptographic verification link to your inbox.
+                          </p>
+                        </div>
                       </button>
                     </div>
                   </div>
-                ) : (
-                  /* Sub-state: Initial Prompt */
+                ) : verificationMethod === 'password' ? (
+                  /* Password Verification Mode */
+                  <form onSubmit={handlePasswordReauth} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Confirm Owner Password</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVerificationMethod('none');
+                          setReauthError(null);
+                        }}
+                        className="text-[9px] font-bold text-accent hover:underline cursor-pointer"
+                        style={{ color: 'var(--accent)' }}
+                      >
+                        Change Method
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        required
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        className="flex-1 px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 transition-all font-semibold"
+                        placeholder="Enter account password"
+                      />
+                      <button
+                        type="submit"
+                        disabled={reauthenticating}
+                        className="px-4 py-2.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-accent-foreground rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                        style={{ background: 'var(--accent)' }}
+                      >
+                        {reauthenticating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+                        Verify Password
+                      </button>
+                    </div>
+                    {reauthError && (
+                      <p className="text-[9px] text-red-500 font-bold animate-fluid-pop">{reauthError}</p>
+                    )}
+                  </form>
+                ) : verificationMethod === 'google' ? (
+                  /* Google Verification Mode */
                   <div className="space-y-3">
-                    <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
-                      To safeguard this organization, deleting requires direct owner identity verification. We will send a secure verification email link directly to the workspace owner account email <span className="font-bold text-foreground font-mono">{profile.email}</span>.
-                    </p>
-                    {emailSendError && (
-                      <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] rounded-xl font-bold flex items-center gap-2">
-                        <AlertCircle className="h-3.5 w-3.5" />
-                        <span>{emailSendError}</span>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] text-muted-foreground font-semibold">Verify ownership via your logged-in Google credentials:</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVerificationMethod('none');
+                          setReauthError(null);
+                        }}
+                        className="text-[9px] font-bold text-accent hover:underline cursor-pointer"
+                        style={{ color: 'var(--accent)' }}
+                      >
+                        Change Method
+                      </button>
+                    </div>
+                    <button
+                      onClick={handleGoogleReauth}
+                      disabled={reauthenticating}
+                      className="w-full py-2.5 bg-white text-black hover:bg-white/90 disabled:opacity-50 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                    >
+                      {reauthenticating ? <Loader2 className="h-3.5 w-3.5 animate-spin text-black" /> : <ShieldCheck className="h-4 w-4 text-black" />}
+                      Verify with Google Account
+                    </button>
+                    {reauthError && (
+                      <p className="text-[9px] text-red-500 font-bold animate-fluid-pop">{reauthError}</p>
+                    )}
+                  </div>
+                ) : (
+                  /* Email Link Verification Mode */
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Email Verification</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVerificationMethod('none');
+                          setEmailSent(false);
+                          setEmailSendError(null);
+                        }}
+                        className="text-[9px] font-bold text-accent hover:underline cursor-pointer"
+                        style={{ color: 'var(--accent)' }}
+                      >
+                        Change Method
+                      </button>
+                    </div>
+                    {emailSent ? (
+                      /* Sub-state: Email Sent Success banner */
+                      <div className="space-y-3.5">
+                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-start gap-3">
+                          <Mail className="h-5 w-5 shrink-0 mt-0.5 text-emerald-400 animate-bounce" />
+                          <div>
+                            <span className="font-extrabold text-[11px] uppercase tracking-wide">Sleek Envelope Sent!</span>
+                            <p className="text-[10px] opacity-90 mt-1 leading-relaxed font-semibold">
+                              A secure, cryptographic deletion verification link has been dispatched to <span className="font-bold text-white font-mono">{profile.email}</span>.
+                            </p>
+                            <p className="text-[9px] opacity-75 mt-1 font-semibold">
+                              Please click the link in your email to authenticate this browser session and unlock deletion. You may leave this page open.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleSendVerificationEmail}
+                            disabled={emailSending}
+                            className="px-3.5 py-2 border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-muted-foreground hover:text-foreground rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                          >
+                            {emailSending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
+                            Resend Verification Email
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Sub-state: Initial Prompt */
+                      <div className="space-y-3">
+                        <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
+                          To safeguard this organization, deleting requires direct owner identity verification. We will send a secure verification email link directly to the workspace owner account email <span className="font-bold text-foreground font-mono">{profile.email}</span>.
+                        </p>
+                        {emailSendError && (
+                          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] rounded-xl font-bold flex items-start gap-2">
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                            <span className="text-[10px] font-semibold">{emailSendError}</span>
+                          </div>
+                        )}
+                        <button
+                          onClick={handleSendVerificationEmail}
+                          disabled={emailSending}
+                          className="px-4.5 py-2.5 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30 text-red-400 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 hover:scale-[1.01] active:scale-[0.99]"
+                        >
+                          {emailSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                          Send Deletion Verification Link
+                        </button>
                       </div>
                     )}
-                    <button
-                      onClick={handleSendVerificationEmail}
-                      disabled={emailSending}
-                      className="px-4.5 py-2.5 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30 text-red-400 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 hover:scale-[1.01] active:scale-[0.99]"
-                    >
-                      {emailSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                      Send Deletion Verification Link
-                    </button>
                   </div>
                 )}
               </div>

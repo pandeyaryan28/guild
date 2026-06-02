@@ -11,6 +11,9 @@ import {
   sendSignInLinkToEmail as firebaseSendSignInLinkToEmail,
   isSignInWithEmailLink as firebaseIsSignInWithEmailLink,
   signInWithEmailLink as firebaseSignInWithEmailLink,
+  EmailAuthProvider,
+  reauthenticateWithCredential as firebaseReauthenticateWithCredential,
+  reauthenticateWithPopup as firebaseReauthenticateWithPopup,
   type User,
 } from 'firebase/auth';
 import { auth } from './firebase';
@@ -66,6 +69,20 @@ export function isDeletionSignInLink(url: string): boolean {
 
 export async function confirmDeletionSignInLink(email: string, url: string) {
   return firebaseSignInWithEmailLink(auth, email, url);
+}
+
+export async function reauthenticatePassword(password: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user || !user.email) throw new Error('No user is currently authenticated.');
+  const credential = EmailAuthProvider.credential(user.email, password);
+  await firebaseReauthenticateWithCredential(user, credential);
+}
+
+export async function reauthenticateGoogle(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('No user is currently authenticated.');
+  const provider = new GoogleAuthProvider();
+  await firebaseReauthenticateWithPopup(user, provider);
 }
 
 export type { User };
