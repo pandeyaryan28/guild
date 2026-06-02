@@ -63,10 +63,10 @@ function Pill({ children, className }: { children: React.ReactNode; className?: 
 }
 
 // ─── Current Plan Strip ───────────────────────────────────────────────────────
-function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, creditMonthsRemaining, currency }: {
+function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency }: {
   billing: NonNullable<ReturnType<typeof useBilling>['billing']>;
   memberCount: number; creditBalanceDisplay: number;
-  creditMonthsRemaining: number; currency: BillingCurrency;
+  currency: BillingCurrency;
 }) {
   const pricing = getPricing(currency);
   const planLabel: Record<string, string> = {
@@ -101,16 +101,10 @@ function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, creditMo
         {/* Right: key stat */}
         <div className="flex items-center gap-5 text-right">
           {billing.plan === 'credit' && (
-            <>
-              <div>
-                <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Balance</p>
-                <p className="text-sm font-bold text-foreground">{formatMoney(creditBalanceDisplay, currency)}</p>
-              </div>
-              <div>
-                <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Est. left</p>
-                <p className="text-sm font-bold text-foreground">{isFinite(creditMonthsRemaining) ? `${creditMonthsRemaining} mo` : '∞'}</p>
-              </div>
-            </>
+            <div>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Balance</p>
+              <p className="text-sm font-bold text-foreground">{formatMoney(creditBalanceDisplay, currency)}</p>
+            </div>
           )}
           {(billing.plan === 'pro_monthly' || billing.plan === 'pro_annual') && (
             <>
@@ -269,10 +263,10 @@ function PlanCard({ title, badge, price, priceSub, features, cta, ctaVariant = '
 }
 
 // ─── Credit Pack Card ─────────────────────────────────────────────────────────
-function CreditPackCard({ title, price, credited, bonusPct, months, includesBonus,
+function CreditPackCard({ title, price, credited, bonusPct, includesBonus,
   highlighted, processing, onTopUp }: {
   title: string; price: string; credited: string; bonusPct: string;
-  months: number; includesBonus?: boolean; highlighted?: boolean;
+  includesBonus?: boolean; highlighted?: boolean;
   processing: boolean; onTopUp: () => void;
 }) {
   return (
@@ -303,7 +297,7 @@ function CreditPackCard({ title, price, credited, bonusPct, months, includesBonu
 
         <ul className="space-y-1.5">
           {[
-            `~${months} months of usage`,
+            'Credits deducted per active seat',
             'Credits roll over',
             includesBonus ? '🎁 1yr HR & Accounting access' : 'Add members anytime',
           ].map(f => (
@@ -348,25 +342,37 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
 
+  // Seat configuration modal state
+  const [subscribeCycle, setSubscribeCycle] = React.useState<'monthly' | 'annual' | null>(null);
+  const [selectedSeats, setSelectedSeats] = React.useState<number>(1);
+
   const plan = billing?.plan ?? 'free';
   const seats = Math.max(memberCount, 1);
 
   const countdownStr = countdown.expired ? '' : `${countdown.days}d ${countdown.hours}h left`;
 
-  const handleSubscribe = async (c: 'monthly' | 'annual') => {
-    if (!orgId) return;
+  const handleOpenSubscribeModal = (c: 'monthly' | 'annual') => {
+    setSelectedSeats(Math.max(memberCount, 1));
+    setSubscribeCycle(c);
+  };
+
+  const confirmSubscribe = async () => {
+    if (!orgId || !subscribeCycle) return;
+    const c = subscribeCycle;
+    const seatsToBuy = selectedSeats;
+    setSubscribeCycle(null);
     setProcessing(true); setError(null);
     try {
-      const total = seats * (c === 'annual' ? pricing.annualTotal : pricing.monthly);
+      const total = seatsToBuy * (c === 'annual' ? pricing.annualTotal : pricing.monthly);
       const res = await openRazorpayCheckout({
         amountInSmallestUnit: toSmallestUnit(total, currency),
         currency, receipt: `sub_${orgId}_${Date.now()}`,
-        description: `Guild Pro ${c === 'annual' ? 'Annual' : 'Monthly'}`,
+        description: `Guild Pro ${c === 'annual' ? 'Annual' : 'Monthly'} (${seatsToBuy} seats)`,
         userName: profile.fullName, userEmail: profile.email,
       });
       await activateSubscription({
         orgId, plan: c === 'annual' ? 'pro_annual' : 'pro_monthly',
-        seats, currency,
+        seats: seatsToBuy, currency,
         razorpayPaymentId: res.razorpay_payment_id,
         razorpayOrderId: res.razorpay_order_id,
         razorpaySignature: res.razorpay_signature,
@@ -430,7 +436,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
       {billing && (
         <CurrentPlanStrip billing={billing} memberCount={memberCount}
           creditBalanceDisplay={creditBalanceDisplay}
-          creditMonthsRemaining={creditMonthsRemaining} currency={currency} />
+          currency={currency} />
       )}
 
       {/* Free seat bar */}
@@ -497,8 +503,8 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                   ? `${formatMoney(pricing.annual, currency)}/mo`
                   : `${formatMoney(pricing.monthly, currency)}/mo`}
                 priceSub={cycle === 'annual'
-                  ? `Billed ${formatMoney(pricing.annualTotal, currency)}/seat/yr`
-                  : `${formatMoney(pricing.monthly, currency)} × ${seats} = ${formatMoney(pricing.monthly * seats, currency)}/mo`}
+                  ? `Billed annually (${formatMoney(pricing.annualTotal, currency)}/seat/year)`
+                  : `Billed monthly (${formatMoney(pricing.monthly, currency)}/seat/month)`}
                 features={[
                   'Unlimited members',
                   'Unlimited storage',
@@ -509,7 +515,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 countdownLabel={cycle === 'annual' && !countdown.expired ? countdownStr : undefined}
                 cta={processing ? 'Processing…' : `Get Pro ${cycle === 'annual' ? 'Annual' : 'Monthly'}`}
                 disabled={processing || plan === (cycle === 'annual' ? 'pro_annual' : 'pro_monthly')}
-                onSelect={() => handleSubscribe(cycle)}
+                onSelect={() => handleOpenSubscribeModal(cycle)}
               />
               <PlanCard
                 title="Enterprise"
@@ -561,7 +567,6 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 price={formatMoney(pricing.creditStarterPrice, currency)}
                 credited={formatMoney(pricing.creditStarterBonus, currency)}
                 bonusPct="10% bonus"
-                months={Math.floor(pricing.creditStarterBonus / pricing.monthly / Math.max(seats, 1))}
                 processing={processing}
                 onTopUp={() => handleTopUp('starter')}
               />
@@ -571,7 +576,6 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 price={formatMoney(pricing.creditGrowthPrice, currency)}
                 credited={formatMoney(pricing.creditGrowthBonus, currency)}
                 bonusPct="20% bonus"
-                months={Math.floor(pricing.creditGrowthBonus / pricing.monthly / Math.max(seats, 1))}
                 includesBonus
                 processing={processing}
                 onTopUp={() => handleTopUp('growth')}
@@ -616,6 +620,101 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
           </div>
         )}
       </div>
+
+      {/* Seat Config Modal */}
+      <AnimatePresence>
+        {subscribeCycle && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl space-y-5"
+            >
+              <div className="space-y-1.5">
+                <h3 className="text-sm font-bold text-foreground">Configure Seats</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Select the number of seats for your organization.
+                </p>
+              </div>
+
+              {/* Seat control input */}
+              <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-muted/50 border border-border">
+                <span className="text-[11px] font-semibold text-foreground">Number of seats</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedSeats(s => Math.max(1, s - 1))}
+                    className="p-1 rounded bg-background border border-border hover:bg-muted font-bold text-xs w-6 h-6 flex items-center justify-center text-foreground cursor-pointer"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    value={selectedSeats}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      setSelectedSeats(isNaN(val) ? 1 : Math.max(1, val));
+                    }}
+                    className="w-12 text-center text-[11px] font-bold bg-background border border-border rounded py-0.5 focus:outline-none focus:border-accent text-foreground"
+                  />
+                  <button
+                    onClick={() => setSelectedSeats(s => s + 1)}
+                    className="p-1 rounded bg-background border border-border hover:bg-muted font-bold text-xs w-6 h-6 flex items-center justify-center text-foreground cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Details & Live calculation */}
+              <div className="space-y-2 text-[10px] text-muted-foreground border-t border-border pt-4">
+                <div className="flex justify-between">
+                  <span>Current organization size:</span>
+                  <span className="font-semibold text-foreground">{memberCount} member{memberCount !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Price per seat:</span>
+                  <span className="font-semibold text-foreground">
+                    {formatMoney(subscribeCycle === 'annual' ? pricing.annualTotal : pricing.monthly, currency)}
+                    {subscribeCycle === 'annual' ? '/yr' : '/mo'}
+                  </span>
+                </div>
+                <div className="flex justify-between text-[11px] font-bold text-foreground border-t border-border/50 pt-2">
+                  <span>Total amount:</span>
+                  <span className="text-accent" style={{ color: 'var(--accent)' }}>
+                    {formatMoney(
+                      selectedSeats * (subscribeCycle === 'annual' ? pricing.annualTotal : pricing.monthly),
+                      currency
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSubscribeCycle(null)}
+                  className="flex-1 py-2 rounded-xl text-[11px] font-bold border border-border text-foreground hover:bg-muted cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmSubscribe}
+                  className="flex-1 py-2 rounded-xl text-[11px] font-bold bg-accent text-accent-foreground hover:opacity-90 flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  Pay Now <ArrowRight className="h-3 w-3" />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Processing overlay */}
       <AnimatePresence>
