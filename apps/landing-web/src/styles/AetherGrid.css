@@ -1,0 +1,191 @@
+/**
+ * Aether Grid Design System Tokens & Global Styles (Trigger Vercel Deploy)
+ * Pure custom Vanilla CSS implementation for the Aether Grid theme.
+ */
+
+:root {
+  /* Visual Tokens (Dynamically mapped to active theme colors) */
+  --aether-radius: 24px;
+  
+  --aether-bg: var(--bg-primary);
+  --aether-bg-gradient: radial-gradient(circle at top left, oklch(from var(--bg-primary) calc(l - 0.01) calc(c + 0.005) h) 0%, var(--bg-primary) 40%, oklch(from var(--bg-secondary) calc(l - 0.02) calc(c + 0.01) h) 100%);
+  
+  /* Satin Milk Glass (Light Theme default) */
+  --aether-glass-bg: oklch(from var(--bg-primary) calc(l - 0.015) c h / 45%);
+  --aether-glass-border: oklch(from var(--accent) 0.88 0.02 h / 15%);
+  --aether-glass-border-inner: oklch(1 0 0 / 22%);
+  --aether-glass-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02), 
+                         0 12px 36px -4px oklch(from var(--accent) 0.15 0.02 h / 8%),
+                         inset 0 1px 0 0 var(--aether-glass-border-inner);
+  
+  --aether-text-primary: var(--text-primary);
+  --aether-text-secondary: var(--text-secondary);
+  --aether-text-muted: var(--text-muted);
+  
+  --aether-primary: var(--accent); 
+  --aether-primary-glow: oklch(from var(--accent) l c h / 18%);
+  --aether-secondary: oklch(from var(--accent) calc(l + 0.08) calc(c - 0.04) calc(h + 35)); 
+  
+  /* Status Halos - Fine Glowing Halos for Active/Busy */
+  --aether-halo-active: oklch(0.74 0.16 142); 
+  --aether-halo-away: oklch(0.78 0.14 68); 
+  --aether-halo-busy: oklch(0.64 0.18 28); 
+  --aether-halo-offline: oklch(0.62 0.02 260); 
+  
+  --aether-success: oklch(0.70 0.15 142);
+  --aether-warning: oklch(0.80 0.13 68);
+  --aether-danger: oklch(0.64 0.18 28);
+}
+
+.dark {
+  /* Frosted Tinted Satin Glass (Dark Theme - clean, vibrant, high-contrast) */
+  --aether-glass-bg: oklch(from var(--accent) 0.98 0.02 h / 11%);
+  --aether-glass-border: oklch(from var(--accent) 0.96 0.04 h / 16%);
+  --aether-glass-border-inner: oklch(1 0 0 / 18%);
+  --aether-glass-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.18), 
+                         0 20px 48px -8px oklch(0 0 0 / 35%),
+                         inset 0 1px 0 0 var(--aether-glass-border-inner);
+}
+
+/* Base Body Application */
+.aether-app-container {
+  min-height: 100vh;
+  background: var(--aether-bg-gradient);
+  color: var(--aether-text-primary);
+  font-family: 'Geist Variable', 'Inter', sans-serif;
+  overflow-x: hidden;
+  position: relative;
+  transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Ambient Moving Aurora Mesh Background - Multi-orb dynamic nebula */
+.aether-aurora {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  filter: blur(150px);
+  opacity: 0.88;
+  background: 
+    radial-gradient(circle at 75% 20%, oklch(0.62 0.22 280 / 18%), transparent 60%),
+    radial-gradient(circle at 20% 80%, oklch(0.55 0.18 160 / 15%), transparent 60%),
+    radial-gradient(circle at 50% 50%, oklch(from var(--aether-primary) l c h / 6%), transparent 65%);
+}
+
+.aether-aurora::before,
+.aether-aurora::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+}
+
+.dark .aether-aurora::before,
+.dark .aether-aurora::after {
+  mix-blend-mode: plus-lighter;
+}
+
+.aether-aurora::before {
+  width: 75vw;
+  height: 75vw;
+  background: radial-gradient(circle, oklch(from var(--aether-primary) 0.58 0.24 h / 28%) 0%, transparent 70%);
+  top: -25%;
+  left: -20%;
+  animation: aurora-float-1 32s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
+}
+
+.aether-aurora::after {
+  width: 70vw;
+  height: 70vw;
+  background: radial-gradient(circle, oklch(from var(--aether-secondary) 0.55 0.18 h / 24%) 0%, transparent 70%);
+  bottom: -25%;
+  right: -20%;
+  animation: aurora-float-2 26s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
+}
+
+@keyframes aurora-float-1 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(6vw, 5vh) scale(1.08) rotate(45deg); }
+  100% { transform: translate(-3vw, -3vh) scale(0.96) rotate(90deg); }
+}
+
+@keyframes aurora-float-2 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(-5vw, -6vh) scale(0.97) rotate(-45deg); }
+  100% { transform: translate(3vw, 3vh) scale(1.06) rotate(-90deg); }
+}
+
+/* Custom Glassmorphic Panels - Premium frosted glass */
+.aether-glass {
+  background: var(--aether-glass-bg);
+  backdrop-filter: blur(32px) saturate(1.8) contrast(1.01);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8) contrast(1.01);
+  border: 1px solid var(--aether-glass-border);
+  border-radius: var(--aether-radius);
+  box-shadow: var(--aether-glass-shadow);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  will-change: backdrop-filter, transform;
+}
+.dark .aether-glass {
+  backdrop-filter: blur(36px) saturate(2.0) contrast(1.03);
+  -webkit-backdrop-filter: blur(36px) saturate(2.0) contrast(1.03);
+}
+
+/* Elevated Glass (Popovers, Dialogs, Dropdowns - ensuring 100% legibility) */
+.aether-glass-elevated {
+  background: oklch(from var(--bg-primary) calc(l - 0.01) c h / 86%);
+  backdrop-filter: blur(44px) saturate(1.9) contrast(1.01);
+  -webkit-backdrop-filter: blur(44px) saturate(1.9) contrast(1.01);
+  border: 1px solid oklch(from var(--accent) 0.95 0.03 h / 20%);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04),
+              0 24px 72px -10px rgba(0, 0, 0, 0.08),
+              inset 0 1px 0 0 oklch(1 0 0 / 28%);
+  border-radius: calc(var(--aether-radius) * 0.85);
+  will-change: backdrop-filter, transform;
+}
+
+/* Hover-Elevated Interactive Glass Cards - Premium spring feeling */
+.aether-glass-interactive {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+.aether-glass-interactive:hover {
+  transform: translateY(-4px) scale(1.01);
+  background: oklch(from var(--bg-primary) calc(l - 0.015) c h / 55%);
+  box-shadow: 0 20px 48px -6px oklch(from var(--accent) 0.15 0.02 h / 12%),
+              0 1px 2px 0 rgba(0, 0, 0, 0.02),
+              inset 0 1px 0 0 oklch(1 0 0 / 26%);
+  border-color: oklch(from var(--accent) 0.88 0.03 h / 26%);
+}
+.aether-glass-interactive:active {
+  transform: translateY(-0.5px) scale(0.99);
+  transition-duration: 80ms;
+}
+
+/* Translucent Glass Inputs */
+.aether-glass-input {
+  background: oklch(from var(--bg-primary) calc(l - 0.015) c h / 40%);
+  border: 1px solid oklch(from var(--text-primary) l c h / 10%);
+  border-radius: 14px;
+  color: var(--text-primary);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 1px 0 oklch(0 0 0 / 2%);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: border-color, box-shadow, background-color;
+}
+.aether-glass-input:focus {
+  background: oklch(from var(--bg-primary) calc(l - 0.01) c h / 65%);
+  border-color: oklch(from var(--accent) l c h / 65%);
+  box-shadow: 0 0 0 3px oklch(from var(--accent) l c h / 15%),
+              inset 0 1px 1px 0 oklch(0 0 0 / 2%);
+  outline: none;
+}
