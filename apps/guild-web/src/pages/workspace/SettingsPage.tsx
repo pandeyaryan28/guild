@@ -1454,7 +1454,11 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
       setEmailSent(true);
     } catch (err: any) {
       console.error('Failed to send verification email:', err);
-      setEmailSendError(err.message || 'Failed to send secure verification link. Please check your network and try again.');
+      if (err.code === 'auth/operation-not-allowed' || err.message?.includes('operation-not-allowed')) {
+        setEmailSendError("Passwordless sign-in is not enabled in your Firebase project. To enable it, please go to your Firebase Console > Authentication > Sign-in method, edit 'Email/Password', enable 'Email link (passwordless sign-in)', and click Save.");
+      } else {
+        setEmailSendError(err.message || 'Failed to send secure verification link. Please check your network and try again.');
+      }
     } finally {
       setEmailSending(false);
     }
