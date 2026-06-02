@@ -21,7 +21,11 @@ import {
   Workflow,
   Gift,
   Wallet,
-  Star
+  Star,
+  Settings,
+  Eye,
+  Target,
+  Folder
 } from 'lucide-react';
 
 export function LandingPage() {
@@ -228,170 +232,157 @@ export function LandingPage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────────────────────
-         THE CHAOS VS GUILD (PROBLEM / SOLUTION)
+         THE SOLUTIONS & CORE VALUE (SIMPLE & VISUAL)
       ───────────────────────────────────────────────────────────────────────────── */}
       <section id="solutions" className="py-20 px-6 max-w-[1200px] mx-auto scroll-mt-20">
-        <div className="text-center max-w-[700px] mx-auto mb-16">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-[750px] mx-auto mb-16">
           <h2 className="text-2xl md:text-3.5xl font-black text-text-primary tracking-tight uppercase">
-            Operational Chaos vs. Unified Control
+            Simple Operations. Zero Noise.
           </h2>
-          <p className="text-xs text-text-secondary mt-3 font-medium">
-            Most teams coordinate through a mess of disconnected chats, tasks, and file storage. GuildHQ is the simple solution that keeps everyone aligned.
+          <p className="text-xs text-text-secondary mt-3 font-semibold leading-relaxed">
+            Stop switching between WhatsApp group chats, Excel spreadsheets, and email request trails. GuildHQ brings your daily team operations under one roof.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-[960px] mx-auto">
-          {/* The Noise (Red Theme Glass Card) */}
-          <div className="aether-glass border-red-200/50 bg-red-50/5 p-8 relative overflow-hidden rounded-[24px]">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-full filter blur-xl pointer-events-none" />
-            <h3 className="text-md font-bold text-red-600 uppercase tracking-wider mb-5 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-red-500" />
-              The Old Way (Operational Noise)
+        {/* 4 Core Features Grid */}
+        <div className="mb-20">
+          <div className="flex items-center gap-2 mb-6">
+            <span className="h-[1px] bg-border-default/60 flex-grow" />
+            <h3 className="text-[10px] font-black uppercase text-text-muted tracking-widest px-3">
+              The 4 Core Platform Features
             </h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 text-[10px] font-black text-red-600">✕</span>
-                <span className="text-xs text-text-secondary font-medium mt-0.5">WhatsApp group chats filled with lost task reminders.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 text-[10px] font-black text-red-600">✕</span>
-                <span className="text-xs text-text-secondary font-medium mt-0.5">Spreadsheets out-of-date before the week even starts.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 text-[10px] font-black text-red-600">✕</span>
-                <span className="text-xs text-text-secondary font-medium mt-0.5">Approvals stuck in inbox archives or informal verbal nods.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 text-[10px] font-black text-red-600">✕</span>
-                <span className="text-xs text-text-secondary font-medium mt-0.5">Zero workspace visibility for leadership, leading to micromanagement.</span>
-              </li>
-            </ul>
+            <span className="h-[1px] bg-border-default/60 flex-grow" />
           </div>
 
-          {/* The Sync (Indigo Theme Glass Card) */}
-          <div className="aether-glass border-indigo-200/50 bg-indigo-50/5 p-8 relative overflow-hidden rounded-[24px]">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full filter blur-xl pointer-events-none" />
-            <h3 className="text-md font-bold text-indigo-600 uppercase tracking-wider mb-5 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-indigo-500" />
-              The Guild HQ Standard (Workspace Sync)
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            {/* Feature 1: Chat */}
+            <div className="aether-glass p-6 flex flex-col h-full rounded-[24px]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600 mb-5">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <h4 className="text-xs font-black text-text-primary uppercase tracking-wider mb-2">1. Team Chat</h4>
+              <p className="text-[11px] text-text-secondary leading-relaxed font-medium">
+                Simple channels and direct messages for work talk. Attach files and create tasks directly from chats to keep context intact.
+              </p>
+            </div>
+
+            {/* Feature 2: Tasks */}
+            <div className="aether-glass p-6 flex flex-col h-full rounded-[24px]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 mb-5">
+                <CheckSquare className="h-5 w-5" />
+              </div>
+              <h4 className="text-xs font-black text-text-primary uppercase tracking-wider mb-2">2. Task Management</h4>
+              <p className="text-[11px] text-text-secondary leading-relaxed font-medium">
+                Kanban boards showing who is doing what. Set due dates, assign owners, prioritize tasks, and write comments without complexity.
+              </p>
+            </div>
+
+            {/* Feature 3: Approvals */}
+            <div className="aether-glass p-6 flex flex-col h-full rounded-[24px]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-100 text-cyan-600 mb-5">
+                <FileCheck className="h-5 w-5" />
+              </div>
+              <h4 className="text-xs font-black text-text-primary uppercase tracking-wider mb-2">3. Requests & Approvals</h4>
+              <p className="text-[11px] text-text-secondary leading-relaxed font-medium">
+                Standardized forms for leave, expenses, and operational orders. Submit requests in seconds and let managers approve with one click.
+              </p>
+            </div>
+
+            {/* Feature 4: File Hub */}
+            <div className="aether-glass p-6 flex flex-col h-full rounded-[24px]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 mb-5">
+                <Folder className="h-5 w-5" />
+              </div>
+              <h4 className="text-xs font-black text-text-primary uppercase tracking-wider mb-2">4. Shared File Hub</h4>
+              <p className="text-[11px] text-text-secondary leading-relaxed font-medium">
+                A central home for team files. Upload PDFs, sheets, or mockups, view basic file previews, and search shared files instantly.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Strategic business benefits (Owner Visibility, Employee Focus Boost, Admin Control) */}
+        <div className="mb-24">
+          <div className="flex items-center gap-2 mb-6">
+            <span className="h-[1px] bg-border-default/60 flex-grow" />
+            <h3 className="text-[10px] font-black uppercase text-text-muted tracking-widest px-3">
+              How GuildHQ Boosts Your Business
             </h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-black text-indigo-600">✓</span>
-                <span className="text-xs text-text-secondary font-medium mt-0.5">Structured, topic-based chat linked directly to task execution.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-black text-indigo-600">✓</span>
-                <span className="text-xs text-text-secondary font-medium mt-0.5">Clean visual Kanban boards showing active assignments, status, and deadlines.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-black text-indigo-600">✓</span>
-                <span className="text-xs text-text-secondary font-medium mt-0.5">One-click request submissions for leaves, purchases, and admin reviews.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-black text-indigo-600">✓</span>
-                <span className="text-xs text-text-secondary font-medium mt-0.5">A single operational dashboard widget view showing all updates in real-time.</span>
-              </li>
-            </ul>
+            <span className="h-[1px] bg-border-default/60 flex-grow" />
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            
+            {/* Owner Visibility */}
+            <div className="aether-glass border border-indigo-100 bg-indigo-50/[0.02] p-8 flex flex-col h-full rounded-[24px]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500 text-white mb-6 shadow-md shadow-indigo-500/25">
+                <Eye className="h-4.5 w-4.5" />
+              </div>
+              <h4 className="text-sm font-extrabold text-text-primary uppercase tracking-wider mb-2.5">
+                Enhanced Owner Visibility
+              </h4>
+              <p className="text-xs text-text-secondary leading-relaxed font-medium">
+                Get a clear view of your company operations from one dashboard. Know exactly which tasks are overdue, which purchases are pending approval, and what your teams are discussing in real-time. No more asking "what's the update?"
+              </p>
+            </div>
+
+            {/* Employee Focus Boost */}
+            <div className="aether-glass border border-violet-100 bg-violet-50/[0.02] p-8 flex flex-col h-full rounded-[24px]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500 text-white mb-6 shadow-md shadow-violet-500/25">
+                <Target className="h-4.5 w-4.5" />
+              </div>
+              <h4 className="text-sm font-extrabold text-text-primary uppercase tracking-wider mb-2.5">
+                Subconscious Focus Boost
+              </h4>
+              <p className="text-xs text-text-secondary leading-relaxed font-medium">
+                Constant context-switching drains productivity. By combining chats, tasks, and request tools into a single workspace, employees maintain an uninterrupted state of focus. Clear ownership and visibility naturally boost subconscious accountability.
+              </p>
+            </div>
+
+            {/* Central Admin Panel */}
+            <div className="aether-glass border border-cyan-100 bg-cyan-50/[0.02] p-8 flex flex-col h-full rounded-[24px]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500 text-white mb-6 shadow-md shadow-cyan-500/25">
+                <Settings className="h-4.5 w-4.5" />
+              </div>
+              <h4 className="text-sm font-extrabold text-text-primary uppercase tracking-wider mb-2.5">
+                Unified Admin Control
+              </h4>
+              <p className="text-xs text-text-secondary leading-relaxed font-medium">
+                Keep operations organized as your team scales. Setup user roles, create custom departments, manage team workspace scopes, review activity audit trails, and maintain strict access boundaries from a simple settings pane.
+              </p>
+            </div>
+
           </div>
         </div>
-      </section>
 
-      {/* ─────────────────────────────────────────────────────────────────────────────
-         CORE FEATURES
-      ───────────────────────────────────────────────────────────────────────────── */}
-      <section id="features" className="py-20 px-6 max-w-[1200px] mx-auto scroll-mt-20">
-        <div className="text-center max-w-[700px] mx-auto mb-16">
-          <h2 className="text-2xl md:text-3.5xl font-black text-text-primary tracking-tight uppercase">
-            Four pillars of Operational execution
-          </h2>
-          <p className="text-xs text-text-secondary mt-3 font-medium">
-            Everything your team needs to invite, collaborate, track, and approve. Built lightweight so your team actually adopts it.
-          </p>
-        </div>
-
-        {/* Feature Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* ─────────────────────────────────────────────────────────────────────────────
+           FEATURE SHOWCASES & DEEP DIVES
+        ───────────────────────────────────────────────────────────────────────────── */}
+        <div id="features" className="space-y-24 max-w-[1000px] mx-auto scroll-mt-20">
           
-          {/* Feature 1: Chat */}
-          <div className="aether-glass aether-glass-interactive p-6 flex flex-col h-full rounded-[24px]">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-100 text-violet-600 mb-5">
-              <MessageSquare className="h-5 w-5" />
-            </div>
-            <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-2">Team Communication</h3>
-            <p className="text-xs text-text-secondary leading-relaxed font-medium mb-4 flex-grow">
-              Topic-focused channels and direct messaging designed specifically to discuss ongoing team activities. Support attachments and references.
-            </p>
-            <div className="text-[10px] font-bold text-violet-600 tracking-wider uppercase mt-auto flex items-center gap-1">
-              Async-first messaging
-            </div>
-          </div>
-
-          {/* Feature 2: Tasks */}
-          <div className="aether-glass aether-glass-interactive p-6 flex flex-col h-full rounded-[24px]">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 mb-5">
-              <CheckSquare className="h-5 w-5" />
-            </div>
-            <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-2">Task Management</h3>
-            <p className="text-xs text-text-secondary leading-relaxed font-medium mb-4 flex-grow">
-              Simple Kanban boards to assign tasks, set due dates, prioritize work, and record progress. Minimalistic workflow, no sprint bloat.
-            </p>
-            <div className="text-[10px] font-bold text-indigo-600 tracking-wider uppercase mt-auto flex items-center gap-1">
-              Kanban visual flow
-            </div>
-          </div>
-
-          {/* Feature 3: Approvals */}
-          <div className="aether-glass aether-glass-interactive p-6 flex flex-col h-full rounded-[24px]">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-100 text-cyan-600 mb-5">
-              <FileCheck className="h-5 w-5" />
-            </div>
-            <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-2">Requests & Approvals</h3>
-            <p className="text-xs text-text-secondary leading-relaxed font-medium mb-4 flex-grow">
-              Submit structured requests for expenses, leave, or operational needs. Managers can sign-off instantly, keeping history transparent.
-            </p>
-            <div className="text-[10px] font-bold text-cyan-600 tracking-wider uppercase mt-auto flex items-center gap-1">
-              Structured approvals
-            </div>
-          </div>
-
-          {/* Feature 4: Dashboard */}
-          <div className="aether-glass aether-glass-interactive p-6 flex flex-col h-full rounded-[24px]">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 mb-5">
-              <LayoutDashboard className="h-5 w-5" />
-            </div>
-            <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-2">Operations Dashboard</h3>
-            <p className="text-xs text-text-secondary leading-relaxed font-medium mb-4 flex-grow">
-              A centralized widget dashboard showing your assigned tasks, pending approvals, recent chats, and workspace-wide activity feed.
-            </p>
-            <div className="text-[10px] font-bold text-emerald-600 tracking-wider uppercase mt-auto flex items-center gap-1">
-              Unified workspace view
-            </div>
-          </div>
-        </div>
-
-        {/* Large Features Deep Dive (Two Column Showcases) */}
-        <div className="mt-20 space-y-24 max-w-[1000px] mx-auto">
-          
-          {/* Deep Dive 1: Approvals focus */}
+          {/* Showcase 1: Request approvals (with generated image) */}
           <div className="grid md:grid-cols-2 gap-10 items-center">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2.5 py-1 rounded-md">
                 <Workflow className="h-3 w-3" />
-                Operational Requests
+                Streamlined Approvals
               </div>
               <h3 className="text-xl md:text-2xl font-black text-text-primary uppercase tracking-tight">
-                Get purchase & leave approvals in seconds, not days
+                Submit leaves and purchase orders in 10 seconds
               </h3>
               <p className="text-xs text-text-secondary leading-relaxed font-medium">
-                No more sending emails or WhatsApp pings requesting budget sign-off. GuildHQ provides simple, structured request templates. Submit budget items, leave requests, or general approvals with context, and tracking statuses automatically.
+                Say goodbye to email folders and spreadsheet records. Employees can submit structured requests with amounts, reasons, and files. Managers receive immediate notifications and can approve or decline instantly, logging the transaction automatically.
               </p>
               <div className="pt-2">
                 <a 
                   href={`${APP_URL}/signup`} 
                   className="inline-flex items-center gap-2 text-xs font-black text-indigo-600 hover:text-indigo-500 hover:translate-x-1 transition-all"
                 >
-                  Create first request
+                  Start free workspace
                   <ArrowRight className="h-4.5 w-4.5" />
                 </a>
               </div>
@@ -406,37 +397,37 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* Deep Dive 2: Chat & Task Sync */}
+          {/* Showcase 2: Chat-to-Task Sync (CSS Rendered Chat Flow) */}
           <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div className="order-2 md:order-1 aether-glass p-6 bg-slate-50/30 border-slate-100 shadow-xl rounded-[24px] space-y-4">
+            <div className="order-2 md:order-1 aether-glass p-6 bg-slate-50/30 border-slate-100 shadow-xl rounded-[24px] space-y-4 select-none">
               <div className="flex items-center justify-between border-b border-border-default/60 pb-3">
                 <span className="text-xs font-bold text-text-secondary flex items-center gap-1.5">
                   <MessageSquare className="h-3.5 w-3.5 text-violet-500" />
-                  #marketing-assets
+                  #ops-dispatch
                 </span>
                 <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
               </div>
               
               <div className="space-y-3.5">
                 <div className="flex gap-2.5 items-start">
-                  <div className="h-7 w-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">A</div>
+                  <div className="h-7 w-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">K</div>
                   <div className="bg-white/80 p-3 rounded-2xl rounded-tl-none border border-indigo-50 shadow-sm max-w-[85%]">
-                    <p className="text-xs text-text-secondary font-medium leading-relaxed">
-                      Hey team, can someone create the new social banner graphics for tomorrow?
+                    <p className="text-[11px] text-text-secondary font-medium leading-relaxed">
+                      We need to inspect the dispatch inventory count before shipping the packages.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex gap-2.5 items-start">
-                  <div className="h-7 w-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">B</div>
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">R</div>
                   <div className="bg-white/80 p-3 rounded-2xl rounded-tl-none border border-emerald-50 shadow-sm max-w-[85%]">
-                    <p className="text-xs text-text-secondary font-medium leading-relaxed mb-2">
-                      I got this. I'll create a task so we can track the completion path.
+                    <p className="text-[11px] text-text-secondary font-medium leading-relaxed mb-2">
+                      Understood. I will spin off a checklist task right here so it doesn't get lost.
                     </p>
                     <div className="aether-glass bg-emerald-50/10 border-emerald-100 p-2.5 rounded-xl flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2">
-                        <CheckSquare className="h-3.5 w-3.5 text-emerald-600" />
-                        <span className="text-[10px] font-bold text-text-primary uppercase">Social Banners</span>
+                        <CheckSquare className="h-3.5 w-3.5 text-emerald-600 animate-pulse" />
+                        <span className="text-[9px] font-bold text-text-primary uppercase">Inventory Audit</span>
                       </div>
                       <span className="text-[8px] font-black uppercase text-white bg-emerald-600 px-2 py-0.5 rounded">Created</span>
                     </div>
@@ -448,108 +439,89 @@ export function LandingPage() {
             <div className="order-1 md:order-2 space-y-4">
               <div className="inline-flex items-center gap-1 text-[10px] font-bold text-violet-600 uppercase tracking-widest bg-violet-50 px-2.5 py-1 rounded-md">
                 <TrendingUp className="h-3 w-3" />
-                Execution Context
+                Actionable Conversations
               </div>
               <h3 className="text-xl md:text-2xl font-black text-text-primary uppercase tracking-tight">
-                Turn channel discussions into tracked tasks instantly
+                Turn chats into tracked tasks instantly
               </h3>
               <p className="text-xs text-text-secondary leading-relaxed font-medium">
-                Don't lose work in active chats. GuildHQ lets you spin off task objects straight from channels. Keep conversations linked with task cards so owners always have the full contextual backdrop they need to execute.
+                Work conversations can easily get buried under hundreds of messages. GuildHQ lets you convert messages directly into task cards. Assign an owner, set a deadline, and keep the task linked to the chat thread so the full context is preserved.
               </p>
               <div className="pt-2">
                 <a 
                   href={`${APP_URL}/signup`} 
                   className="inline-flex items-center gap-2 text-xs font-black text-violet-600 hover:text-violet-500 hover:translate-x-1 transition-all"
                 >
-                  Create workspace channel
+                  Create tasks from chat
                   <ArrowRight className="h-4.5 w-4.5" />
                 </a>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ─────────────────────────────────────────────────────────────────────────────
-         SOLUTIONS & AUDIENCES
-      ───────────────────────────────────────────────────────────────────────────── */}
-      <section id="solutions-deep" className="py-20 px-6 bg-slate-50/5 border-y border-border-default/50">
-        <div className="max-w-[1200px] mx-auto">
-          <div className="text-center max-w-[700px] mx-auto mb-16">
-            <h2 className="text-2xl md:text-3.5xl font-black text-text-primary tracking-tight uppercase">
-              Designed for companies that coordinate daily
-            </h2>
-            <p className="text-xs text-text-secondary mt-3 font-medium">
-              We help SMB companies remove the friction of disorganized manual follow-ups.
-            </p>
+          {/* Showcase 3: CSS-rendered Admin Panel Mockup */}
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-1 text-[10px] font-bold text-cyan-600 uppercase tracking-widest bg-cyan-50 px-2.5 py-1 rounded-md">
+                <Settings className="h-3 w-3" />
+                Admin Dashboard
+              </div>
+              <h3 className="text-xl md:text-2xl font-black text-text-primary uppercase tracking-tight">
+                Centralized user management & role control
+              </h3>
+              <p className="text-xs text-text-secondary leading-relaxed font-medium">
+                Keep security tight. The GuildHQ Admin panel allows workspace owners to invite members, deactivate accounts, assign departments, and configure system permissions. Maintain clear operational borders without complex configurations.
+              </p>
+              <div className="pt-2">
+                <a 
+                  href={`${APP_URL}/signup`} 
+                  className="inline-flex items-center gap-2 text-xs font-black text-cyan-600 hover:text-cyan-500 hover:translate-x-1 transition-all"
+                >
+                  Open admin console
+                  <ArrowRight className="h-4.5 w-4.5" />
+                </a>
+              </div>
+            </div>
+
+            <div className="aether-glass p-5 bg-cyan-50/20 border-cyan-100 shadow-xl rounded-[24px] space-y-4 select-none">
+              <div className="flex items-center justify-between border-b border-border-default/60 pb-3">
+                <span className="text-xs font-bold text-text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5 text-cyan-500" />
+                  Workspace Members
+                </span>
+                <span className="text-[9px] font-black uppercase text-cyan-600 bg-cyan-50 border border-cyan-100 px-2 py-0.5 rounded">
+                  Admin Active
+                </span>
+              </div>
+
+              {/* User row mockup */}
+              <div className="space-y-2">
+                {[
+                  { name: "Aryan Pandey", role: "Owner", dept: "Operations" },
+                  { name: "Rahul Sharma", role: "Manager", dept: "Logistics" },
+                  { name: "Aarav Gupta", role: "Member", dept: "Marketing" }
+                ].map((user, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-white/70 border border-border-default/40 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-7 w-7 rounded-full bg-cyan-500 text-white font-black text-[10px] flex items-center justify-center">
+                        {user.name.split(' ').map(n=>n[0]).join('')}
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-text-primary text-[11px]">{user.name}</p>
+                        <p className="text-[9px] text-text-muted mt-0.5 font-medium">{user.dept}</p>
+                      </div>
+                    </div>
+                    <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase ${
+                      user.role === 'Owner' ? 'bg-indigo-500 text-white' : user.role === 'Manager' ? 'bg-violet-500 text-white' : 'bg-slate-100 text-text-secondary'
+                    }`}>
+                      {user.role}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            
-            {/* Startup Teams */}
-            <div className="aether-glass p-8 relative overflow-hidden flex flex-col h-full rounded-[24px]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500 text-white font-black text-xs mb-6 shadow-md shadow-indigo-500/25">
-                01
-              </div>
-              <h3 className="text-sm font-extrabold text-text-primary uppercase tracking-wider mb-2">Startup Teams</h3>
-              <p className="text-xs text-text-secondary leading-relaxed font-medium mb-6 flex-grow">
-                Launch fast, coordinate marketing and product actions, request budget sign-offs, and maintain a shared history as you scale from 10 to 100 members.
-              </p>
-              <ul className="space-y-2.5 mt-auto">
-                <li className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                  <Check className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-                  Velocity monitoring
-                </li>
-                <li className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                  <Check className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-                  Budget sign-offs
-                </li>
-              </ul>
-            </div>
-
-            {/* Agencies */}
-            <div className="aether-glass p-8 relative overflow-hidden flex flex-col h-full rounded-[24px]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500 text-white font-black text-xs mb-6 shadow-md shadow-violet-500/25">
-                02
-              </div>
-              <h3 className="text-sm font-extrabold text-text-primary uppercase tracking-wider mb-2">Marketing & Design Agencies</h3>
-              <p className="text-xs text-text-secondary leading-relaxed font-medium mb-6 flex-grow">
-                Coordinate deliverables on client projects, handle team communication, upload asset packages, and approve sub-contractor expenses instantly.
-              </p>
-              <ul className="space-y-2.5 mt-auto">
-                <li className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                  <Check className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-                  Client project tasks
-                </li>
-                <li className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                  <Check className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-                  Billing request trails
-                </li>
-              </ul>
-            </div>
-
-            {/* Logistics & Admin */}
-            <div className="aether-glass p-8 relative overflow-hidden flex flex-col h-full rounded-[24px]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500 text-white font-black text-xs mb-6 shadow-md shadow-cyan-500/25">
-                03
-              </div>
-              <h3 className="text-sm font-extrabold text-text-primary uppercase tracking-wider mb-2">Logistics & Operations</h3>
-              <p className="text-xs text-text-secondary leading-relaxed font-medium mb-6 flex-grow">
-                Keep dispatches organized, coordinate office and field support, submit operational supply purchase sheets, and track task completions in real-time.
-              </p>
-              <ul className="space-y-2.5 mt-auto">
-                <li className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                  <Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" />
-                  Real-time activity dispatch
-                </li>
-                <li className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                  <Check className="h-3.5 w-3.5 text-cyan-500 shrink-0" />
-                  Office supply requests
-                </li>
-              </ul>
-            </div>
-
-          </div>
         </div>
       </section>
 
