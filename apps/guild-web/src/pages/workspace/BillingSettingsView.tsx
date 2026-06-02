@@ -142,7 +142,7 @@ function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency
       {billing.annualBonusActivated && (
         <div className="mt-3 flex items-center gap-2 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
           <Gift className="h-3 w-3 shrink-0" />
-          Guild HR & Accounting — 1 yr free access included
+          Guild HR & Accounting (Upcoming) — 1 yr free access included
         </div>
       )}
     </Card>
@@ -299,7 +299,7 @@ function CreditPackCard({ title, price, credited, bonusPct, includesBonus,
           {[
             'Credits deducted per active seat',
             'Credits roll over',
-            includesBonus ? '🎁 1yr HR & Accounting access' : 'Add members anytime',
+            includesBonus ? '🎁 1yr free access to upcoming HR & Accounting' : 'Add members anytime',
           ].map(f => (
             <li key={f} className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" /> {f}
@@ -349,7 +349,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
   const plan = billing?.plan ?? 'free';
   const seats = Math.max(memberCount, 1);
 
-  const countdownStr = countdown.expired ? '' : `${countdown.days}d ${countdown.hours}h left`;
+  const countdownStr = countdown.expired ? '' : 'Limited time offer';
 
   const handleOpenSubscribeModal = (c: 'monthly' | 'annual') => {
     setSelectedSeats(Math.max(memberCount, 1));
@@ -413,7 +413,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 transform-gpu backface-hidden" style={{ transform: 'translate3d(0,0,0)', backfaceVisibility: 'hidden' }}>
       {/* Toast */}
       <AnimatePresence>
         {success && (
@@ -509,9 +509,9 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                   'Unlimited members',
                   'Unlimited storage',
                   'Priority support',
-                  ...(cycle === 'annual' ? ['🎁 1yr HR & Accounting access'] : []),
+                  ...(cycle === 'annual' ? ['🎁 1yr free access to upcoming HR & Accounting'] : []),
                 ]}
-                bonus={cycle === 'annual' ? '1 yr free HR & Accounting' : undefined}
+                bonus={cycle === 'annual' ? '1 yr free access to upcoming HR & Accounting' : undefined}
                 countdownLabel={cycle === 'annual' && !countdown.expired ? countdownStr : undefined}
                 cta={processing ? 'Processing…' : `Get Pro ${cycle === 'annual' ? 'Annual' : 'Monthly'}`}
                 disabled={processing || plan === (cycle === 'annual' ? 'pro_annual' : 'pro_monthly')}
@@ -527,10 +527,6 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 onSelect={() => window.open(ENTERPRISE_CONTACT_URL, '_blank')}
               />
             </div>
-
-            <p className="text-[9px] text-muted-foreground text-center">
-              Prices in {currency === 'INR' ? 'INR (₹)' : 'USD ($)'}. UPI, cards & net banking via Razorpay.
-            </p>
           </motion.div>
         )}
 
