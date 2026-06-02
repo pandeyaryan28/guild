@@ -13,7 +13,7 @@ import { useBilling } from '../../hooks/useBilling';
 import {
   detectCurrency, getPricing, formatMoney, toSmallestUnit,
   openRazorpayCheckout, activateSubscription, activateCreditTopUp,
-  ANNUAL_OFFER_END, ENTERPRISE_CONTACT_URL, FREE_SEAT_LIMIT, FREE_STORAGE_LIMIT_MB,
+  ANNUAL_OFFER_END, ENTERPRISE_CONTACT_URL, FREE_SEAT_LIMIT,
 } from '../../lib/billing';
 import type { UserProfile, BillingCurrency } from '@guild/types';
 
@@ -155,14 +155,13 @@ function SeatBar({ memberCount }: { memberCount: number }) {
   const atLimit = memberCount >= FREE_SEAT_LIMIT;
   return (
     <Card className={atLimit ? 'border-amber-400/30 bg-amber-50/50 dark:bg-amber-500/[0.04]' : ''}>
-      <div className="flex items-center justify-between mb-2.5">
+      <div className="flex items-center mb-2.5">
         <div className="flex items-center gap-2">
           <Users className={cn('h-3.5 w-3.5', atLimit ? 'text-amber-500' : 'text-muted-foreground')} />
           <span className={cn('text-[11px] font-semibold', atLimit ? 'text-amber-600 dark:text-amber-400' : 'text-foreground')}>
             {atLimit ? 'Member limit reached' : `${memberCount} / ${FREE_SEAT_LIMIT} members`}
           </span>
         </div>
-        <span className="text-[9px] font-medium text-muted-foreground">{FREE_STORAGE_LIMIT_MB} MB storage</span>
       </div>
       <div className="h-1 w-full rounded-full bg-border overflow-hidden">
         <motion.div
@@ -299,7 +298,7 @@ function CreditPackCard({ title, price, credited, bonusPct, includesBonus,
           {[
             'Credits deducted per active seat',
             'Credits roll over',
-            includesBonus ? '🎁 1yr free access to upcoming HR & Accounting' : 'Add members anytime',
+            includesBonus ? '1yr free access to upcoming HR & Accounting' : 'Add members anytime',
           ].map(f => (
             <li key={f} className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" /> {f}
@@ -377,7 +376,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
         razorpayOrderId: res.razorpay_order_id,
         razorpaySignature: res.razorpay_signature,
       });
-      setSuccess(`You're on Pro ${c === 'annual' ? 'Annual' : 'Monthly'} 🎉`);
+      setSuccess(`You're on Pro ${c === 'annual' ? 'Annual' : 'Monthly'}`);
     } catch (e: any) {
       if (e?.message !== 'Payment cancelled') setError(e?.message ?? 'Payment failed. Try again.');
     } finally { setProcessing(false); }
@@ -400,7 +399,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
         razorpayPaymentId: res.razorpay_payment_id,
         razorpayOrderId: res.razorpay_order_id,
       });
-      setSuccess(`${formatMoney(credited, currency)} added to your wallet 🎉`);
+      setSuccess(`${formatMoney(credited, currency)} added to your wallet`);
     } catch (e: any) {
       if (e?.message !== 'Payment cancelled') setError(e?.message ?? 'Payment failed. Try again.');
     } finally { setProcessing(false); }
@@ -489,7 +488,12 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 title="Free"
                 price={currency === 'INR' ? '₹0' : '$0'}
                 priceSub="Up to 5 members"
-                features={[`${FREE_SEAT_LIMIT} seats`, `${FREE_STORAGE_LIMIT_MB} MB storage`, 'All core features']}
+                features={[
+                  `${FREE_SEAT_LIMIT} seats`,
+                  'Chat & team channels',
+                  'Task & project management',
+                  'Request management',
+                ]}
                 cta={plan === 'free' ? 'Current plan' : 'Downgrade'}
                 ctaVariant="ghost"
                 disabled={plan === 'free' || processing}
@@ -507,10 +511,12 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                   : `Billed monthly (${formatMoney(pricing.monthly, currency)}/seat/month)`}
                 features={[
                   'Scale seats as your team grows',
-                  '10 GB workspace storage',
+                  'Chat & team channels',
+                  'Task & project management',
+                  'Request management',
                   'Access to GuildHQ Admin panel',
                   'Priority support',
-                  ...(cycle === 'annual' ? ['🎁 1yr free access to upcoming HR & Accounting'] : []),
+                  ...(cycle === 'annual' ? ['1yr free access to upcoming HR & Accounting'] : []),
                 ]}
                 bonus={cycle === 'annual' ? '1 yr free access to upcoming HR & Accounting' : undefined}
                 countdownLabel={cycle === 'annual' && !countdown.expired ? countdownStr : undefined}
