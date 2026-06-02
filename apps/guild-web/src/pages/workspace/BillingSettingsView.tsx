@@ -368,13 +368,14 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
     setProcessing(true);
     setError(null);
     try {
-      const amount = packId === 'growth' ? pricing.creditGrowth : pricing.creditStarter;
+      const paidAmount = packId === 'growth' ? pricing.creditGrowthPrice : pricing.creditStarterPrice;
+      const creditedAmount = packId === 'growth' ? pricing.creditGrowthBonus : pricing.creditStarterBonus;
       const description = packId === 'growth'
         ? `Guild Credit Wallet — Growth Pack`
         : `Guild Credit Wallet — Starter Pack`;
 
       const response = await openRazorpayCheckout({
-        amountInSmallestUnit: toSmallestUnit(amount, currency),
+        amountInSmallestUnit: toSmallestUnit(paidAmount, currency),
         currency,
         receipt: `topup_${orgId}_${Date.now()}`,
         description,
@@ -390,7 +391,8 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
         razorpayOrderId: response.razorpay_order_id,
       });
 
-      setSuccessMsg(`Credits added! ${formatMoney(amount, currency)} has been added to your wallet.`);
+      const bonusPct = packId === 'growth' ? '20%' : '10%';
+      setSuccessMsg(`Credits added! You paid ${formatMoney(paidAmount, currency)} and got ${formatMoney(creditedAmount, currency)} in your wallet (+${bonusPct} bonus) 🎉`);
     } catch (err: any) {
       if (err?.message !== 'Payment cancelled') {
         setError(err?.message ?? 'Payment failed. Please try again.');
@@ -634,14 +636,20 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
               <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4 flex flex-col">
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Starter Pack</p>
-                  <p className="text-2xl font-black text-foreground">{formatMoney(pricing.creditStarter, currency)}</p>
-                  <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">One-time top-up</p>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-2xl font-black text-foreground">{formatMoney(pricing.creditStarterPrice, currency)}</p>
+                    <span className="text-[10px] text-emerald-400 font-black">+10% bonus</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">
+                    Get <span className="text-emerald-400 font-black">{formatMoney(pricing.creditStarterBonus, currency)}</span> in wallet
+                  </p>
                 </div>
                 <ul className="space-y-2 flex-1">
                   {[
-                    `~${Math.floor(pricing.creditStarter / pricing.monthly / Math.max(memberCount, 1))} months for ${Math.max(memberCount, 1)} member${Math.max(memberCount, 1) > 1 ? 's' : ''}`,
+                    `~${Math.floor(pricing.creditStarterBonus / pricing.monthly / Math.max(memberCount, 1))} months for ${Math.max(memberCount, 1)} member${Math.max(memberCount, 1) > 1 ? 's' : ''}`,
                     'Instant credit to wallet',
                     'Roll over unused credits',
+                    `Pay ${formatMoney(pricing.creditStarterPrice, currency)}, get ${formatMoney(pricing.creditStarterBonus, currency)}`,
                   ].map((f) => (
                     <li key={f} className="flex items-start gap-2 text-[10px] text-muted-foreground font-semibold">
                       <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0 mt-0.5" /> {f}
@@ -667,8 +675,13 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 </div>
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Growth Pack</p>
-                  <p className="text-2xl font-black text-foreground">{formatMoney(pricing.creditGrowth, currency)}</p>
-                  <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">One-time top-up</p>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-2xl font-black text-foreground">{formatMoney(pricing.creditGrowthPrice, currency)}</p>
+                    <span className="text-[10px] text-emerald-400 font-black">+20% bonus</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">
+                    Get <span className="text-emerald-400 font-black">{formatMoney(pricing.creditGrowthBonus, currency)}</span> in wallet
+                  </p>
                 </div>
                 <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-500/[0.08] border border-amber-500/20">
                   <Gift className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
@@ -676,9 +689,10 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 </div>
                 <ul className="space-y-2 flex-1">
                   {[
-                    `~${Math.floor(pricing.creditGrowth / pricing.monthly / Math.max(memberCount, 1))} months for ${Math.max(memberCount, 1)} member${Math.max(memberCount, 1) > 1 ? 's' : ''}`,
+                    `~${Math.floor(pricing.creditGrowthBonus / pricing.monthly / Math.max(memberCount, 1))} months for ${Math.max(memberCount, 1)} member${Math.max(memberCount, 1) > 1 ? 's' : ''}`,
                     'Instant credit to wallet',
                     'Roll over unused credits',
+                    `Pay ${formatMoney(pricing.creditGrowthPrice, currency)}, get ${formatMoney(pricing.creditGrowthBonus, currency)}`,
                     '🎁 Annual bonus included',
                   ].map((f) => (
                     <li key={f} className="flex items-start gap-2 text-[10px] text-muted-foreground font-semibold">

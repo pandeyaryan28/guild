@@ -21,8 +21,12 @@ export const PRICING = {
     monthly: 499,          // ₹ per seat per month
     annual: 249.5,         // ₹ per seat per month billed annually (50% off)
     annualTotal: 2994,     // ₹ per seat per year
-    creditStarter: 50000,  // ₹ 50,000
-    creditGrowth: 100000,  // ₹ 1,00,000
+    // What the customer pays
+    creditStarterPrice: 50000,   // ₹ 50,000 paid
+    creditGrowthPrice: 100000,   // ₹ 1,00,000 paid
+    // What they get in wallet (with markup bonus)
+    creditStarterBonus: 55000,   // ₹ 55,000 credited (10% bonus)
+    creditGrowthBonus: 120000,   // ₹ 1,20,000 credited (20% bonus)
     symbol: '₹',
     code: 'INR' as BillingCurrency,
   },
@@ -30,8 +34,12 @@ export const PRICING = {
     monthly: 8.12,         // $ per seat per month
     annual: 4.06,          // $ per seat per month billed annually (50% off)
     annualTotal: 48.72,    // $ per seat per year
-    creditStarter: 500,    // $500
-    creditGrowth: 1000,    // $1,000
+    // What the customer pays
+    creditStarterPrice: 500,     // $500 paid
+    creditGrowthPrice: 1000,     // $1,000 paid
+    // What they get in wallet (with markup bonus)
+    creditStarterBonus: 550,     // $550 credited (10% bonus)
+    creditGrowthBonus: 1200,     // $1,200 credited (20% bonus)
     symbol: '$',
     code: 'USD' as BillingCurrency,
   },
@@ -46,18 +54,26 @@ export const ENTERPRISE_CONTACT_URL =
 
 // ─── Currency Detection ────────────────────────────────────────────────────────
 
+/** India timezone identifiers — both modern and legacy system names */
+const INDIA_TIMEZONES = new Set([
+  'Asia/Kolkata',
+  'Asia/Calcutta', // legacy alias used by some OS/browsers
+  'IST',
+]);
+
 /**
- * Detect whether the user is likely in India based on timezone.
- * Falls back to USD for any non-India locale.
+ * Detect whether the user is in India based on timezone + locale.
+ * Returns INR for India, USD for everywhere else.
  */
 export function detectCurrency(): BillingCurrency {
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (tz && tz.startsWith('Asia/Kolkata')) return 'INR';
-    // Also catch navigator.language as a secondary signal
-    if (navigator.language === 'en-IN') return 'INR';
+    if (tz && INDIA_TIMEZONES.has(tz)) return 'INR';
+    // Secondary signals
+    const lang = navigator.language || '';
+    if (lang === 'en-IN' || lang.endsWith('-IN')) return 'INR';
   } catch {
-    // ignore
+    // ignore — default to USD
   }
   return 'USD';
 }
@@ -141,6 +157,14 @@ interface RazorpayOptions {
   theme?: { color?: string };
   handler: (response: RazorpayResponse) => void;
   modal?: { ondismiss?: () => void };
+  /** Explicitly enable preferred payment methods */
+  config?: {
+    display?: {
+      blocks?: Record<string, { name: string; instruments: { method: string }[] }>;
+      sequence?: string[];
+      preferences?: { show_default_blocks?: boolean };
+    };
+  };
 }
 
 interface RazorpayInstance {
@@ -228,6 +252,7 @@ export async function openRazorpayCheckout(params: {
   );
 
   return new Promise((resolve, reject) => {
+    const isINR = params.currency === 'INR';
     const rzp = new window.Razorpay({
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
       amount: params.amountInSmallestUnit,
@@ -240,6 +265,20 @@ export async function openRazorpayCheckout(params: {
         email: params.userEmail,
       },
       theme: { color: '#6366f1' },
+      // For INR: surface UPI first, then cards, netbanking, wallets
+      ...(isINR && {
+        config: {
+          display: {
+            blocks: {
+              upi: { name: 'Pay via UPI', instruments: [{ method: 'upi' }] },
+              card: { name: 'Pay via Card', instruments: [{ method: 'card' }] },
+              netbanking: { name: 'Net Banking', instruments: [{ method: 'netbanking' }] },
+            },
+            sequence: ['block.upi', 'block.card', 'block.netbanking'],
+            preferences: { show_default_blocks: false },
+          },
+        },
+      }),
       handler: async (response) => {
         const valid = await verifyRazorpayPayment(response);
         if (valid) {
@@ -322,12 +361,23 @@ export async function activateCreditTopUp(params: {
 }): Promise<void> {
   const now = serverTimestamp();
   const pricing = getPricing(params.currency);
-  const topUpAmount = params.packId === 'growth'
-    ? pricing.creditGrowth
-    : pricing.creditStarter;
-  const topUpInSmallestUnit = toSmallestUnit(topUpAmount, params.currency);
 
-  // Get current balance and add to it
+  // Amount the customer pays (used for Razorpay order)
+  const paidAmount = params.packId === 'growth'
+    ? pricing.creditGrowthPrice
+    : pricing.creditStarterPrice;
+
+  // Amount credited to wallet (with markup bonus)
+  // Starter: 10% bonus → pay ₹50k, get ₹55k
+  // Growth:  20% bonus → pay ₹1L,  get ₹1.2L
+  const creditedAmount = params.packId === 'growth'
+    ? pricing.creditGrowthBonus
+    : pricing.creditStarterBonus;
+
+  const creditedInSmallestUnit = toSmallestUnit(creditedAmount, params.currency);
+  const paidInSmallestUnit = toSmallestUnit(paidAmount, params.currency);
+
+  // Get current balance and add the bonus amount to it
   const existing = await getOrgBilling(params.orgId);
   const currentBalance = existing?.creditBalance ?? 0;
 
@@ -336,20 +386,26 @@ export async function activateCreditTopUp(params: {
     status: 'active',
     seats: 0,
     currency: params.currency,
-    creditBalance: currentBalance + topUpInSmallestUnit,
+    creditBalance: currentBalance + creditedInSmallestUnit,
     lastTopUpAt: now,
     // Annual bonus for Growth pack (₹1L / $1k)
     annualBonusActivated: params.packId === 'growth',
     updatedAt: now,
   }, { merge: true });
 
+  const bonusPct = params.packId === 'growth' ? '20%' : '10%';
+  const paidFmt = params.currency === 'INR'
+    ? (params.packId === 'growth' ? '₹1,00,000' : '₹50,000')
+    : (params.packId === 'growth' ? '$1,000' : '$500');
+  const creditedFmt = params.currency === 'INR'
+    ? (params.packId === 'growth' ? '₹1,20,000' : '₹55,000')
+    : (params.packId === 'growth' ? '$1,200' : '$550');
+
   await addDoc(transactionsRef(params.orgId), {
     id: '',
     orgId: params.orgId,
-    description: params.packId === 'growth'
-      ? `Credit Top-up — Growth Pack (${params.currency === 'INR' ? '₹1,00,000' : '$1,000'})`
-      : `Credit Top-up — Starter Pack (${params.currency === 'INR' ? '₹50,000' : '$500'})`,
-    amount: topUpInSmallestUnit,
+    description: `Credit Top-up — ${params.packId === 'growth' ? 'Growth' : 'Starter'} Pack · Paid ${paidFmt} · Credited ${creditedFmt} (+${bonusPct} bonus)`,
+    amount: paidInSmallestUnit, // record what was actually charged
     currency: params.currency,
     type: 'topup',
     status: 'success',
