@@ -45,7 +45,7 @@ export interface Organization {
   industry: string;
   companySize: string;
   ownerId: string;
-  billingPlan?: 'free' | 'premium' | 'enterprise';
+  billingPlan?: 'free' | 'pro_monthly' | 'pro_annual' | 'credit' | 'enterprise';
   createdAt: Timestamp;
   globalInviteToken?: string;
   photoURL?: string;
@@ -507,3 +507,46 @@ export const REQUEST_TYPE_ICONS: Record<RequestType, string> = {
   other:          'ClipboardList',
 };
 
+// ─── Billing ──────────────────────────────────────────────────────────────────
+
+export type BillingPlan = 'free' | 'pro_monthly' | 'pro_annual' | 'credit' | 'enterprise';
+export type BillingStatus = 'active' | 'past_due' | 'cancelled' | 'trialing';
+export type BillingCurrency = 'INR' | 'USD';
+export type CreditPackId = 'starter' | 'growth';
+
+/** Stored at organizations/{orgId}/billing (document) */
+export interface BillingInfo {
+  plan: BillingPlan;
+  status: BillingStatus;
+  /** Number of seats currently billed (for subscription plans) */
+  seats: number;
+  currency: BillingCurrency;
+  /** For subscription plans: when the next billing cycle starts */
+  nextBillingDate?: Timestamp | null;
+  /** Razorpay subscription ID (for recurring plans) */
+  razorpaySubscriptionId?: string | null;
+  /** Credit wallet balance in smallest unit (paise for INR, cents for USD) */
+  creditBalance?: number;
+  /** When credit balance was last topped up */
+  lastTopUpAt?: Timestamp | null;
+  /** Whether the annual HR & Accounting bonus has been activated */
+  annualBonusActivated?: boolean;
+  updatedAt: Timestamp;
+}
+
+/** One entry in organizations/{orgId}/billingTransactions sub-collection */
+export interface BillingTransaction {
+  id: string;
+  orgId: string;
+  /** Human-readable label */
+  description: string;
+  /** Amount in smallest unit (paise / cents) */
+  amount: number;
+  currency: BillingCurrency;
+  type: 'subscription' | 'topup' | 'deduction' | 'refund';
+  status: 'success' | 'pending' | 'failed';
+  /** Razorpay payment/order ID for traceability */
+  razorpayPaymentId?: string;
+  razorpayOrderId?: string;
+  createdAt: Timestamp;
+}

@@ -5,8 +5,9 @@ import {
   Check, Loader2, ShieldAlert, Trash2, Crown, ShieldCheck,
   UserMinus, Copy, AlertCircle, Info, Mail,
   Plus, Workflow, MessageSquare, AtSign, CheckSquare, MessagesSquare, UserPlus, Camera,
-  Download, Share2
+  Download, Share2, CreditCard
 } from 'lucide-react';
+import { BillingSettingsView } from './BillingSettingsView';
 import { createTeam, updateTeam, deleteTeam } from '../../lib/teams';
 import { useTeams } from '../../hooks/useTeams';
 import { useAuth } from '../../hooks/useAuth';
@@ -176,6 +177,7 @@ export function SettingsPage() {
       { id: 'members', label: 'Workspace Members', icon: Users, allowed: ['admin', 'owner'], group: 'workspace' },
       { id: 'teams', label: 'Teams & Org', icon: Workflow, allowed: ['admin', 'owner'], group: 'workspace' },
       { id: 'invites', label: 'Invite Links', icon: Link2, allowed: ['admin', 'owner'], group: 'workspace' },
+      { id: 'billing', label: 'Billing & Plans', icon: CreditCard, allowed: ['owner'], group: 'workspace' },
       { id: 'workspace', label: 'Workspace Info', icon: Building2, allowed: ['owner'], group: 'workspace' },
     ];
     return list.filter((t) => t.allowed.includes(role));
@@ -346,6 +348,9 @@ export function SettingsPage() {
                       profile={localProfile}
                       members={members}
                     />
+                  )}
+                  {activeTab === 'billing' && localProfile && (
+                    <BillingSettingsView profile={localProfile} />
                   )}
                   {activeTab === 'workspace' && localProfile && (
                     loadingOrg ? (

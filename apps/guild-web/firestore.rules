@@ -68,6 +68,20 @@ service cloud.firestore {
       // Only owners/admins can update organization details or delete it
       allow update: if isMemberOfOrg(orgId) && (getUserData().role == 'owner' || getUserData().role == 'admin');
       allow delete: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
+
+      // ── Billing sub-document: owner only ──────────────────────────────────
+      match /billing/{docId} {
+        allow read: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
+        allow write: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
+      }
+
+      // ── Billing transactions: owner can read/write ─────────────────────────
+      match /billingTransactions/{txId} {
+        allow read: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
+        allow create: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
+        // Transactions are immutable after creation
+        allow update, delete: if false;
+      }
     }
 
     match /organizationMembers/{memberId} {
