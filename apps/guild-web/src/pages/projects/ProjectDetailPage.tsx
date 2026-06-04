@@ -466,7 +466,7 @@ export function ProjectDetailPage() {
               })}
             </div>
             
-            <div className="relative">
+            <div className={cn("relative", showMemberPicker && "z-50")}>
               <button
                 onClick={() => setShowMemberPicker(!showMemberPicker)}
                 className="w-6 h-6 rounded-full border border-dashed border-neutral-350 dark:border-neutral-700 hover:border-indigo-500 hover:text-indigo-500 bg-transparent text-neutral-400 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
@@ -486,7 +486,7 @@ export function ProjectDetailPage() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute left-0 mt-2 w-56 max-h-60 overflow-y-auto rounded-2xl border border-neutral-200/50 dark:border-neutral-800/50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl p-2 shadow-xl z-50 scrollbar-thin"
+                      className="absolute left-0 mt-2 w-56 max-h-60 overflow-y-auto rounded-2xl border border-neutral-200/50 dark:border-neutral-800/50 bg-white dark:bg-neutral-900 p-2 shadow-xl z-50 scrollbar-thin"
                     >
                       <div className="px-2 py-1.5 border-b border-neutral-100 dark:border-neutral-800/80 mb-1.5">
                         <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Choose Members</span>
