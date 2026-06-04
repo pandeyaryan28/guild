@@ -356,14 +356,7 @@ export function ProjectDetailPage() {
                   <span>Due Date: {new Date(project.dueDate instanceof Date ? project.dueDate : (project.dueDate as any).seconds * 1000).toLocaleDateString()}</span>
                 )}
               </div>
-              
-              <button
-                onClick={() => setCreateOpen(true)}
-                className="flex items-center justify-center gap-1.5 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/15 text-indigo-650 dark:text-indigo-400 px-4 py-2 h-10 text-xs font-bold tracking-wide transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
-              >
-                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Add Task</span>
-              </button>
+
 
               <button
                 onClick={() => setShowComments(!showComments)}
@@ -608,10 +601,20 @@ export function ProjectDetailPage() {
                 {activeTab === 'tasks' && (
                   <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10 space-y-4">
                     <div className="space-y-4">
-                      <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5 border-b border-neutral-200/20 dark:border-neutral-800/30 pb-2">
+                      <div className="flex items-center justify-between border-b border-neutral-200/20 dark:border-neutral-800/30 pb-2">
+                      <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-indigo-500" />
                         <span>Tasks</span>
                       </h3>
+                      <button
+                        type="button"
+                        onClick={() => setCreateOpen(true)}
+                        className="flex items-center justify-center gap-1 px-3 py-1.5 h-8 text-[10px] font-bold rounded-xl border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/15 text-indigo-650 dark:text-indigo-400 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                      >
+                        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Add Task</span>
+                      </button>
+                    </div>
 
                       {tasksLoading ? (
                         <div className="flex py-12 justify-center">

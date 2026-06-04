@@ -1628,7 +1628,8 @@ export function TaskCanvas() {
                       return (
                         <div
                           key={project.id}
-                          className="aether-glass aether-glass-interactive p-5 space-y-4 flex flex-col justify-between"
+                          onClick={() => navigate(`/projects/${project.id}`)}
+                          className="aether-glass aether-glass-interactive p-5 space-y-4 flex flex-col justify-between cursor-pointer"
                         >
                           <div className="space-y-3">
                             {/* Card Header */}
@@ -1652,9 +1653,8 @@ export function TaskCanvas() {
                                     )}
                                   </button>
                                   <h4 
-                                    onClick={() => navigate(`/projects/${project.id}`)}
                                     className={cn(
-                                      "text-xs font-bold hover:text-indigo-500 cursor-pointer transition-colors truncate min-w-0 flex-1 flex items-center gap-1.5",
+                                      "text-xs font-bold transition-colors truncate min-w-0 flex-1 flex items-center gap-1.5",
                                       project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground"
                                     )}
                                   >
@@ -1719,7 +1719,7 @@ export function TaskCanvas() {
                                   {projectGoals.slice(0, 3).map(goal => (
                                     <div 
                                       key={goal.id} 
-                                      onClick={() => setSearchParams({ goal: goal.id })}
+                                      onClick={(e) => { e.stopPropagation(); setSearchParams({ goal: goal.id }); }}
                                       className="flex items-center justify-between p-1.5 rounded-lg bg-bg-primary/20 border border-border-subtle hover:border-cyan-500/20 hover:bg-bg-primary/40 cursor-pointer transition-all"
                                     >
                                       <span className="text-[10px] font-semibold text-foreground truncate max-w-44 leading-none">
@@ -1757,13 +1757,13 @@ export function TaskCanvas() {
                           {/* Quick Actions */}
                           <div className="flex items-center justify-between pt-3 border-t border-border-default/45 mt-3">
                             <button
-                              onClick={() => triggerAddGoal(project.id)}
+                              onClick={(e) => { e.stopPropagation(); triggerAddGoal(project.id); }}
                               className="text-[9px] text-cyan-600 dark:text-cyan-400 hover:underline font-black tracking-wide flex items-center gap-0.5 cursor-pointer"
                             >
                               + Goal focus
                             </button>
                             <button
-                              onClick={() => triggerAddTask('', project.id)}
+                              onClick={(e) => { e.stopPropagation(); triggerAddTask('', project.id); }}
                               className="text-[9px] text-sky-600 dark:text-sky-455 hover:underline font-black tracking-wide flex items-center gap-0.5 cursor-pointer"
                             >
                               + Task item
@@ -1817,7 +1817,8 @@ export function TaskCanvas() {
                               return (
                                 <div
                                   key={project.id}
-                                  className="aether-glass aether-glass-interactive p-5 space-y-4 flex flex-col justify-between opacity-70 hover:opacity-100"
+                                  onClick={() => navigate(`/projects/${project.id}`)}
+                                  className="aether-glass aether-glass-interactive p-5 space-y-4 flex flex-col justify-between opacity-70 hover:opacity-100 cursor-pointer"
                                 >
                                   <div className="space-y-3">
                                     {/* Card Header */}
@@ -1841,9 +1842,8 @@ export function TaskCanvas() {
                                             )}
                                           </button>
                                           <h4 
-                                            onClick={() => navigate(`/projects/${project.id}`)}
                                             className={cn(
-                                              "text-xs font-bold hover:text-indigo-500 cursor-pointer transition-colors truncate min-w-0 flex-1 flex items-center gap-1.5",
+                                              "text-xs font-bold transition-colors truncate min-w-0 flex-1 flex items-center gap-1.5",
                                               project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground"
                                             )}
                                           >
