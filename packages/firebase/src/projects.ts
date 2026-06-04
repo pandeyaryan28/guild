@@ -36,7 +36,7 @@ export async function createProject(params: {
 
 export async function updateProject(
   projectId: string,
-  patch: Partial<Pick<Project, 'name' | 'description' | 'status' | 'memberIds' | 'dueDate' | 'startDate'>>,
+  patch: Partial<Pick<Project, 'name' | 'description' | 'status' | 'memberIds' | 'teamIds' | 'dueDate' | 'startDate'>>,
 ): Promise<void> {
   await updateDoc(doc(db, 'projects', projectId), {
     ...patch,

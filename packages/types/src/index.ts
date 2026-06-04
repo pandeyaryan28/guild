@@ -139,6 +139,7 @@ export interface Project {
   description: string;
   ownerId: string;
   memberIds: string[];
+  teamIds?: string[];
   status: ProjectStatus;
   startDate: Timestamp | null;
   dueDate: Timestamp | null;

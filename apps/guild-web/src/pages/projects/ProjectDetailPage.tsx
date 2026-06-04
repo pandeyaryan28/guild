@@ -18,7 +18,8 @@ import {
   Send,
   Sparkles,
   HelpCircle,
-  Target
+  Target,
+  Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useProject, useProjectComments } from '../../hooks/useProjects';
 import { useTasks } from '../../hooks/useTasks';
 import { useGoals } from '../../hooks/useGoals';
+import { useTeams } from '../../hooks/useTeams';
 import { createGoal } from '../../lib/goals';
 import { SearchableSelect } from '../../components/SearchableSelect';
 import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
@@ -52,6 +54,7 @@ export function ProjectDetailPage() {
   const { columns, loading: tasksLoading } = useTasks(orgId, projectId ? { projectId } : undefined);
   const members = useOrgMembers(orgId);
   const { goals } = useGoals(orgId);
+  const { teams } = useTeams(orgId);
 
   const [createOpen, setCreateOpen] = React.useState(false);
   const [showCompleted, setShowCompleted] = React.useState(false);
@@ -229,6 +232,55 @@ export function ProjectDetailPage() {
       await updateProject(project.id, { memberIds: nextMembers });
     } catch (err) {
       console.error('Failed to update project members:', err);
+      alert('Failed to update project members: ' + (err as Error).message);
+    }
+  };
+
+  const handleToggleProjectTeam = async (teamId: string) => {
+    if (!project || !teams) return;
+    const currentTeams = project.teamIds || [];
+    const isAlreadyAdded = currentTeams.includes(teamId);
+    
+    const nextTeams = isAlreadyAdded
+      ? currentTeams.filter(id => id !== teamId)
+      : [...currentTeams, teamId];
+
+    const targetTeam = teams.find(t => t.id === teamId);
+    if (!targetTeam) return;
+
+    let nextMembers = [...(project.memberIds || [])];
+    const teamUserIds = Array.from(new Set([targetTeam.managerId, ...(targetTeam.memberIds || [])]));
+
+    if (isAlreadyAdded) {
+      const remainingTeamIds = nextTeams;
+      const remainingTeams = teams.filter(t => remainingTeamIds.includes(t.id));
+      const usersInOtherTeams = new Set<string>();
+      remainingTeams.forEach(t => {
+        usersInOtherTeams.add(t.managerId);
+        (t.memberIds || []).forEach(uid => usersInOtherTeams.add(uid));
+      });
+
+      nextMembers = nextMembers.filter(uid => {
+        if (uid === project.ownerId) return true;
+        if (usersInOtherTeams.has(uid)) return true;
+        return !teamUserIds.includes(uid);
+      });
+    } else {
+      teamUserIds.forEach(uid => {
+        if (!nextMembers.includes(uid)) {
+          nextMembers.push(uid);
+        }
+      });
+    }
+
+    try {
+      await updateProject(project.id, { 
+        teamIds: nextTeams,
+        memberIds: nextMembers
+      });
+    } catch (err) {
+      console.error('Failed to update project teams:', err);
+      alert('Failed to update project teams: ' + (err as Error).message);
     }
   };
 
@@ -461,16 +513,48 @@ export function ProjectDetailPage() {
                                     className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
                                   />
                                 ) : (
-                                  <div className="w-5.5 h-5.5 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[7px] text-primary shrink-0">
+                                  <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 flex items-center justify-center font-bold text-[7px] text-indigo-650 dark:text-indigo-400 shrink-0">
                                     {getInitials(member.uid)}
                                   </div>
                                 )}
                                 <span className="truncate">{member.fullName}</span>
                               </div>
-                              {isIncluded && <Check className="w-3 h-3 text-primary shrink-0 stroke-[2.5]" />}
+                              {isIncluded && <Check className="w-3 h-3 text-indigo-600 dark:text-indigo-400 shrink-0 stroke-[2.5]" />}
                             </button>
                           );
                         })}
+                        
+                        {/* Choose Teams Section */}
+                        {teams.length > 0 && (
+                          <>
+                            <div className="px-2 py-1.5 border-t border-b border-neutral-100 dark:border-neutral-850/80 my-1.5">
+                              <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Choose Teams</span>
+                            </div>
+                            {teams.map((team) => {
+                              const isTeamIncluded = (project.teamIds || []).includes(team.id);
+                              return (
+                                <button
+                                  key={team.id}
+                                  onClick={() => handleToggleProjectTeam(team.id)}
+                                  className={cn(
+                                    "w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[10px] font-semibold text-left transition-all cursor-pointer",
+                                    isTeamIncluded 
+                                      ? "bg-indigo-500/10 text-indigo-650 dark:text-indigo-400" 
+                                      : "hover:bg-neutral-50 dark:hover:bg-neutral-850/50 text-foreground"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/25 bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                                      <Users className="w-3 h-3" />
+                                    </div>
+                                    <span className="truncate">{team.name}</span>
+                                  </div>
+                                  {isTeamIncluded && <Check className="w-3 h-3 text-indigo-600 dark:text-indigo-400 shrink-0 stroke-[2.5]" />}
+                                </button>
+                              );
+                            })}
+                          </>
+                        )}
                       </div>
                     </motion.div>
                   </>
