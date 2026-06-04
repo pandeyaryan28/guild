@@ -234,9 +234,9 @@ export function TeamReportTab({
                 onChange={(e) => setSelectedTeamId(e.target.value)}
                 className="appearance-none rounded-lg aether-glass-input pl-3 pr-8 py-2 text-sm font-medium text-foreground outline-none cursor-pointer transition-colors min-w-[200px]"
               >
-                <option value="all" className="bg-zinc-900 dark:bg-black text-foreground font-semibold">All Managed Teams</option>
+                <option value="all">All Managed Teams</option>
                 {teams.map((t) => (
-                  <option key={t.id} value={t.id} className="bg-zinc-900 dark:bg-black text-foreground font-semibold">
+                  <option key={t.id} value={t.id}>
                     {t.name}
                   </option>
                 ))}
