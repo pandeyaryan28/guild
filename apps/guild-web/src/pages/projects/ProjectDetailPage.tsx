@@ -71,22 +71,8 @@ export function ProjectDetailPage() {
   const [editDesc, setEditDesc] = React.useState('');
   const [editStartDate, setEditStartDate] = React.useState('');
   const [editDueDate, setEditDueDate] = React.useState('');
-  const [showMemberPicker, setShowMemberPicker] = React.useState(false);
-  const memberPickerRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (memberPickerRef.current && !memberPickerRef.current.contains(event.target as Node)) {
-        setShowMemberPicker(false);
-      }
-    }
-    if (showMemberPicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showMemberPicker]);
+  const [showManageModal, setShowManageModal] = React.useState(false);
+  const [pickerSearchQuery, setPickerSearchQuery] = React.useState('');
 
   React.useEffect(() => {
     if (project) {
@@ -481,94 +467,14 @@ export function ProjectDetailPage() {
               })}
             </div>
             
-            <div ref={memberPickerRef} className={cn("relative", showMemberPicker && "z-50")}>
+            <div>
               <button
-                onClick={() => setShowMemberPicker(!showMemberPicker)}
+                onClick={() => setShowManageModal(true)}
                 className="w-6 h-6 rounded-full border border-dashed border-neutral-350 dark:border-neutral-700 hover:border-indigo-500 hover:text-indigo-500 bg-transparent text-neutral-400 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                title="Manage Members"
+                title="Manage Members & Teams"
               >
                 <Plus className="w-3 h-3" />
               </button>
-
-              <AnimatePresence>
-                {showMemberPicker && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute left-0 mt-2 w-56 max-h-60 overflow-y-auto rounded-2xl border border-neutral-200/50 dark:border-neutral-800/50 bg-white dark:bg-neutral-900 p-2 shadow-xl z-50 scrollbar-thin"
-                  >
-                      <div className="px-2 py-1.5 border-b border-neutral-100 dark:border-neutral-800/80 mb-1.5">
-                        <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Choose Members</span>
-                      </div>
-                      <div className="space-y-0.5">
-                        {members.map((member) => {
-                          const isIncluded = (project.memberIds || []).includes(member.uid);
-                          return (
-                            <button
-                              key={member.uid}
-                              onClick={() => handleToggleProjectMember(member.uid)}
-                              className={cn(
-                                "w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[10px] font-semibold text-left transition-all cursor-pointer",
-                                isIncluded 
-                                  ? "bg-indigo-500/10 text-indigo-650 dark:text-indigo-400" 
-                                  : "hover:bg-neutral-50 dark:hover:bg-neutral-850/50 text-foreground"
-                              )}
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                {member.photoURL ? (
-                                  <img
-                                    src={member.photoURL}
-                                    alt={member.fullName}
-                                    className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
-                                  />
-                                ) : (
-                                  <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 flex items-center justify-center font-bold text-[7px] text-indigo-650 dark:text-indigo-400 shrink-0">
-                                    {getInitials(member.uid)}
-                                  </div>
-                                )}
-                                <span className="truncate">{member.fullName}</span>
-                              </div>
-                              {isIncluded && <Check className="w-3 h-3 text-indigo-600 dark:text-indigo-400 shrink-0 stroke-[2.5]" />}
-                            </button>
-                          );
-                        })}
-                        
-                        {/* Choose Teams Section */}
-                        {teams.length > 0 && (
-                          <>
-                            <div className="px-2 py-1.5 border-t border-b border-neutral-100 dark:border-neutral-850/80 my-1.5">
-                              <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Choose Teams</span>
-                            </div>
-                            {teams.map((team) => {
-                              const isTeamIncluded = (project.teamIds || []).includes(team.id);
-                              return (
-                                <button
-                                  key={team.id}
-                                  onClick={() => handleToggleProjectTeam(team.id)}
-                                  className={cn(
-                                    "w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[10px] font-semibold text-left transition-all cursor-pointer",
-                                    isTeamIncluded 
-                                      ? "bg-indigo-500/10 text-indigo-650 dark:text-indigo-400" 
-                                      : "hover:bg-neutral-50 dark:hover:bg-neutral-850/50 text-foreground"
-                                  )}
-                                >
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/25 bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-                                      <Users className="w-3 h-3" />
-                                    </div>
-                                    <span className="truncate">{team.name}</span>
-                                  </div>
-                                  {isTeamIncluded && <Check className="w-3 h-3 text-indigo-600 dark:text-indigo-400 shrink-0 stroke-[2.5]" />}
-                                </button>
-                              );
-                            })}
-                          </>
-                        )}
-                      </div>
-                    </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -1321,6 +1227,169 @@ export function ProjectDetailPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Redesigned Manage Members & Teams Modal */}
+      <AnimatePresence>
+        {showManageModal && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setShowManageModal(false); setPickerSearchQuery(''); }}
+              className="fixed inset-0 bg-neutral-950/20 dark:bg-neutral-950/60 backdrop-blur-sm z-[100]"
+            />
+            {/* Modal Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 rounded-3xl border border-neutral-200/50 dark:border-neutral-800/40 bg-white dark:bg-neutral-900 shadow-2xl z-[101] flex flex-col gap-4 max-h-[85vh] overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-neutral-200/45 dark:border-neutral-800/65 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 shrink-0">
+                    <Users className="w-4 h-4 text-indigo-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-neutral-850 dark:text-neutral-100">Project Access</h3>
+                    <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider mt-0.5">Manage Members & Teams</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setShowManageModal(false); setPickerSearchQuery(''); }}
+                  className="w-8 h-8 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-805 text-neutral-500 hover:text-neutral-850 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm animate-none"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Search input bar */}
+              <div className="relative shrink-0">
+                <input
+                  type="text"
+                  placeholder="Search members or teams..."
+                  value={pickerSearchQuery}
+                  onChange={(e) => setPickerSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3.5 py-2.5 text-xs font-semibold rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-neutral-400 shadow-xs"
+                />
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 pointer-events-none">
+                  <Users className="w-3.5 h-3.5" />
+                </span>
+              </div>
+
+              {/* List container */}
+              <div className="flex-1 overflow-y-auto scrollbar-thin space-y-4 pr-1 py-1 min-h-0">
+                {/* Choose Teams Section */}
+                {teams.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block">Teams</span>
+                    <div className="space-y-1.5">
+                      {teams
+                        .filter(t => t.name.toLowerCase().includes(pickerSearchQuery.toLowerCase()))
+                        .map((team) => {
+                          const isTeamIncluded = (project.teamIds || []).includes(team.id);
+                          return (
+                            <div
+                              key={team.id}
+                              className={cn(
+                                "flex items-center justify-between p-3 rounded-2xl border transition-all",
+                                isTeamIncluded
+                                  ? "border-indigo-500/35 bg-indigo-500/[0.04] dark:bg-indigo-500/[0.06]"
+                                  : "border-neutral-150/40 dark:border-neutral-800/40 bg-neutral-50/20 dark:bg-neutral-900/40"
+                              )}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-xl border border-indigo-500/25 bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                                  <Users className="w-4 h-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="text-xs font-bold block text-neutral-800 dark:text-neutral-100 truncate">{team.name}</span>
+                                  <span className="text-[9px] text-neutral-400 dark:text-neutral-500 font-semibold block mt-0.5">
+                                    {(team.memberIds || []).length + 1} members • Lead: {getMemberName(team.managerId)}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleProjectTeam(team.id)}
+                                className={cn(
+                                  "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs border",
+                                  isTeamIncluded
+                                    ? "bg-indigo-500/10 border-indigo-500/25 text-indigo-650 dark:text-indigo-400 hover:bg-indigo-500/15"
+                                    : "bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-750"
+                                )}
+                              >
+                                {isTeamIncluded ? 'Added' : 'Add Team'}
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Choose Members Section */}
+                <div className="space-y-2">
+                  <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block">Individual Members</span>
+                  <div className="space-y-1.5">
+                    {members
+                      .filter(m => m.fullName.toLowerCase().includes(pickerSearchQuery.toLowerCase()) || m.username.toLowerCase().includes(pickerSearchQuery.toLowerCase()))
+                      .map((member) => {
+                        const isIncluded = (project.memberIds || []).includes(member.uid);
+                        const photoURL = getMemberPhotoURL(member.uid);
+                        return (
+                          <div
+                            key={member.uid}
+                            className={cn(
+                              "flex items-center justify-between p-3 rounded-2xl border transition-all",
+                              isIncluded
+                                ? "border-indigo-500/35 bg-indigo-500/[0.04] dark:bg-indigo-500/[0.06]"
+                                : "border-neutral-150/40 dark:border-neutral-800/40 bg-neutral-50/20 dark:bg-neutral-900/40"
+                            )}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              {photoURL ? (
+                                <img
+                                  src={photoURL}
+                                  alt={member.fullName}
+                                  className="w-8 h-8 rounded-xl object-cover shrink-0 border border-neutral-200/50"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-xl border border-indigo-500/20 bg-indigo-500/10 flex items-center justify-center font-bold text-[10px] text-indigo-650 dark:text-indigo-400 shrink-0">
+                                  {getInitials(member.uid)}
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <span className="text-xs font-bold block text-neutral-800 dark:text-neutral-100 truncate">{member.fullName}</span>
+                                <span className="text-[9px] text-neutral-400 dark:text-neutral-500 font-semibold block mt-0.5 truncate">{member.designation || 'Member'}</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleProjectMember(member.uid)}
+                              className={cn(
+                                "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs border",
+                                isIncluded
+                                  ? "bg-indigo-500/10 border-indigo-500/25 text-indigo-650 dark:text-indigo-400 hover:bg-indigo-500/15"
+                                  : "bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-750"
+                              )}
+                            >
+                              {isIncluded ? 'Joined' : 'Add'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </>
         )}
