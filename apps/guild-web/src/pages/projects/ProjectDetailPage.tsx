@@ -1258,8 +1258,8 @@ export function ProjectDetailPage() {
                     <Users className="w-4 h-4 text-indigo-500" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-neutral-850 dark:text-neutral-100">Project Access</h3>
-                    <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider mt-0.5">Manage Members & Teams</p>
+                    <h3 className="text-sm font-black text-neutral-850 dark:text-neutral-100">Add Members & Teams</h3>
+                    <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider mt-0.5">Add people or teams to this project</p>
                   </div>
                 </div>
                 <button
@@ -1275,7 +1275,7 @@ export function ProjectDetailPage() {
               <div className="relative shrink-0">
                 <input
                   type="text"
-                  placeholder="Search members or teams..."
+                  placeholder="Search people or teams..."
                   value={pickerSearchQuery}
                   onChange={(e) => setPickerSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3.5 py-2.5 text-xs font-semibold rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-neutral-400 shadow-xs"
@@ -1338,7 +1338,7 @@ export function ProjectDetailPage() {
 
                 {/* Choose Members Section */}
                 <div className="space-y-2">
-                  <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block">Individual Members</span>
+                  <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block">People</span>
                   <div className="space-y-1.5">
                     {members
                       .filter(m => m.fullName.toLowerCase().includes(pickerSearchQuery.toLowerCase()) || m.username.toLowerCase().includes(pickerSearchQuery.toLowerCase()))
