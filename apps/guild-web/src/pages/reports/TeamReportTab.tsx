@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Users, CheckSquare, Clock, AlertTriangle, Target, Loader2 } from 'lucide-react';
+import { Users, CheckSquare, Clock, AlertTriangle, Target, Loader2, ChevronDown } from 'lucide-react';
 import { getManagerTeamReport } from '../../lib/reports';
 import type { MemberContribution } from '../../lib/reports';
 import { getUserById } from '../../lib/firestore';
@@ -222,21 +222,28 @@ export function TeamReportTab({
 
   return (
     <div className="space-y-6">
-      {teams.length > 1 && (
-        <div className="flex items-center gap-3 bg-white/5 border border-white/10 dark:border-white/5 p-3 rounded-2xl max-w-xs shadow-sm">
-          <label className="text-xs font-bold text-muted-foreground whitespace-nowrap">Filter Team:</label>
-          <select
-            value={selectedTeamId}
-            onChange={(e) => setSelectedTeamId(e.target.value)}
-            className="w-full bg-transparent border-none text-xs font-bold text-foreground focus:ring-0 focus:outline-none cursor-pointer"
-          >
-            <option value="all" className="bg-zinc-900 dark:bg-black text-foreground font-semibold">All Managed Teams</option>
-            {teams.map((t) => (
-              <option key={t.id} value={t.id} className="bg-zinc-900 dark:bg-black text-foreground font-semibold">
-                {t.name}
-              </option>
-            ))}
-          </select>
+      {teams.length > 0 && (
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
+            <div className="relative">
+              <select
+                value={selectedTeamId}
+                onChange={(e) => setSelectedTeamId(e.target.value)}
+                className="appearance-none rounded-lg aether-glass-input pl-3 pr-8 py-2 text-sm font-medium text-foreground outline-none cursor-pointer transition-colors min-w-[200px]"
+              >
+                <option value="all" className="bg-zinc-900 dark:bg-black text-foreground font-semibold">All Managed Teams</option>
+                {teams.map((t) => (
+                  <option key={t.id} value={t.id} className="bg-zinc-900 dark:bg-black text-foreground font-semibold">
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+          </div>
         </div>
       )}
 
