@@ -103,6 +103,15 @@ function CreateRequestModal({
       }
     }
   }, [currentUser.managerId, currentUser.uid, members, teams]);
+
+  React.useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [startDate, setStartDate] = React.useState('');
@@ -155,11 +164,11 @@ function CreateRequestModal({
         className="w-full max-w-lg max-h-[85vh] flex flex-col aether-glass shadow-2xl overflow-hidden"
       >
         {/* Fixed Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/2 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle bg-bg-secondary/40 flex-shrink-0">
           <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" style={{ color: 'var(--accent)' }} /> New Request
           </h2>
-          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -172,7 +181,7 @@ function CreateRequestModal({
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Send To (Approver)</label>
               <div className="relative">
                 <div
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-white/5 bg-white/5 cursor-text focus-within:border-primary/30 transition-all shadow-inner"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border-default bg-bg-secondary/50 cursor-text focus-within:border-primary/30 transition-all shadow-inner"
                   onClick={() => setShowDropdown(true)}
                 >
                   <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -196,7 +205,7 @@ function CreateRequestModal({
                   )}
                 </div>
                 {showDropdown && !selectedMember && (
-                  <div className="absolute z-10 top-full mt-1.5 w-full bg-surface border border-white/5 rounded-xl shadow-xl overflow-hidden max-h-40 overflow-y-auto aether-scroll backdrop-blur-xl">
+                  <div className="absolute z-10 top-full mt-1.5 w-full bg-surface border border-border-default rounded-xl shadow-xl overflow-hidden max-h-40 overflow-y-auto aether-scroll backdrop-blur-xl">
                     {filtered.length === 0 ? (
                       <p className="text-xs text-muted-foreground px-4 py-3 text-center">No members found</p>
                     ) : (
@@ -204,7 +213,7 @@ function CreateRequestModal({
                         <button
                           key={m.uid} type="button"
                           onClick={() => { setSelectedMember(m); setShowDropdown(false); setSearch(''); }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-left transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-bg-secondary text-left transition-colors cursor-pointer"
                         >
                           <div 
                             className="h-7 w-7 rounded-full text-white text-[11px] font-bold flex items-center justify-center shrink-0 shadow-sm"
@@ -237,8 +246,8 @@ function CreateRequestModal({
                     className={cn(
                       "flex flex-col items-center gap-1.5 p-2 rounded-xl border text-center transition-all duration-300 text-[10px] font-bold cursor-pointer hover:scale-[1.02]",
                       type === k 
-                        ? 'border-primary/40 bg-white/5 text-foreground' 
-                        : 'border-white/5 bg-white/2 text-muted-foreground hover:bg-white/5'
+                        ? 'border-primary/40 bg-bg-secondary text-foreground' 
+                        : 'border-border-subtle bg-bg-secondary/40 text-muted-foreground hover:bg-bg-tertiary'
                     )}
                     style={type === k ? {
                       borderColor: 'var(--accent)',
@@ -265,7 +274,7 @@ function CreateRequestModal({
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Title</label>
               <input
-                className="w-full px-3 py-2 rounded-xl border border-white/5 bg-white/5 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-white/10 hover:border-white/10 focus:border-primary/30 transition-all shadow-inner"
+                className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-secondary/55 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-bg-tertiary hover:border-border-strong focus:border-primary/30 transition-all shadow-inner"
                 placeholder="e.g. Sick Leave – 2 days"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -279,12 +288,12 @@ function CreateRequestModal({
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Calendar className="h-3 w-3" />From</label>
                   <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-white/5 bg-white/5 text-xs text-foreground outline-none focus:border-primary/30 transition-all [color-scheme:dark]" />
+                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-secondary/55 text-xs text-foreground outline-none focus:border-primary/30 transition-all [color-scheme:light] dark:[color-scheme:dark]" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Calendar className="h-3 w-3" />To</label>
                   <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-white/5 bg-white/5 text-xs text-foreground outline-none focus:border-primary/30 transition-all [color-scheme:dark]" />
+                    className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-secondary/55 text-xs text-foreground outline-none focus:border-primary/30 transition-all [color-scheme:light] dark:[color-scheme:dark]" />
                 </div>
               </div>
             )}
@@ -294,7 +303,7 @@ function CreateRequestModal({
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Description</label>
               <textarea
                 rows={3}
-                className="w-full px-3 py-2 rounded-xl border border-white/5 bg-white/5 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-white/10 hover:border-white/10 focus:border-primary/30 transition-all shadow-inner resize-none"
+                className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-secondary/55 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-bg-tertiary hover:border-border-strong focus:border-primary/30 transition-all shadow-inner resize-none"
                 placeholder="Describe your request in detail..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -305,9 +314,9 @@ function CreateRequestModal({
           </div>
 
           {/* Fixed Action Footer */}
-          <div className="flex gap-3 p-6 border-t border-white/5 bg-white/2 flex-shrink-0">
+          <div className="flex gap-3 p-6 border-t border-border-subtle bg-bg-secondary/40 flex-shrink-0">
             <button type="button" onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-white/5 text-sm font-semibold text-muted-foreground hover:bg-white/5 transition-all cursor-pointer">
+              className="flex-1 py-2.5 rounded-xl border border-border-default text-sm font-semibold text-muted-foreground hover:bg-bg-secondary transition-all cursor-pointer">
               Cancel
             </button>
             <button type="submit" disabled={submitting}
@@ -355,7 +364,7 @@ function RequestCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => onSelect?.(req)}
-      className="rounded-2xl border bg-white/2 p-4 space-y-2.5 hover:bg-white/5 hover:shadow-md hover:scale-[1.005] transition-all duration-300 relative overflow-hidden cursor-pointer"
+      className="rounded-2xl border bg-bg-secondary/35 p-4 space-y-2.5 hover:bg-bg-secondary/70 hover:shadow-md hover:scale-[1.005] transition-all duration-300 relative overflow-hidden cursor-pointer"
       style={{
         borderColor: 'oklch(from var(--accent) l c h / 18%)',
       }}
@@ -389,7 +398,7 @@ function RequestCard({
         </div>
       )}
 
-      <div className="flex flex-col gap-2.5 pt-2.5 border-t border-white/5">
+      <div className="flex flex-col gap-2.5 pt-2.5 border-t border-border-subtle">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
             {/* Avatar sphere */}
@@ -414,7 +423,7 @@ function RequestCard({
               {noteOpen ? (
                 <div className="flex items-center gap-1.5">
                   <input
-                    className="px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-[10px] text-foreground placeholder:text-muted-foreground outline-none w-28 shadow-inner"
+                    className="px-2 py-1 rounded-lg border border-border-default bg-bg-secondary text-[10px] text-foreground placeholder:text-muted-foreground outline-none w-28 shadow-inner"
                     placeholder="Review note…"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
@@ -433,7 +442,7 @@ function RequestCard({
                 </div>
               ) : (
                 <button onClick={() => setNoteOpen(true)}
-                  className="px-2.5 py-1 rounded-lg border border-white/5 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all cursor-pointer">
+                  className="px-2.5 py-1 rounded-lg border border-border-default text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-bg-secondary transition-all cursor-pointer">
                   Review
                 </button>
               )}
@@ -442,7 +451,7 @@ function RequestCard({
         </div>
 
         {req.approverNote && (
-          <div className="text-[10px] text-muted-foreground bg-white/2 border border-white/5 rounded-lg px-2.5 py-1.5 italic font-medium">
+          <div className="text-[10px] text-muted-foreground bg-bg-secondary/40 border border-border-subtle rounded-lg px-2.5 py-1.5 italic font-medium">
             "{req.approverNote}"
           </div>
         )}
@@ -473,6 +482,14 @@ function RequestDetailDrawer({
   const [copied, setCopied] = React.useState(false);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = React.useState(false);
   const [withdrawing, setWithdrawing] = React.useState(false);
+
+  React.useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   const theme = {
     sick_leave: { accent: '#10b981', text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
@@ -564,10 +581,10 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-        className="relative w-full max-w-lg h-full aether-glass bg-surface/90 border-l border-white/10 shadow-2xl flex flex-col overflow-hidden select-none z-10"
+        className="relative w-full max-w-lg h-full aether-glass bg-surface/90 border-l border-border-default shadow-2xl flex flex-col overflow-hidden select-text z-10"
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between px-6 py-4.5 border-b border-white/5 bg-white/2 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-border-subtle bg-bg-secondary/40 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div
               className={cn("p-2.5 rounded-xl border shrink-0", theme.bg, theme.border, theme.text)}
@@ -584,7 +601,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
             <button
               onClick={copySummary}
               title="Copy details summary"
-              className="p-2 rounded-xl border border-white/5 bg-white/2 hover:bg-white/5 hover:text-foreground text-muted-foreground transition-all cursor-pointer flex items-center gap-1 text-[10px] font-bold"
+              className="p-2 rounded-xl border border-border-default bg-bg-secondary hover:bg-bg-tertiary hover:text-foreground text-muted-foreground transition-all cursor-pointer flex items-center gap-1 text-[10px] font-bold"
             >
               {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? 'Copied' : 'Copy'}
@@ -592,13 +609,13 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
             <button
               onClick={() => window.print()}
               title="Print request details"
-              className="p-2 rounded-xl border border-white/5 bg-white/2 hover:bg-white/5 hover:text-foreground text-muted-foreground transition-all cursor-pointer"
+              className="p-2 rounded-xl border border-border-default bg-bg-secondary hover:bg-bg-tertiary hover:text-foreground text-muted-foreground transition-all cursor-pointer"
             >
               <Printer className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              className="p-2 rounded-xl hover:bg-bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -608,7 +625,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-6">
           {/* Status Large Block */}
-          <div className={cn("p-4 rounded-2xl border flex items-center justify-between relative overflow-hidden bg-white/2 border-white/5")}>
+          <div className={cn("p-4 rounded-2xl border flex items-center justify-between relative overflow-hidden bg-bg-secondary/35 border-border-subtle")}>
             <div className="space-y-1">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Current Status</p>
               <p className="text-sm font-extrabold text-foreground flex items-center gap-1.5">
@@ -624,14 +641,14 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
 
           {/* Details Metadata Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/2 border border-white/5 p-3 rounded-xl space-y-1">
+            <div className="bg-bg-secondary/35 border border-border-subtle p-3 rounded-xl space-y-1">
               <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                 <User className="h-3 w-3" /> Requested By
               </span>
               <p className="text-xs font-bold text-foreground">{req.creatorName}</p>
               <p className="text-[10px] text-muted-foreground">@{req.creatorUsername}</p>
             </div>
-            <div className="bg-white/2 border border-white/5 p-3 rounded-xl space-y-1">
+            <div className="bg-bg-secondary/35 border border-border-subtle p-3 rounded-xl space-y-1">
               <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                 <User className="h-3 w-3" /> Approver
               </span>
@@ -640,7 +657,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
             </div>
 
             {req.startDate && (
-              <div className="bg-white/2 border border-white/5 p-3 rounded-xl col-span-2 flex items-center justify-between">
+              <div className="bg-bg-secondary/35 border border-border-subtle p-3 rounded-xl col-span-2 flex items-center justify-between">
                 <div className="space-y-1">
                   <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                     <Calendar className="h-3 w-3" /> Request Timeline
@@ -650,7 +667,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
                   </p>
                 </div>
                 {duration && (
-                  <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-white/5 text-foreground border border-white/10 shrink-0">
+                  <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-bg-tertiary text-foreground border border-border-default shrink-0">
                     {duration}
                   </span>
                 )}
@@ -661,7 +678,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
           {/* Request Timeline Visualization */}
           <div className="space-y-3">
             <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status Progress</h3>
-            <div className="relative pl-6 space-y-4 border-l border-white/5 ml-3">
+            <div className="relative pl-6 space-y-4 border-l border-border-subtle ml-3">
               {/* Step 1: Created */}
               <div className="relative">
                 <span className="absolute -left-[30px] top-1 h-4.5 w-4.5 rounded-full border border-emerald-400 bg-emerald-400/20 flex items-center justify-center">
@@ -699,11 +716,11 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
                   "absolute -left-[30px] top-1 h-4.5 w-4.5 rounded-full border flex items-center justify-center",
                   req.status === 'approved' ? 'border-emerald-400 bg-emerald-400/20' :
                   req.status === 'rejected' ? 'border-red-400 bg-red-400/20' :
-                  'border-white/10 bg-white/2'
+                  'border-border-default bg-bg-secondary'
                 )}>
                   {req.status === 'approved' && <Check className="h-2.5 w-2.5 text-emerald-400" />}
                   {req.status === 'rejected' && <X className="h-2.5 w-2.5 text-red-400" />}
-                  {req.status === 'pending' && <span className="h-1.5 w-1.5 rounded-full bg-white/30" />}
+                  {req.status === 'pending' && <span className="h-1.5 w-1.5 rounded-full bg-text-muted/40" />}
                 </span>
                 <div className="space-y-0.5">
                   <p className="text-xs font-bold text-foreground">
@@ -724,7 +741,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
             <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
               <FileText className="h-3.5 w-3.5" /> Details & Description
             </h3>
-            <div className="p-4 rounded-xl border border-white/5 bg-white/2 text-xs leading-relaxed text-foreground select-text whitespace-pre-wrap max-h-56 overflow-y-auto aether-scroll animate-fadeIn">
+            <div className="p-4 rounded-xl border border-border-default bg-bg-secondary/35 text-xs leading-relaxed text-foreground select-text whitespace-pre-wrap animate-fadeIn">
               {req.description}
             </div>
           </div>
@@ -741,7 +758,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
         </div>
 
         {/* Action Panel Footer */}
-        <div className="p-6 border-t border-white/5 bg-white/2 shrink-0 space-y-4">
+        <div className="p-6 border-t border-border-subtle bg-bg-secondary/40 shrink-0 space-y-4">
           {/* 1. If Approver is Viewing + Pending -> Review Controls */}
           {!isSent && req.status === 'pending' && (
             <div className="space-y-3.5">
@@ -749,7 +766,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Add Decision Notes (Optional)</label>
                 <textarea
                   rows={2}
-                  className="w-full px-3 py-2 rounded-xl border border-white/5 bg-white/5 text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-white/10 focus:border-primary/30 transition-all resize-none shadow-inner"
+                  className="w-full px-3 py-2 rounded-xl border border-border-default bg-bg-secondary text-xs text-foreground placeholder:text-muted-foreground outline-none hover:bg-bg-tertiary focus:border-primary/30 transition-all resize-none shadow-inner"
                   placeholder="Provide comments or leave empty..."
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
@@ -790,7 +807,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
                     <button
                       onClick={() => setShowWithdrawConfirm(false)}
                       disabled={withdrawing}
-                      className="flex-1 py-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 text-xs font-bold text-muted-foreground transition-all cursor-pointer"
+                      className="flex-1 py-2 rounded-lg bg-bg-secondary border border-border-default hover:bg-bg-tertiary text-xs font-bold text-muted-foreground transition-all cursor-pointer"
                     >
                       Keep Request
                     </button>
@@ -808,7 +825,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowWithdrawConfirm(true)}
-                    className="flex-1 py-2.5 rounded-xl border border-white/5 bg-white/2 hover:bg-white/5 hover:border-red-500/25 hover:text-red-400 text-xs font-bold text-muted-foreground transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 rounded-xl border border-border-default bg-bg-secondary hover:bg-bg-tertiary hover:border-red-500/25 hover:text-red-400 text-xs font-bold text-muted-foreground transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     Withdraw Request
@@ -820,7 +837,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
                       "flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all duration-300 cursor-pointer border",
                       reminderSent 
                         ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                        : 'border-white/5 bg-white/5 text-foreground hover:bg-white/10'
+                        : 'border-border-default bg-bg-secondary text-foreground hover:bg-bg-tertiary'
                     )}
                   >
                     {reminding ? (
@@ -841,7 +858,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
           {req.status !== 'pending' && (
             <button
               onClick={onClose}
-              className="w-full py-2.5 rounded-xl border border-white/5 hover:bg-white/5 text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="w-full py-2.5 rounded-xl border border-border-default hover:bg-bg-secondary text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               Close Details
             </button>
@@ -889,7 +906,7 @@ export function RequestsPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden bg-transparent">
       {/* Page Header */}
-      <div className="px-8 pt-8 pb-5 border-b border-white/5 flex items-center justify-between shrink-0">
+      <div className="px-8 pt-8 pb-5 border-b border-border-subtle flex items-center justify-between shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Requests</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -918,7 +935,7 @@ export function RequestsPage() {
           <button
             key={id}
             onClick={() => setTab(id as any)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer text-muted-foreground hover:text-foreground hover:bg-white/5"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer text-muted-foreground hover:text-foreground hover:bg-bg-secondary"
             style={tab === id ? {
               backgroundColor: 'oklch(from var(--accent) l c h / 12%)',
               color: 'var(--accent)'

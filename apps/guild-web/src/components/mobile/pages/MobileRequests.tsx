@@ -57,7 +57,7 @@ export function MobileRequests() {
     <div className="flex flex-col space-y-4 animate-fluid-pop pb-6">
       
       {/* 1. Mobile Top Tab Switches */}
-      <div className="aether-glass p-1.5 flex bg-white/2 border border-white/5 shadow-inner" style={{ borderRadius: '18px' }}>
+      <div className="aether-glass p-1.5 flex bg-bg-secondary/40 border border-border-subtle shadow-inner" style={{ borderRadius: '18px' }}>
         {[
           { id: 'inbox', label: 'Inbox', count: pendingCount },
           { id: 'sent', label: 'Sent', count: sent.length }
@@ -84,7 +84,7 @@ export function MobileRequests() {
                 {tab.count > 0 && (
                   <span className={cn(
                     "px-1.5 py-0.2 rounded-md text-[8px] font-black",
-                    isActive ? "bg-white/20 text-white" : "bg-white/5 text-primary"
+                    isActive ? "bg-white/20 text-white" : "bg-bg-tertiary text-primary"
                   )}>
                     {tab.count}
                   </span>
@@ -147,7 +147,7 @@ export function MobileRequests() {
       <div className="fixed bottom-20 right-5 z-30">
         <button
           onClick={() => setModalOpen(true)}
-          className="w-12 h-12 rounded-full flex items-center justify-center bg-primary text-white shadow-lg shadow-primary/20 active:scale-90 transition-all cursor-pointer border border-white/10"
+          className="w-12 h-12 rounded-full flex items-center justify-center bg-primary text-white shadow-lg shadow-primary/20 active:scale-90 transition-all cursor-pointer border border-border-default"
         >
           <Plus className="w-6 h-6" />
         </button>
@@ -205,7 +205,7 @@ function MobileRequestCard({
   };
 
   return (
-    <div className="aether-glass p-4 bg-white/2 border border-white/5 space-y-3 shadow-md">
+    <div className="aether-glass p-4 bg-bg-secondary/35 border border-border-subtle space-y-3 shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <span className="text-xs font-black text-foreground block truncate leading-tight">{req.title}</span>
@@ -220,17 +220,17 @@ function MobileRequestCard({
         </span>
       </div>
 
-      <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed line-clamp-3 bg-white/[0.01] p-2 rounded-lg border border-white/[0.02]">
+      <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed line-clamp-3 bg-bg-secondary/15 p-2 rounded-lg border border-border-subtle/50">
         {req.description}
       </p>
 
       {/* Review Actions */}
       {!isSent && req.status === 'pending' && (
-        <div className="pt-2 border-t border-white/5 flex flex-col gap-2">
+        <div className="pt-2 border-t border-border-subtle flex flex-col gap-2">
           {noteOpen ? (
             <div className="flex flex-col gap-2">
               <input
-                className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-[10px] text-foreground placeholder:text-muted-foreground outline-none font-bold"
+                className="w-full px-3 py-2 rounded-lg border border-border-default bg-bg-secondary text-[10px] text-foreground placeholder:text-muted-foreground outline-none font-bold"
                 placeholder="Write a brief review note..."
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -252,7 +252,7 @@ function MobileRequestCard({
                 </button>
                 <button 
                   onClick={() => setNoteOpen(false)} 
-                  className="px-3 rounded-lg bg-white/5 text-muted-foreground cursor-pointer active:scale-95 text-[10px] font-black border border-white/5"
+                  className="px-3 rounded-lg bg-bg-secondary text-muted-foreground cursor-pointer active:scale-95 text-[10px] font-black border border-border-default"
                 >
                   Cancel
                 </button>
@@ -272,7 +272,7 @@ function MobileRequestCard({
       )}
 
       {req.approverNote && (
-        <div className="text-[9px] text-muted-foreground bg-white/[0.01] border border-white/5 rounded-lg p-2.5 italic font-semibold">
+        <div className="text-[9px] text-muted-foreground bg-bg-secondary/20 border border-border-subtle rounded-lg p-2.5 italic font-semibold">
           "{req.approverNote}"
         </div>
       )}
@@ -307,6 +307,14 @@ function MobileCreateModal({
       if (mgr) setSelectedApprover(mgr);
     }
   }, [currentUser, members]);
+
+  React.useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   const filteredMembers = members.filter(
     m => m.uid !== currentUser.uid &&
@@ -348,16 +356,16 @@ function MobileCreateModal({
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-        className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-white/10 px-6 pb-6 pt-3 flex flex-col bg-surface/98 backdrop-blur-3xl overflow-hidden"
+        className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border-default px-6 pb-6 pt-3 flex flex-col bg-surface/98 backdrop-blur-3xl overflow-hidden"
       >
-        <div className="w-10 h-1.5 rounded-full bg-white/10 mx-auto mb-4 shrink-0" />
+        <div className="w-10 h-1.5 rounded-full bg-text-muted/20 mx-auto mb-4 shrink-0" />
         
-        <div className="flex items-center justify-between border-b border-white/5 pb-3 shrink-0">
+        <div className="flex items-center justify-between border-b border-border-subtle pb-3 shrink-0">
           <span className="text-xs font-black text-foreground flex items-center gap-2">
             <FileText className="w-4.5 h-4.5 text-primary" />
             <span>SUBMIT NEW APPROVAL</span>
           </span>
-          <button onClick={onClose} className="h-7 w-7 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground cursor-pointer active:scale-90">
+          <button onClick={onClose} className="h-7 w-7 rounded-full bg-bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer active:scale-90">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -368,7 +376,7 @@ function MobileCreateModal({
             <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">APPROVER SIGNATURE</span>
             <div className="relative">
               {selectedApprover ? (
-                <div className="p-3.5 rounded-xl border border-white/5 bg-white/5 flex items-center justify-between">
+                <div className="p-3.5 rounded-xl border border-border-subtle bg-bg-secondary/40 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div 
                       className="w-7 h-7 rounded-full flex items-center justify-center font-extrabold text-[10px] text-white"
@@ -381,7 +389,7 @@ function MobileCreateModal({
                       <span className="text-[9px] text-muted-foreground block font-semibold mt-0.5">@{selectedApprover.username}</span>
                     </div>
                   </div>
-                  <button onClick={() => setSelectedApprover(null)} className="h-6 w-6 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground">
+                  <button onClick={() => setSelectedApprover(null)} className="h-6 w-6 rounded-full bg-bg-secondary flex items-center justify-center text-muted-foreground">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -389,7 +397,7 @@ function MobileCreateModal({
                 <button 
                   type="button"
                   onClick={() => setSearchOpen(true)}
-                  className="w-full py-3 px-4 rounded-xl border border-dashed border-white/10 bg-white/2 text-left text-xs font-black text-primary cursor-pointer active:scale-98"
+                  className="w-full py-3 px-4 rounded-xl border border-dashed border-border-default bg-bg-secondary/45 text-left text-xs font-black text-primary cursor-pointer active:scale-98"
                 >
                   + SELECT APPROVER MEMBER
                 </button>
@@ -399,14 +407,14 @@ function MobileCreateModal({
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs p-6 flex flex-col">
                   <div className="flex items-center justify-between pb-3 shrink-0">
                     <span className="text-xs font-black text-foreground">Select Approver</span>
-                    <button onClick={() => setSearchOpen(false)} className="h-7 w-7 rounded-full bg-white/5 flex items-center justify-center"><X className="w-4 h-4" /></button>
+                    <button onClick={() => setSearchOpen(false)} className="h-7 w-7 rounded-full bg-bg-secondary flex items-center justify-center"><X className="w-4 h-4" /></button>
                   </div>
                   <input 
                     type="text" 
                     placeholder="Search members..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full p-3 rounded-xl border border-white/10 bg-white/5 text-xs outline-none focus:border-primary/50 text-foreground font-bold shrink-0"
+                    className="w-full p-3 rounded-xl border border-border-default bg-bg-secondary text-xs outline-none focus:border-primary/50 text-foreground font-bold shrink-0"
                   />
                   <div className="flex-1 overflow-y-auto space-y-2 mt-4">
                     {filteredMembers.map(m => (
@@ -414,7 +422,7 @@ function MobileCreateModal({
                         key={m.uid}
                         type="button"
                         onClick={() => { setSelectedApprover(m); setSearchOpen(false); }}
-                        className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/2 border border-white/5 hover:bg-white/5 text-left"
+                        className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-bg-secondary/40 border border-border-subtle hover:bg-bg-secondary/80 text-left"
                       >
                         <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs" style={{ background: `hsl(${avatarHue(m.uid)} 55% 45%)` }}>
                           {m.fullName[0].toUpperCase()}
@@ -441,7 +449,7 @@ function MobileCreateModal({
                   onClick={() => setType(k)}
                   className={cn(
                     "flex items-center gap-2.5 p-3 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer select-none",
-                    type === k ? "border-primary bg-primary/10 text-primary" : "border-white/5 bg-white/2 text-muted-foreground"
+                    type === k ? "border-primary bg-primary/10 text-primary" : "border-border-subtle bg-bg-secondary/40 text-muted-foreground"
                   )}
                 >
                   <span className="text-xs shrink-0">{label}</span>
@@ -458,7 +466,7 @@ function MobileCreateModal({
               placeholder="e.g. Leave for Family Event"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/2 text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold"
+              className="w-full px-4 py-3 rounded-xl border border-border-default bg-bg-secondary/55 text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold"
             />
           </div>
 
@@ -467,11 +475,11 @@ function MobileCreateModal({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">FROM</span>
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 rounded-xl border border-white/5 bg-white/2 text-xs text-foreground outline-none [color-scheme:dark]" />
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 rounded-xl border border-border-default bg-bg-secondary/55 text-xs text-foreground outline-none [color-scheme:light] dark:[color-scheme:dark]" />
               </div>
               <div className="space-y-1.5">
                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">TO</span>
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full p-3 rounded-xl border border-white/5 bg-white/2 text-xs text-foreground outline-none [color-scheme:dark]" />
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full p-3 rounded-xl border border-border-default bg-bg-secondary/55 text-xs text-foreground outline-none [color-scheme:light] dark:[color-scheme:dark]" />
               </div>
             </div>
           )}
@@ -484,15 +492,15 @@ function MobileCreateModal({
               placeholder="Please explain the details of your request..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/2 text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-border-default bg-bg-secondary/55 text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold resize-none"
             />
           </div>
 
           {error && <span className="text-xs text-red-400 font-bold block bg-red-500/10 border border-red-500/20 p-3 rounded-xl">{error}</span>}
         </form>
 
-        <div className="pt-3 border-t border-white/5 flex gap-3 shrink-0">
-          <button onClick={onClose} className="flex-1 py-3 text-xs font-black text-muted-foreground rounded-xl border border-white/5 cursor-pointer active:scale-95 bg-white/2">
+        <div className="pt-3 border-t border-border-subtle flex gap-3 shrink-0">
+          <button onClick={onClose} className="flex-1 py-3 text-xs font-black text-muted-foreground rounded-xl border border-border-default cursor-pointer active:scale-95 bg-bg-secondary/40">
             CANCEL
           </button>
           <button 
@@ -511,7 +519,7 @@ function MobileCreateModal({
 
 function EmptyState({ icon: Icon, title, subtitle }: { icon: any; title: string; subtitle: string }) {
   return (
-    <div className="aether-glass p-8 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-2xl py-16">
+    <div className="aether-glass p-8 text-center bg-bg-secondary/15 border border-dashed border-border-subtle rounded-2xl py-16">
       <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-primary/10 border border-primary/25 text-primary mx-auto mb-3 shadow-inner">
         <Icon className="w-5.5 h-5.5" />
       </div>
