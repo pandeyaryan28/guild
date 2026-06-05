@@ -331,31 +331,31 @@ export function DashboardControl() {
         )}
       </AnimatePresence>
 
-      {/* Top Banner: Greeting & Avatars Redesigned */}
-      <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-500/10 via-violet-500/5 to-cyan-500/10 p-6 md:p-8 backdrop-blur-xl shadow-2xl animate-fluid-pop">
+      {/* Top Banner: Greeting & Avatars Redesigned (Aurora Horizon Style) */}
+      <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-cyan-500/15 p-6 md:p-8 backdrop-blur-xl shadow-2xl animate-aurora-mesh animate-fluid-pop">
         {/* Absolute glowing blur spots behind content for rich visuals */}
         <div className="absolute -left-16 -top-16 w-40 h-40 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -right-16 -bottom-16 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
-          <div className="flex items-center gap-5">
-            {/* Dual Profile Stack */}
+          <div className="flex items-center gap-5 flex-1 min-w-0">
+            {/* Dual Profile Stack with Liquid Morphs */}
             <div className="flex items-center shrink-0">
               <div className="relative z-10 shrink-0">
                 <button 
                   type="button"
                   onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                  className="w-16 h-16 flex items-center justify-center rounded-full border-2 border-white/20 relative cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-xl ring-4 ring-primary/20 bg-background"
+                  className="w-16 h-16 flex items-center justify-center relative cursor-pointer shadow-xl ring-4 ring-primary/20 bg-background animate-morph-user overflow-hidden border-2 border-white/20 z-10"
                   style={{ background: `hsl(${avatarHue(userProfile?.uid || '')} 55% 45%)` }}
                   title="Click to change your availability status"
                 >
                   {userProfile?.photoURL ? (
-                    <img src={userProfile.photoURL} alt={userProfile.fullName || 'User'} className="h-full w-full object-cover rounded-full" />
+                    <img src={userProfile.photoURL} alt={userProfile.fullName || 'User'} className="h-full w-full object-cover" />
                   ) : (
                     <span className="text-sm font-black text-white">{myInitials}</span>
                   )}
                   {/* Availability status dot indicator */}
-                  <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background flex items-center justify-center shadow-lg border border-white/10">
+                  <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background flex items-center justify-center shadow-lg border border-white/10 z-20">
                     <span className={cn(
                       "h-3 w-3 rounded-full",
                       currentStatus === 'focus' ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" :
@@ -429,7 +429,7 @@ export function DashboardControl() {
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-white/[0.02] border border-white/10 -ml-3 animate-pulse shadow-xl shrink-0" />
               ) : org && (
                 <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-white text-base border-2 border-white/20 relative overflow-hidden -ml-3 shadow-xl transition-all hover:scale-105 z-0 animate-fluid-pop"
+                  className="w-16 h-16 flex items-center justify-center font-black text-white text-base border-2 border-white/20 relative overflow-hidden -ml-3 shadow-xl z-0 animate-morph-org bg-accent/25"
                   style={!org.photoURL ? {
                     background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
                   } : undefined}
@@ -444,18 +444,26 @@ export function DashboardControl() {
               )}
             </div>
 
-            {/* Text Info */}
-            <div className="space-y-0.5 min-w-0">
-              <span className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full inline-block mb-1.5">
-                Active Session
-              </span>
-              <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight tracking-tight truncate">
-                {userProfile?.fullName || displayName}
-              </h1>
+            {/* Text Info - Clearly Separated Layout */}
+            <div className="space-y-2.5 min-w-0 flex-1 ml-2">
+              <div className="space-y-0.5">
+                <span className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full inline-block">
+                  User Profile
+                </span>
+                <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight tracking-tight truncate">
+                  {userProfile?.fullName || displayName}
+                </h1>
+              </div>
+              
               {org && (
-                <p className="text-xs md:text-sm font-bold text-muted-foreground/80 tracking-wide truncate">
-                  Active in <span className="text-foreground font-black">{org.name}</span>
-                </p>
+                <div className="pt-2 border-t border-white/5 flex items-center gap-2 flex-wrap">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full">
+                    Active Workspace
+                  </span>
+                  <p className="text-xs md:text-sm font-bold text-foreground truncate">
+                    {org.name}
+                  </p>
+                </div>
               )}
             </div>
           </div>

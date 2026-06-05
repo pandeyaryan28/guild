@@ -363,3 +363,54 @@
 [class*="bg-accent"] svg {
   color: currentColor !important;
 }
+
+/* Aurora Mesh shifting background animation */
+@keyframes aurora-mesh-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-aurora-mesh {
+  background-size: 200% 200%;
+  animation: aurora-mesh-shift 12s ease infinite;
+}
+
+/* Organic Morphing Liquid Shape animations */
+@keyframes morph-liquid-user {
+  0% {
+    border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
+  }
+  50% {
+    border-radius: 60% 40% 40% 60% / 60% 60% 40% 40%;
+  }
+  100% {
+    border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
+  }
+}
+
+@keyframes morph-liquid-org {
+  0% {
+    border-radius: 60% 40% 40% 60% / 60% 60% 40% 40%;
+  }
+  50% {
+    border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
+  }
+  100% {
+    border-radius: 60% 40% 40% 60% / 60% 60% 40% 40%;
+  }
+}
+
+.animate-morph-user {
+  animation: morph-liquid-user 8s ease-in-out infinite;
+}
+
+.animate-morph-org {
+  animation: morph-liquid-org 8s ease-in-out infinite;
+}
