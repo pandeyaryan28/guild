@@ -12,6 +12,9 @@ import { AetherToasts } from '../AetherToasts';
 import { ThemeSlider } from '../ThemeSlider';
 import { OfflineIndicator } from '../pwa/OfflineIndicator';
 import { PwaInstallPrompt } from '../pwa/PwaInstallPrompt';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { type Organization } from '../../lib/firestore';
 
 interface RedesignLayoutProps {
   children: React.ReactNode;
@@ -25,6 +28,29 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
   const { mode, toggleMode } = useTheme();
   
   const orgId = userProfile?.organizationId;
+  const [org, setOrg] = React.useState<Organization | null>(null);
+
+  React.useEffect(() => {
+    if (!orgId) {
+      setOrg(null);
+      return;
+    }
+    const unsub = onSnapshot(
+      doc(db, 'organizations', orgId),
+      (snap) => {
+        if (snap.exists()) {
+          setOrg({ ...snap.data(), id: snap.id } as Organization);
+        } else {
+          setOrg(null);
+        }
+      },
+      (err) => {
+        console.error('Failed to load organization in Layout:', err);
+        setOrg(null);
+      }
+    );
+    return unsub;
+  }, [orgId]);
   const {
     notifications,
     archivedNotifications,
@@ -84,16 +110,33 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
         
         {/* Top Spatial Control Nav - macOS Floating Window Titlebar Capsule */}
         <header className="flex h-14 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0 px-6 aether-glass shadow-xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20" style={{ borderRadius: '24px' }}>
-          {/* Logo & Section Title */}
-          <div className="flex items-center gap-4">
-            <span 
-              className="text-lg font-black tracking-wider text-gradient uppercase bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400"
-              style={{ letterSpacing: '0.12em' }}
-            >
-              Guild
-            </span>
+          {/* Organization Logo & Workspace Section Title */}
+          <div className="flex items-center gap-3 min-w-0">
+            {org ? (
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div 
+                  className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-white text-[10px] border border-white/10 relative overflow-hidden shrink-0 shadow-sm"
+                  style={!org.photoURL ? {
+                    background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
+                  } : undefined}
+                >
+                  {org.photoURL ? (
+                    <img src={org.photoURL} alt={org.name} className="h-full w-full object-cover" />
+                  ) : (
+                    org.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'O'
+                  )}
+                </div>
+                <span className="text-sm font-black text-foreground truncate select-none">
+                  {org.name}
+                </span>
+              </div>
+            ) : (
+              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest animate-pulse">
+                Loading...
+              </span>
+            )}
             <div className="h-4 w-[1px] bg-white/10 shrink-0" />
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-none truncate capitalize">
               {location.pathname === '/' ? 'Workspace Control' : location.pathname.split('/')[2] || location.pathname.split('/')[1]}
             </span>
           </div>

@@ -13,6 +13,9 @@ import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { OfflineIndicator } from '../pwa/OfflineIndicator';
 import { PwaInstallPrompt } from '../pwa/PwaInstallPrompt';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { type Organization } from '../../lib/firestore';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -27,6 +30,29 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
   const { userProfile } = useAuth();
   
   const orgId = userProfile?.organizationId;
+  const [org, setOrg] = React.useState<Organization | null>(null);
+
+  React.useEffect(() => {
+    if (!orgId) {
+      setOrg(null);
+      return;
+    }
+    const unsub = onSnapshot(
+      doc(db, 'organizations', orgId),
+      (snap) => {
+        if (snap.exists()) {
+          setOrg({ ...snap.data(), id: snap.id } as Organization);
+        } else {
+          setOrg(null);
+        }
+      },
+      (err) => {
+        console.error('Failed to load organization in MobileLayout:', err);
+        setOrg(null);
+      }
+    );
+    return unsub;
+  }, [orgId]);
   const {
     notifications,
     archivedNotifications,
@@ -80,13 +106,31 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
       {/* 2. Top Spatial mobile control bar */}
       <header className="flex h-[calc(3.5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] w-full items-center justify-between px-5 shrink-0 z-30 border-b border-white/5 bg-surface/40 backdrop-blur-md">
         {/* Brand */}
-        <div className="flex items-center gap-2">
-          <span 
-            className="text-sm font-black tracking-widest text-gradient uppercase bg-gradient-to-r from-violet-500 to-indigo-500"
-          >
-            Guild
-          </span>
-          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-80 border-l border-white/10 pl-2">
+        <div className="flex items-center gap-2 max-w-[60%] min-w-0">
+          {org ? (
+            <div className="flex items-center gap-2 min-w-0">
+              <div 
+                className="w-6 h-6 rounded-md flex items-center justify-center font-black text-white text-[9px] border border-white/10 relative overflow-hidden shrink-0 shadow-sm"
+                style={!org.photoURL ? {
+                  background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
+                } : undefined}
+              >
+                {org.photoURL ? (
+                  <img src={org.photoURL} alt={org.name} className="h-full w-full object-cover" />
+                ) : (
+                  org.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'O'
+                )}
+              </div>
+              <span className="text-xs font-black text-foreground truncate select-none">
+                {org.name}
+              </span>
+            </div>
+          ) : (
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest animate-pulse">
+              Loading...
+            </span>
+          )}
+          <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 border-l border-white/10 pl-2 shrink-0">
             {getHeaderTitle()}
           </span>
         </div>
