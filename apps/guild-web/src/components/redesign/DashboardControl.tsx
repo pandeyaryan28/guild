@@ -337,15 +337,49 @@ export function DashboardControl() {
         <div className="absolute -left-16 -top-16 w-40 h-40 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -right-16 -bottom-16 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
-          <div className="flex items-center gap-5 flex-1 min-w-0">
-            {/* Dual Profile Stack with Liquid Morphs */}
-            <div className="flex items-center shrink-0">
-              <div className="relative z-10 shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-6 md:gap-8 flex-1 min-w-0">
+            {/* 1. Organization Block */}
+            {loadingOrg ? (
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-14 h-14 rounded-2xl bg-white/[0.02] border border-white/10 animate-pulse shadow-xl shrink-0" />
+                <div className="h-6 w-24 bg-white/[0.02] border border-white/5 rounded-md animate-pulse shrink-0" />
+              </div>
+            ) : org && (
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div 
+                  className="w-14 h-14 flex items-center justify-center font-black text-white text-sm border-2 border-white/20 relative overflow-hidden shrink-0 shadow-xl animate-morph-org bg-accent/25"
+                  style={!org.photoURL ? {
+                    background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
+                  } : undefined}
+                  title={`Workspace: ${org.name}`}
+                >
+                  {org.photoURL ? (
+                    <img src={org.photoURL} alt={org.name} className="h-full w-full object-cover" />
+                  ) : (
+                    org.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'O'
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <span className="text-xl md:text-2xl font-black text-foreground block truncate select-none leading-tight">
+                    {org.name}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Separator Line (desktop only) */}
+            {org && (
+              <div className="hidden sm:block h-10 w-px bg-white/10 shrink-0" />
+            )}
+
+            {/* 2. User Block */}
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="relative shrink-0">
                 <button 
                   type="button"
                   onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                  className="w-16 h-16 flex items-center justify-center relative cursor-pointer shadow-xl ring-4 ring-primary/20 bg-background animate-morph-user overflow-hidden border-2 border-white/20 z-10"
+                  className="w-14 h-14 flex items-center justify-center relative cursor-pointer shadow-xl ring-4 ring-primary/20 bg-background animate-morph-user overflow-hidden border-2 border-white/20 z-10"
                   style={{ background: `hsl(${avatarHue(userProfile?.uid || '')} 55% 45%)` }}
                   title="Click to change your availability status"
                 >
@@ -423,48 +457,11 @@ export function DashboardControl() {
                   )}
                 </AnimatePresence>
               </div>
-
-              {/* Organization Logo */}
-              {loadingOrg ? (
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-white/[0.02] border border-white/10 -ml-3 animate-pulse shadow-xl shrink-0" />
-              ) : org && (
-                <div 
-                  className="w-16 h-16 flex items-center justify-center font-black text-white text-base border-2 border-white/20 relative overflow-hidden -ml-3 shadow-xl z-0 animate-morph-org bg-accent/25"
-                  style={!org.photoURL ? {
-                    background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
-                  } : undefined}
-                  title={`Workspace: ${org.name}`}
-                >
-                  {org.photoURL ? (
-                    <img src={org.photoURL} alt={org.name} className="h-full w-full object-cover" />
-                  ) : (
-                    org.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'O'
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Text Info - Clearly Separated Layout */}
-            <div className="space-y-2.5 min-w-0 flex-1 ml-2">
-              <div className="space-y-0.5">
-                <span className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full inline-block">
-                  User Profile
-                </span>
-                <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight tracking-tight truncate">
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl font-black text-foreground block truncate leading-tight select-none">
                   {userProfile?.fullName || displayName}
                 </h1>
               </div>
-              
-              {org && (
-                <div className="pt-2 border-t border-white/5 flex items-center gap-2 flex-wrap">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full">
-                    Active Workspace
-                  </span>
-                  <p className="text-xs md:text-sm font-bold text-foreground truncate">
-                    {org.name}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>
