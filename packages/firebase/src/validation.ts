@@ -49,6 +49,14 @@ export function isValidEmail(email: string): boolean {
 }
 
 /**
+ * Validate phone number — optional/empty is allowed, but if provided, it should contain 7–15 digits, optionally starting with a +.
+ */
+export function isValidPhoneNumber(phone: string): boolean {
+  if (!phone.trim()) return true;
+  return /^\+?[0-9\s\-()]{7,20}$/.test(phone.trim()) && phone.replace(/\D/g, '').length >= 7;
+}
+
+/**
  * Validate password — min 8 chars, at least 1 letter and 1 number.
  */
 export function isValidPassword(password: string): boolean {

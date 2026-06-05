@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
 import {
-  Crown, ShieldCheck, User, Mail, Briefcase, Hash, Calendar, X, Workflow, ListTodo
+  Crown, ShieldCheck, User, Mail, Briefcase, Hash, Calendar, X, Workflow, ListTodo, Phone
 } from 'lucide-react';
 import { type UserProfile, type UserRole, type Team, type Task } from '@guild/types';
 import { STATUS_CONFIG, PRIORITY_CONFIG } from '../lib/tasks';
@@ -152,6 +152,16 @@ export function MemberProfileDrawer({ isOpen, member, onClose, tasks, teams }: M
                   <p className="font-semibold text-foreground truncate mt-0.5">{member.email}</p>
                 </div>
               </div>
+
+              {member.phoneNumber && (
+                <div className="flex items-center gap-3 pt-3 pb-3">
+                  <Phone className="h-4 w-4 text-text-muted shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Phone Number</p>
+                    <p className="font-semibold text-foreground truncate mt-0.5">{member.phoneNumber}</p>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center gap-3 pt-3 pb-3">
                 <Briefcase className="h-4 w-4 text-text-muted shrink-0" />

@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { User, Briefcase, Hash, Calendar, AtSign, Loader2, CheckCircle2, XCircle, ChevronRight, Copy, Check, Link, Sparkles, UserPlus } from 'lucide-react';
+import { User, Briefcase, Hash, Calendar, AtSign, Loader2, CheckCircle2, XCircle, ChevronRight, Copy, Check, Link, Sparkles, UserPlus, Phone } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
 import { createUser, addOrgMember, setOnboardingState, checkUsernameUnique, createPendingEmailInvite } from '../../../lib/firestore';
-import { isValidUsername, isValidEmployeeId, isValidAge, isValidEmail } from '../../../lib/validation';
+import { isValidUsername, isValidEmployeeId, isValidAge, isValidEmail, isValidPhoneNumber } from '../../../lib/validation';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
 import type { OnboardingData } from '../OnboardingRoot';
@@ -23,6 +23,7 @@ export function StepOwnerProfile({ data, updateData }: Props) {
   const [designation, setDesignation] = React.useState('');
   const [employeeId, setEmployeeId] = React.useState('');
   const [age, setAge] = React.useState('');
+  const [phoneNumber, setPhoneNumber] = React.useState('');
   const [username, setUsername] = React.useState('');
   const [inviteEmails, setInviteEmails] = React.useState('');
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -69,6 +70,7 @@ export function StepOwnerProfile({ data, updateData }: Props) {
     if (!isValidEmployeeId(employeeId)) errs.employeeId = 'Employee ID is required.';
     const ageNum = parseInt(age);
     if (!isValidAge(ageNum)) errs.age = 'Enter a valid age (16–100).';
+    if (phoneNumber && !isValidPhoneNumber(phoneNumber)) errs.phoneNumber = 'Enter a valid phone number.';
     if (!isValidUsername(username)) errs.username = 'Username: 3–20 chars, letters, numbers, underscores.';
     if (usernameAvailable === false) errs.username = 'This username is taken.';
     setErrors(errs);
@@ -91,6 +93,7 @@ export function StepOwnerProfile({ data, updateData }: Props) {
         age: parseInt(age),
         organizationId: data.orgId,
         role: 'owner',
+        phoneNumber: phoneNumber.trim(),
       });
 
       // 2. Add to org members
@@ -236,6 +239,24 @@ export function StepOwnerProfile({ data, updateData }: Props) {
               </div>
               {errors.age && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.age}</p>}
             </div>
+          </div>
+
+          {/* Phone Number */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+              Phone Number (Optional)
+            </label>
+            <div className="relative group">
+              <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+1 (555) 000-0000"
+                className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+              />
+            </div>
+            {errors.phoneNumber && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.phoneNumber}</p>}
           </div>
 
           {/* Username */}

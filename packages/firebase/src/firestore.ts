@@ -276,6 +276,7 @@ export interface AcceptInvitePayload {
   role: UserRole;
   token?: string;
   isGlobal?: boolean;
+  phoneNumber?: string;
 }
 
 export async function executeMemberOnboardingJoin(payload: AcceptInvitePayload): Promise<void> {
@@ -291,6 +292,7 @@ export async function executeMemberOnboardingJoin(payload: AcceptInvitePayload):
     role,
     token,
     isGlobal,
+    phoneNumber,
   } = payload;
 
   // 1. Transactionally write User Profile
@@ -303,6 +305,7 @@ export async function executeMemberOnboardingJoin(payload: AcceptInvitePayload):
     age,
     organizationId: orgId,
     role,
+    phoneNumber: phoneNumber ?? '',
   });
 
   // 2. Add member record

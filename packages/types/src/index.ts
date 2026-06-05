@@ -28,6 +28,7 @@ export interface UserProfile {
   focusStatus?: FocusStatus;
   availabilityStatus?: 'active' | 'focus' | 'away';
   photoURL?: string;
+  phoneNumber?: string;
 }
 
 export interface FocusStatus {

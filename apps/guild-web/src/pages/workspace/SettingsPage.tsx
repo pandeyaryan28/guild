@@ -35,6 +35,7 @@ import { db } from '../../lib/firebase';
 import { InviteLink, UserProfile, Organization } from '@guild/types';
 import { InviteModal } from '../people/InviteModal';
 import { cn } from '@/lib/utils';
+import { isValidPhoneNumber } from '../../lib/validation';
 
 // ─── Invite Links Hook ────────────────────────────────────────────────────────
 function useInviteLinks(orgId: string | undefined) {
@@ -425,6 +426,7 @@ interface FormError {
   fullName?: string;
   username?: string;
   age?: string;
+  phoneNumber?: string;
 }
 
 function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout: () => Promise<void> }) {
@@ -433,6 +435,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
   const [designation, setDesignation] = React.useState(profile.designation || '');
   const [employeeId, setEmployeeId] = React.useState(profile.employeeId || '');
   const [age, setAge] = React.useState(profile.age ? String(profile.age) : '');
+  const [phoneNumber, setPhoneNumber] = React.useState(profile.phoneNumber || '');
 
   const [saving, setSaving] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
@@ -555,6 +558,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
     setDesignation(profile.designation || '');
     setEmployeeId(profile.employeeId || '');
     setAge(profile.age ? String(profile.age) : '');
+    setPhoneNumber(profile.phoneNumber || '');
   }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -568,6 +572,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
     if (!fullName.trim()) nextErrors.fullName = 'Full Name is required';
     if (!username.trim()) nextErrors.username = 'Username is required';
     if (age && (isNaN(Number(age)) || Number(age) <= 0)) nextErrors.age = 'Age must be a valid positive number';
+    if (phoneNumber && !isValidPhoneNumber(phoneNumber)) nextErrors.phoneNumber = 'Please enter a valid phone number';
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -592,6 +597,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
         designation: designation.trim(),
         employeeId: employeeId.trim(),
         age: age ? Number(age) : 0,
+        phoneNumber: phoneNumber.trim(),
       });
 
       setSuccess(true);
@@ -758,6 +764,22 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               placeholder="26"
             />
             {errors.age && <p className="text-[9px] text-red-500 font-bold">{errors.age}</p>}
+          </div>
+
+          {/* Phone Number */}
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Phone Number</label>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className={cn(
+                "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                errors.phoneNumber ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
+              )}
+              placeholder="+1 (555) 000-0000"
+            />
+            {errors.phoneNumber && <p className="text-[9px] text-red-500 font-bold">{errors.phoneNumber}</p>}
           </div>
 
           {/* Email (Read-Only) */}

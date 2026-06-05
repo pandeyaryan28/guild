@@ -23,6 +23,7 @@ import { updateUserProfile } from '../../../lib/firestore';
 import { sendPasswordReset } from '../../../lib/auth';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { isValidPhoneNumber } from '../../../lib/validation';
 
 export function MobileSettings() {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ export function MobileSettings() {
   const [designation, setDesignation] = React.useState(userProfile?.designation || '');
   const [employeeId, setEmployeeId] = React.useState(userProfile?.employeeId || '');
   const [age, setAge] = React.useState(userProfile?.age ? String(userProfile.age) : '');
+  const [phoneNumber, setPhoneNumber] = React.useState(userProfile?.phoneNumber || '');
   const [saving, setSaving] = React.useState(false);
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
@@ -61,6 +63,7 @@ export function MobileSettings() {
       setDesignation(userProfile.designation || '');
       setEmployeeId(userProfile.employeeId || '');
       setAge(userProfile.age ? String(userProfile.age) : '');
+      setPhoneNumber(userProfile.phoneNumber || '');
     }
   }, [userProfile]);
 
@@ -71,13 +74,20 @@ export function MobileSettings() {
     setSaveError(null);
     setSaveSuccess(false);
 
+    if (phoneNumber && !isValidPhoneNumber(phoneNumber)) {
+      setSaveError('Please enter a valid phone number.');
+      setSaving(false);
+      return;
+    }
+
     try {
       await updateUserProfile(userProfile.uid, {
         fullName: fullName.trim(),
         username: username.trim(),
         designation: designation.trim(),
         employeeId: employeeId.trim(),
-        age: age ? Number(age) : 0
+        age: age ? Number(age) : 0,
+        phoneNumber: phoneNumber.trim()
       });
       setSaveSuccess(true);
       setTimeout(() => {
@@ -338,6 +348,17 @@ export function MobileSettings() {
                       onChange={(e) => setAge(e.target.value)}
                       className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
                       placeholder="26"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black tracking-widest uppercase text-muted-foreground">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
+                      placeholder="+1 (555) 000-0000"
                     />
                   </div>
 
