@@ -509,7 +509,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       console.error("Failed to upload photo:", err);
-      setGeneralError(err.message || "Failed to upload profile photo.");
+      alert(err.message || "Failed to upload profile photo.");
     } finally {
       setUploadingPhoto(false);
     }
@@ -525,7 +525,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       console.error("Failed to remove photo:", err);
-      setGeneralError(err.message || "Failed to remove profile photo.");
+      alert(err.message || "Failed to remove profile photo.");
     } finally {
       setUploadingPhoto(false);
     }
@@ -654,11 +654,6 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
 
         <div className="space-y-1.5 text-center sm:text-left">
           <h3 className="text-xs font-bold text-foreground">Profile Picture</h3>
-          <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
-            Upload a portrait photo to make it easier for colleagues to recognize you.
-            <br />
-            Supports JPEG, PNG, or WebP under 5MB.
-          </p>
           <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
             <button
               type="button"
@@ -854,27 +849,21 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
       </form>
 
       {/* Danger Zone */}
-      <div className="aether-glass bg-red-500/[0.01] border border-red-500/20 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-4 relative overflow-hidden mt-8 text-left">
-        {/* Crimson pulse accent glow */}
-        <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.08] filter blur-xl bg-red-500" />
-        
-        <div className="flex items-start gap-3">
-          <ShieldAlert className="h-5 w-5 text-red-500 shrink-0 mt-0.5 animate-pulse" />
-          <div>
-            <h2 className="text-xs font-black text-red-500 uppercase tracking-wider">Danger Zone</h2>
-            <p className="text-[10px] text-red-500/80 mt-0.5 leading-relaxed font-semibold">
-              Deleting your profile is permanent. Your personal details, account settings, and workspace presence will be deleted. Your unique username will be released.
-            </p>
+      {profile.role !== 'owner' && (
+        <div className="aether-glass bg-red-500/[0.01] border border-red-500/20 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-4 relative overflow-hidden mt-8 text-left">
+          {/* Crimson pulse accent glow */}
+          <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.08] filter blur-xl bg-red-500" />
+          
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="h-5 w-5 text-red-500 shrink-0 mt-0.5 animate-pulse" />
+            <div>
+              <h2 className="text-xs font-black text-red-500 uppercase tracking-wider">Danger Zone</h2>
+              <p className="text-[10px] text-red-500/80 mt-0.5 leading-relaxed font-semibold">
+                Deleting your profile is permanent. Your personal details, account settings, and workspace presence will be deleted. Your unique username will be released.
+              </p>
+            </div>
           </div>
-        </div>
 
-        {profile.role === 'owner' ? (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p className="text-[10px] text-red-500 font-bold leading-normal">
-              CRITICAL: You are currently the Owner of this workspace. You cannot delete your profile until you delete the workspace entirely (via Workspace Info tab).
-            </p>
-          </div>
-        ) : (
           <div className="space-y-3 max-w-md">
             <p className="text-[10px] text-muted-foreground font-semibold">
               To confirm profile deletion, please type your exact username <span className="font-bold text-foreground select-all">"{profile.username}"</span> below:
@@ -901,8 +890,8 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               <p className="text-[10px] text-red-500 font-bold mt-1.5">{profileDeleteError}</p>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1503,7 +1492,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       console.error("Failed to upload organization logo:", err);
-      setError(err.message || "Failed to upload workspace logo.");
+      alert(err.message || "Failed to upload workspace logo.");
     } finally {
       setUploadingLogo(false);
     }
@@ -1519,7 +1508,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       console.error("Failed to remove logo:", err);
-      setError(err.message || "Failed to remove workspace logo.");
+      alert(err.message || "Failed to remove workspace logo.");
     } finally {
       setUploadingLogo(false);
     }
@@ -1639,11 +1628,6 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
 
           <div className="space-y-1.5 text-center sm:text-left">
             <h3 className="text-xs font-bold text-foreground">Workspace Logo</h3>
-            <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
-              Upload a workspace logo to display across your organization sidebar and dropdowns.
-              <br />
-              Supports JPEG, PNG, or WebP under 5MB.
-            </p>
             <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
               <button
                 type="button"
