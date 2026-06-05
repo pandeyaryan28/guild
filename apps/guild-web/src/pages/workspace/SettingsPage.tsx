@@ -17,12 +17,10 @@ import { THEMES } from '../../lib/themes';
 import { sendPasswordReset, sendDeletionVerificationEmail, isDeletionSignInLink, confirmDeletionSignInLink, reauthenticatePassword, reauthenticateGoogle, getCurrentUser } from '../../lib/auth';
 import {
   updateUserProfile,
-  updateUserRole,
   removeUserFromOrg,
   updateOrganizationDetails,
   deleteOrganization,
   revokeInviteLink,
-  transferOrgOwnership,
   checkUsernameUnique,
   checkOrgSlugUnique,
   deleteUserProfile
@@ -873,7 +871,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
         {profile.role === 'owner' ? (
           <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
             <p className="text-[10px] text-red-500 font-bold leading-normal">
-              CRITICAL: You are currently the Owner of this workspace. You cannot delete your profile until you either transfer workspace ownership to another teammate (via Workspace Members tab) or delete the workspace entirely (via Workspace Info tab).
+              CRITICAL: You are currently the Owner of this workspace. You cannot delete your profile until you delete the workspace entirely (via Workspace Info tab).
             </p>
           </div>
         ) : (
@@ -1110,18 +1108,6 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
     });
   }, [members]);
 
-  const handleRoleChange = async (targetId: string, nextRole: 'admin' | 'member') => {
-    setUpdatingId(targetId);
-    setError(null);
-    try {
-      await updateUserRole(targetId, nextRole);
-    } catch (err: any) {
-      setError(err.message || 'Failed to update member role.');
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
   const handleRemoveMember = async (targetId: string) => {
     if (!window.confirm('Are you absolutely sure you want to remove this member from the workspace?')) return;
     setUpdatingId(targetId);
@@ -1130,19 +1116,6 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
       await removeUserFromOrg(targetId);
     } catch (err: any) {
       setError(err.message || 'Failed to remove member.');
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
-  const handleTransfer = async (targetId: string, name: string) => {
-    if (!window.confirm(`CRITICAL WARNING:\nYou are about to transfer complete workspace ownership to ${name}.\nThis action CANNOT be undone and will demote your account to an Admin. Do you want to proceed?`)) return;
-    setUpdatingId(targetId);
-    setError(null);
-    try {
-      await transferOrgOwnership(profile.organizationId, profile.uid, targetId);
-    } catch (err: any) {
-      setError(err.message || 'Failed to transfer ownership.');
     } finally {
       setUpdatingId(null);
     }
@@ -1239,36 +1212,6 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
                   <Loader2 className="h-4 w-4 animate-spin text-accent" />
                 ) : canManage ? (
                   <div className="flex items-center gap-1.5">
-                    {/* Demote Admin / Promote Member */}
-                    {isAdmin ? (
-                      <button
-                        onClick={() => handleRoleChange(member.uid, 'member')}
-                        className="px-2.5 py-1.5 border border-white/10 bg-white/5 hover:bg-white/10 rounded-xl text-[9px] font-extrabold text-foreground transition-all cursor-pointer shadow-sm"
-                        title="Demote to standard Member"
-                      >
-                        Demote
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleRoleChange(member.uid, 'admin')}
-                        className="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-750 text-white rounded-xl text-[9px] font-extrabold transition-all cursor-pointer shadow-md"
-                        title="Promote to Workspace Admin"
-                      >
-                        Promote Admin
-                      </button>
-                    )}
-
-                    {/* Transfer Ownership (Owner Only) */}
-                    {profile.role === 'owner' && !isOwner && (
-                      <button
-                        onClick={() => handleTransfer(member.uid, member.fullName)}
-                        className="px-2.5 py-1.5 border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/15 text-amber-500 rounded-xl text-[9px] font-extrabold transition-all cursor-pointer shadow-sm"
-                        title="Transfer Ownership"
-                      >
-                        Transfer Owner
-                      </button>
-                    )}
-
                     {/* Remove from workspace */}
                     <button
                       onClick={() => handleRemoveMember(member.uid)}
