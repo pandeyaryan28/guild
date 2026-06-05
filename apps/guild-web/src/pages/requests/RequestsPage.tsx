@@ -161,7 +161,7 @@ function CreateRequestModal({
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="w-full max-w-lg max-h-[85vh] flex flex-col aether-glass shadow-2xl overflow-hidden"
+        className="w-full max-w-lg max-h-[85vh] flex flex-col bg-surface/97 backdrop-blur-2xl border border-border-default rounded-[24px] shadow-2xl overflow-hidden"
       >
         {/* Fixed Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle bg-bg-secondary/40 flex-shrink-0">
@@ -581,7 +581,7 @@ ${req.approverNote ? `Review Note: "${req.approverNote}"` : ''}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-        className="relative w-full max-w-lg h-full aether-glass bg-surface/90 border-l border-border-default shadow-2xl flex flex-col overflow-hidden select-text z-10"
+        className="relative w-full max-w-lg h-full bg-surface/97 backdrop-blur-2xl border-l border-border-default shadow-2xl flex flex-col overflow-hidden select-text z-10"
       >
         {/* Drawer Header */}
         <div className="flex items-center justify-between px-6 py-4.5 border-b border-border-subtle bg-bg-secondary/40 shrink-0">

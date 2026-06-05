@@ -356,7 +356,7 @@ function MobileCreateModal({
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-        className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border-default px-6 pb-6 pt-3 flex flex-col bg-surface/98 backdrop-blur-3xl overflow-hidden"
+        className="w-full max-h-[92vh] rounded-t-[32px] border-x-0 border-b-0 border-t border-border-default px-6 pb-6 pt-3 flex flex-col bg-surface/98 backdrop-blur-3xl shadow-2xl overflow-hidden"
       >
         <div className="w-10 h-1.5 rounded-full bg-text-muted/20 mx-auto mb-4 shrink-0" />
         
