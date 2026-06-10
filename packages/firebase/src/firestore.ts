@@ -12,6 +12,7 @@ import {
   updateDoc,
   deleteDoc,
   increment,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { generateInviteToken } from './validation';
@@ -377,25 +378,90 @@ export async function updateOrganizationDetails(
   await updateDoc(orgRef, data);
 }
 
+async function deleteCollectionByQuery(q: any): Promise<void> {
+  const snap = await getDocs(q);
+  if (snap.empty) return;
+  const docs = snap.docs;
+  for (let i = 0; i < docs.length; i += 200) {
+    const batch = writeBatch(db);
+    const chunk = docs.slice(i, i + 200);
+    chunk.forEach((d) => {
+      batch.delete(d.ref);
+    });
+    await batch.commit();
+  }
+}
+
 export async function deleteOrganization(
   orgId: string,
   slug: string,
   ownerId: string
 ): Promise<void> {
-  // 1. Delete the organization document
+  // 1. Delete all cascading collections tied directly to orgId
+  
+  // A. Chats & Messages
+  await deleteCollectionByQuery(query(collection(db, 'messages'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'messageReplies'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'channelMembers'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'channels'), where('orgId', '==', orgId)));
+  
+  // B. DMs & DM Read States
+  const dmSnap = await getDocs(query(collection(db, 'directMessages'), where('orgId', '==', orgId)));
+  for (const dmDoc of dmSnap.docs) {
+    await deleteCollectionByQuery(query(collection(db, 'dmReadState'), where('dmId', '==', dmDoc.id)));
+  }
+  await deleteCollectionByQuery(query(collection(db, 'directMessages'), where('orgId', '==', orgId)));
+  
+  // C. Tasks, Activities, Comments, Labels
+  await deleteCollectionByQuery(query(collection(db, 'tasks'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'taskActivities'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'taskComments'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'taskLabels'), where('orgId', '==', orgId)));
+  
+  // D. Projects & Milestones, Project Comments
+  const projectsSnap = await getDocs(query(collection(db, 'projects'), where('orgId', '==', orgId)));
+  for (const projectDoc of projectsSnap.docs) {
+    await deleteCollectionByQuery(collection(db, 'projects', projectDoc.id, 'milestones'));
+  }
+  await deleteCollectionByQuery(query(collection(db, 'projects'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'projectComments'), where('orgId', '==', orgId)));
+  
+  // E. Goals & Goal Comments
+  await deleteCollectionByQuery(query(collection(db, 'goals'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'goalComments'), where('orgId', '==', orgId)));
+  
+  // F. Teams, Requests, Invites, Notifications
+  await deleteCollectionByQuery(query(collection(db, 'teams'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'requests'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'inviteLinks'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'pendingInvites'), where('orgId', '==', orgId)));
+  
+  // G. Owner's own notifications in the org (security rules restrict other users' notifications)
+  await deleteCollectionByQuery(
+    query(
+      collection(db, 'notifications'), 
+      where('orgId', '==', orgId), 
+      where('recipientId', '==', ownerId)
+    )
+  );
+
+  // 2. Delete the organizationMembers entries
+  await deleteCollectionByQuery(query(collection(db, 'organizationMembers'), where('orgId', '==', orgId)));
+
+  // 3. Delete the organization document itself
   await deleteDoc(doc(db, 'organizations', orgId));
 
-  // 2. Release the globally reserved URL slug
+  // 4. Release the globally reserved URL slug
   await deleteDoc(doc(db, 'orgSlugs', slug.toLowerCase()));
 
-  // 3. Reset the owner's profile to clear workspace references and role
+  // 5. Reset the owner's profile to clear workspace references and role
   const userRef = doc(db, 'users', ownerId);
   await updateDoc(userRef, {
     organizationId: '',
     role: 'member'
   });
 
-  // 4. Reset onboarding state for the owner so they go back to the setup track
+  // 6. Reset onboarding state for the owner so they go back to the setup track
   const onboardingRef = doc(db, 'onboardingState', ownerId);
   await setDoc(onboardingRef, {
     uid: ownerId,
@@ -404,9 +470,6 @@ export async function deleteOrganization(
     path: null,
     updatedAt: serverTimestamp()
   });
-
-  // 5. Clean up organizationMembers entry for the owner
-  await deleteDoc(doc(db, 'organizationMembers', `${orgId}_${ownerId}`));
 }
 
 export async function revokeInviteLink(

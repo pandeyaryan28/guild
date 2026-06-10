@@ -5,7 +5,7 @@ import {
   Check, Loader2, ShieldAlert, Trash2, Crown, ShieldCheck,
   UserMinus, Copy, AlertCircle, Info, Mail,
   Plus, Workflow, MessageSquare, AtSign, CheckSquare, MessagesSquare, UserPlus, Camera,
-  Download, Share2, CreditCard
+  Download, Share2, CreditCard, Folder, Target
 } from 'lucide-react';
 import { BillingSettingsView } from './BillingSettingsView';
 import { createTeam, updateTeam, deleteTeam } from '../../lib/teams';
@@ -14,7 +14,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
 import { THEMES } from '../../lib/themes';
-import { sendPasswordReset, sendDeletionVerificationEmail, isDeletionSignInLink, confirmDeletionSignInLink, reauthenticatePassword, reauthenticateGoogle, getCurrentUser } from '../../lib/auth';
+import { sendPasswordReset, reauthenticatePassword, reauthenticateGoogle, getCurrentUser } from '../../lib/auth';
 import {
   updateUserProfile,
   removeUserFromOrg,
@@ -28,7 +28,7 @@ import {
 import { uploadProfileImage, uploadOrganizationPhoto } from '../../lib/storage';
 import { useOrgMembers } from '../../hooks/useChat';
 import { SearchableSelect } from '../../components/SearchableSelect';
-import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { InviteLink, UserProfile, Organization } from '@guild/types';
 import { InviteModal } from '../people/InviteModal';
@@ -1363,106 +1363,50 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [slugError, setSlugError] = React.useState<string | null>(null);
 
-  // Secure Deletion States
-  const [emailSending, setEmailSending] = React.useState(false);
-  const [emailSent, setEmailSent] = React.useState(false);
-  const [emailSendError, setEmailSendError] = React.useState<string | null>(null);
-  
-  const [isVerifyingLink, setIsVerifyingLink] = React.useState(false);
-  const [linkVerificationError, setLinkVerificationError] = React.useState<string | null>(null);
-  const [deletionUnlocked, setDeletionUnlocked] = React.useState(false);
-
-  // Choice of Verification Method
-  const [verificationMethod, setVerificationMethod] = React.useState<'none' | 'email-link' | 'password' | 'google'>('none');
+  // Deletion States
   const [passwordInput, setPasswordInput] = React.useState('');
   const [reauthError, setReauthError] = React.useState<string | null>(null);
   const [reauthenticating, setReauthenticating] = React.useState(false);
+
+  // Live Stats for Delete confirmation summary
+  const [stats, setStats] = React.useState<{
+    members: number;
+    channels: number;
+    tasks: number;
+    goals: number;
+    projects: number;
+    teams: number;
+  } | null>(null);
 
   // Check user provider
   const currentUser = getCurrentUser();
   const isGoogleUser = currentUser?.providerData.some(p => p.providerId === 'google.com') ?? false;
 
-  const handlePasswordReauth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!passwordInput.trim()) return;
-    setReauthenticating(true);
-    setReauthError(null);
-    try {
-      await reauthenticatePassword(passwordInput);
-      setDeletionUnlocked(true);
-    } catch (err: any) {
-      console.error('Password re-authentication failed:', err);
-      setReauthError(err.message || 'Incorrect password. Please try again.');
-    } finally {
-      setReauthenticating(false);
-    }
-  };
-
-  const handleGoogleReauth = async () => {
-    setReauthenticating(true);
-    setReauthError(null);
-    try {
-      await reauthenticateGoogle();
-      setDeletionUnlocked(true);
-    } catch (err: any) {
-      console.error('Google re-authentication failed:', err);
-      setReauthError(err.message || 'Google verification failed. Please try again.');
-    } finally {
-      setReauthenticating(false);
-    }
-  };
-
-  // Intercept the Firebase email action link on mount/redirect
   React.useEffect(() => {
-    const checkLink = async () => {
-      const url = window.location.href;
-      if (isDeletionSignInLink(url)) {
-        setVerificationMethod('email-link');
-        setIsVerifyingLink(true);
-        setLinkVerificationError(null);
-        try {
-          let email = window.localStorage.getItem('emailForSignIn') || profile.email;
-          if (!email) {
-            email = window.prompt('Please enter your email to confirm deletion:') || '';
-          }
-          if (email && email.trim()) {
-            await confirmDeletionSignInLink(email.trim(), url);
-            setDeletionUnlocked(true);
-            // Clean up query parameters so reloading doesn't repeat verification
-            const newUrl = window.location.pathname + window.location.hash;
-            window.history.replaceState({}, document.title, newUrl);
-          } else {
-            setLinkVerificationError('Email verification required.');
-          }
-        } catch (err: any) {
-          console.error('Email link verification failed', err);
-          setLinkVerificationError(err.message || 'Verification link expired or invalid.');
-        } finally {
-          setIsVerifyingLink(false);
-        }
+    const fetchStats = async () => {
+      try {
+        const [membersSnap, channelsSnap, tasksSnap, goalsSnap, projectsSnap, teamsSnap] = await Promise.all([
+          getDocs(query(collection(db, 'organizationMembers'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'channels'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'tasks'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'goals'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'projects'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'teams'), where('orgId', '==', org.id))),
+        ]);
+        setStats({
+          members: membersSnap.size,
+          channels: channelsSnap.size,
+          tasks: tasksSnap.size,
+          goals: goalsSnap.size,
+          projects: projectsSnap.size,
+          teams: teamsSnap.size,
+        });
+      } catch (err) {
+        console.error('Failed to fetch workspace statistics:', err);
       }
     };
-    checkLink();
-  }, [profile.email]);
-
-  const handleSendVerificationEmail = async () => {
-    setEmailSending(true);
-    setEmailSendError(null);
-    try {
-      await sendDeletionVerificationEmail(profile.email, org.id, window.location.origin);
-      window.localStorage.setItem('emailForSignIn', profile.email);
-      setEmailSent(true);
-    } catch (err: any) {
-      console.error('Failed to send verification email:', err);
-      if (err.code === 'auth/operation-not-allowed' || err.message?.includes('operation-not-allowed')) {
-        setEmailSendError("Passwordless sign-in is not enabled in your Firebase project. To enable it, please go to your Firebase Console > Authentication > Sign-in method, edit 'Email/Password', enable 'Email link (passwordless sign-in)', and click Save.");
-      } else {
-        setEmailSendError(err.message || 'Failed to send secure verification link. Please check your network and try again.');
-      }
-    } finally {
-      setEmailSending(false);
-    }
-  };
+    fetchStats();
+  }, [org.id]);
 
   // Org logo states
   const [uploadingLogo, setUploadingLogo] = React.useState(false);
@@ -1563,19 +1507,37 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteWorkspace = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (confirmName !== org.name) {
-      alert('Confirmation failed. Please type the organization name exactly.');
+      setReauthError('Confirmation failed. Please type the workspace name exactly.');
       return;
     }
+    
+    setReauthenticating(true);
+    setReauthError(null);
     setDeleting(true);
+
     try {
+      if (isGoogleUser) {
+        await reauthenticateGoogle();
+      } else {
+        if (!passwordInput.trim()) {
+          setReauthError('Owner password is required.');
+          setReauthenticating(false);
+          setDeleting(false);
+          return;
+        }
+        await reauthenticatePassword(passwordInput);
+      }
+
       await deleteOrganization(org.id, org.slug, profile.uid);
       await logout();
       window.location.href = '/signup';
-    } catch (err) {
-      console.error('Failed to delete organization', err);
-      alert('Failed to delete workspace.');
+    } catch (err: any) {
+      console.error('Failed to delete organization:', err);
+      setReauthError(err.message || 'Re-authentication failed. Please check your credentials.');
+      setReauthenticating(false);
       setDeleting(false);
     }
   };
@@ -1714,7 +1676,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
 
       {/* Danger Zone Overhaul - STRICTLY Owner Only */}
       {profile.role === 'owner' && (
-        <div className="aether-glass bg-red-500/[0.015] border border-red-500/25 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-4 relative overflow-hidden mt-6 animate-fluid-pop">
+        <div className="aether-glass bg-red-500/[0.015] border border-red-500/25 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-5 relative overflow-hidden mt-6 animate-fluid-pop">
           {/* Crimson pulse accent glow */}
           <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.08] filter blur-xl bg-red-500" />
           
@@ -1723,259 +1685,119 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
             <div>
               <h2 className="text-xs font-black text-red-500 uppercase tracking-wider">Danger Zone</h2>
               <p className="text-[10px] text-red-500/80 mt-0.5 leading-relaxed font-semibold">
-                Deleting your workspace is a permanent action. All channels, chats, goals, projects, and task records will be permanently erased.
+                Deleting your workspace is a permanent action. All associated data will be deleted forever.
               </p>
             </div>
           </div>
 
-          <div className="border-t border-red-500/10 pt-4 mt-2">
-            {isVerifyingLink ? (
-              /* A) Verification Loading Spinner */
-              <div className="flex flex-col items-center justify-center py-6 text-center gap-3">
-                <Loader2 className="h-6 w-6 animate-spin text-red-500" />
-                <p className="text-xs font-bold text-foreground">Verifying secure credentials...</p>
-                <p className="text-[10px] text-muted-foreground font-semibold">Confirming your identity link with Firebase Auth.</p>
-              </div>
-            ) : linkVerificationError ? (
-              /* B) Link Verification Error */
-              <div className="space-y-4 max-w-md">
-                <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-2xl flex items-start gap-2.5">
-                  <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+          {/* Dynamic statistics section */}
+          {stats && (
+            <div className="space-y-2.5">
+              <h3 className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest px-1">Items to be permanently erased:</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
+                  <Folder className="h-4 w-4 text-red-400 shrink-0" />
                   <div>
-                    <span className="font-bold">Verification Failed:</span>
-                    <p className="text-[10px] opacity-80 mt-0.5 font-semibold">{linkVerificationError}</p>
+                    <span className="block text-xs font-bold text-foreground leading-none">{stats.projects}</span>
+                    <span className="text-[9px] text-muted-foreground font-semibold">Projects</span>
                   </div>
                 </div>
-                <button
-                  onClick={handleSendVerificationEmail}
-                  disabled={emailSending}
-                  className="px-4 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-foreground rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {emailSending ? <Loader2 className="h-3.5 w-3.5 animate-spin text-red-500" /> : <Mail className="h-3.5 w-3.5" />}
-                  Request New Verification Link
-                </button>
-              </div>
-            ) : !deletionUnlocked ? (
-              /* C) Not Verified Yet */
-              <div className="space-y-4 max-w-md">
-                {verificationMethod === 'none' ? (
-                  <div className="space-y-3">
-                    <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
-                      To safeguard this organization, deleting requires verifying your owner credentials. Please select a verification method:
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      {/* Direct Auth Option */}
-                      <button
-                        type="button"
-                        onClick={() => setVerificationMethod(isGoogleUser ? 'google' : 'password')}
-                        className="p-4 rounded-2xl border border-white/5 bg-white/[0.015] hover:bg-white/[0.035] hover:border-white/10 text-left transition-all group flex flex-col justify-between h-28 cursor-pointer"
-                      >
-                        <ShieldCheck className="h-5 w-5 text-accent group-hover:scale-105 transition-transform" style={{ color: 'var(--accent)' }} />
-                        <div>
-                          <p className="text-xs font-black text-foreground">
-                            {isGoogleUser ? 'Verify via Google' : 'Verify via Password'}
-                          </p>
-                          <p className="text-[9px] text-muted-foreground mt-0.5 font-semibold">
-                            Re-authenticate instantly in this window.
-                          </p>
-                        </div>
-                      </button>
-
-                      {/* Email Link Option */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVerificationMethod('email-link');
-                          handleSendVerificationEmail();
-                        }}
-                        className="p-4 rounded-2xl border border-white/5 bg-white/[0.015] hover:bg-white/[0.035] hover:border-white/10 text-left transition-all group flex flex-col justify-between h-28 cursor-pointer"
-                      >
-                        <Mail className="h-5 w-5 text-accent group-hover:scale-105 transition-transform" style={{ color: 'var(--accent)' }} />
-                        <div>
-                          <p className="text-xs font-black text-foreground">Secure Email Link</p>
-                          <p className="text-[9px] text-muted-foreground mt-0.5 font-semibold">
-                            Send a cryptographic verification link to your inbox.
-                          </p>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                ) : verificationMethod === 'password' ? (
-                  /* Password Verification Mode */
-                  <form onSubmit={handlePasswordReauth} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Confirm Owner Password</label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVerificationMethod('none');
-                          setReauthError(null);
-                        }}
-                        className="text-[9px] font-bold text-accent hover:underline cursor-pointer"
-                        style={{ color: 'var(--accent)' }}
-                      >
-                        Change Method
-                      </button>
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="password"
-                        required
-                        value={passwordInput}
-                        onChange={(e) => setPasswordInput(e.target.value)}
-                        className="flex-1 px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 transition-all font-semibold"
-                        placeholder="Enter account password"
-                      />
-                      <button
-                        type="submit"
-                        disabled={reauthenticating}
-                        className="px-4 py-2.5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-accent-foreground rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
-                        style={{ background: 'var(--accent)' }}
-                      >
-                        {reauthenticating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
-                        Verify Password
-                      </button>
-                    </div>
-                    {reauthError && (
-                      <p className="text-[9px] text-red-500 font-bold animate-fluid-pop">{reauthError}</p>
-                    )}
-                  </form>
-                ) : verificationMethod === 'google' ? (
-                  /* Google Verification Mode */
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-[10px] text-muted-foreground font-semibold">Verify ownership via your logged-in Google credentials:</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVerificationMethod('none');
-                          setReauthError(null);
-                        }}
-                        className="text-[9px] font-bold text-accent hover:underline cursor-pointer"
-                        style={{ color: 'var(--accent)' }}
-                      >
-                        Change Method
-                      </button>
-                    </div>
-                    <button
-                      onClick={handleGoogleReauth}
-                      disabled={reauthenticating}
-                      className="w-full py-2.5 bg-white text-black hover:bg-white/90 disabled:opacity-50 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      {reauthenticating ? <Loader2 className="h-3.5 w-3.5 animate-spin text-black" /> : <ShieldCheck className="h-4 w-4 text-black" />}
-                      Verify with Google Account
-                    </button>
-                    {reauthError && (
-                      <p className="text-[9px] text-red-500 font-bold animate-fluid-pop">{reauthError}</p>
-                    )}
-                  </div>
-                ) : (
-                  /* Email Link Verification Mode */
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Email Verification</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVerificationMethod('none');
-                          setEmailSent(false);
-                          setEmailSendError(null);
-                        }}
-                        className="text-[9px] font-bold text-accent hover:underline cursor-pointer"
-                        style={{ color: 'var(--accent)' }}
-                      >
-                        Change Method
-                      </button>
-                    </div>
-                    {emailSent ? (
-                      /* Sub-state: Email Sent Success banner */
-                      <div className="space-y-3.5">
-                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-start gap-3">
-                          <Mail className="h-5 w-5 shrink-0 mt-0.5 text-emerald-400 animate-bounce" />
-                          <div>
-                            <span className="font-extrabold text-[11px] uppercase tracking-wide">Sleek Envelope Sent!</span>
-                            <p className="text-[10px] opacity-90 mt-1 leading-relaxed font-semibold">
-                              A secure, cryptographic deletion verification link has been dispatched to <span className="font-bold text-white font-mono">{profile.email}</span>.
-                            </p>
-                            <p className="text-[9px] opacity-75 mt-1 font-semibold">
-                              Please click the link in your email to authenticate this browser session and unlock deletion. You may leave this page open.
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleSendVerificationEmail}
-                            disabled={emailSending}
-                            className="px-3.5 py-2 border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-muted-foreground hover:text-foreground rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-                          >
-                            {emailSending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
-                            Resend Verification Email
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      /* Sub-state: Initial Prompt */
-                      <div className="space-y-3">
-                        <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
-                          To safeguard this organization, deleting requires direct owner identity verification. We will send a secure verification email link directly to the workspace owner account email <span className="font-bold text-foreground font-mono">{profile.email}</span>.
-                        </p>
-                        {emailSendError && (
-                          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] rounded-xl font-bold flex items-start gap-2">
-                            <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                            <span className="text-[10px] font-semibold">{emailSendError}</span>
-                          </div>
-                        )}
-                        <button
-                          onClick={handleSendVerificationEmail}
-                          disabled={emailSending}
-                          className="px-4.5 py-2.5 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30 text-red-400 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 hover:scale-[1.01] active:scale-[0.99]"
-                        >
-                          {emailSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                          Send Deletion Verification Link
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* D) Verification Successful - Confirmed state to complete delete */
-              <div className="space-y-4 max-w-md animate-fluid-pop">
-                <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-start gap-2.5">
-                  <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-400" />
+                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
+                  <CheckSquare className="h-4 w-4 text-red-400 shrink-0" />
                   <div>
-                    <span className="font-extrabold uppercase tracking-wider text-[10px]">Owner Identity Verified!</span>
-                    <p className="text-[10px] opacity-90 mt-0.5 leading-relaxed font-semibold">
-                      Your identity as the authentic workspace owner has been successfully cryptographically verified via Firebase Email Link Auth. Deletion is unlocked.
-                    </p>
+                    <span className="block text-xs font-bold text-foreground leading-none">{stats.tasks}</span>
+                    <span className="text-[9px] text-muted-foreground font-semibold">Tasks</span>
                   </div>
                 </div>
+                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
+                  <Target className="h-4 w-4 text-red-400 shrink-0" />
+                  <div>
+                    <span className="block text-xs font-bold text-foreground leading-none">{stats.goals}</span>
+                    <span className="text-[9px] text-muted-foreground font-semibold">Goals</span>
+                  </div>
+                </div>
+                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
+                  <Workflow className="h-4 w-4 text-red-400 shrink-0" />
+                  <div>
+                    <span className="block text-xs font-bold text-foreground leading-none">{stats.teams}</span>
+                    <span className="text-[9px] text-muted-foreground font-semibold">Teams</span>
+                  </div>
+                </div>
+                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
+                  <MessageSquare className="h-4 w-4 text-red-400 shrink-0" />
+                  <div>
+                    <span className="block text-xs font-bold text-foreground leading-none">{stats.channels}</span>
+                    <span className="text-[9px] text-muted-foreground font-semibold">Channels</span>
+                  </div>
+                </div>
+                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
+                  <Users className="h-4 w-4 text-red-400 shrink-0" />
+                  <div>
+                    <span className="block text-xs font-bold text-foreground leading-none">{stats.members}</span>
+                    <span className="text-[9px] text-muted-foreground font-semibold">Members</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-                <div className="space-y-3">
-                  <p className="text-[10px] text-muted-foreground font-semibold">
-                    To finalize deletion, please type the workspace name exactly <span className="font-bold text-foreground select-all font-mono">"{org.name}"</span> below:
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      value={confirmName}
-                      onChange={(e) => setConfirmName(e.target.value)}
-                      className="flex-1 px-3.5 py-2.5 rounded-xl border border-red-500/20 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold"
-                      placeholder="Type workspace name exactly"
-                    />
-                    <button
-                      onClick={handleDelete}
-                      disabled={deleting || confirmName !== org.name}
-                      className="px-4.5 py-2.5 bg-red-650 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
-                    >
-                      {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                      Delete Workspace
-                    </button>
-                  </div>
-                </div>
+          <form onSubmit={handleDeleteWorkspace} className="border-t border-red-500/10 pt-4 mt-2 space-y-4 max-w-md">
+            {reauthError && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] rounded-xl font-bold flex items-start gap-2 animate-fluid-pop">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <span className="text-[10px] font-semibold">{reauthError}</span>
               </div>
             )}
-          </div>
+
+            <div className="space-y-3.5">
+              {!isGoogleUser && (
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Confirm Owner Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    disabled={deleting}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+                    placeholder="Enter account password"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">
+                  Type Workspace Name Exactly <span className="text-white select-all font-mono">"{org.name}"</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={confirmName}
+                  onChange={(e) => setConfirmName(e.target.value)}
+                  disabled={deleting}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+                  placeholder="Type workspace name exactly"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={deleting || confirmName !== org.name || (!isGoogleUser && !passwordInput.trim())}
+                className="w-full py-2.5 bg-red-650 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Deleting Workspace…
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" /> 
+                    {isGoogleUser ? 'Verify & Delete with Google' : 'Permanently Delete Workspace'}
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>
