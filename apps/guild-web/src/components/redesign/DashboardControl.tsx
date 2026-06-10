@@ -331,11 +331,12 @@ export function DashboardControl() {
         )}
       </AnimatePresence>
 
-      {/* Top Banner: Greeting & Avatars Redesigned (Aurora Horizon Style) */}
-      <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-cyan-500/15 p-6 md:p-8 backdrop-blur-xl shadow-2xl animate-aurora-mesh animate-fluid-pop">
-        {/* Absolute glowing blur spots behind content for rich visuals */}
-        <div className="absolute -left-16 -top-16 w-40 h-40 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute -right-16 -bottom-16 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+      <header className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-cyan-500/15 p-6 md:p-8 backdrop-blur-xl shadow-2xl animate-aurora-mesh animate-fluid-pop">
+        {/* Absolute glowing blur spots behind content for rich visuals, wrapped in an overflow-hidden wrapper so dropdown doesn't clip */}
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+          <div className="absolute -left-16 -top-16 w-40 h-40 rounded-full bg-indigo-500/10 blur-3xl" />
+          <div className="absolute -right-16 -bottom-16 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl" />
+        </div>
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-center gap-6 md:gap-8 flex-1 min-w-0">
