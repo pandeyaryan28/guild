@@ -2,10 +2,10 @@ import React, { useRef } from 'react';
 import { useAdminAuth } from './hooks/useAdminAuth';
 import { useAdminData } from './hooks/useAdminData';
 import { AdminLayout } from './components/AdminLayout';
-import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
+const LoginPage = React.lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const DashboardPage = React.lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const MobileAdminApp = React.lazy(() => import('./components/mobile/MobileAdminApp').then(m => ({ default: m.MobileAdminApp })));
 import { useDeviceType } from './hooks/useDeviceType';
-import { MobileAdminApp } from './components/mobile/MobileAdminApp';
 
 // ─── Loading Spinner ──────────────────────────────────────────────────────────
 function FullPageSpinner() {
@@ -92,9 +92,17 @@ function AuthorizedApp({ profile }: { profile: ReturnType<typeof useAdminAuth> &
 export default function App() {
   const auth = useAdminAuth();
 
-  if (auth.status === 'loading')         return <FullPageSpinner />;
-  if (auth.status === 'unauthenticated') return <LoginPage />;
-  if (auth.status === 'unauthorized')    return <UnauthorizedScreen email={auth.email} />;
+  if (auth.status === 'loading') {
+    return <FullPageSpinner />;
+  }
 
-  return <AuthorizedApp profile={auth as typeof auth & { status: 'authorized' }} />;
+  return (
+    <React.Suspense fallback={<FullPageSpinner />}>
+      {auth.status === 'unauthenticated' && <LoginPage />}
+      {auth.status === 'unauthorized' && <UnauthorizedScreen email={auth.email} />}
+      {auth.status === 'authorized' && (
+        <AuthorizedApp profile={auth as typeof auth & { status: 'authorized' }} />
+      )}
+    </React.Suspense>
+  );
 }

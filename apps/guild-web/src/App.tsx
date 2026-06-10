@@ -11,37 +11,52 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { usePushNotifications } from './hooks/usePushNotifications';
 
 // Auth pages
-import { LoginPage } from './pages/LoginPage';
-import { SignupPage } from './pages/SignupPage';
-import { VerifyEmailPage } from './pages/VerifyEmailPage';
+const LoginPage = React.lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const SignupPage = React.lazy(() => import('./pages/SignupPage').then(m => ({ default: m.SignupPage })));
+const VerifyEmailPage = React.lazy(() => import('./pages/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })));
 
 // Onboarding
-import { OnboardingRoot } from './pages/onboarding/OnboardingRoot';
-import { JoinInvitePage } from './pages/onboarding/JoinInvitePage';
+const OnboardingRoot = React.lazy(() => import('./pages/onboarding/OnboardingRoot').then(m => ({ default: m.OnboardingRoot })));
+const JoinInvitePage = React.lazy(() => import('./pages/onboarding/JoinInvitePage').then(m => ({ default: m.JoinInvitePage })));
 
 // Dashboard (existing)
 import { RedesignLayout } from './components/redesign/Layout';
-import { DashboardControl } from './components/redesign/DashboardControl';
+const DashboardControl = React.lazy(() => import('./components/redesign/DashboardControl').then(m => ({ default: m.DashboardControl })));
 
 // Chat
-import { ChatLayout } from './pages/chat/ChatLayout';
+const ChatLayout = React.lazy(() => import('./pages/chat/ChatLayout').then(m => ({ default: m.ChatLayout })));
 
 // Tasks & Work
-import { TaskCanvas } from './components/redesign/TaskCanvas';
-import { RequestsPage } from './pages/requests/RequestsPage';
-import { PeoplePage } from './pages/people/PeoplePage';
-import { SettingsPage } from './pages/workspace/SettingsPage';
-import { CalendarPage } from './pages/calendar/CalendarPage';
+const TaskCanvas = React.lazy(() => import('./components/redesign/TaskCanvas').then(m => ({ default: m.TaskCanvas })));
+const RequestsPage = React.lazy(() => import('./pages/requests/RequestsPage').then(m => ({ default: m.RequestsPage })));
+const PeoplePage = React.lazy(() => import('./pages/people/PeoplePage').then(m => ({ default: m.PeoplePage })));
+const SettingsPage = React.lazy(() => import('./pages/workspace/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const CalendarPage = React.lazy(() => import('./pages/calendar/CalendarPage').then(m => ({ default: m.CalendarPage })));
 
 // Execution OS
-import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
+const ProjectDetailPage = React.lazy(() => import('./pages/projects/ProjectDetailPage').then(m => ({ default: m.ProjectDetailPage })));
 
 // Reports
-import { ReportsPage } from './pages/reports/ReportsPage';
+const ReportsPage = React.lazy(() => import('./pages/reports/ReportsPage').then(m => ({ default: m.ReportsPage })));
 
 // Responsive Controllers
 import { useDeviceType } from './hooks/useDeviceType';
-import { MobileApp } from './components/mobile/MobileApp';
+const MobileApp = React.lazy(() => import('./components/mobile/MobileApp').then(m => ({ default: m.MobileApp })));
+
+// Premium Glassmorphism Global Loader
+const GlobalLoader = () => (
+  <div className="fixed inset-0 bg-[#020617] flex flex-col items-center justify-center z-50">
+    <div className="relative flex items-center justify-center">
+      {/* Outer pulsing ring */}
+      <div className="absolute w-20 h-20 border-2 border-indigo-500/10 rounded-full animate-ping duration-1000"></div>
+      {/* Spinning glow ring */}
+      <div className="w-16 h-16 border-4 border-indigo-500/10 border-t-indigo-500 rounded-full animate-spin"></div>
+    </div>
+    <p className="mt-6 text-xs font-semibold text-indigo-400 tracking-widest uppercase animate-pulse">
+      Loading Guild...
+    </p>
+  </div>
+);
 
 function DashboardApp({ children }: { children?: React.ReactNode }) {
   return (
@@ -239,7 +254,9 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
       <AuthProvider>
-        <AppContent />
+        <React.Suspense fallback={<GlobalLoader />}>
+          <AppContent />
+        </React.Suspense>
       </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
