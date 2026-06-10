@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 interface NavigationContextType {
   currentPath: string;
@@ -7,13 +7,11 @@ interface NavigationContextType {
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
 
-export function NavigationProvider({ children }: { children: React.ReactNode }) {
+export function NavigationProvider({ children }: { children: ReactNode }) {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
-    };
+    const handlePopState = () => setCurrentPath(window.location.pathname);
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
@@ -22,8 +20,7 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
     if (window.location.pathname !== path) {
       window.history.pushState({}, '', path);
       setCurrentPath(path);
-      // Immediately scroll to the top of the page when navigating between views
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     }
   };
 
@@ -36,8 +33,6 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
 
 export function useNavigation() {
   const context = useContext(NavigationContext);
-  if (!context) {
-    throw new Error('useNavigation must be used within a NavigationProvider');
-  }
+  if (!context) throw new Error('useNavigation must be used within NavigationProvider');
   return context;
 }
