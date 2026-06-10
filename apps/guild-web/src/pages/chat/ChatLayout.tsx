@@ -12,6 +12,7 @@ import { useTeams } from '../../hooks/useTeams';
 import { getOrCreateDM, markChannelRead, markDMRead } from '../../lib/chat';
 import { CreateChannelModal } from '../../components/chat/CreateChannelModal';
 import { NewDMModal } from '../../components/chat/NewDMModal';
+import { ChannelSettingsModal } from '../../components/chat/ChannelSettingsModal';
 import { MessageArea } from './MessageArea';
 import { type UserProfile, getOrgById, type Organization } from '../../lib/firestore';
 import { type Message } from '../../lib/chat';
@@ -240,6 +241,7 @@ export function ChatLayout() {
   const { channelId, dmId } = useParams<{ channelId: string; dmId: string }>();
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
+  const { channels } = useChannels(orgId);
   const members = useOrgMembers(orgId);
   const { teams } = useTeams(orgId);
   const navigate = useNavigate();
@@ -252,10 +254,22 @@ export function ChatLayout() {
   const openTaskId = searchParams.get('task');
   const openGoalId = searchParams.get('goal');
   const openRequestId = searchParams.get('request');
+  const openSettings = searchParams.get('settings') === 'true';
 
   const openTask = useSingleTask(openTaskId);
   const { goal: openGoal } = useGoal(openGoalId ?? undefined);
   const { request: openRequest } = useRequest(openRequestId ?? undefined);
+
+  const activeChannel = React.useMemo(() => {
+    if (!channelId) return null;
+    return channels.find((c) => c.id === channelId) ?? null;
+  }, [channelId, channels]);
+
+  const handleClosePanel = React.useCallback((key: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.delete(key);
+    setSearchParams(params);
+  }, [searchParams, setSearchParams]);
 
   const { projects } = useProjects(orgId);
   const { goals } = useGoals(orgId);
@@ -315,7 +329,7 @@ export function ChatLayout() {
         />
 
         {/* Message Thread Workspace */}
-        <div className="flex-1 flex min-w-0 aether-glass bg-white/2 border border-white/5 overflow-hidden">
+        <div className="flex-1 flex min-w-0 aether-glass bg-white/2 border border-white/5 overflow-hidden relative">
           {hasContent ? (
             <>
               <MessageArea
@@ -328,6 +342,59 @@ export function ChatLayout() {
                 isSidebarCollapsed={isSidebarCollapsed}
                 onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
               />
+
+              {openTask && (
+                <TaskDetailDrawer
+                  task={openTask}
+                  onClose={() => handleClosePanel('task')}
+                  orgId={orgId ?? ''}
+                  actor={actor}
+                  members={members}
+                  projects={projects}
+                  goals={goals}
+                  inline={true}
+                />
+              )}
+
+              {openGoal && (
+                <GoalDetailDrawer
+                  goal={openGoal}
+                  onClose={() => handleClosePanel('goal')}
+                  orgId={orgId ?? ''}
+                  actor={actor}
+                  members={members}
+                  projects={projects}
+                  tasks={tasks}
+                  onSelectTask={(t) => {
+                    const params = new URLSearchParams(searchParams);
+                    params.set('task', t.id);
+                    params.delete('goal');
+                    setSearchParams(params);
+                  }}
+                  inline={true}
+                />
+              )}
+
+              {openRequest && userProfile && (
+                <RequestDetailDrawer
+                  request={openRequest}
+                  onClose={() => handleClosePanel('request')}
+                  orgId={orgId ?? ''}
+                  currentUser={userProfile}
+                  inline={true}
+                />
+              )}
+
+              {openSettings && activeChannel && orgId && (
+                <ChannelSettingsModal
+                  channel={activeChannel}
+                  orgId={orgId}
+                  currentUserProfile={userProfile}
+                  onClose={() => handleClosePanel('settings')}
+                  onUpdated={() => {}}
+                  inline={true}
+                />
+              )}
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20 relative">
@@ -361,41 +428,6 @@ export function ChatLayout() {
         <NewDMModal orgId={orgId} members={members} onClose={() => setShowDMModal(false)} onDMCreated={handleDMCreated} />
       )}
 
-      {openTask && (
-        <TaskDetailDrawer
-          task={openTask}
-          onClose={() => setSearchParams({})}
-          orgId={orgId ?? ''}
-          actor={actor}
-          members={members}
-          projects={projects}
-          goals={goals}
-        />
-      )}
-
-      {openGoal && (
-        <GoalDetailDrawer
-          goal={openGoal}
-          onClose={() => setSearchParams({})}
-          orgId={orgId ?? ''}
-          actor={actor}
-          members={members}
-          projects={projects}
-          tasks={tasks}
-          onSelectTask={(t) => {
-            setSearchParams({ task: t.id });
-          }}
-        />
-      )}
-
-      {openRequest && userProfile && (
-        <RequestDetailDrawer
-          request={openRequest}
-          onClose={() => setSearchParams({})}
-          orgId={orgId ?? ''}
-          currentUser={userProfile}
-        />
-      )}
     </RedesignLayout>
   );
 }

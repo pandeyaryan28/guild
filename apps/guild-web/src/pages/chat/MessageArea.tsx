@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useChannels } from '../../hooks/useChat';
 import { useMessages } from '../../hooks/useChat';
@@ -18,7 +18,6 @@ import { createTask } from '../../lib/tasks';
 import { createGoal } from '../../lib/goals';
 import { createRequest } from '../../lib/requests';
 import { InviteChannelMembersModal } from '../../components/chat/InviteChannelMembersModal';
-import { ChannelSettingsModal } from '../../components/chat/ChannelSettingsModal';
 import { type MessageAttachment } from '@guild/types';
 
 interface MessageAreaProps {
@@ -50,7 +49,7 @@ export function MessageArea({
   const [dmPartnerName, setDmPartnerName] = React.useState('');
   const [channel, setChannel] = React.useState<Channel | null>(null);
   const [showInviteModal, setShowInviteModal] = React.useState(false);
-  const [showSettingsModal, setShowSettingsModal] = React.useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // PWA Offline Message Sync Hooks
   const isOnline = useOnlineStatus();
@@ -429,7 +428,11 @@ export function MessageArea({
             {/* Settings Gear Button */}
             {isChannelAdmin && (
               <button
-                onClick={() => setShowSettingsModal(true)}
+                onClick={() => {
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.set('settings', 'true');
+                  setSearchParams(newParams);
+                }}
                 title="Channel settings"
                 className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors shrink-0"
               >
@@ -480,17 +483,7 @@ export function MessageArea({
         />
       )}
 
-      {showSettingsModal && channel && orgId && (
-        <ChannelSettingsModal
-          channel={channel}
-          orgId={orgId}
-          currentUserProfile={profile}
-          onClose={() => setShowSettingsModal(false)}
-          onUpdated={() => {
-            // Merged listener will handle updating channels in real-time, but this triggers a quick state redraw
-          }}
-        />
-      )}
+
 
       {/* Offline Messaging Indicator Toast */}
       <AnimatePresence>

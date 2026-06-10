@@ -31,6 +31,7 @@ interface TaskDetailDrawerProps {
   members: any[];
   projects: any[];
   goals: any[];
+  inline?: boolean;
 }
 
 export function TaskDetailDrawer({
@@ -40,7 +41,8 @@ export function TaskDetailDrawer({
   actor,
   members,
   projects,
-  goals
+  goals,
+  inline = false
 }: TaskDetailDrawerProps) {
   const [, setSearchParams] = useSearchParams();
   const [title, setTitle] = React.useState('');
@@ -450,6 +452,637 @@ export function TaskDetailDrawer({
       </div>
     );
   };
+
+  if (inline) {
+    return (
+      <div className="h-full border-l border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/60 backdrop-blur-xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[420px] lg:relative shadow-2xl lg:shadow-none shrink-0">
+        <div className="w-full sm:w-[420px] h-full flex flex-col min-h-0">
+          
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4.5 border-b border-neutral-100 dark:border-neutral-850/60 flex-shrink-0 bg-neutral-50/30 dark:bg-neutral-900/30 backdrop-blur-sm">
+            <div className="min-w-0 flex-1 mr-4">
+              {parentTask ? (
+                <div className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-500 font-bold mb-0.5 truncate">
+                  <span 
+                    onClick={() => setSearchParams({ task: parentTask.id })}
+                    className="hover:text-primary cursor-pointer transition-colors max-w-[120px] truncate block"
+                  >
+                    {parentTask.title}
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 text-neutral-350 dark:text-neutral-700 shrink-0" />
+                  <span className="text-neutral-550 dark:text-neutral-300 font-extrabold max-w-[120px] truncate block">
+                    Current task
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/60 px-2 py-0.5 rounded-md">
+                    Task Workspace
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Actions & Close Buttons */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleCopyLink}
+                className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                title="Copy Link to Task"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+              {canDelete && (
+                <button
+                  onClick={handleDeleteTask}
+                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:border-rose-200/40 hover:bg-rose-50/20 dark:hover:border-rose-900/20 text-neutral-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                  title="Delete Task"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              <div className="h-6 w-[1px] bg-neutral-200 dark:bg-neutral-800 mx-1 shrink-0" />
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Body Content */}
+          <div className="flex-grow flex flex-col overflow-y-auto scrollbar-thin min-h-0">
+            {/* Left Workspace Column (Stacked vertically when inline) */}
+            <div className="p-6 space-y-6 flex-shrink-0">
+              
+              {/* Approval revisions block */}
+              {task.status === 'review' && task.creatorId === actor.uid && (
+                <div className="bg-amber-500/[0.03] dark:bg-amber-500/[0.05] border border-amber-500/20 rounded-2xl p-4.5 space-y-3.5 relative overflow-hidden shadow-xs">
+                  <div className="flex items-start gap-3.5">
+                    <div className="h-7.5 w-7.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shrink-0 shadow-xs">
+                      <Clock className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-amber-500">
+                        Review Approval Request
+                      </h4>
+                      <p className="text-[11px] text-neutral-600 dark:text-neutral-400 leading-relaxed font-semibold">
+                        This task has been submitted for review. Please inspect the revisions and approve it, or send it back with comments.
+                      </p>
+                    </div>
+                  </div>
+
+                  {!isSendBackOpen ? (
+                    <div className="flex items-center gap-3 pt-2.5 border-t border-amber-500/10">
+                      <button
+                        onClick={() => handleStatusChange('done')}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-500/10"
+                      >
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        Approve Task
+                      </button>
+                      <button
+                        onClick={() => setIsSendBackOpen(true)}
+                        className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 text-amber-600 dark:text-amber-450 text-xs font-bold rounded-xl active:scale-95 transition-all cursor-pointer"
+                      >
+                        Request Revisions
+                      </button>
+                    </div>
+                  ) : (
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!sendBackText.trim() || isSubmittingSendBack) return;
+                        setIsSubmittingSendBack(true);
+                        try {
+                          await moveTask(task.id, orgId, 'in_progress', task.orderIndex, task.status, actor);
+                          await addComment({
+                            taskId: task.id,
+                            orgId,
+                            authorId: actor.uid,
+                            authorName: actor.name,
+                            authorUsername: actor.name.toLowerCase().replace(/\s+/g, ''),
+                            body: `[Review Feedback] ${sendBackText.trim()}`,
+                            mentions: task.assigneeIds || [],
+                            taskTitle: task.title
+                          });
+                          setIsSendBackOpen(false);
+                          setSendBackText('');
+                          setToastMessage("Revisions requested.");
+                        } catch (err) {
+                          console.error("Failed to request changes:", err);
+                        } finally {
+                          setIsSubmittingSendBack(false);
+                        }
+                      }}
+                      className="space-y-3 pt-2.5 border-t border-amber-500/10"
+                    >
+                      <textarea
+                        value={sendBackText}
+                        onChange={(e) => setSendBackText(e.target.value)}
+                        placeholder="Detail what revisions or corrections are needed..."
+                        rows={3}
+                        required
+                        className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-neutral-450 focus:border-amber-500/50 outline-none resize-none font-semibold transition-all"
+                      />
+                      <div className="flex items-center gap-2.5 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsSendBackOpen(false);
+                            setSendBackText('');
+                          }}
+                          className="px-3.5 py-1.5 border border-border-default/60 hover:bg-bg-secondary text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={!sendBackText.trim() || isSubmittingSendBack}
+                          className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white text-[11px] font-bold rounded-lg transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                        >
+                          {isSubmittingSendBack ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            "Send Back"
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {/* Title Header */}
+              <div className="space-y-1.5">
+                {isEditingTitle ? (
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    onBlur={handleTitleBlur}
+                    onKeyDown={(e) => e.key === 'Enter' && handleTitleBlur()}
+                    autoFocus
+                    className="w-full text-lg font-bold text-neutral-850 dark:text-neutral-100 outline-none border-b border-primary bg-transparent pb-1.5 transition-all"
+                  />
+                ) : (
+                  <h2
+                    onClick={() => setIsEditingTitle(true)}
+                    className="text-lg font-bold text-neutral-850 dark:text-neutral-100 cursor-text hover:bg-neutral-50/50 dark:hover:bg-neutral-850/20 px-2 py-1 -ml-2 rounded-xl border border-transparent hover:border-neutral-200/30 transition-all break-words leading-tight"
+                  >
+                    {title || <span className="text-neutral-400 italic font-normal">Untitled Task</span>}
+                  </h2>
+                )}
+              </div>
+
+              {/* Description Pad */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase font-black tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+                  Task Guidelines & Description
+                </label>
+                {isEditingDesc ? (
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    onBlur={handleDescBlur}
+                    rows={4}
+                    autoFocus
+                    placeholder="Provide expectation details, notes or guidelines..."
+                    className="w-full bg-neutral-50/50 dark:bg-neutral-850/20 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-4 py-3.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-450 dark:placeholder:text-neutral-600 outline-none focus:border-primary/50 font-semibold resize-none transition-all"
+                  />
+                ) : (
+                  <div
+                    onClick={() => setIsEditingDesc(true)}
+                    className="min-h-16 text-xs text-neutral-650 dark:text-neutral-350 hover:bg-neutral-50/50 dark:hover:bg-neutral-850/10 px-4 py-3.5 rounded-2xl border border-neutral-150 dark:border-neutral-850/80 cursor-text transition-all leading-relaxed whitespace-pre-wrap font-semibold"
+                  >
+                    {description || <span className="text-neutral-400 italic font-normal">Add descriptive notes, key requirements or guidelines...</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* Subtasks checklist area */}
+              <div className="bg-neutral-50/20 dark:bg-neutral-850/10 border border-neutral-150 dark:border-neutral-850/80 rounded-2xl p-4.5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ListChecks className="w-4 h-4 text-primary" />
+                    <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200">Subtask Items</h3>
+                  </div>
+                  {totalSubtasksCount > 0 && (
+                    <span className="text-[10px] font-black text-neutral-450 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/80 px-2 py-0.5 rounded-full">
+                      {completedSubtasksCount} of {totalSubtasksCount} done
+                    </span>
+                  )}
+                </div>
+
+                {/* Subtask Progress indicator */}
+                {totalSubtasksCount > 0 && (
+                  <div className="space-y-1">
+                    <div className="w-full bg-neutral-200/70 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden shadow-inner">
+                      <div 
+                        className="bg-gradient-to-r from-violet-500 to-indigo-500 h-full rounded-full transition-all duration-500 ease-out shadow-xs" 
+                        style={{ width: `${subtaskProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Subtask items card stack */}
+                {subtasks.length > 0 ? (
+                  <div className="space-y-2">
+                    {subtasks.map((sub) => (
+                      <div 
+                        key={sub.id}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 hover:shadow-xs transition-all group"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <button
+                            onClick={() => handleToggleSubtaskStatus(sub)}
+                            className={cn(
+                              "h-4.5 w-4.5 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-2xs",
+                              sub.status === 'done' 
+                                ? "bg-primary border-primary text-white" 
+                                : "border-neutral-350 dark:border-neutral-700 hover:border-primary bg-transparent"
+                            )}
+                          >
+                            {sub.status === 'done' && <Check className="w-2.5 h-2.5 stroke-[3.5]" />}
+                          </button>
+
+                          <span 
+                            onClick={() => setSearchParams({ task: sub.id })}
+                            className={cn(
+                              "text-xs font-semibold cursor-pointer hover:text-primary transition-all truncate",
+                              sub.status === 'done' ? "text-neutral-450 dark:text-neutral-500 line-through" : "text-neutral-800 dark:text-neutral-200"
+                            )}
+                          >
+                            {sub.title}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {sub.assigneeIds.slice(0, 1).map((uid) => (
+                            <div 
+                              key={uid} 
+                              className="h-5.5 w-5.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[8px] font-bold text-primary shrink-0 overflow-hidden shadow-2xs"
+                              title={getMemberName(uid)}
+                            >
+                              {getMemberPhotoURL(uid) ? (
+                                <img src={getMemberPhotoURL(uid)} alt={getMemberName(uid)} className="h-full w-full object-cover" />
+                              ) : (
+                                getMemberInitials(uid)
+                              )}
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => handleDeleteSubtask(sub.id)}
+                            className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-neutral-450 dark:text-neutral-550 italic text-center py-2">
+                    No checklist subtasks. Break this task into smaller steps.
+                  </p>
+                )}
+
+                {/* Subtask inline creation input */}
+                <form onSubmit={handleAddSubtaskSubmit} className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Add a subtask step..."
+                    value={newSubtaskTitle}
+                    onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                    className="flex-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 py-2 text-xs text-neutral-850 dark:text-neutral-200 placeholder:text-neutral-450 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newSubtaskTitle.trim() || isAddingSubtask}
+                    className="px-3.5 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-xl text-xs font-bold hover:bg-neutral-850 dark:hover:bg-neutral-100 active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all cursor-pointer flex items-center justify-center shrink-0"
+                  >
+                    {isAddingSubtask ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Add"}
+                  </button>
+                </form>
+              </div>
+
+              {/* Attachments Section */}
+              <div>
+                <AttachmentSection
+                  entityType="tasks"
+                  entityId={task.id}
+                  files={task.files}
+                  onAttachmentsChanged={async (updatedFiles) => {
+                    try {
+                      await updateTaskAttachments(task.id, updatedFiles);
+                    } catch (err) {
+                      console.error("Failed to update task attachments:", err);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Discussion & Activity Timelines */}
+              <div className="pt-4 border-t border-neutral-100 dark:border-neutral-850/60 flex flex-col flex-grow min-h-[320px]">
+                <div className="flex border-b border-neutral-150 dark:border-neutral-850/60 mb-4 flex-shrink-0 relative">
+                  <button
+                    onClick={() => setActiveTab('comments')}
+                    className={cn(
+                      "pb-2 px-4 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 relative z-10",
+                      activeTab === 'comments'
+                        ? "text-neutral-900 dark:text-neutral-100 font-black"
+                        : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 font-semibold"
+                    )}
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Comments ({comments.length})</span>
+                    {activeTab === 'comments' && (
+                      <motion.div 
+                        layoutId="activeTabUnderline" 
+                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" 
+                      />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('activity')}
+                    className={cn(
+                      "pb-2 px-4 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 relative z-10",
+                      activeTab === 'activity'
+                        ? "text-neutral-900 dark:text-neutral-100 font-black"
+                        : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 font-semibold"
+                    )}
+                  >
+                    <ListTodo className="w-4 h-4" />
+                    <span>Activity Log ({activities.length})</span>
+                    {activeTab === 'activity' && (
+                      <motion.div 
+                        layoutId="activeTabUnderline" 
+                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" 
+                      />
+                    )}
+                  </button>
+                </div>
+
+                {/* Switchable Thread Panels */}
+                <div className="flex-grow flex flex-col overflow-hidden min-h-[220px]">
+                  {activeTab === 'comments' ? (
+                    <div className="flex flex-col h-full overflow-hidden justify-between">
+                      <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 scrollbar-thin max-h-[250px]">
+                        {comments.length > 0 ? (
+                          comments.map((comment) => (
+                            <div key={comment.id} className="flex items-start gap-3 bg-neutral-50/30 dark:bg-neutral-850/10 p-3.5 rounded-2xl border border-neutral-100 dark:border-neutral-850/50 hover:shadow-2xs transition-all">
+                              <div className="h-7.5 w-7.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 overflow-hidden shadow-xs">
+                                {getMemberPhotoURL(comment.authorId) ? (
+                                  <img src={getMemberPhotoURL(comment.authorId)} alt={comment.authorName} className="h-full w-full object-cover" />
+                                ) : (
+                                  getMemberInitials(comment.authorId)
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 truncate">
+                                    {comment.authorName}
+                                  </span>
+                                  <span className="text-[9px] text-neutral-400 dark:text-neutral-500 font-mono">
+                                    {formatTimestamp(comment.createdAt)}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-neutral-650 dark:text-neutral-300 font-semibold leading-relaxed break-words whitespace-pre-wrap">
+                                  {comment.body}
+                                </p>
+                                
+                                {comment.files && comment.files.length > 0 && (
+                                  <div className="mt-2 space-y-1.5 max-w-sm">
+                                    {comment.files.map((file, fIdx) => (
+                                      <a
+                                        key={fIdx}
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2 p-1.5 rounded-xl border border-neutral-200/40 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 text-[10px] text-primary font-bold truncate transition-colors shadow-2xs"
+                                      >
+                                        <Paperclip className="w-3 h-3 text-primary shrink-0" />
+                                        <span className="truncate flex-1">{file.name}</span>
+                                        <span className="text-[8px] text-neutral-400 font-semibold shrink-0">
+                                          {(file.size / 1024).toFixed(1)} KB
+                                        </span>
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-550 italic">
+                            No team comments on this task yet. Add yours below.
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="border-t border-neutral-150 dark:border-neutral-850/60 pt-3.5 flex-shrink-0 flex flex-col gap-2">
+                        <AttachmentInput
+                          selectedFiles={commentFiles}
+                          onRemove={(idx) => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
+                          onAdd={(files) => setCommentFiles(prev => [...prev, ...Array.from(files)])}
+                        />
+                        <form onSubmit={handleAddComment} className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder={uploadingCommentFiles ? "Uploading attachments..." : "Add a team comment here..."}
+                            value={commentBody}
+                            disabled={uploadingCommentFiles}
+                            onChange={(e) => setCommentBody(e.target.value)}
+                            className="flex-1 bg-neutral-50/70 dark:bg-neutral-850/20 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-450 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold disabled:opacity-50"
+                          />
+                          <button
+                            type="button"
+                            disabled={uploadingCommentFiles}
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.multiple = true;
+                              input.onchange = (e) => {
+                                const files = (e.target as HTMLInputElement).files;
+                                if (files) setCommentFiles(prev => [...prev, ...Array.from(files)]);
+                              };
+                              input.click();
+                            }}
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-850 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-500 dark:text-neutral-450 hover:text-neutral-800 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shadow-2xs"
+                            title="Attach Files"
+                          >
+                            <Paperclip className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={uploadingCommentFiles}
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/60 dark:border-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-350 hover:text-neutral-850 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shadow-2xs"
+                          >
+                            {uploadingCommentFiles ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            ) : (
+                              <Send className="w-4 h-4" />
+                            )}
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex-1 overflow-y-auto space-y-0.5 pr-1 scrollbar-thin max-h-[320px] pt-1">
+                      {activities.length > 0 ? (
+                        activities.map((act) => (
+                          <div 
+                            key={act.id} 
+                            className="flex items-start gap-4 pb-5 border-l border-neutral-100 dark:border-neutral-800 ml-4.5 pl-6 relative last:border-0"
+                          >
+                            <div className={cn(
+                              "absolute -left-[14.5px] top-0 h-7 w-7 rounded-full border flex items-center justify-center shadow-xs shrink-0 bg-white dark:bg-neutral-900 z-10",
+                              getActivityColor(act.type)
+                            )}>
+                              {getActivityIcon(act.type)}
+                            </div>
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-250 truncate">
+                                  {act.actorName}
+                                </span>
+                                <span className="text-[9px] text-neutral-400 dark:text-neutral-500 font-mono shrink-0">
+                                  {formatTimestamp(act.createdAt)}
+                                </span>
+                              </div>
+                              <p className="text-xs text-neutral-550 dark:text-neutral-400 font-semibold leading-relaxed break-words">
+                                {renderActivityDetail(act)}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-550 italic">
+                          No audit activities registered yet.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right Parameters Dashboard Column (Stacked vertically when inline) */}
+            <div className="w-full flex-shrink-0 bg-neutral-50/20 dark:bg-neutral-900/10 p-6 space-y-5.5 flex flex-col border-t border-neutral-100 dark:border-neutral-850/60 flex-grow-0">
+              
+              {/* Status block with custom selector */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+                  Workflow Status
+                </label>
+                <CustomDropdown
+                  value={task.status}
+                  onChange={handleStatusChange}
+                  options={STATUSES}
+                  renderTrigger={renderStatusTrigger}
+                  renderOption={renderStatusOption}
+                />
+              </div>
+
+              {/* Priority block with custom selector */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+                  Task Urgency
+                </label>
+                <CustomDropdown
+                  value={task.priority}
+                  onChange={handlePriorityChange}
+                  options={['none', 'low', 'medium', 'high', 'urgent']}
+                  renderTrigger={renderPriorityTrigger}
+                  renderOption={renderPriorityOption}
+                />
+              </div>
+
+              {/* Assignees Collaborators block */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-0.5">
+                  Team Assignees
+                </label>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin pr-1">
+                  {members.map((m) => {
+                    const isAssigned = task.assigneeIds.includes(m.uid);
+                    return (
+                      <button
+                        key={m.uid}
+                        onClick={() => handleAssigneeChange(m.uid)}
+                        className={cn(
+                          "w-full flex items-center justify-between rounded-xl px-3 py-2 text-left border transition-all cursor-pointer shadow-2xs",
+                          isAssigned
+                            ? "bg-primary/[0.04] border-primary/25 text-primary dark:text-white"
+                            : "bg-white dark:bg-neutral-900 border-neutral-200/50 dark:border-neutral-800/60 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-250 hover:bg-neutral-50/50"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="h-5.5 w-5.5 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-extrabold text-primary shrink-0 overflow-hidden border border-primary/10">
+                            {m.photoURL ? (
+                              <img src={m.photoURL} alt={m.fullName} className="h-full w-full object-cover" />
+                            ) : (
+                              getMemberInitials(m.uid)
+                            )}
+                          </div>
+                          <span className="text-[11px] font-semibold truncate">
+                            {m.fullName || m.username}
+                          </span>
+                        </div>
+                        {isAssigned && <Check className="w-3.5 h-3.5 text-primary shrink-0 stroke-[2.5]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Due Date picker block */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500 flex items-center gap-1 px-0.5">
+                  <Calendar className="w-3 h-3 text-primary" />
+                  <span>Schedule Due Date</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={getDueDateString()}
+                    onChange={(e) => handleDueDateChange(e.target.value)}
+                    className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl pl-3.5 pr-8 py-2.5 text-xs text-neutral-855 dark:text-neutral-200 outline-none cursor-pointer focus:border-primary/50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all font-mono font-bold shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              {/* Context connections info tags */}
+              <div className="space-y-3.5 pt-4.5 border-t border-neutral-150 dark:border-neutral-850/60">
+                {currentProject && (
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block px-0.5">Project Scope</span>
+                    <span className="text-[11px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-500/[0.04] px-2 py-1.5 border border-indigo-500/10 rounded-xl block truncate shadow-2xs">
+                      {currentProject.name}
+                    </span>
+                  </div>
+                )}
+
+                {currentGoal && (
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block px-0.5">Focus Goal Link</span>
+                    <span className="text-[11px] font-bold text-cyan-500 dark:text-cyan-400 bg-cyan-500/[0.04] px-2 py-1.5 border border-cyan-500/10 rounded-xl block truncate shadow-2xs">
+                      {currentGoal.title}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AnimatePresence>
