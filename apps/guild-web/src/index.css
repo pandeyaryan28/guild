@@ -324,7 +324,7 @@
 ───────────────────────────────────────────────────────────────────────────── */
 .bg-primary, 
 .bg-accent, 
-[class*="bg-primary"]:not([class*=":bg-primary"]):not([class*="bg-primary/"]), 
+[class*="bg-primary"]:not([class*=":bg-primary"]):not([class*="bg-primary/"]):not([class*="bg-bg-primary"]), 
 [class*="bg-accent"]:not([class*=":bg-accent"]):not([class*="bg-accent/"]) {
   /* Dynamic text-color container inheritance */
   --text-primary: var(--accent-foreground) !important;
