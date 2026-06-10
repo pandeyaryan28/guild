@@ -199,3 +199,21 @@ export function listenToReceivedRequests(
     (snap) => cb(snap.docs.map((d) => d.data() as OrgRequest)),
   );
 }
+
+/** Single request listener */
+export function listenToRequest(
+  requestId: string,
+  cb: (req: OrgRequest | null) => void,
+): () => void {
+  return onSnapshot(
+    doc(db, 'requests', requestId),
+    (snap) => {
+      if (snap.exists()) {
+        cb(snap.data() as OrgRequest);
+      } else {
+        cb(null);
+      }
+    }
+  );
+}
+

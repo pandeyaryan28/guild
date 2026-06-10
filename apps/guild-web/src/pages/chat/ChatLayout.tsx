@@ -16,6 +16,14 @@ import { MessageArea } from './MessageArea';
 import { type UserProfile, getOrgById, type Organization } from '../../lib/firestore';
 import { type Message } from '../../lib/chat';
 import { RedesignLayout } from '../../components/redesign/Layout';
+import { useSearchParams } from 'react-router-dom';
+import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
+import { GoalDetailDrawer } from '../../components/tasks/GoalDetailDrawer';
+import { RequestDetailDrawer } from '../../components/tasks/RequestDetailDrawer';
+import { useSingleTask, useTasks } from '../../hooks/useTasks';
+import { useGoal, useGoals } from '../../hooks/useGoals';
+import { useRequest } from '../../hooks/useRequests';
+import { useProjects } from '../../hooks/useProjects';
 
 interface RedesignChatSidebarProps {
   isCollapsed: boolean;
@@ -240,6 +248,24 @@ export function ChatLayout() {
   const [showChannelModal, setShowChannelModal] = React.useState(false);
   const [showDMModal, setShowDMModal] = React.useState(false);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openTaskId = searchParams.get('task');
+  const openGoalId = searchParams.get('goal');
+  const openRequestId = searchParams.get('request');
+
+  const openTask = useSingleTask(openTaskId);
+  const { goal: openGoal } = useGoal(openGoalId ?? undefined);
+  const { request: openRequest } = useRequest(openRequestId ?? undefined);
+
+  const { projects } = useProjects(orgId);
+  const { goals } = useGoals(orgId);
+  const { tasks } = useTasks(orgId);
+
+  const actor = React.useMemo(() => ({
+    uid: user?.uid ?? '',
+    name: userProfile?.fullName ?? 'User',
+  }), [user, userProfile]);
+
   const handleChannelCreated = (chId: string) => {
     setShowChannelModal(false);
     navigate(`/chat/c/${chId}`);
@@ -333,6 +359,42 @@ export function ChatLayout() {
       )}
       {showDMModal && orgId && (
         <NewDMModal orgId={orgId} members={members} onClose={() => setShowDMModal(false)} onDMCreated={handleDMCreated} />
+      )}
+
+      {openTask && (
+        <TaskDetailDrawer
+          task={openTask}
+          onClose={() => setSearchParams({})}
+          orgId={orgId ?? ''}
+          actor={actor}
+          members={members}
+          projects={projects}
+          goals={goals}
+        />
+      )}
+
+      {openGoal && (
+        <GoalDetailDrawer
+          goal={openGoal}
+          onClose={() => setSearchParams({})}
+          orgId={orgId ?? ''}
+          actor={actor}
+          members={members}
+          projects={projects}
+          tasks={tasks}
+          onSelectTask={(t) => {
+            setSearchParams({ task: t.id });
+          }}
+        />
+      )}
+
+      {openRequest && userProfile && (
+        <RequestDetailDrawer
+          request={openRequest}
+          onClose={() => setSearchParams({})}
+          orgId={orgId ?? ''}
+          currentUser={userProfile}
+        />
       )}
     </RedesignLayout>
   );

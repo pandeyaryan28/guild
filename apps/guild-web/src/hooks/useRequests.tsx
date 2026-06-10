@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import {
   listenToSentRequests,
   listenToReceivedRequests,
+  listenToRequest,
   type OrgRequest,
 } from '../lib/requests';
 
@@ -32,3 +33,24 @@ export function useRequests(orgId: string | undefined) {
 
   return { sent, received, pendingCount, loading };
 }
+
+export function useRequest(requestId: string | null | undefined) {
+  const [request, setRequest] = React.useState<OrgRequest | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!requestId) {
+      setRequest(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    return listenToRequest(requestId, (r) => {
+      setRequest(r);
+      setLoading(false);
+    });
+  }, [requestId]);
+
+  return { request, loading };
+}
+

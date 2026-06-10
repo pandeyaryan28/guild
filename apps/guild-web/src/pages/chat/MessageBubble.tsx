@@ -9,6 +9,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { updateRequestStatus } from '../../lib/requests';
 import { toggleReaction, addMessageReply, listenToReplies, type MessageReply } from '../../lib/replies';
+import { useSearchParams } from 'react-router-dom';
 
 interface MessageBubbleProps {
   message: Message;
@@ -64,6 +65,7 @@ function getSenderColor(username: string) {
 export function MessageBubble({ message, isOwn, isGrouped, members, orgId, currentUser, onOpenDiscussion }: MessageBubbleProps) {
   const sender = members.find((m) => m.uid === message.senderId);
   const photoURL = sender?.photoURL;
+  const [, setSearchParams] = useSearchParams();
 
   const [hovered, setHovered] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
@@ -199,9 +201,16 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     if (isTaskCommand) {
       const args = message.body.trim().slice(5).trim();
       const taskTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
+      const taskId = (message as any).taskId;
 
       return (
-        <div className="mt-1.5 max-w-lg rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4 shadow-md shadow-primary/5 backdrop-blur-sm transition-all hover:bg-primary/12 group-hover:border-primary/30 text-left">
+        <div
+          onClick={() => taskId && setSearchParams({ task: taskId })}
+          className={cn(
+            "mt-1.5 max-w-lg rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4 shadow-md shadow-primary/5 backdrop-blur-sm transition-all text-left",
+            taskId ? "cursor-pointer hover:bg-primary/12 hover:border-primary/45 hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.01]" : ""
+          )}
+        >
           <div className="flex items-center justify-between gap-4 mb-2.5">
             <div className="flex items-center gap-2 text-primary">
               <CheckSquare className="h-4 w-4 shrink-0" />
@@ -223,9 +232,16 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
       const args = message.body.trim().slice(5).trim();
       const goalTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
       const displayStatus = realtimeGoalStatus || (message as any).goalStatus || 'active';
+      const goalId = (message as any).goalId;
 
       return (
-        <div className="mt-1.5 max-w-lg rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4 shadow-md shadow-emerald-500/5 backdrop-blur-sm transition-all hover:bg-emerald-500/12 group-hover:border-emerald-500/30 text-left">
+        <div
+          onClick={() => goalId && setSearchParams({ goal: goalId })}
+          className={cn(
+            "mt-1.5 max-w-lg rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4 shadow-md shadow-emerald-500/5 backdrop-blur-sm transition-all text-left",
+            goalId ? "cursor-pointer hover:bg-emerald-500/12 hover:border-emerald-500/45 hover:shadow-lg hover:shadow-emerald-500/5 hover:scale-[1.01]" : ""
+          )}
+        >
           <div className="flex items-center justify-between gap-4 mb-2.5">
             <div className="flex items-center gap-2 text-emerald-500">
               <Target className="h-4 w-4 shrink-0" />
@@ -324,7 +340,13 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
       };
 
       return (
-        <div className="mt-1.5 max-w-lg rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-amber-500/5 p-4 shadow-md shadow-amber-500/5 backdrop-blur-sm transition-all hover:bg-amber-500/12 group-hover:border-amber-500/30 text-left">
+        <div
+          onClick={() => rId && setSearchParams({ request: rId })}
+          className={cn(
+            "mt-1.5 max-w-lg rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-amber-500/5 p-4 shadow-md shadow-amber-500/5 backdrop-blur-sm transition-all text-left",
+            rId ? "cursor-pointer hover:bg-amber-500/12 hover:border-amber-500/45 hover:shadow-lg hover:shadow-amber-500/5 hover:scale-[1.01]" : ""
+          )}
+        >
           <div className="flex items-center justify-between gap-4 mb-2.5">
             <div className="flex items-center gap-2 text-amber-500">
               <ClipboardList className="h-4 w-4 shrink-0" />
