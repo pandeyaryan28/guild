@@ -122,8 +122,8 @@ export function SignupPage() {
       >
         {/* Logo / Brand */}
         <div className="flex items-center gap-3 mb-8 cursor-default group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-black text-white shadow-xl shadow-indigo-500/25 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
-            G
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl overflow-hidden shadow-xl shadow-indigo-500/25 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300 bg-white/10">
+            <img src="/logo.png" alt="Guild Orbit Logo" className="w-full h-full object-cover" />
           </div>
           <span className="text-2xl font-black text-gradient uppercase bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 dark:from-violet-400 dark:via-indigo-400 dark:to-cyan-400 tracking-wider">
             Guild

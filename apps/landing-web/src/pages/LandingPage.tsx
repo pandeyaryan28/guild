@@ -53,8 +53,8 @@ export function LandingPage() {
         <nav className="aether-glass flex items-center justify-between px-6 py-3.5 shadow-md">
           {/* Brand Logo */}
           <a href="#" className="flex items-center gap-2.5 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-black text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
-              G
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden shadow-lg group-hover:scale-105 transition-transform duration-300">
+              <img src="/logo.png" alt="Guild Orbit Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-lg font-black tracking-wider uppercase text-gradient bg-gradient-to-r from-indigo-600 to-violet-600">
               Guild Orbit
@@ -1237,8 +1237,8 @@ export function LandingPage() {
           
           <div className="col-span-2 space-y-4">
             <a href="#" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-xs font-black text-white">
-                G
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
+                <img src="/logo.png" alt="Guild Orbit Logo" className="w-full h-full object-cover" />
               </div>
               <span className="text-md font-black tracking-wider uppercase text-text-primary">
                 Guild Orbit
