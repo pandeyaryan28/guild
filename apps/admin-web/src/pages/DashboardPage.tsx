@@ -397,7 +397,7 @@ export function DashboardPage({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-up">
         <div>
           <h1 className="text-2xl font-black text-[--foreground] tracking-tight uppercase">
-            Guild HQ / {activeSection}
+            Guild Orbit / {activeSection}
           </h1>
           <p className="text-xs text-[--muted-foreground] font-semibold mt-0.5 tracking-wide">
             HQ Brain operations visible center · Live sync at {format(now, "h:mm a")}

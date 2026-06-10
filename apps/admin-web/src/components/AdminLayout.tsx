@@ -28,7 +28,7 @@ export function AdminLayout({ profile, children }: AdminLayoutProps) {
               className="text-lg font-black tracking-wider text-gradient uppercase bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400"
               style={{ letterSpacing: '0.12em' }}
             >
-              Guild HQ
+              Guild Orbit
             </span>
             <div className="h-4 w-[1px] bg-white/10 shrink-0" />
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none">

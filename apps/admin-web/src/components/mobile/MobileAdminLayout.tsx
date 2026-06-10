@@ -53,7 +53,7 @@ export function MobileAdminLayout({ profile, activeSection, onNavigate, children
           <span 
             className="text-sm font-black tracking-widest text-gradient uppercase bg-gradient-to-r from-violet-500 to-indigo-500"
           >
-            Guild HQ
+            Guild Orbit
           </span>
           <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-80 border-l border-white/10 pl-2">
             {activeSection}

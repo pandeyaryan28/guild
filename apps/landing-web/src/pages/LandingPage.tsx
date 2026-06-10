@@ -57,7 +57,7 @@ export function LandingPage() {
               G
             </div>
             <span className="text-lg font-black tracking-wider uppercase text-gradient bg-gradient-to-r from-indigo-600 to-violet-600">
-              GuildHQ
+              Guild Orbit
             </span>
           </a>
 
@@ -188,7 +188,7 @@ export function LandingPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-xs md:text-sm text-text-secondary text-center mt-5 max-w-[620px] leading-relaxed font-medium"
         >
-          GuildHQ unites your team chat, task boards, and operational approvals into one beautiful glassmorphic workspace. Stop chasing status updates across five different apps.
+          Guild Orbit unites your team chat, task boards, and operational approvals into one beautiful glassmorphic workspace. Stop chasing status updates across five different apps.
         </motion.p>
 
         {/* CTAs */}
@@ -224,7 +224,7 @@ export function LandingPage() {
           <div className="absolute inset-0 bg-dashboard-grid opacity-[0.06] pointer-events-none" />
           <img 
             src="/guild_hero_mockup.png" 
-            alt="GuildHQ Workspace Dashboard Mockup" 
+            alt="Guild Orbit Workspace Dashboard Mockup" 
             className="w-full h-full object-cover rounded-[20px] shadow-inner select-none"
             loading="eager"
           />
@@ -242,7 +242,7 @@ export function LandingPage() {
             Simple Operations. Zero Noise.
           </h2>
           <p className="text-xs text-text-secondary mt-3 font-semibold leading-relaxed">
-            Stop switching between WhatsApp group chats, Excel spreadsheets, and email request trails. GuildHQ brings your daily team operations under one roof.
+            Stop switching between WhatsApp group chats, Excel spreadsheets, and email request trails. Guild Orbit brings your daily team operations under one roof.
           </p>
         </div>
 
@@ -412,7 +412,7 @@ export function LandingPage() {
           <div className="flex items-center gap-2 mb-6">
             <span className="h-[1px] bg-border-default/60 flex-grow" />
             <h3 className="text-[10px] font-black uppercase text-text-muted tracking-widest px-3">
-              How GuildHQ Boosts Your Business
+              How Guild Orbit Boosts Your Business
             </h3>
             <span className="h-[1px] bg-border-default/60 flex-grow" />
           </div>
@@ -507,10 +507,10 @@ export function LandingPage() {
                   </div>
                 </div>
                 
-                {/* GuildHQ Flow */}
+                {/* Guild Orbit Flow */}
                 <div className="space-y-1 border-t border-dashed border-black/5 pt-2">
                   <div className="flex items-center justify-between text-[7px] font-bold text-emerald-600 uppercase">
-                    <span>The Sync: GuildHQ Monolith</span>
+                    <span>The Sync: Guild Orbit Monolith</span>
                     <span>✓</span>
                   </div>
                   <div className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-100 p-1.5 rounded-lg">
@@ -670,7 +670,7 @@ export function LandingPage() {
                 Turn chats into tracked tasks instantly
               </h3>
               <p className="text-xs text-text-secondary leading-relaxed font-medium">
-                Work conversations can easily get buried under hundreds of messages. GuildHQ lets you convert messages directly into task cards. Assign an owner, set a deadline, and keep the task linked to the chat thread so the full context is preserved.
+                Work conversations can easily get buried under hundreds of messages. Guild Orbit lets you convert messages directly into task cards. Assign an owner, set a deadline, and keep the task linked to the chat thread so the full context is preserved.
               </p>
               <div className="pt-2">
                 <a 
@@ -695,7 +695,7 @@ export function LandingPage() {
                 Centralized user management & role control
               </h3>
               <p className="text-xs text-text-secondary leading-relaxed font-medium">
-                Keep security tight. The GuildHQ Admin panel allows workspace owners to invite members, deactivate accounts, assign departments, and configure system permissions. Maintain clear operational borders without complex configurations.
+                Keep security tight. The Guild Orbit Admin panel allows workspace owners to invite members, deactivate accounts, assign departments, and configure system permissions. Maintain clear operational borders without complex configurations.
               </p>
               <div className="pt-2">
                 <a 
@@ -946,7 +946,7 @@ export function LandingPage() {
                   </li>
                   <li className="flex items-start gap-2.5 text-xs text-text-secondary font-semibold">
                     <Check className="h-4.5 w-4.5 text-indigo-500 shrink-0" />
-                    <span>Full GuildHQ Admin panel access</span>
+                    <span>Full Guild Orbit Admin panel access</span>
                   </li>
                   <li className="flex items-start gap-2.5 text-xs text-text-secondary font-semibold">
                     <Check className="h-4.5 w-4.5 text-indigo-500 shrink-0" />
@@ -1140,7 +1140,7 @@ export function LandingPage() {
             Frequently Asked Questions
           </h2>
           <p className="text-xs text-text-secondary mt-3 font-medium">
-            Have questions about how GuildHQ works? We've compiled the answers below.
+            Have questions about how Guild Orbit works? We've compiled the answers below.
           </p>
         </div>
 
@@ -1156,15 +1156,15 @@ export function LandingPage() {
             },
             {
               q: "Can I manage permissions for different team departments?",
-              a: "Yes! GuildHQ supports team roles and permissions inside the workspace admin dashboard. You can group members into departments (like marketing, operations, admin) and configure specific workspace view boundaries."
+              a: "Yes! Guild Orbit supports team roles and permissions inside the workspace admin dashboard. You can group members into departments (like marketing, operations, admin) and configure specific workspace view boundaries."
             },
             {
-              q: "How secure is GuildHQ?",
+              q: "How secure is Guild Orbit?",
               a: "We prioritize security by implementing standard token authentication protocols (JWT and Firebase Auth) alongside strict database rules. All database exchanges and user attachments are encrypted and isolated at the workspace level, ensuring data separation."
             },
             {
               q: "Can I cancel my monthly user subscription?",
-              a: "Absolutely. GuildHQ operates on a simple pay-as-you-go model. You can modify your team seat count, delete workspace records, or cancel the premium plan directly in the billing dashboard at any time."
+              a: "Absolutely. Guild Orbit operates on a simple pay-as-you-go model. You can modify your team seat count, delete workspace records, or cancel the premium plan directly in the billing dashboard at any time."
             }
           ].map((item, index) => (
             <div 
@@ -1214,7 +1214,7 @@ export function LandingPage() {
             Eliminate Operational Noise Today
           </h2>
           <p className="text-xs text-text-secondary max-w-[550px] mx-auto leading-relaxed font-medium mb-8">
-            Join the forward-thinking teams coordinating workflows, tracking tasks, and securing approvals with GuildHQ.
+            Join the forward-thinking teams coordinating workflows, tracking tasks, and securing approvals with Guild Orbit.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-[500px] mx-auto">
@@ -1241,7 +1241,7 @@ export function LandingPage() {
                 G
               </div>
               <span className="text-md font-black tracking-wider uppercase text-text-primary">
-                GuildHQ
+                Guild Orbit
               </span>
             </a>
             <p className="text-xs text-text-secondary max-w-[280px] leading-relaxed font-medium">
@@ -1271,7 +1271,7 @@ export function LandingPage() {
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border-default/30 pt-6">
           <span className="text-[10px] font-semibold text-text-muted">
-            &copy; 2026 GuildHQ Inc. All rights reserved.
+            &copy; 2026 Guild Orbit Inc. All rights reserved.
           </span>
           <div className="flex items-center gap-6 text-[10px] font-semibold text-text-muted">
             <a href="#" className="hover:text-text-primary">Privacy Policy</a>

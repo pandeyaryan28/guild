@@ -514,7 +514,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                   'Chat & team channels',
                   'Task & project management',
                   'Request management',
-                  'Access to GuildHQ Admin panel',
+                  'Access to Guild Orbit Admin panel',
                   'Priority support',
                   ...(cycle === 'annual' ? ['1yr free access to upcoming HR & Accounting'] : []),
                 ]}
