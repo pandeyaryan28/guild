@@ -7,7 +7,12 @@ export function HeroSection() {
   const { navigate } = useNavigation();
 
   return (
-    <section className="relative pt-28 md:pt-36 pb-16 px-6">
+    <section className="relative pt-28 md:pt-36 pb-16 px-6 overflow-hidden">
+      {/* Floating background glows for depth */}
+      <div className="absolute top-[10%] left-[5%] w-[400px] h-[400px] rounded-full bg-indigo-400/8 blur-[100px] animate-drift pointer-events-none" />
+      <div className="absolute top-[20%] right-[5%] w-[450px] h-[450px] rounded-full bg-cyan-400/8 blur-[110px] animate-drift-reverse pointer-events-none" />
+      <div className="absolute top-[40%] left-[25%] w-[350px] h-[350px] rounded-full bg-purple-300/6 blur-[90px] animate-drift pointer-events-none" />
+
       {/* Subtle background glow */}
       <div className="hero-glow absolute inset-0 pointer-events-none" />
 
@@ -17,10 +22,10 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="inline-flex items-center gap-2 bg-accent-light text-accent text-xs font-medium px-4 py-1.5 rounded-full mb-8"
+          className="inline-flex items-center gap-2 bg-accent-light text-accent text-xs font-semibold px-4 py-1.5 rounded-full mb-8 glass"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-          Unified operations for growing teams
+          No chaos. Just operational flow.
         </motion.div>
 
         {/* Headline */}
@@ -30,8 +35,8 @@ export function HeroSection() {
           transition={{ duration: 0.5, delay: 0.08 }}
           className="text-[clamp(2.25rem,5vw,4.25rem)] font-bold tracking-tight leading-[1.1] max-w-3xl"
         >
-          Your team&apos;s operations,{' '}
-          <span className="text-gradient">finally in one place</span>
+          Your entire operations,{' '}
+          <span className="text-gradient">perfectly in orbit.</span>
         </motion.h1>
 
         {/* Subtext */}
@@ -39,10 +44,9 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.16 }}
-          className="mt-6 text-lg text-ink-light max-w-lg leading-relaxed"
+          className="mt-6 text-lg md:text-xl text-ink-light max-w-lg leading-relaxed font-medium"
         >
-          Chat, tasks, and approvals — without the chaos of five different
-          apps.
+          Chat, tasks, and approvals. Together in a unified workspace.
         </motion.p>
 
         {/* CTAs */}
@@ -54,14 +58,14 @@ export function HeroSection() {
         >
           <a
             href={`${APP_URL}/signup`}
-            className="inline-flex items-center gap-2 text-sm font-medium text-white bg-accent hover:bg-accent-dark px-6 py-3 rounded-xl transition-all active:scale-[0.97] shadow-lg shadow-accent/20"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-accent hover:bg-accent-dark px-6 py-3 rounded-xl transition-all active:scale-[0.97] shadow-lg shadow-accent/15"
           >
             Start for free
             <ArrowRight className="h-4 w-4" />
           </a>
           <button
             onClick={() => navigate('/features')}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-light hover:text-ink px-5 py-3 rounded-xl transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-light hover:text-ink px-5 py-3 rounded-xl transition-colors cursor-pointer"
           >
             See features
             <ArrowRight className="h-3.5 w-3.5" />

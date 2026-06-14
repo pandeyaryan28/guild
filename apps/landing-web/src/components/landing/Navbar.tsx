@@ -22,10 +22,10 @@ export function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-3">
+    <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 transition-all duration-300">
       <nav
-        className={`mx-auto max-w-5xl rounded-2xl px-5 py-3 flex items-center justify-between transition-all duration-300 ${
-          scrolled ? 'glass-nav' : 'bg-transparent'
+        className={`mx-auto max-w-5xl rounded-2xl px-5 flex items-center justify-between transition-all duration-300 glass-nav ${
+          scrolled ? 'py-2.5 shadow-md' : 'py-3.5'
         }`}
       >
         {/* Logo */}

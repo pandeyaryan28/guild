@@ -71,21 +71,21 @@ export function PricingCards() {
       </ScrollReveal>
 
       {/* Plan cards */}
-      <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
+      <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch px-4">
         {/* Free */}
         <ScrollReveal delay={0}>
-          <div className="glass rounded-2xl p-7 flex flex-col h-full">
-            <p className="text-xs font-semibold text-ink-faint mb-2">Free</p>
-            <p className="text-4xl font-bold text-ink">
+          <div className="glass rounded-3xl p-8 flex flex-col h-full hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-indigo-100/5 hover:shadow-2xl">
+            <p className="text-xs font-bold text-ink-faint uppercase tracking-wider mb-2">Free</p>
+            <p className="text-4xl font-extrabold text-ink">
               {currency === 'INR' ? '₹0' : '$0'}
             </p>
-            <p className="text-xs text-ink-faint mt-1 mb-6">
+            <p className="text-xs font-semibold text-ink-faint mt-1.5 mb-6">
               Up to 5 members
             </p>
 
             <div className="h-px bg-line mb-6" />
 
-            <ul className="space-y-3 flex-grow mb-8">
+            <ul className="space-y-4 flex-grow mb-8">
               {[
                 '5 seat limit',
                 '10 MB storage',
@@ -95,7 +95,7 @@ export function PricingCards() {
               ].map((f) => (
                 <li
                   key={f}
-                  className="flex items-start gap-2.5 text-sm text-ink-light"
+                  className="flex items-start gap-2.5 text-sm text-ink-light font-medium"
                 >
                   <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                   {f}
@@ -105,7 +105,7 @@ export function PricingCards() {
 
             <a
               href={`${APP_URL}/signup`}
-              className="w-full text-center py-2.5 rounded-xl text-sm font-medium text-ink border border-line hover:bg-surface transition-all"
+              className="w-full text-center py-3 rounded-xl text-sm font-semibold text-ink border border-line hover:bg-white/40 transition-all cursor-pointer"
             >
               Get started
             </a>
@@ -114,15 +114,15 @@ export function PricingCards() {
 
         {/* Pro */}
         <ScrollReveal delay={0.08}>
-          <div className="glass rounded-2xl p-7 flex flex-col h-full border-accent/20 relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-md shadow-accent/20">
+          <div className="glass rounded-3xl p-8 flex flex-col h-full border-accent/25 relative hover:scale-[1.03] hover:-translate-y-1.5 transition-all duration-300 shadow-2xl shadow-indigo-500/10 ring-1 ring-accent/10">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-[10px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-full flex items-center gap-1 shadow-md shadow-accent/20">
               <Star className="h-3 w-3 fill-white" />
               Best value
             </div>
 
-            <p className="text-xs font-semibold text-accent mt-1 mb-2">Pro</p>
+            <p className="text-xs font-bold text-accent uppercase tracking-wider mt-1 mb-2">Pro</p>
             <div className="flex items-baseline">
-              <p className="text-4xl font-bold text-ink">
+              <p className="text-4xl font-extrabold text-ink">
                 {currency === 'INR'
                   ? cycle === 'annual'
                     ? '₹249'
@@ -131,17 +131,17 @@ export function PricingCards() {
                     ? '$4'
                     : '$8'}
               </p>
-              <span className="text-sm text-ink-light ml-1.5">
+              <span className="text-sm font-semibold text-ink-light ml-1.5">
                 / seat / mo
               </span>
             </div>
-            <p className="text-xs text-ink-faint mt-1 mb-6">
+            <p className="text-xs font-semibold text-ink-faint mt-1.5 mb-6">
               {cycle === 'annual' ? 'Billed annually' : 'Billed monthly'}
             </p>
 
             <div className="h-px bg-accent/10 mb-6" />
 
-            <ul className="space-y-3 flex-grow mb-8">
+            <ul className="space-y-4 flex-grow mb-8">
               {[
                 'Unlimited seats',
                 'Everything in Free',
@@ -151,7 +151,7 @@ export function PricingCards() {
               ].map((f) => (
                 <li
                   key={f}
-                  className="flex items-start gap-2.5 text-sm text-ink-light"
+                  className="flex items-start gap-2.5 text-sm text-ink-light font-medium"
                 >
                   <Check className="h-4 w-4 text-accent shrink-0 mt-0.5" />
                   {f}
@@ -161,7 +161,7 @@ export function PricingCards() {
 
             <a
               href={`${APP_URL}/signup`}
-              className="w-full text-center py-2.5 rounded-xl text-sm font-medium text-white bg-accent hover:bg-accent-dark transition-all flex items-center justify-center gap-1.5 shadow-md shadow-accent/15"
+              className="w-full text-center py-3 rounded-xl text-sm font-semibold text-white bg-accent hover:bg-accent-dark transition-all flex items-center justify-center gap-1.5 shadow-md shadow-accent/15 cursor-pointer"
             >
               Upgrade to Pro
               <ArrowRight className="h-3.5 w-3.5" />
@@ -171,18 +171,18 @@ export function PricingCards() {
 
         {/* Enterprise */}
         <ScrollReveal delay={0.16}>
-          <div className="glass rounded-2xl p-7 flex flex-col h-full">
-            <p className="text-xs font-semibold text-ink-faint mb-2">
+          <div className="glass rounded-3xl p-8 flex flex-col h-full hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-indigo-100/5 hover:shadow-2xl">
+            <p className="text-xs font-bold text-ink-faint uppercase tracking-wider mb-2">
               Enterprise
             </p>
-            <p className="text-4xl font-bold text-ink">Custom</p>
-            <p className="text-xs text-ink-faint mt-1 mb-6">
+            <p className="text-4xl font-extrabold text-ink">Custom</p>
+            <p className="text-xs font-semibold text-ink-faint mt-1.5 mb-6">
               For teams with 100+ seats
             </p>
 
             <div className="h-px bg-line mb-6" />
 
-            <ul className="space-y-3 flex-grow mb-8">
+            <ul className="space-y-4 flex-grow mb-8">
               {[
                 'Volume discounts',
                 'Dedicated success manager',
@@ -191,7 +191,7 @@ export function PricingCards() {
               ].map((f) => (
                 <li
                   key={f}
-                  className="flex items-start gap-2.5 text-sm text-ink-light"
+                  className="flex items-start gap-2.5 text-sm text-ink-light font-medium"
                 >
                   <Check className="h-4 w-4 text-sky-500 shrink-0 mt-0.5" />
                   {f}
@@ -201,7 +201,7 @@ export function PricingCards() {
 
             <a
               href="mailto:enterprise@guildhq.com"
-              className="w-full text-center py-2.5 rounded-xl text-sm font-medium text-sky-600 bg-sky-50 border border-sky-100 hover:bg-sky-100 transition-all"
+              className="w-full text-center py-3 rounded-xl text-sm font-semibold text-sky-700 bg-sky-50 border border-sky-100 hover:bg-sky-100 transition-all cursor-pointer"
             >
               Contact sales
             </a>

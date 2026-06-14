@@ -11,10 +11,10 @@ export function FAQAccordion() {
     <div className="space-y-3 max-w-2xl mx-auto">
       {FAQ_ITEMS.map((item, i) => (
         <ScrollReveal key={i} delay={i * 0.04}>
-          <div className="glass rounded-2xl overflow-hidden">
+          <div className="glass rounded-3xl overflow-hidden hover:scale-[1.005] transition-transform duration-300">
             <button
               onClick={() => setActive(active === i ? null : i)}
-              className="w-full px-6 py-5 text-left flex items-center justify-between text-sm font-medium text-ink hover:bg-black/[0.01] transition-colors cursor-pointer"
+              className="w-full px-6 py-5 text-left flex items-center justify-between text-base font-bold text-ink hover:bg-white/30 transition-colors cursor-pointer"
             >
               <span className="pr-4">{item.q}</span>
               <ChevronDown
@@ -32,8 +32,8 @@ export function FAQAccordion() {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.25 }}
                 >
-                  <div className="px-6 pb-5 text-sm text-ink-light leading-relaxed border-t border-line/50">
-                    <div className="pt-4">{item.a}</div>
+                  <div className="px-6 pb-5 text-sm text-ink-light leading-relaxed border-t border-line/40">
+                    <div className="pt-4 font-medium">{item.a}</div>
                   </div>
                 </motion.div>
               )}

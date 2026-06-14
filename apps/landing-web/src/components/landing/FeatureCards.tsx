@@ -5,27 +5,24 @@ import { useNavigation } from '../../context/NavigationContext';
 const features = [
   {
     icon: MessageSquare,
-    title: 'Team chat, built for work',
-    description:
-      'Channels, DMs, and file sharing — without the noise of personal chat apps.',
-    color: 'text-violet-500',
-    bg: 'bg-violet-50',
+    title: 'Contextual Chat',
+    description: 'Discuss, share, and unblock in real-time.',
+    color: 'text-violet-600',
+    bg: 'bg-violet-500/10',
   },
   {
     icon: CheckSquare,
-    title: 'Visual task boards',
-    description:
-      'Kanban boards with owners, due dates, and priorities. Simple, not enterprise.',
-    color: 'text-indigo-500',
-    bg: 'bg-indigo-50',
+    title: 'Visual Kanban',
+    description: 'Assign, track, and complete tasks effortlessly.',
+    color: 'text-indigo-600',
+    bg: 'bg-indigo-500/10',
   },
   {
     icon: FileCheck,
-    title: 'Approvals in one click',
-    description:
-      'Submit requests for purchases, leaves, or admin actions. Managers approve instantly.',
-    color: 'text-cyan-500',
-    bg: 'bg-cyan-50',
+    title: 'Instant Approvals',
+    description: 'Submit, review, and track admin requests in a click.',
+    color: 'text-cyan-600',
+    bg: 'bg-cyan-500/10',
   },
 ];
 
@@ -33,15 +30,15 @@ export function FeatureCards() {
   const { navigate } = useNavigation();
 
   return (
-    <section className="px-6 py-20">
+    <section className="px-6 py-20 relative">
       <div className="max-w-5xl mx-auto">
         <ScrollReveal>
           <div className="text-center mb-14">
-            <h2 className="text-2xl md:text-3xl font-bold text-ink tracking-tight">
-              Everything your team needs
+            <h2 className="text-2xl md:text-3xl font-extrabold text-ink tracking-tight">
+              One Workspace. Three Modules.
             </h2>
-            <p className="mt-3 text-ink-light text-base">
-              Three core modules. Zero learning curve.
+            <p className="mt-3 text-ink-light text-base font-medium">
+              Zero learning curve. Zero friction.
             </p>
           </div>
         </ScrollReveal>
@@ -49,16 +46,16 @@ export function FeatureCards() {
         <div className="grid md:grid-cols-3 gap-6">
           {features.map((f, i) => (
             <ScrollReveal key={f.title} delay={i * 0.08}>
-              <div className="glass rounded-2xl p-7 h-full hover:scale-[1.015] transition-transform duration-300">
+              <div className="glass rounded-2xl p-7 h-full hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                 <div
-                  className={`inline-flex items-center justify-center h-10 w-10 rounded-xl ${f.bg} ${f.color} mb-5`}
+                  className={`inline-flex items-center justify-center h-12 w-12 rounded-2xl ${f.bg} ${f.color} mb-6`}
                 >
-                  <f.icon className="h-5 w-5" />
+                  <f.icon className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-semibold text-ink mb-2">
+                <h3 className="text-lg font-bold text-ink mb-2">
                   {f.title}
                 </h3>
-                <p className="text-sm text-ink-light leading-relaxed">
+                <p className="text-sm text-ink-light leading-relaxed font-medium">
                   {f.description}
                 </p>
               </div>
