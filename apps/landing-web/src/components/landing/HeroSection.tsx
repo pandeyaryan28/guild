@@ -16,18 +16,7 @@ export function HeroSection() {
       {/* Subtle background glow */}
       <div className="hero-glow absolute inset-0 pointer-events-none" />
 
-      <div className="max-w-5xl mx-auto flex flex-col items-center text-center relative">
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="inline-flex items-center gap-2 bg-accent-light text-accent text-xs font-semibold px-4 py-1.5 rounded-full mb-8 glass"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-          No chaos. Just operational flow.
-        </motion.div>
-
+      <div className="max-w-5xl mx-auto flex flex-col items-center text-center relative pt-4">
         {/* Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 16 }}

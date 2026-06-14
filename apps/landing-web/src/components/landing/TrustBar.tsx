@@ -1,31 +1,30 @@
-import { Rocket, Palette, Truck, Monitor, Factory, Settings } from 'lucide-react';
+import { Zap, Sparkles, Layers } from 'lucide-react';
 import { ScrollReveal } from './ScrollReveal';
 
-const industries = [
-  { icon: Rocket, label: 'Startups' },
-  { icon: Palette, label: 'Agencies' },
-  { icon: Truck, label: 'Logistics' },
-  { icon: Monitor, label: 'IT Services' },
-  { icon: Factory, label: 'Manufacturing' },
-  { icon: Settings, label: 'Operations' },
+const points = [
+  { icon: Zap, label: '5 Minute Setup' },
+  { icon: Sparkles, label: 'Zero Learning Curve' },
+  { icon: Layers, label: 'Fully Integrated' },
 ];
 
 export function TrustBar() {
   return (
-    <section className="px-6 py-16">
+    <section className="px-6 py-12 relative overflow-hidden">
       <ScrollReveal>
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm text-ink-faint font-medium mb-8">
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-sm text-ink-light font-bold uppercase tracking-wider mb-8">
             Built for teams who want clarity, not complexity
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5">
-            {industries.map(({ icon: Icon, label }) => (
+          <div className="glass rounded-3xl p-6 md:p-8 flex flex-col sm:flex-row items-center justify-around gap-8 shadow-xl shadow-indigo-100/5 border-white/80 hover:scale-[1.005] transition-all duration-300">
+            {points.map(({ icon: Icon, label }) => (
               <div
                 key={label}
-                className="flex items-center gap-2 text-ink-faint hover:text-ink-light transition-colors"
+                className="flex items-center gap-3 text-ink-light hover:text-ink transition-colors"
               >
-                <Icon className="h-4 w-4" strokeWidth={1.5} />
-                <span className="text-sm font-medium">{label}</span>
+                <div className="h-9 w-9 rounded-xl bg-accent-light flex items-center justify-center">
+                  <Icon className="h-5 w-5 text-accent" strokeWidth={2.5} />
+                </div>
+                <span className="text-sm font-bold tracking-tight">{label}</span>
               </div>
             ))}
           </div>
