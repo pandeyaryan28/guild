@@ -35,11 +35,8 @@ export function FeatureCards() {
         <ScrollReveal>
           <div className="text-center mb-14">
             <h2 className="text-2xl md:text-3xl font-extrabold text-ink tracking-tight">
-              One Workspace. Three Modules.
+              One Workspace.
             </h2>
-            <p className="mt-3 text-ink-light text-base font-medium">
-              Zero learning curve. Zero friction.
-            </p>
           </div>
         </ScrollReveal>
 

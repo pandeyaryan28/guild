@@ -4,14 +4,24 @@ import { APP_URL } from '../../config/landingData';
 import { ScrollReveal } from './ScrollReveal';
 
 export function PricingCards() {
-  const [currency, setCurrency] = useState<'USD' | 'INR'>('USD');
+  const [currency] = useState<'USD' | 'INR'>(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta') {
+        return 'INR';
+      }
+    } catch (e) {
+      // ignore
+    }
+    return 'USD';
+  });
   const [cycle, setCycle] = useState<'monthly' | 'annual'>('annual');
 
   return (
     <div className="space-y-12">
       {/* Controls */}
       <ScrollReveal>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+        <div className="flex items-center justify-center">
           {/* Billing cycle */}
           <div className="flex gap-1 bg-surface rounded-xl border border-line p-1">
             <button
@@ -37,35 +47,6 @@ export function PricingCards() {
                 -50%
               </span>
             </button>
-          </div>
-
-          {/* Currency */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-ink-faint font-medium">
-              Currency:
-            </span>
-            <div className="flex gap-1 bg-surface rounded-lg border border-line p-0.5">
-              <button
-                onClick={() => setCurrency('USD')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md cursor-pointer transition-all ${
-                  currency === 'USD'
-                    ? 'bg-page text-ink shadow-sm'
-                    : 'text-ink-light hover:text-ink'
-                }`}
-              >
-                USD
-              </button>
-              <button
-                onClick={() => setCurrency('INR')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md cursor-pointer transition-all ${
-                  currency === 'INR'
-                    ? 'bg-page text-ink shadow-sm'
-                    : 'text-ink-light hover:text-ink'
-                }`}
-              >
-                INR
-              </button>
-            </div>
           </div>
         </div>
       </ScrollReveal>

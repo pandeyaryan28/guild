@@ -79,7 +79,7 @@ export function HeroSection() {
               </span>
             </div>
             <img
-              src="/guild_hero_mockup.png"
+              src="/guild_hero_mockup.png?v=2"
               alt="Guild Orbit dashboard showing team chat, task boards, and pending approvals"
               className="w-full rounded-b-xl"
               loading="eager"

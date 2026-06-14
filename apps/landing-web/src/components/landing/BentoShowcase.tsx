@@ -42,7 +42,7 @@ export function BentoShowcase() {
           <ScrollReveal className="md:col-span-3">
             <div className="glass rounded-3xl overflow-hidden h-full min-h-[320px] p-2 hover:scale-[1.01] transition-transform duration-300 shadow-xl shadow-indigo-100/10 border-white/80">
               <img
-                src="/guild_hero_mockup.png"
+                src="/guild_hero_mockup.png?v=2"
                 alt="Guild Orbit dashboard overview"
                 className="w-full h-full object-cover object-top rounded-2xl"
                 loading="lazy"
@@ -76,7 +76,7 @@ export function BentoShowcase() {
         <ScrollReveal className="mt-6">
           <div className="glass rounded-3xl overflow-hidden p-2 shadow-xl shadow-indigo-100/10 border-white/80 hover:scale-[1.005] transition-transform duration-300">
             <img
-              src="/guild_feature_showcase.png"
+              src="/guild_feature_showcase.png?v=2"
               alt="Guild Orbit feature showcase"
               className="w-full object-cover max-h-[300px] rounded-2xl"
               loading="lazy"
