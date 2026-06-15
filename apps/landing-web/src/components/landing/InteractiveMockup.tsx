@@ -4,22 +4,16 @@ import {
   List, 
   KanbanSquare, 
   FileCheck, 
-  Folder, 
+  MessageSquare,
   CheckCircle2, 
-  Clock, 
-  User, 
   ChevronRight, 
-  ArrowRight,
-  Plus, 
-  CornerDownRight, 
-  FileText, 
-  Image as ImageIcon, 
-  Paperclip,
+  Send,
+  Sparkles,
   Check,
   X
 } from 'lucide-react';
 
-type TabType = 'list' | 'kanban' | 'approvals' | 'files';
+type TabType = 'list' | 'kanban' | 'approvals' | 'chat';
 
 interface TaskItem {
   id: string;
@@ -39,6 +33,15 @@ interface ApprovalItem {
   status: 'Pending' | 'Approved' | 'Rejected';
 }
 
+interface ChatMessage {
+  id: string;
+  sender: string;
+  avatar: string;
+  text: string;
+  time: string;
+  isSystem?: boolean;
+}
+
 export function InteractiveMockup() {
   const [activeTab, setActiveTab] = useState<TabType>('list');
 
@@ -56,6 +59,127 @@ export function InteractiveMockup() {
     { id: '2', title: 'Annual Leave Request (5 Days)', type: 'Leave', requester: 'Alex Rivera', status: 'Pending' },
     { id: '3', title: 'Office Supplies Bulk Order', type: 'Purchase', requester: 'Sarah Jenkins', amount: '$340', status: 'Approved' },
   ]);
+
+  // Interactive Chat State
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    { id: '1', sender: 'Sarah Jenkins', avatar: 'SJ', text: 'Hey team, did we confirm the shipping contract for this month?', time: '10:24 AM' },
+    { id: '2', sender: 'Alex Rivera', avatar: 'AR', text: 'Yes, just waiting on final operations protocol sign-off.', time: '10:25 AM' },
+    { id: '3', sender: 'Marcus Chen', avatar: 'MC', text: 'Great. Also, we need to inspect the shipping dock soon.', time: '10:28 AM' },
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  // Auto-typing Chat Demo Simulator
+  const runChatDemo = () => {
+    if (isTyping) return;
+    setIsTyping(true);
+    setChatInput('');
+    
+    const commandText = '/task Inspect the shipping dock assign @marcus';
+    let currentIndex = 0;
+    
+    const interval = setInterval(() => {
+      setChatInput(prev => prev + commandText[currentIndex]);
+      currentIndex++;
+      
+      if (currentIndex === commandText.length) {
+        clearInterval(interval);
+        
+        // Send message after a slight delay
+        setTimeout(() => {
+          const userMsgId = Math.random().toString();
+          setChatMessages(prev => [...prev, {
+            id: userMsgId,
+            sender: 'You',
+            avatar: 'ME',
+            text: commandText,
+            time: '11:15 AM'
+          }]);
+          setChatInput('');
+          
+          // Show bot created response
+          setTimeout(() => {
+            setChatMessages(prev => [...prev, {
+              id: Math.random().toString(),
+              sender: 'System Bot',
+              avatar: 'GO',
+              text: '✅ Task created: "Inspect the shipping dock" (Assigned to Marcus Chen, Priority: High)',
+              time: '11:15 AM',
+              isSystem: true
+            }]);
+            
+            // Add to tasks list state so they see it in List/Board tabs!
+            setTasks(prev => [...prev, {
+              id: Math.random().toString(),
+              title: 'Inspect the shipping dock',
+              assignee: 'Marcus Chen',
+              avatar: 'MC',
+              priority: 'High',
+              status: 'To Do'
+            }]);
+            setIsTyping(false);
+          }, 800);
+          
+        }, 400);
+      }
+    }, 45);
+  };
+
+  const handleSendManual = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isTyping) return;
+    
+    const text = chatInput.trim();
+    const newUserMsg = {
+      id: Math.random().toString(),
+      sender: 'You',
+      avatar: 'ME',
+      text: text,
+      time: '11:16 AM'
+    };
+    
+    setChatMessages(prev => [...prev, newUserMsg]);
+    setChatInput('');
+    
+    if (text.startsWith('/task ')) {
+      const taskTitle = text.replace('/task ', '').split('assign')[0].trim();
+      const hasAssign = text.includes('assign @');
+      let assigneeName = 'Sarah Jenkins';
+      let assigneeAvatar = 'SJ';
+      
+      if (hasAssign) {
+        const parts = text.split('assign @');
+        const candidate = parts[parts.length - 1].toLowerCase().trim();
+        if (candidate.startsWith('marcus') || candidate.startsWith('mc')) {
+          assigneeName = 'Marcus Chen';
+          assigneeAvatar = 'MC';
+        } else if (candidate.startsWith('alex') || candidate.startsWith('ar')) {
+          assigneeName = 'Alex Rivera';
+          assigneeAvatar = 'AR';
+        }
+      }
+      
+      setTimeout(() => {
+        setChatMessages(prev => [...prev, {
+          id: Math.random().toString(),
+          sender: 'System Bot',
+          avatar: 'GO',
+          text: `✅ Task created: "${taskTitle}" (Assigned to ${assigneeName})`,
+          time: '11:16 AM',
+          isSystem: true
+        }]);
+        
+        setTasks(prev => [...prev, {
+          id: Math.random().toString(),
+          title: taskTitle,
+          assignee: assigneeName,
+          avatar: assigneeAvatar,
+          priority: 'Medium',
+          status: 'To Do'
+        }]);
+      }, 700);
+    }
+  };
 
   const toggleTaskStatus = (id: string) => {
     setTasks(prev => prev.map(t => {
@@ -97,12 +221,6 @@ export function InteractiveMockup() {
     Low: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20',
   };
 
-  const statusColor = {
-    'To Do': 'bg-slate-100 text-slate-600 border border-slate-200',
-    'In Progress': 'bg-indigo-50 text-indigo-600 border border-indigo-100',
-    'Done': 'bg-emerald-50 text-emerald-600 border border-emerald-100',
-  };
-
   return (
     <div className="w-full max-w-4xl mx-auto rounded-3xl border border-indigo-100 bg-white shadow-[0_24px_70px_rgba(99,102,241,0.08)] overflow-hidden">
       {/* Header controls for switcher */}
@@ -111,7 +229,7 @@ export function InteractiveMockup() {
         <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100/80 rounded-xl max-w-max self-center">
           <button
             onClick={() => setActiveTab('list')}
-            className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all ${
+            className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all cursor-pointer ${
               activeTab === 'list' 
                 ? 'bg-white text-indigo-600 shadow-sm' 
                 : 'text-slate-600 hover:text-slate-900'
@@ -122,7 +240,7 @@ export function InteractiveMockup() {
           </button>
           <button
             onClick={() => setActiveTab('kanban')}
-            className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all ${
+            className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all cursor-pointer ${
               activeTab === 'kanban' 
                 ? 'bg-white text-indigo-600 shadow-sm' 
                 : 'text-slate-600 hover:text-slate-900'
@@ -133,7 +251,7 @@ export function InteractiveMockup() {
           </button>
           <button
             onClick={() => setActiveTab('approvals')}
-            className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all ${
+            className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all cursor-pointer ${
               activeTab === 'approvals' 
                 ? 'bg-white text-indigo-600 shadow-sm' 
                 : 'text-slate-600 hover:text-slate-900'
@@ -143,15 +261,15 @@ export function InteractiveMockup() {
             Approvals
           </button>
           <button
-            onClick={() => setActiveTab('files')}
-            className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'files' 
+            onClick={() => setActiveTab('chat')}
+            className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all cursor-pointer ${
+              activeTab === 'chat' 
                 ? 'bg-white text-indigo-600 shadow-sm' 
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Folder className="h-4 w-4" />
-            Files
+            <MessageSquare className="h-4 w-4" />
+            Team Chat
           </button>
         </div>
 
@@ -439,55 +557,85 @@ export function InteractiveMockup() {
             </motion.div>
           )}
 
-          {activeTab === 'files' && (
+          {activeTab === 'chat' && (
             <motion.div
-              key="files-view"
+              key="chat-view"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col h-full"
+              className="flex flex-col h-[350px] justify-between"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-900">Shared Files View</h3>
-                <span className="text-[11px] text-slate-400 font-semibold">Shared company assets</span>
+              {/* Chat Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-800 text-sm">#operations-channel</span>
+                  <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                </div>
+                <button
+                  onClick={runChatDemo}
+                  disabled={isTyping}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                    isTyping 
+                      ? 'bg-slate-50 text-slate-400 border-slate-200' 
+                      : 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100'
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                  Simulate `/task` shortcut
+                </button>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="border border-slate-100 rounded-2xl p-4 bg-white hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer text-center group">
-                  <div className="h-12 w-12 rounded-xl bg-rose-50 text-rose-500 border border-rose-100 flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
-                    <FileText className="h-6 w-6" />
+
+              {/* Chat Message Box */}
+              <div className="flex-grow overflow-y-auto py-4 space-y-3.5 pr-2 custom-scroll">
+                {chatMessages.map((msg) => (
+                  <div key={msg.id} className={`flex items-start gap-3 ${msg.isSystem ? 'bg-indigo-50/40 p-3 rounded-2xl border border-indigo-100/40' : ''}`}>
+                    <div className={`h-7 w-7 rounded-lg text-[10px] font-bold flex items-center justify-center border shrink-0 ${
+                      msg.sender === 'System Bot' 
+                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                        : msg.avatar === 'ME'
+                        ? 'bg-indigo-50 text-indigo-600 border-indigo-150'
+                        : 'bg-slate-100 text-slate-600 border-slate-200'
+                    }`}>
+                      {msg.avatar}
+                    </div>
+                    <div className="flex-grow">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[11px] font-bold text-slate-900">{msg.sender}</span>
+                        <span className="text-[9px] text-slate-400 font-semibold">{msg.time}</span>
+                      </div>
+                      <p className={`text-xs mt-1.5 leading-relaxed ${
+                        msg.isSystem 
+                          ? 'text-indigo-950 font-semibold' 
+                          : msg.sender === 'You'
+                          ? 'text-indigo-650 font-medium'
+                          : 'text-slate-650'
+                      }`}>
+                        {msg.text}
+                      </p>
+                    </div>
                   </div>
-                  <h4 className="text-xs font-bold text-slate-800 line-clamp-1">Q3_Logistics_Budget.xlsx</h4>
-                  <p className="text-[10px] text-slate-400 font-semibold mt-1">1.4 MB • Excel</p>
-                </div>
-                <div className="border border-slate-100 rounded-2xl p-4 bg-white hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer text-center group">
-                  <div className="h-12 w-12 rounded-xl bg-indigo-50 text-indigo-500 border border-indigo-100 flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
-                    <ImageIcon className="h-6 w-6" />
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-800 line-clamp-1">warehouse_layout_mockup.png</h4>
-                  <p className="text-[10px] text-slate-400 font-semibold mt-1">4.2 MB • Image</p>
-                </div>
-                <div className="border border-slate-100 rounded-2xl p-4 bg-white hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer text-center group">
-                  <div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-500 border border-amber-100 flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
-                    <FileText className="h-6 w-6" />
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-800 line-clamp-1">Shipping_Terms_2026.pdf</h4>
-                  <p className="text-[10px] text-slate-400 font-semibold mt-1">820 KB • PDF</p>
-                </div>
-                <div className="border border-slate-100 rounded-2xl p-4 bg-slate-50/50 hover:bg-slate-50 border-dashed border-slate-200 flex flex-col items-center justify-center min-h-[110px] rounded-2xl transition-all cursor-pointer text-slate-400 hover:text-indigo-600 hover:border-indigo-200">
-                  <Plus className="h-5 w-5 mb-1.5" />
-                  <span className="text-[11px] font-bold">Upload File</span>
-                </div>
+                ))}
               </div>
-              
-              <div className="mt-5 border border-dashed border-slate-150 rounded-2xl p-4 bg-slate-50/30 flex items-center gap-3">
-                <div className="h-6 w-6 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100 text-indigo-600">
-                  <Paperclip className="h-3 w-3" />
-                </div>
-                <span className="text-[11px] text-slate-500 font-medium leading-normal">
-                  You can upload invoices, leave forms, or layout files directly within direct chats or task tickets, automatically storing them here in the shared files list.
-                </span>
-              </div>
+
+              {/* Chat Input Bar */}
+              <form onSubmit={handleSendManual} className="flex gap-2 pt-3 border-t border-slate-100 items-center">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  disabled={isTyping}
+                  placeholder={isTyping ? "Simulating typing..." : "Type a message, or try '/task [task name] assign @marcus'..."}
+                  className="flex-grow border border-slate-150 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-indigo-500 font-medium bg-slate-50/50 disabled:bg-slate-100 disabled:text-slate-400"
+                />
+                <button
+                  type="submit"
+                  disabled={isTyping || !chatInput.trim()}
+                  className="h-8.5 w-8.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md shadow-indigo-150 disabled:opacity-40 disabled:shadow-none transition-all cursor-pointer"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </form>
             </motion.div>
           )}
         </AnimatePresence>
