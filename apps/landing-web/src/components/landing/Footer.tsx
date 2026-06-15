@@ -55,8 +55,8 @@ export function Footer() {
           <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
             <a href="/pricing" onClick={(e) => handleNav(e, '/pricing')} className="hover:text-indigo-600 transition-colors">Pricing Plans</a>
             <a href="/faq" onClick={(e) => handleNav(e, '/faq')} className="hover:text-indigo-600 transition-colors">Help FAQ</a>
-            <a href="/onboarding" onClick={(e) => handleNav(e, '/')} className="hover:text-indigo-600 transition-colors">Onboarding Guide</a>
-            <a href="/demo" onClick={(e) => handleNav(e, '/faq')} className="hover:text-indigo-600 transition-colors">Watch Demo</a>
+            <a href="/onboarding" onClick={(e) => handleNav(e, '/onboarding')} className="hover:text-indigo-600 transition-colors">Onboarding Guide</a>
+            <a href="/demo" onClick={(e) => handleNav(e, '/demo')} className="hover:text-indigo-600 transition-colors">Watch Demo</a>
           </div>
         </div>
 
@@ -66,8 +66,8 @@ export function Footer() {
           <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
             <a href={`${APP_URL}/login`} className="hover:text-indigo-600 transition-colors">Sign In</a>
             <a href={`${APP_URL}/signup`} className="hover:text-indigo-600 transition-colors">Sign Up Free</a>
-            <a href="#" className="hover:text-indigo-600 transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-indigo-600 transition-colors">Terms of Service</a>
+            <a href="/privacy" onClick={(e) => handleNav(e, '/privacy')} className="hover:text-indigo-600 transition-colors">Privacy Policy</a>
+            <a href="/terms" onClick={(e) => handleNav(e, '/terms')} className="hover:text-indigo-600 transition-colors">Terms of Service</a>
           </div>
         </div>
 

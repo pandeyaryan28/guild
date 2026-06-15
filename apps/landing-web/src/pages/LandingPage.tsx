@@ -9,6 +9,10 @@ import { TeamChatFeature } from './TeamChatFeature';
 import { ApprovalsFeature } from './ApprovalsFeature';
 import { VisibilityFeature } from './VisibilityFeature';
 import { AdminFeature } from './AdminFeature';
+import { Privacy } from './Privacy';
+import { Terms } from './Terms';
+import { Demo } from './Demo';
+import { Onboarding } from './Onboarding';
 import { useNavigation } from '../context/NavigationContext';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -31,6 +35,26 @@ export function LandingPage() {
         const faqIdx = path.indexOf('/faq');
         if (faqIdx !== -1) {
           path = path.substring(faqIdx);
+        } else {
+          const onboardingIdx = path.indexOf('/onboarding');
+          if (onboardingIdx !== -1) {
+            path = path.substring(onboardingIdx);
+          } else {
+            const demoIdx = path.indexOf('/demo');
+            if (demoIdx !== -1) {
+              path = path.substring(demoIdx);
+            } else {
+              const privacyIdx = path.indexOf('/privacy');
+              if (privacyIdx !== -1) {
+                path = path.substring(privacyIdx);
+              } else {
+                const termsIdx = path.indexOf('/terms');
+                if (termsIdx !== -1) {
+                  path = path.substring(termsIdx);
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -52,6 +76,14 @@ export function LandingPage() {
         return <Pricing key="pricing" />;
       case '/faq':
         return <FAQ key="faq" />;
+      case '/privacy':
+        return <Privacy key="privacy" />;
+      case '/terms':
+        return <Terms key="terms" />;
+      case '/demo':
+        return <Demo key="demo" />;
+      case '/onboarding':
+        return <Onboarding key="onboarding" />;
       default:
         return <Home key="home" />;
     }
