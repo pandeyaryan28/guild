@@ -70,7 +70,7 @@ const MOTION_SCENES: MotionScene[] = [
   },
 ];
 
-const TOTAL_DURATION = 40; // seconds (Faster, 10s per scene)
+const TOTAL_DURATION = 40; // seconds
 
 export function Demo() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -92,7 +92,6 @@ export function Demo() {
       const ctx = new AudioContext();
       
       if (type === 'play') {
-        // Sci-fi entry sweep
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -105,7 +104,6 @@ export function Demo() {
         osc.start();
         osc.stop(ctx.currentTime + 0.6);
       } else if (type === 'transition') {
-        // Wind-up drop sound
         const osc = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -125,7 +123,6 @@ export function Demo() {
         osc.stop(ctx.currentTime + 0.4);
         osc2.stop(ctx.currentTime + 0.4);
       } else if (type === 'click') {
-        // High frequency UI tick
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -137,7 +134,6 @@ export function Demo() {
         osc.start();
         osc.stop(ctx.currentTime + 0.08);
       } else if (type === 'success') {
-        // Metallic positive chime
         const osc = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -146,10 +142,10 @@ export function Demo() {
         gain.connect(ctx.destination);
         osc.type = 'sine';
         osc2.type = 'triangle';
-        osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
-        osc.frequency.setValueAtTime(554.37, ctx.currentTime + 0.1); // C#5
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2); // E5
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.3); // A5
+        osc.frequency.setValueAtTime(440, ctx.currentTime);
+        osc.frequency.setValueAtTime(554.37, ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.3);
         osc2.frequency.setValueAtTime(880, ctx.currentTime);
         gain.gain.setValueAtTime(volume * 0.15, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
@@ -158,7 +154,6 @@ export function Demo() {
         osc.stop(ctx.currentTime + 0.5);
         osc2.stop(ctx.currentTime + 0.5);
       } else if (type === 'bubble') {
-        // Watery pop sound for chats
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -172,7 +167,7 @@ export function Demo() {
         osc.stop(ctx.currentTime + 0.15);
       }
     } catch (e) {
-      console.warn('Web Audio not allowed or failed:', e);
+      console.warn('Web Audio fail:', e);
     }
   };
 
@@ -245,77 +240,58 @@ export function Demo() {
     }, 600);
   };
 
-  // Sound effects triggered at specific timestamps
+  // Sound triggers
   useEffect(() => {
     if (isPlaying) {
-      // Scene 1 (Tasks) card moves
-      if (currentTime === 3 || currentTime === 7) {
-        playSound('play');
-      }
-      // Scene 2 (Chat) messages popping
-      if (currentTime === 12 || currentTime === 15 || currentTime === 18) {
-        playSound('bubble');
-      }
-      // Scene 3 (Approvals) success chime
-      if (currentTime === 26) {
-        playSound('success');
-      }
-      // Scene 4 (Directory) allocate pulse
-      if (currentTime === 34 || currentTime === 37) {
-        playSound('click');
-      }
+      if (currentTime === 3 || currentTime === 7) playSound('play');
+      if (currentTime === 12 || currentTime === 15 || currentTime === 18) playSound('bubble');
+      if (currentTime === 26) playSound('success');
+      if (currentTime === 34 || currentTime === 37) playSound('click');
     }
   }, [currentTime, isPlaying]);
 
-  // Motion Graphic Scenes Inside the Player Screen
   const renderGraphicScreen = () => {
     const currentScene = MOTION_SCENES.find((s) => s.id === activeTab) || MOTION_SCENES[0];
-    const sceneElapsed = currentTime - currentScene.startTime; // 0 to 10 seconds
+    const sceneElapsed = currentTime - currentScene.startTime;
 
     switch (activeTab) {
       case 'tasks':
         return (
-          <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center text-white relative overflow-hidden select-none p-6">
-            {/* Pulsing Grid Background */}
-            <div className="absolute inset-0 grid-pattern-dark opacity-40" />
+          <div className="w-full h-full flex flex-col justify-center items-center text-slate-950 relative overflow-hidden select-none p-6">
+            {/* Grid Pattern */}
+            <div className="absolute inset-0 grid-pattern opacity-60" />
             
-            {/* Neon Glowing Circles */}
-            <div className="absolute top-[30%] left-[20%] w-[200px] h-[200px] rounded-full bg-indigo-500/10 blur-[80px]" />
-            <div className="absolute bottom-[20%] right-[20%] w-[250px] h-[250px] rounded-full bg-purple-500/10 blur-[90px]" />
+            {/* Glowing Backdrop Orbs */}
+            <div className="absolute top-[30%] left-[20%] w-[200px] h-[200px] rounded-full bg-indigo-500/15 blur-[80px]" />
+            <div className="absolute bottom-[20%] right-[20%] w-[250px] h-[250px] rounded-full bg-purple-500/15 blur-[90px]" />
 
-            {/* Glowing Orbital rings */}
-            <svg className="absolute w-[80%] h-[80%] opacity-20 pointer-events-none" viewBox="0 0 400 400">
-              <circle cx="200" cy="200" r="140" fill="none" stroke="#6366f1" strokeWidth="1" strokeDasharray="5 5" className="animate-[spin_40s_linear_infinite]" />
-              <circle cx="200" cy="200" r="90" fill="none" stroke="#d8b4fe" strokeWidth="1.5" className="animate-[spin_20s_linear_infinite_reverse]" />
-            </svg>
-
-            {/* Floating Visual Cards */}
+            {/* Floating Glass Panels */}
             <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
               <div className="flex gap-4 items-center">
-                {/* Visual Column 1 */}
+                {/* Backlog Column - Glassmorphic */}
                 <motion.div 
-                  animate={{ y: [0, -8, 0] }}
+                  animate={{ y: [0, -6, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl w-36 text-left shadow-lg"
+                  className="glass rounded-2xl p-3.5 w-36 text-left shadow-lg border border-white/70"
                 >
                   <span className="text-[7px] font-bold text-slate-500 tracking-wider block mb-2">BACKLOG</span>
-                  <div className="h-6 bg-slate-800/80 border border-slate-700/50 rounded-lg flex items-center justify-between px-2 text-[8px] font-bold">
+                  <div className="h-6 bg-white/40 border border-white/50 rounded-lg flex items-center justify-between px-2 text-[8px] font-extrabold text-slate-800">
                     <span>Task Core</span>
-                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                    <span className="h-2 w-2 rounded-full bg-indigo-500 shadow-md shadow-indigo-500/50" />
                   </div>
                 </motion.div>
 
-                {/* Flying Card in Motion */}
+                {/* Flying Card in Motion - High-Fidelity Glassmorphic */}
                 <div className="relative h-16 w-20 flex items-center justify-center">
                   <AnimatePresence mode="wait">
                     {sceneElapsed >= 3 && sceneElapsed < 7 ? (
                       <motion.div
                         key="flying-card"
                         initial={{ opacity: 0, scale: 0.5, x: -70, rotate: -10 }}
-                        animate={{ opacity: 1, scale: 1.1, x: 0, y: [0, -15, 0], rotate: 5, boxShadow: "0 0 20px rgba(99, 102, 241, 0.4)" }}
+                        animate={{ opacity: 1, scale: 1.1, x: 0, y: [0, -12, 0], rotate: 5, boxShadow: "0 8px 32px rgba(99, 102, 241, 0.15)" }}
                         exit={{ opacity: 0, scale: 0.8, x: 70, rotate: 15 }}
                         transition={{ duration: 1.5, ease: "easeInOut" }}
-                        className="bg-indigo-600 border border-indigo-400 p-2.5 rounded-xl text-center w-28 absolute z-20 shadow-xl"
+                        className="bg-indigo-650/80 backdrop-blur-md border border-indigo-400 p-2.5 rounded-xl text-center w-28 absolute z-20 shadow-xl"
                       >
                         <Zap className="h-4 w-4 text-white mx-auto mb-1 animate-bounce" />
                         <span className="text-[8px] font-bold tracking-tight block text-white leading-none">Sprint Feature</span>
@@ -324,30 +300,30 @@ export function Demo() {
                   </AnimatePresence>
                 </div>
 
-                {/* Visual Column 2 */}
+                {/* In Progress Column - Glassmorphic */}
                 <motion.div 
-                  animate={{ y: [0, 8, 0] }}
+                  animate={{ y: [0, 6, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl w-36 text-left shadow-lg"
+                  className="glass rounded-2xl p-3.5 w-36 text-left shadow-lg border border-white/70"
                 >
                   <span className="text-[7px] font-bold text-slate-500 tracking-wider block mb-2">IN PROGRESS</span>
-                  <div className="h-6 bg-slate-800/80 border border-slate-700/50 rounded-lg flex items-center justify-between px-2 text-[8px] font-bold">
+                  <div className="h-6 bg-white/40 border border-white/50 rounded-lg flex items-center justify-between px-2 text-[8px] font-extrabold text-slate-800">
                     <span>QA Redesign</span>
-                    <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-cyan-500 shadow-md shadow-cyan-500/50 animate-pulse" />
                   </div>
                 </motion.div>
               </div>
 
-              {/* Central Typographical Highlight */}
+              {/* Typographical highlight */}
               <div className="text-center mt-2">
                 <motion.h2 
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 tracking-wider uppercase leading-none"
+                  className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 tracking-wider uppercase leading-none"
                 >
                   DRAG. DROP. DELIVER.
                 </motion.h2>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                <p className="text-[9px] text-slate-500 font-extrabold uppercase tracking-widest mt-1">
                   Fluid, intuitive board management
                 </p>
               </div>
@@ -356,91 +332,90 @@ export function Demo() {
         );
       case 'chat':
         return (
-          <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center text-white relative overflow-hidden select-none p-6">
-            <div className="absolute inset-0 grid-pattern-dark opacity-40" />
-            <div className="absolute top-[20%] right-[15%] w-[200px] h-[200px] rounded-full bg-cyan-500/10 blur-[80px]" />
-            <div className="absolute bottom-[30%] left-[15%] w-[250px] h-[250px] rounded-full bg-indigo-500/10 blur-[90px]" />
+          <div className="w-full h-full flex flex-col justify-center items-center text-slate-900 relative overflow-hidden select-none p-6">
+            <div className="absolute inset-0 grid-pattern opacity-60" />
+            <div className="absolute top-[20%] right-[15%] w-[200px] h-[200px] rounded-full bg-cyan-500/15 blur-[80px]" />
+            <div className="absolute bottom-[30%] left-[15%] w-[250px] h-[250px] rounded-full bg-indigo-500/15 blur-[90px]" />
 
-            {/* Glowing Network Nodes (Connecting Lines) */}
-            <svg className="absolute w-full h-full opacity-35" viewBox="0 0 500 300">
-              <motion.line x1="100" y1="150" x2="250" y2="70" stroke="#06b6d4" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5 }} />
-              <motion.line x1="400" y1="150" x2="250" y2="70" stroke="#6366f1" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, delay: 0.5 }} />
-              <motion.line x1="250" y1="230" x2="250" y2="70" stroke="#10b981" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, delay: 1 }} />
-              {/* Pulsing signal dots traveling down lines */}
+            {/* Glowing Network Nodes */}
+            <svg className="absolute w-full h-full opacity-45" viewBox="0 0 500 300">
+              <motion.line x1="100" y1="150" x2="250" y2="70" stroke="#06b6d4" strokeWidth="2" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5 }} />
+              <motion.line x1="400" y1="150" x2="250" y2="70" stroke="#6366f1" strokeWidth="2" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, delay: 0.5 }} />
+              <motion.line x1="250" y1="230" x2="250" y2="70" stroke="#10b981" strokeWidth="2" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, delay: 1 }} />
               {sceneElapsed > 2 && (
                 <>
-                  <motion.circle r="4" fill="#06b6d4" animate={{ cx: [100, 250], cy: [150, 70] }} transition={{ duration: 2, repeat: Infinity }} />
-                  <motion.circle r="4" fill="#6366f1" animate={{ cx: [400, 250], cy: [150, 70] }} transition={{ duration: 2, repeat: Infinity, delay: 0.7 }} />
-                  <motion.circle r="4" fill="#10b981" animate={{ cx: [250, 250], cy: [230, 70] }} transition={{ duration: 2, repeat: Infinity, delay: 1.4 }} />
+                  <motion.circle r="5" fill="#06b6d4" animate={{ cx: [100, 250], cy: [150, 70] }} transition={{ duration: 2, repeat: Infinity }} />
+                  <motion.circle r="5" fill="#6366f1" animate={{ cx: [400, 250], cy: [150, 70] }} transition={{ duration: 2, repeat: Infinity, delay: 0.7 }} />
+                  <motion.circle r="5" fill="#10b981" animate={{ cx: [250, 250], cy: [230, 70] }} transition={{ duration: 2, repeat: Infinity, delay: 1.4 }} />
                 </>
               )}
             </svg>
 
-            {/* Nodes representation */}
-            <div className="absolute left-[10%] top-[40%] bg-slate-900 border border-cyan-500/30 p-2 rounded-xl text-center shadow-lg">
-              <span className="text-[8px] font-bold text-cyan-400 block uppercase">Product</span>
+            {/* Glassmorphic Nodes */}
+            <div className="absolute left-[8%] top-[40%] glass border border-white/80 p-2 rounded-xl text-center shadow-md">
+              <span className="text-[8px] font-extrabold text-cyan-600 block uppercase">Product</span>
             </div>
-            <div className="absolute right-[10%] top-[40%] bg-slate-900 border border-indigo-500/30 p-2 rounded-xl text-center shadow-lg">
-              <span className="text-[8px] font-bold text-indigo-400 block uppercase">Engineering</span>
+            <div className="absolute right-[8%] top-[40%] glass border border-white/80 p-2 rounded-xl text-center shadow-md">
+              <span className="text-[8px] font-extrabold text-indigo-600 block uppercase">Engineering</span>
             </div>
-            <div className="absolute left-[40%] bottom-[10%] bg-slate-900 border border-emerald-500/30 p-2 rounded-xl text-center shadow-lg">
-              <span className="text-[8px] font-bold text-emerald-400 block uppercase">Operations</span>
+            <div className="absolute left-[40%] bottom-[8%] glass border border-white/80 p-2 rounded-xl text-center shadow-md">
+              <span className="text-[8px] font-extrabold text-emerald-600 block uppercase">Operations</span>
             </div>
 
             {/* Central hub showing messages */}
             <div className="relative z-10 flex flex-col items-center max-w-sm text-center">
               <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
+                animate={{ scale: [1, 1.06, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="h-16 w-16 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/10 border border-cyan-400 mb-6"
+                className="h-16 w-16 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-cyan-500/20 border border-white/80 mb-6"
               >
-                <Activity className="h-7 w-7 text-white" />
+                <Activity className="h-7 w-7 text-white animate-pulse" />
               </motion.div>
 
-              <div className="min-h-[40px] flex items-center justify-center">
+              <div className="min-h-[40px] flex items-center justify-center px-4">
                 <AnimatePresence mode="wait">
                   {sceneElapsed >= 2 && sceneElapsed < 5 && (
-                    <motion.p
+                    <motion.div
                       key="msg1"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-xs font-bold text-cyan-200"
+                      className="glass border border-white px-3 py-1.5 rounded-xl text-[10px] font-bold text-slate-800 shadow-md"
                     >
                       "Sarah: Budget Q3 has been approved!"
-                    </motion.p>
+                    </motion.div>
                   )}
                   {sceneElapsed >= 5 && sceneElapsed < 8 && (
-                    <motion.p
+                    <motion.div
                       key="msg2"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-xs font-bold text-indigo-200"
+                      className="glass border border-white px-3 py-1.5 rounded-xl text-[10px] font-bold text-slate-800 shadow-md"
                     >
                       "Alex: Deploying the build to staging."
-                    </motion.p>
+                    </motion.div>
                   )}
                   {sceneElapsed >= 8 && (
-                    <motion.p
+                    <motion.div
                       key="msg3"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-xs font-bold text-emerald-200"
+                      className="glass border border-white px-3 py-1.5 rounded-xl text-[10px] font-bold text-slate-800 shadow-md"
                     >
                       "David: Shared directory is up to date."
-                    </motion.p>
+                    </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
               <div className="mt-4">
-                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 tracking-wider uppercase leading-none">
-                  SYCHRONIZED & CENTERALIZED.
+                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-indigo-600 tracking-wider uppercase leading-none">
+                  SYNCHRONIZED CHANNELS.
                 </h2>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                  Team channels without communication silos
+                <p className="text-[9px] text-slate-500 font-extrabold uppercase tracking-widest mt-1">
+                  Team chat rooms without communication silos
                 </p>
               </div>
             </div>
@@ -448,24 +423,24 @@ export function Demo() {
         );
       case 'approvals':
         return (
-          <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center text-white relative overflow-hidden select-none p-6">
-            <div className="absolute inset-0 grid-pattern-dark opacity-40" />
-            <div className="absolute top-[10%] left-[20%] w-[220px] h-[220px] rounded-full bg-purple-500/10 blur-[90px]" />
-            <div className="absolute bottom-[20%] right-[10%] w-[220px] h-[220px] rounded-full bg-amber-500/10 blur-[80px]" />
+          <div className="w-full h-full flex flex-col justify-center items-center text-slate-900 relative overflow-hidden select-none p-6">
+            <div className="absolute inset-0 grid-pattern opacity-60" />
+            <div className="absolute top-[10%] left-[20%] w-[220px] h-[220px] rounded-full bg-purple-500/15 blur-[90px]" />
+            <div className="absolute bottom-[20%] right-[10%] w-[220px] h-[220px] rounded-full bg-amber-500/15 blur-[80px]" />
 
-            {/* Glowing Circuit Lines */}
-            <svg className="absolute w-[60%] h-[60%] opacity-30" viewBox="0 0 200 200">
+            {/* Circuit Lines */}
+            <svg className="absolute w-[60%] h-[60%] opacity-40" viewBox="0 0 200 200">
               <motion.path
                 d="M 20 100 L 80 100 L 100 80 L 140 80 L 150 90 L 180 90"
                 fill="none"
                 stroke="#a855f7"
-                strokeWidth="2"
+                strokeWidth="2.5"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
                 transition={{ duration: 2 }}
               />
               <motion.circle
-                r="4"
+                r="5"
                 fill="#f59e0b"
                 animate={{
                   offsetDistance: ["0%", "100%"]
@@ -477,7 +452,7 @@ export function Demo() {
               />
             </svg>
 
-            {/* Central Lock / Stamp Animation */}
+            {/* Lock / Stamp animation with glass panel */}
             <div className="relative z-10 flex flex-col items-center max-w-sm text-center">
               <div className="h-24 w-24 relative flex items-center justify-center mb-6">
                 <AnimatePresence mode="wait">
@@ -488,23 +463,22 @@ export function Demo() {
                       animate={{ scale: 1.05, opacity: 1, rotate: [0, 5, -5, 0] }}
                       exit={{ scale: 0.8, opacity: 0 }}
                       transition={{ duration: 0.4 }}
-                      className="h-16 w-16 rounded-2xl bg-amber-500/10 border-2 border-amber-400 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/5"
+                      className="h-16 w-16 glass border border-white rounded-2xl flex items-center justify-center text-amber-500 shadow-lg"
                     >
-                      <Lock className="h-7 w-7 text-amber-400" />
+                      <Lock className="h-7 w-7 text-amber-500" />
                     </motion.div>
                   ) : (
                     <motion.div
                       key="success-chime"
                       initial={{ scale: 0.3, opacity: 0, rotate: -45 }}
                       animate={{ scale: [1.3, 1], opacity: 1, rotate: 0 }}
-                      className="h-20 w-20 rounded-full bg-emerald-500/10 border-2 border-emerald-400 flex items-center justify-center text-emerald-400 shadow-xl shadow-emerald-500/10"
+                      className="h-20 w-20 glass border-2 border-emerald-400 rounded-full flex items-center justify-center text-emerald-500 shadow-xl"
                     >
-                      <CheckCircle2 className="h-10 w-10 text-emerald-400" />
+                      <CheckCircle2 className="h-10 w-10 text-emerald-500 animate-[bounce_0.5s_ease-out]" />
                     </motion.div>
                   )}
                 </AnimatePresence>
                 
-                {/* Exploding particles on success */}
                 {sceneElapsed >= 6 && sceneElapsed < 8 && (
                   <motion.div
                     initial={{ scale: 0.8, opacity: 1 }}
@@ -516,10 +490,10 @@ export function Demo() {
               </div>
 
               <div>
-                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400 tracking-wider uppercase leading-none">
-                  COMPLIANT. SIGNED. SECURE.
+                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-amber-600 tracking-wider uppercase leading-none">
+                  SECURE COMPLIANCE.
                 </h2>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                <p className="text-[9px] text-slate-500 font-extrabold uppercase tracking-widest mt-1">
                   Automated sign-off thresholds & locks
                 </p>
               </div>
@@ -528,53 +502,50 @@ export function Demo() {
         );
       case 'directory':
         return (
-          <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center text-white relative overflow-hidden select-none p-6">
-            <div className="absolute inset-0 grid-pattern-dark opacity-40" />
-            <div className="absolute top-[20%] left-[10%] w-[200px] h-[200px] rounded-full bg-emerald-500/10 blur-[80px]" />
-            <div className="absolute bottom-[10%] right-[15%] w-[250px] h-[250px] rounded-full bg-indigo-500/10 blur-[90px]" />
+          <div className="w-full h-full flex flex-col justify-center items-center text-slate-900 relative overflow-hidden select-none p-6">
+            <div className="absolute inset-0 grid-pattern opacity-60" />
+            <div className="absolute top-[20%] left-[10%] w-[200px] h-[200px] rounded-full bg-emerald-500/15 blur-[80px]" />
+            <div className="absolute bottom-[10%] right-[15%] w-[250px] h-[250px] rounded-full bg-indigo-500/15 blur-[90px]" />
 
-            {/* Balancing nodes structure */}
+            {/* Glassmorphic gauges */}
             <div className="relative z-10 flex flex-col items-center w-full max-w-sm text-center">
-              <div className="flex gap-6 items-end justify-center h-20 mb-8 w-full px-8">
-                {/* Member 1 meter */}
-                <div className="flex flex-col items-center gap-1.5 flex-1">
+              <div className="flex gap-6 items-end justify-center h-24 mb-6 w-full px-8">
+                {/* Gauge 1 */}
+                <div className="flex flex-col items-center gap-1.5 flex-1 p-2 bg-white/20 glass border border-white/60 rounded-2xl shadow-md">
                   <motion.div
                     animate={{ height: sceneElapsed < 5 ? 70 : 40 }}
                     transition={{ duration: 1.5, ease: "easeInOut" }}
-                    className="w-4 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-lg shadow-md"
+                    className="w-3.5 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-md shadow-inner"
                   />
-                  <Users className="h-4 w-4 text-emerald-400" />
-                  <span className="text-[7px] font-bold text-slate-500">Alex</span>
+                  <span className="text-[8px] font-extrabold text-slate-800">Alex</span>
                 </div>
 
-                {/* Member 2 meter */}
-                <div className="flex flex-col items-center gap-1.5 flex-1">
+                {/* Gauge 2 */}
+                <div className="flex flex-col items-center gap-1.5 flex-1 p-2 bg-white/20 glass border border-white/60 rounded-2xl shadow-md">
                   <motion.div
                     animate={{ height: sceneElapsed < 5 ? 20 : 45 }}
                     transition={{ duration: 1.5, ease: "easeInOut" }}
-                    className="w-4 bg-gradient-to-t from-teal-600 to-teal-400 rounded-lg shadow-md"
+                    className="w-3.5 bg-gradient-to-t from-teal-500 to-teal-400 rounded-md shadow-inner"
                   />
-                  <Users className="h-4 w-4 text-teal-400" />
-                  <span className="text-[7px] font-bold text-slate-500">Sarah</span>
+                  <span className="text-[8px] font-extrabold text-slate-800">Sarah</span>
                 </div>
 
-                {/* Member 3 meter */}
-                <div className="flex flex-col items-center gap-1.5 flex-1">
+                {/* Gauge 3 */}
+                <div className="flex flex-col items-center gap-1.5 flex-1 p-2 bg-white/20 glass border border-white/60 rounded-2xl shadow-md">
                   <motion.div
                     animate={{ height: sceneElapsed < 5 ? 90 : 50 }}
                     transition={{ duration: 1.5, ease: "easeInOut" }}
-                    className="w-4 bg-gradient-to-t from-indigo-600 to-indigo-400 rounded-lg shadow-md"
+                    className="w-3.5 bg-gradient-to-t from-indigo-500 to-indigo-400 rounded-md shadow-inner"
                   />
-                  <Users className="h-4 w-4 text-indigo-400" />
-                  <span className="text-[7px] font-bold text-slate-500">David</span>
+                  <span className="text-[8px] font-extrabold text-slate-800">David</span>
                 </div>
               </div>
 
               <div>
-                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400 tracking-wider uppercase leading-none">
-                  OPTIMIZE WORKLOAD BALANCE.
+                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 tracking-wider uppercase leading-none">
+                  BALANCED WORKLOADS.
                 </h2>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                <p className="text-[9px] text-slate-500 font-extrabold uppercase tracking-widest mt-1">
                   Visually distribute tasks & prevent team burnout
                 </p>
               </div>
@@ -605,17 +576,17 @@ export function Demo() {
           </p>
         </section>
 
-        {/* Video Player Layout */}
+        {/* Video Player Layout - Glassmorphic Outer Wrapper */}
         <section className="w-full max-w-4xl relative z-20 mb-16">
-          <div className="bg-slate-950 rounded-3xl p-3 md:p-4 shadow-2xl border border-slate-900 flex flex-col">
+          <div className="bg-white/30 dark-glass rounded-3xl p-3 md:p-4 shadow-2xl flex flex-col">
             
-            {/* Screen Container */}
-            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-900 shadow-inner flex items-center justify-center">
+            {/* Screen Container - Glassmorphic Overlay */}
+            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-white/40 glass border border-white/90 shadow-inner flex items-center justify-center">
               {renderGraphicScreen()}
 
-              {/* Idle Play Overlay */}
+              {/* Idle Play Overlay - Dark Glassmorphic */}
               {!isPlaying && currentTime === 0 && (
-                <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center z-30">
+                <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-md flex flex-col items-center justify-center z-30">
                   <motion.button
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.95 }}
@@ -627,7 +598,7 @@ export function Demo() {
                   <span className="text-xs font-extrabold text-white uppercase tracking-widest mt-4">
                     Play Motion Graphic Trailer
                   </span>
-                  <span className="text-[10px] font-bold text-slate-500 mt-1">Duration: 40 seconds (Fast Tour)</span>
+                  <span className="text-[10px] font-bold text-slate-350 mt-1">Duration: 40 seconds (Fast Tour)</span>
                   
                   {/* Speaker Hint */}
                   <div className="mt-6 flex items-center gap-1.5 text-[9px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full">
@@ -651,9 +622,9 @@ export function Demo() {
                   max={TOTAL_DURATION}
                   value={currentTime}
                   onChange={handleScrubberChange}
-                  className="flex-grow h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none"
+                  className="flex-grow h-1.5 bg-slate-200/50 rounded-lg appearance-none cursor-pointer accent-indigo-600 focus:outline-none"
                   style={{
-                    background: `linear-gradient(to right, #6366f1 ${(currentTime / TOTAL_DURATION) * 100}%, #1e293b ${(currentTime / TOTAL_DURATION) * 100}%)`,
+                    background: `linear-gradient(to right, #4f46e5 ${(currentTime / TOTAL_DURATION) * 100}%, rgba(0,0,0,0.08) ${(currentTime / TOTAL_DURATION) * 100}%)`,
                   }}
                 />
                 <span className="text-[10px] text-slate-500 font-extrabold font-mono w-8 text-right">
@@ -662,20 +633,20 @@ export function Demo() {
               </div>
 
               {/* Button Controls */}
-              <div className="flex items-center justify-between text-slate-400">
+              <div className="flex items-center justify-between text-slate-500">
                 <div className="flex items-center gap-4">
                   <button
                     onClick={togglePlay}
-                    className="hover:text-white transition-colors cursor-pointer"
+                    className="hover:text-slate-900 transition-colors cursor-pointer"
                     title={isPlaying ? 'Pause' : 'Play'}
                   >
-                    {isPlaying ? <Pause className="h-5 w-5 fill-slate-400 hover:fill-white" /> : <Play className="h-5 w-5 fill-slate-400 hover:fill-white" />}
+                    {isPlaying ? <Pause className="h-5 w-5 fill-slate-500 hover:fill-slate-900" /> : <Play className="h-5 w-5 fill-slate-500 hover:fill-slate-900" />}
                   </button>
 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={toggleMute}
-                      className="hover:text-white transition-colors cursor-pointer"
+                      className="hover:text-slate-900 transition-colors cursor-pointer"
                       title={isMuted ? 'Unmute' : 'Mute'}
                     >
                       {isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
@@ -690,17 +661,17 @@ export function Demo() {
                         setVolume(parseFloat(e.target.value));
                         if (isMuted) setIsMuted(false);
                       }}
-                      className="w-16 h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-slate-400"
+                      className="w-16 h-1 bg-slate-300 rounded appearance-none cursor-pointer accent-slate-600"
                     />
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-bold text-slate-500 uppercase mr-2 flex items-center gap-1.5">
-                    <Tv className="h-3.5 w-3.5 text-slate-500 animate-pulse" />
+                    <Tv className="h-3.5 w-3.5 text-indigo-500 animate-pulse" />
                     Vibrant Vector Graphics
                   </span>
-                  <button className="hover:text-white transition-colors cursor-pointer" title="Fullscreen">
+                  <button className="hover:text-slate-900 transition-colors cursor-pointer" title="Fullscreen">
                     <Maximize className="h-4 w-4" />
                   </button>
                 </div>
