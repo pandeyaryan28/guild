@@ -1,4 +1,4 @@
-import { MessageSquare, CheckSquare, FileCheck, ArrowRight } from 'lucide-react';
+import { MessageSquare, CheckSquare, FileCheck, ArrowRight, Shield } from 'lucide-react';
 import { ScrollReveal } from './ScrollReveal';
 import { useNavigation } from '../../context/NavigationContext';
 
@@ -27,6 +27,14 @@ const features = [
     bg: 'bg-cyan-500/10',
     path: '/features/approvals',
   },
+  {
+    icon: Shield,
+    title: 'Admin Console',
+    description: 'Monitor workloads, project health, and overdue tasks.',
+    color: 'text-rose-600',
+    bg: 'bg-rose-500/10',
+    path: '/features/admin-console',
+  },
 ];
 
 export function FeatureCards() {
@@ -43,7 +51,7 @@ export function FeatureCards() {
           </div>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-4 gap-6">
           {features.map((f, i) => (
             <ScrollReveal key={f.title} delay={i * 0.08}>
               <div 

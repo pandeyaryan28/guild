@@ -6,6 +6,7 @@ import {
   FolderOpen,
   ArrowRight,
   Sparkles,
+  Shield,
 } from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
 import { ScrollReveal } from '../components/landing/ScrollReveal';
@@ -59,6 +60,18 @@ const featuresPortalData = [
     bg: 'bg-rose-50 border border-rose-100/50',
     accentColor: 'group-hover:text-rose-600',
     btnBg: 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-100 shadow-md',
+  },
+  {
+    category: 'Admin Console',
+    icon: Shield,
+    title: 'Operational Visibility & Workloads',
+    description: 'Provide owners and managers with organizational intelligence to track resource allocation and project status.',
+    bullets: ['Resource workload allocation', 'Project & goal health tracking', 'Overdue task triage dashboards'],
+    path: '/features/admin-console',
+    color: 'text-indigo-600',
+    bg: 'bg-indigo-50 border border-indigo-100/50',
+    accentColor: 'group-hover:text-indigo-600',
+    btnBg: 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-100 shadow-md',
   },
 ];
 

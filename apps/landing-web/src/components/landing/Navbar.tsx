@@ -13,7 +13,8 @@ import {
   HelpCircle, 
   Play, 
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  Shield
 } from 'lucide-react';
 import { APP_URL } from '../../config/landingData';
 import { useNavigation } from '../../context/NavigationContext';
@@ -83,6 +84,16 @@ export function Navbar() {
       items: [
         { icon: LayoutDashboard, label: 'Central Dashboard', desc: 'Assigned tasks & activity feeds.', path: '/features/visibility' },
         { icon: FolderOpen, label: 'Shared Files', desc: 'Shared budget, layout, and document lists.', path: '/features/visibility' },
+      ]
+    },
+    {
+      title: 'Admin Console',
+      color: 'text-indigo-600',
+      bg: 'bg-indigo-50 border border-indigo-100/50',
+      path: '/features/admin-console',
+      items: [
+        { icon: Shield, label: 'Workload Allotment', desc: 'Balance team work allocations.', path: '/features/admin-console' },
+        { icon: Shield, label: 'Project Health', desc: 'Track on-track vs delayed.', path: '/features/admin-console' },
       ]
     },
     {
@@ -220,7 +231,7 @@ export function Navbar() {
               onMouseEnter={() => setShowMegaMenu(true)}
               onMouseLeave={() => setShowMegaMenu(false)}
             >
-              <div className="mx-auto max-w-5xl rounded-2xl bg-white border border-slate-150/70 p-6 shadow-2xl shadow-slate-200/60 grid grid-cols-5 gap-6">
+              <div className="mx-auto max-w-5xl rounded-2xl bg-white border border-slate-150/70 p-6 shadow-2xl shadow-slate-200/60 grid grid-cols-6 gap-6">
                 {megaMenuData.map((col) => (
                   <div key={col.title} className="flex flex-col gap-4">
                     <a
@@ -288,6 +299,9 @@ export function Navbar() {
                 </a>
                 <a href="/features/visibility" onClick={(e) => handleNav(e, '/features/visibility')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700">
                   <FolderOpen className="h-4 w-4 text-rose-600" /> Shared Files
+                </a>
+                <a href="/features/admin-console" onClick={(e) => handleNav(e, '/features/admin-console')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700 col-span-2">
+                  <Shield className="h-4 w-4 text-slate-700" /> Admin Console
                 </a>
               </div>
 

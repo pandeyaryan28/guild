@@ -24,6 +24,10 @@ export const FAQ_ITEMS: FAQItem[] = [
     q: 'Can I cancel anytime?',
     a: 'Absolutely. No contracts. Change your plan or cancel directly from billing settings.',
   },
+  {
+    q: 'How can team owners track workload allotment and project health?',
+    a: 'Guild Orbit features a dedicated Admin Console. It gives administrators full visibility to check member task allotment, monitor project/goal completion health, audit overdue items, and manage secure invite links or department-based roles.',
+  },
 ];
 
 export const APP_URL = 'https://app.guildhq.space';

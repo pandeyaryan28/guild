@@ -5,7 +5,7 @@ import { APP_URL } from '../../config/landingData';
 import { useNavigation } from '../../context/NavigationContext';
 import { CosmicCanvas3D } from './CosmicCanvas3D';
 
-const Words = ['Tasks', 'Direct Chats', 'Leave Approvals', 'Expense Sign-offs', 'Shared Files'];
+const Words = ['Tasks', 'Direct Chats', 'Leave Approvals', 'Expense Sign-offs', 'Shared Files', 'Admin Visibility', 'Workload Allotment'];
 
 export function HeroSection() {
   const { navigate } = useNavigation();

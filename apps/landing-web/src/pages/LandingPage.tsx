@@ -8,6 +8,7 @@ import { WorkTrackingFeature } from './WorkTrackingFeature';
 import { TeamChatFeature } from './TeamChatFeature';
 import { ApprovalsFeature } from './ApprovalsFeature';
 import { VisibilityFeature } from './VisibilityFeature';
+import { AdminFeature } from './AdminFeature';
 import { useNavigation } from '../context/NavigationContext';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -45,6 +46,8 @@ export function LandingPage() {
         return <ApprovalsFeature key="approvals" />;
       case '/features/visibility':
         return <VisibilityFeature key="visibility" />;
+      case '/features/admin-console':
+        return <AdminFeature key="admin-console" />;
       case '/pricing':
         return <Pricing key="pricing" />;
       case '/faq':

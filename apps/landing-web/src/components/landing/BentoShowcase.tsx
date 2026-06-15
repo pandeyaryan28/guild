@@ -1,7 +1,10 @@
-import { Zap, Search, Shield, Users, FileCheck, Folder, ArrowRight } from 'lucide-react';
+import { Zap, Search, Shield, Users, FileCheck, Folder, ArrowRight, Clock, AlertTriangle, UserCheck } from 'lucide-react';
 import { ScrollReveal } from './ScrollReveal';
+import { useNavigation } from '../../context/NavigationContext';
 
 export function BentoShowcase() {
+  const { navigate } = useNavigation();
+
   return (
     <section className="px-6 py-24 relative bg-slate-50/10">
       <div className="max-w-5xl mx-auto">
@@ -168,6 +171,78 @@ export function BentoShowcase() {
             </div>
           </ScrollReveal>
 
+          {/* Card 5: Admin Portal Visibility Layer */}
+          <ScrollReveal className="md:col-span-3">
+            <div 
+              onClick={() => navigate('/features/admin-console')}
+              className="glass rounded-3xl p-8 hover:scale-[1.005] transition-all duration-300 border-indigo-50/50 shadow-sm flex flex-col md:flex-row gap-8 items-center cursor-pointer hover:border-slate-350"
+            >
+              <div className="flex-1 space-y-4">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100/30">
+                  Premium Admin Console
+                </span>
+                <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Business-Wide Visibility Layer
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  As a business owner or founder, get complete administrative control. Spot which members are underloaded, check if goals/projects are on-track, and instantly triage overdue tasks.
+                </p>
+                <div className="pt-2">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/features/admin-console');
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
+                  >
+                    Explore Admin features
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Simulated Dashboard Widgets */}
+              <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                {/* Workload Allotment widget */}
+                <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100/50 space-y-3">
+                  <div className="flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                    <span>Workload Allotment</span>
+                    <span className="text-indigo-600">Admin</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-700">
+                      <span className="flex items-center gap-1"><UserCheck className="h-3.5 w-3.5 text-emerald-500" /> Sarah Jenkins</span>
+                      <span className="text-slate-400">Allotted (3 Tasks)</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-700">
+                      <span className="flex items-center gap-1"><UserCheck className="h-3.5 w-3.5 text-amber-500" /> Alex Rivera</span>
+                      <span className="text-indigo-600">Underloaded (1 Task)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Project Status & Overdue widget */}
+                <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100/50 space-y-3">
+                  <div className="flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                    <span>Operational Health</span>
+                    <span className="text-rose-500">Alerts</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-700">
+                      <span>Q3 Delivery Goal</span>
+                      <span className="text-emerald-600 bg-emerald-50 border border-emerald-100 px-1 py-0.5 rounded text-[8px]">On Track</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-700">
+                      <span>Logistics Team</span>
+                      <span className="text-rose-600 bg-rose-50 border border-rose-100 px-1 py-0.5 rounded text-[8px]">3 Overdue</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </ScrollReveal>
 
         </div>
       </div>
