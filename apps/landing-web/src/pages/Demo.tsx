@@ -7,85 +7,183 @@ import {
   VolumeX,
   Maximize,
   ArrowRight,
-  Kanban,
-  MessageSquare,
-  CheckSquare,
-  Users,
-  Tv,
+  Sparkles,
+  Zap,
+  Activity,
   CheckCircle2,
-  Calendar,
-  Sparkles
+  Lock,
+  Users,
+  Tv
 } from 'lucide-react';
 
-interface Scene {
+interface MotionScene {
   id: string;
   title: string;
   startTime: number; // in seconds
   endTime: number; // in seconds
-  icon: any;
-  label: string;
-  description: string;
+  subtitle: string;
+  badge: string;
+  color: string;
+  gradient: string;
 }
 
-const SCENES: Scene[] = [
+const MOTION_SCENES: MotionScene[] = [
   {
     id: 'tasks',
-    title: 'Tasks & Kanban',
+    title: 'FLUID WORKFLOWS',
     startTime: 0,
-    endTime: 25,
-    icon: Kanban,
-    label: 'Kanban Boards',
-    description: 'Organize work visually, update task statuses, and assign duties in a clean drag-and-drop Kanban view.',
+    endTime: 10,
+    subtitle: 'Streamlined Kanban Boards',
+    badge: 'Task Management',
+    color: '#6366f1',
+    gradient: 'from-indigo-500 via-purple-500 to-cyan-500',
   },
   {
     id: 'chat',
-    title: 'Team Channels',
-    startTime: 25,
-    endTime: 50,
-    icon: MessageSquare,
-    label: 'Group Chat',
-    description: 'Keep chat rooms aligned with departments, projects, or threads, with full slack-like message history.',
+    title: 'CONNECTED TEAMS',
+    startTime: 10,
+    endTime: 20,
+    subtitle: 'Real-time Synchronized Chat',
+    badge: 'Communication',
+    color: '#06b6d4',
+    gradient: 'from-cyan-500 via-indigo-500 to-emerald-500',
   },
   {
     id: 'approvals',
-    title: 'Approvals Log',
-    startTime: 50,
-    endTime: 75,
-    icon: CheckSquare,
-    label: 'Operational Sign-offs',
-    description: 'Request formal sign-offs for releases, budgets, or designs, tracking the status with a clear log.',
+    title: 'INSTANT SIGN-OFFS',
+    startTime: 20,
+    endTime: 30,
+    subtitle: 'Automated Compliance Routing',
+    badge: 'Operations & Approvals',
+    color: '#a855f7',
+    gradient: 'from-purple-500 via-pink-500 to-amber-500',
   },
   {
     id: 'directory',
-    title: 'Workload Directory',
-    startTime: 75,
-    endTime: 100,
-    icon: Users,
-    label: 'Team Directory',
-    description: 'Check department allocations, view what tasks team members are on, and avoid workload burnout.',
+    title: 'SMART ALLOCATIONS',
+    startTime: 30,
+    endTime: 40,
+    subtitle: 'Workload Balance Directory',
+    badge: 'Resource Visibility',
+    color: '#10b981',
+    gradient: 'from-emerald-500 via-teal-500 to-indigo-500',
   },
 ];
 
-const TOTAL_DURATION = 100; // seconds
+const TOTAL_DURATION = 40; // seconds (Faster, 10s per scene)
 
 export function Demo() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(0.8);
+  const [volume, setVolume] = useState(0.5);
   const [activeTab, setActiveTab] = useState('tasks');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', teamSize: '5-20', message: '' });
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Web Audio Synth for motion graphic sound effects
+  const playSound = (type: 'play' | 'transition' | 'click' | 'success' | 'bubble') => {
+    if (typeof window === 'undefined' || isMuted) return;
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      
+      if (type === 'play') {
+        // Sci-fi entry sweep
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(100, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.6);
+        gain.gain.setValueAtTime(volume * 0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.6);
+      } else if (type === 'transition') {
+        // Wind-up drop sound
+        const osc = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc2.type = 'sawtooth';
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.4);
+        osc2.frequency.setValueAtTime(200, ctx.currentTime);
+        osc2.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(volume * 0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        osc.start();
+        osc2.start();
+        osc.stop(ctx.currentTime + 0.4);
+        osc2.stop(ctx.currentTime + 0.4);
+      } else if (type === 'click') {
+        // High frequency UI tick
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, ctx.currentTime);
+        gain.gain.setValueAtTime(volume * 0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08);
+      } else if (type === 'success') {
+        // Metallic positive chime
+        const osc = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc2.type = 'triangle';
+        osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
+        osc.frequency.setValueAtTime(554.37, ctx.currentTime + 0.1); // C#5
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2); // E5
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.3); // A5
+        osc2.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(volume * 0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.start();
+        osc2.start();
+        osc.stop(ctx.currentTime + 0.5);
+        osc2.stop(ctx.currentTime + 0.5);
+      } else if (type === 'bubble') {
+        // Watery pop sound for chats
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(200, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(volume * 0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+      }
+    } catch (e) {
+      console.warn('Web Audio not allowed or failed:', e);
+    }
+  };
+
   // Sync active tab based on current time
   useEffect(() => {
-    const matchingScene = SCENES.find(
+    const matchingScene = MOTION_SCENES.find(
       (s) => currentTime >= s.startTime && currentTime < s.endTime
     );
     if (matchingScene && matchingScene.id !== activeTab) {
       setActiveTab(matchingScene.id);
+      playSound('transition');
     }
   }, [currentTime, activeTab]);
 
@@ -110,18 +208,27 @@ export function Demo() {
     };
   }, [isPlaying]);
 
-  const togglePlay = () => setIsPlaying(!isPlaying);
-  const toggleMute = () => setIsMuted(!isMuted);
+  const togglePlay = () => {
+    playSound('play');
+    setIsPlaying(!isPlaying);
+  };
+  
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    playSound('click');
+  };
 
   const handleScrubberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     setCurrentTime(value);
+    playSound('click');
   };
 
-  const jumpToScene = (scene: Scene) => {
+  const jumpToScene = (scene: MotionScene) => {
     setCurrentTime(scene.startTime);
     setActiveTab(scene.id);
     setIsPlaying(true);
+    playSound('transition');
   };
 
   const formatTime = (time: number) => {
@@ -132,320 +239,344 @@ export function Demo() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API request
+    playSound('success');
     setTimeout(() => {
       setFormSubmitted(true);
     }, 600);
   };
 
-  // Simulated scene views inside the player
-  const renderPlayerScreen = () => {
-    // Current scene time percentage (0 to 100%) inside its 25-second slot
-    const currentScene = SCENES.find((s) => s.id === activeTab) || SCENES[0];
-    const sceneProgress = ((currentTime - currentScene.startTime) / 25) * 100;
+  // Sound effects triggered at specific timestamps
+  useEffect(() => {
+    if (isPlaying) {
+      // Scene 1 (Tasks) card moves
+      if (currentTime === 3 || currentTime === 7) {
+        playSound('play');
+      }
+      // Scene 2 (Chat) messages popping
+      if (currentTime === 12 || currentTime === 15 || currentTime === 18) {
+        playSound('bubble');
+      }
+      // Scene 3 (Approvals) success chime
+      if (currentTime === 26) {
+        playSound('success');
+      }
+      // Scene 4 (Directory) allocate pulse
+      if (currentTime === 34 || currentTime === 37) {
+        playSound('click');
+      }
+    }
+  }, [currentTime, isPlaying]);
+
+  // Motion Graphic Scenes Inside the Player Screen
+  const renderGraphicScreen = () => {
+    const currentScene = MOTION_SCENES.find((s) => s.id === activeTab) || MOTION_SCENES[0];
+    const sceneElapsed = currentTime - currentScene.startTime; // 0 to 10 seconds
 
     switch (activeTab) {
       case 'tasks':
         return (
-          <div className="w-full h-full bg-slate-900 flex flex-col p-4 text-white select-none">
-            {/* Mock Header */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-red-500" />
-                <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                <div className="h-2 w-2 rounded-full bg-green-500" />
-                <span className="text-[10px] text-slate-400 font-semibold ml-2">Guild Workspace / Tasks</span>
-              </div>
-              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded-full font-bold border border-indigo-500/30">
-                Kanban view
-              </span>
-            </div>
+          <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center text-white relative overflow-hidden select-none p-6">
+            {/* Pulsing Grid Background */}
+            <div className="absolute inset-0 grid-pattern-dark opacity-40" />
+            
+            {/* Neon Glowing Circles */}
+            <div className="absolute top-[30%] left-[20%] w-[200px] h-[200px] rounded-full bg-indigo-500/10 blur-[80px]" />
+            <div className="absolute bottom-[20%] right-[20%] w-[250px] h-[250px] rounded-full bg-purple-500/10 blur-[90px]" />
 
-            {/* Mock Board */}
-            <div className="grid grid-cols-3 gap-3 flex-grow">
-              {/* Column 1 */}
-              <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col gap-2">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">To Do (2)</span>
-                <div className="bg-white/10 p-2.5 rounded-lg border border-white/5 text-[10px] font-semibold space-y-1.5 shadow-sm">
-                  <p>Design landing feedback section</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[8px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded">High</span>
-                    <div className="h-4 w-4 rounded-full bg-slate-500 text-[8px] flex items-center justify-center font-bold">JD</div>
-                  </div>
-                </div>
-                {/* Dragging Task animation */}
-                {sceneProgress < 40 && (
-                  <div className="bg-white/10 p-2.5 rounded-lg border border-white/5 text-[10px] font-semibold space-y-1.5 shadow-sm">
-                    <p>Integrate Stripe webhooks</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[8px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded">Feature</span>
-                      <div className="h-4 w-4 rounded-full bg-slate-500 text-[8px] flex items-center justify-center font-bold">AP</div>
-                    </div>
-                  </div>
-                )}
-              </div>
+            {/* Glowing Orbital rings */}
+            <svg className="absolute w-[80%] h-[80%] opacity-20 pointer-events-none" viewBox="0 0 400 400">
+              <circle cx="200" cy="200" r="140" fill="none" stroke="#6366f1" strokeWidth="1" strokeDasharray="5 5" className="animate-[spin_40s_linear_infinite]" />
+              <circle cx="200" cy="200" r="90" fill="none" stroke="#d8b4fe" strokeWidth="1.5" className="animate-[spin_20s_linear_infinite_reverse]" />
+            </svg>
 
-              {/* Column 2 */}
-              <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col gap-2 relative">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">In Progress</span>
-                {/* Animated arrival of dragging task */}
-                {sceneProgress >= 40 && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    className="bg-white/15 p-2.5 rounded-lg border border-indigo-500/30 text-[10px] font-semibold space-y-1.5 shadow-md shadow-indigo-500/5"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-indigo-200">Integrate Stripe webhooks</p>
-                      <Sparkles className="h-3.5 w-3.5 text-indigo-400 animate-pulse" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[8px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded">Feature</span>
-                      <div className="h-4 w-4 rounded-full bg-indigo-600 text-[8px] flex items-center justify-center font-bold">AP</div>
-                    </div>
-                  </motion.div>
-                )}
-                <div className="bg-white/10 p-2.5 rounded-lg border border-white/5 text-[10px] font-semibold space-y-1.5 shadow-sm">
-                  <p>Refactor auth state flow</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[8px] bg-yellow-500/20 text-yellow-300 px-1.5 py-0.5 rounded">Bug</span>
-                    <div className="h-4 w-4 rounded-full bg-cyan-500 text-[8px] flex items-center justify-center font-bold">SK</div>
+            {/* Floating Visual Cards */}
+            <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
+              <div className="flex gap-4 items-center">
+                {/* Visual Column 1 */}
+                <motion.div 
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl w-36 text-left shadow-lg"
+                >
+                  <span className="text-[7px] font-bold text-slate-500 tracking-wider block mb-2">BACKLOG</span>
+                  <div className="h-6 bg-slate-800/80 border border-slate-700/50 rounded-lg flex items-center justify-between px-2 text-[8px] font-bold">
+                    <span>Task Core</span>
+                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
                   </div>
+                </motion.div>
+
+                {/* Flying Card in Motion */}
+                <div className="relative h-16 w-20 flex items-center justify-center">
+                  <AnimatePresence mode="wait">
+                    {sceneElapsed >= 3 && sceneElapsed < 7 ? (
+                      <motion.div
+                        key="flying-card"
+                        initial={{ opacity: 0, scale: 0.5, x: -70, rotate: -10 }}
+                        animate={{ opacity: 1, scale: 1.1, x: 0, y: [0, -15, 0], rotate: 5, boxShadow: "0 0 20px rgba(99, 102, 241, 0.4)" }}
+                        exit={{ opacity: 0, scale: 0.8, x: 70, rotate: 15 }}
+                        transition={{ duration: 1.5, ease: "easeInOut" }}
+                        className="bg-indigo-600 border border-indigo-400 p-2.5 rounded-xl text-center w-28 absolute z-20 shadow-xl"
+                      >
+                        <Zap className="h-4 w-4 text-white mx-auto mb-1 animate-bounce" />
+                        <span className="text-[8px] font-bold tracking-tight block text-white leading-none">Sprint Feature</span>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
                 </div>
+
+                {/* Visual Column 2 */}
+                <motion.div 
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                  className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl w-36 text-left shadow-lg"
+                >
+                  <span className="text-[7px] font-bold text-slate-500 tracking-wider block mb-2">IN PROGRESS</span>
+                  <div className="h-6 bg-slate-800/80 border border-slate-700/50 rounded-lg flex items-center justify-between px-2 text-[8px] font-bold">
+                    <span>QA Redesign</span>
+                    <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+                  </div>
+                </motion.div>
               </div>
 
-              {/* Column 3 */}
-              <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col gap-2">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Done</span>
-                <div className="bg-white/10 p-2.5 rounded-lg border border-white/5 text-[10px] font-semibold space-y-1.5 line-through text-slate-500 shadow-sm">
-                  <p>Draft user guide markdown</p>
-                  <div className="flex items-center justify-between opacity-50">
-                    <span className="text-[8px] bg-green-500/20 text-green-300 px-1.5 py-0.5 rounded">Docs</span>
-                    <div className="h-4 w-4 rounded-full bg-slate-500 text-[8px] flex items-center justify-center font-bold">JD</div>
-                  </div>
-                </div>
+              {/* Central Typographical Highlight */}
+              <div className="text-center mt-2">
+                <motion.h2 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 tracking-wider uppercase leading-none"
+                >
+                  DRAG. DROP. DELIVER.
+                </motion.h2>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                  Fluid, intuitive board management
+                </p>
               </div>
             </div>
-            {/* Pointer cursor simulation */}
-            {sceneProgress < 40 && (
-              <motion.div
-                animate={{
-                  x: [60, 160],
-                  y: [140, 110],
-                }}
-                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
-                className="absolute h-5 w-5 pointer-events-none z-50 text-indigo-400"
-                style={{ left: '20%', top: '40%' }}
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-md">
-                  <path d="M4 4l12.4 12.4-4.8.9 3.2 6.7-2.7 1.3-3.2-6.7-4.9 4.9V4z" />
-                </svg>
-              </motion.div>
-            )}
           </div>
         );
       case 'chat':
-        // Chat room simulation
-        const messages = [
-          { name: 'Sarah', role: 'Product', text: 'Hey teams! Are we ready for the 2:00 PM sprint review?' },
-          { name: 'Alex', role: 'Dev', text: 'Stripe webhook integration is In Progress. Visual QA is done!' },
-          { name: 'David', role: 'Design', text: 'I uploaded the landing assets in the workspace folder.' },
-        ];
         return (
-          <div className="w-full h-full bg-slate-900 flex flex-col p-4 text-white select-none">
-            {/* Chat header */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-indigo-400 font-bold text-xs">#</span>
-                <span className="text-xs font-bold text-slate-200">sprint-coordination</span>
-                <span className="text-[9px] text-slate-500 font-bold">• 12 members</span>
+          <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center text-white relative overflow-hidden select-none p-6">
+            <div className="absolute inset-0 grid-pattern-dark opacity-40" />
+            <div className="absolute top-[20%] right-[15%] w-[200px] h-[200px] rounded-full bg-cyan-500/10 blur-[80px]" />
+            <div className="absolute bottom-[30%] left-[15%] w-[250px] h-[250px] rounded-full bg-indigo-500/10 blur-[90px]" />
+
+            {/* Glowing Network Nodes (Connecting Lines) */}
+            <svg className="absolute w-full h-full opacity-35" viewBox="0 0 500 300">
+              <motion.line x1="100" y1="150" x2="250" y2="70" stroke="#06b6d4" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5 }} />
+              <motion.line x1="400" y1="150" x2="250" y2="70" stroke="#6366f1" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, delay: 0.5 }} />
+              <motion.line x1="250" y1="230" x2="250" y2="70" stroke="#10b981" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, delay: 1 }} />
+              {/* Pulsing signal dots traveling down lines */}
+              {sceneElapsed > 2 && (
+                <>
+                  <motion.circle r="4" fill="#06b6d4" animate={{ cx: [100, 250], cy: [150, 70] }} transition={{ duration: 2, repeat: Infinity }} />
+                  <motion.circle r="4" fill="#6366f1" animate={{ cx: [400, 250], cy: [150, 70] }} transition={{ duration: 2, repeat: Infinity, delay: 0.7 }} />
+                  <motion.circle r="4" fill="#10b981" animate={{ cx: [250, 250], cy: [230, 70] }} transition={{ duration: 2, repeat: Infinity, delay: 1.4 }} />
+                </>
+              )}
+            </svg>
+
+            {/* Nodes representation */}
+            <div className="absolute left-[10%] top-[40%] bg-slate-900 border border-cyan-500/30 p-2 rounded-xl text-center shadow-lg">
+              <span className="text-[8px] font-bold text-cyan-400 block uppercase">Product</span>
+            </div>
+            <div className="absolute right-[10%] top-[40%] bg-slate-900 border border-indigo-500/30 p-2 rounded-xl text-center shadow-lg">
+              <span className="text-[8px] font-bold text-indigo-400 block uppercase">Engineering</span>
+            </div>
+            <div className="absolute left-[40%] bottom-[10%] bg-slate-900 border border-emerald-500/30 p-2 rounded-xl text-center shadow-lg">
+              <span className="text-[8px] font-bold text-emerald-400 block uppercase">Operations</span>
+            </div>
+
+            {/* Central hub showing messages */}
+            <div className="relative z-10 flex flex-col items-center max-w-sm text-center">
+              <motion.div
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="h-16 w-16 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/10 border border-cyan-400 mb-6"
+              >
+                <Activity className="h-7 w-7 text-white" />
+              </motion.div>
+
+              <div className="min-h-[40px] flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                  {sceneElapsed >= 2 && sceneElapsed < 5 && (
+                    <motion.p
+                      key="msg1"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="text-xs font-bold text-cyan-200"
+                    >
+                      "Sarah: Budget Q3 has been approved!"
+                    </motion.p>
+                  )}
+                  {sceneElapsed >= 5 && sceneElapsed < 8 && (
+                    <motion.p
+                      key="msg2"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="text-xs font-bold text-indigo-200"
+                    >
+                      "Alex: Deploying the build to staging."
+                    </motion.p>
+                  )}
+                  {sceneElapsed >= 8 && (
+                    <motion.p
+                      key="msg3"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="text-xs font-bold text-emerald-200"
+                    >
+                      "David: Shared directory is up to date."
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </div>
-              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-semibold">
-                Sync Channels
-              </span>
-            </div>
 
-            {/* Chat bubbles list */}
-            <div className="flex-grow flex flex-col gap-3 justify-end pb-2">
-              {sceneProgress > 10 && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2.5 items-start">
-                  <div className="h-7 w-7 rounded-lg bg-pink-600 text-[10px] flex items-center justify-center font-bold uppercase shadow-inner">SO</div>
-                  <div className="flex flex-col gap-0.5">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-[10px] font-bold text-slate-200">{messages[0].name}</span>
-                      <span className="text-[8px] text-indigo-300 font-extrabold uppercase bg-indigo-500/10 px-1 rounded">{messages[0].role}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-300 bg-white/5 px-2.5 py-1.5 rounded-r-xl rounded-bl-xl border border-white/5 max-w-[280px]">
-                      {messages[0].text}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-
-              {sceneProgress > 45 && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2.5 items-start">
-                  <div className="h-7 w-7 rounded-lg bg-blue-600 text-[10px] flex items-center justify-center font-bold uppercase shadow-inner">AP</div>
-                  <div className="flex flex-col gap-0.5">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-[10px] font-bold text-slate-200">{messages[1].name}</span>
-                      <span className="text-[8px] text-cyan-300 font-extrabold uppercase bg-cyan-500/10 px-1 rounded">{messages[1].role}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-300 bg-white/5 px-2.5 py-1.5 rounded-r-xl rounded-bl-xl border border-white/5 max-w-[280px]">
-                      {messages[1].text}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-
-              {sceneProgress > 80 && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2.5 items-start">
-                  <div className="h-7 w-7 rounded-lg bg-emerald-600 text-[10px] flex items-center justify-center font-bold uppercase shadow-inner">DK</div>
-                  <div className="flex flex-col gap-0.5">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-[10px] font-bold text-slate-200">{messages[2].name}</span>
-                      <span className="text-[8px] text-emerald-300 font-extrabold uppercase bg-emerald-500/10 px-1 rounded">{messages[2].role}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-300 bg-white/5 px-2.5 py-1.5 rounded-r-xl rounded-bl-xl border border-white/5 max-w-[280px]">
-                      {messages[2].text}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-            {/* Input simulator */}
-            <div className="bg-white/5 border border-white/10 p-2 rounded-xl flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 font-semibold pl-1">Message #sprint-coordination...</span>
-              <div className="h-5 w-10 bg-indigo-600 rounded-lg flex items-center justify-center text-[9px] font-bold">Send</div>
+              <div className="mt-4">
+                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 tracking-wider uppercase leading-none">
+                  SYCHRONIZED & CENTERALIZED.
+                </h2>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                  Team channels without communication silos
+                </p>
+              </div>
             </div>
           </div>
         );
       case 'approvals':
         return (
-          <div className="w-full h-full bg-slate-900 flex flex-col p-4 text-white select-none relative">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-              <span className="text-xs font-bold text-slate-200">Department Approvals Log</span>
-              <span className="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold border border-amber-500/30">
-                1 Pending Sign-off
-              </span>
-            </div>
+          <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center text-white relative overflow-hidden select-none p-6">
+            <div className="absolute inset-0 grid-pattern-dark opacity-40" />
+            <div className="absolute top-[10%] left-[20%] w-[220px] h-[220px] rounded-full bg-purple-500/10 blur-[90px]" />
+            <div className="absolute bottom-[20%] right-[10%] w-[220px] h-[220px] rounded-full bg-amber-500/10 blur-[80px]" />
 
-            {/* Approvals Table */}
-            <div className="flex-grow flex flex-col gap-2">
-              {/* Row 1 */}
-              <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-center justify-between">
-                <div>
-                  <h4 className="text-[10px] font-bold text-slate-250">Marketing Budget Q3 Approval</h4>
-                  <p className="text-[8px] text-slate-500 mt-0.5">Requested by Sarah Jenkins • Marketing</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {sceneProgress < 50 ? (
-                    <span className="text-[9px] bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2 py-1 rounded-lg font-bold">
-                      Pending
-                    </span>
-                  ) : (
-                    <motion.span
-                      initial={{ scale: 0.95 }}
-                      animate={{ scale: 1 }}
-                      className="text-[9px] bg-green-500/20 text-green-300 border border-green-500/30 px-2 py-1 rounded-lg font-bold flex items-center gap-1"
-                    >
-                      <CheckCircle2 className="h-3 w-3 text-green-400" />
-                      Approved
-                    </motion.span>
-                  )}
-                </div>
-              </div>
-
-              {/* Row 2 */}
-              <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-center justify-between opacity-60">
-                <div>
-                  <h4 className="text-[10px] font-bold text-slate-300">Stripe Integration Deployment</h4>
-                  <p className="text-[8px] text-slate-500 mt-0.5">Approved by CTO • Engineering</p>
-                </div>
-                <span className="text-[9px] bg-green-500/20 text-green-400 border border-green-500/20 px-2 py-1 rounded-lg font-bold">
-                  Approved
-                </span>
-              </div>
-            </div>
-
-            {/* Mouse Click Overlay Simulation */}
-            {sceneProgress >= 30 && sceneProgress < 55 && (
-              <motion.div
+            {/* Glowing Circuit Lines */}
+            <svg className="absolute w-[60%] h-[60%] opacity-30" viewBox="0 0 200 200">
+              <motion.path
+                d="M 20 100 L 80 100 L 100 80 L 140 80 L 150 90 L 180 90"
+                fill="none"
+                stroke="#a855f7"
+                strokeWidth="2"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 2 }}
+              />
+              <motion.circle
+                r="4"
+                fill="#f59e0b"
                 animate={{
-                  x: [220, 260],
-                  y: [120, 75],
+                  offsetDistance: ["0%", "100%"]
                 }}
-                transition={{ duration: 1.2 }}
-                className="absolute h-5 w-5 pointer-events-none z-50 text-indigo-400"
-                style={{ left: '50%', top: '50%' }}
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-md">
-                  <path d="M4 4l12.4 12.4-4.8.9 3.2 6.7-2.7 1.3-3.2-6.7-4.9 4.9V4z" />
-                </svg>
-              </motion.div>
-            )}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                style={{
+                  motionPath: "path('M 20 100 L 80 100 L 100 80 L 140 80 L 150 90 L 180 90')"
+                }}
+              />
+            </svg>
+
+            {/* Central Lock / Stamp Animation */}
+            <div className="relative z-10 flex flex-col items-center max-w-sm text-center">
+              <div className="h-24 w-24 relative flex items-center justify-center mb-6">
+                <AnimatePresence mode="wait">
+                  {sceneElapsed < 6 ? (
+                    <motion.div
+                      key="pending-lock"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1.05, opacity: 1, rotate: [0, 5, -5, 0] }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="h-16 w-16 rounded-2xl bg-amber-500/10 border-2 border-amber-400 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/5"
+                    >
+                      <Lock className="h-7 w-7 text-amber-400" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="success-chime"
+                      initial={{ scale: 0.3, opacity: 0, rotate: -45 }}
+                      animate={{ scale: [1.3, 1], opacity: 1, rotate: 0 }}
+                      className="h-20 w-20 rounded-full bg-emerald-500/10 border-2 border-emerald-400 flex items-center justify-center text-emerald-400 shadow-xl shadow-emerald-500/10"
+                    >
+                      <CheckCircle2 className="h-10 w-10 text-emerald-400" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
+                {/* Exploding particles on success */}
+                {sceneElapsed >= 6 && sceneElapsed < 8 && (
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 1 }}
+                    animate={{ scale: 1.8, opacity: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="absolute inset-0 rounded-full border border-emerald-400"
+                  />
+                )}
+              </div>
+
+              <div>
+                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400 tracking-wider uppercase leading-none">
+                  COMPLIANT. SIGNED. SECURE.
+                </h2>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                  Automated sign-off thresholds & locks
+                </p>
+              </div>
+            </div>
           </div>
         );
       case 'directory':
         return (
-          <div className="w-full h-full bg-slate-900 flex flex-col p-4 text-white select-none">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-              <span className="text-xs font-bold text-slate-200">Workspace Member Allocation</span>
-              <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">
-                Healthy Workloads
-              </span>
-            </div>
+          <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center text-white relative overflow-hidden select-none p-6">
+            <div className="absolute inset-0 grid-pattern-dark opacity-40" />
+            <div className="absolute top-[20%] left-[10%] w-[200px] h-[200px] rounded-full bg-emerald-500/10 blur-[80px]" />
+            <div className="absolute bottom-[10%] right-[15%] w-[250px] h-[250px] rounded-full bg-indigo-500/10 blur-[90px]" />
 
-            {/* Directory Grid */}
-            <div className="grid grid-cols-2 gap-3 flex-grow">
-              {/* Member Card 1 */}
-              <div className="bg-white/5 border border-white/5 rounded-xl p-2.5 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-[10px]">SO</div>
-                <div className="flex-grow min-w-0">
-                  <h4 className="text-[10px] font-bold truncate">Sarah O'Connor</h4>
-                  <p className="text-[8px] text-slate-500 truncate">Product Lead</p>
-                  {/* Allocation meter */}
-                  <div className="mt-1.5 w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-indigo-500 h-full rounded-full" style={{ width: '70%' }} />
-                  </div>
+            {/* Balancing nodes structure */}
+            <div className="relative z-10 flex flex-col items-center w-full max-w-sm text-center">
+              <div className="flex gap-6 items-end justify-center h-20 mb-8 w-full px-8">
+                {/* Member 1 meter */}
+                <div className="flex flex-col items-center gap-1.5 flex-1">
+                  <motion.div
+                    animate={{ height: sceneElapsed < 5 ? 70 : 40 }}
+                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                    className="w-4 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-lg shadow-md"
+                  />
+                  <Users className="h-4 w-4 text-emerald-400" />
+                  <span className="text-[7px] font-bold text-slate-500">Alex</span>
+                </div>
+
+                {/* Member 2 meter */}
+                <div className="flex flex-col items-center gap-1.5 flex-1">
+                  <motion.div
+                    animate={{ height: sceneElapsed < 5 ? 20 : 45 }}
+                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                    className="w-4 bg-gradient-to-t from-teal-600 to-teal-400 rounded-lg shadow-md"
+                  />
+                  <Users className="h-4 w-4 text-teal-400" />
+                  <span className="text-[7px] font-bold text-slate-500">Sarah</span>
+                </div>
+
+                {/* Member 3 meter */}
+                <div className="flex flex-col items-center gap-1.5 flex-1">
+                  <motion.div
+                    animate={{ height: sceneElapsed < 5 ? 90 : 50 }}
+                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                    className="w-4 bg-gradient-to-t from-indigo-600 to-indigo-400 rounded-lg shadow-md"
+                  />
+                  <Users className="h-4 w-4 text-indigo-400" />
+                  <span className="text-[7px] font-bold text-slate-500">David</span>
                 </div>
               </div>
 
-              {/* Member Card 2 */}
-              <div className="bg-white/5 border border-white/5 rounded-xl p-2.5 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center font-bold text-[10px]">AP</div>
-                <div className="flex-grow min-w-0">
-                  <h4 className="text-[10px] font-bold truncate">Aryan Pandey</h4>
-                  <p className="text-[8px] text-slate-500 truncate">Senior Engineer</p>
-                  <div className="mt-1.5 w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-yellow-500 h-full rounded-full" style={{ width: '90%' }} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Member Card 3 */}
-              <div className="bg-white/5 border border-white/5 rounded-xl p-2.5 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-[10px]">DK</div>
-                <div className="flex-grow min-w-0">
-                  <h4 className="text-[10px] font-bold truncate">David Kim</h4>
-                  <p className="text-[8px] text-slate-500 truncate">UI Designer</p>
-                  <div className="mt-1.5 w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-green-500 h-full rounded-full" style={{ width: '40%' }} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Member Card 4 */}
-              <div className="bg-white/5 border border-white/5 rounded-xl p-2.5 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-rose-500 flex items-center justify-center font-bold text-[10px]">EL</div>
-                <div className="flex-grow min-w-0">
-                  <h4 className="text-[10px] font-bold truncate">Emily Lucas</h4>
-                  <p className="text-[8px] text-slate-500 truncate">QA Specialist</p>
-                  <div className="mt-1.5 w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-green-500 h-full rounded-full" style={{ width: '30%' }} />
-                  </div>
-                </div>
+              <div>
+                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400 tracking-wider uppercase leading-none">
+                  OPTIMIZE WORKLOAD BALANCE.
+                </h2>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                  Visually distribute tasks & prevent team burnout
+                </p>
               </div>
             </div>
           </div>
@@ -464,39 +595,45 @@ export function Demo() {
         {/* Header */}
         <section className="text-center mb-12 max-w-2xl relative z-10">
           <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50/80 border border-indigo-100/50 px-3 py-1.5 rounded-full mb-3 glass">
-            Watch Walkthrough
+            Motion Walkthrough
           </span>
           <h1 className="text-[clamp(2rem,4vw,3.5rem)] font-extrabold text-slate-900 tracking-tight leading-none">
-            See how Guild Orbit works
+            See the Platform in Action
           </h1>
           <p className="mt-4 text-sm font-semibold text-slate-500 max-w-lg mx-auto leading-relaxed">
-            Take a 100-second tour of our collaborative workspaces, task dashboards, department chat rooms, and automated sign-offs.
+            Experience our 40-second animated motion graphic showcase mapping task workflows, instant sync channels, secure sign-offs, and team balancing.
           </p>
         </section>
 
         {/* Video Player Layout */}
         <section className="w-full max-w-4xl relative z-20 mb-16">
-          <div className="bg-slate-950 rounded-3xl p-3 md:p-4 shadow-2xl border border-slate-800 flex flex-col">
+          <div className="bg-slate-950 rounded-3xl p-3 md:p-4 shadow-2xl border border-slate-900 flex flex-col">
             
             {/* Screen Container */}
-            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-inner flex items-center justify-center">
-              {renderPlayerScreen()}
+            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-900 shadow-inner flex items-center justify-center">
+              {renderGraphicScreen()}
 
               {/* Idle Play Overlay */}
               {!isPlaying && currentTime === 0 && (
-                <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex flex-col items-center justify-center z-30">
+                <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center z-30">
                   <motion.button
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={togglePlay}
-                    className="h-16 w-16 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-xl shadow-indigo-600/30 border border-indigo-500 cursor-pointer"
+                    className="h-16 w-16 bg-indigo-650 rounded-full flex items-center justify-center text-white shadow-xl shadow-indigo-500/30 border border-indigo-500 cursor-pointer"
                   >
                     <Play fill="currentColor" className="h-6 w-6 ml-1" />
                   </motion.button>
                   <span className="text-xs font-extrabold text-white uppercase tracking-widest mt-4">
-                    Play Product Walkthrough
+                    Play Motion Graphic Trailer
                   </span>
-                  <span className="text-[10px] font-bold text-slate-400 mt-1">Duration: 1:40 min</span>
+                  <span className="text-[10px] font-bold text-slate-500 mt-1">Duration: 40 seconds (Fast Tour)</span>
+                  
+                  {/* Speaker Hint */}
+                  <div className="mt-6 flex items-center gap-1.5 text-[9px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full">
+                    <Volume2 className="h-3.5 w-3.5 animate-pulse" />
+                    Turn on sound for synthesizer UI chimes!
+                  </div>
                 </div>
               )}
             </div>
@@ -505,7 +642,7 @@ export function Demo() {
             <div className="flex flex-col gap-2.5 mt-3 px-2">
               {/* Scrubber / Progress Bar */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-slate-400 font-extrabold font-mono w-8">
+                <span className="text-[10px] text-slate-500 font-extrabold font-mono w-8">
                   {formatTime(currentTime)}
                 </span>
                 <input
@@ -516,10 +653,10 @@ export function Demo() {
                   onChange={handleScrubberChange}
                   className="flex-grow h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none"
                   style={{
-                    background: `linear-gradient(to right, #4f46e5 ${currentTime}%, #1e293b ${currentTime}%)`,
+                    background: `linear-gradient(to right, #6366f1 ${(currentTime / TOTAL_DURATION) * 100}%, #1e293b ${(currentTime / TOTAL_DURATION) * 100}%)`,
                   }}
                 />
-                <span className="text-[10px] text-slate-400 font-extrabold font-mono w-8 text-right">
+                <span className="text-[10px] text-slate-500 font-extrabold font-mono w-8 text-right">
                   {formatTime(TOTAL_DURATION)}
                 </span>
               </div>
@@ -559,9 +696,9 @@ export function Demo() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase mr-2 flex items-center gap-1">
-                    <Tv className="h-3 w-3 text-slate-500" />
-                    Simulated Walkthrough
+                  <span className="text-[9px] font-bold text-slate-500 uppercase mr-2 flex items-center gap-1.5">
+                    <Tv className="h-3.5 w-3.5 text-slate-500 animate-pulse" />
+                    Vibrant Vector Graphics
                   </span>
                   <button className="hover:text-white transition-colors cursor-pointer" title="Fullscreen">
                     <Maximize className="h-4 w-4" />
@@ -575,8 +712,7 @@ export function Demo() {
 
         {/* Feature Tabs Links */}
         <section className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
-          {SCENES.map((scene) => {
-            const Icon = scene.icon;
+          {MOTION_SCENES.map((scene) => {
             const isTabActive = activeTab === scene.id;
             return (
               <button
@@ -589,20 +725,26 @@ export function Demo() {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                    isTabActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
-                  }`}>
-                    <Icon className="h-4.5 w-4.5" />
+                  <div 
+                    className="h-8 w-8 rounded-lg flex items-center justify-center text-white"
+                    style={{ backgroundColor: scene.color }}
+                  >
+                    <Sparkles className="h-4 w-4 text-white" />
                   </div>
                   <span className="text-[11px] font-extrabold text-slate-900 leading-tight">
-                    {scene.title}
+                    {scene.badge}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">
-                  {scene.description}
-                </p>
+                <div>
+                  <span className={`text-[10px] font-extrabold tracking-tight block text-transparent bg-clip-text bg-gradient-to-r ${scene.gradient}`}>
+                    {scene.title}
+                  </span>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                    {scene.subtitle}
+                  </p>
+                </div>
                 <span className="text-[9px] font-bold text-indigo-600 mt-1 flex items-center gap-1">
-                  Jump to {formatTime(scene.startTime)}
+                  Play Scene ({formatTime(scene.startTime)})
                   <ArrowRight className="h-3 w-3" />
                 </span>
               </button>
@@ -714,10 +856,6 @@ export function Demo() {
                 <p className="text-slate-500 text-xs font-semibold max-w-sm leading-relaxed">
                   Thanks for your interest, <span className="text-slate-800 font-bold">{formData.name}</span>! An onboarding specialist will email you at <span className="text-slate-800 font-bold">{formData.email}</span> within the next 24 hours with an invite link.
                 </p>
-                <div className="mt-4 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100/50 text-[10px] text-slate-500 font-semibold max-w-xs flex gap-2.5 text-left items-center">
-                  <Calendar className="h-5 w-5 text-indigo-500 flex-shrink-0" />
-                  <span>We'll coordinate a time suitable for your team's timezone.</span>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
