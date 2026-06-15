@@ -13,69 +13,65 @@ export function Footer() {
   };
 
   return (
-    <footer className="max-w-5xl mx-auto px-6 py-10 border-t border-line">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-        {/* Brand */}
-        <div className="flex items-center gap-5">
+    <footer className="w-full bg-slate-50/20 border-t border-slate-150 py-16 px-6 relative z-10 grid-pattern">
+      <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-8">
+        
+        {/* Brand Column */}
+        <div className="col-span-2 flex flex-col gap-4">
           <a
             href="/"
             onClick={(e) => handleNav(e, '/')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2.5"
           >
             <img
               src="/logo.png"
               alt="Guild Orbit"
-              className="h-6 w-6 rounded-md"
+              className="h-7 w-7 rounded-lg"
             />
-            <span className="text-sm font-semibold text-ink">Guild Orbit</span>
+            <span className="text-base font-bold text-slate-900 tracking-tight">Guild Orbit</span>
           </a>
-          <span className="hidden sm:inline text-xs text-ink-faint">
-            © 2026 Guild Orbit Inc.
+          <p className="text-xs text-slate-500 font-semibold leading-relaxed max-w-sm">
+            The lightweight coordination platform for small & mid-sized teams to unify task boards, department chat, and operational requests.
+          </p>
+          <span className="text-[11px] text-slate-400 font-bold mt-2">
+            © 2026 Guild Orbit Inc. All rights reserved.
           </span>
         </div>
 
-        {/* Links */}
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-ink-faint">
-          <a
-            href="/features"
-            onClick={(e) => handleNav(e, '/features')}
-            className="hover:text-ink transition-colors"
-          >
-            Features
-          </a>
-          <a
-            href="/pricing"
-            onClick={(e) => handleNav(e, '/pricing')}
-            className="hover:text-ink transition-colors"
-          >
-            Pricing
-          </a>
-          <a
-            href="/faq"
-            onClick={(e) => handleNav(e, '/faq')}
-            className="hover:text-ink transition-colors"
-          >
-            FAQ
-          </a>
-          <a
-            href={`${APP_URL}/login`}
-            className="hover:text-ink transition-colors"
-          >
-            Sign in
-          </a>
-          <a href="#" className="hover:text-ink transition-colors">
-            Privacy
-          </a>
-          <a href="#" className="hover:text-ink transition-colors">
-            Terms
-          </a>
+        {/* Column 2: Product */}
+        <div className="flex flex-col gap-3">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Product</span>
+          <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
+            <a href="/features" onClick={(e) => handleNav(e, '/features')} className="hover:text-indigo-600 transition-colors">Tasks & Kanban</a>
+            <a href="/features" onClick={(e) => handleNav(e, '/features')} className="hover:text-indigo-600 transition-colors">Team Channels</a>
+            <a href="/features" onClick={(e) => handleNav(e, '/features')} className="hover:text-indigo-600 transition-colors">Approvals Log</a>
+            <a href="/features" onClick={(e) => handleNav(e, '/features')} className="hover:text-indigo-600 transition-colors">Shared Directory</a>
+          </div>
         </div>
-      </div>
 
-      {/* Mobile copyright */}
-      <p className="sm:hidden text-center text-xs text-ink-faint mt-6">
-        © 2026 Guild Orbit Inc. All rights reserved.
-      </p>
+        {/* Column 3: Resources */}
+        <div className="flex flex-col gap-3">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Resources</span>
+          <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
+            <a href="/pricing" onClick={(e) => handleNav(e, '/pricing')} className="hover:text-indigo-600 transition-colors">Pricing Plans</a>
+            <a href="/faq" onClick={(e) => handleNav(e, '/faq')} className="hover:text-indigo-600 transition-colors">Help FAQ</a>
+            <a href="/onboarding" onClick={(e) => handleNav(e, '/')} className="hover:text-indigo-600 transition-colors">Onboarding Guide</a>
+            <a href="/demo" onClick={(e) => handleNav(e, '/faq')} className="hover:text-indigo-600 transition-colors">Watch Demo</a>
+          </div>
+        </div>
+
+        {/* Column 4: Account */}
+        <div className="flex flex-col gap-3">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Account</span>
+          <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
+            <a href={`${APP_URL}/login`} className="hover:text-indigo-600 transition-colors">Sign In</a>
+            <a href={`${APP_URL}/signup`} className="hover:text-indigo-600 transition-colors">Sign Up Free</a>
+            <a href="#" className="hover:text-indigo-600 transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-indigo-600 transition-colors">Terms of Service</a>
+          </div>
+        </div>
+
+      </div>
     </footer>
   );
 }

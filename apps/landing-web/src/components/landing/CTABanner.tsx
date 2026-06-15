@@ -1,27 +1,34 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { APP_URL } from '../../config/landingData';
 import { ScrollReveal } from './ScrollReveal';
 
 export function CTABanner() {
   return (
-    <section className="px-6 py-20">
+    <section className="px-6 py-24 bg-slate-50/5">
       <ScrollReveal>
-        <div className="max-w-3xl mx-auto text-center glass rounded-3xl p-12 md:p-16 relative overflow-hidden shadow-2xl shadow-indigo-100/10 border-white/80">
-          {/* Subtle dynamic accent glows */}
-          <div className="absolute -top-20 left-1/4 w-80 h-80 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none animate-drift" />
-          <div className="absolute -bottom-20 right-1/4 w-80 h-80 bg-cyan-400/10 rounded-full blur-3xl pointer-events-none animate-drift-reverse" />
+        <div className="max-w-4xl mx-auto text-center bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-12 md:p-16 relative overflow-hidden shadow-2xl border border-indigo-900/30">
+          {/* Subtle cosmic glows */}
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none animate-drift" />
+          <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none animate-drift-reverse" />
+          <div className="absolute inset-0 grid-pattern-dark opacity-30 pointer-events-none" />
 
-          <h2 className="text-2xl md:text-4xl font-extrabold text-ink tracking-tight relative">
+          {/* Sparkle badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-extrabold text-indigo-300 uppercase tracking-widest mb-6 relative">
+            <Sparkles className="h-3 w-3 animate-pulse" />
+            <span>Onboarding in 5 minutes</span>
+          </div>
+
+          <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight relative leading-none font-sans">
             Bring your team into orbit.
           </h2>
-          <p className="mt-4 text-ink-light text-base max-w-md mx-auto relative font-medium">
-            Get started in five minutes. No credit card required.
+          <p className="mt-4 text-slate-300 text-sm md:text-base max-w-md mx-auto relative font-medium leading-relaxed">
+            Eliminate operational silos, consolidate chats and approvals, and execute tasks with absolute accountability.
           </p>
           <a
             href={`${APP_URL}/signup`}
-            className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-white bg-accent hover:bg-accent-dark px-6 py-3 rounded-xl transition-all active:scale-[0.97] shadow-lg shadow-accent/20 relative"
+            className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-6.5 py-3.5 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all active:scale-[0.97] hover:-translate-y-0.5 relative cursor-pointer"
           >
-            Start for free
+            Start free workspace
             <ArrowRight className="h-4 w-4" />
           </a>
         </div>
