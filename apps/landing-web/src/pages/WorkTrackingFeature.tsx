@@ -1,5 +1,16 @@
 import { motion } from 'motion/react';
-import { CheckSquare, LayoutDashboard, MessageSquare, Clock, ArrowLeft, Sparkles, Check } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  CheckSquare, 
+  ArrowLeft, 
+  Check, 
+  Sparkles, 
+  Users, 
+  Clock, 
+  Tag, 
+  Paperclip,
+  ArrowRight
+} from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
 import { CTABanner } from '../components/landing/CTABanner';
 
@@ -9,137 +20,232 @@ export function WorkTrackingFeature() {
   return (
     <div className="pt-32 pb-8 relative overflow-hidden bg-slate-50/20 grid-pattern">
       {/* Background glow blobs */}
-      <div className="absolute top-[10%] left-[5%] w-[350px] h-[350px] rounded-full bg-indigo-500/5 blur-[90px] pointer-events-none animate-drift" />
-      <div className="absolute top-[40%] right-[5%] w-[400px] h-[400px] rounded-full bg-cyan-500/5 blur-[100px] pointer-events-none animate-drift-reverse" />
+      <div className="absolute top-[10%] left-[5%] w-[400px] h-[400px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none animate-drift" />
+      <div className="absolute top-[40%] right-[5%] w-[450px] h-[450px] rounded-full bg-cyan-500/5 blur-[120px] pointer-events-none animate-drift-reverse" />
 
-      <div className="max-w-5xl mx-auto px-6 relative z-10">
+      <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Back navigation */}
         <button
           onClick={() => navigate('/features')}
-          className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors mb-8 cursor-pointer group"
+          className="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-500 hover:text-indigo-600 transition-colors mb-12 cursor-pointer group"
         >
-          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Back to all features
         </button>
 
-        {/* Hero header */}
-        <div className="max-w-3xl mb-16">
-          <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight font-sans">
-            Work Tracking & Task Management
-          </h1>
-          <p className="mt-4 text-slate-500 text-base md:text-lg font-medium leading-relaxed">
-            Eliminate loose paper trails and scattered spreadsheets. Assign owners, set priorities, and track operations using lightweight Kanban boards and task lists.
-          </p>
+        {/* Top Split Hero Section */}
+        <div className="grid lg:grid-cols-12 gap-12 items-center mb-24">
+          {/* Left Text Column */}
+          <div className="lg:col-span-5 space-y-6">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-150/50 px-3 py-1.5 rounded-full glass">
+              <Sparkles className="h-3 w-3 text-indigo-500 animate-pulse" />
+              Guild Core Module
+            </span>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Work Tracking <br/>
+              <span className="text-gradient">& Task Flow</span>
+            </h1>
+            <p className="text-slate-500 text-sm md:text-base font-semibold leading-relaxed">
+              Ditch scattered messages and disorganized spreadsheets. Coordinate your operations on lightweight Kanban boards designed for team speed and absolute transparency.
+            </p>
+
+            <div className="flex flex-col gap-3.5 pt-2">
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                  <Check className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700">Centralize all tasks, checklists, and owners</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                  <Check className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700">Instant updates across drag-and-drop columns</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                  <Check className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700">Audit logs and comment threads on every card</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Image Mockup Column */}
+          <div className="lg:col-span-7 relative">
+            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-cyan-500/10 rounded-3xl blur-2xl -z-10" />
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="glass rounded-3xl p-3 border border-white/60 shadow-xl overflow-hidden hover:scale-[1.01] transition-transform duration-500"
+            >
+              <img 
+                src="/work_tracking.png" 
+                alt="Work Tracking Kanban Board Mockup" 
+                className="w-full h-auto rounded-2xl border border-slate-100/50 shadow-sm"
+              />
+            </motion.div>
+
+            {/* Floating micro-widget */}
+            <motion.div 
+              animate={{ y: [-6, 6] }}
+              transition={{ duration: 4, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+              className="absolute -bottom-6 -left-6 glass hidden sm:flex items-center gap-3.5 px-4.5 py-3 rounded-2xl border border-indigo-100/70 shadow-lg"
+            >
+              <div className="h-8 w-8 rounded-xl bg-indigo-50 border border-indigo-150 flex items-center justify-center text-indigo-600">
+                <LayoutDashboard className="h-4.5 w-4.5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Active Workspace</p>
+                <p className="text-xs font-bold text-slate-800">Operations Board</p>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Feature Grid */}
-        <div className="grid md:grid-cols-2 gap-8 items-stretch mb-20">
-          
-          {/* Card 1: Kanban Board */}
-          <div className="glass rounded-3xl p-8 border border-indigo-50/50 flex flex-col justify-between hover:scale-[1.005] transition-all shadow-sm">
-            <div>
-              <div className="h-10 w-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-6">
-                <LayoutDashboard className="h-5 w-5" />
+        {/* Detailed Features Deep Dive */}
+        <div className="mb-24">
+          <div className="text-center max-w-xl mx-auto mb-16">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Uncompromising Clarity for Every Task
+            </h2>
+            <p className="mt-3 text-slate-500 text-xs font-semibold leading-relaxed">
+              Every card on your board acts as a secure container for task specifications, preventing execution errors and maintaining accountability.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Card 1: Kanban */}
+            <div className="glass rounded-3xl p-8 border border-white/50 hover:scale-[1.02] hover:-translate-y-1 hover:border-indigo-200 transition-all duration-300 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="h-11 w-11 rounded-2xl bg-indigo-50 border border-indigo-100/75 flex items-center justify-center text-indigo-600 mb-6 shadow-sm">
+                  <LayoutDashboard className="h-5.5 w-5.5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Structured Kanban Boards</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
+                  Maintain a clean high-level view of projects. Drag-and-drop operations tasks from 'To Do' to 'In Progress' and 'Done' to align team coordinators instantly.
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-3">Visual Kanban Boards</h3>
-              <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
-                View your team's workload at-a-glance. Drag-and-drop tasks across custom columns (like To Do, In Progress, and Done) to ensure absolute transparency on operational progress.
+              <ul className="space-y-2.5 pt-4 border-t border-slate-100">
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  Custom column workflows
+                </li>
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  Visual subtask checklists
+                </li>
+              </ul>
+            </div>
+
+            {/* Card 2: Ownership */}
+            <div className="glass rounded-3xl p-8 border border-white/50 hover:scale-[1.02] hover:-translate-y-1 hover:border-cyan-200 transition-all duration-300 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="h-11 w-11 rounded-2xl bg-cyan-50 border border-cyan-100/75 flex items-center justify-center text-cyan-600 mb-6 shadow-sm">
+                  <Users className="h-5.5 w-5.5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Assign Owners & Roles</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
+                  Ensure every operation has a clear lead. Assign ownership to department coordinators to establish distinct channels of accountability across tasks.
+                </p>
+              </div>
+              <ul className="space-y-2.5 pt-4 border-t border-slate-100">
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                  Multiple co-assignees support
+                </li>
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                  Role-based activity locks
+                </li>
+              </ul>
+            </div>
+
+            {/* Card 3: Deadlines & Triage */}
+            <div className="glass rounded-3xl p-8 border border-white/50 hover:scale-[1.02] hover:-translate-y-1 hover:border-rose-200 transition-all duration-300 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="h-11 w-11 rounded-2xl bg-rose-50 border border-rose-100/75 flex items-center justify-center text-rose-600 mb-6 shadow-sm">
+                  <Clock className="h-5.5 w-5.5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Due Dates & Priority Triage</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
+                  Keep projects on course. Apply custom tags for high, medium, and low priorities, and set strict calendar deadlines to notify coordinators before tasks fall behind.
+                </p>
+              </div>
+              <ul className="space-y-2.5 pt-4 border-t border-slate-100">
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                  Overdue highlights & notifications
+                </li>
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                  Filter by priority tag
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Centralized audit logs section */}
+        <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-150/70 shadow-sm mb-20 relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-[200px] h-[200px] bg-indigo-50/50 rounded-full blur-3xl pointer-events-none" />
+          <div className="grid md:grid-cols-12 gap-8 items-center">
+            <div className="md:col-span-7 space-y-4">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100/30">
+                Operational Compliance
+              </span>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
+                Auditable Task Trails
+              </h2>
+              <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                Every update, comment, and attachment is logged into a secure history. Resolve issues in the comment threads, and drag-and-drop file receipts or layouts directly onto task tickets for reference.
               </p>
-            </div>
-            
-            {/* Visual indicator */}
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-[10px] font-bold text-slate-500 space-y-2">
-              <div className="flex justify-between items-center bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
-                <span>Forklift safety inspection</span>
-                <span className="bg-rose-50 text-rose-600 px-2 py-0.5 rounded border border-rose-100">High</span>
-              </div>
-              <div className="flex justify-between items-center bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
-                <span>Update operations protocol</span>
-                <span className="bg-amber-50 text-amber-600 px-2 py-0.5 rounded border border-amber-100">Medium</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Details & Comments */}
-          <div className="glass rounded-3xl p-8 border border-indigo-50/50 flex flex-col justify-between hover:scale-[1.005] transition-all shadow-sm">
-            <div>
-              <div className="h-10 w-10 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-6">
-                <CheckSquare className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-3">Auditable Task Logs</h3>
-              <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
-                Every task card is a centralized log containing ownership details, target due dates, attachment history, and comment threads. Resolve issues directly on the task context.
-              </p>
-            </div>
-            
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-[10px] font-semibold text-slate-500 space-y-2">
-              <p className="border-b border-slate-200/60 pb-1.5 font-bold text-slate-700">Recent Comments</p>
-              <p className="text-slate-600"><span className="font-bold text-slate-800">Sarah J:</span> Invoice added. Ready to procure.</p>
-              <p className="text-slate-600"><span className="font-bold text-slate-800">Marcus C:</span> Picking up supplies at 2pm.</p>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Feature Deep Dive details */}
-        <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-150/70 shadow-sm mb-16">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-8 tracking-tight">
-            Comprehensive Task Capabilities
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8 text-sm font-semibold text-slate-600">
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mt-0.5 shrink-0">
-                  <Check className="h-3 w-3" />
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="flex gap-2 items-center text-xs font-bold text-slate-700">
+                  <Tag className="h-4 w-4 text-indigo-500" />
+                  <span>Category Tags</span>
                 </div>
-                <div>
-                  <h4 className="text-slate-900 font-bold text-xs">Assign Owners</h4>
-                  <p className="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">
-                    Delegate tasks to specific department members to set clear accountability.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mt-0.5 shrink-0">
-                  <Check className="h-3 w-3" />
-                </div>
-                <div>
-                  <h4 className="text-slate-900 font-bold text-xs">Due Dates & Deadlines</h4>
-                  <p className="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">
-                    Set precise calendar due dates to organize timelines and avoid execution delays.
-                  </p>
+                <div className="flex gap-2 items-center text-xs font-bold text-slate-700">
+                  <Paperclip className="h-4 w-4 text-indigo-500" />
+                  <span>Attachment Catalogs</span>
                 </div>
               </div>
             </div>
             
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mt-0.5 shrink-0">
-                  <Check className="h-3 w-3" />
+            <div className="md:col-span-5 bg-slate-50 p-6 rounded-2xl border border-slate-100/80 space-y-3 shadow-inner">
+              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">Auditable Activity Log</span>
+              
+              <div className="space-y-3 text-[11px] font-semibold text-slate-500">
+                <div className="flex items-start gap-2.5">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                  <div>
+                    <span className="font-bold text-slate-800">Sarah J.</span> created task "Warehouse Audit"
+                    <p className="text-[9px] text-slate-400 mt-0.5">Today at 10:15 AM</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-slate-900 font-bold text-xs">Priority Triage</h4>
-                  <p className="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">
-                    Sort tasks by High, Medium, or Low priority badges to tackle bottlenecks first.
-                  </p>
+                
+                <div className="flex items-start gap-2.5">
+                  <div className="h-2 w-2 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                  <div>
+                    <span className="font-bold text-slate-800">Marcus Lee</span> uploaded "Safety_Protocol.pdf"
+                    <p className="text-[9px] text-slate-400 mt-0.5">Today at 11:30 AM</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mt-0.5 shrink-0">
-                  <Check className="h-3 w-3" />
-                </div>
-                <div>
-                  <h4 className="text-slate-900 font-bold text-xs">Unified File Attachments</h4>
-                  <p className="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">
-                    Attach receipts, schedules, or layout mockups directly to task tickets for visual clarity.
-                  </p>
+                
+                <div className="flex items-start gap-2.5">
+                  <div className="h-2 w-2 rounded-full bg-cyan-500 mt-1.5 shrink-0" />
+                  <div>
+                    <span className="font-bold text-slate-800">Sarah J.</span> assigned task to <span className="font-bold text-indigo-600">@marcus</span>
+                    <p className="text-[9px] text-slate-400 mt-0.5">Today at 11:32 AM</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
       </div>
+
       <CTABanner />
     </div>
   );

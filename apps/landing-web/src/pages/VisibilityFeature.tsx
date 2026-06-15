@@ -1,5 +1,15 @@
 import { motion } from 'motion/react';
-import { LayoutDashboard, FolderOpen, ArrowLeft, Check, Sparkles, Files } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  FolderOpen, 
+  ArrowLeft, 
+  Check, 
+  Sparkles, 
+  Files, 
+  Search, 
+  Eye, 
+  TrendingUp 
+} from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
 import { CTABanner } from '../components/landing/CTABanner';
 
@@ -9,129 +19,227 @@ export function VisibilityFeature() {
   return (
     <div className="pt-32 pb-8 relative overflow-hidden bg-slate-50/20 grid-pattern">
       {/* Background glow blobs */}
-      <div className="absolute top-[10%] left-[5%] w-[350px] h-[350px] rounded-full bg-rose-500/5 blur-[90px] pointer-events-none animate-drift" />
-      <div className="absolute top-[40%] right-[5%] w-[400px] h-[400px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none animate-drift-reverse" />
+      <div className="absolute top-[10%] left-[5%] w-[400px] h-[400px] rounded-full bg-rose-500/5 blur-[100px] pointer-events-none animate-drift" />
+      <div className="absolute top-[40%] right-[5%] w-[450px] h-[450px] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none animate-drift-reverse" />
 
-      <div className="max-w-5xl mx-auto px-6 relative z-10">
+      <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Back navigation */}
         <button
           onClick={() => navigate('/features')}
-          className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors mb-8 cursor-pointer group"
+          className="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-500 hover:text-indigo-600 transition-colors mb-12 cursor-pointer group"
         >
-          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Back to all features
         </button>
 
-        {/* Hero header */}
-        <div className="max-w-3xl mb-16">
-          <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight font-sans">
-            Visibility & Shared Files
-          </h1>
-          <p className="mt-4 text-slate-500 text-base md:text-lg font-medium leading-relaxed">
-            A single source of truth for operations. Centralize your daily dashboards, recent activities, and uploaded team files.
-          </p>
+        {/* Top Split Hero Section */}
+        <div className="grid lg:grid-cols-12 gap-12 items-center mb-24">
+          {/* Left Text Column */}
+          <div className="lg:col-span-5 space-y-6">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-150/50 px-3 py-1.5 rounded-full glass">
+              <Sparkles className="h-3 w-3 text-rose-500 animate-pulse" />
+              Guild Core Module
+            </span>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Visibility & <br/>
+              <span className="text-gradient">Shared Files</span>
+            </h1>
+            <p className="text-slate-500 text-sm md:text-base font-semibold leading-relaxed">
+              Consolidate team documentation. Access daily task feeds, preview uploaded team receipts, and search through global chat histories in a centralized visibility layer.
+            </p>
+
+            <div className="flex flex-col gap-3.5 pt-2">
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                  <Check className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700">Centralized personal dashboards for active tasks</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                  <Check className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700">All chat & task files auto-cataloged in a shared directory</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                  <Check className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700">Database indexed full-text search for quick access</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Image Mockup Column */}
+          <div className="lg:col-span-7 relative">
+            <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/10 to-indigo-500/10 rounded-3xl blur-2xl -z-10" />
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="glass rounded-3xl p-3 border border-white/60 shadow-xl overflow-hidden hover:scale-[1.01] transition-transform duration-500"
+            >
+              <img 
+                src="/visibility.png" 
+                alt="Visibility & Shared Files Dashboard Mockup" 
+                className="w-full h-auto rounded-2xl border border-slate-100/50 shadow-sm"
+              />
+            </motion.div>
+
+            {/* Floating micro-widget */}
+            <motion.div 
+              animate={{ y: [6, -6] }}
+              transition={{ duration: 4.8, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+              className="absolute -bottom-6 -left-6 glass hidden sm:flex items-center gap-3 px-4 py-2.5 rounded-2xl border border-rose-150/70 shadow-lg"
+            >
+              <div className="h-8 w-8 rounded-xl bg-rose-50 border border-rose-150 flex items-center justify-center text-rose-600">
+                <FolderOpen className="h-4.5 w-4.5" />
+              </div>
+              <div>
+                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Storage Used</p>
+                <p className="text-xs font-bold text-slate-800">1.2 GB of 10 GB</p>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Feature Grid */}
-        <div className="grid md:grid-cols-2 gap-8 items-stretch mb-20">
-          
-          {/* Card 1: Dashboard */}
-          <div className="glass rounded-3xl p-8 border border-indigo-50/50 flex flex-col justify-between hover:scale-[1.005] transition-all shadow-sm">
-            <div>
-              <div className="h-10 w-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-6">
-                <LayoutDashboard className="h-5 w-5" />
+        {/* Detailed Features Deep Dive */}
+        <div className="mb-24">
+          <div className="text-center max-w-xl mx-auto mb-16">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+              A Single Source of Truth
+            </h2>
+            <p className="mt-3 text-slate-500 text-xs font-semibold leading-relaxed">
+              Unify team context. Keep assets organized automatically, eliminating time wasted looking for files across threads.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Card 1: Dashboard */}
+            <div className="glass rounded-3xl p-8 border border-white/50 hover:scale-[1.02] hover:-translate-y-1 hover:border-indigo-200 transition-all duration-300 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="h-11 w-11 rounded-2xl bg-indigo-50 border border-indigo-100/75 flex items-center justify-center text-indigo-600 mb-6 shadow-sm">
+                  <LayoutDashboard className="h-5.5 w-5.5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Centralized Operations Hub</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
+                  Access your personal workspace feed. Review assigned tasks, view pending approval statuses, and read updates on target project deadlines on a single page.
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-3">Central Operations Dashboard</h3>
-              <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
-                Never lose track of your work again. Get an aggregated view of your assigned tasks, pending leave or purchase approvals, and active DMs in a single page.
+              <ul className="space-y-2.5 pt-4 border-t border-slate-100">
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  Personal task indexes
+                </li>
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  Recent activity streams
+                </li>
+              </ul>
+            </div>
+
+            {/* Card 2: Shared Folder */}
+            <div className="glass rounded-3xl p-8 border border-white/50 hover:scale-[1.02] hover:-translate-y-1 hover:border-rose-200 transition-all duration-300 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="h-11 w-11 rounded-2xl bg-rose-50 border border-rose-100/75 flex items-center justify-center text-rose-600 mb-6 shadow-sm">
+                  <FolderOpen className="h-5.5 w-5.5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Centralized File Folder</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
+                  Stop digging through old chats. Every file, mockup, or layout document uploaded inside direct chats, task cards, or channel threads is auto-cataloged inside the shared folder.
+                </p>
+              </div>
+              <ul className="space-y-2.5 pt-4 border-t border-slate-100">
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                  Automatic file classifications
+                </li>
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                  Preview mockups and layouts in-app
+                </li>
+              </ul>
+            </div>
+
+            {/* Card 3: Indexed Search */}
+            <div className="glass rounded-3xl p-8 border border-white/50 hover:scale-[1.02] hover:-translate-y-1 hover:border-cyan-200 transition-all duration-300 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="h-11 w-11 rounded-2xl bg-cyan-50 border border-cyan-100/75 flex items-center justify-center text-cyan-600 mb-6 shadow-sm">
+                  <Search className="h-5.5 w-5.5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Full-Text Indexed Search</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
+                  Retrieve assets in seconds. Query task names, check comment contents, or search through chat logs and shared file directories using indexed search.
+                </p>
+              </div>
+              <ul className="space-y-2.5 pt-4 border-t border-slate-100">
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                  Indexed database query matching
+                </li>
+                <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                  Cross-category result filtering
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Detailed Search Preview */}
+        <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-150/70 shadow-sm mb-20 relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-[200px] h-[200px] bg-rose-50/50 rounded-full blur-3xl pointer-events-none" />
+          <div className="grid md:grid-cols-12 gap-8 items-center">
+            <div className="md:col-span-7 space-y-4">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100/30">
+                Data Indexing
+              </span>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
+                Universal Search Capabilities
+              </h2>
+              <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                By indexing all text metadata, Guild Orbit makes it easy to find specific documents or comments. Type a keyword like "budget" and instantly see files, chat references, and task descriptions.
               </p>
+              <div className="flex gap-4 pt-2 font-sans text-xs font-bold text-slate-700">
+                <div className="flex items-center gap-1.5">
+                  <Eye className="h-4 w-4 text-rose-500" />
+                  <span>Immediate file preview</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp className="h-4 w-4 text-rose-500" />
+                  <span>Fast database response</span>
+                </div>
+              </div>
             </div>
-            
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-[10px] font-bold text-slate-500 space-y-1">
-              <p className="text-slate-800">✓ Your Open Tasks: 4</p>
-              <p className="text-slate-800">⏳ Awaiting Sign-off: 2</p>
-            </div>
-          </div>
 
-          {/* Card 2: Shared Files */}
-          <div className="glass rounded-3xl p-8 border border-indigo-50/50 flex flex-col justify-between hover:scale-[1.005] transition-all shadow-sm">
-            <div>
-              <div className="h-10 w-10 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 mb-6">
-                <FolderOpen className="h-5 w-5" />
+            <div className="md:col-span-5 bg-slate-50 p-5.5 rounded-2xl border border-slate-100/80 space-y-3 shadow-inner">
+              <div className="flex items-center gap-2 bg-white px-3 py-2 border border-slate-200/80 rounded-xl shadow-sm text-xs font-bold text-slate-800">
+                <Search className="h-4 w-4 text-slate-400 shrink-0" />
+                <span>budget</span>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-3">Centralized File Directory</h3>
-              <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
-                Any file uploaded inside DMs, channel chats, or task logs is automatically organized inside the central shared files folder. Easily search and download operational assets.
-              </p>
-            </div>
-            
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-[10px] font-bold text-slate-500 flex items-center gap-2">
-              <Files className="h-4 w-4 text-rose-500" />
-              <span>Q3_Logistics_Budget.xlsx • 1.4 MB</span>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Feature Deep Dive details */}
-        <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-150/70 shadow-sm mb-16">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-8 tracking-tight">
-            Centralized Asset Management
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8 text-sm font-semibold text-slate-600">
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mt-0.5 shrink-0">
-                  <Check className="h-3 w-3" />
+              
+              <div className="space-y-2 text-[10px] font-bold">
+                <div className="flex items-center justify-between bg-rose-50/50 text-rose-700 border border-rose-100/50 p-2 rounded-lg">
+                  <div className="flex items-center gap-1.5">
+                    <Files className="h-3.5 w-3.5 text-rose-500" />
+                    <span>Q3_Logistics_Budget.xlsx</span>
+                  </div>
+                  <span className="text-[9px] text-slate-400">Shared Files</span>
                 </div>
-                <div>
-                  <h4 className="text-slate-900 font-bold text-xs">Recent Activity Feeds</h4>
-                  <p className="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">
-                    Track updates across channels and task logs in real-time, boosting visibility.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mt-0.5 shrink-0">
-                  <Check className="h-3 w-3" />
-                </div>
-                <div>
-                  <h4 className="text-slate-900 font-bold text-xs">Attachment Previews</h4>
-                  <p className="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">
-                    View images and standard files directly in-app without downloading them first.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mt-0.5 shrink-0">
-                  <Check className="h-3 w-3" />
-                </div>
-                <div>
-                  <h4 className="text-slate-900 font-bold text-xs">Quick Action Workflows</h4>
-                  <p className="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">
-                    Submit leave requests or log a task directly from dashboard quick action widgets.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mt-0.5 shrink-0">
-                  <Check className="h-3 w-3" />
-                </div>
-                <div>
-                  <h4 className="text-slate-900 font-bold text-xs">Indexed File Search</h4>
-                  <p className="text-[11px] text-slate-500 font-medium mt-1 leading-relaxed">
-                    Search uploaded files instantly using PostgreSQL full-text search.
-                  </p>
+                
+                <div className="flex items-center justify-between bg-slate-100/50 text-slate-700 border border-slate-200/50 p-2 rounded-lg">
+                  <div className="flex items-center gap-1.5">
+                    <Search className="h-3.5 w-3.5 text-slate-500" />
+                    <span>Task: "Finalize operations budget"</span>
+                  </div>
+                  <span className="text-[9px] text-slate-400">Tasks Board</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
       </div>
+
       <CTABanner />
     </div>
   );
