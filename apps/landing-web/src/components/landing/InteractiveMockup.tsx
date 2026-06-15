@@ -16,10 +16,12 @@ import {
   Paperclip,
   Smile,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Bot
 } from 'lucide-react';
 
 type TabType = 'list' | 'kanban' | 'approvals' | 'chat';
+type ChatTargetType = 'operations' | 'general' | 'marketing-ops' | 'sarah' | 'alex' | 'marcus';
 
 interface TaskItem {
   id: string;
@@ -102,20 +104,58 @@ export function InteractiveMockup() {
   const [selectedApprovalId, setSelectedApprovalId] = useState<string | null>(null);
   const [approvalComment, setApprovalComment] = useState('');
 
-  // Interactive Chat State
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { id: '1', sender: 'Sarah Jenkins', avatar: 'SJ', text: 'Hey team, did we confirm the shipping contract for this month?', time: '10:24 AM' },
-    { id: '2', sender: 'Alex Rivera', avatar: 'AR', text: 'Yes, just waiting on final operations protocol sign-off.', time: '10:25 AM' },
-    { id: '3', sender: 'Marcus Chen', avatar: 'MC', text: 'Great. Also, we need to inspect the shipping dock soon.', time: '10:28 AM' },
-  ]);
+  // Active Chat Target state
+  const [activeChatTarget, setActiveChatTarget] = useState<ChatTargetType>('operations');
+
+  // Interactive Chat Channels & DMs Store
+  const [chatStore, setChatStore] = useState<Record<ChatTargetType, ChatMessage[]>>({
+    operations: [
+      { id: '1', sender: 'Sarah Jenkins', avatar: 'SJ', text: 'Hey team, did we confirm the shipping contract for this month?', time: '10:24 AM' },
+      { id: '2', sender: 'Alex Rivera', avatar: 'AR', text: 'Yes, just waiting on final operations protocol sign-off.', time: '10:25 AM' },
+      { id: '3', sender: 'Marcus Chen', avatar: 'MC', text: 'Great. Also, we need to inspect the shipping dock soon.', time: '10:28 AM' },
+    ],
+    general: [
+      { id: 'g1', sender: 'Sarah Jenkins', avatar: 'SJ', text: 'Welcome to the new Guild Orbit operations workspace! 🚀', time: 'Yesterday, 9:00 AM' },
+      { id: 'g2', sender: 'Alex Rivera', avatar: 'AR', text: 'Stunning interface! Onboarding was literally under 5 minutes.', time: 'Yesterday, 9:02 AM' },
+      { id: 'g3', sender: 'Marcus Chen', avatar: 'MC', text: 'Excited to coordinate forklift maintenance and sign-offs here.', time: 'Yesterday, 9:05 AM' }
+    ],
+    'marketing-ops': [
+      { id: 'm1', sender: 'Sarah Jenkins', avatar: 'SJ', text: 'Alex, did you get around to exporting the new onboarding banner images?', time: 'Today, 8:12 AM' },
+      { id: 'm2', sender: 'Alex Rivera', avatar: 'AR', text: 'Yep! Exported and uploaded to the Shared Files folder. Let me know if we need changes.', time: 'Today, 8:15 AM' }
+    ],
+    sarah: [
+      { id: 's1', sender: 'Sarah Jenkins', avatar: 'SJ', text: 'Hey there! Let me know if you need help assigning permissions by department.', time: 'Yesterday, 4:10 PM' },
+      { id: 's2', sender: 'You', avatar: 'ME', text: 'Thanks Sarah, the admin settings panel is super intuitive.', time: 'Yesterday, 4:15 PM' }
+    ],
+    alex: [
+      { id: 'a1', sender: 'Alex Rivera', avatar: 'AR', text: 'Hey, I just submitted my annual leave request in the approvals tab. Could you take a look?', time: 'Today, 8:41 AM' },
+      { id: 'a2', sender: 'You', avatar: 'ME', text: 'On it! I will review the leave approvals side panel and sign off.', time: 'Today, 8:43 AM' }
+    ],
+    marcus: [
+      { id: 'c1', sender: 'Marcus Chen', avatar: 'MC', text: 'Forklift maintenance is finished. Staged the invoice receipt for $1,200.', time: 'Today, 9:16 AM' },
+      { id: 'c2', sender: 'You', avatar: 'ME', text: 'Awesome Marcus. I see the expense approval on my dashboard. Approving now.', time: 'Today, 9:20 AM' }
+    ]
+  });
+
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+
+  // Active chat details
+  const activeChatDetails = {
+    operations: { title: 'operations', desc: 'Company daily logistics and administrative coordination' },
+    general: { title: 'general', desc: 'Company-wide announcements and team updates' },
+    'marketing-ops': { title: 'marketing-ops', desc: 'Marketing campaign briefs, banner assets, and scheduling' },
+    sarah: { title: 'Sarah Jenkins', desc: 'Direct Message (Operations Director)' },
+    alex: { title: 'Alex Rivera', desc: 'Direct Message (Product Lead)' },
+    marcus: { title: 'Marcus Chen', desc: 'Direct Message (Logistics Ops Manager)' }
+  }[activeChatTarget];
 
   // Auto-typing Chat Demo Simulator
   const runChatDemo = () => {
     if (isTyping) return;
     setIsTyping(true);
     setChatInput('');
+    setActiveChatTarget('operations'); // Force operations channel for simulation
     
     const commandText = '/task Inspect the shipping dock assign @marcus';
     let currentIndex = 0;
@@ -130,25 +170,35 @@ export function InteractiveMockup() {
         // Send message after a slight delay
         setTimeout(() => {
           const userMsgId = Math.random().toString();
-          setChatMessages(prev => [...prev, {
+          const userMsg = {
             id: userMsgId,
             sender: 'You',
             avatar: 'ME',
             text: commandText,
             time: '11:15 AM'
-          }]);
+          };
+          
+          setChatStore(prev => ({
+            ...prev,
+            operations: [...prev.operations, userMsg]
+          }));
           setChatInput('');
           
           // Show bot created response
           setTimeout(() => {
-            setChatMessages(prev => [...prev, {
+            const systemMsg = {
               id: Math.random().toString(),
               sender: 'System Bot',
               avatar: 'GO',
               text: '✅ Task created: "Inspect the shipping dock" (Assigned to Marcus Chen, Priority: High)',
               time: '11:15 AM',
               isSystem: true
-            }]);
+            };
+            
+            setChatStore(prev => ({
+              ...prev,
+              operations: [...prev.operations, systemMsg]
+            }));
             
             // Add to tasks list state so they see it in List/Board tabs!
             setTasks(prev => [...prev, {
@@ -180,7 +230,10 @@ export function InteractiveMockup() {
       time: '11:16 AM'
     };
     
-    setChatMessages(prev => [...prev, newUserMsg]);
+    setChatStore(prev => ({
+      ...prev,
+      [activeChatTarget]: [...prev[activeChatTarget], newUserMsg]
+    }));
     setChatInput('');
     
     if (text.startsWith('/task ')) {
@@ -202,14 +255,19 @@ export function InteractiveMockup() {
       }
       
       setTimeout(() => {
-        setChatMessages(prev => [...prev, {
+        const systemMsg = {
           id: Math.random().toString(),
           sender: 'System Bot',
           avatar: 'GO',
           text: `✅ Task created: "${taskTitle}" (Assigned to ${assigneeName})`,
           time: '11:16 AM',
           isSystem: true
-        }]);
+        };
+        
+        setChatStore(prev => ({
+          ...prev,
+          [activeChatTarget]: [...prev[activeChatTarget], systemMsg]
+        }));
         
         setTasks(prev => [...prev, {
           id: Math.random().toString(),
@@ -271,6 +329,7 @@ export function InteractiveMockup() {
   };
 
   const activeApproval = approvals.find(a => a.id === selectedApprovalId);
+  const currentChatMessages = chatStore[activeChatTarget] || [];
 
   return (
     <div className="w-full max-w-4xl mx-auto rounded-3xl border border-indigo-100 bg-white shadow-[0_24px_70px_rgba(99,102,241,0.08)] overflow-hidden relative">
@@ -689,7 +748,7 @@ export function InteractiveMockup() {
                             </button>
                             <button
                               onClick={() => handleApprovalSubmit(activeApproval.id, 'Approved')}
-                              className="inline-flex items-center justify-center gap-1.5 h-9 rounded-xl text-white bg-emerald-600 hover:bg-emerald-750 text-xs font-bold shadow-md shadow-emerald-200 transition-all cursor-pointer active:scale-95"
+                              className="inline-flex items-center justify-center gap-1.5 h-9 rounded-xl text-white bg-emerald-600 hover:bg-emerald-750 text-xs font-bold shadow-md shadow-emerald-200 transition-all cursor-pointer active:scale-95 animate-pulse"
                             >
                               <Check className="h-4 w-4" />
                               Approve
@@ -723,20 +782,35 @@ export function InteractiveMockup() {
               <div className="w-1/4 bg-slate-900 text-slate-400 flex flex-col justify-between py-4 border-r border-slate-950 shrink-0">
                 <div className="space-y-6">
                   {/* Channels Section */}
-                  <div className="px-4">
-                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 block mb-2.5">
+                  <div className="px-3">
+                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block mb-2 px-2">
                       Channels
                     </span>
-                    <div className="space-y-1">
-                      <button className="flex items-center gap-1.5 text-xs font-bold text-white w-full text-left py-1.5 px-2 bg-slate-800 rounded-lg cursor-pointer">
+                    <div className="space-y-0.5">
+                      <button 
+                        onClick={() => setActiveChatTarget('operations')}
+                        className={`flex items-center gap-1.5 text-xs font-bold w-full text-left py-1.5 px-2.5 rounded-lg cursor-pointer transition-colors ${
+                          activeChatTarget === 'operations' ? 'bg-slate-800 text-white' : 'hover:text-slate-100 hover:bg-slate-800/40'
+                        }`}
+                      >
                         <Hash className="h-3.5 w-3.5 text-indigo-400" />
                         operations
                       </button>
-                      <button className="flex items-center gap-1.5 text-xs font-semibold hover:text-white w-full text-left py-1.5 px-2 transition-colors cursor-pointer">
+                      <button 
+                        onClick={() => setActiveChatTarget('general')}
+                        className={`flex items-center gap-1.5 text-xs font-bold w-full text-left py-1.5 px-2.5 rounded-lg cursor-pointer transition-colors ${
+                          activeChatTarget === 'general' ? 'bg-slate-800 text-white' : 'hover:text-slate-100 hover:bg-slate-800/40'
+                        }`}
+                      >
                         <Hash className="h-3.5 w-3.5 text-slate-500" />
                         general
                       </button>
-                      <button className="flex items-center gap-1.5 text-xs font-semibold hover:text-white w-full text-left py-1.5 px-2 transition-colors cursor-pointer">
+                      <button 
+                        onClick={() => setActiveChatTarget('marketing-ops')}
+                        className={`flex items-center gap-1.5 text-xs font-bold w-full text-left py-1.5 px-2.5 rounded-lg cursor-pointer transition-colors ${
+                          activeChatTarget === 'marketing-ops' ? 'bg-slate-800 text-white' : 'hover:text-slate-100 hover:bg-slate-800/40'
+                        }`}
+                      >
                         <Hash className="h-3.5 w-3.5 text-slate-500" />
                         marketing-ops
                       </button>
@@ -744,21 +818,36 @@ export function InteractiveMockup() {
                   </div>
 
                   {/* Direct Messages Section */}
-                  <div className="px-4">
-                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 block mb-2.5">
+                  <div className="px-3">
+                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block mb-2 px-2">
                       Direct Messages
                     </span>
-                    <div className="space-y-1">
-                      <button className="flex items-center gap-2 text-xs font-semibold hover:text-white w-full text-left py-1.5 px-2 transition-colors cursor-pointer">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 block" />
+                    <div className="space-y-0.5">
+                      <button 
+                        onClick={() => setActiveChatTarget('sarah')}
+                        className={`flex items-center gap-2.5 text-xs font-bold w-full text-left py-1.5 px-2.5 rounded-lg cursor-pointer transition-colors ${
+                          activeChatTarget === 'sarah' ? 'bg-slate-800 text-white' : 'hover:text-slate-100 hover:bg-slate-800/40'
+                        }`}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 block shrink-0" />
                         Sarah Jenkins
                       </button>
-                      <button className="flex items-center gap-2 text-xs font-semibold hover:text-white w-full text-left py-1.5 px-2 transition-colors cursor-pointer">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 block" />
+                      <button 
+                        onClick={() => setActiveChatTarget('alex')}
+                        className={`flex items-center gap-2.5 text-xs font-bold w-full text-left py-1.5 px-2.5 rounded-lg cursor-pointer transition-colors ${
+                          activeChatTarget === 'alex' ? 'bg-slate-800 text-white' : 'hover:text-slate-100 hover:bg-slate-800/40'
+                        }`}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 block shrink-0" />
                         Alex Rivera
                       </button>
-                      <button className="flex items-center gap-2 text-xs font-semibold hover:text-white w-full text-left py-1.5 px-2 transition-colors cursor-pointer">
-                        <span className="h-1.5 w-1.5 rounded-full bg-slate-500 block" />
+                      <button 
+                        onClick={() => setActiveChatTarget('marcus')}
+                        className={`flex items-center gap-2.5 text-xs font-bold w-full text-left py-1.5 px-2.5 rounded-lg cursor-pointer transition-colors ${
+                          activeChatTarget === 'marcus' ? 'bg-slate-800 text-white' : 'hover:text-slate-100 hover:bg-slate-800/40'
+                        }`}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-500 block shrink-0" />
                         Marcus Chen
                       </button>
                     </div>
@@ -766,106 +855,141 @@ export function InteractiveMockup() {
                 </div>
 
                 {/* Active user status tag */}
-                <div className="px-4 border-t border-slate-800/80 pt-3 flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-full bg-indigo-600 border border-indigo-700 text-[10px] font-extrabold text-white flex items-center justify-center">
+                <div className="px-4 border-t border-slate-850 pt-3 flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-full bg-indigo-600 border border-indigo-700 text-[10px] font-extrabold text-white flex items-center justify-center shrink-0">
                     SJ
                   </div>
-                  <div className="leading-none">
-                    <p className="text-[10px] font-bold text-slate-100">Sarah Jenkins</p>
-                    <span className="text-[8px] text-emerald-400 font-semibold">Active (You)</span>
+                  <div className="leading-none overflow-hidden text-ellipsis">
+                    <p className="text-[10px] font-extrabold text-slate-100">Sarah Jenkins</p>
+                    <span className="text-[8px] text-emerald-400 font-semibold mt-0.5 block">Active (You)</span>
                   </div>
                 </div>
               </div>
 
               {/* Right Column: Chat Conversation Interface */}
-              <div className="w-3/4 flex flex-col justify-between h-full bg-white relative">
+              <div className="w-3/4 flex flex-col justify-between h-full bg-slate-50/30 relative">
                 {/* Chat Column Header */}
-                <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/30">
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                      <Hash className="h-3.5 w-3.5 text-slate-400" />
-                      operations
+                <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-white shadow-sm z-10 shrink-0">
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-extrabold text-slate-850 flex items-center gap-1 truncate">
+                      {['sarah', 'alex', 'marcus'].includes(activeChatTarget) ? (
+                        <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0 inline-block mr-1" />
+                      ) : (
+                        <Hash className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      )}
+                      {activeChatDetails.title}
                     </h3>
-                    <p className="text-[9px] text-slate-400 font-medium mt-0.5">
-                      Company daily logistics and administrative coordination
+                    <p className="text-[9.5px] text-slate-400 font-semibold truncate mt-0.5">
+                      {activeChatDetails.desc}
                     </p>
                   </div>
 
-                  {/* Simulate Command Action */}
-                  <button
-                    onClick={runChatDemo}
-                    disabled={isTyping}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
-                      isTyping 
-                        ? 'bg-slate-50 text-slate-400 border-slate-200' 
-                        : 'bg-indigo-50 text-indigo-600 border-indigo-150 hover:bg-indigo-100'
-                    }`}
-                  >
-                    <Sparkles className="h-3 w-3 animate-pulse" />
-                    Simulate `/task` shortcut
-                  </button>
+                  {/* Simulate Command Action - only enabled for operations channel */}
+                  {activeChatTarget === 'operations' && (
+                    <button
+                      onClick={runChatDemo}
+                      disabled={isTyping}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-extrabold border transition-all cursor-pointer shrink-0 shadow-sm ${
+                        isTyping 
+                          ? 'bg-slate-50 text-slate-400 border-slate-200' 
+                          : 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-600 border-indigo-150 hover:from-indigo-100 hover:to-purple-100'
+                      }`}
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-indigo-500 animate-pulse" />
+                      Simulate `/task` shortcut
+                    </button>
+                  )}
                 </div>
 
                 {/* Messages Stream */}
-                <div className="flex-grow overflow-y-auto px-5 py-4 space-y-4 custom-scroll">
-                  {chatMessages.map((msg) => (
-                    <div 
-                      key={msg.id} 
-                      className={`flex items-start gap-3 p-1 rounded-xl transition-colors ${
-                        msg.isSystem ? 'bg-indigo-55/30 border border-indigo-100/50 p-3' : 'hover:bg-slate-50/30'
-                      }`}
-                    >
-                      <div className={`h-8.5 w-8.5 rounded-xl text-[11px] font-extrabold flex items-center justify-center border shrink-0 ${
-                        msg.sender === 'System Bot' 
-                          ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
-                          : msg.avatar === 'ME'
-                          ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
-                          : 'bg-slate-100 text-slate-650 border-slate-200'
-                      }`}>
-                        {msg.avatar}
-                      </div>
-                      
-                      <div className="flex-grow">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-xs font-extrabold text-slate-900">{msg.sender}</span>
-                          <span className="text-[9px] text-slate-400 font-semibold">{msg.time}</span>
+                <div className="flex-grow overflow-y-auto px-5 py-4 space-y-4 custom-scroll bg-slate-50/10">
+                  {currentChatMessages.map((msg) => {
+                    const isMe = msg.sender === 'You' || msg.avatar === 'ME';
+                    const isSystem = msg.isSystem;
+
+                    if (isSystem) {
+                      return (
+                        <div key={msg.id} className="w-full my-3 flex justify-center">
+                          <div className="bg-indigo-950 text-indigo-50 border border-indigo-900/40 px-4 py-3 rounded-2xl flex items-start gap-3 shadow-md max-w-[90%] select-none">
+                            <Bot className="h-5 w-5 text-indigo-400 mt-0.5 shrink-0 animate-bounce" />
+                            <div>
+                              <p className="text-[10px] font-extrabold text-indigo-300 uppercase tracking-widest leading-none">System Automation</p>
+                              <p className="text-xs font-semibold mt-1.5 leading-relaxed text-indigo-100">{msg.text}</p>
+                              <span className="text-[8px] text-indigo-400 font-semibold block mt-1.5">{msg.time} • Action Audited</span>
+                            </div>
+                          </div>
                         </div>
-                        
-                        <p className={`text-xs mt-1.5 leading-relaxed ${
-                          msg.isSystem 
-                            ? 'text-indigo-950 font-semibold' 
-                            : msg.sender === 'You'
-                            ? 'text-indigo-650 font-medium'
-                            : 'text-slate-650 font-medium'
+                      );
+                    }
+
+                    return (
+                      <div 
+                        key={msg.id} 
+                        className={`flex gap-3 max-w-[85%] ${
+                          isMe ? 'flex-row-reverse ml-auto' : 'mr-auto'
+                        }`}
+                      >
+                        {/* Avatar */}
+                        <div className={`h-8 w-8 rounded-xl text-[10px] font-extrabold flex items-center justify-center border shrink-0 shadow-sm ${
+                          isMe 
+                            ? 'bg-indigo-50 text-indigo-600 border-indigo-100' 
+                            : 'bg-white text-slate-600 border-slate-150'
                         }`}>
-                          {msg.text}
-                        </p>
+                          {msg.avatar}
+                        </div>
+
+                        {/* Content */}
+                        <div className="space-y-1">
+                          {/* Name & Time */}
+                          <div className={`flex items-center gap-1.5 text-[9px] text-slate-400 font-extrabold ${
+                            isMe ? 'flex-row-reverse' : ''
+                          }`}>
+                            <span className="text-slate-800">{msg.sender}</span>
+                            <span>•</span>
+                            <span>{msg.time}</span>
+                          </div>
+
+                          {/* Bubble */}
+                          <div className={`px-4 py-2.5 text-xs font-semibold shadow-sm leading-relaxed ${
+                            isMe 
+                              ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-none border border-indigo-700/30' 
+                              : 'bg-white text-slate-700 rounded-2xl rounded-tl-none border border-slate-150'
+                          }`}>
+                            <p>{msg.text}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Form Input Bar */}
-                <form onSubmit={handleSendManual} className="px-5 py-3 border-t border-slate-100 flex items-center gap-3">
-                  <div className="flex-grow flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:border-indigo-500 transition-colors">
+                <form onSubmit={handleSendManual} className="px-5 py-3 border-t border-slate-100 bg-white flex items-center gap-3 shrink-0 shadow-inner">
+                  <div className="flex-grow flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:border-indigo-500 focus-within:bg-white transition-all">
                     <input
                       type="text"
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       disabled={isTyping}
-                      placeholder={isTyping ? "Simulating typing..." : "Send message, or try '/task [task name] assign @marcus'..."}
-                      className="flex-grow text-xs focus:outline-none font-medium bg-transparent disabled:text-slate-400"
+                      placeholder={
+                        isTyping 
+                          ? "Simulating typing..." 
+                          : activeChatTarget === 'operations' 
+                          ? "Type message, or try '/task [task name] assign @marcus'..."
+                          : "Send a message..."
+                      }
+                      className="flex-grow text-xs focus:outline-none font-semibold bg-transparent disabled:text-slate-400"
                     />
                     <div className="flex items-center gap-1.5 text-slate-400 ml-2">
-                      <Smile className="h-4.5 w-4.5 hover:text-slate-600 cursor-pointer" />
-                      <Paperclip className="h-4.5 w-4.5 hover:text-slate-600 cursor-pointer" />
+                      <Smile className="h-4.5 w-4.5 hover:text-slate-650 cursor-pointer" />
+                      <Paperclip className="h-4.5 w-4.5 hover:text-slate-650 cursor-pointer" />
                     </div>
                   </div>
                   
                   <button
                     type="submit"
                     disabled={isTyping || !chatInput.trim()}
-                    className="h-9 w-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md shadow-indigo-150 disabled:opacity-40 disabled:shadow-none transition-all cursor-pointer"
+                    className="h-9 w-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md shadow-indigo-150 disabled:opacity-40 disabled:shadow-none transition-all cursor-pointer active:scale-95"
                   >
                     <Send className="h-4 w-4" />
                   </button>
