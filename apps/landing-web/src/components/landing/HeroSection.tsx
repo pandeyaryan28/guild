@@ -32,20 +32,9 @@ export function HeroSection() {
       <div className="absolute top-[45%] left-[30%] w-[320px] h-[320px] rounded-full bg-purple-500/4 blur-[90px] animate-drift pointer-events-none z-0" />
 
       <div className="max-w-5xl mx-auto flex flex-col items-center text-center relative z-10 pt-4">
-        {/* Sub-header badge */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-indigo-100 bg-white/80 shadow-sm text-[11px] font-bold text-indigo-600 mb-6 glass"
-        >
-          <Sparkles className="h-3 w-3 animate-pulse" />
-          <span>The Unified Operations Platform for SMB Teams</span>
-        </motion.div>
-
         {/* Dynamic Bold Title */}
         <h1 className="text-[clamp(2.25rem,6vw,4.5rem)] font-extrabold tracking-tight leading-[1.08] max-w-4xl text-slate-900 font-sans">
-          One operations platform to{' '}
+          Bring your team's{' '}
           <div className="block sm:inline-block h-[1.15em] relative align-bottom overflow-hidden w-full sm:w-[320px] md:w-[380px] text-left sm:text-center mt-1 sm:mt-0">
             <AnimatePresence mode="wait">
               <motion.span
@@ -61,7 +50,7 @@ export function HeroSection() {
             </AnimatePresence>
           </div>
           <br className="hidden sm:inline" />
-          <span className="relative">orbit them all.</span>
+          <span className="relative">into perfect orbit.</span>
         </h1>
 
         {/* Subtext */}

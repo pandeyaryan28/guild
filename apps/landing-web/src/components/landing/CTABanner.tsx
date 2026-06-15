@@ -12,12 +12,6 @@ export function CTABanner() {
           <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none animate-drift-reverse" />
           <div className="absolute inset-0 grid-pattern-dark opacity-30 pointer-events-none" />
 
-          {/* Sparkle badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-extrabold text-indigo-300 uppercase tracking-widest mb-6 relative">
-            <Sparkles className="h-3 w-3 animate-pulse" />
-            <span>Onboarding in 5 minutes</span>
-          </div>
-
           <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight relative leading-none font-sans">
             Bring your team into orbit.
           </h2>
