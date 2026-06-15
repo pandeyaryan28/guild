@@ -10,7 +10,13 @@ import {
   Send,
   Sparkles,
   Check,
-  X
+  X,
+  Hash,
+  Users,
+  Paperclip,
+  Smile,
+  Clock,
+  ArrowRight
 } from 'lucide-react';
 
 type TabType = 'list' | 'kanban' | 'approvals' | 'chat';
@@ -27,10 +33,14 @@ interface TaskItem {
 interface ApprovalItem {
   id: string;
   title: string;
-  type: string;
+  type: 'Purchase' | 'Leave';
   requester: string;
   amount?: string;
   status: 'Pending' | 'Approved' | 'Rejected';
+  date: string;
+  description: string;
+  comment?: string;
+  actionedBy?: string;
 }
 
 interface ChatMessage {
@@ -55,10 +65,42 @@ export function InteractiveMockup() {
 
   // Interactive Approvals State
   const [approvals, setApprovals] = useState<ApprovalItem[]>([
-    { id: '1', title: 'Forklift Maintenance Expense', type: 'Purchase', requester: 'Marcus Chen', amount: '$1,200', status: 'Pending' },
-    { id: '2', title: 'Annual Leave Request (5 Days)', type: 'Leave', requester: 'Alex Rivera', status: 'Pending' },
-    { id: '3', title: 'Office Supplies Bulk Order', type: 'Purchase', requester: 'Sarah Jenkins', amount: '$340', status: 'Approved' },
+    { 
+      id: '1', 
+      title: 'Forklift Maintenance Expense', 
+      type: 'Purchase', 
+      requester: 'Marcus Chen', 
+      amount: '$1,200', 
+      status: 'Pending',
+      date: 'Today, 9:15 AM',
+      description: 'Hydraulic cylinder replacement and safety inspection for the primary Warehouse Unit B forklift. Critical for loading dock ops.'
+    },
+    { 
+      id: '2', 
+      title: 'Annual Leave Request (5 Days)', 
+      type: 'Leave', 
+      requester: 'Alex Rivera', 
+      status: 'Pending',
+      date: 'Today, 8:40 AM',
+      description: 'Requesting 5 consecutive working days off for family vacation from June 20 to June 25. Core cover will be managed by Marcus.'
+    },
+    { 
+      id: '3', 
+      title: 'Office Supplies Bulk Order', 
+      type: 'Purchase', 
+      requester: 'Sarah Jenkins', 
+      amount: '$340', 
+      status: 'Approved',
+      date: 'Yesterday, 2:10 PM',
+      description: 'Bulk order of standard printing paper, department logbooks, and office whiteboard markers for the main operations room.',
+      comment: 'Approved. Proceed with vendor checkout.',
+      actionedBy: 'Sarah Jenkins'
+    },
   ]);
+
+  // Selected Approval Detail state
+  const [selectedApprovalId, setSelectedApprovalId] = useState<string | null>(null);
+  const [approvalComment, setApprovalComment] = useState('');
 
   // Interactive Chat State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -205,13 +247,20 @@ export function InteractiveMockup() {
     }));
   };
 
-  const handleApproval = (id: string, action: 'Approved' | 'Rejected') => {
+  const handleApprovalSubmit = (id: string, action: 'Approved' | 'Rejected') => {
     setApprovals(prev => prev.map(a => {
       if (a.id === id) {
-        return { ...a, status: action };
+        return { 
+          ...a, 
+          status: action,
+          comment: approvalComment.trim() || undefined,
+          actionedBy: 'Sarah Jenkins (You)'
+        };
       }
       return a;
     }));
+    setApprovalComment('');
+    setSelectedApprovalId(null);
   };
 
   // Color mappings
@@ -221,14 +270,16 @@ export function InteractiveMockup() {
     Low: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20',
   };
 
+  const activeApproval = approvals.find(a => a.id === selectedApprovalId);
+
   return (
-    <div className="w-full max-w-4xl mx-auto rounded-3xl border border-indigo-100 bg-white shadow-[0_24px_70px_rgba(99,102,241,0.08)] overflow-hidden">
+    <div className="w-full max-w-4xl mx-auto rounded-3xl border border-indigo-100 bg-white shadow-[0_24px_70px_rgba(99,102,241,0.08)] overflow-hidden relative">
       {/* Header controls for switcher */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50 gap-4">
         {/* Switcher Tab Buttons */}
         <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100/80 rounded-xl max-w-max self-center">
           <button
-            onClick={() => setActiveTab('list')}
+            onClick={() => { setActiveTab('list'); setSelectedApprovalId(null); }}
             className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all cursor-pointer ${
               activeTab === 'list' 
                 ? 'bg-white text-indigo-600 shadow-sm' 
@@ -239,7 +290,7 @@ export function InteractiveMockup() {
             List View
           </button>
           <button
-            onClick={() => setActiveTab('kanban')}
+            onClick={() => { setActiveTab('kanban'); setSelectedApprovalId(null); }}
             className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all cursor-pointer ${
               activeTab === 'kanban' 
                 ? 'bg-white text-indigo-600 shadow-sm' 
@@ -250,7 +301,7 @@ export function InteractiveMockup() {
             Board View
           </button>
           <button
-            onClick={() => setActiveTab('approvals')}
+            onClick={() => { setActiveTab('approvals'); setSelectedApprovalId(null); }}
             className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all cursor-pointer ${
               activeTab === 'approvals' 
                 ? 'bg-white text-indigo-600 shadow-sm' 
@@ -261,7 +312,7 @@ export function InteractiveMockup() {
             Approvals
           </button>
           <button
-            onClick={() => setActiveTab('chat')}
+            onClick={() => { setActiveTab('chat'); setSelectedApprovalId(null); }}
             className={`inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-lg transition-all cursor-pointer ${
               activeTab === 'chat' 
                 ? 'bg-white text-indigo-600 shadow-sm' 
@@ -281,7 +332,7 @@ export function InteractiveMockup() {
       </div>
 
       {/* Main Sandbox Area */}
-      <div className="relative min-h-[380px] p-6 bg-white overflow-hidden custom-scroll">
+      <div className="relative min-h-[400px] bg-white overflow-hidden">
         <AnimatePresence mode="wait">
           {activeTab === 'list' && (
             <motion.div
@@ -290,7 +341,7 @@ export function InteractiveMockup() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col h-full"
+              className="flex flex-col h-full p-6"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-slate-900">Active Operations Tasks</h3>
@@ -318,7 +369,7 @@ export function InteractiveMockup() {
                         <td className="py-3.5 px-4 text-center">
                           <button 
                             onClick={() => toggleTaskStatus(task.id)}
-                            className="text-slate-300 hover:text-indigo-600 transition-colors focus:outline-none"
+                            className="text-slate-300 hover:text-indigo-600 transition-colors focus:outline-none cursor-pointer"
                           >
                             <CheckCircle2 
                               className={`h-4.5 w-4.5 ${
@@ -369,7 +420,7 @@ export function InteractiveMockup() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col h-full"
+              className="flex flex-col h-full p-6"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-slate-900 font-sans">Operational Kanban Board</h3>
@@ -377,7 +428,7 @@ export function InteractiveMockup() {
               </div>
               <div className="grid md:grid-cols-3 gap-4 h-full items-start">
                 {/* TO DO COLUMN */}
-                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col gap-3 min-h-[260px]">
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col gap-3 min-h-[280px]">
                   <div className="flex items-center justify-between px-1 mb-1">
                     <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">To Do</span>
                     <span className="h-5 px-2 bg-slate-200/50 rounded-full text-[10px] font-bold text-slate-600 flex items-center justify-center">
@@ -411,7 +462,7 @@ export function InteractiveMockup() {
                 </div>
 
                 {/* IN PROGRESS COLUMN */}
-                <div className="bg-indigo-50/20 border border-indigo-100/50 rounded-2xl p-4 flex flex-col gap-3 min-h-[260px]">
+                <div className="bg-indigo-50/20 border border-indigo-100/50 rounded-2xl p-4 flex flex-col gap-3 min-h-[280px]">
                   <div className="flex items-center justify-between px-1 mb-1">
                     <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">In Progress</span>
                     <span className="h-5 px-2 bg-indigo-100/50 rounded-full text-[10px] font-bold text-indigo-600 flex items-center justify-center">
@@ -445,7 +496,7 @@ export function InteractiveMockup() {
                 </div>
 
                 {/* DONE COLUMN */}
-                <div className="bg-emerald-50/20 border border-emerald-100/30 rounded-2xl p-4 flex flex-col gap-3 min-h-[260px]">
+                <div className="bg-emerald-50/20 border border-emerald-100/30 rounded-2xl p-4 flex flex-col gap-3 min-h-[280px]">
                   <div className="flex items-center justify-between px-1 mb-1">
                     <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Done</span>
                     <span className="h-5 px-2 bg-emerald-100/50 rounded-full text-[10px] font-bold text-emerald-600 flex items-center justify-center">
@@ -488,72 +539,174 @@ export function InteractiveMockup() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col h-full"
+              className="flex h-[400px]"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-900">One-Click Operational Sign-offs</h3>
-                <span className="text-[11px] text-slate-400 font-semibold">
-                  {approvals.filter(a => a.status === 'Pending').length} pending approvals
-                </span>
-              </div>
-              <div className="space-y-3">
-                {approvals.map((approval) => (
-                  <div 
-                    key={approval.id} 
-                    className="border border-slate-100 rounded-2xl p-4 bg-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`h-9 w-9 rounded-xl flex items-center justify-center mt-0.5 ${
-                        approval.type === 'Purchase' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-purple-50 text-purple-600 border border-purple-100'
-                      }`}>
-                        <FileCheck className="h-4.5 w-4.5" />
+              {/* Left Column: Approvals List */}
+              <div className={`flex flex-col p-6 h-full overflow-y-auto custom-scroll transition-all duration-300 ${
+                selectedApprovalId ? 'w-1/2 border-r border-slate-100' : 'w-full'
+              }`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-slate-900">One-Click Operational Sign-offs</h3>
+                  <span className="text-[11px] text-slate-400 font-semibold">
+                    {approvals.filter(a => a.status === 'Pending').length} pending approvals
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {approvals.map((approval) => (
+                    <div 
+                      key={approval.id} 
+                      onClick={() => {
+                        setSelectedApprovalId(approval.id);
+                        setApprovalComment(approval.comment || '');
+                      }}
+                      className={`border rounded-2xl p-4 bg-white shadow-sm flex items-center justify-between gap-4 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all ${
+                        selectedApprovalId === approval.id ? 'border-indigo-500 shadow-md ring-2 ring-indigo-50' : 'border-slate-100'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`h-9 w-9 rounded-xl flex items-center justify-center mt-0.5 shrink-0 ${
+                          approval.type === 'Purchase' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-purple-50 text-purple-600 border border-purple-100'
+                        }`}>
+                          <FileCheck className="h-4.5 w-4.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-950">{approval.title}</h4>
+                          <div className="mt-1 flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold">
+                            <span>Req: {approval.requester}</span>
+                            <span>•</span>
+                            <span className="text-indigo-600">{approval.amount || 'Leave'}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-950">{approval.title}</h4>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-400 font-semibold">
-                          <span className="text-slate-600">Req: {approval.requester}</span>
-                          <span>•</span>
-                          <span>Type: {approval.type}</span>
-                          {approval.amount && (
-                            <>
-                              <span>•</span>
-                              <span className="text-indigo-600">{approval.amount}</span>
-                            </>
+
+                      <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 ${
+                        approval.status === 'Approved' 
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+                          : approval.status === 'Rejected'
+                          ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                          : 'bg-amber-50 text-amber-700 border border-amber-100'
+                      }`}>
+                        {approval.status === 'Approved' ? (
+                          <Check className="h-3 w-3" />
+                        ) : approval.status === 'Rejected' ? (
+                          <X className="h-3 w-3" />
+                        ) : (
+                          <Clock className="h-3 w-3" />
+                        )}
+                        {approval.status}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column: Approval Detail View Panel */}
+              <AnimatePresence>
+                {selectedApprovalId && activeApproval && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    className="w-1/2 h-full bg-slate-50/70 p-6 flex flex-col justify-between overflow-y-auto custom-scroll"
+                  >
+                    <div>
+                      {/* Close Header */}
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Request details</span>
+                        <button 
+                          onClick={() => setSelectedApprovalId(null)}
+                          className="p-1 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      {/* Request Content */}
+                      <div className="space-y-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
+                            activeApproval.type === 'Purchase' 
+                              ? 'bg-indigo-50 text-indigo-600 border-indigo-150' 
+                              : 'bg-purple-50 text-purple-600 border-purple-150'
+                          }`}>
+                            {activeApproval.type} Request
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-semibold">{activeApproval.date}</span>
+                        </div>
+
+                        <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{activeApproval.title}</h4>
+
+                        {/* Requester Profile card */}
+                        <div className="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
+                          <div className="h-7 w-7 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-100">
+                            {activeApproval.requester.split(' ').map(n=>n[0]).join('')}
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-bold text-slate-800 leading-none">{activeApproval.requester}</p>
+                            <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Operations Coordinator</p>
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-xs text-slate-600 leading-relaxed font-semibold">
+                          <p>{activeApproval.description}</p>
+                          {activeApproval.amount && (
+                            <p className="mt-2 text-indigo-600 font-bold">Total Amount: {activeApproval.amount}</p>
                           )}
                         </div>
+
+                        {/* Logs and Action Comments */}
+                        {activeApproval.comment && (
+                          <div className="bg-emerald-50/50 border border-emerald-100 p-3 rounded-xl text-xs">
+                            <p className="font-bold text-emerald-800 flex items-center gap-1">
+                              <Check className="h-3.5 w-3.5" />
+                              Action Taken by {activeApproval.actionedBy}
+                            </p>
+                            <p className="text-slate-600 italic mt-1 font-semibold">"{activeApproval.comment}"</p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-center">
-                      {approval.status === 'Pending' ? (
-                        <>
-                          <button
-                            onClick={() => handleApproval(approval.id, 'Rejected')}
-                            className="inline-flex items-center justify-center h-8 px-3.5 rounded-xl border border-rose-100 text-rose-600 bg-rose-50/50 hover:bg-rose-50 text-xs font-bold transition-all cursor-pointer active:scale-95"
-                          >
-                            <X className="h-3.5 w-3.5 mr-1" />
-                            Reject
-                          </button>
-                          <button
-                            onClick={() => handleApproval(approval.id, 'Approved')}
-                            className="inline-flex items-center justify-center h-8 px-4 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 text-xs font-bold shadow-md shadow-indigo-200 transition-all cursor-pointer active:scale-95"
-                          >
-                            <Check className="h-3.5 w-3.5 mr-1" />
-                            Approve
-                          </button>
-                        </>
+                    {/* Action Panel */}
+                    <div className="mt-6 border-t border-slate-200 pt-4 bg-slate-50/70">
+                      {activeApproval.status === 'Pending' ? (
+                        <div className="space-y-3">
+                          <textarea
+                            value={approvalComment}
+                            onChange={(e) => setApprovalComment(e.target.value)}
+                            placeholder="Add approval or rejection comment..."
+                            className="w-full border border-slate-200 hover:border-slate-300 focus:border-indigo-500 rounded-xl p-3 text-xs focus:outline-none bg-white font-medium resize-none shadow-inner"
+                            rows={3}
+                          />
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              onClick={() => handleApprovalSubmit(activeApproval.id, 'Rejected')}
+                              className="inline-flex items-center justify-center gap-1.5 h-9 rounded-xl border border-rose-200 text-rose-600 bg-white hover:bg-rose-50 text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
+                            >
+                              <X className="h-4 w-4" />
+                              Reject
+                            </button>
+                            <button
+                              onClick={() => handleApprovalSubmit(activeApproval.id, 'Approved')}
+                              className="inline-flex items-center justify-center gap-1.5 h-9 rounded-xl text-white bg-emerald-600 hover:bg-emerald-750 text-xs font-bold shadow-md shadow-emerald-200 transition-all cursor-pointer active:scale-95"
+                            >
+                              <Check className="h-4 w-4" />
+                              Approve
+                            </button>
+                          </div>
+                        </div>
                       ) : (
-                        <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold ${
-                          approval.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
-                        }`}>
-                          {approval.status === 'Approved' ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
-                          {approval.status}
+                        <div className="text-center py-2">
+                          <p className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">
+                            Approval Logged Successfully
+                          </p>
                         </div>
                       )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
 
@@ -564,78 +717,160 @@ export function InteractiveMockup() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col h-[350px] justify-between"
+              className="flex h-[400px]"
             >
-              {/* Chat Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-800 text-sm">#operations-channel</span>
-                  <span className="h-2 w-2 rounded-full bg-indigo-500" />
-                </div>
-                <button
-                  onClick={runChatDemo}
-                  disabled={isTyping}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
-                    isTyping 
-                      ? 'bg-slate-50 text-slate-400 border-slate-200' 
-                      : 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100'
-                  }`}
-                >
-                  <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-                  Simulate `/task` shortcut
-                </button>
-              </div>
-
-              {/* Chat Message Box */}
-              <div className="flex-grow overflow-y-auto py-4 space-y-3.5 pr-2 custom-scroll">
-                {chatMessages.map((msg) => (
-                  <div key={msg.id} className={`flex items-start gap-3 ${msg.isSystem ? 'bg-indigo-50/40 p-3 rounded-2xl border border-indigo-100/40' : ''}`}>
-                    <div className={`h-7 w-7 rounded-lg text-[10px] font-bold flex items-center justify-center border shrink-0 ${
-                      msg.sender === 'System Bot' 
-                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
-                        : msg.avatar === 'ME'
-                        ? 'bg-indigo-50 text-indigo-600 border-indigo-150'
-                        : 'bg-slate-100 text-slate-600 border-slate-200'
-                    }`}>
-                      {msg.avatar}
-                    </div>
-                    <div className="flex-grow">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-[11px] font-bold text-slate-900">{msg.sender}</span>
-                        <span className="text-[9px] text-slate-400 font-semibold">{msg.time}</span>
-                      </div>
-                      <p className={`text-xs mt-1.5 leading-relaxed ${
-                        msg.isSystem 
-                          ? 'text-indigo-950 font-semibold' 
-                          : msg.sender === 'You'
-                          ? 'text-indigo-650 font-medium'
-                          : 'text-slate-650'
-                      }`}>
-                        {msg.text}
-                      </p>
+              {/* Left Column: Chat Sidebar (Slack-like) */}
+              <div className="w-1/4 bg-slate-900 text-slate-400 flex flex-col justify-between py-4 border-r border-slate-950 shrink-0">
+                <div className="space-y-6">
+                  {/* Channels Section */}
+                  <div className="px-4">
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 block mb-2.5">
+                      Channels
+                    </span>
+                    <div className="space-y-1">
+                      <button className="flex items-center gap-1.5 text-xs font-bold text-white w-full text-left py-1.5 px-2 bg-slate-800 rounded-lg cursor-pointer">
+                        <Hash className="h-3.5 w-3.5 text-indigo-400" />
+                        operations
+                      </button>
+                      <button className="flex items-center gap-1.5 text-xs font-semibold hover:text-white w-full text-left py-1.5 px-2 transition-colors cursor-pointer">
+                        <Hash className="h-3.5 w-3.5 text-slate-500" />
+                        general
+                      </button>
+                      <button className="flex items-center gap-1.5 text-xs font-semibold hover:text-white w-full text-left py-1.5 px-2 transition-colors cursor-pointer">
+                        <Hash className="h-3.5 w-3.5 text-slate-500" />
+                        marketing-ops
+                      </button>
                     </div>
                   </div>
-                ))}
+
+                  {/* Direct Messages Section */}
+                  <div className="px-4">
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 block mb-2.5">
+                      Direct Messages
+                    </span>
+                    <div className="space-y-1">
+                      <button className="flex items-center gap-2 text-xs font-semibold hover:text-white w-full text-left py-1.5 px-2 transition-colors cursor-pointer">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 block" />
+                        Sarah Jenkins
+                      </button>
+                      <button className="flex items-center gap-2 text-xs font-semibold hover:text-white w-full text-left py-1.5 px-2 transition-colors cursor-pointer">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 block" />
+                        Alex Rivera
+                      </button>
+                      <button className="flex items-center gap-2 text-xs font-semibold hover:text-white w-full text-left py-1.5 px-2 transition-colors cursor-pointer">
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-500 block" />
+                        Marcus Chen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active user status tag */}
+                <div className="px-4 border-t border-slate-800/80 pt-3 flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-full bg-indigo-600 border border-indigo-700 text-[10px] font-extrabold text-white flex items-center justify-center">
+                    SJ
+                  </div>
+                  <div className="leading-none">
+                    <p className="text-[10px] font-bold text-slate-100">Sarah Jenkins</p>
+                    <span className="text-[8px] text-emerald-400 font-semibold">Active (You)</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Chat Input Bar */}
-              <form onSubmit={handleSendManual} className="flex gap-2 pt-3 border-t border-slate-100 items-center">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  disabled={isTyping}
-                  placeholder={isTyping ? "Simulating typing..." : "Type a message, or try '/task [task name] assign @marcus'..."}
-                  className="flex-grow border border-slate-150 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-indigo-500 font-medium bg-slate-50/50 disabled:bg-slate-100 disabled:text-slate-400"
-                />
-                <button
-                  type="submit"
-                  disabled={isTyping || !chatInput.trim()}
-                  className="h-8.5 w-8.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md shadow-indigo-150 disabled:opacity-40 disabled:shadow-none transition-all cursor-pointer"
-                >
-                  <Send className="h-4 w-4" />
-                </button>
-              </form>
+              {/* Right Column: Chat Conversation Interface */}
+              <div className="w-3/4 flex flex-col justify-between h-full bg-white relative">
+                {/* Chat Column Header */}
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/30">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                      <Hash className="h-3.5 w-3.5 text-slate-400" />
+                      operations
+                    </h3>
+                    <p className="text-[9px] text-slate-400 font-medium mt-0.5">
+                      Company daily logistics and administrative coordination
+                    </p>
+                  </div>
+
+                  {/* Simulate Command Action */}
+                  <button
+                    onClick={runChatDemo}
+                    disabled={isTyping}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
+                      isTyping 
+                        ? 'bg-slate-50 text-slate-400 border-slate-200' 
+                        : 'bg-indigo-50 text-indigo-600 border-indigo-150 hover:bg-indigo-100'
+                    }`}
+                  >
+                    <Sparkles className="h-3 w-3 animate-pulse" />
+                    Simulate `/task` shortcut
+                  </button>
+                </div>
+
+                {/* Messages Stream */}
+                <div className="flex-grow overflow-y-auto px-5 py-4 space-y-4 custom-scroll">
+                  {chatMessages.map((msg) => (
+                    <div 
+                      key={msg.id} 
+                      className={`flex items-start gap-3 p-1 rounded-xl transition-colors ${
+                        msg.isSystem ? 'bg-indigo-55/30 border border-indigo-100/50 p-3' : 'hover:bg-slate-50/30'
+                      }`}
+                    >
+                      <div className={`h-8.5 w-8.5 rounded-xl text-[11px] font-extrabold flex items-center justify-center border shrink-0 ${
+                        msg.sender === 'System Bot' 
+                          ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                          : msg.avatar === 'ME'
+                          ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                          : 'bg-slate-100 text-slate-650 border-slate-200'
+                      }`}>
+                        {msg.avatar}
+                      </div>
+                      
+                      <div className="flex-grow">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-xs font-extrabold text-slate-900">{msg.sender}</span>
+                          <span className="text-[9px] text-slate-400 font-semibold">{msg.time}</span>
+                        </div>
+                        
+                        <p className={`text-xs mt-1.5 leading-relaxed ${
+                          msg.isSystem 
+                            ? 'text-indigo-950 font-semibold' 
+                            : msg.sender === 'You'
+                            ? 'text-indigo-650 font-medium'
+                            : 'text-slate-650 font-medium'
+                        }`}>
+                          {msg.text}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Form Input Bar */}
+                <form onSubmit={handleSendManual} className="px-5 py-3 border-t border-slate-100 flex items-center gap-3">
+                  <div className="flex-grow flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:border-indigo-500 transition-colors">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      disabled={isTyping}
+                      placeholder={isTyping ? "Simulating typing..." : "Send message, or try '/task [task name] assign @marcus'..."}
+                      className="flex-grow text-xs focus:outline-none font-medium bg-transparent disabled:text-slate-400"
+                    />
+                    <div className="flex items-center gap-1.5 text-slate-400 ml-2">
+                      <Smile className="h-4.5 w-4.5 hover:text-slate-600 cursor-pointer" />
+                      <Paperclip className="h-4.5 w-4.5 hover:text-slate-600 cursor-pointer" />
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    disabled={isTyping || !chatInput.trim()}
+                    className="h-9 w-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md shadow-indigo-150 disabled:opacity-40 disabled:shadow-none transition-all cursor-pointer"
+                  >
+                    <Send className="h-4 w-4" />
+                  </button>
+                </form>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
