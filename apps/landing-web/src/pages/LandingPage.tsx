@@ -4,6 +4,10 @@ import { Home } from './Home';
 import { Features } from './Features';
 import { Pricing } from './Pricing';
 import { FAQ } from './FAQ';
+import { WorkTrackingFeature } from './WorkTrackingFeature';
+import { TeamChatFeature } from './TeamChatFeature';
+import { ApprovalsFeature } from './ApprovalsFeature';
+import { VisibilityFeature } from './VisibilityFeature';
 import { useNavigation } from '../context/NavigationContext';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -11,9 +15,36 @@ export function LandingPage() {
   const { currentPath } = useNavigation();
 
   const renderPage = () => {
-    switch (currentPath) {
+    // Normalize path: lowercase, trim, remove trailing slash
+    let path = currentPath.toLowerCase().trim().replace(/\/$/, '');
+
+    // Strip out base path if served from a subdirectory (e.g. /guild/features -> /features)
+    const featuresIdx = path.indexOf('/features');
+    if (featuresIdx !== -1) {
+      path = path.substring(featuresIdx);
+    } else {
+      const pricingIdx = path.indexOf('/pricing');
+      if (pricingIdx !== -1) {
+        path = path.substring(pricingIdx);
+      } else {
+        const faqIdx = path.indexOf('/faq');
+        if (faqIdx !== -1) {
+          path = path.substring(faqIdx);
+        }
+      }
+    }
+
+    switch (path) {
       case '/features':
         return <Features key="features" />;
+      case '/features/work-tracking':
+        return <WorkTrackingFeature key="work-tracking" />;
+      case '/features/team-chat':
+        return <TeamChatFeature key="team-chat" />;
+      case '/features/approvals':
+        return <ApprovalsFeature key="approvals" />;
+      case '/features/visibility':
+        return <VisibilityFeature key="visibility" />;
       case '/pricing':
         return <Pricing key="pricing" />;
       case '/faq':

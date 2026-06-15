@@ -4,7 +4,6 @@ import { ArrowRight, Sparkles, CheckSquare, MessageSquare, FileCheck } from 'luc
 import { APP_URL } from '../../config/landingData';
 import { useNavigation } from '../../context/NavigationContext';
 import { CosmicCanvas3D } from './CosmicCanvas3D';
-import { InteractiveMockup } from './InteractiveMockup';
 
 const Words = ['Tasks', 'Direct Chats', 'Leave Approvals', 'Expense Sign-offs', 'Shared Files'];
 
@@ -107,15 +106,7 @@ export function HeroSection() {
           </div>
         </motion.div>
 
-        {/* Interactive Dashboard Mockup Frame */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97, y: 40 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-16 md:mt-20 w-full max-w-4xl z-20"
-        >
-          <InteractiveMockup />
-        </motion.div>
+
       </div>
     </section>
   );

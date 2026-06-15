@@ -30,7 +30,7 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const handleNav = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+  const handleNav = (e: React.MouseEvent<any>, path: string) => {
     e.preventDefault();
     navigate(path);
     setMobileOpen(false);
@@ -49,45 +49,50 @@ export function Navbar() {
       title: 'Work Tracking',
       color: 'text-indigo-600',
       bg: 'bg-indigo-50 border border-indigo-100/50',
+      path: '/features/work-tracking',
       items: [
-        { icon: CheckSquare, label: 'Tasks', desc: 'Assign and organize team tasks.' },
-        { icon: LayoutDashboard, label: 'Kanban Board', desc: 'Drag-and-drop workflows.' },
+        { icon: CheckSquare, label: 'Tasks', desc: 'Assign and organize team tasks.', path: '/features/work-tracking' },
+        { icon: LayoutDashboard, label: 'Kanban Board', desc: 'Drag-and-drop workflows.', path: '/features/work-tracking' },
       ]
     },
     {
       title: 'Team Chat',
       color: 'text-cyan-600',
       bg: 'bg-cyan-50 border border-cyan-100/50',
+      path: '/features/team-chat',
       items: [
-        { icon: MessageSquare, label: 'Channels', desc: 'Department-focused chat rooms.' },
-        { icon: Sparkles, label: 'Mentions & DMs', desc: 'Fast, secure direct chats.' },
+        { icon: MessageSquare, label: 'Channels', desc: 'Department-focused chat rooms.', path: '/features/team-chat' },
+        { icon: Sparkles, label: 'Mentions & DMs', desc: 'Fast, secure direct chats.', path: '/features/team-chat' },
       ]
     },
     {
       title: 'Requests & Approvals',
       color: 'text-purple-600',
       bg: 'bg-purple-50 border border-purple-100/50',
+      path: '/features/approvals',
       items: [
-        { icon: FileCheck, label: 'Leave Requests', desc: 'Quick time-off submissions.' },
-        { icon: Sparkles, label: 'Expense Approvals', desc: 'Purchase orders and sign-offs.' },
+        { icon: FileCheck, label: 'Leave Requests', desc: 'Quick time-off submissions.', path: '/features/approvals' },
+        { icon: Sparkles, label: 'Expense Approvals', desc: 'Purchase orders and sign-offs.', path: '/features/approvals' },
       ]
     },
     {
       title: 'Visibility & Files',
       color: 'text-rose-600',
       bg: 'bg-rose-50 border border-rose-100/50',
+      path: '/features/visibility',
       items: [
-        { icon: LayoutDashboard, label: 'Central Dashboard', desc: 'Assigned tasks & activity feeds.' },
-        { icon: FolderOpen, label: 'Shared Files', desc: 'Shared budget, layout, and document lists.' },
+        { icon: LayoutDashboard, label: 'Central Dashboard', desc: 'Assigned tasks & activity feeds.', path: '/features/visibility' },
+        { icon: FolderOpen, label: 'Shared Files', desc: 'Shared budget, layout, and document lists.', path: '/features/visibility' },
       ]
     },
     {
       title: 'Resources',
       color: 'text-emerald-600',
       bg: 'bg-emerald-50 border border-emerald-100/50',
+      path: '/faq',
       items: [
-        { icon: BookOpen, label: 'Onboarding Guide', desc: 'Start coordination in 5 mins.' },
-        { icon: HelpCircle, label: 'Help Center', desc: 'Guides on setup & permissions.' },
+        { icon: BookOpen, label: 'Onboarding Guide', desc: 'Start coordination in 5 mins.', path: '/faq' },
+        { icon: HelpCircle, label: 'Help Center', desc: 'Guides on setup & permissions.', path: '/faq' },
       ]
     }
   ];
@@ -140,8 +145,13 @@ export function Navbar() {
               onMouseEnter={() => setShowMegaMenu(true)}
             >
               <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate('/features');
+                  setShowMegaMenu(false);
+                }}
                 className={`flex items-center gap-1 text-[13px] font-semibold transition-colors cursor-pointer ${
-                  showMegaMenu ? 'text-indigo-600' : 'text-slate-600 hover:text-slate-900'
+                  currentPath.startsWith('/features') || showMegaMenu ? 'text-indigo-600' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Features
@@ -226,17 +236,21 @@ export function Navbar() {
               <div className="mx-auto max-w-5xl rounded-2xl bg-white border border-slate-150/70 p-6 shadow-2xl shadow-slate-200/60 grid grid-cols-5 gap-6">
                 {megaMenuData.map((col) => (
                   <div key={col.title} className="flex flex-col gap-4">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
+                    <a
+                      href={col.path}
+                      onClick={(e) => handleNav(e, col.path)}
+                      className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors"
+                    >
                       {col.title}
-                    </span>
+                    </a>
                     <div className="flex flex-col gap-3">
                       {col.items.map((item) => {
                         const Icon = item.icon;
                         return (
                           <a
                             key={item.label}
-                            href="/features"
-                            onClick={(e) => handleNav(e, '/features')}
+                            href={item.path}
+                            onClick={(e) => handleNav(e, item.path)}
                             className="group flex gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-all"
                           >
                             <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${col.bg} ${col.color} group-hover:scale-105 transition-transform`}>
@@ -276,16 +290,16 @@ export function Navbar() {
               </span>
               
               <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
-                <a href="/features" onClick={(e) => handleNav(e, '/features')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700">
+                <a href="/features/work-tracking" onClick={(e) => handleNav(e, '/features/work-tracking')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700">
                   <CheckSquare className="h-4 w-4 text-indigo-600" /> Tasks
                 </a>
-                <a href="/features" onClick={(e) => handleNav(e, '/features')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700">
+                <a href="/features/team-chat" onClick={(e) => handleNav(e, '/features/team-chat')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700">
                   <MessageSquare className="h-4 w-4 text-cyan-600" /> DMs & Chat
                 </a>
-                <a href="/features" onClick={(e) => handleNav(e, '/features')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700">
+                <a href="/features/approvals" onClick={(e) => handleNav(e, '/features/approvals')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700">
                   <FileCheck className="h-4 w-4 text-purple-600" /> Approvals
                 </a>
-                <a href="/features" onClick={(e) => handleNav(e, '/features')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700">
+                <a href="/features/visibility" onClick={(e) => handleNav(e, '/features/visibility')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700">
                   <FolderOpen className="h-4 w-4 text-rose-600" /> Shared Files
                 </a>
               </div>

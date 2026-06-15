@@ -9,6 +9,7 @@ const features = [
     description: 'Discuss, share, and unblock in real-time.',
     color: 'text-violet-600',
     bg: 'bg-violet-500/10',
+    path: '/features/team-chat',
   },
   {
     icon: CheckSquare,
@@ -16,6 +17,7 @@ const features = [
     description: 'Assign, track, and complete tasks effortlessly.',
     color: 'text-indigo-600',
     bg: 'bg-indigo-500/10',
+    path: '/features/work-tracking',
   },
   {
     icon: FileCheck,
@@ -23,6 +25,7 @@ const features = [
     description: 'Submit, review, and track admin requests in a click.',
     color: 'text-cyan-600',
     bg: 'bg-cyan-500/10',
+    path: '/features/approvals',
   },
 ];
 
@@ -43,7 +46,10 @@ export function FeatureCards() {
         <div className="grid md:grid-cols-3 gap-6">
           {features.map((f, i) => (
             <ScrollReveal key={f.title} delay={i * 0.08}>
-              <div className="glass rounded-2xl p-7 h-full hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+              <div 
+                onClick={() => navigate(f.path)}
+                className="glass rounded-2xl p-7 h-full hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer hover:border-slate-300"
+              >
                 <div
                   className={`inline-flex items-center justify-center h-12 w-12 rounded-2xl ${f.bg} ${f.color} mb-6`}
                 >
