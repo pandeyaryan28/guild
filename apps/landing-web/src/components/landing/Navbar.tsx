@@ -99,19 +99,6 @@ export function Navbar() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex flex-col">
-      {/* Top Promotion Announcement Bar */}
-      <div className="bg-gradient-to-right from-indigo-600 via-indigo-700 to-purple-600 text-white py-2 px-4 text-center text-[11px] md:text-xs font-semibold tracking-wide shadow-sm flex items-center justify-center gap-1.5 z-50">
-        <Sparkles className="h-3 w-3 text-amber-300 animate-pulse" />
-        <span>Meet Guild Orbit v2 — Optimize team operations in a single workspace.</span>
-        <a 
-          href="/onboarding" 
-          onClick={(e) => handleNav(e, '/')} 
-          className="underline hover:text-indigo-100 transition-colors inline-flex items-center gap-0.5 ml-1.5"
-        >
-          Learn more <ArrowRight className="h-3 w-3 inline" />
-        </a>
-      </div>
-
       <header 
         className="w-full px-4 pt-3 transition-all duration-300 relative"
         onMouseLeave={() => setShowMegaMenu(false)}

@@ -168,19 +168,8 @@ export function BentoShowcase() {
             </div>
           </ScrollReveal>
 
-        </div>
 
-        {/* Generated Cosmic Illustration Row */}
-        <ScrollReveal className="mt-8">
-          <div className="glass rounded-3xl overflow-hidden p-2 shadow-lg border-indigo-50/30 hover:scale-[1.005] transition-transform duration-300">
-            <img
-              src="/cosmic_collaboration.png"
-              alt="Guild Orbit Cosmic Collaboration Workspace"
-              className="w-full object-cover max-h-[350px] rounded-2xl"
-              loading="lazy"
-            />
-          </div>
-        </ScrollReveal>
+        </div>
       </div>
     </section>
   );

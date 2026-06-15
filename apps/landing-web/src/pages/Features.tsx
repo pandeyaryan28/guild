@@ -73,10 +73,6 @@ export function Features() {
 
       {/* Header */}
       <section className="px-6 max-w-3xl mx-auto text-center mb-16">
-        <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-3 py-1 rounded-full mb-4 glass">
-          <Sparkles className="h-3 w-3 text-amber-500" />
-          Product Modules
-        </div>
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
