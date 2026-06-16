@@ -11,7 +11,8 @@ import {
   ChevronDown,
   Play,
   Pause,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 import { ScrollReveal } from './ScrollReveal';
 import { useNavigation } from '../../context/NavigationContext';
@@ -38,8 +39,8 @@ const features = [
   {
     icon: CheckSquare,
     title: 'Work Tracking',
-    description: 'Track operations with transparent Kanban boards, assigned task owners, and real-time statuses.',
-    bullets: ['Lightweight Kanban boards', 'Assigned owners & due dates', 'Auditable priority triage'],
+    description: 'Empower managers and owners to map, track, and monitor every task and its live status assigned to teammates.',
+    bullets: ['Oversight for managers & owners', 'Team-wide task mapping', 'Live status updates for assignees'],
     color: 'text-indigo-650',
     bg: 'bg-indigo-50 border border-indigo-100/30',
     hoverBorder: 'hover:border-indigo-305',
@@ -91,7 +92,7 @@ const features = [
   },
 ];
 
-// Simulated custom cursor for animations
+// Simulated custom dark cursor for light-theme preview canvas
 const MouseCursor = ({ x, y, isGrabbing }: { x: number; y: number; isGrabbing: boolean }) => (
   <motion.div
     style={{ x, y, position: 'absolute', zIndex: 50, pointerEvents: 'none' }}
@@ -109,8 +110,8 @@ const MouseCursor = ({ x, y, isGrabbing }: { x: number; y: number; isGrabbing: b
     >
       <path
         d="M5.65376 12.3825L19.346 5.65376C19.7845 5.43797 20.3015 5.61732 20.5173 6.05581C20.597 6.2177 20.6273 6.40114 20.6033 6.57945L18.7303 20.5794C18.6653 21.0672 18.2163 21.4111 17.7286 21.3461C17.5855 21.327 17.4497 21.2678 17.3361 21.175L12.5024 17.2282L9.64731 20.1037C9.30206 20.4514 8.73977 20.4578 8.38676 20.118C8.24357 19.9802 8.15065 19.7997 8.12573 19.6043L7.29177 13.0617L5.32791 11.2334C4.96541 10.8957 4.94272 10.3271 5.2774 9.96144C5.38541 9.84343 5.51478 9.75485 5.65997 9.70059L5.65376 12.3825Z"
-        fill={isGrabbing ? '#6366f1' : '#f8fafc'}
-        stroke="#0f172a"
+        fill={isGrabbing ? '#6366f1' : '#0f172a'}
+        stroke="white"
         strokeWidth="2"
         strokeLinejoin="round"
       />
@@ -118,7 +119,7 @@ const MouseCursor = ({ x, y, isGrabbing }: { x: number; y: number; isGrabbing: b
   </motion.div>
 );
 
-// Animation Subcomponent 1: Real-time Chat
+// Animation Subcomponent 1: Real-time Chat (Light Glass)
 function ChatPreview() {
   const [messages, setMessages] = useState<Array<{ sender: string; avatar: string; text: string; time: string; type?: 'system' | 'message' }>>([]);
   const [typingName, setTypingName] = useState<string | null>(null);
@@ -196,14 +197,14 @@ function ChatPreview() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 text-slate-100 font-sans text-xs">
+    <div className="flex flex-col h-full bg-slate-50/20 text-slate-800 font-sans text-xs">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800 bg-slate-900/50 shrink-0">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200/50 bg-white/40 shrink-0">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-200">#ops-dispatch</span>
+          <span className="font-bold text-slate-800">#ops-dispatch</span>
           <span className="text-[10px] text-slate-500 font-semibold hidden sm:inline">Daily logistics coordination</span>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-655 font-bold">
           <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span>3 active</span>
         </div>
@@ -218,24 +219,24 @@ function ChatPreview() {
               initial={{ opacity: 0, y: 10, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.25 }}
-              className={`flex gap-2.5 ${msg.type === 'system' ? 'bg-indigo-950/20 border border-indigo-900/30 p-2.5 rounded-xl' : ''}`}
+              className={`flex gap-2.5 ${msg.type === 'system' ? 'bg-indigo-50/60 border border-indigo-100/50 p-2.5 rounded-xl' : ''}`}
             >
               {msg.type === 'system' ? (
-                <div className="h-6 w-6 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+                <div className="h-6 w-6 rounded-lg bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-600 shrink-0">
                   <Terminal className="h-3.5 w-3.5" />
                 </div>
               ) : (
-                <div className="h-6 w-6 rounded-lg bg-slate-800 flex items-center justify-center font-bold text-[10px] text-slate-350 border border-slate-700 shrink-0 select-none">
+                <div className="h-6 w-6 rounded-lg bg-white flex items-center justify-center font-bold text-[10px] text-slate-700 border border-slate-200 shrink-0 select-none shadow-sm">
                   {msg.avatar}
                 </div>
               )}
               
               <div className="flex-1 space-y-0.5 min-w-0">
                 <div className="flex items-baseline gap-1.5">
-                  <span className={`font-bold text-[10.5px] ${msg.type === 'system' ? 'text-indigo-400' : 'text-slate-300'}`}>{msg.sender}</span>
-                  <span className="text-[9px] text-slate-500">{msg.time}</span>
+                  <span className={`font-bold text-[10.5px] ${msg.type === 'system' ? 'text-indigo-700' : 'text-slate-800'}`}>{msg.sender}</span>
+                  <span className="text-[9px] text-slate-400 font-semibold">{msg.time}</span>
                 </div>
-                <p className={`text-[11px] leading-normal break-words ${msg.type === 'system' ? 'text-slate-300 font-medium' : 'text-slate-400'}`}>{msg.text}</p>
+                <p className={`text-[11px] leading-normal break-words ${msg.type === 'system' ? 'text-indigo-950 font-semibold' : 'text-slate-600'}`}>{msg.text}</p>
               </div>
             </motion.div>
           ))}
@@ -246,28 +247,28 @@ function ChatPreview() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex items-center gap-1 text-[10px] text-slate-500 pl-8 font-semibold"
+            className="flex items-center gap-1 text-[10px] text-slate-500 pl-8 font-bold"
           >
             <span>{typingName}</span>
             <span>is typing</span>
             <span className="flex gap-0.5 ml-0.5">
-              <span className="h-1 w-1 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="h-1 w-1 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="h-1 w-1 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <span className="h-1 w-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="h-1 w-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="h-1 w-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </span>
           </motion.div>
         )}
       </div>
       
       {/* Input Box */}
-      <div className="p-3 border-t border-slate-900 bg-slate-950/80 shrink-0">
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800">
-          <span className="text-slate-500 select-none">/</span>
-          <div className="flex-1 text-[11px] text-slate-300 min-h-[16px] relative select-none">
+      <div className="p-3 border-t border-slate-200/50 bg-white/40 shrink-0">
+        <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <span className="text-slate-400 select-none">/</span>
+          <div className="flex-1 text-[11px] text-slate-700 min-h-[16px] relative select-none">
             {chatInput ? (
               <span>{chatInput}</span>
             ) : (
-              <span className="text-slate-600">Message #ops-dispatch...</span>
+              <span className="text-slate-400">Message #ops-dispatch...</span>
             )}
             <motion.span
               animate={{ opacity: [1, 0] }}
@@ -281,7 +282,7 @@ function ChatPreview() {
   );
 }
 
-// Animation Subcomponent 2: Work Tracking (Kanban)
+// Animation Subcomponent 2: Work Tracking (Kanban - Light Glass)
 function WorkTrackingPreview() {
   const [column1, setColumn1] = useState<any[]>([]);
   const [column2, setColumn2] = useState<any[]>([]);
@@ -378,13 +379,13 @@ function WorkTrackingPreview() {
   }, []);
 
   return (
-    <div className="h-full bg-slate-950 text-slate-100 p-4 font-sans text-xs relative overflow-hidden flex flex-col">
+    <div className="h-full bg-slate-50/20 text-slate-800 p-4 font-sans text-xs relative overflow-hidden flex flex-col">
       <MouseCursor x={cursorX} y={cursorY} isGrabbing={isGrabbing} />
       
       {/* Title */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4 shrink-0">
-        <span className="font-bold text-slate-350 select-none">Operations Tracking Board</span>
-        <div className="flex items-center gap-1 bg-slate-900 px-2 py-0.5 rounded text-[10px] text-slate-500 font-bold select-none">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-200/50 mb-4 shrink-0">
+        <span className="font-bold text-slate-800 select-none">Operations Tracking Board</span>
+        <div className="flex items-center gap-1 bg-white border border-slate-200 px-2 py-0.5 rounded text-[10px] text-slate-500 font-bold select-none shadow-sm">
           <span>Active Board</span>
         </div>
       </div>
@@ -392,9 +393,9 @@ function WorkTrackingPreview() {
       {/* Columns */}
       <div className="flex-1 min-h-0 grid grid-cols-2 gap-4 relative">
         {/* Column 1: In Progress */}
-        <div className="bg-slate-900/20 border border-slate-900/50 rounded-xl p-2.5 flex flex-col h-full overflow-hidden select-none">
+        <div className="bg-slate-100/40 border border-slate-200/40 rounded-2xl p-2.5 flex flex-col h-full overflow-hidden select-none">
           <div className="flex justify-between items-center mb-2 px-1 shrink-0">
-            <span className="font-bold text-[9px] text-indigo-400 tracking-wider uppercase">In Progress ({column1.length})</span>
+            <span className="font-bold text-[9px] text-indigo-600 tracking-wider uppercase">In Progress ({column1.length})</span>
           </div>
           <div className="space-y-2 flex-1 overflow-y-auto custom-scroll">
             {column1.map(card => (
@@ -402,23 +403,23 @@ function WorkTrackingPreview() {
                 key={card.id}
                 layoutId={card.id}
                 style={{ opacity: draggingCardId === card.id ? 0.35 : 1 }}
-                className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 shadow-sm space-y-2 relative"
+                className="bg-white border border-slate-200/80 rounded-xl p-2.5 shadow-sm space-y-2 relative"
               >
-                <h4 className="font-bold text-[10.5px] leading-tight text-slate-200">{card.title}</h4>
+                <h4 className="font-bold text-[10.5px] leading-tight text-slate-800">{card.title}</h4>
                 {card.progress > 0 && (
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[8px] text-slate-500 font-semibold">
+                    <div className="flex justify-between text-[8px] text-slate-400 font-bold">
                       <span>Progress</span>
                       <span>{card.progress}%</span>
                     </div>
-                    <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
                       <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${card.progress}%` }} />
                     </div>
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-1 text-[8px] font-extrabold">
-                  <span className="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-400 font-bold uppercase">{card.priority}</span>
-                  <div className="h-4 w-4 rounded-full bg-slate-800 flex items-center justify-center text-[8.5px] text-indigo-400 border border-slate-700">{card.avatar}</div>
+                  <span className="px-1.5 py-0.5 rounded bg-slate-50 border border-slate-200 text-slate-500 font-bold uppercase">{card.priority}</span>
+                  <div className="h-4 w-4 rounded-full bg-white flex items-center justify-center text-[8.5px] text-indigo-650 font-bold border border-slate-200 shadow-sm">{card.avatar}</div>
                 </div>
               </motion.div>
             ))}
@@ -426,14 +427,14 @@ function WorkTrackingPreview() {
         </div>
         
         {/* Column 2: Done */}
-        <div className="bg-slate-900/20 border border-slate-900/50 rounded-xl p-2.5 flex flex-col h-full overflow-hidden relative select-none">
+        <div className="bg-slate-100/40 border border-slate-200/40 rounded-2xl p-2.5 flex flex-col h-full overflow-hidden relative select-none">
           {showSparkles && (
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-40">
               <motion.div
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: [1, 1.25, 0.8], opacity: [0, 1, 0] }}
                 transition={{ duration: 0.8 }}
-                className="text-indigo-400 flex gap-2"
+                className="text-indigo-600 flex gap-2"
               >
                 <Sparkles className="h-5 w-5 animate-spin" />
                 <Sparkles className="h-4 w-4 animate-bounce" />
@@ -442,31 +443,31 @@ function WorkTrackingPreview() {
           )}
           
           <div className="flex justify-between items-center mb-2 px-1 shrink-0">
-            <span className="font-bold text-[9px] text-emerald-450 tracking-wider uppercase">Done ({column2.length})</span>
+            <span className="font-bold text-[9px] text-emerald-600 tracking-wider uppercase">Done ({column2.length})</span>
           </div>
           <div className="space-y-2 flex-grow overflow-y-auto custom-scroll">
             {column2.map(card => (
               <motion.div
                 key={card.id}
                 layoutId={card.id}
-                className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 shadow-sm space-y-2 relative"
+                className="bg-white border border-slate-200/80 rounded-xl p-2.5 shadow-sm space-y-2 relative"
               >
-                <h4 className="font-bold text-[10.5px] leading-tight text-slate-250">{card.title}</h4>
+                <h4 className="font-bold text-[10.5px] leading-tight text-slate-800">{card.title}</h4>
                 <div className="space-y-1">
-                  <div className="flex justify-between text-[8px] text-slate-500 font-semibold">
+                  <div className="flex justify-between text-[8px] text-slate-400 font-bold">
                     <span>Progress</span>
-                    <span className="text-emerald-455 font-bold">{card.progress}%</span>
+                    <span className="text-emerald-600 font-bold">{card.progress}%</span>
                   </div>
-                  <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
                     <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${card.progress}%` }} />
                   </div>
                 </div>
                 <div className="flex justify-between items-center pt-1 text-[8px] font-extrabold">
-                  <span className="px-1.5 py-0.5 rounded bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 font-bold uppercase flex items-center gap-0.5">
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-150 text-emerald-600 font-bold uppercase flex items-center gap-0.5">
                     <Check className="h-2.5 w-2.5" />
                     <span>Done</span>
                   </span>
-                  <div className="h-4 w-4 rounded-full bg-slate-800 flex items-center justify-center text-[8.5px] text-indigo-400 border border-slate-700">{card.avatar}</div>
+                  <div className="h-4 w-4 rounded-full bg-white flex items-center justify-center text-[8.5px] text-indigo-650 font-bold border border-slate-200 shadow-sm">{card.avatar}</div>
                 </div>
               </motion.div>
             ))}
@@ -477,7 +478,7 @@ function WorkTrackingPreview() {
   );
 }
 
-// Animation Subcomponent 3: Approvals Log
+// Animation Subcomponent 3: Approvals Log (Light Glass)
 function ApprovalsPreview() {
   const [cursorX, setCursorX] = useState(180);
   const [cursorY, setCursorY] = useState(210);
@@ -559,31 +560,31 @@ function ApprovalsPreview() {
   }, []);
 
   return (
-    <div className="h-full bg-slate-950 text-slate-100 p-4 font-sans text-xs relative overflow-hidden flex gap-3">
+    <div className="h-full bg-slate-50/20 text-slate-800 p-4 font-sans text-xs relative overflow-hidden flex gap-3">
       <MouseCursor x={cursorX} y={cursorY} isGrabbing={isGrabbing} />
       
       {/* Left Column: Inbox List */}
-      <div className="w-[30%] border-r border-slate-900 pr-3 flex flex-col gap-2 shrink-0 select-none">
-        <span className="font-bold text-[9px] text-purple-400 uppercase tracking-wider mb-1">Queue (2)</span>
+      <div className="w-[30%] border-r border-slate-200/50 pr-3 flex flex-col gap-2 shrink-0 select-none">
+        <span className="font-bold text-[9px] text-purple-600 uppercase tracking-wider mb-1">Queue (2)</span>
         
         {/* Item 1 */}
-        <div className={`p-2 rounded-xl border text-left transition-colors ${
+        <div className={`p-2 rounded-xl border text-left transition-all ${
           activeItem === 1
-            ? 'bg-purple-950/20 border-purple-900/50 text-slate-200 shadow-sm'
-            : 'bg-slate-900/30 border-slate-900/40 text-slate-500'
+            ? 'bg-purple-50 border-purple-200 text-purple-950 shadow-sm'
+            : 'bg-white/65 border-slate-200/50 text-slate-400'
         }`}>
           <div className="font-bold text-[9.5px] truncate">Forklift Repair</div>
-          <div className="text-[8px] text-slate-500 font-bold mt-0.5">$1,200 · Marcus</div>
+          <div className="text-[8px] font-bold mt-0.5 text-slate-500">$1,200 · Marcus</div>
         </div>
         
         {/* Item 2 */}
-        <div className={`p-2 rounded-xl border text-left transition-colors ${
+        <div className={`p-2 rounded-xl border text-left transition-all ${
           activeItem === 2
-            ? 'bg-purple-950/20 border-purple-900/50 text-slate-200 shadow-sm'
-            : 'bg-slate-900/30 border-slate-900/40 text-slate-500'
+            ? 'bg-purple-50 border-purple-200 text-purple-950 shadow-sm'
+            : 'bg-white/65 border-slate-200/50 text-slate-400'
         }`}>
           <div className="font-bold text-[9.5px] truncate">Phoenix Flights</div>
-          <div className="text-[8px] text-slate-500 font-bold mt-0.5">$450 · Alex</div>
+          <div className="text-[8px] font-bold mt-0.5 text-slate-500">$450 · Alex</div>
         </div>
       </div>
       
@@ -604,7 +605,7 @@ function ApprovalsPreview() {
                   initial={{ scale: 2.3, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1, rotate: -12 }}
                   transition={{ type: 'spring', damping: 10, stiffness: 200 }}
-                  className="absolute inset-0 m-auto h-9 w-28 border-[3px] border-emerald-500 rounded bg-slate-950/95 text-emerald-500 font-extrabold text-[11px] flex items-center justify-center tracking-widest rotate-[-12deg] shadow-[0_0_15px_rgba(16,185,129,0.25)] z-30 select-none"
+                  className="absolute inset-0 m-auto h-9 w-28 border-[3px] border-emerald-500 rounded bg-white text-emerald-600 font-extrabold text-[11px] flex items-center justify-center tracking-widest rotate-[-12deg] shadow-[0_0_15px_rgba(16,185,129,0.18)] z-30 select-none"
                 >
                   APPROVED
                 </motion.div>
@@ -614,18 +615,18 @@ function ApprovalsPreview() {
                 {/* Header */}
                 <div className="flex justify-between items-start gap-2">
                   <div>
-                    <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-purple-400 font-bold uppercase">Purchase Request</span>
-                    <h4 className="font-bold text-slate-200 text-xs mt-1 leading-tight">
+                    <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-purple-700 font-bold uppercase">Purchase Request</span>
+                    <h4 className="font-bold text-slate-900 text-xs mt-1 leading-tight">
                       {activeItem === 1 ? 'Forklift Hydraulic Cylinder' : 'Operations Flight & Lodging'}
                     </h4>
                   </div>
-                  <span className="text-xs font-extrabold text-slate-200 shrink-0">
+                  <span className="text-xs font-extrabold text-slate-800 shrink-0">
                     {activeItem === 1 ? '$1,200' : '$450'}
                   </span>
                 </div>
                 
                 {/* Description */}
-                <p className="text-[9.5px] leading-relaxed text-slate-400">
+                <p className="text-[9.5px] leading-relaxed text-slate-600 font-medium">
                   {activeItem === 1 
                     ? 'Hydraulic cylinder replacement for secondary Warehouse Unit B forklift. Essential for morning loading dock logistics.'
                     : 'Flight expenses and 2 nights lodging in Phoenix for logistics expo.'
@@ -633,30 +634,30 @@ function ApprovalsPreview() {
                 </p>
                 
                 {/* Meta details */}
-                <div className="grid grid-cols-2 gap-2 text-[8px] border-t border-slate-900 pt-2 text-slate-500 font-bold">
+                <div className="grid grid-cols-2 gap-2 text-[8px] border-t border-slate-200/50 pt-2 text-slate-450 font-bold">
                   <div>
                     <span>REQUESTED BY</span>
-                    <div className="text-slate-350 mt-0.5">{activeItem === 1 ? 'Marcus Chen' : 'Alex Rivera'}</div>
+                    <div className="text-slate-700 mt-0.5">{activeItem === 1 ? 'Marcus Chen' : 'Alex Rivera'}</div>
                   </div>
                   <div>
                     <span>BUDGET ALLOC</span>
-                    <div className="text-slate-350 mt-0.5">{activeItem === 1 ? 'Q2 Maintenance' : 'Travel & Conference'}</div>
+                    <div className="text-slate-700 mt-0.5">{activeItem === 1 ? 'Q2 Maintenance' : 'Travel & Conference'}</div>
                   </div>
                 </div>
               </div>
               
               {/* Actions & Budget Indicator */}
-              <div className="space-y-3 pt-2.5 border-t border-slate-900 shrink-0">
+              <div className="space-y-3 pt-2.5 border-t border-slate-200/50 shrink-0">
                 {/* Budget utilization */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[7.5px] text-slate-500 font-bold">
                     <span>BUDGET UTILIZATION</span>
                     <span>{activeItem === 1 ? `$${(budgetPercent * 100).toLocaleString()}` : '$3,400'} / $10,000</span>
                   </div>
-                  <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div 
                       className={`h-full rounded-full transition-all duration-1000 ${
-                        budgetPercent >= 100 ? 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.4)]' : 'bg-purple-500'
+                        budgetPercent >= 100 ? 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.3)]' : 'bg-purple-500'
                       }`}
                       style={{ width: `${budgetPercent}%` }}
                     />
@@ -665,12 +666,12 @@ function ApprovalsPreview() {
                 
                 {/* Action buttons */}
                 <div className="flex justify-end gap-2 text-[10px] font-bold">
-                  <button className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400 cursor-default">Reject</button>
+                  <button className="px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-500 cursor-default">Reject</button>
                   <button 
                     className={`px-3 py-1 rounded font-extrabold cursor-default transition-all ${
                       isApproved 
-                        ? 'bg-emerald-950/20 border border-emerald-900/30 text-emerald-400' 
-                        : 'bg-emerald-600 border border-emerald-500 text-slate-950 hover:bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.15)] animate-pulse'
+                        ? 'bg-emerald-50 border border-emerald-200 text-emerald-600' 
+                        : 'bg-emerald-600 border border-emerald-500 text-white hover:bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.15)] animate-pulse'
                     }`}
                   >
                     {isApproved ? 'Approved' : 'Approve'}
@@ -685,35 +686,45 @@ function ApprovalsPreview() {
   );
 }
 
-// Animation Subcomponent 4: Admin Console
+// Animation Subcomponent 4: Admin Console (Our biggest moat - Light Glass Control Tower)
 function AdminPreview() {
   const [cursorX, setCursorX] = useState(150);
   const [cursorY, setCursorY] = useState(210);
   const [isGrabbing, setIsGrabbing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [marcusLoad, setMarcusLoad] = useState(95);
-  const [alexLoad, setAlexLoad] = useState(50);
-  const [assigneeName, setAssigneeName] = useState('Marcus Chen');
+  
+  // Moat states: Marcus overloaded at 120%
+  const [marcusLoad, setMarcusLoad] = useState(120);
+  const [alexLoad, setAlexLoad] = useState(40);
+  const [triageResolved, setTriageResolved] = useState(false);
+  const [auditLog, setAuditLog] = useState<string[]>([
+    'Sarah Jenkins approved $1,200 expense',
+    'System audit: Goal status healthy (94%)'
+  ]);
 
   useEffect(() => {
     let active = true;
     const runAnimation = async () => {
       if (!active) return;
-      setMarcusLoad(95);
-      setAlexLoad(50);
-      setAssigneeName('Marcus Chen');
+      setMarcusLoad(120);
+      setAlexLoad(40);
+      setTriageResolved(false);
       setDropdownOpen(false);
       setIsGrabbing(false);
-      setCursorX(150);
+      setCursorX(160);
       setCursorY(210);
+      setAuditLog([
+        'Sarah Jenkins approved $1,200 expense',
+        'System audit: Goal status healthy (94%)'
+      ]);
 
-      // 1.5s: Move cursor to task assignee (Roughly X: 220, Y: 185 relative to panel area)
+      // 1.5s: Move cursor to "Accept Auto-Triage" button (Roughly X: 240, Y: 215)
       await new Promise(r => setTimeout(r, 1500));
       if (!active) return;
 
       const steps1 = 30;
-      const startX = 150, startY = 210;
-      const endX = 220, endY = 185;
+      const startX = 160, startY = 210;
+      const endX = 240, endY = 215;
       for (let i = 1; i <= steps1; i++) {
         await new Promise(r => setTimeout(r, 18));
         if (!active) return;
@@ -723,60 +734,39 @@ function AdminPreview() {
         setCursorY(startY + (endY - startY) * t);
       }
 
-      // Click to open dropdown
-      await new Promise(r => setTimeout(r, 350));
+      // Click to accept triage recommendation
+      await new Promise(r => setTimeout(r, 450));
       if (!active) return;
       setIsGrabbing(true);
       await new Promise(r => setTimeout(r, 120));
       if (!active) return;
       setIsGrabbing(false);
-      setDropdownOpen(true);
+      setTriageResolved(true);
 
-      // 3.0s: Move cursor to Alex Rivera (Roughly X: 220, Y: 215)
-      await new Promise(r => setTimeout(r, 800));
-      if (!active) return;
-
-      const steps2 = 15;
-      const dStartX = 220, dStartY = 185;
-      const dEndX = 220, dEndY = 215;
-      for (let i = 1; i <= steps2; i++) {
-        await new Promise(r => setTimeout(r, 18));
-        if (!active) return;
-        const ratio = i / steps2;
-        const t = ratio * ratio * (3 - 2 * ratio);
-        setCursorX(dStartX + (dEndX - dStartX) * t);
-        setCursorY(dStartY + (dEndY - dStartY) * t);
-      }
-
-      // Click Alex Rivera
-      await new Promise(r => setTimeout(r, 350));
-      if (!active) return;
-      setIsGrabbing(true);
-      await new Promise(r => setTimeout(r, 120));
-      if (!active) return;
-      setIsGrabbing(false);
-      setDropdownOpen(false);
-      setAssigneeName('Alex Rivera');
-
-      // 4.0s: Animate workload reallocation shift
-      await new Promise(r => setTimeout(r, 300));
-      if (!active) return;
-
+      // Animate workload shift (Marcus 120% -> 80%, Alex 40% -> 60%)
       const transitionSteps = 25;
       for (let i = 1; i <= transitionSteps; i++) {
         await new Promise(r => setTimeout(r, 25));
         if (!active) return;
         const ratio = i / transitionSteps;
-        setMarcusLoad(95 - (95 - 75) * ratio);
-        setAlexLoad(50 + (70 - 50) * ratio);
+        setMarcusLoad(120 - (120 - 80) * ratio);
+        setAlexLoad(40 + (60 - 40) * ratio);
       }
 
+      // Add audit log entry
+      await new Promise(r => setTimeout(r, 400));
+      if (!active) return;
+      setAuditLog(prev => [
+        'AI Triage: Inspect Dock Gates reallocated to Alex',
+        ...prev
+      ]);
+
       // Move cursor back to rest
-      setCursorX(150);
+      setCursorX(160);
       setCursorY(210);
 
       // 8.5s: Reset loop
-      await new Promise(r => setTimeout(r, 3500));
+      await new Promise(r => setTimeout(r, 4500));
       if (active) {
         runAnimation();
       }
@@ -787,117 +777,153 @@ function AdminPreview() {
   }, []);
 
   return (
-    <div className="h-full bg-slate-950 text-slate-100 p-4 font-sans text-xs relative overflow-hidden flex flex-col justify-between select-none">
+    <div className="h-full bg-slate-50/20 text-slate-800 p-4 font-sans text-xs relative overflow-hidden flex flex-col justify-between select-none">
       <MouseCursor x={cursorX} y={cursorY} isGrabbing={isGrabbing} />
       
-      {/* Top section widgets */}
-      <div className="grid grid-cols-2 gap-3 shrink-0">
-        {/* Widget 1: Workload allocation */}
-        <div className="bg-slate-900/20 border border-slate-900/50 rounded-xl p-2.5 flex flex-col gap-2">
-          <span className="font-bold text-[8.5px] text-slate-500 uppercase tracking-wider">Workload Allocation</span>
+      {/* Dashboard Top Widgets */}
+      <div className="grid grid-cols-12 gap-3 shrink-0">
+        {/* Widget 1: Capacity Allocator */}
+        <div className="col-span-7 bg-white/70 border border-slate-200/80 rounded-2xl p-2.5 flex flex-col gap-2 shadow-sm">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-[8.5px] text-slate-500 uppercase tracking-wider">Workload Balancer</span>
+            {!triageResolved && (
+              <span className="text-[7.5px] px-1 bg-red-50 text-red-600 border border-red-200 rounded font-extrabold animate-pulse">1 Risk</span>
+            )}
+          </div>
           <div className="space-y-1.5">
             {/* Marcus */}
             <div className="flex justify-between items-center text-[9px] font-bold">
-              <span className="text-slate-355">Marcus Chen</span>
-              <span className={`transition-colors font-extrabold ${marcusLoad > 85 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`}>
+              <span className="text-slate-600">Marcus (Logistics)</span>
+              <span className={`transition-colors font-extrabold ${marcusLoad > 90 ? 'text-red-600 animate-pulse' : 'text-emerald-600'}`}>
                 {Math.round(marcusLoad)}%
               </span>
             </div>
-            <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div 
                 className={`h-full rounded-full transition-all duration-300 ${
-                  marcusLoad > 85 ? 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.4)]' : 'bg-rose-500'
+                  marcusLoad > 90 ? 'bg-red-500' : 'bg-emerald-500'
                 }`}
-                style={{ width: `${marcusLoad}%` }}
+                style={{ width: `${marcusLoad / 1.3}%` }} // Adjusted ratio for 120% capacity visual
               />
             </div>
             
             {/* Alex */}
             <div className="flex justify-between items-center text-[9px] font-bold">
-              <span className="text-slate-355">Alex Rivera</span>
-              <span className="text-slate-400 font-extrabold">{Math.round(alexLoad)}%</span>
+              <span className="text-slate-600">Alex (Product Ops)</span>
+              <span className="text-slate-500 font-extrabold">{Math.round(alexLoad)}%</span>
             </div>
-            <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div className="h-full bg-indigo-500 rounded-full transition-all duration-300" style={{ width: `${alexLoad}%` }} />
             </div>
           </div>
         </div>
         
-        {/* Widget 2: Operations Health */}
-        <div className="bg-slate-900/20 border border-slate-900/50 rounded-xl p-2.5 flex items-center justify-between">
-          <div className="space-y-0.5">
-            <span className="font-bold text-[8.5px] text-slate-500 uppercase tracking-wider block">Project Health</span>
-            <div className="text-[10px] font-extrabold text-emerald-455 mt-1">94% On Track</div>
-            <div className="text-[7.5px] text-slate-500 mt-0.5">0 blockages found</div>
-          </div>
-          
-          <div className="relative h-11 w-11 flex items-center justify-center shrink-0">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-slate-900"
-                strokeWidth="3.5"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <motion.path
-                initial={{ strokeDasharray: '0, 100' }}
-                animate={{ strokeDasharray: '94, 100' }}
-                transition={{ duration: 1.5 }}
-                className="text-emerald-500"
-                strokeWidth="3.5"
-                strokeDasharray="94, 100"
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-            <div className="absolute font-bold text-[9px] text-slate-200">94%</div>
+        {/* Widget 2: Goal progress circle */}
+        <div className="col-span-5 bg-white/70 border border-slate-200/80 rounded-2xl p-2.5 flex flex-col justify-between shadow-sm">
+          <span className="font-bold text-[8.5px] text-slate-500 uppercase tracking-wider block">Goal Target</span>
+          <div className="flex items-center gap-2.5">
+            <div className="relative h-10 w-10 flex items-center justify-center shrink-0">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <path className="text-slate-100" strokeWidth="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <motion.path
+                  initial={{ strokeDasharray: '0, 100' }}
+                  animate={{ strokeDasharray: '94, 100' }}
+                  transition={{ duration: 1.5 }}
+                  className="text-emerald-500"
+                  strokeWidth="3.5"
+                  strokeDasharray="94, 100"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <div className="absolute font-bold text-[9px] text-slate-800">94%</div>
+            </div>
+            <div className="min-w-0">
+              <div className="text-[9.5px] font-extrabold text-emerald-600 truncate">Q2 Fleet</div>
+              <div className="text-[7.5px] text-slate-400 font-bold">On Track</div>
+            </div>
           </div>
         </div>
       </div>
       
-      {/* Bottom section triage */}
-      <div className="bg-slate-900/20 border border-slate-900/50 rounded-xl p-2.5 flex-1 mt-3 flex flex-col justify-between relative min-h-0">
-        <span className="font-bold text-[8.5px] text-slate-500 uppercase tracking-wider shrink-0 block mb-1.5">Triage Queue</span>
-        
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="flex items-center justify-between bg-slate-950/80 border border-slate-900 p-2 rounded-xl relative">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
-              <div className="min-w-0">
-                <div className="font-bold text-[9.5px] text-slate-200 truncate">Inspect dock gates</div>
-                <div className="text-[7.5px] text-slate-500 font-bold mt-0.5">Urgent · Overdue</div>
-              </div>
-            </div>
-            
-            {/* Assignee button */}
-            <div className="relative shrink-0">
-              <button className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg text-[9px] font-bold text-slate-350 cursor-default">
-                <div className="h-3.5 w-3.5 rounded-full bg-indigo-950 flex items-center justify-center text-[7px] font-bold text-indigo-400 border border-indigo-900/40">
-                  {assigneeName === 'Marcus Chen' ? 'MC' : 'AR'}
+      {/* Triage Copilot Center - Moat representation */}
+      <div className="flex-1 mt-3 bg-white/70 border border-slate-200/80 rounded-2xl p-2.5 flex flex-col justify-between shadow-sm min-h-0">
+        <div className="flex justify-between items-start mb-1 shrink-0">
+          <div className="flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-indigo-500" />
+            <span className="font-bold text-[8.5px] text-slate-500 uppercase tracking-wider">Control Tower Triage</span>
+          </div>
+          <span className="text-[8px] text-slate-400 font-bold">AI Autopilot Suggestion</span>
+        </div>
+
+        {/* Triage card content */}
+        <div className="flex-grow flex flex-col justify-center">
+          <AnimatePresence mode="wait">
+            {!triageResolved ? (
+              <motion.div
+                key="alert"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                className="bg-red-50/80 border border-red-200 rounded-xl p-2 flex items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="font-bold text-[9.5px] text-red-950 truncate">Marcus Chen Overcapacity</div>
+                    <div className="text-[8px] text-red-700 font-semibold mt-0.5 leading-tight">
+                      Reallocate task 'Inspect gates' to Alex Rivera (40% capacity)
+                    </div>
+                  </div>
                 </div>
-                <span>{assigneeName.split(' ')[0]}</span>
-                <ChevronDown className="h-2.5 w-2.5 text-slate-500" />
-              </button>
-              
-              {/* Dropdown Menu */}
-              {dropdownOpen && (
-                <div className="absolute right-0 bottom-full mb-1 w-24 bg-slate-900 border border-slate-800 rounded-lg shadow-xl py-1 z-40">
-                  <div className="px-2 py-0.5 text-[7px] text-slate-500 uppercase font-bold">Reassign</div>
-                  <div className="h-px bg-slate-800 my-1" />
-                  <button className="w-full text-left px-2 py-1 text-[8.5px] font-bold text-slate-450 hover:bg-slate-800 cursor-default flex items-center gap-1.5">
-                    <div className="h-3 w-3 rounded-full bg-slate-850 text-[7px] font-bold text-slate-400 flex items-center justify-center">MC</div>
-                    <span>Marcus</span>
-                  </button>
-                  <button className="w-full text-left px-2 py-1 text-[8.5px] font-bold text-indigo-400 hover:bg-slate-850 cursor-default flex items-center gap-1.5">
-                    <div className="h-3 w-3 rounded-full bg-indigo-950 border border-indigo-900/40 text-[7px] font-bold text-indigo-400 flex items-center justify-center">AR</div>
-                    <span>Alex</span>
-                  </button>
+                
+                {/* Suggestion action button */}
+                <button className="px-2 py-1 bg-indigo-600 border border-indigo-500 text-white rounded-lg text-[9px] font-extrabold shadow-sm shrink-0 flex items-center gap-0.5 cursor-default hover:bg-indigo-500">
+                  <span>Rebalance</span>
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="resolved"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-emerald-50/80 border border-emerald-250 rounded-xl p-2 flex items-center justify-between gap-2.5"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-[9.5px] text-emerald-950">Workloads Fully Balanced</div>
+                    <div className="text-[8px] text-emerald-700 font-semibold mt-0.5">Alert resolved. Load balanced smoothly.</div>
+                  </div>
                 </div>
-              )}
-            </div>
+                <span className="text-[7.5px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-600 font-bold border border-emerald-200">Balanced</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Audit Log Feed */}
+        <div className="border-t border-slate-100 pt-1.5 mt-1.5 shrink-0">
+          <div className="flex items-center justify-between text-[7px] text-slate-400 font-bold uppercase mb-1">
+            <span>Live Audit Trail</span>
+            <span className="h-1 w-1 bg-slate-300 rounded-full animate-ping" />
+          </div>
+          <div className="space-y-1 max-h-[30px] overflow-hidden">
+            {auditLog.map((log, index) => (
+              <motion.div 
+                key={log} 
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-1.5 text-[8.5px] text-slate-500 font-semibold truncate"
+              >
+                <div className="h-1 w-1 rounded-full bg-slate-350" />
+                <span className="truncate">{log}</span>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
@@ -956,11 +982,6 @@ export function FeatureCards() {
       <div className="max-w-6xl mx-auto">
         <ScrollReveal>
           <div className="text-center mb-16 flex flex-col items-center">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50/70 border border-indigo-100 text-[10px] font-extrabold text-indigo-600 tracking-wider uppercase mb-4 shadow-sm select-none">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-500 animate-pulse" />
-              <span>Operational Efficiency</span>
-            </div>
-            
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
               Engineered for <span className="text-gradient">Operational Speed</span>
             </h2>
@@ -986,7 +1007,7 @@ export function FeatureCards() {
                   className={`group relative rounded-3xl p-6 transition-all duration-300 cursor-pointer border shadow-sm overflow-hidden flex flex-col justify-between ${
                     isActive 
                       ? `${f.activeClass.bg} ${f.activeClass.border} ${f.activeClass.glow} scale-[1.01]` 
-                      : 'bg-white/40 border-slate-150 hover:bg-white/75 hover:scale-[1.005]'
+                      : 'bg-white/40 border-slate-155 hover:bg-white/75 hover:scale-[1.005]'
                   } mouse-glow-card mouse-glow-border`}
                 >
                   <div className="flex gap-4">
@@ -1008,7 +1029,7 @@ export function FeatureCards() {
                         {f.title}
                       </h3>
                       
-                      <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                      <p className="text-xs text-slate-505 leading-relaxed font-semibold">
                         {f.description}
                       </p>
 
@@ -1048,12 +1069,14 @@ export function FeatureCards() {
             })}
           </div>
 
-          {/* Right Column: Dark-Glass Mockup Terminal Showcase */}
+          {/* Right Column: Light-Glass Mockup Terminal Showcase */}
           <div className="col-span-7 relative h-[360px] flex">
             <div className="absolute inset-0 rounded-3xl bg-indigo-500/5 blur-[45px] pointer-events-none" />
-            <div className="w-full h-full dark-glass rounded-3xl border border-white/10 shadow-2xl relative flex flex-col overflow-hidden">
+            
+            {/* Main Light Glass Frame */}
+            <div className="w-full h-full glass rounded-3xl border border-white/60 shadow-2xl relative flex flex-col overflow-hidden">
               {/* macOS Control Header */}
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 bg-slate-950/20 shrink-0 select-none">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/50 bg-white/60 shrink-0 select-none">
                 <div className="flex items-center gap-1.5">
                   <div className="h-3 w-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/20" />
                   <div className="h-3 w-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/20" />
@@ -1061,23 +1084,23 @@ export function FeatureCards() {
                 </div>
                 
                 {/* Mock Browser URL */}
-                <div className="text-[10px] text-slate-500 font-bold font-mono px-4 py-0.5 rounded-md bg-slate-950/40 border border-white/5 flex items-center gap-1 max-w-[200px] truncate">
+                <div className="text-[10px] text-slate-600 font-bold font-mono px-4 py-0.5 rounded-md bg-slate-200/40 border border-slate-300/30 flex items-center gap-1 max-w-[200px] truncate">
                   <span>guild.orbit</span>
-                  <span className="text-slate-600">/</span>
-                  <span className="text-slate-400 font-semibold">{features[activeTab].title.toLowerCase().replace(/\s+/g, '-')}</span>
+                  <span className="text-slate-400">/</span>
+                  <span className="text-slate-655 font-semibold">{features[activeTab].title.toLowerCase().replace(/\s+/g, '-')}</span>
                 </div>
                 
                 {/* Play/Pause Control toggle */}
                 <button 
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="p-1 rounded bg-slate-900 border border-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer flex items-center justify-center shrink-0 animate-fade-in"
+                  className="p-1 rounded bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-center shrink-0 shadow-sm"
                 >
                   {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
                 </button>
               </div>
 
-              {/* Dynamic Animated Preview Canvas */}
-              <div className="flex-grow min-h-0 bg-slate-950">
+              {/* Dynamic Animated Preview Canvas (Light Glass Canvas background) */}
+              <div className="flex-grow min-h-0 bg-white/35 backdrop-blur-md">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
@@ -1152,9 +1175,10 @@ export function FeatureCards() {
                       animate={{ opacity: 1, height: 280 }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="overflow-hidden w-full border border-slate-805 rounded-2xl relative shadow-inner mt-2 flex flex-col"
+                      className="overflow-hidden w-full border border-slate-200/50 rounded-2xl relative shadow-inner mt-2 flex flex-col"
                     >
-                      <div className="flex-1 min-h-0 bg-slate-950 rounded-2xl overflow-hidden">
+                      {/* Inside mobile drawer, render light glass canvas */}
+                      <div className="flex-grow min-h-0 bg-white/35 backdrop-blur-md rounded-2xl overflow-hidden">
                         {i === 0 && <ChatPreview />}
                         {i === 1 && <WorkTrackingPreview />}
                         {i === 2 && <ApprovalsPreview />}
