@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { Shield, Eye, Lock, FileText, Share2, Bell, Mail } from 'lucide-react';
+import { Shield, Eye, Lock, FileText, Share2, Bell } from 'lucide-react';
 
 interface Section {
   id: string;
@@ -15,7 +15,6 @@ const SECTIONS: Section[] = [
   { id: 'security', title: 'Data Security & Storage', icon: Lock },
   { id: 'sharing', title: 'Information Sharing', icon: Share2 },
   { id: 'updates', title: 'Policy Updates', icon: Bell },
-  { id: 'contact', title: 'Contact Us', icon: Mail },
 ];
 
 export function Privacy() {
@@ -251,31 +250,7 @@ export function Privacy() {
             </div>
           </section>
 
-          {/* Section: Contact Us */}
-          <section
-            id="contact"
-            className="bg-white/45 glass rounded-3xl p-8 md:p-10 shadow-sm border border-slate-200/50"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
-                <Mail className="h-5 w-5 text-indigo-600" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900">7. Contact Us</h2>
-            </div>
-            <div className="text-sm text-slate-600 font-medium space-y-4 leading-relaxed">
-              <p>
-                If you have any questions or concerns about this Privacy Policy, or if you wish to request data deletion/export, please contact our security team at:
-              </p>
-              <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200/30 flex flex-col gap-1 text-xs">
-                <span className="font-bold text-slate-800">Email:</span>
-                <span className="text-indigo-600 font-semibold">security@guildorbit.com</span>
-                <span className="font-bold text-slate-800 mt-2">Mailing Address:</span>
-                <span className="text-slate-500 font-semibold">
-                  Guild Orbit Inc., 100 Pine Street, Suite 1200, San Francisco, CA 94111
-                </span>
-              </div>
-            </div>
-          </section>
+
         </main>
       </div>
     </div>

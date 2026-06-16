@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { FileText, ShieldAlert, UserCheck, Settings, Scale, AlertTriangle, HelpCircle } from 'lucide-react';
+import { FileText, ShieldAlert, UserCheck, Settings, Scale, AlertTriangle } from 'lucide-react';
 
 interface Section {
   id: string;
@@ -15,7 +15,6 @@ const SECTIONS: Section[] = [
   { id: 'conduct', title: '4. User Conduct', icon: ShieldAlert },
   { id: 'property', title: '5. Intellectual Property', icon: Scale },
   { id: 'liability', title: '6. Limitation of Liability', icon: AlertTriangle },
-  { id: 'governing', title: '7. Governing Law', icon: HelpCircle },
 ];
 
 export function Terms() {
@@ -248,26 +247,7 @@ export function Terms() {
             </div>
           </section>
 
-          {/* Section: Governing Law */}
-          <section
-            id="governing"
-            className="bg-white/45 glass rounded-3xl p-8 md:p-10 shadow-sm border border-slate-200/50"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
-                <HelpCircle className="h-5 w-5 text-indigo-600" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900">7. Governing Law</h2>
-            </div>
-            <div className="text-sm text-slate-600 font-medium space-y-4 leading-relaxed">
-              <p>
-                These Terms shall be governed by and construed in accordance with the laws of the State of California, United States, without regard to its conflict of law principles.
-              </p>
-              <p>
-                Any legal action or proceeding arising under these Terms will be brought exclusively in the federal or state courts located in San Francisco, California, and you hereby consent to the personal jurisdiction and venue therein.
-              </p>
-            </div>
-          </section>
+
         </main>
       </div>
     </div>
