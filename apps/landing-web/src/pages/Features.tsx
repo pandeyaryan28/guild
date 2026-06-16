@@ -290,23 +290,7 @@ export function Features() {
                         }}
                       />
 
-                      {/* Dynamic Floating Badge Overlay specific to active tab */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 15, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ delay: 0.25, type: 'spring', stiffness: 200, damping: 18 }}
-                        className="absolute bottom-4 right-4 z-20"
-                      >
-                        <div className="glass dark-glass rounded-xl p-2.5 border border-white/10 shadow-lg flex items-center gap-2 text-[10.5px] font-bold text-white">
-                          <div className="h-2 w-2 rounded-full animate-pulse" style={{
-                            backgroundColor: activeFeature.color === 'indigo' ? '#6366f1' : 
-                                             activeFeature.color === 'cyan' ? '#06b6d4' : 
-                                             activeFeature.color === 'purple' ? '#a855f7' : 
-                                             activeFeature.color === 'rose' ? '#f43f5e' : '#8b5cf6'
-                          }} />
-                          <span>Status: {activeFeature.highlightBadge}</span>
-                        </div>
-                      </motion.div>
+
 
                       {/* Interactive Floating Micro-graphics for wow-factor */}
                       {activeFeature.id === 'work-tracking' && (
