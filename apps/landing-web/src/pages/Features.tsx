@@ -185,7 +185,13 @@ export function Features() {
                 return (
                   <button
                     key={f.id}
-                    onClick={() => setActiveTab(idx)}
+                    onClick={() => {
+                      if (isActive) {
+                        navigate(f.path);
+                      } else {
+                        setActiveTab(idx);
+                      }
+                    }}
                     onMouseMove={handleMouseMove}
                     className={`text-left p-5 rounded-2xl transition-all duration-300 relative border flex items-start gap-4 cursor-pointer outline-none select-none group w-full ${
                       isActive 
@@ -219,11 +225,6 @@ export function Features() {
                         }`}>
                           {f.category}
                         </span>
-                        {isActive && (
-                          <span className="text-[9.5px] font-extrabold bg-indigo-50 text-indigo-750 px-2 py-0.5 rounded border border-indigo-100/40">
-                            Active
-                          </span>
-                        )}
                       </div>
                       <h3 className={`text-[13.5px] font-bold tracking-tight ${
                         isActive ? 'text-slate-900' : 'text-slate-700'
@@ -231,13 +232,25 @@ export function Features() {
                         {f.title}
                       </h3>
                       {isActive && (
-                        <motion.p
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          className="text-[11.5px] text-slate-500 font-semibold leading-relaxed pt-1"
-                        >
-                          {f.description}
-                        </motion.p>
+                        <>
+                          <motion.p
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="text-[11.5px] text-slate-500 font-semibold leading-relaxed pt-1"
+                          >
+                            {f.description}
+                          </motion.p>
+                          
+                          <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="pt-2.5 flex items-center gap-1.5 text-[11px] font-extrabold text-indigo-600 group-hover:text-indigo-700 transition-colors"
+                          >
+                            <span>Explore Module</span>
+                            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                          </motion.div>
+                        </>
                       )}
                     </div>
                   </button>
@@ -338,20 +351,6 @@ export function Features() {
                       )}
                     </motion.div>
                   </AnimatePresence>
-                </div>
-
-                {/* Learn More & Module Navigation bar */}
-                <div className="mt-3 flex justify-between items-center px-1">
-                  <span className="text-[10px] text-slate-500 font-semibold">
-                    Interactive Preview • Click Learn More to deep dive
-                  </span>
-                  <button
-                    onClick={() => navigate(activeFeature.path)}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer group"
-                  >
-                    Learn more
-                    <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </button>
                 </div>
               </div>
             </div>
