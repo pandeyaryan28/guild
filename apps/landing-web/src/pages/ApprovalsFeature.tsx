@@ -1,7 +1,6 @@
 import { motion } from 'motion/react';
 import { 
   FileCheck, 
-  Sparkles, 
   Clock, 
   ArrowLeft, 
   Check, 
@@ -35,10 +34,6 @@ export function ApprovalsFeature() {
         <div className="grid lg:grid-cols-12 gap-12 items-center mb-24">
           {/* Left Text Column */}
           <div className="lg:col-span-5 space-y-6">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-purple-600 bg-purple-50 border border-purple-150/50 px-3 py-1.5 rounded-full glass">
-              <Sparkles className="h-3 w-3 text-purple-500 animate-pulse" />
-              Guild Core Module
-            </span>
             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
               Requests & <br/>
               <span className="text-gradient">Approvals Log</span>

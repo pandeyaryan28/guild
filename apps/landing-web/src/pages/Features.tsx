@@ -5,7 +5,6 @@ import {
   FileCheck,
   FolderOpen,
   ArrowRight,
-  Sparkles,
   Shield,
 } from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
@@ -86,10 +85,6 @@ export function Features() {
 
       {/* Header */}
       <section className="px-6 max-w-3xl mx-auto text-center mb-16 space-y-4">
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-indigo-655 bg-indigo-50 border border-indigo-150/50 px-3 py-1.5 rounded-full glass">
-          <Sparkles className="h-3 w-3 text-indigo-500 animate-pulse" />
-          Guild Product Suite
-        </span>
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

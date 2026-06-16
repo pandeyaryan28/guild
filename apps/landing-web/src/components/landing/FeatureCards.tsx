@@ -5,7 +5,6 @@ import {
   FileCheck, 
   Shield, 
   ArrowRight, 
-  Sparkles,
   Terminal,
   Clock,
   Users,
@@ -27,19 +26,19 @@ const features = [
   },
   {
     icon: CheckSquare,
-    title: 'Visual Kanban',
-    description: 'Track operations with transparent Kanban boards, task owners, and real-time statuses.',
+    title: 'Work Tracking',
+    description: 'Track operations with transparent Kanban boards, assigned task owners, and real-time statuses.',
     bullets: ['Lightweight Kanban boards', 'Assigned owners & due dates', 'Auditable priority triage'],
-    color: 'text-indigo-600',
+    color: 'text-indigo-650',
     bg: 'bg-indigo-55 bg-indigo-50 border border-indigo-100/30',
     hoverBorder: 'hover:border-indigo-300',
     path: '/features/work-tracking',
   },
   {
     icon: FileCheck,
-    title: 'Instant Approvals',
-    description: 'Submit, review, and authorize purchase orders and leave requests in a single click.',
-    bullets: ['Leave & vacation requests', 'Purchase order approvals', 'Optional action comments'],
+    title: 'Requests & Approvals Log',
+    description: 'Standardize administrative requests. Review expense quotes, authorize leaves of absence, and track procurement files in a secure sign-off inbox.',
+    bullets: ['Expense reimbursement queues', 'Leave of absence forms', 'Procurement audit logs'],
     color: 'text-purple-600',
     bg: 'bg-purple-55 bg-purple-50 border border-purple-100/30',
     hoverBorder: 'hover:border-purple-300',
@@ -65,10 +64,6 @@ export function FeatureCards() {
       <div className="max-w-5xl mx-auto">
         <ScrollReveal>
           <div className="text-center mb-16 space-y-4">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50/80 border border-indigo-100/50 px-3 py-1.5 rounded-full glass">
-              <Sparkles className="h-3 w-3 text-indigo-500 animate-pulse" />
-              Everything you need in one hub
-            </span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
               Engineered for Operational Speed
             </h2>

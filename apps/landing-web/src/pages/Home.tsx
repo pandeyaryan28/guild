@@ -22,9 +22,6 @@ export function Home() {
         <div className="max-w-5xl mx-auto flex flex-col items-center">
           <ScrollReveal>
             <div className="text-center mb-12">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50/80 border border-indigo-100/50 px-3 py-1.5 rounded-full mb-3 glass">
-                Interactive Preview
-              </span>
               <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
                 Try the live simulator
               </h2>

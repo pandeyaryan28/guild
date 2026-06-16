@@ -565,9 +565,6 @@ export function Demo() {
       <div className="max-w-5xl mx-auto flex flex-col items-center">
         {/* Header */}
         <section className="text-center mb-12 max-w-2xl relative z-10">
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50/80 border border-indigo-100/50 px-3 py-1.5 rounded-full mb-3 glass">
-            Motion Walkthrough
-          </span>
           <h1 className="text-[clamp(2rem,4vw,3.5rem)] font-extrabold text-slate-900 tracking-tight leading-none">
             See the Platform in Action
           </h1>

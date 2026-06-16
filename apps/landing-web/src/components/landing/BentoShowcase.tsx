@@ -13,9 +13,7 @@ import {
   UserCheck,
   CheckCircle2,
   Terminal,
-  Layers,
-  Inbox,
-  Lock
+  Inbox
 } from 'lucide-react';
 import { ScrollReveal } from './ScrollReveal';
 import { useNavigation } from '../../context/NavigationContext';
@@ -63,10 +61,6 @@ export function BentoShowcase() {
       <div className="max-w-5xl mx-auto">
         <ScrollReveal>
           <div className="text-center mb-16 space-y-4">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50/85 border border-indigo-150/40 px-3 py-1.5 rounded-full glass">
-              <Layers className="h-3 w-3 text-indigo-500 animate-spin" style={{ animationDuration: '6s' }} />
-              Workspace Architecture
-            </span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
               Engineered for Total Visibility
             </h2>
@@ -251,10 +245,6 @@ export function BentoShowcase() {
               className="glass rounded-3xl p-8 hover:scale-[1.005] transition-all duration-300 border-slate-150 shadow-sm flex flex-col md:flex-row gap-8 items-center cursor-pointer hover:border-slate-350"
             >
               <div className="flex-1 space-y-4">
-                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100/35">
-                  <Lock className="h-3 w-3 text-indigo-500" />
-                  Premium Admin Console
-                </span>
                 <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
                   Business-Wide Visibility Layer
                 </h3>

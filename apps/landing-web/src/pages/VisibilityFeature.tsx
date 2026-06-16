@@ -4,7 +4,6 @@ import {
   FolderOpen, 
   ArrowLeft, 
   Check, 
-  Sparkles, 
   Files, 
   Search, 
   Eye, 
@@ -36,10 +35,6 @@ export function VisibilityFeature() {
         <div className="grid lg:grid-cols-12 gap-12 items-center mb-24">
           {/* Left Text Column */}
           <div className="lg:col-span-5 space-y-6">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-150/50 px-3 py-1.5 rounded-full glass">
-              <Sparkles className="h-3 w-3 text-rose-500 animate-pulse" />
-              Guild Core Module
-            </span>
             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
               Visibility & <br/>
               <span className="text-gradient">Shared Files</span>

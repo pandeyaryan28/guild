@@ -8,7 +8,6 @@ import {
   Check, 
   AlertTriangle, 
   UserCheck, 
-  Sparkles,
   TrendingUp,
   Sliders
 } from 'lucide-react';
@@ -38,10 +37,6 @@ export function AdminFeature() {
         <div className="grid lg:grid-cols-12 gap-12 items-center mb-24">
           {/* Left Text Column */}
           <div className="lg:col-span-5 space-y-6">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-150/50 px-3 py-1.5 rounded-full glass">
-              <Sparkles className="h-3 w-3 text-indigo-500 animate-pulse" />
-              Guild Orbit Premium Feature
-            </span>
             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
               Admin Portal & <br/>
               <span className="text-gradient">Operations Hub</span>
