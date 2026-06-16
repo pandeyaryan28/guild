@@ -8,7 +8,9 @@ import {
   Users, 
   ShieldCheck, 
   AlertCircle,
-  Video
+  Video,
+  Hash,
+  Send
 } from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
 import { CTABanner } from '../components/landing/CTABanner';

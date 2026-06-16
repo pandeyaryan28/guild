@@ -3,18 +3,50 @@ import { Check, Star, ArrowRight } from 'lucide-react';
 import { APP_URL } from '../../config/landingData';
 import { ScrollReveal } from './ScrollReveal';
 
+const INDIA_TIMEZONES = new Set([
+  'Asia/Kolkata',
+  'Asia/Calcutta', // legacy alias used by some OS/browsers
+  'IST',
+]);
+
+function detectCurrency(): 'USD' | 'INR' {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz && INDIA_TIMEZONES.has(tz)) return 'INR';
+    
+    // Secondary signals
+    const lang = navigator.language || '';
+    if (lang === 'en-IN' || lang.endsWith('-IN')) return 'INR';
+  } catch {
+    // ignore — default to USD
+  }
+  return 'USD';
+}
+
+const PRICING = {
+  INR: {
+    monthly: 499,          // ₹ per seat per month
+    annual: 249.5,         // ₹ per seat per month billed annually (50% off)
+    annualTotal: 2994,     // ₹ per seat per year
+    symbol: '₹',
+  },
+  USD: {
+    monthly: 8.12,         // $ per seat per month
+    annual: 4.06,          // $ per seat per month billed annually (50% off)
+    annualTotal: 48.72,    // $ per seat per year
+    symbol: '$',
+  },
+} as const;
+
+function formatMoney(amount: number, currency: 'USD' | 'INR'): string {
+  if (currency === 'INR') {
+    return `₹${amount.toLocaleString('en-IN')}`;
+  }
+  return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export function PricingCards() {
-  const [currency] = useState<'USD' | 'INR'>(() => {
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta') {
-        return 'INR';
-      }
-    } catch (e) {
-      // ignore
-    }
-    return 'USD';
-  });
+  const [currency] = useState<'USD' | 'INR'>(() => detectCurrency());
   const [cycle, setCycle] = useState<'monthly' | 'annual'>('annual');
 
   return (
@@ -104,20 +136,19 @@ export function PricingCards() {
             <p className="text-xs font-bold text-accent uppercase tracking-wider mt-1 mb-2">Pro</p>
             <div className="flex items-baseline">
               <p className="text-4xl font-extrabold text-ink">
-                {currency === 'INR'
-                  ? cycle === 'annual'
-                    ? '₹249'
-                    : '₹499'
-                  : cycle === 'annual'
-                    ? '$4'
-                    : '$8'}
+                {formatMoney(
+                  cycle === 'annual' ? PRICING[currency].annual : PRICING[currency].monthly,
+                  currency
+                )}
               </p>
               <span className="text-sm font-semibold text-ink-light ml-1.5">
                 / seat / mo
               </span>
             </div>
             <p className="text-xs font-semibold text-ink-faint mt-1.5 mb-6">
-              {cycle === 'annual' ? 'Billed annually' : 'Billed monthly'}
+              {cycle === 'annual'
+                ? `Billed annually (${formatMoney(PRICING[currency].annualTotal, currency)}/seat/year)`
+                : 'Billed monthly'}
             </p>
 
             <div className="h-px bg-accent/10 mb-6" />

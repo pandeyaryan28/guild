@@ -98,7 +98,7 @@ export function Features() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Mouse coordinate tracker hook for standard glow cards
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
