@@ -45,7 +45,7 @@ export function Footer() {
             <a href="/features/work-tracking" onClick={(e) => handleNav(e, '/features/work-tracking')} className="hover:text-indigo-600 transition-colors">Tasks & Kanban</a>
             <a href="/features/team-chat" onClick={(e) => handleNav(e, '/features/team-chat')} className="hover:text-indigo-600 transition-colors">Team Channels</a>
             <a href="/features/approvals" onClick={(e) => handleNav(e, '/features/approvals')} className="hover:text-indigo-600 transition-colors">Approvals Log</a>
-            <a href="/features/visibility" onClick={(e) => handleNav(e, '/features/visibility')} className="hover:text-indigo-600 transition-colors">Shared Directory</a>
+            <a href="/features/visibility" onClick={(e) => handleNav(e, '/features/visibility')} className="hover:text-indigo-600 transition-colors">Dashboards & Feeds</a>
           </div>
         </div>
 

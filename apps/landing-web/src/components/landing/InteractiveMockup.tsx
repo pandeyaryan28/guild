@@ -121,7 +121,7 @@ export function InteractiveMockup() {
     ],
     'marketing-ops': [
       { id: 'm1', sender: 'Sarah Jenkins', avatar: 'SJ', text: 'Alex, did you get around to exporting the new onboarding banner images?', time: 'Today, 8:12 AM' },
-      { id: 'm2', sender: 'Alex Rivera', avatar: 'AR', text: 'Yep! Exported and uploaded to the Shared Files folder. Let me know if we need changes.', time: 'Today, 8:15 AM' }
+      { id: 'm2', sender: 'Alex Rivera', avatar: 'AR', text: 'Yep! Exported the assets. Let me know if we need changes.', time: 'Today, 8:15 AM' }
     ],
     sarah: [
       { id: 's1', sender: 'Sarah Jenkins', avatar: 'SJ', text: 'Hey there! Let me know if you need help assigning permissions by department.', time: 'Yesterday, 4:10 PM' },

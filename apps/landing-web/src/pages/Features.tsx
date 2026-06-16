@@ -4,7 +4,7 @@ import {
   MessageSquare,
   CheckSquare,
   FileCheck,
-  FolderOpen,
+  Clock,
   Shield,
   ArrowRight,
   Maximize2
@@ -62,18 +62,18 @@ const featuresList = [
   },
   {
     id: 'visibility',
-    category: 'Visibility & Files',
-    icon: FolderOpen,
-    title: 'Central Dashboards & Shared Files',
-    description: 'Establish a single source of truth with personal activity feeds, files directory, and task indexes.',
-    bullets: ['Centralized dashboard views', 'Shared files directory', 'Global indexed search'],
+    category: 'Visibility & Dashboards',
+    icon: Clock,
+    title: 'Central Dashboards & Activity Feeds',
+    description: 'Establish a single source of truth with personal activity feeds, central dashboards, and task indexes.',
+    bullets: ['Centralized dashboard views', 'Personal activity feeds', 'Global indexed search'],
     path: '/features/visibility',
     image: '/visibility.png',
     color: 'rose',
     accentClass: 'text-rose-600 bg-rose-50 border-rose-150/40',
     glowColor: 'rgba(244, 63, 94, 0.15)',
     gradient: 'from-rose-500 to-rose-650',
-    highlightBadge: 'Shared'
+    highlightBadge: 'Dashboards'
   },
   {
     id: 'admin-console',

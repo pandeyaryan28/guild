@@ -8,7 +8,7 @@ import {
   MessageSquare, 
   FileCheck, 
   LayoutDashboard, 
-  FolderOpen, 
+  Clock, 
   BookOpen, 
   HelpCircle, 
   Play, 
@@ -77,13 +77,13 @@ export function Navbar() {
       ]
     },
     {
-      title: 'Visibility & Files',
+      title: 'Visibility & Dashboards',
       color: 'text-rose-600',
       bg: 'bg-rose-50 border border-rose-100/50',
       path: '/features/visibility',
       items: [
         { icon: LayoutDashboard, label: 'Central Dashboard', desc: 'Assigned tasks & activity feeds.', path: '/features/visibility' },
-        { icon: FolderOpen, label: 'Shared Files', desc: 'Shared budget, layout, and document lists.', path: '/features/visibility' },
+        { icon: Clock, label: 'Activity Feeds', desc: 'Real-time updates on status changes.', path: '/features/visibility' },
       ]
     },
     {
@@ -298,7 +298,7 @@ export function Navbar() {
                   <FileCheck className="h-4 w-4 text-purple-600" /> Approvals
                 </a>
                 <a href="/features/visibility" onClick={(e) => handleNav(e, '/features/visibility')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700">
-                  <FolderOpen className="h-4 w-4 text-rose-600" /> Shared Files
+                  <Clock className="h-4 w-4 text-rose-600" /> Activity Feeds
                 </a>
                 <a href="/features/admin-console" onClick={(e) => handleNav(e, '/features/admin-console')} className="flex items-center gap-1.5 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-700 col-span-2">
                   <Shield className="h-4 w-4 text-slate-700" /> Admin Console

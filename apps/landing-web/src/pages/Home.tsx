@@ -26,7 +26,7 @@ export function Home() {
                 Try the live simulator
               </h2>
               <p className="text-slate-500 text-xs font-semibold mt-2.5 max-w-md mx-auto leading-relaxed">
-                Interact with task boards, approvals, private DMs, and shared directory components in real-time.
+                Interact with task boards, approvals, private DMs, and activity feeds in real-time.
               </p>
             </div>
           </ScrollReveal>

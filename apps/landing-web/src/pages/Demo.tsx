@@ -404,7 +404,7 @@ export function Demo() {
                       exit={{ opacity: 0, y: -10 }}
                       className="glass border border-white px-3 py-1.5 rounded-xl text-[10px] font-bold text-slate-800 shadow-md"
                     >
-                      "David: Shared directory is up to date."
+                      "David: All tasks updated."
                     </motion.div>
                   )}
                 </AnimatePresence>

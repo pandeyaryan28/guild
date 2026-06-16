@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { APP_URL } from '../../config/landingData';
 import { useNavigation } from '../../context/NavigationContext';
 
-const Words = ['Tasks', 'Direct Chats', 'Leave Approvals', 'Expense Sign-offs', 'Shared Files', 'Admin Visibility', 'Workload Allotment'];
+const Words = ['Tasks', 'Direct Chats', 'Leave Approvals', 'Expense Sign-offs', 'Central Dashboards', 'Admin Visibility', 'Workload Allotment'];
 
 export function HeroSection() {
   const { navigate } = useNavigation();
@@ -54,7 +54,7 @@ export function HeroSection() {
           transition={{ duration: 0.5, delay: 0.16 }}
           className="mt-6 text-base md:text-lg text-slate-500 max-w-2xl leading-relaxed font-semibold"
         >
-          Stop checking five fragmented apps. Unify your team tasks, chat, approvals, and shared files in one beautifully coordinated workspace built for operational clarity.
+          Stop checking five fragmented apps. Unify your team tasks, chat, approvals, and dashboards in one beautifully coordinated workspace built for operational clarity.
         </motion.p>
 
         {/* Action Buttons */}

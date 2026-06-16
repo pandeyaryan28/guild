@@ -144,7 +144,7 @@ export function Terms() {
                 <li>Kanban task boards and workflow tracking.</li>
                 <li>Departmental/team chat channels.</li>
                 <li>Structured approval logs.</li>
-                <li>A shared workspace directory with workload visibility.</li>
+                <li>Workspace dashboards with workload visibility.</li>
               </ul>
               <p>
                 We reserve the right to modify, suspend, or discontinue any aspect of the Service at any time, with or without notice, though we will make reasonable efforts to notify customers of major changes.
