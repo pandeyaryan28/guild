@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Sparkles, CheckSquare, MessageSquare, FileCheck } from 'lucide-react';
+import { ArrowRight, CheckSquare, MessageSquare, FileCheck } from 'lucide-react';
 import { APP_URL } from '../../config/landingData';
 import { useNavigation } from '../../context/NavigationContext';
-import { CosmicCanvas3D } from './CosmicCanvas3D';
 
 const Words = ['Tasks', 'Direct Chats', 'Leave Approvals', 'Expense Sign-offs', 'Shared Files', 'Admin Visibility', 'Workload Allotment'];
 
@@ -20,10 +19,6 @@ export function HeroSection() {
 
   return (
     <section className="relative pt-36 md:pt-44 pb-20 px-6 overflow-hidden bg-slate-50/20 grid-pattern">
-      {/* 3D Cosmic Node Canvas Background */}
-      <div className="absolute inset-0 z-0 h-full w-full pointer-events-none">
-        <CosmicCanvas3D />
-      </div>
 
       {/* Glow blobs for visual depth */}
       <div className="absolute top-[12%] left-[10%] w-[380px] h-[380px] rounded-full bg-indigo-500/5 blur-[100px] animate-drift pointer-events-none z-0" />
