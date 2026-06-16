@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, CheckSquare, MessageSquare, FileCheck } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { APP_URL } from '../../config/landingData';
 import { useNavigation } from '../../context/NavigationContext';
 
@@ -80,26 +80,7 @@ export function HeroSection() {
           </button>
         </motion.div>
 
-        {/* Mini Feature Highlights */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-3 text-[11px] font-bold text-slate-400"
-        >
-          <div className="flex items-center gap-1.5">
-            <CheckSquare className="h-3.5 w-3.5 text-indigo-500" />
-            No Limits on Tasks
-          </div>
-          <div className="flex items-center gap-1.5">
-            <MessageSquare className="h-3.5 w-3.5 text-cyan-500" />
-            Centralized Team Chats
-          </div>
-          <div className="flex items-center gap-1.5">
-            <FileCheck className="h-3.5 w-3.5 text-purple-500" />
-            Instant Leave & Sign-offs
-          </div>
-        </motion.div>
+
 
 
       </div>
