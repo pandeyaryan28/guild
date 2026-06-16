@@ -13,6 +13,7 @@ import { Privacy } from './Privacy';
 import { Terms } from './Terms';
 import { Demo } from './Demo';
 import { Onboarding } from './Onboarding';
+import { Contact } from './Contact';
 import { useNavigation } from '../context/NavigationContext';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -44,13 +45,18 @@ export function LandingPage() {
             if (demoIdx !== -1) {
               path = path.substring(demoIdx);
             } else {
-              const privacyIdx = path.indexOf('/privacy');
-              if (privacyIdx !== -1) {
-                path = path.substring(privacyIdx);
+              const contactIdx = path.indexOf('/contact');
+              if (contactIdx !== -1) {
+                path = path.substring(contactIdx);
               } else {
-                const termsIdx = path.indexOf('/terms');
-                if (termsIdx !== -1) {
-                  path = path.substring(termsIdx);
+                const privacyIdx = path.indexOf('/privacy');
+                if (privacyIdx !== -1) {
+                  path = path.substring(privacyIdx);
+                } else {
+                  const termsIdx = path.indexOf('/terms');
+                  if (termsIdx !== -1) {
+                    path = path.substring(termsIdx);
+                  }
                 }
               }
             }
@@ -76,6 +82,8 @@ export function LandingPage() {
         return <Pricing key="pricing" />;
       case '/faq':
         return <FAQ key="faq" />;
+      case '/contact':
+        return <Contact key="contact" />;
       case '/privacy':
         return <Privacy key="privacy" />;
       case '/terms':

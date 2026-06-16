@@ -180,12 +180,24 @@ export function Navbar() {
             >
               FAQ
             </a>
+
+            <a
+              href="/contact"
+              onClick={(e) => handleNav(e, '/contact')}
+              className={`text-[13px] font-semibold transition-colors ${
+                currentPath === '/contact'
+                  ? 'text-indigo-600'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Contact
+            </a>
           </div>
 
           {/* Right: Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
             <button
-              onClick={() => navigate('/faq')}
+              onClick={() => navigate('/demo')}
               className="text-[13px] font-semibold text-slate-600 hover:text-slate-900 transition-colors px-3 py-1.5 cursor-pointer"
             >
               Get a Demo
@@ -324,6 +336,15 @@ export function Navbar() {
                 }`}
               >
                 FAQ
+              </a>
+              <a
+                href="/contact"
+                onClick={(e) => handleNav(e, '/contact')}
+                className={`text-sm font-bold py-1 ${
+                  currentPath === '/contact' ? 'text-indigo-600' : 'text-slate-600'
+                }`}
+              >
+                Contact
               </a>
               <div className="h-px bg-slate-100 mt-1 mb-1" />
               <a

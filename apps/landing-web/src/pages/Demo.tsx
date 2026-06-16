@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   Lock,
   Users,
-  Tv
+  Tv,
+  Loader2
 } from 'lucide-react';
 
 interface MotionScene {
@@ -80,6 +81,8 @@ export function Demo() {
   const [activeTab, setActiveTab] = useState('tasks');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', teamSize: '5-20', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -232,12 +235,60 @@ export function Demo() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    playSound('success');
-    setTimeout(() => {
+    setIsSubmitting(true);
+    setErrorMsg(null);
+
+    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+
+    if (!accessKey || accessKey === 'your_web3forms_access_key_here') {
+      console.log('%c[Guild Demo Form - Mock Mode]', 'color: #6366f1; font-weight: bold;', {
+        ...formData,
+        timestamp: new Date().toISOString()
+      });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      playSound('success');
+      setIsSubmitting(false);
       setFormSubmitted(true);
-    }, 600);
+      return;
+    }
+
+    try {
+      const payload = {
+        access_key: accessKey,
+        subject: `New Demo Booking from ${formData.name}`,
+        from_name: 'Guild Orbit Website Demo Page',
+        name: formData.name,
+        email: formData.email,
+        teamSize: formData.teamSize,
+        message: formData.message,
+        form_type: 'demo_page_booking'
+      };
+
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        playSound('success');
+        setFormSubmitted(true);
+      } else {
+        throw new Error(data.message || 'Something went wrong. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Demo Form Submit Error:', err);
+      setErrorMsg(err.message || 'Failed to submit form. Please check your internet connection.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Sound triggers
@@ -740,6 +791,12 @@ export function Demo() {
                 </p>
 
                 <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
+                  {errorMsg && (
+                    <div className="bg-rose-50 border border-rose-100 text-rose-700 px-4 py-2.5 rounded-xl text-xs font-semibold">
+                      {errorMsg}
+                    </div>
+                  )}
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
                       <label htmlFor="name" className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">
@@ -749,10 +806,11 @@ export function Demo() {
                         type="text"
                         id="name"
                         required
+                        disabled={isSubmitting}
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="John Doe"
-                        className="bg-white/60 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                        className="bg-white/60 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -763,10 +821,11 @@ export function Demo() {
                         type="email"
                         id="email"
                         required
+                        disabled={isSubmitting}
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="john@company.com"
-                        className="bg-white/60 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                        className="bg-white/60 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
                       />
                     </div>
                   </div>
@@ -777,9 +836,10 @@ export function Demo() {
                     </label>
                     <select
                       id="team-size"
+                      disabled={isSubmitting}
                       value={formData.teamSize}
                       onChange={(e) => setFormData({ ...formData, teamSize: e.target.value })}
-                      className="bg-white/60 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      className="bg-white/60 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
                     >
                       <option value="5-20">5 to 20 users</option>
                       <option value="20-100">20 to 100 users</option>
@@ -794,19 +854,30 @@ export function Demo() {
                     <textarea
                       id="message"
                       rows={3}
+                      disabled={isSubmitting}
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       placeholder="Tell us a bit about your operational challenges..."
-                      className="bg-white/60 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"
+                      className="bg-white/60 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none disabled:opacity-50"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 transition-colors text-white py-3 px-4 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/10 cursor-pointer flex items-center justify-center gap-1.5 mt-2"
+                    disabled={isSubmitting}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors text-white py-3 px-4 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/10 cursor-pointer flex items-center justify-center gap-1.5 mt-2 disabled:cursor-not-allowed"
                   >
-                    Book Demo Call
-                    <ArrowRight className="h-4 w-4" />
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Booking demo call...
+                      </>
+                    ) : (
+                      <>
+                        Book Demo Call
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
                   </button>
                 </form>
               </motion.div>
