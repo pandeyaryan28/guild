@@ -176,5 +176,76 @@
   .custom-scroll::-webkit-scrollbar-thumb:hover {
     background: rgba(99, 102, 241, 0.3);
   }
+
+  /* Interactive Hover Mouse Glow */
+  .mouse-glow-card {
+    position: relative;
+  }
+
+  .mouse-glow-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: radial-gradient(
+      350px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
+      rgba(99, 102, 241, 0.12),
+      transparent 80%
+    );
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mouse-glow-card:hover::before {
+    opacity: 1;
+  }
+
+  .mouse-glow-border {
+    position: relative;
+  }
+
+  .mouse-glow-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(
+      250px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
+      rgba(99, 102, 241, 0.45),
+      rgba(6, 182, 212, 0.1) 40%,
+      transparent 80%
+    );
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 2;
+  }
+
+  .mouse-glow-border:hover::before {
+    opacity: 1;
+  }
+
+  /* Shimmer animations */
+  @keyframes shimmer-slow {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer-slow {
+    animation: shimmer-slow 3s infinite linear;
+  }
 }
+
 
