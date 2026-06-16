@@ -1,3 +1,4 @@
+import { Hero } from '../components/landing/Hero';
 import { TrustBar } from '../components/landing/TrustBar';
 import { FeatureCards } from '../components/landing/FeatureCards';
 import { InteractiveMockup } from '../components/landing/InteractiveMockup';
@@ -9,6 +10,7 @@ import { CTABanner } from '../components/landing/CTABanner';
 export function Home() {
   return (
     <>
+      <Hero />
       <TrustBar />
       <FeatureCards />
       
