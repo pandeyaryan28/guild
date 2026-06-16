@@ -34,8 +34,7 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
             className="text-[15px] sm:text-lg md:text-[19px] text-slate-500 max-w-2xl mx-auto leading-relaxed mb-10"
           >
-            Ditch the fragmented chat groups, chaotic spreadsheets, and messy emails. Guild fuses 
-            channel communication, task management, and operational approvals into a single, beautifully simple workspace.
+            The lightweight coordination platform for small & mid-sized teams to unify tasks, chat, and approvals. Powered by a centralized visibility layer that gives owners and managers total oversight of every department.
           </motion.p>
         </div>
 
