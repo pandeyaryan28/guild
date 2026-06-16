@@ -36,7 +36,7 @@ export function BentoShowcase() {
 
   useEffect(() => {
     let index = 0;
-    const word = 'budget';
+    const word = 'invoice';
     const interval = setInterval(() => {
       if (!showResults) {
         if (index < word.length) {
