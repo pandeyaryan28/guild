@@ -100,11 +100,10 @@ export function PricingCards() {
 
             <ul className="space-y-4 flex-grow mb-8">
               {[
-                '5 seat limit',
-                '10 MB storage',
-                'Chat channels & DMs',
-                'Kanban task boards',
-                'Leave & expense requests',
+                '5 seats limit',
+                'Chat & team channels',
+                'Task & project management',
+                'Request management',
               ].map((f) => (
                 <li
                   key={f}
@@ -155,11 +154,13 @@ export function PricingCards() {
 
             <ul className="space-y-4 flex-grow mb-8">
               {[
-                'Unlimited seats',
-                'Everything in Free',
-                'Full admin panel',
+                'Scale seats as your team grows',
+                'Chat & team channels',
+                'Task & project management',
+                'Request management',
+                'Access to Guild Orbit Admin panel',
                 'Priority support',
-                'Standard SLA',
+                ...(cycle === 'annual' ? ['1yr free access to upcoming HR & Accounting'] : []),
               ].map((f) => (
                 <li
                   key={f}
@@ -196,10 +197,9 @@ export function PricingCards() {
 
             <ul className="space-y-4 flex-grow mb-8">
               {[
-                'Volume discounts',
-                'Dedicated success manager',
+                'Volume pricing',
+                'Dedicated support',
                 'Custom onboarding',
-                'Custom SLAs & security',
               ].map((f) => (
                 <li
                   key={f}
