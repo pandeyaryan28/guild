@@ -261,6 +261,51 @@
     background-size: 16px 16px;
     background-image: radial-gradient(circle, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
   }
+
+  /* Redesign specific styles */
+  .neon-glow-indigo {
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4), 0 0 30px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .neon-glow-cyan {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4), 0 0 30px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .neon-glow-purple {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.4), 0 0 30px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .neon-glow-emerald {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), 0 0 30px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  @keyframes pulse-mesh {
+    0%, 100% {
+      opacity: 0.25;
+      transform: scale(1) rotate(0deg);
+    }
+    50% {
+      opacity: 0.45;
+      transform: scale(1.12) rotate(180deg);
+    }
+  }
+
+  .animate-pulse-mesh {
+    animation: pulse-mesh 25s infinite ease-in-out;
+  }
+
+  .gravity-core-glow {
+    background: radial-gradient(circle, var(--core-color-1, #6366f1) 0%, var(--core-color-2, #312e81) 50%, transparent 100%);
+    filter: blur(12px);
+  }
+
+  .gravity-scanline {
+    background: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(16, 185, 129, 0.05) 50%,
+      rgba(16, 185, 129, 0.05) 52%,
+      transparent 52%
+    );
+    background-size: 100% 4px;
+  }
 }
 
 
