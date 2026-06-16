@@ -66,35 +66,20 @@ export function WorkTrackingFeature() {
             </div>
           </div>
 
-          {/* Right Image Mockup Column */}
+          {/* Right Image/Graphic Column */}
           <div className="lg:col-span-7 relative">
-            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-cyan-500/10 rounded-3xl blur-2xl -z-10" />
+            {/* Visual Frame */}
             <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="glass rounded-3xl p-3 border border-white/60 shadow-xl overflow-hidden hover:scale-[1.01] transition-transform duration-500"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.12 }}
+              className="relative z-10 bg-white/20 dark-glass rounded-3xl p-3 shadow-2xl border border-white/60"
             >
               <img 
                 src="/work_tracking.png" 
                 alt="Work Tracking Kanban Board Mockup" 
                 className="w-full h-auto rounded-2xl border border-slate-100/50 shadow-sm"
               />
-            </motion.div>
-
-            {/* Floating micro-widget */}
-            <motion.div 
-              animate={{ y: [-6, 6] }}
-              transition={{ duration: 4, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
-              className="absolute -bottom-6 -left-6 glass hidden sm:flex items-center gap-3.5 px-4.5 py-3 rounded-2xl border border-indigo-100/70 shadow-lg"
-            >
-              <div className="h-8 w-8 rounded-xl bg-indigo-50 border border-indigo-150 flex items-center justify-center text-indigo-600">
-                <LayoutDashboard className="h-4.5 w-4.5" />
-              </div>
-              <div>
-                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Active Workspace</p>
-                <p className="text-xs font-bold text-slate-800">Operations Board</p>
-              </div>
             </motion.div>
           </div>
         </div>

@@ -1,3 +1,4 @@
 # Project Guidelines
 
 - Never use pill badges or decorative tags (such as `inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest ... rounded-full glass`) with Sparkles/icons at the top of landing page sections or feature pages (e.g. "Guild Core Module", "Guild Orbit Premium Feature", "Everything you need in one hub"). They clutter the design and are redundant.
+- Never use floating micro-widgets (such as absolute positioned glass divs with `absolute -bottom-6 -left-6` or `-right-6` showing status or metadata like "Active Workspace Operations Board", "Workspace Authority", etc.) next to the main hero screenshots in the feature pages. Keep the screenshot/graphic presentations clean.

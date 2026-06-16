@@ -1,15 +1,14 @@
 import { motion } from 'motion/react';
 import { 
-  MessageSquare, 
   Sparkles, 
-  Hash, 
+  Clock, 
   ArrowLeft, 
   Check, 
   Terminal, 
-  Users,
-  ChevronRight,
-  ShieldCheck,
-  Send
+  Users, 
+  ShieldCheck, 
+  AlertCircle,
+  Video
 } from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
 import { CTABanner } from '../components/landing/CTABanner';
@@ -56,46 +55,31 @@ export function TeamChatFeature() {
                 <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
                   <Check className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-xs font-bold text-slate-700">Type `/task` to log items directly onto Kanban boards</span>
+                <span className="text-xs font-bold text-slate-700">Direct mentions and secure direct messaging</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
                   <Check className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-xs font-bold text-slate-700">Secure Direct Messages (DMs) & pings</span>
+                <span className="text-xs font-bold text-slate-700">Create workspace tasks instantly using `/task` shortcut</span>
               </div>
             </div>
           </div>
 
-          {/* Right Image Mockup Column */}
+          {/* Right Image/Graphic Column */}
           <div className="lg:col-span-7 relative">
-            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/10 to-indigo-500/10 rounded-3xl blur-2xl -z-10" />
+            {/* Visual Frame */}
             <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="glass rounded-3xl p-3 border border-white/60 shadow-xl overflow-hidden hover:scale-[1.01] transition-transform duration-500"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.12 }}
+              className="relative z-10 bg-white/20 dark-glass rounded-3xl p-3 shadow-2xl border border-white/60"
             >
               <img 
                 src="/team_chat.png" 
                 alt="Real-time Team Chat & Chat Shortcuts Mockup" 
                 className="w-full h-auto rounded-2xl border border-slate-100/50 shadow-sm"
               />
-            </motion.div>
-
-            {/* Floating micro-widget */}
-            <motion.div 
-              animate={{ y: [6, -6] }}
-              transition={{ duration: 4.5, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
-              className="absolute -bottom-6 -right-6 glass hidden sm:flex items-center gap-3 px-4 py-2.5 rounded-2xl border border-cyan-150/70 shadow-lg"
-            >
-              <div className="h-8 w-8 rounded-xl bg-cyan-50 border border-cyan-150 flex items-center justify-center text-cyan-600">
-                <MessageSquare className="h-4.5 w-4.5" />
-              </div>
-              <div>
-                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Live Status</p>
-                <p className="text-xs font-bold text-slate-800">14 Members Online</p>
-              </div>
             </motion.div>
           </div>
         </div>
