@@ -105,6 +105,10 @@ export function GlassTorusKnot() {
       const cameraDistance = 350;
       const focusLength = 350;
 
+      // Dynamically scale the torus knot relative to canvas dimensions (occupy 80% of container size)
+      // Base design size was ~290px diameter (R_major = 105 + r_minor = 40)
+      const baseScale = (0.8 * Math.min(width, height)) / 290;
+
       const projected = basePoints.map((pt) => {
         // Rotate around X axis
         const xy = pt.y * cosX - pt.z * sinX;
@@ -121,12 +125,17 @@ export function GlassTorusKnot() {
         const ry = yx * sinZ + yy * cosZ;
         const rz = yz;
 
-        // Project
-        const scale = focusLength / (focusLength + rz + cameraDistance);
-        const px = centerX + rx * scale;
-        const py = centerY + ry * scale;
+        // Apply dynamic canvas scaling
+        const rxScaled = rx * baseScale;
+        const ryScaled = ry * baseScale;
+        const rzScaled = rz * baseScale;
 
-        return { px, py, rz, scale };
+        // Project
+        const scale = focusLength / (focusLength + rzScaled + cameraDistance);
+        const px = centerX + rxScaled * scale;
+        const py = centerY + ryScaled * scale;
+
+        return { px, py, rz: rzScaled, scale, baseScale };
       });
 
       // Sort points from back to front (Painter's Algorithm for depth buffer)
@@ -136,8 +145,8 @@ export function GlassTorusKnot() {
       ctx.fillStyle = 'rgba(15, 23, 42, 0.012)'; // Soft translucent dark shadow
       for (let i = 0; i < projected.length; i++) {
         const pt = projected[i];
-        const shadowOffsetDist = 12 * pt.scale;
-        const shadowRadius = 22 * pt.scale;
+        const shadowOffsetDist = 12 * pt.scale * pt.baseScale;
+        const shadowRadius = 22 * pt.scale * pt.baseScale;
         ctx.beginPath();
         ctx.arc(
           pt.px + shadowOffsetDist, 
@@ -152,7 +161,7 @@ export function GlassTorusKnot() {
       // 2. Draw the volumetric glass torus knot
       for (let i = 0; i < projected.length; i++) {
         const pt = projected[i];
-        const beadRadius = 16 * pt.scale;
+        const beadRadius = 16 * pt.scale * pt.baseScale;
 
         // Create volumetric glass specular/diffuse gradient
         // Light source is simulated from top-left (offset center)

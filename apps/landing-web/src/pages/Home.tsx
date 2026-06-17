@@ -6,18 +6,31 @@ import { ScrollReveal } from '../components/landing/ScrollReveal';
 import { BentoShowcase } from '../components/landing/BentoShowcase';
 import { BeforeAfter } from '../components/landing/BeforeAfter';
 import { CTABanner } from '../components/landing/CTABanner';
+import { GlassTorusKnot } from '../components/landing/GlassTorusKnot';
 
 export function Home() {
   return (
     <>
       <Hero />
       <TrustBar />
-      <FeatureCards />
+      
+      {/* FeatureCards with background torus knot floating on the left */}
+      <div className="relative overflow-hidden">
+        <div className="absolute top-[10%] -left-[15%] w-[400px] h-[400px] sm:w-[550px] sm:h-[550px] md:w-[700px] md:h-[700px] pointer-events-none z-0 opacity-15 select-none">
+          <GlassTorusKnot />
+        </div>
+        <FeatureCards />
+      </div>
       
       {/* Live Simulator Section (Shifted under One Workspace / FeatureCards) */}
       <section className="py-16 pb-24 px-6 relative overflow-hidden bg-slate-50/10">
         <div className="absolute top-[10%] left-[5%] w-[350px] h-[350px] rounded-full bg-indigo-500/5 blur-[90px] pointer-events-none" />
         <div className="absolute bottom-[10%] right-[5%] w-[350px] h-[350px] rounded-full bg-cyan-500/5 blur-[90px] pointer-events-none" />
+        
+        {/* Torus knot floating on the right */}
+        <div className="absolute bottom-[10%] -right-[15%] w-[400px] h-[400px] sm:w-[550px] sm:h-[550px] md:w-[700px] md:h-[700px] pointer-events-none z-0 opacity-15 select-none">
+          <GlassTorusKnot />
+        </div>
         
         <div className="max-w-5xl mx-auto flex flex-col items-center">
           <ScrollReveal>
@@ -39,7 +52,14 @@ export function Home() {
         </div>
       </section>
 
-      <BentoShowcase />
+      {/* BentoShowcase with background torus knot floating on the left */}
+      <div className="relative overflow-hidden">
+        <div className="absolute bottom-[10%] -left-[12%] w-[350px] h-[350px] sm:w-[500px] sm:h-[500px] md:w-[650px] md:h-[650px] pointer-events-none z-0 opacity-15 select-none">
+          <GlassTorusKnot />
+        </div>
+        <BentoShowcase />
+      </div>
+
       <BeforeAfter />
       <CTABanner />
     </>

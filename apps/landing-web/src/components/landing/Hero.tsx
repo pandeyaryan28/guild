@@ -27,8 +27,8 @@ export function Hero() {
       <div className="absolute bottom-[20%] right-[10%] w-[400px] h-[400px] rounded-full bg-cyan-500/10 blur-[120px] animate-drift-reverse pointer-events-none" />
       
       {/* Floating Interactive 3D Glass Torus Knot */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-45 select-none scale-[1.0] md:scale-[1.25]">
-        <div className="w-[320px] h-[320px] sm:w-[480px] sm:h-[480px] md:w-[600px] md:h-[600px] relative">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-35 select-none scale-[1.0] md:scale-[1.15]">
+        <div className="w-[360px] h-[360px] sm:w-[560px] sm:h-[560px] md:w-[760px] md:h-[760px] lg:w-[920px] lg:h-[920px] relative">
           <GlassTorusKnot />
         </div>
       </div>
@@ -46,7 +46,7 @@ export function Hero() {
             One Workspace. <br className="sm:hidden" />
             <span className="block sm:inline">Stay in </span>
             <span 
-              className="relative inline-flex items-center justify-start text-left text-gradient-cosmic min-w-[120px] sm:min-w-[165px] md:min-w-[210px] h-[1.25em] overflow-hidden align-middle select-none"
+              className="relative inline-flex items-center justify-start text-left min-w-[120px] sm:min-w-[165px] md:min-w-[210px] h-[1.25em] overflow-hidden align-middle select-none"
               style={{ perspective: 1000 }}
             >
               <AnimatePresence mode="wait">
@@ -56,7 +56,7 @@ export function Hero() {
                   animate={{ opacity: 1, y: 0, rotateX: 0 }}
                   exit={{ opacity: 0, y: -15, rotateX: -60 }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
-                  className="absolute left-0 h-full flex items-center"
+                  className="absolute left-0 h-full flex items-center text-gradient-cosmic"
                 >
                   {WORDS[wordIndex]}
                 </motion.span>

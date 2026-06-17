@@ -1,6 +1,7 @@
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { APP_URL } from '../../config/landingData';
 import { ScrollReveal } from './ScrollReveal';
+import { GlassTorusKnot } from './GlassTorusKnot';
 
 export function CTABanner() {
   return (
@@ -11,6 +12,13 @@ export function CTABanner() {
           <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none animate-drift" />
           <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none animate-drift-reverse" />
           <div className="absolute inset-0 grid-pattern-dark opacity-30 pointer-events-none" />
+
+          {/* Floating Interactive 3D Glass Torus Knot */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-20 select-none scale-[1.0] md:scale-[1.1]">
+            <div className="w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] md:w-[600px] md:h-[600px] relative">
+              <GlassTorusKnot />
+            </div>
+          </div>
 
           <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight relative leading-none font-sans">
             Bring your team into orbit.
