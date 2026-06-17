@@ -30,7 +30,7 @@ export const FAQ_ITEMS: FAQItem[] = [
   },
 ];
 
-export const APP_URL = 'https://app.guildhq.space';
+export const APP_URL = 'https://app.guildorbit.com';
 
 export const NAV_ITEMS = [
   { label: 'Features', path: '/features' },
