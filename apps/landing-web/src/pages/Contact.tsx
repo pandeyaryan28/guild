@@ -6,10 +6,8 @@ import {
   Loader2, 
   Mail, 
   MessageSquare, 
-  Sparkles, 
   Building2, 
-  Users, 
-  Globe 
+  Users 
 } from 'lucide-react';
 
 export function Contact() {
@@ -98,10 +96,7 @@ export function Contact() {
         
         {/* Left Side: Copy and Details */}
         <div className="md:col-span-5 flex flex-col gap-6">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50/70 border border-indigo-100/50 rounded-full w-fit">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">Get In Touch</span>
-          </div>
+
 
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
             Let's build your unified <span className="text-gradient">workspace.</span>
@@ -148,12 +143,7 @@ export function Contact() {
               </div>
               support@guildorbit.com
             </a>
-            <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
-              <div className="h-8 w-8 rounded-lg bg-white/60 border border-slate-200 flex items-center justify-center">
-                <Globe className="h-3.5 w-3.5" />
-              </div>
-              Based in San Francisco, CA
-            </div>
+
           </div>
         </div>
 
