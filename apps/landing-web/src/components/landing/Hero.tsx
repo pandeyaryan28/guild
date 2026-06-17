@@ -1,9 +1,21 @@
-import { motion } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { useNavigation } from '../../context/NavigationContext';
+import { GlassTorusKnot } from './GlassTorusKnot';
+
+const WORDS = ['Sync.', 'Control.'];
 
 export function Hero() {
   const { navigate } = useNavigation();
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % WORDS.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <section className="relative pt-32 pb-20 px-6 overflow-hidden hero-glow">
@@ -13,6 +25,13 @@ export function Hero() {
       {/* Floating Ambient Glowing Spheres */}
       <div className="absolute top-[10%] left-[12%] w-[450px] h-[450px] rounded-full bg-indigo-500/10 blur-[130px] animate-drift pointer-events-none" />
       <div className="absolute bottom-[20%] right-[10%] w-[400px] h-[400px] rounded-full bg-cyan-500/10 blur-[120px] animate-drift-reverse pointer-events-none" />
+      
+      {/* Floating Interactive 3D Glass Torus Knot */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-45 select-none scale-[1.0] md:scale-[1.25]">
+        <div className="w-[320px] h-[320px] sm:w-[480px] sm:h-[480px] md:w-[600px] md:h-[600px] relative">
+          <GlassTorusKnot />
+        </div>
+      </div>
       
       <div className="max-w-6xl mx-auto flex flex-col items-center relative z-10">
         
@@ -25,7 +44,24 @@ export function Hero() {
             className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.08] mb-6"
           >
             One Workspace. <br className="sm:hidden" />
-            <span className="text-gradient-cosmic">Total Operational Clarity.</span>
+            <span className="block sm:inline">Stay in </span>
+            <span 
+              className="relative inline-flex items-center justify-start text-left text-gradient-cosmic min-w-[120px] sm:min-w-[165px] md:min-w-[210px] h-[1.25em] overflow-hidden align-middle select-none"
+              style={{ perspective: 1000 }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={wordIndex}
+                  initial={{ opacity: 0, y: 15, rotateX: 60 }}
+                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                  exit={{ opacity: 0, y: -15, rotateX: -60 }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className="absolute left-0 h-full flex items-center"
+                >
+                  {WORDS[wordIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </motion.h1>
           
           <motion.p 
