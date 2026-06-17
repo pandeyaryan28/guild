@@ -12,7 +12,6 @@ import {
   Activity,
   CheckCircle2,
   Lock,
-  Tv,
   Loader2,
   Users,
   FileText,
@@ -1121,17 +1120,14 @@ export function Demo() {
 
       <div className="max-w-5xl mx-auto flex flex-col items-center">
         {/* Header */}
-        <section className="text-center mb-12 max-w-2xl relative z-10">
+        <section className="text-center mb-10 max-w-2xl relative z-10">
           <h1 className="text-[clamp(2rem,4vw,3.5rem)] font-extrabold text-slate-900 tracking-tight leading-none">
             See the Platform in Action
           </h1>
-          <p className="mt-4 text-sm font-semibold text-slate-500 max-w-lg mx-auto leading-relaxed">
-            Experience our 24-second animated motion graphic showcase mapping task workflows, instant sync channels, secure approvals routing, and team workload balancing.
-          </p>
         </section>
 
         {/* Video Player Layout - Glassmorphic Outer Wrapper in Premium Light Mode */}
-        <section className="w-full max-w-4xl relative z-20 mb-16">
+        <section className="w-full max-w-4xl relative z-20 mb-10">
           <div className="bg-white/80 backdrop-blur-xl border border-white/90 rounded-3xl p-3 md:p-4 shadow-2xl shadow-indigo-950/5 flex flex-col">
             
             {/* Browser Window mockup chrome frame */}
@@ -1173,15 +1169,8 @@ export function Demo() {
                     <Play fill="currentColor" className="h-6 w-6 ml-1" />
                   </motion.button>
                   <span className="text-xs font-extrabold text-slate-800 uppercase tracking-widest mt-4">
-                    Play Motion Graphic Tour
+                    Play Demo
                   </span>
-                  <span className="text-[10px] font-bold text-slate-500 mt-1">Duration: 24 seconds (Fast Overview)</span>
-                  
-                  {/* Speaker Hint */}
-                  <div className="mt-5 flex items-center gap-1.5 text-[9px] font-extrabold text-indigo-650 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-full shadow-sm">
-                    <Volume2 className="h-3.5 w-3.5 text-indigo-600 animate-pulse" />
-                    Turn on sound for synthesizer UI chimes!
-                  </div>
                 </div>
               )}
             </div>
@@ -1244,10 +1233,6 @@ export function Demo() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-extrabold text-slate-500 uppercase mr-2 flex items-center gap-1.5">
-                    <Tv className="h-3.5 w-3.5 text-indigo-500 animate-pulse" />
-                    Vibrant Vector Graphics
-                  </span>
                   <button className="hover:text-slate-900 transition-colors cursor-pointer" title="Fullscreen">
                     <Maximize className="h-4 w-4" />
                   </button>
@@ -1256,48 +1241,6 @@ export function Demo() {
             </div>
 
           </div>
-        </section>
-
-        {/* Feature Tabs Links */}
-        <section className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
-          {MOTION_SCENES.map((scene) => {
-            const isTabActive = activeTab === scene.id;
-            return (
-              <button
-                key={scene.id}
-                onClick={() => jumpToScene(scene)}
-                className={`bg-white/45 glass p-4 rounded-2xl border text-left cursor-pointer flex flex-col gap-2.5 transition-all shadow-sm ${
-                  isTabActive
-                    ? 'border-indigo-500/50 shadow-md ring-1 ring-indigo-500/20 bg-indigo-50/20'
-                    : 'border-slate-200/50 hover:bg-slate-50/50 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="h-8 w-8 rounded-lg flex items-center justify-center text-white"
-                    style={{ backgroundColor: scene.color }}
-                  >
-                    <Sparkles className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-[11px] font-extrabold text-slate-900 leading-tight">
-                    {scene.badge}
-                  </span>
-                </div>
-                <div>
-                  <span className={`text-[10px] font-extrabold tracking-tight block text-transparent bg-clip-text bg-gradient-to-r ${scene.gradient}`}>
-                    {scene.title}
-                  </span>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                    {scene.subtitle}
-                  </p>
-                </div>
-                <span className="text-[9px] font-bold text-indigo-650 mt-1 flex items-center gap-1">
-                  Play Scene ({formatTime(scene.startTime)})
-                  <ArrowRight className="h-3 w-3" />
-                </span>
-              </button>
-            );
-          })}
         </section>
 
         {/* Form CTA Section */}
