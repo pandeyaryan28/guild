@@ -1676,15 +1676,15 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
 
       {/* Danger Zone Overhaul - STRICTLY Owner Only */}
       {profile.role === 'owner' && (
-        <div className="aether-glass bg-red-500/[0.015] border border-red-500/25 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-5 relative overflow-hidden mt-6 animate-fluid-pop">
+        <div className="aether-glass bg-red-50/35 dark:bg-red-950/10 border-red-200/60 dark:border-red-500/20 shadow-xs dark:shadow-[0_4px_24px_rgba(239,68,68,0.06)] rounded-3xl p-6 space-y-5 relative overflow-hidden mt-6 animate-fluid-pop">
           {/* Crimson pulse accent glow */}
-          <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.08] filter blur-xl bg-red-500" />
+          <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.04] dark:opacity-[0.08] filter blur-xl bg-red-500" />
           
           <div className="flex items-start gap-3">
-            <ShieldAlert className="h-5 w-5 text-red-500 shrink-0 mt-0.5 animate-pulse" />
+            <ShieldAlert className="h-5 w-5 text-red-600 dark:text-red-500 shrink-0 mt-0.5 animate-pulse" />
             <div>
-              <h2 className="text-xs font-black text-red-500 uppercase tracking-wider">Danger Zone</h2>
-              <p className="text-[10px] text-red-500/80 mt-0.5 leading-relaxed font-semibold">
+              <h2 className="text-xs font-black text-red-600 dark:text-red-500 uppercase tracking-wider">Danger Zone</h2>
+              <p className="text-[10px] text-red-700/80 dark:text-red-400/80 mt-0.5 leading-relaxed font-semibold">
                 Deleting your workspace is a permanent action. All associated data will be deleted forever.
               </p>
             </div>
@@ -1695,87 +1695,89 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
             <div className="space-y-2.5">
               <h3 className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest px-1">Items to be permanently erased:</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
-                  <Folder className="h-4 w-4 text-red-400 shrink-0" />
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                  <Folder className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.projects}</span>
-                    <span className="text-[9px] text-muted-foreground font-semibold">Projects</span>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Projects</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
-                  <CheckSquare className="h-4 w-4 text-red-400 shrink-0" />
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                  <CheckSquare className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.tasks}</span>
-                    <span className="text-[9px] text-muted-foreground font-semibold">Tasks</span>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Tasks</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
-                  <Target className="h-4 w-4 text-red-400 shrink-0" />
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                  <Target className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.goals}</span>
-                    <span className="text-[9px] text-muted-foreground font-semibold">Goals</span>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Goals</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
-                  <Workflow className="h-4 w-4 text-red-400 shrink-0" />
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                  <Workflow className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.teams}</span>
-                    <span className="text-[9px] text-muted-foreground font-semibold">Teams</span>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Teams</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
-                  <MessageSquare className="h-4 w-4 text-red-400 shrink-0" />
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                  <MessageSquare className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.channels}</span>
-                    <span className="text-[9px] text-muted-foreground font-semibold">Channels</span>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Channels</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-2xl border border-white/5 bg-white/[0.01] flex items-center gap-2.5">
-                  <Users className="h-4 w-4 text-red-400 shrink-0" />
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                  <Users className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.members}</span>
-                    <span className="text-[9px] text-muted-foreground font-semibold">Members</span>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Members</span>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleDeleteWorkspace} className="border-t border-red-500/10 pt-4 mt-2 space-y-4 max-w-md">
+          <form onSubmit={handleDeleteWorkspace} className="border-t border-red-200 dark:border-red-500/10 pt-4 mt-2 space-y-4 max-w-md">
             {reauthError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] rounded-xl font-bold flex items-start gap-2 animate-fluid-pop">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                <span className="text-[10px] font-semibold">{reauthError}</span>
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl font-semibold flex items-start gap-2 animate-fluid-pop">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span className="leading-normal">{reauthError}</span>
               </div>
             )}
 
-            <div className="space-y-3.5">
+            <div className="space-y-4">
               {!isGoogleUser && (
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Confirm Owner Password</label>
+                  <label htmlFor="owner-password" className="text-xs font-semibold text-muted-foreground pl-0.5">Confirm Owner Password</label>
                   <input
+                    id="owner-password"
                     type="password"
                     required
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
                     disabled={deleting}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+                    className="w-full px-3.5 py-2 rounded-xl border border-border bg-white/50 dark:border-white/10 dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-sm"
                     placeholder="Enter account password"
                   />
                 </div>
               )}
 
               <div className="space-y-1.5">
-                <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">
-                  Type Workspace Name Exactly <span className="text-white select-all font-mono">"{org.name}"</span>
+                <label htmlFor="confirm-workspace-name" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                  Type Workspace Name Exactly <code className="bg-red-100/50 dark:bg-red-950/40 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded font-mono font-bold select-all border border-red-200/40 dark:border-red-500/10">"{org.name}"</code>
                 </label>
                 <input
+                  id="confirm-workspace-name"
                   type="text"
                   required
                   value={confirmName}
                   onChange={(e) => setConfirmName(e.target.value)}
                   disabled={deleting}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+                  className="w-full px-3.5 py-2 rounded-xl border border-border bg-white/50 dark:border-white/10 dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-sm"
                   placeholder="Type workspace name exactly"
                 />
               </div>
@@ -1783,15 +1785,15 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
               <button
                 type="submit"
                 disabled={deleting || confirmName !== org.name || (!isGoogleUser && !passwordInput.trim())}
-                className="w-full py-2.5 bg-red-650 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                className="w-full h-10 bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
               >
                 {deleting ? (
                   <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Deleting Workspace…
+                    <Loader2 className="h-4 w-4 animate-spin" /> Deleting Workspace…
                   </>
                 ) : (
                   <>
-                    <Trash2 className="h-3.5 w-3.5" /> 
+                    <Trash2 className="h-4 w-4" /> 
                     {isGoogleUser ? 'Verify & Delete with Google' : 'Permanently Delete Workspace'}
                   </>
                 )}
