@@ -74,7 +74,12 @@ export function LoginPage() {
         // Navigation handled by useEffect above
       }
     } catch (err: any) {
-      setError('Failed to sign in with Google. Please try again.');
+      const code = err?.code || '';
+      if (code === 'auth/account-exists-with-different-credential') {
+        setError('An account already exists with this email address under a different login method (password). Please sign in using your email and password.');
+      } else {
+        setError('Failed to sign in with Google. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

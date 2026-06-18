@@ -90,7 +90,12 @@ export function SignupPage() {
         // useAuth handles redirect
       }
     } catch (err: any) {
-      setGlobalError('Failed to sign in with Google. Please try again.');
+      const code = err?.code || '';
+      if (code === 'auth/account-exists-with-different-credential') {
+        setGlobalError('An account already exists with this email address under a different login method (password). Please sign in using your email and password.');
+      } else {
+        setGlobalError('Failed to sign in with Google. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

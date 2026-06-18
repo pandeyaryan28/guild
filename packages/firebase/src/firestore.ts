@@ -445,23 +445,50 @@ export async function deleteOrganization(
     )
   );
 
-  // 2. Delete the organizationMembers entries
+  // 2. Fetch all members (excluding owner) to reset their profiles and onboarding states
+  const membersSnap = await getDocs(query(collection(db, 'organizationMembers'), where('orgId', '==', orgId)));
+  const memberIds = membersSnap.docs
+    .map((d) => d.data().userId as string)
+    .filter((uid) => uid !== ownerId);
+
+  for (const memberId of memberIds) {
+    try {
+      // A. Reset onboarding state so they go back to setup flow
+      await setDoc(doc(db, 'onboardingState', memberId), {
+        uid: memberId,
+        completed: false,
+        step: 1,
+        path: null,
+        updatedAt: serverTimestamp()
+      });
+
+      // B. Clear organization membership in user profile
+      await updateDoc(doc(db, 'users', memberId), {
+        organizationId: '',
+        role: 'member'
+      });
+    } catch (err) {
+      console.error(`Failed to reset member profile for user ${memberId}:`, err);
+    }
+  }
+
+  // 3. Delete the organizationMembers entries
   await deleteCollectionByQuery(query(collection(db, 'organizationMembers'), where('orgId', '==', orgId)));
 
-  // 3. Delete the organization document itself
+  // 4. Delete the organization document itself
   await deleteDoc(doc(db, 'organizations', orgId));
 
-  // 4. Release the globally reserved URL slug
+  // 5. Release the globally reserved URL slug
   await deleteDoc(doc(db, 'orgSlugs', slug.toLowerCase()));
 
-  // 5. Reset the owner's profile to clear workspace references and role
+  // 6. Reset the owner's profile to clear workspace references and role
   const userRef = doc(db, 'users', ownerId);
   await updateDoc(userRef, {
     organizationId: '',
     role: 'member'
   });
 
-  // 6. Reset onboarding state for the owner so they go back to the setup track
+  // 7. Reset onboarding state for the owner so they go back to the setup track
   const onboardingRef = doc(db, 'onboardingState', ownerId);
   await setDoc(onboardingRef, {
     uid: ownerId,

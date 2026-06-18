@@ -34,6 +34,13 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/directMessages/$(dmId)).data.orgId;
     }
 
+    // Check if the user is the owner of the specified organization
+    function isOrgOwner(orgId) {
+      return isAuth() && 
+        getUserData().organizationId == orgId && 
+        getUserData().role == 'owner';
+    }
+
     // ─── USER PROFILES & ACCOUNTS ───────────────────────────────────────────
 
     match /users/{userId} {
@@ -43,7 +50,10 @@ service cloud.firestore {
         request.auth.uid == userId || 
         getUserData().organizationId == resource.data.organizationId
       );
-      allow write: if isAuth() && request.auth.uid == userId;
+      allow write: if isAuth() && (
+        request.auth.uid == userId ||
+        (resource != null && isOrgOwner(resource.data.organizationId))
+      );
     }
 
     match /usernames/{username} {
@@ -60,7 +70,11 @@ service cloud.firestore {
 
     match /onboardingState/{userId} {
       // Users can manage their own onboarding state
-      allow read, write: if isAuth() && request.auth.uid == userId;
+      allow read, write: if isAuth() && (
+        request.auth.uid == userId ||
+        (exists(/databases/$(database)/documents/users/$(userId)) && 
+         isOrgOwner(get(/databases/$(database)/documents/users/$(userId)).data.organizationId))
+      );
     }
 
     // ─── ORGANIZATIONS & MEMBERSHIP ──────────────────────────────────────────
