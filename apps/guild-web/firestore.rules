@@ -29,6 +29,11 @@ service cloud.firestore {
       return isAuth() && getUserData().organizationId == request.resource.data.orgId;
     }
 
+    // Get the orgId of a DM thread by its ID
+    function getDmOrgId(dmId) {
+      return get(/databases/$(database)/documents/directMessages/$(dmId)).data.orgId;
+    }
+
     // ─── USER PROFILES & ACCOUNTS ───────────────────────────────────────────
 
     match /users/{userId} {
@@ -211,8 +216,17 @@ service cloud.firestore {
     }
 
     match /dmReadState/{stateId} {
-      allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow read: if isAuth() && isMemberOfOrg("orgId" in resource.data ? resource.data.orgId : getDmOrgId(resource.data.dmId));
+      allow write: if isAuth() && (
+        // Allow if the user is writing/deleting their own read state
+        (request.auth.uid == (resource == null ? request.resource.data.userId : resource.data.userId)) ||
+        // Or if the read state falls under the user's organization
+        isMemberOfOrg(
+          resource != null 
+            ? ("orgId" in resource.data ? resource.data.orgId : getDmOrgId(resource.data.dmId))
+            : ("orgId" in request.resource.data ? request.resource.data.orgId : getDmOrgId(request.resource.data.dmId))
+        )
+      );
     }
 
     // ─── NOTIFICATIONS ──────────────────────────────────────────────────────

@@ -341,10 +341,22 @@ export async function markChannelRead(channelId: string, userId: string, orgId?:
   );
 }
 
-export async function markDMRead(dmId: string, userId: string): Promise<void> {
+export async function markDMRead(dmId: string, userId: string, orgId?: string): Promise<void> {
+  let finalOrgId = orgId;
+  if (!finalOrgId) {
+    try {
+      const snap = await getDoc(doc(db, 'directMessages', dmId));
+      if (snap.exists()) {
+        finalOrgId = snap.data().orgId;
+      }
+    } catch (e) {
+      console.error('Failed to fetch DM orgId in markDMRead:', e);
+    }
+  }
+
   await setDoc(
     doc(db, 'dmReadState', `${dmId}_${userId}`),
-    { dmId, userId, lastRead: serverTimestamp() },
+    { dmId, userId, orgId: finalOrgId || '', lastRead: serverTimestamp() },
     { merge: true },
   );
 }
