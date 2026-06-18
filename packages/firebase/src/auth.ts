@@ -14,9 +14,16 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential as firebaseReauthenticateWithCredential,
   reauthenticateWithPopup as firebaseReauthenticateWithPopup,
+  linkWithCredential,
   type User,
 } from 'firebase/auth';
 import { auth } from './firebase';
+
+export { GoogleAuthProvider };
+
+export async function linkGoogleCredential(user: User, credential: any) {
+  return linkWithCredential(user, credential);
+}
 
 export async function signUpWithEmail(email: string, password: string) {
   return createUserWithEmailAndPassword(auth, email, password);

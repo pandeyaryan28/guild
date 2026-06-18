@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Eye, EyeOff, Loader2, Mail, Lock, Zap, Sun, Moon } from 'lucide-react';
-import { signInWithEmail, signInWithGoogle } from '../lib/auth';
+import { signInWithEmail, signInWithGoogle, GoogleAuthProvider, linkGoogleCredential } from '../lib/auth';
 import { getAdditionalUserInfo } from 'firebase/auth';
 import { setOnboardingState } from '../lib/firestore';
 import { useAuth } from '../hooks/useAuth';
@@ -20,6 +20,11 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState('');
+
+  const [pendingCred, setPendingCred] = React.useState<any>(null);
+  const [linkingEmail, setLinkingEmail] = React.useState('');
+  const [linkPassword, setLinkPassword] = React.useState('');
+  const [linking, setLinking] = React.useState(false);
 
   const from = (location.state as any)?.from?.pathname || '/';
 
@@ -76,12 +81,42 @@ export function LoginPage() {
     } catch (err: any) {
       const code = err?.code || '';
       if (code === 'auth/account-exists-with-different-credential') {
-        setError('An account already exists with this email address under a different login method (password). Please sign in using your email and password.');
+        const credential = GoogleAuthProvider.credentialFromError(err);
+        setPendingCred(credential);
+        setLinkingEmail(err.customData?.email || '');
+        setError('An account already exists with this email address. Enter your password below to link Google sign-in.');
       } else {
         setError('Failed to sign in with Google. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleLinkAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!linkPassword.trim()) {
+      setError('Please enter your password.');
+      return;
+    }
+    setError('');
+    setLinking(true);
+    try {
+      // 1. Sign in with existing credentials
+      const credential = await signInWithEmail(linkingEmail, linkPassword);
+      // 2. Link the Google credential
+      await linkGoogleCredential(credential.user, pendingCred);
+      // Navigation is handled by useEffect
+    } catch (err: any) {
+      console.error('Failed to link account:', err);
+      const code = err?.code || '';
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
+        setError('Incorrect password. Please try again.');
+      } else {
+        setError('Failed to link account. Please try again.');
+      }
+    } finally {
+      setLinking(false);
     }
   };
 
@@ -122,104 +157,171 @@ export function LoginPage() {
         <div className="aether-glass w-full p-8 shadow-xl border border-border-default/30">
           <div className="mb-6">
             <h1 className="text-lg font-bold text-foreground">
-              Sign In
+              {pendingCred ? 'Link Google Account' : 'Sign In'}
             </h1>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
-            <div className="space-y-1.5">
-              <label htmlFor="email" className="text-xs font-semibold text-muted-foreground pl-0.5">
-                Email
-              </label>
-              <div className="relative">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                  required
-                  autoComplete="username"
-                  className="w-full h-10 aether-glass-input px-3.5 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
-                />
+          {pendingCred ? (
+            <form onSubmit={handleLinkAccount} className="space-y-4">
+              <div className="p-3.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[11px] rounded-xl font-bold leading-relaxed">
+                An account already exists with the email <span className="underline">{linkingEmail}</span>. Enter your password to link Google sign-in to this existing account.
               </div>
-            </div>
 
-            {/* Password */}
-            <div className="space-y-1.5">
-              <label htmlFor="current-password" className="text-xs font-semibold text-muted-foreground pl-0.5">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="current-password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="current-password"
-                  className="w-full h-10 aether-glass-input pl-3.5 pr-10 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+              {/* Password */}
+              <div className="space-y-1.5">
+                <label htmlFor="link-password" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="link-password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={linkPassword}
+                    onChange={(e) => setLinkPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="w-full h-10 aether-glass-input pl-3.5 pr-10 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Error */}
-            {error && (
-              <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2.5">
-                <p className="text-[11px] font-semibold text-destructive">{error}</p>
-              </div>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-            >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin text-white" />
-              ) : (
-                'Sign In'
+              {/* Error */}
+              {error && (
+                <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2.5">
+                  <p className="text-[11px] font-semibold text-destructive">{error}</p>
+                </div>
               )}
-            </button>
 
-            {/* Separator */}
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border-default/60 dark:border-white/10"></div>
-              </div>
-              <div className="relative flex justify-center text-[10px]">
-                <span className="bg-transparent px-3 font-semibold text-muted-foreground uppercase tracking-wider backdrop-blur-sm">
-                  Or
-                </span>
-              </div>
-            </div>
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={linking}
+                className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              >
+                {linking ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                ) : (
+                  'Link & Sign In'
+                )}
+              </button>
 
-            {/* Google Sign In */}
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isSubmitting}
-              className="w-full h-10 aether-glass border border-white/10 hover:bg-white/5 text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50"
-            >
-              <svg className="h-3.5 w-3.5" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-              </svg>
-              Continue with Google
-            </button>
-          </form>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingCred(null);
+                  setLinkingEmail('');
+                  setLinkPassword('');
+                  setError('');
+                }}
+                className="w-full h-10 rounded-xl border border-border-default/60 hover:bg-surface/50 text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-1"
+              >
+                Cancel
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email */}
+              <div className="space-y-1.5">
+                <label htmlFor="email" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                  Email
+                </label>
+                <div className="relative">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
+                    required
+                    autoComplete="username"
+                    className="w-full h-10 aether-glass-input px-3.5 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <label htmlFor="current-password" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="current-password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    autoComplete="current-password"
+                    className="w-full h-10 aether-glass-input pl-3.5 pr-10 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2.5">
+                  <p className="text-[11px] font-semibold text-destructive">{error}</p>
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                ) : (
+                  'Sign In'
+                )}
+              </button>
+
+              {/* Separator */}
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border-default/60 dark:border-white/10"></div>
+                </div>
+                <div className="relative flex justify-center text-[10px]">
+                  <span className="bg-transparent px-3 font-semibold text-muted-foreground uppercase tracking-wider backdrop-blur-sm">
+                    Or
+                  </span>
+                </div>
+              </div>
+
+              {/* Google Sign In */}
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isSubmitting}
+                className="w-full h-10 aether-glass border border-white/10 hover:bg-white/5 text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50"
+              >
+                <svg className="h-3.5 w-3.5" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                  <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+                </svg>
+                Continue with Google
+              </button>
+            </form>
+          )}
         </div>
 
         {/* Footer */}

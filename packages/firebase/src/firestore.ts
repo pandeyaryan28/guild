@@ -445,7 +445,7 @@ export async function deleteOrganization(
     )
   );
 
-  // 2. Fetch all members (excluding owner) to reset their profiles and onboarding states
+  // 2. Fetch all members (excluding owner) to delete their profiles fully
   const membersSnap = await getDocs(query(collection(db, 'organizationMembers'), where('orgId', '==', orgId)));
   const memberIds = membersSnap.docs
     .map((d) => d.data().userId as string)
@@ -453,22 +453,13 @@ export async function deleteOrganization(
 
   for (const memberId of memberIds) {
     try {
-      // A. Reset onboarding state so they go back to setup flow
-      await setDoc(doc(db, 'onboardingState', memberId), {
-        uid: memberId,
-        completed: false,
-        step: 1,
-        path: null,
-        updatedAt: serverTimestamp()
-      });
-
-      // B. Clear organization membership in user profile
-      await updateDoc(doc(db, 'users', memberId), {
-        organizationId: '',
-        role: 'member'
-      });
+      // Get the profile to retrieve the username for deletion
+      const userProfile = await getUserById(memberId);
+      if (userProfile && userProfile.username) {
+        await deleteUserProfile(memberId, userProfile.username, orgId);
+      }
     } catch (err) {
-      console.error(`Failed to reset member profile for user ${memberId}:`, err);
+      console.error(`Failed to delete member profile for user ${memberId}:`, err);
     }
   }
 
@@ -520,14 +511,14 @@ export async function deleteUserProfile(
   username: string,
   organizationId?: string
 ): Promise<void> {
-  // 1. Delete user profile document
-  await deleteDoc(doc(db, 'users', uid));
+  // 1. Clear the onboarding state history (must be done while users profile still exists for security rules checks)
+  await deleteDoc(doc(db, 'onboardingState', uid));
 
   // 2. Release the globally unique username handle
   await deleteDoc(doc(db, 'usernames', username.toLowerCase()));
 
-  // 3. Clear the onboarding state history
-  await deleteDoc(doc(db, 'onboardingState', uid));
+  // 3. Delete user profile document
+  await deleteDoc(doc(db, 'users', uid));
 
   // 4. Clean up workspace members association if user was part of an organization
   if (organizationId) {
