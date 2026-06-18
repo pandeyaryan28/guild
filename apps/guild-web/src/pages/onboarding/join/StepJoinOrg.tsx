@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { Search, Link2, Building2, Loader2, CheckCircle2, XCircle, ChevronRight, AlertTriangle, User } from 'lucide-react';
+import { Search, Link2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
 import { getOrgBySlug, validateInviteToken, type Organization } from '../../../lib/firestore';
 import { setOnboardingState } from '../../../lib/firestore';
@@ -48,7 +47,7 @@ export function StepJoinOrg({ data, updateData }: Props) {
       if (found) {
         setOrg(found);
       } else {
-        setError('No organization found with that username.');
+        setError('No organization found with that workspace handle.');
       }
     } catch {
       setError('Failed to search. Please try again.');
@@ -100,24 +99,22 @@ export function StepJoinOrg({ data, updateData }: Props) {
   };
 
   return (
-    <div className="w-full max-w-[500px] px-4 flex flex-col items-center">
+    <div className="w-full max-w-[480px] px-4 flex flex-col items-center">
       <StepHeader
         step={2}
         totalSteps={4}
-        title="Find your team"
-        subtitle="Connect with your organization's operational workspace."
+        title="Find Organization"
+        subtitle="Search for your organization or enter your invitation link."
       />
 
-      <div className="aether-glass w-full p-8 mt-8 shadow-2xl relative overflow-hidden border border-border-default/30">
-        <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
-
+      <div className="aether-glass w-full p-8 mt-8 shadow-xl border border-border-default/30">
         {/* Method Toggle Buttons */}
-        <div className="flex rounded-xl border border-border-default bg-surface/50 dark:border-white/5 dark:bg-black/40 p-1 mb-6 relative z-10">
+        <div className="flex rounded-xl border border-border-default bg-surface/50 p-1 mb-6">
           <button
             onClick={() => { setMethod('slug'); setOrg(null); setError(''); }}
             className={cn(
-              'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer',
-              method === 'slug' ? 'bg-indigo-600 text-white shadow-md' : 'text-muted-foreground hover:text-foreground'
+              'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer border-0',
+              method === 'slug' ? 'bg-indigo-600 text-white shadow' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <Search className="h-3.5 w-3.5" />
@@ -126,8 +123,8 @@ export function StepJoinOrg({ data, updateData }: Props) {
           <button
             onClick={() => { setMethod('invite'); setOrg(null); setError(''); }}
             className={cn(
-              'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer',
-              method === 'invite' ? 'bg-indigo-600 text-white shadow-md' : 'text-muted-foreground hover:text-foreground'
+              'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer border-0',
+              method === 'invite' ? 'bg-indigo-600 text-white shadow' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <Link2 className="h-3.5 w-3.5" />
@@ -135,59 +132,58 @@ export function StepJoinOrg({ data, updateData }: Props) {
           </button>
         </div>
 
-        <div className="space-y-5 relative z-10">
+        <div className="space-y-4">
           {/* Method: By Slug */}
           {method === 'slug' ? (
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+              <label htmlFor="workspace-handle" className="text-xs font-semibold text-muted-foreground pl-0.5">
                 Workspace Handle
               </label>
               <div className="flex gap-2">
-                <div className="relative group flex-1">
+                <div className="relative flex-1">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground select-none">guild.app/</span>
                   <input
+                    id="workspace-handle"
                     value={slugInput}
                     onChange={(e) => { setSlugInput(e.target.value.toLowerCase()); setOrg(null); setError(''); }}
                     onKeyDown={(e) => e.key === 'Enter' && searchBySlug()}
                     placeholder="acme-corp"
                     style={{ paddingLeft: '84px' }}
-                    className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pr-4 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                    className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 pr-4 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={searchBySlug}
                   disabled={isSearching || !slugInput}
-                  className="h-10 px-3.5 rounded-xl bg-surface/60 border border-border-default hover:bg-surface/80 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10 text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
+                  className="h-10 px-3.5 rounded-xl bg-surface border border-border-default hover:bg-surface-hover text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
                 >
-                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
                 </button>
               </div>
             </div>
           ) : (
             /* Method: By Invite Link */
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
-                Invite Token or Link
+              <label htmlFor="invite-link" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                Invite Link or Token
               </label>
               <div className="flex gap-2">
-                <div className="relative group flex-1">
-                  <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-                  <input
-                    value={inviteInput}
-                    onChange={(e) => { setInviteInput(e.target.value); setOrg(null); setError(''); }}
-                    onKeyDown={(e) => e.key === 'Enter' && searchByInvite()}
-                    placeholder="https://guild.app/join/token"
-                    className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
-                  />
-                </div>
+                <input
+                  id="invite-link"
+                  value={inviteInput}
+                  onChange={(e) => { setInviteInput(e.target.value); setOrg(null); setError(''); }}
+                  onKeyDown={(e) => e.key === 'Enter' && searchByInvite()}
+                  placeholder="e.g. guild.app/join/token"
+                  className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 flex-1"
+                />
                 <button
                   type="button"
                   onClick={searchByInvite}
                   disabled={isSearching || !inviteInput}
-                  className="h-10 px-3.5 rounded-xl bg-surface/60 border border-border-default hover:bg-surface/80 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10 text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
+                  className="h-10 px-3.5 rounded-xl bg-surface border border-border-default hover:bg-surface-hover text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
                 >
-                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
                 </button>
               </div>
             </div>
@@ -195,44 +191,29 @@ export function StepJoinOrg({ data, updateData }: Props) {
 
           {/* Validation Alert */}
           {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-2.5 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3"
-            >
-              <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
-              <p className="text-[11px] font-semibold text-destructive">{error}</p>
-            </motion.div>
+            <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2.5 flex gap-2 items-center text-xs">
+              <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+              <p className="font-semibold text-destructive">{error}</p>
+            </div>
           )}
 
-          {/* Majestic Org Preview Card */}
+          {/* Org Preview Card */}
           {org && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4.5 flex items-center gap-4 relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-dashboard-grid opacity-10 pointer-events-none" />
-              
-              {/* Teammate presence visual logo representation */}
-              <div className="relative flex-shrink-0 select-none">
-                <div className="teammate-halo active border-emerald-500/30">
-                  <div className="h-11 w-11 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/30 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-sm font-black shadow-lg">
-                    {org.name[0].toUpperCase()}
-                  </div>
-                </div>
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex items-center gap-4">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-sm font-black shadow-inner">
+                {org.name[0].toUpperCase()}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-black text-foreground truncate uppercase tracking-tight">{org.name}</h4>
+                  <h4 className="text-sm font-bold text-foreground truncate">{org.name}</h4>
                   <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-0.5 font-bold uppercase tracking-wider">
+                <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">
                   {org.industry} · {org.companySize} employees
                 </p>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Submit/Continue Join */}
@@ -240,15 +221,12 @@ export function StepJoinOrg({ data, updateData }: Props) {
             type="button"
             onClick={handleContinue}
             disabled={!org || isSubmitting}
-            className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
+            className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin text-white" />
             ) : (
-              <>
-                Join {org?.name || 'Organization'}
-                <ChevronRight className="h-4 w-4 text-white" />
-              </>
+              'Continue'
             )}
           </button>
         </div>

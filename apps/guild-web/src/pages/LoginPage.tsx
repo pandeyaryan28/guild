@@ -83,15 +83,14 @@ export function LoginPage() {
   if (loading) return null;
 
   return (
-    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
-      {/* 1. Shifting Aurora Mesh Layer */}
-      <div className="aether-aurora opacity-75" />
+    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 select-none">
+      <div className="aether-aurora opacity-50" />
 
       {/* Floating Theme Mode Toggle */}
       <div className="absolute top-6 right-8 z-50">
         <button
           onClick={toggleMode}
-          className="aether-glass flex h-10 w-10 items-center justify-center rounded-xl hover:scale-105 active:scale-95 transition-all shadow-sm border border-border-default/80 bg-surface/50 text-foreground cursor-pointer"
+          className="aether-glass flex h-10 w-10 items-center justify-center rounded-xl hover:scale-105 active:scale-95 transition-all shadow-sm border border-border-default bg-surface/50 text-foreground cursor-pointer"
           title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
         >
           {mode === 'light' ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5 text-amber-400" />}
@@ -99,115 +98,105 @@ export function LoginPage() {
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 w-full max-w-[420px] px-2 flex flex-col items-center"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative z-10 w-full max-w-[400px] px-4 flex flex-col items-center"
       >
-        {/* Logo / Brand header */}
-        <div className="flex items-center gap-3 mb-8 cursor-default group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl overflow-hidden shadow-xl shadow-indigo-500/25 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300 bg-white/10">
-            <img src="/logo.png" alt="Guild Orbit Logo" className="w-full h-full object-cover" />
+        {/* Brand header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden shadow bg-white/10">
+            <img src="/logo.png" alt="Guild Logo" className="w-full h-full object-cover" />
           </div>
-          <span className="text-2xl font-black text-gradient uppercase bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 dark:from-violet-400 dark:via-indigo-400 dark:to-cyan-400 tracking-wider">
+          <span className="text-xl font-bold tracking-tight text-foreground">
             Guild
           </span>
         </div>
 
         {/* Card */}
-        <div className="aether-glass-elevated w-full p-8 shadow-2xl relative overflow-hidden">
-          {/* Subtle inside grid accent */}
-          <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
-
-          <div className="mb-6 relative z-10">
-            <h1 className="text-xl font-black text-foreground tracking-tight leading-none uppercase">
-              Welcome back
+        <div className="aether-glass w-full p-8 shadow-xl border border-border-default/30">
+          <div className="mb-6">
+            <h1 className="text-lg font-bold text-foreground">
+              Sign In
             </h1>
-            <p className="text-xs text-muted-foreground mt-1.5 font-medium leading-relaxed">
-              Access your collaborative operations center
-            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+              <label htmlFor="email" className="text-xs font-semibold text-muted-foreground pl-0.5">
                 Email
               </label>
-              <div className="relative group">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-indigo-500" />
+              <div className="relative">
                 <input
+                  id="email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   required
-                  className="w-full h-10 aether-glass-input pl-10 pr-4 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
+                  autoComplete="username"
+                  className="w-full h-10 aether-glass-input px-3.5 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between pl-1">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  Password
-                </label>
-              </div>
-              <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-indigo-500" />
+              <label htmlFor="current-password" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                Password
+              </label>
+              <div className="relative">
                 <input
+                  id="current-password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full h-10 aether-glass-input pl-10 pr-10 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
+                  autoComplete="current-password"
+                  className="w-full h-10 aether-glass-input pl-3.5 pr-10 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
             {/* Error */}
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-destructive/20 bg-destructive/10 px-4.5 py-3"
-              >
+              <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2.5">
                 <p className="text-[11px] font-semibold text-destructive">{error}</p>
-              </motion.div>
+              </div>
             )}
 
             {/* Submit */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin text-white" />
               ) : (
-                <>
-                  <Zap className="h-4 w-4 text-white" />
-                  Sign In to Workspace
-                </>
+                'Sign In'
               )}
             </button>
 
             {/* Separator */}
-            <div className="relative my-5">
+            <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border-default/60 dark:border-white/10"></div>
               </div>
               <div className="relative flex justify-center text-[10px]">
-                <span className="bg-transparent px-3 font-semibold text-muted-foreground uppercase tracking-widest backdrop-blur-sm">
+                <span className="bg-transparent px-3 font-semibold text-muted-foreground uppercase tracking-wider backdrop-blur-sm">
                   Or
                 </span>
               </div>
@@ -229,7 +218,7 @@ export function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-[11px] text-muted-foreground mt-6 font-semibold tracking-wide">
+        <p className="text-center text-[11px] text-muted-foreground mt-5 font-semibold tracking-wide">
           New here?{' '}
           <Link
             to="/signup"

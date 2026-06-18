@@ -79,15 +79,14 @@ export function JoinInvitePage() {
   }
 
   return (
-    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
-      {/* 1. Shifting Aurora Mesh Layer */}
-      <div className="aether-aurora opacity-75" />
+    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 select-none">
+      <div className="aether-aurora opacity-50" />
 
       {/* Floating Theme Mode Toggle */}
       <div className="absolute top-6 right-8 z-50">
         <button
           onClick={toggleMode}
-          className="aether-glass flex h-10 w-10 items-center justify-center rounded-xl hover:scale-105 active:scale-95 transition-all shadow-sm border border-border-default/80 bg-surface/50 text-foreground cursor-pointer"
+          className="aether-glass flex h-10 w-10 items-center justify-center rounded-xl hover:scale-105 active:scale-95 transition-all shadow-sm border border-border-default bg-surface/50 text-foreground cursor-pointer"
           title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
         >
           {mode === 'light' ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5 text-amber-400" />}
@@ -95,77 +94,70 @@ export function JoinInvitePage() {
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 w-full max-w-[420px] px-2 flex flex-col items-center"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative z-10 w-full max-w-[400px] px-4 flex flex-col items-center"
       >
-        {/* Logo / Brand */}
-        <div className="flex items-center gap-3 mb-8 cursor-default group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-black text-white shadow-xl shadow-indigo-500/25 transition-all duration-300">
-            G
+        {/* Brand header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden shadow bg-white/10">
+            <img src="/logo.png" alt="Guild Logo" className="w-full h-full object-cover" />
           </div>
-          <span className="text-2xl font-black text-gradient uppercase bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 dark:from-violet-400 dark:via-indigo-400 dark:to-cyan-400 tracking-wider">
+          <span className="text-xl font-bold tracking-tight text-foreground">
             Guild
           </span>
         </div>
 
         {/* Card */}
-        <div className="aether-glass w-full p-8 shadow-2xl relative overflow-hidden border border-border-default/30 text-center">
-          <div className="absolute inset-0 bg-dashboard-grid opacity-20 pointer-events-none" />
-
+        <div className="aether-glass w-full p-8 shadow-xl border border-border-default/30 text-center">
           {error ? (
-            <div className="flex flex-col items-center relative z-10">
-              <div className="h-16 w-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-6 border border-rose-500/20 shadow-lg shadow-rose-500/5">
-                <AlertCircle className="h-8 w-8 text-rose-500 animate-pulse animate-duration-1000" />
+            <div className="flex flex-col items-center">
+              <div className="h-12 w-12 rounded-xl bg-rose-500/10 flex items-center justify-center mb-4 border border-rose-500/20">
+                <AlertCircle className="h-6 w-6 text-rose-500" />
               </div>
-              <h1 className="text-lg font-black text-foreground tracking-tight uppercase leading-none mb-2">Invite Invalid</h1>
-              <p className="text-xs text-muted-foreground mb-8 leading-relaxed max-w-[280px] font-semibold">{error}</p>
+              <h1 className="text-lg font-bold text-foreground mb-2">Invite Invalid</h1>
+              <p className="text-xs text-muted-foreground mb-6 leading-relaxed font-semibold">{error}</p>
               <Link
                 to="/"
-                className="w-full flex items-center justify-center h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 active:scale-98"
+                className="w-full flex items-center justify-center h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow active:scale-98"
               >
-                Go Home Command
+                Go to Login
               </Link>
             </div>
           ) : success ? (
-            <div className="flex flex-col items-center relative z-10">
-              <div className="h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/20 shadow-lg shadow-emerald-500/5">
-                <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+            <div className="flex flex-col items-center">
+              <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4 border border-emerald-500/20">
+                <CheckCircle2 className="h-6 w-6 text-emerald-500" />
               </div>
-              <h1 className="text-lg font-black text-foreground tracking-tight uppercase leading-none mb-2">Welcome!</h1>
-              <p className="text-xs text-muted-foreground mb-8 leading-normal font-semibold">You have successfully joined <strong>{org?.name}</strong>.</p>
+              <h1 className="text-lg font-bold text-foreground mb-2">Welcome!</h1>
+              <p className="text-xs text-muted-foreground mb-6 leading-normal font-semibold">Joined {org?.name} successfully.</p>
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
             </div>
           ) : (
-            <div className="flex flex-col items-center relative z-10">
-              {/* Organization Circle Avatar Preview with glowing halo */}
-              <div className="relative mb-6 select-none">
-                <div className="teammate-halo active border-primary/40">
-                  <div className="h-16 w-16 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/30 text-indigo-600 dark:text-indigo-400 border border-indigo-500/35 text-xl font-black shadow-xl">
-                    {org?.name[0].toUpperCase()}
-                  </div>
+            <div className="flex flex-col items-center">
+              {/* Organization Circle Avatar Preview */}
+              <div className="mb-4">
+                <div className="h-14 w-14 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/30 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 text-lg font-black shadow-inner">
+                  {org?.name[0].toUpperCase()}
                 </div>
               </div>
 
-              <h1 className="text-xl font-black text-foreground tracking-tight uppercase leading-none mb-2">Join {org?.name}</h1>
-              <p className="text-xs text-muted-foreground mb-8 leading-relaxed max-w-[300px] font-semibold">
-                You've been invited to coordinate operations with <strong>{org?.name}</strong> on Guild.
+              <h1 className="text-lg font-bold text-foreground mb-2">Join {org?.name}</h1>
+              <p className="text-xs text-muted-foreground mb-6 leading-relaxed max-w-[280px]">
+                You have been invited to join <strong>{org?.name}</strong> on Guild.
               </p>
 
               {user ? (
                 <button
                   onClick={handleAccept}
                   disabled={isAccepting}
-                  className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 active:scale-98 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold transition-all shadow active:scale-98 cursor-pointer"
                 >
                   {isAccepting ? (
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
                   ) : (
-                    <>
-                      Accept Invitation Ticket
-                      <ArrowRight className="h-4 w-4 text-white" />
-                    </>
+                    'Accept Invitation'
                   )}
                 </button>
               ) : (
@@ -173,11 +165,11 @@ export function JoinInvitePage() {
                   <Link
                     to="/login"
                     state={{ from: `/join/${token}` }}
-                    className="w-full flex items-center justify-center h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 active:scale-98"
+                    className="w-full flex items-center justify-center h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow active:scale-98"
                   >
                     Log In to Accept
                   </Link>
-                  <p className="text-[11px] text-muted-foreground mt-2 font-semibold tracking-wide">
+                  <p className="text-center text-[11px] text-muted-foreground mt-2 font-semibold tracking-wide">
                     New here?{' '}
                     <Link to="/signup" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold transition-colors ml-1">
                       Create an account
