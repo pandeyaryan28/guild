@@ -2,9 +2,10 @@ import * as React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Eye, EyeOff, Loader2, Mail, Lock, Zap, Sun, Moon } from 'lucide-react';
-import { signInWithEmail, signInWithGoogle, GoogleAuthProvider, linkGoogleCredential } from '../lib/auth';
+import { signInWithEmail, signInWithGoogle, GoogleAuthProvider, linkGoogleCredential, sendPasswordReset } from '../lib/auth';
 import { getAdditionalUserInfo } from 'firebase/auth';
 import { setOnboardingState } from '../lib/firestore';
+import { isValidEmail } from '../lib/validation';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,7 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [successMessage, setSuccessMessage] = React.useState('');
 
   const [pendingCred, setPendingCred] = React.useState<any>(null);
   const [linkingEmail, setLinkingEmail] = React.useState('');
@@ -39,9 +41,43 @@ export function LoginPage() {
     }
   }, [user, onboarding, loading, navigate]);
 
+  const handleForgotPassword = async () => {
+    setError('');
+    setSuccessMessage('');
+
+    if (!email.trim()) {
+      setError('Please enter your email address first to reset your password.');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await sendPasswordReset(email);
+      setSuccessMessage('Password reset email sent! Check your inbox for instructions.');
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      const code = err?.code || '';
+      if (code === 'auth/user-not-found') {
+        setError('No user found with this email address.');
+      } else if (code === 'auth/too-many-requests') {
+        setError('Too many requests. Please try again later.');
+      } else {
+        setError('Failed to send password reset email. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setIsSubmitting(true);
 
     try {
@@ -250,9 +286,18 @@ export function LoginPage() {
 
               {/* Password */}
               <div className="space-y-1.5">
-                <label htmlFor="current-password" className="text-xs font-semibold text-muted-foreground pl-0.5">
-                  Password
-                </label>
+                <div className="flex items-center justify-between pl-0.5">
+                  <label htmlFor="current-password" className="text-xs font-semibold text-muted-foreground">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-[11px] font-bold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors cursor-pointer"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
                 <div className="relative">
                   <input
                     id="current-password"
@@ -280,6 +325,13 @@ export function LoginPage() {
               {error && (
                 <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2.5">
                   <p className="text-[11px] font-semibold text-destructive">{error}</p>
+                </div>
+              )}
+
+              {/* Success */}
+              {successMessage && (
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5">
+                  <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{successMessage}</p>
                 </div>
               )}
 
