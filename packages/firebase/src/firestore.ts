@@ -397,6 +397,8 @@ export async function deleteOrganization(
   slug: string,
   ownerId: string
 ): Promise<void> {
+  const ownerProfile = await getUserById(ownerId);
+
   // 1. Delete all cascading collections tied directly to orgId
   
   // A. Chats & Messages
@@ -472,22 +474,10 @@ export async function deleteOrganization(
   // 5. Release the globally reserved URL slug
   await deleteDoc(doc(db, 'orgSlugs', slug.toLowerCase()));
 
-  // 6. Reset the owner's profile to clear workspace references and role
-  const userRef = doc(db, 'users', ownerId);
-  await updateDoc(userRef, {
-    organizationId: '',
-    role: 'member'
-  });
-
-  // 7. Reset onboarding state for the owner so they go back to the setup track
-  const onboardingRef = doc(db, 'onboardingState', ownerId);
-  await setDoc(onboardingRef, {
-    uid: ownerId,
-    completed: false,
-    step: 1,
-    path: null,
-    updatedAt: serverTimestamp()
-  });
+  // 6. Delete the owner's profile fully (including users, usernames, onboardingState)
+  if (ownerProfile && ownerProfile.username) {
+    await deleteUserProfile(ownerId, ownerProfile.username, orgId);
+  }
 }
 
 export async function revokeInviteLink(
