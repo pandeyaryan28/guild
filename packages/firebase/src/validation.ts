@@ -7,27 +7,6 @@ export function isValidUsername(username: string): boolean {
 }
 
 /**
- * Validate an organization slug.
- * Rules: 3–30 chars, lowercase alphanumeric + hyphens, must start with a letter.
- */
-export function isValidSlug(slug: string): boolean {
-  return /^[a-z][a-z0-9-]{2,29}$/.test(slug);
-}
-
-/**
- * Slugify an organization name into a valid slug.
- */
-export function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .slice(0, 30);
-}
-
-/**
  * Validate employee ID — non-empty string.
  */
 export function isValidEmployeeId(id: string): boolean {

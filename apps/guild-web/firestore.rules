@@ -62,12 +62,6 @@ service cloud.firestore {
       allow write: if isAuth();
     }
 
-    match /orgSlugs/{slug} {
-      // Publicly readable for uniqueness checking during org creation
-      allow read: if true;
-      allow write: if isAuth();
-    }
-
     match /onboardingState/{userId} {
       // Users can manage their own onboarding state
       allow read, write: if isAuth() && (

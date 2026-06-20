@@ -1,14 +1,11 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Link2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Link2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
-import { getOrgBySlug, validateInviteToken, type Organization } from '../../../lib/firestore';
+import { validateInviteToken, type Organization } from '../../../lib/firestore';
 import { setOnboardingState } from '../../../lib/firestore';
 import { useAuth } from '../../../hooks/useAuth';
 import type { OnboardingData } from '../OnboardingRoot';
-import { cn } from '@/lib/utils';
-
-type JoinMethod = 'slug' | 'invite';
 
 interface Props {
   data: OnboardingData;
@@ -19,8 +16,6 @@ export function StepJoinOrg({ data, updateData }: Props) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [method, setMethod] = React.useState<JoinMethod>('slug');
-  const [slugInput, setSlugInput] = React.useState('');
   const [inviteInput, setInviteInput] = React.useState('');
   const [org, setOrg] = React.useState<Organization | null>(null);
   const [isSearching, setIsSearching] = React.useState(false);
@@ -33,28 +28,8 @@ export function StepJoinOrg({ data, updateData }: Props) {
     const token = url.searchParams.get('token');
     if (token) {
       setInviteInput(token);
-      setMethod('invite');
     }
   }, []);
-
-  const searchBySlug = async () => {
-    if (!slugInput.trim()) return;
-    setIsSearching(true);
-    setError('');
-    setOrg(null);
-    try {
-      const found = await getOrgBySlug(slugInput.trim().toLowerCase());
-      if (found) {
-        setOrg(found);
-      } else {
-        setError('No organization found with that workspace handle.');
-      }
-    } catch {
-      setError('Failed to search. Please try again.');
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
   const searchByInvite = async () => {
     if (!inviteInput.trim()) return;
@@ -104,90 +79,35 @@ export function StepJoinOrg({ data, updateData }: Props) {
         step={2}
         totalSteps={4}
         title="Find Organization"
-        subtitle="Search for your organization or enter your invitation link."
+        subtitle="Enter your invitation link to find and join your organization."
       />
 
       <div className="aether-glass w-full p-8 mt-8 shadow-xl border border-border-default/30">
-        {/* Method Toggle Buttons */}
-        <div className="flex rounded-xl border border-border-default bg-surface/50 p-1 mb-6">
-          <button
-            onClick={() => { setMethod('slug'); setOrg(null); setError(''); }}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer border-0',
-              method === 'slug' ? 'bg-indigo-600 text-white shadow' : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <Search className="h-3.5 w-3.5" />
-            By Handle
-          </button>
-          <button
-            onClick={() => { setMethod('invite'); setOrg(null); setError(''); }}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-bold transition-all cursor-pointer border-0',
-              method === 'invite' ? 'bg-indigo-600 text-white shadow' : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <Link2 className="h-3.5 w-3.5" />
-            By Invite Link
-          </button>
-        </div>
-
         <div className="space-y-4">
-          {/* Method: By Slug */}
-          {method === 'slug' ? (
-            <div className="space-y-1.5">
-              <label htmlFor="workspace-handle" className="text-xs font-semibold text-muted-foreground pl-0.5">
-                Workspace Handle
-              </label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground select-none">guild.app/</span>
-                  <input
-                    id="workspace-handle"
-                    value={slugInput}
-                    onChange={(e) => { setSlugInput(e.target.value.toLowerCase()); setOrg(null); setError(''); }}
-                    onKeyDown={(e) => e.key === 'Enter' && searchBySlug()}
-                    placeholder="acme-corp"
-                    style={{ paddingLeft: '84px' }}
-                    className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 pr-4 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={searchBySlug}
-                  disabled={isSearching || !slugInput}
-                  className="h-10 px-3.5 rounded-xl bg-surface border border-border-default hover:bg-surface-hover text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
-                >
-                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
-                </button>
-              </div>
+          {/* Method: By Invite Link */}
+          <div className="space-y-1.5">
+            <label htmlFor="invite-link" className="text-xs font-semibold text-muted-foreground pl-0.5">
+              Invite Link or Token
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="invite-link"
+                value={inviteInput}
+                onChange={(e) => { setInviteInput(e.target.value); setOrg(null); setError(''); }}
+                onKeyDown={(e) => e.key === 'Enter' && searchByInvite()}
+                placeholder="e.g. guild.app/join/token"
+                className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 flex-1"
+              />
+              <button
+                type="button"
+                onClick={searchByInvite}
+                disabled={isSearching || !inviteInput}
+                className="h-10 px-3.5 rounded-xl bg-surface border border-border-default hover:bg-surface-hover text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
+              >
+                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
+              </button>
             </div>
-          ) : (
-            /* Method: By Invite Link */
-            <div className="space-y-1.5">
-              <label htmlFor="invite-link" className="text-xs font-semibold text-muted-foreground pl-0.5">
-                Invite Link or Token
-              </label>
-              <div className="flex gap-2">
-                <input
-                  id="invite-link"
-                  value={inviteInput}
-                  onChange={(e) => { setInviteInput(e.target.value); setOrg(null); setError(''); }}
-                  onKeyDown={(e) => e.key === 'Enter' && searchByInvite()}
-                  placeholder="e.g. guild.app/join/token"
-                  className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 flex-1"
-                />
-                <button
-                  type="button"
-                  onClick={searchByInvite}
-                  disabled={isSearching || !inviteInput}
-                  className="h-10 px-3.5 rounded-xl bg-surface border border-border-default hover:bg-surface-hover text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
-                >
-                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
-                </button>
-              </div>
-            </div>
-          )}
+          </div>
 
           {/* Validation Alert */}
           {error && (

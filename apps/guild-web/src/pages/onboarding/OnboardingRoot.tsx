@@ -18,7 +18,6 @@ export interface OnboardingData {
   path: OnboardingPath;
   // Create org
   orgName?: string;
-  orgSlug?: string;
   orgIndustry?: string;
   orgSize?: string;
   orgId?: string;

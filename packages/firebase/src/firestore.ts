@@ -34,12 +34,6 @@ export async function checkUsernameUnique(username: string): Promise<boolean> {
   return !snap.exists();
 }
 
-export async function checkOrgSlugUnique(slug: string): Promise<boolean> {
-  const ref = doc(db, 'orgSlugs', slug.toLowerCase());
-  const snap = await getDoc(ref);
-  return !snap.exists();
-}
-
 // ─── User Operations ──────────────────────────────────────────────────────────
 
 export async function createUser(
@@ -77,9 +71,6 @@ export async function createOrganization(
     createdAt: serverTimestamp(),
   });
 
-  // Reserve org slug globally
-  await setDoc(doc(db, 'orgSlugs', data.slug.toLowerCase()), { orgId });
-
   return orgId;
 }
 
@@ -87,14 +78,6 @@ export async function getOrgById(orgId: string): Promise<Organization | null> {
   const snap = await getDoc(doc(db, 'organizations', orgId));
   if (!snap.exists()) return null;
   return { ...snap.data(), id: orgId } as Organization;
-}
-
-export async function getOrgBySlug(slug: string): Promise<Organization | null> {
-  const slugDoc = await getDoc(doc(db, 'orgSlugs', slug.toLowerCase()));
-  if (!slugDoc.exists()) return null;
-
-  const { orgId } = slugDoc.data();
-  return getOrgById(orgId);
 }
 
 // ─── Organization Members ─────────────────────────────────────────────────────
@@ -394,7 +377,6 @@ async function deleteCollectionByQuery(q: any): Promise<void> {
 
 export async function deleteOrganization(
   orgId: string,
-  slug: string,
   ownerId: string
 ): Promise<void> {
   const ownerProfile = await getUserById(ownerId);
@@ -470,9 +452,6 @@ export async function deleteOrganization(
 
   // 4. Delete the organization document itself
   await deleteDoc(doc(db, 'organizations', orgId));
-
-  // 5. Release the globally reserved URL slug
-  await deleteDoc(doc(db, 'orgSlugs', slug.toLowerCase()));
 
   // 6. Delete the owner's profile fully (including users, usernames, onboardingState)
   if (ownerProfile && ownerProfile.username) {

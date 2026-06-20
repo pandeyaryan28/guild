@@ -22,7 +22,6 @@ import {
   deleteOrganization,
   revokeInviteLink,
   checkUsernameUnique,
-  checkOrgSlugUnique,
   deleteUserProfile
 } from '../../lib/firestore';
 import { uploadProfileImage, uploadOrganizationPhoto } from '../../lib/storage';
@@ -1354,14 +1353,12 @@ interface WorkspaceViewProps {
 
 function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
   const [name, setName] = React.useState(org.name || '');
-  const [slug, setSlug] = React.useState(org.slug || '');
   const [deleting, setDeleting] = React.useState(false);
   const [confirmName, setConfirmName] = React.useState('');
 
   const [saving, setSaving] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [slugError, setSlugError] = React.useState<string | null>(null);
 
   // Deletion States
   const [passwordInput, setPasswordInput] = React.useState('');
@@ -1461,7 +1458,6 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
   // Sync state
   React.useEffect(() => {
     setName(org.name || '');
-    setSlug(org.slug || '');
   }, [org]);
 
   const handleUpdateWorkspace = async (e: React.FormEvent) => {
@@ -1469,33 +1465,16 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
     setSaving(true);
     setSuccess(false);
     setError(null);
-    setSlugError(null);
 
     if (!name.trim()) {
       setError('Workspace Name is required');
       setSaving(false);
       return;
     }
-    if (!slug.trim()) {
-      setSlugError('Workspace Slug is required');
-      setSaving(false);
-      return;
-    }
 
     try {
-      // Validate unique slug if changed
-      if (slug.toLowerCase() !== org.slug.toLowerCase()) {
-        const isUnique = await checkOrgSlugUnique(slug);
-        if (!isUnique) {
-          setSlugError('This Workspace URL Slug is already taken.');
-          setSaving(false);
-          return;
-        }
-      }
-
       await updateOrganizationDetails(org.id, {
         name: name.trim(),
-        slug: slug.trim().toLowerCase(),
       });
 
       setSuccess(true);
@@ -1531,7 +1510,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
         await reauthenticatePassword(passwordInput);
       }
 
-      await deleteOrganization(org.id, org.slug, profile.uid);
+      await deleteOrganization(org.id, profile.uid);
       await logout();
       window.location.href = '/signup';
     } catch (err: any) {
@@ -1621,7 +1600,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
         )}
 
         <form onSubmit={handleUpdateWorkspace} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {/* Name */}
             <div className="space-y-1.5">
               <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Workspace Name</label>
@@ -1632,22 +1611,6 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
                 placeholder="Google Deepmind"
               />
-            </div>
-
-            {/* Slug */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Workspace URL Slug</label>
-              <div className="flex items-center gap-1 p-1 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
-                <span className="text-xs text-muted-foreground font-bold pl-2.5 select-none truncate">guild.com/</span>
-                <input
-                  type="text"
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  className="flex-1 bg-transparent px-1.5 py-1.5 text-xs text-foreground outline-none font-bold"
-                  placeholder="deepmind"
-                />
-              </div>
-              {slugError && <p className="text-[9px] text-red-500 font-bold">{slugError}</p>}
             </div>
           </div>
 

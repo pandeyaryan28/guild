@@ -42,7 +42,6 @@ export interface FocusStatus {
 export interface Organization {
   id: string;
   name: string;
-  slug: string;
   industry: string;
   companySize: string;
   ownerId: string;
