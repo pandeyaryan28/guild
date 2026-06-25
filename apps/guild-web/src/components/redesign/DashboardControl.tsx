@@ -14,7 +14,8 @@ import {
   Hash,
   Download,
   X,
-  Share2
+  Share2,
+  Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from '../../hooks/useAuth';
@@ -465,6 +466,19 @@ export function DashboardControl() {
               </div>
             </div>
           </div>
+
+          {/* Right side CTA: Admin panel button (for owners/admins) */}
+          {(userProfile?.role === 'owner' || userProfile?.role === 'admin') && (
+            <a
+              href="https://admin.guildorbit.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold text-xs shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0 hover:shadow-indigo-500/10 cursor-pointer"
+            >
+              <Shield className="w-4 h-4 text-indigo-400" />
+              <span>Admin Panel</span>
+            </a>
+          )}
         </div>
       </header>
 

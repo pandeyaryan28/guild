@@ -28,11 +28,16 @@ export function VerifyEmailPage() {
   React.useEffect(() => {
     if (isVerifiedSuccess) {
       const timer = setTimeout(() => {
-        window.location.href = onboarding?.completed ? '/' : '/onboarding';
+        const savedToken = sessionStorage.getItem('guild_invite_token');
+        if (savedToken) {
+          navigate(`/join/${savedToken}`, { replace: true });
+        } else {
+          navigate(onboarding?.completed ? '/' : '/onboarding', { replace: true });
+        }
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isVerifiedSuccess, onboarding]);
+  }, [isVerifiedSuccess, onboarding, navigate]);
 
   // Redirect if not logged in
   React.useEffect(() => {

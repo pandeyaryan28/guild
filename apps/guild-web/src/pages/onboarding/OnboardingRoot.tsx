@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { setOnboardingState, getPendingInviteByEmail, getOrgById, validateInviteToken } from '../../lib/firestore';
+import { setOnboardingState, getPendingInviteByEmail, getOrgById, validateInviteToken, findOrgByAutoJoinDomain } from '../../lib/firestore';
 import { StepChoose } from './StepChoose';
 import { StepOrgDetails } from './create/StepOrgDetails';
 import { StepOwnerProfile } from './create/StepOwnerProfile';
@@ -11,6 +11,12 @@ import { StepJoinOrg } from './join/StepJoinOrg';
 import { StepMemberProfile } from './join/StepMemberProfile';
 import { StepComplete } from './StepComplete';
 import { Loader2, Sun, Moon } from 'lucide-react';
+
+const PUBLIC_DOMAINS = [
+  'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'live.com',
+  'aol.com', 'icloud.com', 'mail.com', 'zoho.com', 'protonmail.com',
+  'yandex.com', 'gmx.com'
+];
 
 export type OnboardingPath = 'create' | 'join' | null;
 
@@ -22,6 +28,8 @@ export interface OnboardingData {
   orgSize?: string;
   orgId?: string;
   inviteToken?: string;
+  domainAutoJoin?: boolean;
+  emailDomain?: string;
   // Join org
   joinOrgId?: string;
   joinOrgName?: string;
@@ -83,11 +91,29 @@ export function OnboardingRoot() {
             path: 'join',
             joinOrgId: invite.orgId,
             joinOrgName: org?.name || 'Organization',
-            inviteRole: invite.role,
+            inviteRole: 'member', // Force strictly to member!
             inviteToken: invite.token,
             directInviteDetected: true
           });
           navigate('/onboarding/join/profile', { replace: true });
+          setCheckingInvite(false);
+          return;
+        }
+
+        // 3. Third, check domain-based auto-join
+        const emailDomain = user.email.substring(user.email.lastIndexOf('@') + 1).toLowerCase();
+        if (!PUBLIC_DOMAINS.includes(emailDomain)) {
+          const matchingOrg = await findOrgByAutoJoinDomain(emailDomain);
+          if (matchingOrg && !data.directInviteDetected) {
+            updateData({
+              path: 'join',
+              joinOrgId: matchingOrg.id,
+              joinOrgName: matchingOrg.name,
+              inviteRole: 'member', // Force strictly to member!
+              directInviteDetected: true
+            });
+            navigate('/onboarding/join/find?autoJoin=true', { replace: true });
+          }
         }
       } catch (err) {
         console.error('Invite/token auto-scan failed:', err);

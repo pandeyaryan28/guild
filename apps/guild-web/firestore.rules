@@ -41,18 +41,45 @@ service cloud.firestore {
         getUserData().role == 'owner';
     }
 
+    // Check if the user is an admin or owner of the specified organization
+    function isOrgAdminOrOwner(orgId) {
+      return isAuth() && 
+        getUserData().organizationId == orgId && 
+        (getUserData().role == 'owner' || getUserData().role == 'admin');
+    }
+
     // ─── USER PROFILES & ACCOUNTS ───────────────────────────────────────────
 
     match /users/{userId} {
-      // Users can read/write their own profile
-      // Users can read other profiles in their same organization
+      // Users can read their own profile or profiles in the same organization
       allow read: if isAuth() && (
         request.auth.uid == userId || 
         getUserData().organizationId == resource.data.organizationId
       );
-      allow write: if isAuth() && (
+      
+      // Creating a user profile
+      allow create: if isAuth() && request.auth.uid == userId && (
+        // A user can create their own profile with role 'member'
+        (request.resource.data.role == 'member') ||
+        // Or with role 'owner' only if they are the verified owner of the organization they are setting
+        (request.resource.data.role == 'owner' && 
+         get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == userId)
+      );
+
+      // Updating a user profile
+      allow update: if isAuth() && (
+        // A user can update their own details, but NOT their role or organizationId
+        (request.auth.uid == userId && 
+         request.resource.data.role == resource.data.role && 
+         request.resource.data.organizationId == resource.data.organizationId) ||
+        // Or an organization admin or owner can modify them
+        isOrgAdminOrOwner(resource.data.organizationId)
+      );
+
+      // Deleting a user profile
+      allow delete: if isAuth() && (
         request.auth.uid == userId ||
-        (resource != null && isOrgOwner(resource.data.organizationId))
+        (resource != null && isOrgAdminOrOwner(resource.data.organizationId))
       );
     }
 
@@ -103,8 +130,12 @@ service cloud.firestore {
       allow read: if isAuth() && isMemberOfOrg(resource.data.orgId);
       // Creating or updating a membership record
       allow create, update, delete: if isAuth() && (
-        // A user onboarding can add themselves
+        // A user onboarding can add themselves as a member
         (request.auth.uid == request.resource.data.userId && request.resource.data.role == 'member') ||
+        // A workspace owner can add themselves as the owner
+        (request.auth.uid == request.resource.data.userId && 
+         request.resource.data.role == 'owner' && 
+         get(/databases/$(database)/documents/organizations/$(request.resource.data.orgId)).data.ownerId == request.auth.uid) ||
         // Or the owner/admin can manage it
         (isMemberOfOrg(resource.data.orgId) && (getUserData().role == 'owner' || getUserData().role == 'admin')) ||
         (isMemberOfOrg(request.resource.data.orgId) && (getUserData().role == 'owner' || getUserData().role == 'admin'))

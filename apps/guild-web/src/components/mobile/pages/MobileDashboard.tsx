@@ -14,7 +14,8 @@ import {
   UserCheck,
   Download,
   X,
-  Share2
+  Share2,
+  Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from '../../../hooks/useAuth';
@@ -306,6 +307,18 @@ export function MobileDashboard() {
               </h2>
             </div>
           </div>
+
+          {(userProfile?.role === 'owner' || userProfile?.role === 'admin') && (
+            <a
+              href="https://admin.guildorbit.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold text-[10px] shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0 cursor-pointer animate-fluid-pop"
+            >
+              <Shield className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Admin</span>
+            </a>
+          )}
         </div>
 
         {/* 2. Sleek Custom Mobile Focus Target */}

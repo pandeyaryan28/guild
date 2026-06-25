@@ -33,7 +33,10 @@ export function LoginPage() {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (!loading && user) {
-      if (onboarding?.completed) {
+      const savedToken = sessionStorage.getItem('guild_invite_token');
+      if (savedToken) {
+        navigate(`/join/${savedToken}`, { replace: true });
+      } else if (onboarding?.completed) {
         navigate('/', { replace: true });
       } else {
         navigate('/onboarding', { replace: true });
@@ -110,7 +113,12 @@ export function LoginPage() {
           step: 0,
           path: null,
         });
-        navigate('/onboarding', { replace: true });
+        const savedToken = sessionStorage.getItem('guild_invite_token');
+        if (savedToken) {
+          navigate(`/join/${savedToken}`, { replace: true });
+        } else {
+          navigate('/onboarding', { replace: true });
+        }
       } else {
         // Navigation handled by useEffect above
       }

@@ -339,6 +339,7 @@ export function SettingsPage() {
                       inviteLinks={inviteLinks}
                       loading={invitesLoading}
                       members={members}
+                      onOpenInvite={() => setIsInviteModalOpen(true)}
                     />
                   )}
                   {activeTab === 'teams' && localProfile && (

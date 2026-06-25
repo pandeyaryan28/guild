@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, CheckCircle2, XCircle, Copy, Check } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
-import { createUser, addOrgMember, setOnboardingState, checkUsernameUnique, createPendingEmailInvite } from '../../../lib/firestore';
+import { executeOwnerOnboardingCreate, checkUsernameUnique } from '../../../lib/firestore';
 import { isValidUsername, isValidEmployeeId, isValidAge, isValidEmail, isValidPhoneNumber } from '../../../lib/validation';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -78,45 +78,35 @@ export function StepOwnerProfile({ data, updateData }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate() || !user || !data.orgId) return;
+    if (!validate() || !user || !data.orgName) return;
 
     setIsSubmitting(true);
     try {
-      // 1. Create user profile
-      await createUser(user.uid, {
+      // 1. Create org and owner profile transactionally
+      const { orgId } = await executeOwnerOnboardingCreate({
+        uid: user.uid,
         email: user.email!,
         fullName: fullName.trim(),
         username: username.toLowerCase(),
         designation: designation.trim(),
         employeeId: employeeId.trim(),
         age: parseInt(age),
-        organizationId: data.orgId,
-        role: 'owner',
         phoneNumber: phoneNumber.trim(),
+        orgName: data.orgName,
+        orgIndustry: data.orgIndustry || 'Other',
+        orgSize: data.orgSize || '1–10',
+        domainAutoJoin: !!data.domainAutoJoin,
+        emailDomain: data.emailDomain || '',
+        inviteEmails: inviteEmails,
       });
 
-      // 2. Add to org members
-      await addOrgMember(data.orgId, user.uid, 'owner');
-
-      // 3. Process direct email invitations if specified
-      if (inviteEmails.trim()) {
-        const emailList = inviteEmails
-          .split(',')
-          .map((email) => email.trim().toLowerCase())
-          .filter((email) => isValidEmail(email));
-        
-        const invitePromises = emailList.map((email) => 
-          createPendingEmailInvite(email, data.orgId!, 'member', user.uid)
-        );
-        await Promise.all(invitePromises);
-      }
-
-      // 4. Update onboarding state
-      await setOnboardingState(user.uid, { step: 3, path: 'create' });
+      // Update local onboarding data with orgId
+      updateData({ orgId });
 
       navigate('/onboarding/complete');
-    } catch {
-      setErrors({ submit: 'Failed to save profile. Please try again.' });
+    } catch (err) {
+      console.error('Failed to create workspace & profile:', err);
+      setErrors({ submit: 'Failed to create workspace. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }

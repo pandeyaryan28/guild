@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
-import { validateInviteToken, type Organization } from '../../../lib/firestore';
+import { validateInviteToken, getOrgById, type Organization } from '../../../lib/firestore';
 import { setOnboardingState } from '../../../lib/firestore';
 import { useAuth } from '../../../hooks/useAuth';
 import type { OnboardingData } from '../OnboardingRoot';
@@ -22,6 +22,9 @@ export function StepJoinOrg({ data, updateData }: Props) {
   const [error, setError] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  const queryParams = React.useMemo(() => new URLSearchParams(window.location.search), []);
+  const isAutoJoin = queryParams.get('autoJoin') === 'true';
+
   // Parse invite token from URL if present
   React.useEffect(() => {
     const url = new URL(window.location.href);
@@ -30,6 +33,27 @@ export function StepJoinOrg({ data, updateData }: Props) {
       setInviteInput(token);
     }
   }, []);
+
+  // Fetch auto-join organization details
+  React.useEffect(() => {
+    if (isAutoJoin && data.joinOrgId) {
+      setIsSearching(true);
+      getOrgById(data.joinOrgId)
+        .then((result) => {
+          if (result) {
+            setOrg(result);
+          } else {
+            setError('The organization could not be found.');
+          }
+        })
+        .catch(() => {
+          setError('Failed to load organization details.');
+        })
+        .finally(() => {
+          setIsSearching(false);
+        });
+    }
+  }, [isAutoJoin, data.joinOrgId]);
 
   const searchByInvite = async () => {
     if (!inviteInput.trim()) return;
@@ -78,36 +102,46 @@ export function StepJoinOrg({ data, updateData }: Props) {
       <StepHeader
         step={2}
         totalSteps={4}
-        title="Find Organization"
-        subtitle="Enter your invitation link to find and join your organization."
+        title={isAutoJoin ? 'Join Workspace' : 'Find Organization'}
+        subtitle={
+          isAutoJoin
+            ? "We found an active workspace matching your company's email domain."
+            : 'Enter your invitation link to find and join your organization.'
+        }
       />
 
       <div className="aether-glass w-full p-8 mt-8 shadow-xl border border-border-default/30">
         <div className="space-y-4">
-          {/* Method: By Invite Link */}
-          <div className="space-y-1.5">
-            <label htmlFor="invite-link" className="text-xs font-semibold text-muted-foreground pl-0.5">
-              Invite Link or Token
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="invite-link"
-                value={inviteInput}
-                onChange={(e) => { setInviteInput(e.target.value); setOrg(null); setError(''); }}
-                onKeyDown={(e) => e.key === 'Enter' && searchByInvite()}
-                placeholder="e.g. guild.app/join/token"
-                className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 flex-1"
-              />
-              <button
-                type="button"
-                onClick={searchByInvite}
-                disabled={isSearching || !inviteInput}
-                className="h-10 px-3.5 rounded-xl bg-surface border border-border-default hover:bg-surface-hover text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
-              >
-                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
-              </button>
+          {/* Method: By Invite Link (Only show if not auto-joining) */}
+          {!isAutoJoin && (
+            <div className="space-y-1.5">
+              <label htmlFor="invite-link" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                Invite Link or Token
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="invite-link"
+                  value={inviteInput}
+                  onChange={(e) => {
+                    setInviteInput(e.target.value);
+                    setOrg(null);
+                    setError('');
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && searchByInvite()}
+                  placeholder="e.g. guild.app/join/token"
+                  className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={searchByInvite}
+                  disabled={isSearching || !inviteInput}
+                  className="h-10 px-3.5 rounded-xl bg-surface border border-border-default hover:bg-surface-hover text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
+                >
+                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Validation Alert */}
           {error && (
@@ -117,8 +151,15 @@ export function StepJoinOrg({ data, updateData }: Props) {
             </div>
           )}
 
+          {/* Loading spinner for auto-join lookup */}
+          {isSearching && isAutoJoin && (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          )}
+
           {/* Org Preview Card */}
-          {org && (
+          {org && !isSearching && (
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex items-center gap-4">
               <div className="h-10 w-10 flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-sm font-black shadow-inner">
                 {org.name[0].toUpperCase()}
@@ -140,14 +181,22 @@ export function StepJoinOrg({ data, updateData }: Props) {
           <button
             type="button"
             onClick={handleContinue}
-            disabled={!org || isSubmitting}
+            disabled={!org || isSubmitting || isSearching}
             className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
           >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin text-white" />
-            ) : (
-              'Continue'
-            )}
+            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : 'Join Workspace'}
+          </button>
+
+          {/* Alternate Path Options */}
+          <button
+            type="button"
+            onClick={() => {
+              updateData({ path: null, joinOrgId: undefined, joinOrgName: undefined });
+              navigate('/onboarding', { replace: true });
+            }}
+            className="w-full text-center text-xs font-bold text-muted-foreground hover:text-foreground transition-colors mt-4 bg-transparent border-none outline-none cursor-pointer"
+          >
+            {isAutoJoin ? 'Create a new workspace instead' : 'Cancel'}
           </button>
         </div>
       </div>

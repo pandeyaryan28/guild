@@ -49,6 +49,8 @@ export interface Organization {
   createdAt: Timestamp;
   globalInviteToken?: string;
   photoURL?: string;
+  domainAutoJoin?: boolean;
+  emailDomain?: string;
 }
 
 export interface OrganizationMember {

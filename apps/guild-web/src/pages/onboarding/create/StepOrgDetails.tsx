@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
-import { createOrganization, createInviteLink } from '../../../lib/firestore';
-import { seedDefaultChannels } from '../../../lib/chat';
 import { useAuth } from '../../../hooks/useAuth';
+import { generateInviteToken } from '../../../lib/validation';
 import type { OnboardingData } from '../OnboardingRoot';
 
 const INDUSTRIES = [
@@ -27,8 +25,22 @@ export function StepOrgDetails({ data, updateData }: Props) {
   const [name, setName] = React.useState(data.orgName || '');
   const [industry, setIndustry] = React.useState(data.orgIndustry || '');
   const [size, setSize] = React.useState(data.orgSize || '');
+  const [domainAutoJoin, setDomainAutoJoin] = React.useState(data.domainAutoJoin ?? false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const emailDomain = React.useMemo(() => {
+    if (!user?.email) return '';
+    return user.email.substring(user.email.lastIndexOf('@') + 1).toLowerCase();
+  }, [user?.email]);
+
+  const isPublicDomain = React.useMemo(() => {
+    const PUBLIC_DOMAINS = [
+      'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'live.com',
+      'aol.com', 'icloud.com', 'mail.com', 'zoho.com', 'protonmail.com',
+      'yandex.com', 'gmx.com'
+    ];
+    return PUBLIC_DOMAINS.includes(emailDomain);
+  }, [emailDomain]);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -39,30 +51,21 @@ export function StepOrgDetails({ data, updateData }: Props) {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate() || !user) return;
 
-    setIsSubmitting(true);
-    try {
-      const orgId = await createOrganization({
-        name: name.trim(),
-        industry,
-        companySize: size,
-        ownerId: user.uid,
-      });
-      const inviteToken = await createInviteLink(orgId, user.uid);
+    const preGeneratedToken = generateInviteToken();
 
-      // Seed default channels for the new org with dynamic templates based on the industry
-      await seedDefaultChannels(orgId, user.uid, industry);
-
-      updateData({ orgName: name, orgIndustry: industry, orgSize: size, orgId, inviteToken });
-      navigate('/onboarding/create/profile');
-    } catch {
-      setErrors({ submit: 'Failed to create organization. Please try again.' });
-    } finally {
-      setIsSubmitting(false);
-    }
+    updateData({
+      orgName: name.trim(),
+      orgIndustry: industry,
+      orgSize: size,
+      domainAutoJoin: emailDomain && !isPublicDomain ? domainAutoJoin : false,
+      emailDomain: emailDomain && !isPublicDomain ? emailDomain : '',
+      inviteToken: preGeneratedToken,
+    });
+    navigate('/onboarding/create/profile');
   };
 
   return (
@@ -135,20 +138,31 @@ export function StepOrgDetails({ data, updateData }: Props) {
             </div>
           </div>
 
-          {errors.submit && (
-            <p className="text-xs text-destructive font-semibold text-center mt-2">{errors.submit}</p>
+          {/* Domain Auto-Join Checkbox */}
+          {emailDomain && !isPublicDomain && (
+            <div className="space-y-2 pt-2 border-t border-border-default/20">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={domainAutoJoin}
+                  onChange={(e) => setDomainAutoJoin(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-border-default text-indigo-600 focus:ring-indigo-500/20 accent-indigo-600 cursor-pointer"
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-bold text-foreground">Enable Domain Auto-Join</span>
+                  <span className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
+                    Allow anyone signing up with verified emails ending in <strong>@{emailDomain}</strong> to join this workspace automatically.
+                  </span>
+                </div>
+              </label>
+            </div>
           )}
 
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
+            className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
           >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin text-white" />
-            ) : (
-              'Continue'
-            )}
+            Continue
           </button>
         </form>
       </div>

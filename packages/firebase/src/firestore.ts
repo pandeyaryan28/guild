@@ -15,7 +15,8 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { generateInviteToken } from './validation';
+import { generateInviteToken, isValidEmail } from './validation';
+import { seedDefaultChannels } from './chat';
 import type {
   UserRole,
   UserProfile,
@@ -164,6 +165,17 @@ export async function markInviteUsed(token: string): Promise<void> {
 }
 
 export async function acceptInvite(uid: string, token: string, orgId: string): Promise<void> {
+  // Check if token is global
+  let isGlobal = false;
+  try {
+    const invite = await getInviteLinkByToken(token);
+    if (invite) {
+      isGlobal = !!invite.isGlobal;
+    }
+  } catch (err) {
+    console.error('Failed to look up invite link token:', err);
+  }
+
   // Backwards compatibility layer
   await setDoc(
     doc(db, 'users', uid),
@@ -171,7 +183,15 @@ export async function acceptInvite(uid: string, token: string, orgId: string): P
     { merge: true }
   );
   await addOrgMember(orgId, uid, 'member');
-  await markInviteUsed(token);
+  
+  if (isGlobal) {
+    await updateDoc(doc(db, 'inviteLinks', token), {
+      usageCount: increment(1)
+    });
+  } else {
+    await markInviteUsed(token);
+  }
+  
   await setOnboardingState(uid, { completed: true, path: null, step: 4 });
 }
 
@@ -184,7 +204,7 @@ export async function createPendingEmailInvite(
   invitedBy: string
 ): Promise<string> {
   const token = generateInviteToken();
-  const ref = doc(db, 'pendingInvites', `${orgId}_${email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_')}`);
+  const ref = doc(db, 'pendingInvites', `${orgId}_${email.toLowerCase().trim()}`);
   await setDoc(ref, {
     email: email.toLowerCase().trim(),
     orgId,
@@ -273,11 +293,12 @@ export async function executeMemberOnboardingJoin(payload: AcceptInvitePayload):
     employeeId,
     age,
     orgId,
-    role,
     token,
     isGlobal,
     phoneNumber,
   } = payload;
+
+  const joiningRole: UserRole = 'member';
 
   // 1. Transactionally write User Profile
   await createUser(uid, {
@@ -288,12 +309,12 @@ export async function executeMemberOnboardingJoin(payload: AcceptInvitePayload):
     employeeId,
     age,
     organizationId: orgId,
-    role,
+    role: joiningRole,
     phoneNumber: phoneNumber ?? '',
   });
 
   // 2. Add member record
-  await addOrgMember(orgId, uid, role);
+  await addOrgMember(orgId, uid, joiningRole);
 
   // 3. Mark/increment token
   if (token) {
@@ -495,6 +516,140 @@ export async function deleteUserProfile(
   }
 }
 
+
+export interface OwnerOnboardingPayload {
+  uid: string;
+  email: string;
+  fullName: string;
+  username: string;
+  designation: string;
+  employeeId: string;
+  age: number;
+  phoneNumber?: string;
+  orgName: string;
+  orgIndustry: string;
+  orgSize: string;
+  domainAutoJoin?: boolean;
+  emailDomain?: string;
+  inviteEmails?: string;
+}
+
+export async function executeOwnerOnboardingCreate(payload: OwnerOnboardingPayload): Promise<{ orgId: string; inviteToken: string }> {
+  const {
+    uid,
+    email,
+    fullName,
+    username,
+    designation,
+    employeeId,
+    age,
+    phoneNumber,
+    orgName,
+    orgIndustry,
+    orgSize,
+    domainAutoJoin,
+    emailDomain,
+    inviteEmails,
+  } = payload;
+
+  const orgRef = doc(collection(db, 'organizations'));
+  const orgId = orgRef.id;
+  const inviteToken = generateInviteToken();
+
+  const batch = writeBatch(db);
+
+  // 1. Create Organization
+  batch.set(orgRef, {
+    id: orgId,
+    name: orgName.trim(),
+    industry: orgIndustry,
+    companySize: orgSize,
+    ownerId: uid,
+    domainAutoJoin: !!domainAutoJoin,
+    emailDomain: emailDomain ? emailDomain.toLowerCase().trim() : '',
+    createdAt: serverTimestamp(),
+  });
+
+  // 2. Create User Profile
+  const userRef = doc(db, 'users', uid);
+  batch.set(userRef, {
+    uid,
+    email,
+    fullName: fullName.trim(),
+    username: username.toLowerCase(),
+    designation: designation.trim(),
+    employeeId: employeeId.trim(),
+    age,
+    organizationId: orgId,
+    role: 'owner',
+    phoneNumber: phoneNumber?.trim() ?? '',
+    createdAt: serverTimestamp(),
+  });
+
+  // 3. Reserve Username Globally
+  batch.set(doc(db, 'usernames', username.toLowerCase()), { uid });
+
+  // 4. Add Member Record
+  batch.set(doc(db, 'organizationMembers', `${orgId}_${uid}`), {
+    orgId,
+    userId: uid,
+    role: 'owner',
+    joinedAt: serverTimestamp(),
+  });
+
+  // 5. Create Invite Link (single-use / general link for the org)
+  const expiresAt = Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  batch.set(doc(db, 'inviteLinks', inviteToken), {
+    token: inviteToken,
+    orgId,
+    createdBy: uid,
+    expiresAt,
+    used: false,
+    isGlobal: false,
+    usageCount: 0,
+  });
+
+  // 6. Complete onboarding journey
+  batch.set(doc(db, 'onboardingState', uid), {
+    uid,
+    completed: true,
+    path: 'create',
+    step: 4,
+    updatedAt: serverTimestamp(),
+  });
+
+  // Commit batch write
+  await batch.commit();
+
+  // 7. Seed default channels (async)
+  await seedDefaultChannels(orgId, uid, orgIndustry);
+
+  // 8. Process direct email invitations if specified
+  if (inviteEmails?.trim()) {
+    const emailList = inviteEmails
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter((e) => isValidEmail(e));
+    
+    const invitePromises = emailList.map((e) => 
+      createPendingEmailInvite(e, orgId, 'member', uid)
+    );
+    await Promise.all(invitePromises);
+  }
+
+  return { orgId, inviteToken };
+}
+
+export async function findOrgByAutoJoinDomain(domain: string): Promise<Organization | null> {
+  const q = query(
+    collection(db, 'organizations'),
+    where('domainAutoJoin', '==', true),
+    where('emailDomain', '==', domain.toLowerCase().trim())
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return { ...snap.docs[0].data(), id: snap.docs[0].id } as Organization;
+}
 
 // Re-export types
 export type { UserRole, UserProfile, Organization, OrganizationMember, OnboardingState, InviteLink };
