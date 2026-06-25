@@ -14,7 +14,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
 import { THEMES } from '../../lib/themes';
-import { sendPasswordReset, reauthenticatePassword, reauthenticateGoogle, getCurrentUser } from '../../lib/auth';
+import { sendPasswordReset, reauthenticatePassword, reauthenticateGoogle, getCurrentUser, deleteCurrentUser } from '../../lib/auth';
 import {
   updateUserProfile,
   removeUserFromOrg,
@@ -539,7 +539,16 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
     setDeletingProfile(true);
     setProfileDeleteError(null);
     try {
+      // 1. Delete Firestore user records
       await deleteUserProfile(profile.uid, profile.username, profile.organizationId);
+      
+      // 2. Attempt to delete Firebase Auth user
+      try {
+        await deleteCurrentUser();
+      } catch (authErr: any) {
+        console.warn('Failed to delete Auth user (may require recent login):', authErr);
+      }
+      
       await logout();
       window.location.href = '/signup';
     } catch (err: any) {

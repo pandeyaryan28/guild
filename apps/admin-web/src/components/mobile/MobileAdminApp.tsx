@@ -18,7 +18,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { type UserProfile, type Task, type Organization, type Team } from '@guild/types';
-import { updateOrganizationDetails, getOrCreateGlobalInviteLink } from '@guild/firebase';
+import { updateOrganizationDetails } from '@guild/firebase';
 import { cn } from '../../lib/utils';
 
 interface MobileAdminAppProps {

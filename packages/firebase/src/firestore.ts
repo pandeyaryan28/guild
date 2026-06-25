@@ -314,7 +314,7 @@ export async function executeMemberOnboardingJoin(payload: AcceptInvitePayload):
     });
 
     // 6. Complete onboarding state
-    const onboardingRef = doc(db, 'onboardingStates', uid);
+    const onboardingRef = doc(db, 'onboardingState', uid);
     transaction.set(onboardingRef, {
       uid,
       completed: true,
@@ -329,7 +329,7 @@ export async function acceptInvite(uid: string, token: string, orgId: string): P
   const inviteRef = doc(db, 'inviteLinks', token);
   const userRef = doc(db, 'users', uid);
   const memberRef = doc(db, 'organizationMembers', `${orgId}_${uid}`);
-  const onboardingRef = doc(db, 'onboardingStates', uid);
+  const onboardingRef = doc(db, 'onboardingState', uid);
 
   await runTransaction(db, async (transaction) => {
     // 1. Get and validate invite link
@@ -413,8 +413,9 @@ export async function updateUserRole(
 export async function removeUserFromOrg(
   uid: string
 ): Promise<void> {
-  const userRef = doc(db, 'users', uid);
-  await updateDoc(userRef, { organizationId: '', role: 'member' });
+  const userProfile = await getUserById(uid);
+  if (!userProfile) return;
+  await deleteUserProfile(uid, userProfile.username, userProfile.organizationId);
 }
 
 export async function updateOrganizationDetails(
@@ -542,7 +543,9 @@ export async function deleteUserProfile(
   await deleteDoc(doc(db, 'onboardingState', uid));
 
   // 2. Release the globally unique username handle
-  await deleteDoc(doc(db, 'usernames', username.toLowerCase()));
+  if (username) {
+    await deleteDoc(doc(db, 'usernames', username.toLowerCase()));
+  }
 
   // 3. Delete user profile document
   await deleteDoc(doc(db, 'users', uid));
@@ -550,6 +553,61 @@ export async function deleteUserProfile(
   // 4. Clean up workspace members association if user was part of an organization
   if (organizationId) {
     await deleteDoc(doc(db, 'organizationMembers', `${organizationId}_${uid}`));
+
+    // 5. Clean up channel memberships
+    try {
+      await deleteCollectionByQuery(
+        query(collection(db, 'channelMembers'), where('userId', '==', uid))
+      );
+    } catch (err) {
+      console.error(`Failed to clean up channelMembers for user ${uid}:`, err);
+    }
+
+    // 6. Clean up teams in the organization (remove from memberIds, clear managerId if matches)
+    try {
+      const teamsSnap = await getDocs(
+        query(collection(db, 'teams'), where('orgId', '==', organizationId))
+      );
+      for (const teamDoc of teamsSnap.docs) {
+        const teamData = teamDoc.data();
+        const memberIds = teamData.memberIds || [];
+        if (memberIds.includes(uid) || teamData.managerId === uid) {
+          const newMemberIds = memberIds.filter((id: string) => id !== uid);
+          const patch: any = { memberIds: newMemberIds };
+          if (teamData.managerId === uid) {
+            patch.managerId = '';
+          }
+          await updateDoc(doc(db, 'teams', teamDoc.id), patch);
+        }
+      }
+    } catch (err) {
+      console.error(`Failed to clean up teams for user ${uid}:`, err);
+    }
+
+    // 7. Clean up projects in the organization (remove from memberIds, reassign ownerId if matches)
+    try {
+      const projectsSnap = await getDocs(
+        query(collection(db, 'projects'), where('orgId', '==', organizationId))
+      );
+      for (const projDoc of projectsSnap.docs) {
+        const projData = projDoc.data();
+        const memberIds = projData.memberIds || [];
+        if (memberIds.includes(uid) || projData.ownerId === uid) {
+          const newMemberIds = memberIds.filter((id: string) => id !== uid);
+          const patch: any = { memberIds: newMemberIds };
+          if (projData.ownerId === uid) {
+            // Reassign project owner to the organization owner
+            const orgRef = doc(db, 'organizations', organizationId);
+            const orgSnap = await getDoc(orgRef);
+            const orgOwnerId = orgSnap.exists() ? (orgSnap.data()?.ownerId || '') : '';
+            patch.ownerId = orgOwnerId;
+          }
+          await updateDoc(doc(db, 'projects', projDoc.id), patch);
+        }
+      }
+    } catch (err) {
+      console.error(`Failed to clean up projects for user ${uid}:`, err);
+    }
   }
 }
 
@@ -669,7 +727,7 @@ export async function executeOwnerOnboardingCreate(payload: OwnerOnboardingPaylo
       .filter((e) => isValidEmail(e));
     
     const invitePromises = emailList.map((e) => 
-      createPendingEmailInvite(e, orgId, 'member', uid)
+      createInviteLink(orgId, uid, { email: e, role: 'member' })
     );
     await Promise.all(invitePromises);
   }

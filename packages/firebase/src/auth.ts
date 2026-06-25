@@ -15,6 +15,7 @@ import {
   reauthenticateWithCredential as firebaseReauthenticateWithCredential,
   reauthenticateWithPopup as firebaseReauthenticateWithPopup,
   linkWithCredential,
+  deleteUser as firebaseDeleteUser,
   type User,
 } from 'firebase/auth';
 import { auth } from './firebase';
@@ -90,6 +91,13 @@ export async function reauthenticateGoogle(): Promise<void> {
   if (!user) throw new Error('No user is currently authenticated.');
   const provider = new GoogleAuthProvider();
   await firebaseReauthenticateWithPopup(user, provider);
+}
+
+export async function deleteCurrentUser(): Promise<void> {
+  const user = auth.currentUser;
+  if (user) {
+    await firebaseDeleteUser(user);
+  }
 }
 
 export type { User };
