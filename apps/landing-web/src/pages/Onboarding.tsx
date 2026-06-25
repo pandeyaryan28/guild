@@ -228,7 +228,7 @@ export function Onboarding() {
           </div>
         );
       case 2:
-        if (path === 'create') {
+        if (path !== 'join') {
           return (
             <div className="flex flex-col gap-3.5 animate-fade-in">
               <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
@@ -557,7 +557,7 @@ export function Onboarding() {
               </div>
 
               {/* Invitations section for Create Path */}
-              {path === 'create' && (
+              {path !== 'join' && (
                 <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-2.5 mt-1">
                   <label className="text-[8px] font-extrabold uppercase text-slate-400">Invite Team Members (Optional)</label>
                   <div className="flex gap-1.5">
@@ -614,6 +614,85 @@ export function Onboarding() {
             </button>
           </div>
         );
+      case 4:
+        return (
+          <div className="text-center py-6 flex flex-col items-center gap-4 animate-fade-in">
+            {/* Dynamic Ambient Orbit Ceremony */}
+            <div className="flex items-center justify-center relative h-24 w-24">
+              <div className="absolute inset-0 rounded-full bg-indigo-500/10 blur-xl animate-pulse" />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
+                className="absolute inset-0 rounded-full border border-dashed border-indigo-500/20 p-2"
+              />
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/10 to-indigo-500/25 border border-indigo-500/40 shadow-xl backdrop-blur-md">
+                <CheckCircle2 className="h-8 w-8 text-indigo-600" />
+              </div>
+            </div>
+
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight flex items-center gap-1">
+              Setup Complete!
+              <Sparkles className="h-4.5 w-4.5 text-indigo-600 animate-pulse" />
+            </h3>
+            <p className="text-[10px] text-slate-500 font-semibold leading-relaxed max-w-xs mx-auto">
+              Your Guild workspace credentials have been mapped. Let's step into the operations deck.
+            </p>
+            
+            <div className="w-full bg-slate-50 border border-slate-200/50 rounded-2xl p-4 text-left text-[9px] font-semibold space-y-2 text-slate-600">
+              <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
+                <span>Path:</span>
+                <span className="font-bold text-slate-800 uppercase tracking-wider">{path !== 'join' ? 'Create Space' : 'Join Team'}</span>
+              </p>
+              <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
+                <span>Workspace Name:</span>
+                <span className="font-bold text-slate-800">{path !== 'join' ? orgName : foundOrgName || 'N/A'}</span>
+              </p>
+              {path !== 'join' && (
+                <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
+                  <span>Subdomain:</span>
+                  <span className="font-bold text-indigo-600 font-mono">https://{orgSlug || 'acme'}.guildhq.space</span>
+                </p>
+              )}
+              <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
+                <span>Profile Name:</span>
+                <span className="font-bold text-slate-800">{fullName || 'N/A'}</span>
+              </p>
+              <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
+                <span>Username:</span>
+                <span className="font-bold text-slate-850">@{username || 'user'}</span>
+              </p>
+              <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
+                <span>Designation:</span>
+                <span className="font-bold text-slate-800">{designation || 'None'}</span>
+              </p>
+              <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
+                <span>Age / Emp ID:</span>
+                <span className="font-bold text-slate-800">{age || 'N/A'} yrs / {employeeId || 'N/A'}</span>
+              </p>
+              <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
+                <span>Interface Theme:</span>
+                <span className="font-bold text-slate-800 capitalize flex items-center gap-1">
+                  {themePreference === 'dark' ? <Moon className="h-3 w-3" /> : <Sun className="h-3 w-3 text-amber-500" />}
+                  {themePreference} Mode
+                </span>
+              </p>
+              {path !== 'join' && (
+                <p className="flex justify-between">
+                  <span>Colleagues Invited:</span>
+                  <span className="font-bold text-slate-800">{inviteEmails.length} member(s)</span>
+                </p>
+              )}
+            </div>
+
+            <a
+              href={APP_URL}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 transition-colors text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/10 cursor-pointer flex items-center justify-center gap-1.5 mt-2"
+            >
+              Enter Workspace Command
+              <Send className="h-4 w-4" />
+            </a>
+          </div>
+        );
       default:
         return null;
     }
@@ -647,15 +726,13 @@ export function Onboarding() {
           {steps.map((step) => {
             const Icon = step.icon;
             const isCurrent = activeStep === step.id;
-            const isCompleted = completedSteps.includes(step.id) || (activeStep > step.id);
+            const isCompleted = completedSteps.includes(step.id);
 
             return (
               <div
                 key={step.id}
                 onClick={() => {
-                  if (step.id <= completedSteps.length + 1) {
-                    setActiveStep(step.id);
-                  }
+                  setActiveStep(step.id);
                 }}
                 className={`bg-white/45 glass p-6 rounded-2xl border text-left cursor-pointer transition-all shadow-sm ${
                   isCurrent
@@ -706,7 +783,7 @@ export function Onboarding() {
                           </p>
                         )}
                         {step.id === 2 && (
-                          path === 'create' ? (
+                          path !== 'join' ? (
                             <>
                               <p>Fill in your Organization's Name. We will generate a unique subdomain slug that maps directly to your workspace database directory.</p>
                               <p className="bg-slate-50 p-2 rounded-lg border border-slate-200/50 text-[9px] font-mono">
@@ -720,7 +797,7 @@ export function Onboarding() {
                           )
                         )}
                         {step.id === 3 && (
-                          path === 'create' ? (
+                          path !== 'join' ? (
                             <p>
                               Configure your Owner Profile. Set your full name, unique system username, designation, and default interface theme (Light or Dark). You can also seed email invitations to dispatch signup tokens to your team.
                             </p>
@@ -761,99 +838,15 @@ export function Onboarding() {
           </div>
 
           <AnimatePresence mode="wait">
-            {completedSteps.length < steps.length ? (
-              <motion.div
-                key={activeStep}
-                initial={{ opacity: 0, x: 15 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -15 }}
-                transition={{ duration: 0.2 }}
-              >
-                {renderSimulatorSection()}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="completion"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-6 flex flex-col items-center gap-4 animate-fade-in"
-              >
-                {/* Dynamic Ambient Orbit Ceremony */}
-                <div className="flex items-center justify-center relative h-24 w-24">
-                  <div className="absolute inset-0 rounded-full bg-indigo-500/10 blur-xl animate-pulse" />
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
-                    className="absolute inset-0 rounded-full border border-dashed border-indigo-500/20 p-2"
-                  />
-                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/10 to-indigo-500/25 border border-indigo-500/40 shadow-xl backdrop-blur-md">
-                    <CheckCircle2 className="h-8 w-8 text-indigo-600" />
-                  </div>
-                </div>
-
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight flex items-center gap-1">
-                  Setup Complete!
-                  <Sparkles className="h-4.5 w-4.5 text-indigo-600 animate-pulse" />
-                </h3>
-                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed max-w-xs mx-auto">
-                  Your Guild workspace credentials have been mapped. Let's step into the operations deck.
-                </p>
-                
-                <div className="w-full bg-slate-50 border border-slate-200/50 rounded-2xl p-4 text-left text-[9px] font-semibold space-y-2 text-slate-600">
-                  <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
-                    <span>Path:</span>
-                    <span className="font-bold text-slate-800 uppercase tracking-wider">{path === 'create' ? 'Create Space' : 'Join Team'}</span>
-                  </p>
-                  <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
-                    <span>Workspace Name:</span>
-                    <span className="font-bold text-slate-800">{path === 'create' ? orgName : foundOrgName}</span>
-                  </p>
-                  {path === 'create' && (
-                    <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
-                      <span>Subdomain:</span>
-                      <span className="font-bold text-indigo-600 font-mono">https://{orgSlug}.guildhq.space</span>
-                    </p>
-                  )}
-                  <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
-                    <span>Profile Name:</span>
-                    <span className="font-bold text-slate-800">{fullName}</span>
-                  </p>
-                  <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
-                    <span>Username:</span>
-                    <span className="font-bold text-slate-850">@{username}</span>
-                  </p>
-                  <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
-                    <span>Designation:</span>
-                    <span className="font-bold text-slate-800">{designation || 'None'}</span>
-                  </p>
-                  <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
-                    <span>Age / Emp ID:</span>
-                    <span className="font-bold text-slate-800">{age} yrs / {employeeId || 'N/A'}</span>
-                  </p>
-                  <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
-                    <span>Interface Theme:</span>
-                    <span className="font-bold text-slate-800 capitalize flex items-center gap-1">
-                      {themePreference === 'dark' ? <Moon className="h-3 w-3" /> : <Sun className="h-3 w-3 text-amber-500" />}
-                      {themePreference} Mode
-                    </span>
-                  </p>
-                  {path === 'create' && (
-                    <p className="flex justify-between">
-                      <span>Colleagues Invited:</span>
-                      <span className="font-bold text-slate-800">{inviteEmails.length} member(s)</span>
-                    </p>
-                  )}
-                </div>
-
-                <a
-                  href={APP_URL}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 transition-colors text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/10 cursor-pointer flex items-center justify-center gap-1.5 mt-2"
-                >
-                  Enter Workspace Command
-                  <Send className="h-4 w-4" />
-                </a>
-              </motion.div>
-            )}
+            <motion.div
+              key={activeStep}
+              initial={{ opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -15 }}
+              transition={{ duration: 0.2 }}
+            >
+              {renderSimulatorSection()}
+            </motion.div>
           </AnimatePresence>
         </div>
       </div>
