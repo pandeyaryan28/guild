@@ -1118,7 +1118,7 @@ export function Demo() {
       <div className="absolute top-[10%] left-[5%] w-[450px] h-[450px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none" />
       <div className="absolute bottom-[10%] right-[5%] w-[450px] h-[450px] rounded-full bg-cyan-500/5 blur-[100px] pointer-events-none" />
 
-      <div className="max-w-5xl mx-auto flex flex-col items-center">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 flex flex-col items-center">
         {/* Header */}
         <section className="text-center mb-10 max-w-2xl relative z-10">
           <h1 className="text-[clamp(2rem,4vw,3.5rem)] font-extrabold text-slate-900 tracking-tight leading-none">
@@ -1126,8 +1126,10 @@ export function Demo() {
           </h1>
         </section>
 
-        {/* Video Player Layout - Glassmorphic Outer Wrapper in Premium Light Mode */}
-        <section className="w-full max-w-4xl relative z-20 mb-10">
+        {/* Main Content Layout Grid */}
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-20 mb-10">
+          {/* Video Player Layout - Glassmorphic Outer Wrapper in Premium Light Mode */}
+          <section className="lg:col-span-7 xl:col-span-8 w-full">
           <div className="bg-white/80 backdrop-blur-xl border border-white/90 rounded-3xl p-3 md:p-4 shadow-2xl shadow-indigo-950/5 flex flex-col">
             
             {/* Browser Window mockup chrome frame */}
@@ -1243,8 +1245,8 @@ export function Demo() {
           </div>
         </section>
 
-        {/* Form CTA Section */}
-        <section className="w-full max-w-2xl bg-white/45 glass rounded-3xl p-8 md:p-10 border border-slate-200/50 shadow-sm relative overflow-hidden">
+          {/* Form CTA Section */}
+          <section className="lg:col-span-5 xl:col-span-4 w-full bg-white/45 glass rounded-3xl p-6 md:p-8 border border-slate-200/50 shadow-sm relative overflow-hidden">
           <div className="absolute top-[10%] right-[5%] w-[120px] h-[120px] rounded-full bg-indigo-500/5 blur-[30px] pointer-events-none" />
           
           <AnimatePresence mode="wait">
@@ -1337,7 +1339,7 @@ export function Demo() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-indigo-650 hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors text-white py-3 px-4 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/10 cursor-pointer flex items-center justify-center gap-1.5 mt-2 disabled:cursor-not-allowed"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors text-white py-3 px-4 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/10 cursor-pointer flex items-center justify-center gap-1.5 mt-2 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <>
@@ -1360,7 +1362,7 @@ export function Demo() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-8 flex flex-col items-center gap-4"
               >
-                <div className="h-14 w-14 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-650 flex items-center justify-center shadow-sm">
+                <div className="h-14 w-14 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-sm">
                   <CheckCircle2 className="h-8 w-8 text-indigo-600" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">Demo Scheduled Successfully!</h3>
@@ -1371,7 +1373,8 @@ export function Demo() {
             )}
           </AnimatePresence>
         </section>
-      </div>
+      </div> {/* Close Grid */}
+      </div> {/* Close max-w-7xl */}
     </div>
   );
 }
