@@ -63,9 +63,12 @@ export function OnboardingRoot() {
         return;
       }
       try {
-        // 1. First, check if there is an explicit token in the URL params
+        // 1. First, check if there is an explicit token in the URL params or saved locally
         const url = new URL(window.location.href);
-        const token = url.searchParams.get('token');
+        let token = url.searchParams.get('token');
+        if (!token) {
+          token = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
+        }
         if (token && !data.directInviteDetected) {
           const res = await validateInviteToken(token);
           if (res.valid && res.org) {

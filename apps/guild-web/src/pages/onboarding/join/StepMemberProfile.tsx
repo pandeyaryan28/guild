@@ -92,6 +92,8 @@ export function StepMemberProfile({ data, updateData }: Props) {
         phoneNumber: phoneNumber.trim(),
       });
 
+      localStorage.removeItem('guild_invite_token');
+      sessionStorage.removeItem('guild_invite_token');
       navigate('/onboarding/complete');
     } catch {
       setErrors({ submit: 'Failed to complete profile registration. Please try again.' });

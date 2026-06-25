@@ -32,9 +32,11 @@ export function JoinInvitePage() {
         if (!res.valid) {
           setError(res.error || 'Invalid invite link.');
           sessionStorage.removeItem('guild_invite_token');
+          localStorage.removeItem('guild_invite_token');
         } else {
           setOrg(res.org);
           sessionStorage.setItem('guild_invite_token', token);
+          localStorage.setItem('guild_invite_token', token);
         }
       } catch (err: any) {
         setError(err.message || 'Failed to validate invite link.');
@@ -56,12 +58,14 @@ export function JoinInvitePage() {
         // User hasn't completed onboarding yet. Redirect them to onboarding to complete profile, passing the token.
         // OnboardingRoot will auto-detect the token and skip search steps.
         sessionStorage.setItem('guild_invite_token', token);
+        localStorage.setItem('guild_invite_token', token);
         navigate(`/onboarding?token=${token}`, { replace: true });
         return;
       }
 
       await acceptInvite(user.uid, token, org.id);
       sessionStorage.removeItem('guild_invite_token');
+      localStorage.removeItem('guild_invite_token');
       setSuccess(true);
       setTimeout(() => {
         navigate('/', { replace: true });

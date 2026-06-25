@@ -33,7 +33,7 @@ export function LoginPage() {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (!loading && user) {
-      const savedToken = sessionStorage.getItem('guild_invite_token');
+      const savedToken = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
       if (savedToken) {
         navigate(`/join/${savedToken}`, { replace: true });
       } else if (onboarding?.completed) {
@@ -113,7 +113,7 @@ export function LoginPage() {
           step: 0,
           path: null,
         });
-        const savedToken = sessionStorage.getItem('guild_invite_token');
+        const savedToken = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
         if (savedToken) {
           navigate(`/join/${savedToken}`, { replace: true });
         } else {

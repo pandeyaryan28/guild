@@ -28,7 +28,7 @@ export function VerifyEmailPage() {
   React.useEffect(() => {
     if (isVerifiedSuccess) {
       const timer = setTimeout(() => {
-        const savedToken = sessionStorage.getItem('guild_invite_token');
+        const savedToken = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
         if (savedToken) {
           navigate(`/join/${savedToken}`, { replace: true });
         } else {
