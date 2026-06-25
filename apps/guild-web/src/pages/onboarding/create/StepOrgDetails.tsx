@@ -61,8 +61,8 @@ export function StepOrgDetails({ data, updateData }: Props) {
       orgName: name.trim(),
       orgIndustry: industry,
       orgSize: size,
-      domainAutoJoin: emailDomain && !isPublicDomain ? domainAutoJoin : false,
-      emailDomain: emailDomain && !isPublicDomain ? emailDomain : '',
+      domainAutoJoin: emailDomain ? domainAutoJoin : false,
+      emailDomain: emailDomain || '',
       inviteToken: preGeneratedToken,
     });
     navigate('/onboarding/create/profile');
@@ -139,13 +139,24 @@ export function StepOrgDetails({ data, updateData }: Props) {
           </div>
 
           {/* Domain Auto-Join Checkbox */}
-          {emailDomain && !isPublicDomain && (
+          {emailDomain && (
             <div className="space-y-2 pt-2 border-t border-border-default/20">
               <label className="flex items-start gap-2.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={domainAutoJoin}
-                  onChange={(e) => setDomainAutoJoin(e.target.checked)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    if (checked && isPublicDomain) {
+                      const confirm = window.confirm(
+                        `WARNING: You are enabling domain-based auto-join for a public email domain (${emailDomain}). ` +
+                        `This means ANYONE with a verified email ending in @${emailDomain} can join your organization. ` +
+                        `Are you sure you want to proceed?`
+                      );
+                      if (!confirm) return;
+                    }
+                    setDomainAutoJoin(checked);
+                  }}
                   className="mt-0.5 h-4 w-4 rounded border-border-default text-indigo-600 focus:ring-indigo-500/20 accent-indigo-600 cursor-pointer"
                 />
                 <div className="flex flex-col gap-0.5">

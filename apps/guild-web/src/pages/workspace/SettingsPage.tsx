@@ -176,7 +176,7 @@ export function SettingsPage() {
       { id: 'teams', label: 'Teams & Org', icon: Workflow, allowed: ['admin', 'owner'], group: 'workspace' },
       { id: 'invites', label: 'Invite Links', icon: Link2, allowed: ['admin', 'owner'], group: 'workspace' },
       { id: 'billing', label: 'Billing & Plans', icon: CreditCard, allowed: ['owner'], group: 'workspace' },
-      { id: 'workspace', label: 'Workspace Info', icon: Building2, allowed: ['owner'], group: 'workspace' },
+      { id: 'workspace', label: 'Workspace Info', icon: Building2, allowed: ['admin', 'owner'], group: 'workspace' },
     ];
     return list.filter((t) => t.allowed.includes(role));
   }, [role]);
@@ -1228,9 +1228,10 @@ interface InviteLinksProps {
   inviteLinks: InviteLink[];
   loading: boolean;
   members: UserProfile[];
+  onOpenInvite: () => void;
 }
 
-function InviteLinksSettingsView({ inviteLinks, loading, members }: InviteLinksProps) {
+function InviteLinksSettingsView({ inviteLinks, loading, members, onOpenInvite }: InviteLinksProps) {
   const [revoking, setRevoking] = React.useState<string | null>(null);
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
@@ -1261,8 +1262,17 @@ function InviteLinksSettingsView({ inviteLinks, loading, members }: InviteLinksP
 
   return (
     <div className="space-y-6 text-left animate-fluid-pop">
-      <div>
-        <h2 className="text-sm font-bold text-foreground">Invite Links</h2>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-bold text-foreground">Invite Links</h2>
+        </div>
+        <button
+          onClick={onOpenInvite}
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-accent text-accent-foreground rounded-xl text-xs font-bold hover:bg-accent/90 hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+          style={{ background: 'var(--accent)' }}
+        >
+          <Plus className="h-3.5 w-3.5" /> Create Invite Link
+        </button>
       </div>
 
       {loading ? (
@@ -1274,9 +1284,16 @@ function InviteLinksSettingsView({ inviteLinks, loading, members }: InviteLinksP
         <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
           <Link2 className="h-7 w-7 text-muted-foreground opacity-50 mb-2" />
           <p className="text-xs font-bold text-foreground">No active invite tokens</p>
-          <p className="text-[10px] text-muted-foreground mt-1 max-w-[240px] leading-relaxed font-semibold">
-            Generate invite tokens on the Teammates directory or from the Members tab
+          <p className="text-[10px] text-muted-foreground mt-1 max-w-[240px] leading-relaxed font-semibold mb-4">
+            Generate invite tokens on the Teammates directory or directly below
           </p>
+          <button
+            onClick={onOpenInvite}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-accent text-accent-foreground rounded-xl text-xs font-bold hover:bg-accent/90 hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+            style={{ background: 'var(--accent)' }}
+          >
+            <Plus className="h-3.5 w-3.5" /> Create Invite Link
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1354,12 +1371,23 @@ interface WorkspaceViewProps {
 
 function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
   const [name, setName] = React.useState(org.name || '');
+  const [domainAutoJoin, setDomainAutoJoin] = React.useState(!!org.domainAutoJoin);
   const [deleting, setDeleting] = React.useState(false);
   const [confirmName, setConfirmName] = React.useState('');
 
   const [saving, setSaving] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  const isPublicDomain = React.useMemo(() => {
+    const PUBLIC_DOMAINS = [
+      'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'live.com',
+      'aol.com', 'icloud.com', 'mail.com', 'zoho.com', 'protonmail.com',
+      'yandex.com', 'gmx.com'
+    ];
+    const domain = org.emailDomain || profile.email.substring(profile.email.lastIndexOf('@') + 1).toLowerCase();
+    return PUBLIC_DOMAINS.includes(domain);
+  }, [org.emailDomain, profile.email]);
 
   // Deletion States
   const [passwordInput, setPasswordInput] = React.useState('');
@@ -1459,6 +1487,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
   // Sync state
   React.useEffect(() => {
     setName(org.name || '');
+    setDomainAutoJoin(!!org.domainAutoJoin);
   }, [org]);
 
   const handleUpdateWorkspace = async (e: React.FormEvent) => {
@@ -1474,8 +1503,11 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
     }
 
     try {
+      const computedDomain = org.emailDomain || profile.email.substring(profile.email.lastIndexOf('@') + 1).toLowerCase();
       await updateOrganizationDetails(org.id, {
         name: name.trim(),
+        domainAutoJoin,
+        emailDomain: computedDomain
       });
 
       setSuccess(true);
@@ -1612,6 +1644,36 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
                 placeholder="Google Deepmind"
               />
+            </div>
+
+            {/* Domain Auto-Join Toggle */}
+            <div className="space-y-2 pt-2 border-t border-white/5">
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={domainAutoJoin}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    if (checked && isPublicDomain) {
+                      const domain = org.emailDomain || profile.email.substring(profile.email.lastIndexOf('@') + 1).toLowerCase();
+                      const confirm = window.confirm(
+                        `WARNING: You are enabling domain-based auto-join for a public email domain (${domain}). ` +
+                        `This means ANYONE with a verified email ending in @${domain} can join your organization. ` +
+                        `Are you sure you want to proceed?`
+                      );
+                      if (!confirm) return;
+                    }
+                    setDomainAutoJoin(checked);
+                  }}
+                  className="mt-0.5 h-4 w-4 rounded border-white/10 bg-white/[0.02] text-accent focus:ring-accent/20 focus:ring-2 focus:bg-white/[0.04] accent-indigo-600 cursor-pointer"
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-bold text-foreground">Domain-based Auto-Join</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground leading-relaxed">
+                    Allow users signing up with verified emails ending in <strong>@{org.emailDomain || profile.email.substring(profile.email.lastIndexOf('@') + 1).toLowerCase()}</strong> to join this workspace automatically.
+                  </span>
+                </div>
+              </label>
             </div>
           </div>
 
