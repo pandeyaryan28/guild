@@ -70,14 +70,14 @@ export function OnboardingRoot() {
           token = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
         }
         if (token && !data.directInviteDetected) {
-          const res = await validateInviteToken(token);
+          const res = await validateInviteToken(token, user.email ?? undefined);
           if (res.valid && res.org) {
             updateData({
               path: 'join',
               joinOrgId: res.org.id,
               joinOrgName: res.org.name,
               inviteToken: token,
-              inviteRole: 'member',
+              inviteRole: res.invite?.role ?? 'member',
               directInviteDetected: true
             });
             navigate('/onboarding/join/profile', { replace: true });

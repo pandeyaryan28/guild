@@ -2,7 +2,7 @@ import * as React from 'react';
 import { onAuthStateChanged, signOut } from '../lib/auth';
 import { getOnboardingState, type UserProfile, type OnboardingState } from '../lib/firestore';
 import { type User } from 'firebase/auth';
-import { onSnapshot, doc } from 'firebase/firestore';
+import { onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 interface AuthContextValue {
@@ -10,6 +10,7 @@ interface AuthContextValue {
   userProfile: UserProfile | null;
   onboarding: OnboardingState | null;
   loading: boolean;
+  isBanned: boolean;
   logout: () => Promise<void>;
 }
 
@@ -18,6 +19,7 @@ const AuthContext = React.createContext<AuthContextValue>({
   userProfile: null,
   onboarding: null,
   loading: true,
+  isBanned: false,
   logout: async () => {},
 });
 
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
   const [onboarding, setOnboarding] = React.useState<OnboardingState | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [isBanned, setIsBanned] = React.useState(false);
 
   React.useEffect(() => {
     let unsubscribeProfile: (() => void) | null = null;
@@ -38,10 +41,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setUser(firebaseUser);
+      setIsBanned(false);
 
       if (firebaseUser) {
         setLoading(true);
         try {
+          // Check if this user has been banned (removed by an org admin).
+          // Do this FIRST so we can sign them out immediately if banned.
+          const bannedSnap = await getDoc(doc(db, 'bannedUsers', firebaseUser.uid));
+          if (bannedSnap.exists()) {
+            // User was deleted from their org — force sign-out
+            setIsBanned(true);
+            setUserProfile(null);
+            setOnboarding(null);
+            setLoading(false);
+            await signOut();
+            return;
+          }
+
           // Fetch onboarding state once
           const onboardingState = await getOnboardingState(firebaseUser.uid);
           setOnboarding(onboardingState);
@@ -72,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUserProfile(null);
         setOnboarding(null);
+        setIsBanned(false);
         setLoading(false);
       }
     });
@@ -85,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, onboarding, loading, logout: signOut }}>
+    <AuthContext.Provider value={{ user, userProfile, onboarding, loading, isBanned, logout: signOut }}>
       {children}
     </AuthContext.Provider>
   );

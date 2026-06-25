@@ -143,8 +143,12 @@ service cloud.firestore {
     }
 
     match /inviteLinks/{token} {
-      // Allow any authenticated user to read invite links to validate
-      allow read: if isAuth();
+      // Allow anyone to GET a specific invite link by token.
+      // The token itself is randomly generated and serves as the shared secret —
+      // if you have the URL you're already authorised to see its content.
+      allow get: if true;
+      // Listing all invite links for an org is restricted to admins/owners
+      allow list: if isAuth() && isOrgAdminOrOwner(resource.data.orgId);
       // Allow creation only by org owners and admins
       allow create: if isAuth() && isOrgAdminOrOwner(request.resource.data.orgId);
       // Allow update by org owners/admins OR when only useCount is updated (by onboarding user)
@@ -277,6 +281,28 @@ service cloud.firestore {
       allow read, write: if isAuth() && request.auth.uid == resource.data.recipientId;
       // Allow creation of notifications for others in the same organization
       allow create: if isAuth() && isNewDocInMyOrg();
+    }
+    // ─── BANNED USERS ────────────────────────────────────────────────────────
+    // Written when an org owner/admin deletes a member to block re-login.
+
+    match /bannedUsers/{uid} {
+      // The banned user themselves can read their own ban record (to show a message)
+      allow read: if isAuth() && (
+        request.auth.uid == uid ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         isOrgAdminOrOwner(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId))
+      );
+      // Only org owners/admins can ban a user
+      allow create: if isAuth() && (
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        isOrgAdminOrOwner(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId)
+      );
+      // Only org owners can remove a ban
+      allow delete: if isAuth() && (
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        isOrgOwner(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId)
+      );
+      allow update: if false;
     }
   }
 }

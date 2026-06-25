@@ -539,6 +539,33 @@ export async function deleteUserProfile(
   username: string,
   organizationId?: string
 ): Promise<void> {
+  // 0. Write a ban record FIRST (while the caller is still authenticated as
+  //    an admin — needed for the Firestore security rule write check).
+  //    This blocks the deleted user's active sessions client-side immediately.
+  try {
+    await setDoc(doc(db, 'bannedUsers', uid), {
+      uid,
+      bannedAt: Timestamp.now(),
+      reason: 'removed_by_admin',
+    });
+  } catch (err) {
+    // Non-fatal — continue with profile deletion even if this fails
+    console.warn(`Could not write bannedUsers record for ${uid}:`, err);
+  }
+
+  // 0b. Disable the Firebase Auth account server-side so the user cannot log in
+  //     again even in a fresh browser session.
+  try {
+    await fetch('/api/disable-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid }),
+    });
+  } catch (err) {
+    // Non-fatal — the bannedUsers doc provides client-side coverage
+    console.warn(`Could not disable Firebase Auth for ${uid}:`, err);
+  }
+
   // 1. Clear the onboarding state history (must be done while users profile still exists for security rules checks)
   await deleteDoc(doc(db, 'onboardingState', uid));
 

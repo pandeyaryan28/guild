@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Eye, EyeOff, Loader2, Mail, Lock, Zap, Sun, Moon } from 'lucide-react';
 import { signUpWithEmail, signInWithGoogle, sendVerificationEmail, GoogleAuthProvider, linkGoogleCredential, signInWithEmail } from '../lib/auth';
@@ -11,6 +11,7 @@ import { isValidEmail, isValidPassword } from '../lib/validation';
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading } = useAuth();
   const { mode, toggleMode } = useTheme();
 
@@ -31,6 +32,12 @@ export function SignupPage() {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (!loading && user) {
+      // If the user came from a /join/:token URL, send them back after signup
+      const fromPath = (location.state as any)?.from as string | undefined;
+      if (fromPath?.startsWith('/join/')) {
+        navigate(fromPath, { replace: true });
+        return;
+      }
       const savedToken = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
       if (savedToken) {
         navigate(`/join/${savedToken}`, { replace: true });
@@ -38,7 +45,7 @@ export function SignupPage() {
         navigate('/onboarding', { replace: true });
       }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, location.state]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};

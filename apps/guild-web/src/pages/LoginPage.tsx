@@ -33,6 +33,22 @@ export function LoginPage() {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (!loading && user) {
+      // 1. Honor the `from` state set by JoinInvitePage (or any other page that
+      //    sent the user here). If they came from a /join/:token URL, send them
+      //    back there so the invite validation + accept flow can complete.
+      const fromPath = (location.state as any)?.from as string | undefined;
+      if (fromPath?.startsWith('/join/')) {
+        // Extract and persist the token so OnboardingRoot can pick it up too
+        const tokenFromPath = fromPath.split('/join/')[1];
+        if (tokenFromPath) {
+          localStorage.setItem('guild_invite_token', tokenFromPath);
+          sessionStorage.setItem('guild_invite_token', tokenFromPath);
+        }
+        navigate(fromPath, { replace: true });
+        return;
+      }
+
+      // 2. Fall back to any token saved in storage (e.g. from a prior session)
       const savedToken = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
       if (savedToken) {
         navigate(`/join/${savedToken}`, { replace: true });
@@ -42,7 +58,7 @@ export function LoginPage() {
         navigate('/onboarding', { replace: true });
       }
     }
-  }, [user, onboarding, loading, navigate]);
+  }, [user, onboarding, loading, navigate, location.state]);
 
   const handleForgotPassword = async () => {
     setError('');
