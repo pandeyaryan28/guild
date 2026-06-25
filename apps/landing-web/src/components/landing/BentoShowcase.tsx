@@ -35,25 +35,29 @@ export function BentoShowcase() {
   const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
-    let index = 0;
-    const word = 'invoice';
-    const interval = setInterval(() => {
-      if (!showResults) {
-        if (index < word.length) {
-          setSearchText((prev) => prev + word.charAt(index));
+    let timer: NodeJS.Timeout;
+    if (!showResults) {
+      const currentWord = 'invoice';
+      let index = 0;
+      setSearchText('');
+      const interval = setInterval(() => {
+        if (index < currentWord.length) {
+          setSearchText(currentWord.substring(0, index + 1));
           index++;
         } else {
+          clearInterval(interval);
           setShowResults(true);
-          setTimeout(() => {
+          timer = setTimeout(() => {
             setShowResults(false);
-            setSearchText('');
-            index = 0;
-          }, 3500); // Hold results open
+          }, 3500);
         }
-      }
-    }, 250);
+      }, 250);
 
-    return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        if (timer) clearTimeout(timer);
+      };
+    }
   }, [showResults]);
 
   return (

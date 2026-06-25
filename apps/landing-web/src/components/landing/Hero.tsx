@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { useNavigation } from '../../context/NavigationContext';
+import { APP_URL } from '../../config/landingData';
 import { GlassTorusKnot } from './GlassTorusKnot';
 
 const WORDS = ['Sync.', 'Control.'];
@@ -81,13 +82,13 @@ export function Hero() {
           transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
           className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center"
         >
-          <button 
-            onClick={() => navigate('/onboarding')}
+          <a 
+            href={APP_URL}
             className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm tracking-tight shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] cursor-pointer"
           >
             Start free trial
             <ArrowRight className="h-4 w-4" />
-          </button>
+          </a>
         </motion.div>
 
       </div>

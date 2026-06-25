@@ -56,6 +56,7 @@ export function Footer() {
             <a href="/pricing" onClick={(e) => handleNav(e, '/pricing')} className="hover:text-indigo-600 transition-colors">Pricing Plans</a>
             <a href="/faq" onClick={(e) => handleNav(e, '/faq')} className="hover:text-indigo-600 transition-colors">Help FAQ</a>
             <a href="/contact" onClick={(e) => handleNav(e, '/contact')} className="hover:text-indigo-600 transition-colors">Contact Us</a>
+            <a href="/careers" onClick={(e) => handleNav(e, '/careers')} className="hover:text-indigo-600 transition-colors">Careers</a>
             <a href="/onboarding" onClick={(e) => handleNav(e, '/onboarding')} className="hover:text-indigo-600 transition-colors">Onboarding Guide</a>
             <a href="/demo" onClick={(e) => handleNav(e, '/demo')} className="hover:text-indigo-600 transition-colors">Watch Demo</a>
           </div>

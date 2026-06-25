@@ -14,6 +14,7 @@ import { Terms } from './Terms';
 import { Demo } from './Demo';
 import { Onboarding } from './Onboarding';
 import { Contact } from './Contact';
+import { Careers } from './Careers';
 import { useNavigation } from '../context/NavigationContext';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -56,6 +57,11 @@ export function LandingPage() {
                   const termsIdx = path.indexOf('/terms');
                   if (termsIdx !== -1) {
                     path = path.substring(termsIdx);
+                  } else {
+                    const careersIdx = path.indexOf('/careers');
+                    if (careersIdx !== -1) {
+                      path = path.substring(careersIdx);
+                    }
                   }
                 }
               }
@@ -92,6 +98,8 @@ export function LandingPage() {
         return <Demo key="demo" />;
       case '/onboarding':
         return <Onboarding key="onboarding" />;
+      case '/careers':
+        return <Careers key="careers" />;
       default:
         return <Home key="home" />;
     }
