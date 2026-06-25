@@ -89,6 +89,13 @@ export function Hero() {
             Start free trial
             <ArrowRight className="h-4 w-4" />
           </a>
+          <button 
+            onClick={() => navigate('/features')}
+            className="w-full sm:w-auto px-7 py-3.5 rounded-2xl border border-slate-200 hover:border-slate-350 bg-white hover:bg-slate-50/50 text-slate-700 font-bold text-sm tracking-tight flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-sm"
+          >
+            Explore features
+            <ArrowRight className="h-4 w-4" />
+          </button>
         </motion.div>
 
       </div>
