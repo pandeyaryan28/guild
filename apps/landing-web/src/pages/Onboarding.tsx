@@ -259,7 +259,7 @@ export function Onboarding() {
                     className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-indigo-500"
                   />
                   <span className="text-[8px] font-bold text-slate-400 block mt-0.5">
-                    Preview: https://{orgSlug || 'acme'}.guildhq.space
+                    Preview: https://{orgSlug || 'acme'}.guildorbit.com
                   </span>
                 </div>
 
@@ -650,7 +650,7 @@ export function Onboarding() {
               {path !== 'join' && (
                 <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
                   <span>Subdomain:</span>
-                  <span className="font-bold text-indigo-600 font-mono">https://{orgSlug || 'acme'}.guildhq.space</span>
+                  <span className="font-bold text-indigo-600 font-mono">https://{orgSlug || 'acme'}.guildorbit.com</span>
                 </p>
               )}
               <p className="border-b border-slate-200/50 pb-1.5 flex justify-between">
@@ -787,7 +787,7 @@ export function Onboarding() {
                             <>
                               <p>Fill in your Organization's Name. We will generate a unique subdomain slug that maps directly to your workspace database directory.</p>
                               <p className="bg-slate-50 p-2 rounded-lg border border-slate-200/50 text-[9px] font-mono">
-                                Subdomain: https://{orgSlug || 'acme'}.guildhq.space
+                                Subdomain: https://{orgSlug || 'acme'}.guildorbit.com
                               </p>
                             </>
                           ) : (
