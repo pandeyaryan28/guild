@@ -141,7 +141,7 @@ export function StepOrgDetails({ data, updateData }: Props) {
 
           <button
             type="submit"
-            disabled={isSubmitting || checkingSlug || slugAvailable === false}
+            disabled={isSubmitting}
             className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
           >
             {isSubmitting ? (

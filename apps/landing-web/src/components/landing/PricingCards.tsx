@@ -116,7 +116,7 @@ export function PricingCards() {
             </ul>
 
             <a
-              href={`${APP_URL}/signup`}
+              href={APP_URL}
               className="w-full text-center py-3 rounded-xl text-sm font-semibold text-ink border border-line hover:bg-white/40 transition-all cursor-pointer"
             >
               Get started
@@ -173,7 +173,7 @@ export function PricingCards() {
             </ul>
 
             <a
-              href={`${APP_URL}/signup`}
+              href={APP_URL}
               className="w-full text-center py-3 rounded-xl text-sm font-semibold text-white bg-accent hover:bg-accent-dark transition-all flex items-center justify-center gap-1.5 shadow-md shadow-accent/15 cursor-pointer"
             >
               Upgrade to Pro

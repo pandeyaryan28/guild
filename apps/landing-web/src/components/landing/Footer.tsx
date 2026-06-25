@@ -65,8 +65,8 @@ export function Footer() {
         <div className="flex flex-col gap-3">
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Account</span>
           <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
-            <a href={`${APP_URL}/login`} className="hover:text-indigo-600 transition-colors">Sign In</a>
-            <a href={`${APP_URL}/signup`} className="hover:text-indigo-600 transition-colors">Sign Up Free</a>
+            <a href={APP_URL} className="hover:text-indigo-600 transition-colors">Sign In</a>
+            <a href={APP_URL} className="hover:text-indigo-600 transition-colors">Sign Up Free</a>
             <a href="/privacy" onClick={(e) => handleNav(e, '/privacy')} className="hover:text-indigo-600 transition-colors">Privacy Policy</a>
             <a href="/terms" onClick={(e) => handleNav(e, '/terms')} className="hover:text-indigo-600 transition-colors">Terms of Service</a>
           </div>

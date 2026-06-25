@@ -846,7 +846,7 @@ export function Onboarding() {
                 </div>
 
                 <a
-                  href={`${APP_URL}/signup`}
+                  href={APP_URL}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 transition-colors text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/10 cursor-pointer flex items-center justify-center gap-1.5 mt-2"
                 >
                   Enter Workspace Command

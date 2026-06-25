@@ -27,7 +27,7 @@ export function CTABanner() {
             Eliminate operational silos, consolidate chats and approvals, and execute tasks with absolute accountability.
           </p>
           <a
-            href={`${APP_URL}/signup`}
+            href={APP_URL}
             className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-6.5 py-3.5 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all active:scale-[0.97] hover:-translate-y-0.5 relative cursor-pointer"
           >
             Start free workspace

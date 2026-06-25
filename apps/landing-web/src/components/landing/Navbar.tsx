@@ -203,13 +203,13 @@ export function Navbar() {
               Get a Demo
             </button>
             <a
-              href={`${APP_URL}/login`}
+              href={APP_URL}
               className="text-[13px] font-semibold text-slate-600 hover:text-slate-900 transition-colors px-3 py-1.5 border border-transparent hover:border-slate-100 rounded-xl"
             >
               Sign in
             </a>
             <a
-              href={`${APP_URL}/signup`}
+              href={APP_URL}
               className="inline-flex items-center gap-1.5 text-[13px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-xl shadow-md shadow-indigo-150 transition-all active:scale-[0.97]"
             >
               Start for free
@@ -348,13 +348,13 @@ export function Navbar() {
               </a>
               <div className="h-px bg-slate-100 mt-1 mb-1" />
               <a
-                href={`${APP_URL}/login`}
+                href={APP_URL}
                 className="text-sm font-bold text-slate-600 text-center py-2 hover:bg-slate-50 rounded-xl transition-colors"
               >
                 Sign in
               </a>
               <a
-                href={`${APP_URL}/signup`}
+                href={APP_URL}
                 className="text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 text-center py-2.5 rounded-xl shadow-md shadow-indigo-100 transition-all"
               >
                 Start for free
