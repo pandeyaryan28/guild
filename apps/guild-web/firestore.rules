@@ -143,15 +143,17 @@ service cloud.firestore {
     }
 
     match /inviteLinks/{token} {
-      // Publicly readable to validate invitations
-      allow read: if true;
-      allow write: if isAuth();
-    }
-
-    match /pendingInvites/{inviteId} {
-      // Authenticated users can read or write pending invites
+      // Allow any authenticated user to read invite links to validate
       allow read: if isAuth();
-      allow write: if isAuth();
+      // Allow creation only by org owners and admins
+      allow create: if isAuth() && isOrgAdminOrOwner(request.resource.data.orgId);
+      // Allow update by org owners/admins OR when only useCount is updated (by onboarding user)
+      allow update: if isAuth() && (
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['useCount'])
+      );
+      // Allow deletion only by org owners and admins
+      allow delete: if isAuth() && isOrgAdminOrOwner(resource.data.orgId);
     }
 
     // ─── CHANNELS, TEAMS, PROJECTS, GOALS, TASKS & OPERATIONS ────────────────

@@ -13,6 +13,7 @@ import {
   deleteDoc,
   increment,
   writeBatch,
+  runTransaction,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { generateInviteToken, isValidEmail } from './validation';
@@ -24,7 +25,6 @@ import type {
   OrganizationMember,
   OnboardingState,
   InviteLink,
-  PendingEmailInvite,
 } from '@guild/types';
 
 // ─── Uniqueness Checks ────────────────────────────────────────────────────────
@@ -118,23 +118,41 @@ export async function getOnboardingState(uid: string): Promise<OnboardingState |
 
 // ─── Invite Links ─────────────────────────────────────────────────────────────
 
-export async function createInviteLink(orgId: string, createdBy: string, isGlobal = false): Promise<string> {
+export async function createInviteLink(
+  orgId: string,
+  createdBy: string,
+  options: { maxUses?: number | null; expiresDays?: number; email?: string; role?: UserRole } = {}
+): Promise<string> {
   const token = generateInviteToken();
-  const expiresAt = isGlobal 
-    ? Timestamp.fromMillis(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000) // 10 years for global
-    : Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000); // 24 hours for single-use
+  const expiresDays = options.expiresDays ?? 7; // default 7 days
+  const expiresAt = Timestamp.fromMillis(Date.now() + expiresDays * 24 * 60 * 60 * 1000);
 
-  await setDoc(doc(db, 'inviteLinks', token), {
+  const invite: Omit<InviteLink, 'id'> = {
     token,
     orgId,
     createdBy,
+    createdAt: Timestamp.now(),
     expiresAt,
-    used: false,
-    isGlobal,
-    usageCount: 0,
-  });
+    maxUses: options.maxUses !== undefined ? options.maxUses : 5, // default 5 uses
+    useCount: 0,
+    isActive: true,
+    role: options.role ?? 'member',
+  };
 
+  if (options.email) {
+    invite.email = options.email.toLowerCase().trim();
+    // For email invites, default to 1 use
+    if (options.maxUses === undefined) {
+      invite.maxUses = 1;
+    }
+  }
+
+  await setDoc(doc(db, 'inviteLinks', token), invite);
   return token;
+}
+
+export async function revokeInviteLink(token: string): Promise<void> {
+  await updateDoc(doc(db, 'inviteLinks', token), { isActive: false });
 }
 
 export async function getInviteLinkByToken(token: string): Promise<InviteLink | null> {
@@ -144,125 +162,53 @@ export async function getInviteLinkByToken(token: string): Promise<InviteLink | 
 }
 
 export async function validateInviteToken(
-  token: string
-): Promise<{ valid: boolean; org: Organization | null; error?: string }> {
+  token: string,
+  userEmail?: string
+): Promise<{ valid: boolean; org: Organization | null; error?: string; invite?: InviteLink }> {
   const invite = await getInviteLinkByToken(token);
 
   if (!invite) return { valid: false, org: null, error: 'Invite link not found.' };
-  if (!invite.isGlobal && invite.used) return { valid: false, org: null, error: 'This invite link has already been used.' };
+  if (!invite.isActive) return { valid: false, org: null, error: 'This invite link has been revoked or deactivated.' };
 
   const now = Timestamp.now();
   if (invite.expiresAt.toMillis() < now.toMillis()) {
     return { valid: false, org: null, error: 'This invite link has expired.' };
   }
 
-  const org = await getOrgById(invite.orgId);
-  return { valid: true, org };
-}
+  if (invite.maxUses !== null && invite.useCount >= invite.maxUses) {
+    return { valid: false, org: null, error: 'This invite link has reached its maximum usage limit.' };
+  }
 
-export async function markInviteUsed(token: string): Promise<void> {
-  await setDoc(doc(db, 'inviteLinks', token), { used: true }, { merge: true });
-}
-
-export async function acceptInvite(uid: string, token: string, orgId: string): Promise<void> {
-  // Check if token is global
-  let isGlobal = false;
-  try {
-    const invite = await getInviteLinkByToken(token);
-    if (invite) {
-      isGlobal = !!invite.isGlobal;
+  if (invite.email) {
+    if (userEmail && invite.email !== userEmail.toLowerCase().trim()) {
+      return { 
+        valid: false, 
+        org: null, 
+        error: `This invite link is reserved for ${invite.email} (you are signed in as ${userEmail}).` 
+      };
     }
-  } catch (err) {
-    console.error('Failed to look up invite link token:', err);
   }
 
-  // Backwards compatibility layer
-  await setDoc(
-    doc(db, 'users', uid),
-    { organizationId: orgId, role: 'member' },
-    { merge: true }
-  );
-  await addOrgMember(orgId, uid, 'member');
-  
-  if (isGlobal) {
-    await updateDoc(doc(db, 'inviteLinks', token), {
-      usageCount: increment(1)
-    });
-  } else {
-    await markInviteUsed(token);
-  }
-  
-  await setOnboardingState(uid, { completed: true, path: null, step: 4 });
+  const org = await getOrgById(invite.orgId);
+  return { valid: true, org, invite };
 }
 
-// ─── Direct Email Invitation Logic ───────────────────────────────────────────
-
-export async function createPendingEmailInvite(
-  email: string,
-  orgId: string,
-  role: UserRole,
-  invitedBy: string
-): Promise<string> {
-  const token = generateInviteToken();
-  const ref = doc(db, 'pendingInvites', `${orgId}_${email.toLowerCase().trim()}`);
-  await setDoc(ref, {
-    email: email.toLowerCase().trim(),
-    orgId,
-    role,
-    invitedBy,
-    token,
-    createdAt: serverTimestamp(),
-  });
-  return token;
-}
-
-export async function getPendingInviteByEmail(email: string): Promise<PendingEmailInvite | null> {
+export async function getInviteLinkByEmail(email: string): Promise<InviteLink | null> {
   const q = query(
-    collection(db, 'pendingInvites'),
-    where('email', '==', email.toLowerCase().trim())
+    collection(db, 'inviteLinks'),
+    where('email', '==', email.toLowerCase().trim()),
+    where('isActive', '==', true)
   );
   const snap = await getDocs(q);
   if (snap.empty) return null;
-  return snap.docs[0].data() as PendingEmailInvite;
-}
-
-// ─── Global Multi-Use Invite Links ────────────────────────────────────────────
-
-export async function createGlobalInviteLink(orgId: string, createdBy: string): Promise<string> {
-  const token = await createInviteLink(orgId, createdBy, true);
-  await updateDoc(doc(db, 'organizations', orgId), {
-    globalInviteToken: token,
-  });
-  return token;
-}
-
-export async function getOrCreateGlobalInviteLink(orgId: string, createdBy: string): Promise<string> {
-  const org = await getOrgById(orgId);
-  if (org?.globalInviteToken) {
-    const snap = await getDoc(doc(db, 'inviteLinks', org.globalInviteToken));
-    if (snap.exists()) {
-      return org.globalInviteToken;
+  const now = Date.now();
+  for (const docSnap of snap.docs) {
+    const invite = docSnap.data() as InviteLink;
+    if (invite.expiresAt.toMillis() > now && (invite.maxUses === null || invite.useCount < invite.maxUses)) {
+      return invite;
     }
   }
-  return createGlobalInviteLink(orgId, createdBy);
-}
-
-export async function resetGlobalInviteLink(orgId: string, createdBy: string): Promise<string> {
-  const org = await getOrgById(orgId);
-  if (org?.globalInviteToken) {
-    await deleteDoc(doc(db, 'inviteLinks', org.globalInviteToken));
-  }
-  return createGlobalInviteLink(orgId, createdBy);
-}
-
-export async function disableGlobalInviteLink(orgId: string): Promise<void> {
-  const org = await getOrgById(orgId);
-  if (org?.globalInviteToken) {
-    await deleteDoc(doc(db, 'inviteLinks', org.globalInviteToken));
-  }
-  await updateDoc(doc(db, 'organizations', orgId), {
-    globalInviteToken: '',
-  });
+  return null;
 }
 
 
@@ -279,7 +225,6 @@ export interface AcceptInvitePayload {
   orgId: string;
   role: UserRole;
   token?: string;
-  isGlobal?: boolean;
   phoneNumber?: string;
 }
 
@@ -294,58 +239,156 @@ export async function executeMemberOnboardingJoin(payload: AcceptInvitePayload):
     age,
     orgId,
     token,
-    isGlobal,
     phoneNumber,
   } = payload;
 
-  const joiningRole: UserRole = 'member';
+  const lowerUsername = username.toLowerCase().trim();
 
-  // 1. Transactionally write User Profile
-  await createUser(uid, {
-    email,
-    fullName,
-    username: username.toLowerCase(),
-    designation,
-    employeeId,
-    age,
-    organizationId: orgId,
-    role: joiningRole,
-    phoneNumber: phoneNumber ?? '',
-  });
-
-  // 2. Add member record
-  await addOrgMember(orgId, uid, joiningRole);
-
-  // 3. Mark/increment token
-  if (token) {
-    if (isGlobal) {
-      await updateDoc(doc(db, 'inviteLinks', token), {
-        usageCount: increment(1)
-      });
-    } else {
-      await markInviteUsed(token);
+  await runTransaction(db, async (transaction) => {
+    // 1. Check Username uniqueness in transaction
+    const usernameRef = doc(db, 'usernames', lowerUsername);
+    const usernameSnap = await transaction.get(usernameRef);
+    if (usernameSnap.exists()) {
+      throw new Error('This username is already taken.');
     }
-  }
 
-  // 4. Delete matching direct email invite
-  try {
-    const q = query(
-      collection(db, 'pendingInvites'),
-      where('email', '==', email.toLowerCase().trim()),
-      where('orgId', '==', orgId)
-    );
-    const snap = await getDocs(q);
-    const deletePromises = snap.docs.map((d) => deleteDoc(d.ref));
-    await Promise.all(deletePromises);
-  } catch (err) {
-    console.error('Failed to clean up pending direct email invites:', err);
-  }
+    let joiningRole: UserRole = 'member';
 
-  // 5. Complete onboarding journey
-  await setOnboardingState(uid, {
-    completed: true,
-    path: 'join',
-    step: 4,
+    // 2. Validate invite token if provided in transaction
+    if (token) {
+      const inviteRef = doc(db, 'inviteLinks', token);
+      const inviteSnap = await transaction.get(inviteRef);
+      if (!inviteSnap.exists()) {
+        throw new Error('Invite link not found.');
+      }
+      const invite = inviteSnap.data() as InviteLink;
+
+      if (!invite.isActive) {
+        throw new Error('This invite link has been revoked or deactivated.');
+      }
+      if (invite.expiresAt.toMillis() < Date.now()) {
+        throw new Error('This invite link has expired.');
+      }
+      if (invite.maxUses !== null && invite.useCount >= invite.maxUses) {
+        throw new Error('This invite link has reached its maximum usage limit.');
+      }
+      if (invite.email && invite.email !== email.toLowerCase().trim()) {
+        throw new Error(`This invite link is reserved for ${invite.email}`);
+      }
+
+      // Set joining role specified by invite metadata (owner can invite admins, etc.)
+      joiningRole = invite.role ?? 'member';
+
+      // Increment invite count
+      transaction.update(inviteRef, {
+        useCount: increment(1)
+      });
+    }
+
+    // 3. Create User Profile
+    const userRef = doc(db, 'users', uid);
+    transaction.set(userRef, {
+      uid,
+      email,
+      fullName,
+      username: lowerUsername,
+      designation,
+      employeeId,
+      age,
+      organizationId: orgId,
+      role: joiningRole,
+      phoneNumber: phoneNumber ?? '',
+      createdAt: Timestamp.now()
+    });
+
+    // 4. Reserve Username
+    transaction.set(usernameRef, { uid });
+
+    // 5. Add Member to Organization membership collection
+    const memberRef = doc(db, 'organizationMembers', `${orgId}_${uid}`);
+    transaction.set(memberRef, {
+      orgId,
+      userId: uid,
+      role: joiningRole,
+      joinedAt: Timestamp.now()
+    });
+
+    // 6. Complete onboarding state
+    const onboardingRef = doc(db, 'onboardingStates', uid);
+    transaction.set(onboardingRef, {
+      uid,
+      completed: true,
+      path: 'join',
+      step: 4,
+      updatedAt: Timestamp.now()
+    });
+  });
+}
+
+export async function acceptInvite(uid: string, token: string, orgId: string): Promise<void> {
+  const inviteRef = doc(db, 'inviteLinks', token);
+  const userRef = doc(db, 'users', uid);
+  const memberRef = doc(db, 'organizationMembers', `${orgId}_${uid}`);
+  const onboardingRef = doc(db, 'onboardingStates', uid);
+
+  await runTransaction(db, async (transaction) => {
+    // 1. Get and validate invite link
+    const inviteSnap = await transaction.get(inviteRef);
+    if (!inviteSnap.exists()) {
+      throw new Error('Invite link not found.');
+    }
+    const invite = inviteSnap.data() as InviteLink;
+
+    if (!invite.isActive) {
+      throw new Error('This invite link has been revoked or deactivated.');
+    }
+    const now = Date.now();
+    if (invite.expiresAt.toMillis() < now) {
+      throw new Error('This invite link has expired.');
+    }
+    if (invite.maxUses !== null && invite.useCount >= invite.maxUses) {
+      throw new Error('This invite link has reached its maximum usage limit.');
+    }
+
+    // 2. Get user profile to check email match
+    const userSnap = await transaction.get(userRef);
+    if (!userSnap.exists()) {
+      throw new Error('User profile not found.');
+    }
+    const userProfile = userSnap.data() as UserProfile;
+    if (invite.email && invite.email !== userProfile.email.toLowerCase().trim()) {
+      throw new Error(`This invite link is reserved for ${invite.email}`);
+    }
+
+    const joiningRole = invite.role ?? 'member';
+
+    // 3. Update invite useCount
+    transaction.update(inviteRef, {
+      useCount: increment(1)
+    });
+
+    // 4. Update user profile organization
+    transaction.update(userRef, {
+      organizationId: orgId,
+      role: joiningRole
+    });
+
+    // 5. Add org member
+    transaction.set(memberRef, {
+      orgId,
+      userId: uid,
+      role: joiningRole,
+      joinedAt: Timestamp.now()
+    });
+
+    // 6. Complete onboarding state
+    transaction.set(onboardingRef, {
+      uid,
+      completed: true,
+      path: 'join',
+      step: 4,
+      updatedAt: Timestamp.now()
+    });
   });
 }
 
@@ -478,12 +521,6 @@ export async function deleteOrganization(
   if (ownerProfile && ownerProfile.username) {
     await deleteUserProfile(ownerId, ownerProfile.username, orgId);
   }
-}
-
-export async function revokeInviteLink(
-  token: string
-): Promise<void> {
-  await deleteDoc(doc(db, 'inviteLinks', token));
 }
 
 export async function transferOrgOwnership(

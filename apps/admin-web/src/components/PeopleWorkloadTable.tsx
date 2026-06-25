@@ -10,9 +10,7 @@ import {
   updateUserProfile, 
   updateUserRole, 
   removeUserFromOrg, 
-  createPendingEmailInvite, 
-  getOrCreateGlobalInviteLink, 
-  resetGlobalInviteLink,
+  createInviteLink,
   auth
 } from '@guild/firebase';
 
@@ -65,7 +63,6 @@ export function PeopleWorkloadTable({
 
   // Invite states
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<UserRole>('member');
   const [globalInviteLink, setGlobalInviteLink] = useState<string>('');
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
@@ -209,13 +206,18 @@ export function PeopleWorkloadTable({
     setInviteSuccess(null);
 
     try {
-      const token = await createPendingEmailInvite(
-        inviteEmail.toLowerCase().trim(),
+      const token = await createInviteLink(
         currentUser.organizationId,
-        inviteRole,
-        currentUser.uid
+        currentUser.uid,
+        {
+          email: inviteEmail.toLowerCase().trim(),
+          maxUses: 1,
+          expiresDays: 7,
+          role: 'member'
+        }
       );
-      setInviteSuccess(`Invitation successfully created for ${inviteEmail.toLowerCase().trim()}`);
+      const url = `${window.location.origin}/join/${token}`;
+      setInviteSuccess(`Invitation successfully created! Share this link with them: ${url}`);
       setInviteEmail('');
     } catch (err: any) {
       setInviteError(err.message || 'Failed to create invitation');
@@ -229,30 +231,19 @@ export function PeopleWorkloadTable({
     setIsGeneratingLink(true);
     setInviteError(null);
     try {
-      const token = await getOrCreateGlobalInviteLink(currentUser.organizationId, currentUser.uid);
+      const token = await createInviteLink(
+        currentUser.organizationId,
+        currentUser.uid,
+        {
+          maxUses: 5, // default 5 uses
+          expiresDays: 7, // default 7 days
+          role: 'member'
+        }
+      );
       const url = `${window.location.origin}/join/${token}`;
       setGlobalInviteLink(url);
     } catch (err: any) {
-      setInviteError(err.message || 'Failed to fetch global link');
-    } finally {
-      setIsGeneratingLink(false);
-    }
-  };
-
-  const handleResetGlobalLink = async () => {
-    if (!currentUser?.organizationId) return;
-    const confirm = window.confirm('Are you sure you want to revoke the active link and generate a new token? The old link will stop working immediately.');
-    if (!confirm) return;
-
-    setIsGeneratingLink(true);
-    setInviteError(null);
-    try {
-      const token = await resetGlobalInviteLink(currentUser.organizationId, currentUser.uid);
-      const url = `${window.location.origin}/join/${token}`;
-      setGlobalInviteLink(url);
-      setCopiedLink(false);
-    } catch (err: any) {
-      setInviteError(err.message || 'Failed to reset global link');
+      setInviteError(err.message || 'Failed to generate invite link');
     } finally {
       setIsGeneratingLink(false);
     }
@@ -705,37 +696,23 @@ export function PeopleWorkloadTable({
                 </div>
 
                 {/* Role Switch */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-[--muted-foreground] uppercase tracking-wider px-1">User Role</label>
-                  <select
-                    value={inviteRole}
-                    onChange={e => setInviteRole(e.target.value as UserRole)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
-                  >
-                    <option value="member">Member</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                    <option value="owner">Owner</option>
-                  </select>
-                </div>
-
                 <button
                   type="submit"
                   disabled={isInviting}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[--primary] text-[--primary-foreground] hover:opacity-90 py-3 text-xs font-black tracking-wide transition-all active:scale-98 cursor-pointer shadow-md select-none"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[--primary] text-[--primary-foreground] hover:opacity-90 py-3 text-xs font-black tracking-wide transition-all active:scale-98 cursor-pointer shadow-md select-none mt-2"
                 >
                   {isInviting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                  Send Invitation
+                  Generate Email Invite Link
                 </button>
               </form>
 
               <div className="h-[1px] bg-white/10 my-4 shrink-0" />
 
-              {/* OPTION 2: SHAREABLE GLOBAL LINK */}
+              {/* OPTION 2: SHAREABLE INVITE LINK */}
               <div className="space-y-4 pb-2">
-                <h5 className="text-[9px] font-black uppercase tracking-widest text-[--muted-foreground]/60 px-1">Option 2: Global Shareable Link</h5>
+                <h5 className="text-[9px] font-black uppercase tracking-widest text-[--muted-foreground]/60 px-1">Option 2: Shareable Invite Link</h5>
                 <p className="text-[10px] text-[--muted-foreground] px-1 font-semibold">
-                  Generate a multi-use token link that lets any teammate join your organization immediately upon registering.
+                  Generate a multi-use invite link (up to 5 uses, valid for 7 days) that you can share with your team.
                 </p>
 
                 {globalInviteLink ? (
@@ -758,15 +735,8 @@ export function PeopleWorkloadTable({
 
                     <div className="flex justify-between items-center px-1">
                       <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-emerald-400" /> Active Multi-use Token
+                        <Star className="w-3 h-3 fill-emerald-400" /> Active Shareable Invite Link
                       </span>
-                      <button
-                        onClick={handleResetGlobalLink}
-                        disabled={isGeneratingLink}
-                        className="text-[9px] font-black text-red-400 hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none outline-none"
-                      >
-                        Revoke & Reset Link
-                      </button>
                     </div>
                   </div>
                 ) : (
@@ -777,7 +747,7 @@ export function PeopleWorkloadTable({
                   >
                     {isGeneratingLink && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                     <Link className="w-3.5 h-3.5" />
-                    Activate / View Global Invite Link
+                    Generate Shareable Invite Link
                   </button>
                 )}
               </div>

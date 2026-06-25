@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { setOnboardingState, getPendingInviteByEmail, getOrgById, validateInviteToken, findOrgByAutoJoinDomain } from '../../lib/firestore';
+import { setOnboardingState, getInviteLinkByEmail, getOrgById, validateInviteToken, findOrgByAutoJoinDomain } from '../../lib/firestore';
 import { StepChoose } from './StepChoose';
 import { StepOrgDetails } from './create/StepOrgDetails';
 import { StepOwnerProfile } from './create/StepOwnerProfile';
@@ -87,7 +87,7 @@ export function OnboardingRoot() {
         }
 
         // 2. Second, check if there is a pending pre-authorized email invitation
-        const invite = await getPendingInviteByEmail(user.email);
+        const invite = await getInviteLinkByEmail(user.email);
         if (invite && !data.directInviteDetected) {
           const org = await getOrgById(invite.orgId);
           updateData({

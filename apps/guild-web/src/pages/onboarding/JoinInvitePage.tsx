@@ -28,7 +28,7 @@ export function JoinInvitePage() {
       }
       
       try {
-        const res = await validateInviteToken(token);
+        const res = await validateInviteToken(token, user?.email ?? undefined);
         if (!res.valid) {
           setError(res.error || 'Invalid invite link.');
           sessionStorage.removeItem('guild_invite_token');

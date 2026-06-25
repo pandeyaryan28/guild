@@ -1231,7 +1231,7 @@ interface InviteLinksProps {
   onOpenInvite: () => void;
 }
 
-function InviteLinksSettingsView({ inviteLinks, loading, members, onOpenInvite }: InviteLinksProps) {
+function InviteLinksSettingsView({ profile, inviteLinks, loading, members, onOpenInvite }: InviteLinksProps) {
   const [revoking, setRevoking] = React.useState<string | null>(null);
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
@@ -1243,7 +1243,7 @@ function InviteLinksSettingsView({ inviteLinks, loading, members, onOpenInvite }
   };
 
   const handleRevoke = async (token: string) => {
-    if (!window.confirm('Are you sure you want to revoke and delete this single-use invite link?')) return;
+    if (!window.confirm('Are you sure you want to revoke this invite link?')) return;
     setRevoking(token);
     try {
       await revokeInviteLink(token);
@@ -1300,7 +1300,8 @@ function InviteLinksSettingsView({ inviteLinks, loading, members, onOpenInvite }
           {inviteLinks.map((link) => {
             const now = Date.now();
             const isExpired = link.expiresAt.toMillis() < now;
-            const isActive = !link.used && !isExpired;
+            const isFullyUsed = link.maxUses !== null && link.useCount >= link.maxUses;
+            const isActive = link.isActive && !isExpired && !isFullyUsed;
             const isRevoking = revoking === link.token;
 
             return (
@@ -1312,8 +1313,10 @@ function InviteLinksSettingsView({ inviteLinks, loading, members, onOpenInvite }
                 <div className="space-y-3.5 z-10">
                   <div className="flex items-center justify-between gap-2 w-full">
                     {/* Status Badge */}
-                    {link.used ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-white/5 bg-white/5 text-[8px] font-black uppercase tracking-wider text-muted-foreground">Used</span>
+                    {!link.isActive ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-white/5 bg-white/5 text-[8px] font-black uppercase tracking-wider text-muted-foreground">Revoked</span>
+                    ) : isFullyUsed ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-white/5 bg-white/5 text-[8px] font-black uppercase tracking-wider text-muted-foreground">Fully Used</span>
                     ) : isExpired ? (
                       <span className="inline-flex items-center px-2 py-0.5 rounded border border-red-500/10 bg-red-500/10 text-[8px] font-black uppercase tracking-wider text-red-400">Expired</span>
                     ) : (
@@ -1324,14 +1327,33 @@ function InviteLinksSettingsView({ inviteLinks, loading, members, onOpenInvite }
                     {isRevoking ? (
                       <Loader2 className="h-4 w-4 animate-spin text-accent" />
                     ) : (
-                      <button
-                        onClick={() => handleRevoke(link.token)}
-                        className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 rounded-lg transition-all cursor-pointer border border-transparent hover:border-red-500/10"
-                        title="Delete link"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      link.isActive && (
+                        <button
+                          onClick={() => handleRevoke(link.token)}
+                          className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 rounded-lg transition-all cursor-pointer border border-transparent hover:border-red-500/10"
+                          title="Revoke invite link"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )
                     )}
+                  </div>
+
+                  {/* Details about email / role */}
+                  <div className="space-y-1 text-xs">
+                    {link.email ? (
+                      <div className="font-semibold text-foreground truncate">
+                        Email Invite: <span className="font-mono text-accent">{link.email}</span>
+                      </div>
+                    ) : (
+                      <div className="font-semibold text-foreground">
+                        Shareable Link
+                      </div>
+                    )}
+                    <div className="text-[10px] text-muted-foreground flex gap-3">
+                      <span>Uses: <strong className="text-foreground">{link.useCount} / {link.maxUses !== null ? link.maxUses : '∞'}</strong></span>
+                      <span>Expires: <strong className="text-foreground">{new Date(link.expiresAt.toMillis()).toLocaleDateString()}</strong></span>
+                    </div>
                   </div>
 
                   {/* Token link box */}

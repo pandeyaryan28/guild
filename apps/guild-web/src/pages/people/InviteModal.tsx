@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserPlus, X, Link2, Copy, Check, Loader2, Mail, ShieldAlert, Sparkles, RefreshCw } from 'lucide-react';
-import { createInviteLink, createPendingEmailInvite, getOrCreateGlobalInviteLink, resetGlobalInviteLink } from '../../lib/firestore';
+import { UserPlus, X, Link2, Copy, Check, Loader2, Mail, ShieldAlert, Sparkles } from 'lucide-react';
+import { createInviteLink } from '../../lib/firestore';
 import { cn } from '@/lib/utils';
 import { isValidEmail } from '../../lib/validation';
 
@@ -12,24 +12,21 @@ interface InviteModalProps {
   userId: string;
 }
 
-type InviteTab = 'email' | 'global' | 'single';
+type InviteTab = 'email' | 'link';
 
 export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps) {
   const [activeTab, setActiveTab] = React.useState<InviteTab>('email');
   
   // Tab: Email
   const [emailInput, setEmailInput] = React.useState('');
-  const [roleInput, setRoleInput] = React.useState<'member' | 'admin'>('member');
-  const [isInviting, setIsInviting] = React.useState(false);
-  const [emailSuccess, setEmailSuccess] = React.useState<string | null>(null);
+  const [emailLink, setEmailLink] = React.useState<string | null>(null);
+  const [isGeneratingEmail, setIsGeneratingEmail] = React.useState(false);
 
-  // Tab: Global Link
-  const [globalLink, setGlobalLink] = React.useState<string | null>(null);
-  const [isFetchingGlobal, setIsFetchingGlobal] = React.useState(false);
-  
-  // Tab: Single Use
-  const [singleLink, setSingleLink] = React.useState<string | null>(null);
-  const [isGeneratingSingle, setIsGeneratingSingle] = React.useState(false);
+  // Tab: Shareable Link
+  const [maxUses, setMaxUses] = React.useState<string>('5');
+  const [expiresDays, setExpiresDays] = React.useState<string>('7');
+  const [shareableLink, setShareableLink] = React.useState<string | null>(null);
+  const [isGeneratingShareable, setIsGeneratingShareable] = React.useState(false);
 
   const [copied, setCopied] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -37,48 +34,14 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
   React.useEffect(() => {
     if (!isOpen) {
       setEmailInput('');
-      setEmailSuccess(null);
-      setGlobalLink(null);
-      setSingleLink(null);
+      setEmailLink(null);
+      setShareableLink(null);
       setCopied(false);
       setError(null);
-    } else {
-      // Auto-load global link if active
-      if (activeTab === 'global') {
-        loadGlobalLink();
-      }
+      setMaxUses('5');
+      setExpiresDays('7');
     }
-  }, [isOpen, activeTab]);
-
-  const loadGlobalLink = async () => {
-    setIsFetchingGlobal(true);
-    setError(null);
-    try {
-      const token = await getOrCreateGlobalInviteLink(orgId, userId);
-      setGlobalLink(`${window.location.origin}/join/${token}`);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load permanent invite link.');
-    } finally {
-      setIsFetchingGlobal(false);
-    }
-  };
-
-  const handleResetGlobal = async () => {
-    if (!confirm('Are you sure you want to reset this permanent link? All previously shared copies of this specific link will be instantly invalidated.')) {
-      return;
-    }
-    setIsFetchingGlobal(true);
-    setError(null);
-    setCopied(false);
-    try {
-      const token = await resetGlobalInviteLink(orgId, userId);
-      setGlobalLink(`${window.location.origin}/join/${token}`);
-    } catch (err: any) {
-      setError(err.message || 'Failed to reset permanent link.');
-    } finally {
-      setIsFetchingGlobal(false);
-    }
-  };
+  }, [isOpen]);
 
   const handleEmailInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,30 +52,40 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
       return;
     }
 
-    setIsInviting(true);
+    setIsGeneratingEmail(true);
     setError(null);
-    setEmailSuccess(null);
+    setEmailLink(null);
     try {
-      await createPendingEmailInvite(emailInput.trim(), orgId, roleInput, userId);
-      setEmailSuccess(`Successfully invited ${emailInput.trim()}! When they sign up, they will automatically join your organization.`);
-      setEmailInput('');
+      const token = await createInviteLink(orgId, userId, {
+        email: emailInput.trim(),
+        maxUses: 1,
+        expiresDays: 7,
+        role: 'member'
+      });
+      setEmailLink(`${window.location.origin}/join/${token}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to send direct email invitation.');
+      setError(err.message || 'Failed to generate direct email invite.');
     } finally {
-      setIsInviting(false);
+      setIsGeneratingEmail(false);
     }
   };
 
-  const handleGenerateSingle = async () => {
-    setIsGeneratingSingle(true);
+  const handleGenerateShareable = async () => {
+    setIsGeneratingShareable(true);
     setError(null);
+    setShareableLink(null);
     try {
-      const token = await createInviteLink(orgId, userId, false);
-      setSingleLink(`${window.location.origin}/join/${token}`);
+      const limit = maxUses === 'unlimited' ? null : Number(maxUses);
+      const token = await createInviteLink(orgId, userId, {
+        maxUses: limit,
+        expiresDays: Number(expiresDays),
+        role: 'member'
+      });
+      setShareableLink(`${window.location.origin}/join/${token}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to generate single-use invite link.');
+      setError(err.message || 'Failed to generate shareable invite link.');
     } finally {
-      setIsGeneratingSingle(false);
+      setIsGeneratingShareable(false);
     }
   };
 
@@ -154,7 +127,7 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                   </div>
                   <div>
                     <h2 className="text-base font-black text-foreground leading-none uppercase tracking-tight">Invite Teammates</h2>
-                    <p className="text-[10px] text-muted-foreground mt-1 font-semibold leading-none">Add new members to your operational command.</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 font-semibold leading-none">Add new members to your workspace.</p>
                   </div>
                 </div>
                 <button
@@ -174,25 +147,16 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                     activeTab === 'email' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  Email Invite
+                  Invite by Email
                 </button>
                 <button
-                  onClick={() => { setActiveTab('global'); setError(null); }}
+                  onClick={() => { setActiveTab('link'); setError(null); }}
                   className={cn(
                     'px-3 py-2 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all cursor-pointer leading-none',
-                    activeTab === 'global' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
+                    activeTab === 'link' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  Permanent Link
-                </button>
-                <button
-                  onClick={() => { setActiveTab('single'); setError(null); }}
-                  className={cn(
-                    'px-3 py-2 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all cursor-pointer leading-none',
-                    activeTab === 'single' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
-                  )}
-                >
-                  Secure Code
+                  Shareable Link
                 </button>
               </div>
 
@@ -207,81 +171,56 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
 
                 {/* Tab: Direct Email Invite */}
                 {activeTab === 'email' && (
-                  <form onSubmit={handleEmailInvite} className="space-y-4">
-                    {emailSuccess && (
-                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-500 dark:text-emerald-400 font-semibold leading-relaxed">
-                        {emailSuccess}
-                      </div>
-                    )}
-                    
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
-                        Teammate Email
-                      </label>
-                      <div className="relative group">
-                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-indigo-500" />
-                        <input
-                          type="email"
-                          value={emailInput}
-                          onChange={(e) => { setEmailInput(e.target.value); setError(null); setEmailSuccess(null); }}
-                          placeholder="jane@company.com"
-                          required
-                          className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
-                        Workspace Access Role
-                      </label>
-                      <select
-                        value={roleInput}
-                        onChange={(e) => setRoleInput(e.target.value as any)}
-                        className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 px-4.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 cursor-pointer appearance-none [&>option]:bg-surface [&>option]:text-foreground"
-                      >
-                        <option value="member" className="text-foreground bg-surface">Regular Member (Tasks, chat, requests)</option>
-                        <option value="admin" className="text-foreground bg-surface">Administrator (Settings, teammate management)</option>
-                      </select>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isInviting || !emailInput}
-                      className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
-                    >
-                      {isInviting ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : 'Pre-Authorize Colleague'}
-                    </button>
-                  </form>
-                )}
-
-                {/* Tab: Permanent Org-wide Invite Link */}
-                {activeTab === 'global' && (
                   <div className="space-y-4">
-                    {isFetchingGlobal ? (
-                      <div className="flex flex-col items-center justify-center py-6 gap-2">
-                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Syncing permanent token...</span>
-                      </div>
-                    ) : globalLink ? (
+                    {!emailLink ? (
+                      <form onSubmit={handleEmailInvite} className="space-y-4">
+                        <p className="text-[11px] text-muted-foreground font-semibold leading-normal">
+                          Authorize a specific colleague by email. They must log in with this email to join. The link is single-use and valid for 7 days.
+                        </p>
+                        
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                            Teammate Email
+                          </label>
+                          <div className="relative group">
+                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-indigo-500" />
+                            <input
+                              type="email"
+                              value={emailInput}
+                              onChange={(e) => { setEmailInput(e.target.value); setError(null); }}
+                              placeholder="jane@company.com"
+                              required
+                              className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 pl-10 pr-4 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isGeneratingEmail || !emailInput}
+                          className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
+                        >
+                          {isGeneratingEmail ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : 'Pre-Authorize Colleague'}
+                        </button>
+                      </form>
+                    ) : (
                       <div className="space-y-4">
-                        <div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/15 flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                          <Sparkles className="h-4 w-4 flex-shrink-0" />
-                          Multi-use permanent link: Share with your entire team.
+                        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-500 dark:text-emerald-400 font-semibold leading-relaxed">
+                          Successfully pre-authorized {emailInput}! Share this unique link with them so they can claim their account.
                         </div>
 
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
-                            Teammate Invitation URL
+                            Unique Invitation URL
                           </label>
                           <div className="flex items-center gap-2 p-1 rounded-xl border border-border-default/60 dark:border-white/5 bg-surface/80 dark:bg-black/35 shadow-sm">
                             <input
                               readOnly
-                              value={globalLink}
+                              value={emailLink}
                               className="flex-1 bg-transparent px-3 py-2 text-xs font-semibold text-foreground outline-none font-mono truncate"
                             />
                             <button
-                              onClick={() => handleCopy(globalLink)}
+                              onClick={() => handleCopy(emailLink)}
                               className={cn(
                                 'flex items-center justify-center h-8 w-8 rounded-lg transition-all cursor-pointer flex-shrink-0 active:scale-95',
                                 copied ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/25' : 'bg-indigo-600 text-white shadow shadow-indigo-600/10 hover:bg-indigo-500'
@@ -292,63 +231,90 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                           </div>
                         </div>
 
-                        <div className="border-t border-border-default pt-4 mt-2 flex items-center justify-between gap-4">
-                          <div className="text-[10px] text-muted-foreground leading-tight font-semibold">
-                            Accidentally posted publicly?<br />Revoke and generate a new token link.
-                          </div>
-                          <button
-                            onClick={handleResetGlobal}
-                            className="flex items-center gap-1.5 h-8 px-3 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest text-rose-500 dark:text-rose-400 transition-all cursor-pointer active:scale-95 flex-shrink-0"
-                          >
-                            <RefreshCw className="h-3 w-3" />
-                            Reset Link
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => {
+                            setEmailLink(null);
+                            setEmailInput('');
+                          }}
+                          className="w-full h-10 rounded-xl border border-border-default hover:bg-surface-hover text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                        >
+                          Invite Another Colleague
+                        </button>
                       </div>
-                    ) : (
-                      <button
-                        onClick={loadGlobalLink}
-                        className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-                      >
-                        Generate Permanent Workspace Link
-                      </button>
                     )}
                   </div>
                 )}
 
-                {/* Tab: Single-Use Secure Invite Code */}
-                {activeTab === 'single' && (
+                {/* Tab: Shareable Link */}
+                {activeTab === 'link' && (
                   <div className="space-y-4">
-                    {!singleLink ? (
-                      <div className="flex flex-col items-center justify-center text-center py-4">
-                        <div className="p-4 rounded-full bg-indigo-500/5 border border-indigo-500/10 text-indigo-500/55 mb-3">
-                          <Link2 className="h-7 w-7" />
-                        </div>
-                        <p className="text-[11px] text-muted-foreground mb-4 max-w-[280px] font-semibold leading-normal">
-                          Generates a secure, single-use registration URL that instantly expires once a single member claims it.
+                    {!shareableLink ? (
+                      <div className="space-y-4">
+                        <p className="text-[11px] text-muted-foreground font-semibold leading-normal">
+                          Create a multi-use or single-use invitation link that you can share with your team.
                         </p>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                              Max Uses
+                            </label>
+                            <select
+                              value={maxUses}
+                              onChange={(e) => setMaxUses(e.target.value)}
+                              className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 px-3 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 cursor-pointer"
+                            >
+                              <option value="1">1 Use</option>
+                              <option value="5">5 Uses</option>
+                              <option value="10">10 Uses</option>
+                              <option value="50">50 Uses</option>
+                              <option value="unlimited">Unlimited</option>
+                            </select>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                              Expires In
+                            </label>
+                            <select
+                              value={expiresDays}
+                              onChange={(e) => setExpiresDays(e.target.value)}
+                              className="w-full h-10 rounded-xl border border-border-default/60 bg-surface/50 dark:bg-white/5 px-3 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 cursor-pointer"
+                            >
+                              <option value="1">1 Day</option>
+                              <option value="7">7 Days</option>
+                              <option value="30">30 Days</option>
+                            </select>
+                          </div>
+                        </div>
+
                         <button
-                          onClick={handleGenerateSingle}
-                          disabled={isGeneratingSingle}
-                          className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                          onClick={handleGenerateShareable}
+                          disabled={isGeneratingShareable}
+                          className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-98 mt-2"
                         >
-                          {isGeneratingSingle ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : 'Generate Secure Ticket'}
+                          {isGeneratingShareable ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : 'Generate Shareable Link'}
                         </button>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
+                        <div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/15 flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                          <Sparkles className="h-4 w-4 flex-shrink-0" />
+                          Shareable invite link generated. Copy the URL below.
+                        </div>
+
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
-                            Single-Use Secure URL
+                            Invitation URL
                           </label>
                           <div className="flex items-center gap-2 p-1 rounded-xl border border-border-default/60 dark:border-white/5 bg-surface/80 dark:bg-black/35 shadow-sm">
                             <input
                               readOnly
-                              value={singleLink}
+                              value={shareableLink}
                               className="flex-1 bg-transparent px-3 py-2 text-xs font-semibold text-foreground outline-none font-mono truncate"
                             />
                             <button
-                              onClick={() => handleCopy(singleLink)}
+                              onClick={() => handleCopy(shareableLink)}
                               className={cn(
                                 'flex items-center justify-center h-8 w-8 rounded-lg transition-all cursor-pointer flex-shrink-0 active:scale-95',
                                 copied ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/25' : 'bg-indigo-600 text-white shadow shadow-indigo-600/10 hover:bg-indigo-500'
@@ -358,9 +324,15 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                             </button>
                           </div>
                         </div>
-                        <p className="text-[10px] text-muted-foreground text-center font-bold uppercase tracking-wider mt-2.5">
-                          This url can be claimed once and expires in 24 hours.
-                        </p>
+
+                        <button
+                          onClick={() => {
+                            setShareableLink(null);
+                          }}
+                          className="w-full h-10 rounded-xl border border-border-default hover:bg-surface-hover text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                        >
+                          Create Another Link
+                        </button>
                       </div>
                     )}
                   </div>

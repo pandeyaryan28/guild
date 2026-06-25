@@ -47,7 +47,6 @@ export interface Organization {
   ownerId: string;
   billingPlan?: 'free' | 'pro_monthly' | 'pro_annual' | 'credit' | 'enterprise';
   createdAt: Timestamp;
-  globalInviteToken?: string;
   photoURL?: string;
   domainAutoJoin?: boolean;
   emailDomain?: string;
@@ -90,19 +89,13 @@ export interface InviteLink {
   token: string;
   orgId: string;
   createdBy: string;
-  expiresAt: Timestamp;
-  used: boolean;
-  isGlobal?: boolean;
-  usageCount?: number;
-}
-
-export interface PendingEmailInvite {
-  email: string;
-  orgId: string;
-  role: UserRole;
-  invitedBy: string;
-  token: string;
   createdAt: Timestamp;
+  expiresAt: Timestamp;
+  maxUses: number | null; // e.g. 1 for single-use/email, 5 for shareable, null for unlimited
+  useCount: number;
+  isActive: boolean;
+  role: UserRole;
+  email?: string; // present only for direct email invitations
 }
 
 // ─── Notifications ────────────────────────────────────────────────────────────

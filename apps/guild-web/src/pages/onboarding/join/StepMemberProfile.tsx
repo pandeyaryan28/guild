@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
-import { executeMemberOnboardingJoin, getInviteLinkByToken, checkUsernameUnique } from '../../../lib/firestore';
+import { executeMemberOnboardingJoin, checkUsernameUnique } from '../../../lib/firestore';
 import { isValidUsername, isValidEmployeeId, isValidAge, isValidPhoneNumber } from '../../../lib/validation';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -67,16 +67,7 @@ export function StepMemberProfile({ data, updateData }: Props) {
 
     setIsSubmitting(true);
     try {
-      // 1. Check if it's a global token
-      let isGlobal = false;
-      if (data.inviteToken) {
-        const invite = await getInviteLinkByToken(data.inviteToken);
-        if (invite) {
-          isGlobal = !!invite.isGlobal;
-        }
-      }
-
-      // 2. Perform the joining procedure
+      // Perform the joining procedure
       await executeMemberOnboardingJoin({
         uid: user.uid,
         email: user.email!,
@@ -88,7 +79,6 @@ export function StepMemberProfile({ data, updateData }: Props) {
         orgId: data.joinOrgId,
         role: (data.inviteRole as any) || 'member',
         token: data.inviteToken,
-        isGlobal,
         phoneNumber: phoneNumber.trim(),
       });
 

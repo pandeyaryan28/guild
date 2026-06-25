@@ -14,9 +14,6 @@ import { ProjectsTable } from '../components/ProjectsTable';
 import { AnimatePresence } from 'motion/react';
 import {
   updateOrganizationDetails,
-  disableGlobalInviteLink,
-  getOrCreateGlobalInviteLink,
-  resetGlobalInviteLink,
   auth
 } from '@guild/firebase';
 
@@ -101,9 +98,6 @@ export function DashboardPage({
   const [orgFormName, setOrgFormName] = useState('');
   const [orgFormIndustry, setOrgFormIndustry] = useState('');
   const [orgFormCompanySize, setOrgFormCompanySize] = useState('');
-  const [globalInviteLink, setSettingsGlobalInviteLink] = useState<string>('');
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [isSavingOrg, setIsSavingOrg] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -187,13 +181,7 @@ export function DashboardPage({
       setOrgFormName(activeOrg.name || '');
       setOrgFormIndustry(activeOrg.industry || '');
       setOrgFormCompanySize(activeOrg.companySize || '');
-      if (activeOrg.globalInviteToken) {
-        setSettingsGlobalInviteLink(`${window.location.origin}/join/${activeOrg.globalInviteToken}`);
-      } else {
-        setSettingsGlobalInviteLink('');
-      }
     }
-    setCopiedLink(false);
   }, [activeOrg]);
 
   if (loading) {
@@ -238,59 +226,7 @@ export function DashboardPage({
   const orgMap = Object.fromEntries(orgs.map(o => [o.id, o.name]));
   const userMap = Object.fromEntries(users.map(u => [u.uid, u.fullName || u.username]));
 
-  const handleSettingsGenerateLink = async () => {
-    if (!activeOrg || !currentUser) return;
-    setIsGeneratingLink(true);
-    try {
-      const token = await getOrCreateGlobalInviteLink(activeOrg.id, currentUser.uid);
-      setSettingsGlobalInviteLink(`${window.location.origin}/join/${token}`);
-      refresh();
-    } catch (err: any) {
-      alert(err.message || 'Failed to generate global invite link');
-    } finally {
-      setIsGeneratingLink(false);
-    }
-  };
 
-  const handleSettingsResetLink = async () => {
-    if (!activeOrg || !currentUser) return;
-    const confirm = window.confirm('Are you sure you want to revoke the active link and generate a new token? The old link will stop working immediately.');
-    if (!confirm) return;
-    setIsGeneratingLink(true);
-    try {
-      const token = await resetGlobalInviteLink(activeOrg.id, currentUser.uid);
-      setSettingsGlobalInviteLink(`${window.location.origin}/join/${token}`);
-      setCopiedLink(false);
-      refresh();
-    } catch (err: any) {
-      alert(err.message || 'Failed to reset global invite link');
-    } finally {
-      setIsGeneratingLink(false);
-    }
-  };
-
-  const handleSettingsDisableLink = async () => {
-    if (!activeOrg) return;
-    const confirm = window.confirm('Are you sure you want to completely revoke and disable the global invite link? Workspace membership access using this token will stop working.');
-    if (!confirm) return;
-    setIsGeneratingLink(true);
-    try {
-      await disableGlobalInviteLink(activeOrg.id);
-      setSettingsGlobalInviteLink('');
-      setCopiedLink(false);
-      refresh();
-    } catch (err: any) {
-      alert(err.message || 'Failed to disable global invite link');
-    } finally {
-      setIsGeneratingLink(false);
-    }
-  };
-
-  const handleSettingsCopyLink = () => {
-    navigator.clipboard.writeText(globalInviteLink);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
-  };
 
   const handleSaveOrgDetails = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1163,80 +1099,7 @@ export function DashboardPage({
               </div>
             </div>
 
-            {/* 2. Global Invitation Control Center Card */}
-            <div className="aether-glass aether-glass-interactive p-5 space-y-6 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-[--muted-foreground] flex items-center gap-2">
-                    <Key className="w-4.5 h-4.5 text-[--primary]" />
-                    Global Invitation Gateway
-                  </h3>
-                  <span className="text-[10px] font-bold text-[--muted-foreground]/60 uppercase tracking-widest">
-                    Workspace Invite Token
-                  </span>
-                </div>
 
-                <div className="space-y-3.5">
-                  <p className="text-xs text-[--muted-foreground] leading-relaxed">
-                    The global multi-use invitation link allows anyone to instantly register and join the 
-                    <strong className="text-[--foreground] font-bold ml-1">{activeOrg?.name}</strong> workspace. You can copy, reset, or completely revoke/disable the active invitation gateway below.
-                  </p>
-
-                  {globalInviteLink ? (
-                    <div className="space-y-3 pt-2">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          readOnly
-                          value={globalInviteLink}
-                          className="flex-1 px-4 py-3 aether-glass-input text-xs font-mono font-medium outline-none"
-                        />
-                        <button
-                          onClick={handleSettingsCopyLink}
-                          className="h-11 px-4 rounded-xl text-xs font-bold border border-white/10 dark:border-white/5 bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-[--foreground] flex items-center gap-1.5 cursor-pointer shadow-sm"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                          {copiedLink ? 'Copied!' : 'Copy'}
-                        </button>
-                      </div>
-
-                      <div className="flex items-center gap-2.5 pt-4 border-t border-white/5 mt-4">
-                        <button
-                          onClick={handleSettingsResetLink}
-                          disabled={isGeneratingLink}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border border-white/10 dark:border-white/5 text-[--muted-foreground] bg-white/[0.03] hover:bg-white/[0.08] active:scale-95 transition-all cursor-pointer shadow-inner"
-                        >
-                          <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingLink ? 'animate-spin' : ''}`} />
-                          Reset invite token
-                        </button>
-                        <button
-                          onClick={handleSettingsDisableLink}
-                          disabled={isGeneratingLink}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 active:scale-95 transition-all cursor-pointer shadow-md"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Disable link access
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="pt-4 text-center">
-                      <button
-                        onClick={handleSettingsGenerateLink}
-                        disabled={isGeneratingLink}
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold bg-gradient-to-b from-indigo-500/90 to-indigo-600/90 hover:brightness-105 border-t border-white/20 text-white active:scale-95 transition-all cursor-pointer shadow-lg select-none"
-                      >
-                        <Key className="w-4 h-4" />
-                        {isGeneratingLink ? 'Activating Gateway...' : 'Activate Global Invitation Link'}
-                      </button>
-                      <p className="text-[10px] text-[--muted-foreground] font-semibold mt-2.5">
-                        No active invite link gateway. Click to generate a shareable token.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}
