@@ -42,7 +42,7 @@ export function Careers() {
           </p>
           <a
             href="mailto:career@guildorbit.com?subject=Application for Careers at Guild Orbit"
-            className="text-2xl md:text-4xl font-extrabold text-indigo-650 hover:text-indigo-700 transition-colors flex items-center gap-2 underline underline-offset-8 decoration-2"
+            className="text-2xl md:text-4xl font-extrabold text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-2 underline underline-offset-8 decoration-2"
           >
             <Mail className="h-6 w-6 md:h-9 md:w-9 shrink-0" />
             career@guildorbit.com
@@ -51,7 +51,7 @@ export function Careers() {
           <div className="pt-8">
             <a
               href="mailto:career@guildorbit.com?subject=Application for Careers at Guild Orbit"
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-indigo-650 hover:bg-indigo-700 text-white font-extrabold text-base tracking-tight shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.97] cursor-pointer"
+              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-base tracking-tight shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.97] cursor-pointer"
             >
               Email Resume
               <ArrowRight className="h-5 w-5" />

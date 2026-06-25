@@ -220,6 +220,125 @@ export function PricingCards() {
           </div>
         </ScrollReveal>
       </div>
+
+      {/* Divider */}
+      <ScrollReveal>
+        <div className="max-w-5xl mx-auto py-8">
+          <div className="h-px bg-slate-200/60 w-full" />
+        </div>
+      </ScrollReveal>
+
+      {/* Credit Wallet Section */}
+      <ScrollReveal>
+        <div className="max-w-4xl mx-auto space-y-8 px-4 pb-12">
+          <div className="text-center space-y-3">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-2.5 py-1 rounded-full">
+              Credit Wallet System
+            </span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight font-sans">
+              Prepay Once, Use as You Grow
+            </h2>
+            <p className="text-xs md:text-sm font-semibold text-slate-500 max-w-xl mx-auto leading-relaxed">
+              Prefer a prepaid model instead of fixed recurring billing? Fund a shared team wallet with Credit Packs and deduct seat consumption automatically.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6 items-stretch">
+            {/* Starter Credit Pack */}
+            <div className="glass rounded-3xl p-6 border border-white/50 flex flex-col justify-between hover:scale-[1.01] transition-transform duration-300">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Starter Pack</span>
+                <div className="flex items-baseline gap-2 mt-2 mb-4">
+                  <p className="text-3xl font-black text-slate-900">
+                    {currency === 'INR' ? '₹50,000' : '$500'}
+                  </p>
+                  <span className="text-xs font-semibold text-slate-400">one-time top-up</span>
+                </div>
+                <div className="bg-indigo-50 border border-indigo-100/50 rounded-xl p-3 text-[11px] font-bold text-indigo-700 flex items-center justify-between mb-4">
+                  <span>Total Wallet Credit:</span>
+                  <span className="text-xs font-black">{currency === 'INR' ? '₹55,000' : '$550'}</span>
+                </div>
+                <ul className="space-y-2 text-xs font-medium text-slate-500 mb-6">
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    <span>Includes 10% bonus credits</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    <span>Dynamic member seat deductions</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    <span>Indefinite rollover, credits never expire</span>
+                  </li>
+                </ul>
+              </div>
+              <a
+                href={APP_URL}
+                className="w-full text-center py-2.5 rounded-xl text-xs font-bold text-indigo-650 bg-indigo-50 hover:bg-indigo-100/60 border border-indigo-100/40 transition-colors"
+              >
+                Purchase Starter Pack
+              </a>
+            </div>
+
+            {/* Growth Credit Pack */}
+            <div className="glass rounded-3xl p-6 border border-indigo-100/30 relative flex flex-col justify-between hover:scale-[1.01] transition-transform duration-300">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[9px] font-extrabold uppercase tracking-wider px-3 py-0.5 rounded-full shadow-md shadow-indigo-600/10">
+                Best Value (20% Bonus)
+              </div>
+              <div className="mt-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600">Growth Pack</span>
+                <div className="flex items-baseline gap-2 mt-2 mb-4">
+                  <p className="text-3xl font-black text-slate-900">
+                    {currency === 'INR' ? '₹1,00,000' : '$1,000'}
+                  </p>
+                  <span className="text-xs font-semibold text-slate-400">one-time top-up</span>
+                </div>
+                <div className="bg-indigo-600 text-white rounded-xl p-3 text-[11px] font-bold flex items-center justify-between mb-4 shadow-sm">
+                  <span>Total Wallet Credit:</span>
+                  <span className="text-xs font-black">{currency === 'INR' ? '₹1,20,000' : '$1,200'}</span>
+                </div>
+                <ul className="space-y-2 text-xs font-medium text-slate-500 mb-6">
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    <span>Includes 20% bonus credits</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    <span>Priority customer support access</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    <span>Indefinite rollover, credits never expire</span>
+                  </li>
+                </ul>
+              </div>
+              <a
+                href={APP_URL}
+                className="w-full text-center py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-600/10"
+              >
+                Purchase Growth Pack
+              </a>
+            </div>
+          </div>
+
+          {/* Details list */}
+          <div className="bg-slate-50 border border-slate-200/50 p-4 rounded-2xl grid md:grid-cols-3 gap-6 text-xs text-slate-500 font-semibold leading-relaxed">
+            <div>
+              <p className="font-extrabold text-slate-800 mb-1">Prepaid Consumption</p>
+              Seats are charged dynamically on a monthly basis ({currency === 'INR' ? '₹499' : '$8.12'} per active seat). Only active members draw from the wallet.
+            </div>
+            <div>
+              <p className="font-extrabold text-slate-800 mb-1">Dynamic Seat Scale</p>
+              Add or remove members anytime. The billing system automatically scales the consumption rate per-second, refunding unused days as credits.
+            </div>
+            <div>
+              <p className="font-extrabold text-slate-800 mb-1">Zero Expiration</p>
+              Prepaid credits remain in your organization's wallet forever. There are no monthly minimums or expiration timelines.
+            </div>
+          </div>
+        </div>
+      </ScrollReveal>
     </div>
   );
 }
