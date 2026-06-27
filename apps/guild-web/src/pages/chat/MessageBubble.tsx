@@ -11,6 +11,13 @@ import { updateRequestStatus } from '../../lib/requests';
 import { toggleReaction, addMessageReply, listenToReplies, type MessageReply } from '../../lib/replies';
 import { useSearchParams } from 'react-router-dom';
 
+const TASK_STATUS_CONFIG: Record<string, { label: string; border: string; bg: string; text: string }> = {
+  todo: { label: 'To Do', border: 'border-zinc-500/20', bg: 'bg-zinc-500/10', text: 'text-zinc-400' },
+  in_progress: { label: 'In Progress', border: 'border-blue-500/20', bg: 'bg-blue-500/10', text: 'text-blue-400' },
+  review: { label: 'Review', border: 'border-amber-500/20', bg: 'bg-amber-500/10', text: 'text-amber-400' },
+  done: { label: 'Done', border: 'border-emerald-500/20', bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+};
+
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
@@ -122,6 +129,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
 
   const [realtimeRequestStatus, setRealtimeRequestStatus] = React.useState<string | null>(null);
   const [realtimeGoalStatus, setRealtimeGoalStatus] = React.useState<string | null>(null);
+  const [realtimeTaskStatus, setRealtimeTaskStatus] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const rId = (message as any).requestId;
@@ -142,6 +150,18 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     const unsub = onSnapshot(doc(db, 'goals', gId), (snap) => {
       if (snap.exists()) {
         setRealtimeGoalStatus(snap.data().status);
+      }
+    });
+    return () => unsub();
+  }, [message]);
+
+  React.useEffect(() => {
+    const tId = (message as any).taskId;
+    if (!tId) return;
+
+    const unsub = onSnapshot(doc(db, 'tasks', tId), (snap) => {
+      if (snap.exists()) {
+        setRealtimeTaskStatus(snap.data().status);
       }
     });
     return () => unsub();
@@ -202,6 +222,8 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
       const args = message.body.trim().slice(5).trim();
       const taskTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
       const taskId = (message as any).taskId;
+      const statusKey = realtimeTaskStatus || 'todo';
+      const statusConfig = TASK_STATUS_CONFIG[statusKey] || TASK_STATUS_CONFIG.todo;
 
       return (
         <div
@@ -216,8 +238,13 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
               <CheckSquare className="h-4 w-4 shrink-0" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-primary/95">Task</span>
             </div>
-            <span className="rounded-full border border-zinc-500/20 bg-zinc-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-zinc-400">
-              Todo
+            <span className={cn(
+              "rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+              statusConfig.border,
+              statusConfig.bg,
+              statusConfig.text
+            )}>
+              {statusConfig.label}
             </span>
           </div>
 

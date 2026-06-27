@@ -332,7 +332,7 @@ export function DashboardControl() {
         )}
       </AnimatePresence>
 
-      <header className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-cyan-500/15 p-6 md:p-8 backdrop-blur-xl shadow-2xl animate-aurora-mesh animate-fluid-pop">
+      <header className="relative z-20 rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-cyan-500/15 p-6 md:p-8 backdrop-blur-xl shadow-2xl animate-aurora-mesh animate-fluid-pop">
         {/* Absolute glowing blur spots behind content for rich visuals, wrapped in an overflow-hidden wrapper so dropdown doesn't clip */}
         <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
           <div className="absolute -left-16 -top-16 w-40 h-40 rounded-full bg-indigo-500/10 blur-3xl" />
@@ -390,16 +390,16 @@ export function DashboardControl() {
                   ) : (
                     <span className="text-sm font-black text-white">{myInitials}</span>
                   )}
-                  {/* Availability status dot indicator */}
-                  <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background flex items-center justify-center shadow-lg border border-white/10 z-20">
-                    <span className={cn(
-                      "h-3 w-3 rounded-full",
-                      currentStatus === 'focus' ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" :
-                      currentStatus === 'away' ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" :
-                      "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
-                    )} />
-                  </span>
                 </button>
+                {/* Availability status dot indicator - Moved OUTSIDE the button to prevent clipping from overflow-hidden */}
+                <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background flex items-center justify-center shadow-lg border border-white/10 z-20 pointer-events-none">
+                  <span className={cn(
+                    "h-3 w-3 rounded-full",
+                    currentStatus === 'focus' ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" :
+                    currentStatus === 'away' ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" :
+                    "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+                  )} />
+                </span>
 
                 {/* Custom Premium Availability dropdown */}
                 <AnimatePresence>
@@ -473,9 +473,9 @@ export function DashboardControl() {
               href="https://admin.guildorbit.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold text-xs shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0 hover:shadow-indigo-500/10 cursor-pointer"
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-[0_4px_20px_rgba(99,102,241,0.35)] hover:shadow-[0_6px_24px_rgba(99,102,241,0.5)] transition-all hover:scale-[1.04] active:scale-[0.98] shrink-0 border border-white/20 cursor-pointer tracking-wider uppercase"
             >
-              <Shield className="w-4 h-4 text-indigo-400" />
+              <Shield className="w-4 h-4 text-white animate-pulse" />
               <span>Admin Panel</span>
             </a>
           )}

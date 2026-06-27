@@ -62,6 +62,176 @@ function timeAgo(ts: any) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+interface RequestPrintPDFProps {
+  request: OrgRequest;
+  duration: string | null;
+}
+
+function RequestPrintPDF({ request, duration }: RequestPrintPDFProps) {
+  const printedDate = React.useMemo(() => {
+    try {
+      return new Date().toLocaleString('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      });
+    } catch {
+      return new Date().toLocaleString();
+    }
+  }, []);
+
+  const submissionDate = React.useMemo(() => {
+    if (!request.createdAt) return 'N/A';
+    try {
+      const date = request.createdAt.toDate ? request.createdAt.toDate() : new Date(Number(request.createdAt));
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return 'N/A';
+    }
+  }, [request.createdAt]);
+
+  const updateDate = React.useMemo(() => {
+    if (!request.updatedAt) return null;
+    try {
+      const date = request.updatedAt.toDate ? request.updatedAt.toDate() : new Date(Number(request.updatedAt));
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return null;
+    }
+  }, [request.updatedAt]);
+
+  return (
+    <div className="hidden print:block printable-request-pdf w-full text-black bg-white p-8 font-sans space-y-6">
+      {/* Header Banner */}
+      <div className="flex justify-between items-start border-b-2 border-neutral-800 pb-4">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-neutral-800">GUILD WORKSPACE</h1>
+          <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mt-1">Official Request Document</p>
+        </div>
+        <div className="text-right">
+          <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-neutral-100 border border-neutral-350">
+            Status: {request.status.toUpperCase()}
+          </span>
+          <p className="text-[10px] text-neutral-400 mt-1.5 font-mono">Ref ID: {request.id}</p>
+        </div>
+      </div>
+
+      {/* Request Title & Type */}
+      <div className="space-y-1">
+        <span className="text-[9px] uppercase tracking-widest text-neutral-500 font-bold">Request Title & Type</span>
+        <h2 className="text-xl font-bold text-neutral-800 leading-tight">{request.title}</h2>
+        <p className="text-xs text-neutral-600 font-medium">Type: {REQUEST_TYPE_LABELS[request.type]}</p>
+      </div>
+
+      {/* People Grid */}
+      <div className="grid grid-cols-2 gap-6 border-t border-b border-neutral-200 py-4">
+        <div>
+          <span className="text-[9px] uppercase tracking-widest text-neutral-500 font-bold block mb-1">Requested By</span>
+          <p className="text-sm font-bold text-neutral-800">{request.creatorName}</p>
+          <p className="text-xs text-neutral-500">@{request.creatorUsername}</p>
+        </div>
+        <div>
+          <span className="text-[9px] uppercase tracking-widest text-neutral-500 font-bold block mb-1">Assigned Approver</span>
+          <p className="text-sm font-bold text-neutral-800">{request.approverName}</p>
+          <p className="text-xs text-neutral-500">@{request.approverUsername}</p>
+        </div>
+      </div>
+
+      {/* Timeline Grid */}
+      {request.startDate && (
+        <div className="space-y-1.5">
+          <span className="text-[9px] uppercase tracking-widest text-neutral-500 font-bold block">Proposed Dates & Duration</span>
+          <div className="flex items-center justify-between bg-neutral-50 p-3 border border-neutral-200">
+            <p className="text-xs font-bold text-neutral-700">
+              {formatDate(request.startDate)} {request.endDate && request.endDate !== request.startDate ? ` → ${formatDate(request.endDate)}` : ''}
+            </p>
+            {duration && (
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-200 text-neutral-800 border border-neutral-300">
+                {duration}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Description Section */}
+      <div className="space-y-1.5">
+        <span className="text-[9px] uppercase tracking-widest text-neutral-500 font-bold block">Details & Description</span>
+        <div className="p-4 bg-white border border-neutral-200 text-xs leading-relaxed text-neutral-850 whitespace-pre-wrap min-h-[100px] rounded-sm">
+          {request.description}
+        </div>
+      </div>
+
+      {/* Approver Note */}
+      {request.approverNote && (
+        <div className="space-y-1.5">
+          <span className="text-[9px] uppercase tracking-widest text-neutral-500 font-bold block">Approver Review Note</span>
+          <div className="p-3 bg-neutral-50 border border-neutral-200 text-xs italic text-neutral-800 whitespace-pre-wrap rounded-sm">
+            "{request.approverNote}"
+          </div>
+        </div>
+      )}
+
+      {/* History / Status Timeline */}
+      <div className="space-y-2">
+        <span className="text-[9px] uppercase tracking-widest text-neutral-500 font-bold block">Approval Status History</span>
+        <div className="space-y-3 pl-4 border-l border-neutral-300 ml-2">
+          <div className="relative">
+            <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            <p className="text-xs font-bold text-neutral-800">Submitted</p>
+            <p className="text-[10px] text-neutral-500">by {request.creatorName} on {submissionDate}</p>
+          </div>
+          <div className="relative">
+            <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-amber-500" />
+            <p className="text-xs font-bold text-neutral-800">Under Review</p>
+            <p className="text-[10px] text-neutral-500">Assigned to {request.approverName}</p>
+          </div>
+          {request.status !== 'pending' && (
+            <div className="relative">
+              <span className={`absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full ${
+                request.status === 'approved' ? 'bg-emerald-500' : 'bg-red-500'
+              }`} />
+              <p className="text-xs font-bold text-neutral-800">
+                {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+              </p>
+              {updateDate && (
+                <p className="text-[10px] text-neutral-500">
+                  Processed by {request.approverName} on {updateDate}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Signature Section */}
+      <div className="pt-8 grid grid-cols-2 gap-12">
+        <div className="space-y-4">
+          <div className="border-b border-neutral-400 h-8" />
+          <p className="text-[9px] text-center text-neutral-500 font-bold uppercase tracking-wider">Requested By (Signature)</p>
+        </div>
+        <div className="space-y-4">
+          <div className="border-b border-neutral-400 h-8" />
+          <p className="text-[9px] text-center text-neutral-500 font-bold uppercase tracking-wider">Approver (Signature)</p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="pt-10 text-center text-[9px] text-neutral-400 border-t border-neutral-100 flex justify-between items-center">
+        <span>Generated via Guild Orbit Workspace System</span>
+        <span>Printed on: {printedDate}</span>
+      </div>
+    </div>
+  );
+}
+
 interface RequestDetailDrawerProps {
   request: OrgRequest | null;
   onClose: () => void;
@@ -178,7 +348,7 @@ ${request.approverNote ? `Review Note: "${request.approverNote}"` : ''}
   if (inline) {
     return (
       <div className="h-full border-l border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/60 backdrop-blur-xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[420px] lg:relative shadow-2xl lg:shadow-none shrink-0 animate-in slide-in-from-right duration-200">
-        <div className="w-full sm:w-[420px] h-full flex flex-col min-h-0">
+        <div className="w-full sm:w-[420px] h-full flex flex-col min-h-0 print:hidden">
           
           {/* Drawer Header */}
           <div className="flex items-center justify-between px-6 py-4.5 border-b border-border-subtle bg-bg-secondary/40 shrink-0">
@@ -461,6 +631,7 @@ ${request.approverNote ? `Review Note: "${request.approverNote}"` : ''}
               </button>
             )}
           </div>
+          <RequestPrintPDF request={request} duration={duration} />
         </div>
       </div>
     );
@@ -483,7 +654,7 @@ ${request.approverNote ? `Review Note: "${request.approverNote}"` : ''}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-        className="relative w-full max-w-lg h-full bg-surface/97 backdrop-blur-2xl border-l border-border-default shadow-2xl flex flex-col overflow-hidden select-text z-10"
+        className="relative w-full max-w-lg h-full bg-surface/97 backdrop-blur-2xl border-l border-border-default shadow-2xl flex flex-col overflow-hidden select-text z-10 print:hidden"
       >
         {/* Drawer Header */}
         <div className="flex items-center justify-between px-6 py-4.5 border-b border-border-subtle bg-bg-secondary/40 shrink-0">
@@ -767,6 +938,7 @@ ${request.approverNote ? `Review Note: "${request.approverNote}"` : ''}
           )}
         </div>
       </motion.div>
+      <RequestPrintPDF request={request} duration={duration} />
     </div>
   );
 }

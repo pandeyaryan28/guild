@@ -414,3 +414,39 @@
 .animate-morph-org {
   animation: morph-liquid-org 8s ease-in-out infinite;
 }
+
+/* Custom Print Styles for Request PDFs */
+@media print {
+  /* Hide all screen components */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Reset layout constraints on root elements to allow full page height and multi-page flows */
+  body, html, #root, .aether-app-container, main, .flex-1 {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    position: static !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Make only the custom printable request container visible and position it at page origin */
+  .printable-request-pdf,
+  .printable-request-pdf * {
+    visibility: visible;
+  }
+
+  .printable-request-pdf {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: block !important;
+    background: white !important;
+    color: black !important;
+  }
+}

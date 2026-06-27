@@ -501,7 +501,7 @@ export function RequestsPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden bg-transparent">
       {/* Page Header */}
-      <div className="px-8 pt-8 pb-5 border-b border-border-subtle flex items-center justify-between shrink-0">
+      <div className="px-8 pt-8 pb-5 border-b border-border-subtle flex items-center justify-between shrink-0 print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Requests</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -522,7 +522,7 @@ export function RequestsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="px-8 pt-4 pb-0 flex items-center gap-1.5 shrink-0">
+      <div className="px-8 pt-4 pb-0 flex items-center gap-1.5 shrink-0 print:hidden">
         {[
           { id: 'inbox', label: 'Inbox', count: pendingCount },
           { id: 'sent', label: 'Sent', count: sent.length },
@@ -558,7 +558,7 @@ export function RequestsPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-8 py-5 space-y-5 aether-scroll">
+      <div className="flex-1 overflow-y-auto px-8 py-5 space-y-5 aether-scroll print:hidden">
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-5 w-5 animate-spin" style={{ color: 'var(--accent)' }} />

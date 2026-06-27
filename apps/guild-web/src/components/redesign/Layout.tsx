@@ -94,22 +94,26 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
   }, []);
 
   return (
-    <div className="aether-app-container flex min-h-screen w-full overflow-hidden select-none">
+    <div className="aether-app-container flex min-h-screen w-full overflow-hidden select-none print:min-h-0 print:h-auto print:overflow-visible">
       {/* PWA State Managers */}
-      <OfflineIndicator />
-      <PwaInstallPrompt />
+      <div className="print:hidden">
+        <OfflineIndicator />
+        <PwaInstallPrompt />
+      </div>
 
       {/* 1. Shifting Aurora Mesh Layer in the Background */}
-      <div className="aether-aurora" />
+      <div className="aether-aurora print:hidden" />
 
       {/* 2. Floating macOS Navigation Command Dock */}
-      <NavDock />
+      <div className="print:hidden">
+        <NavDock />
+      </div>
 
       {/* 3. Main Workspace Container */}
-      <div className="flex-1 flex flex-col min-w-0 pl-[120px] pr-6 py-5 z-10 overflow-hidden relative h-screen">
+      <div className="flex-1 flex flex-col min-w-0 pl-[120px] pr-6 py-5 z-10 overflow-hidden relative h-screen print:pl-0 print:pr-0 print:py-0 print:h-auto print:overflow-visible">
         
         {/* Top Spatial Control Nav - macOS Floating Window Titlebar Capsule */}
-        <header className="flex h-14 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0 px-6 aether-glass shadow-xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20" style={{ borderRadius: '24px' }}>
+        <header className="flex h-14 w-full items-center justify-between gap-4 mb-4 z-30 shrink-0 px-6 aether-glass shadow-xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 print:hidden" style={{ borderRadius: '24px' }}>
           {/* Organization Logo & Workspace Section Title */}
           <div className="flex items-center gap-3 min-w-0">
             {org ? (
@@ -203,15 +207,17 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
         </header>
 
         {/* Scrollable Spatial Canvas */}
-        <div className="flex-1 overflow-hidden relative rounded-3xl w-full">
-          <main className="absolute inset-0 overflow-y-auto aether-scroll pr-2 pb-6">
+        <div className="flex-1 overflow-hidden relative rounded-3xl w-full print:overflow-visible print:rounded-none">
+          <main className="absolute inset-0 overflow-y-auto aether-scroll pr-2 pb-6 print:relative print:overflow-visible print:p-0 print:h-auto">
             {children}
           </main>
         </div>
       </div>
 
       {/* Search overlay component */}
-      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <div className="print:hidden">
+        <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+      </div>
     </div>
   );
 }
