@@ -85,7 +85,7 @@ export function MobileAdminApp({ profile }: MobileAdminAppProps) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Syncing Admin HQ...</span>
+        <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Syncing...</span>
       </div>
     );
   }
@@ -239,11 +239,11 @@ export function MobileAdminApp({ profile }: MobileAdminAppProps) {
           <div className="aether-glass p-5 bg-white/2 border border-white/5 space-y-4">
             <div className="flex items-center gap-2 border-b border-white/5 pb-2.5">
               <Building className="w-4.5 h-4.5 text-primary" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-foreground">HQ Administrative Settings</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Admin Settings</span>
             </div>
             
             <p className="text-[10px] text-muted-foreground leading-normal font-semibold">
-              You are signed in as an administrator for the operations center. Use the desktop portal for full multi-workspace configurations and analytics tools.
+              You are signed in as an administrator. Use the desktop site for full configurations and analytics.
             </p>
           </div>
         )}

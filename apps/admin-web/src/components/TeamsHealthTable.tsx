@@ -664,11 +664,11 @@ export function TeamsHealthTable({
 
       {/* ─── MAC-STYLE GLASS CREATE / EDIT SQUAD MODAL ───────────────────────── */}
       {isSquadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop overlay */}
           <div
             onClick={() => setIsSquadModalOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
+            className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
           />
 
           {/* Modal Container */}
@@ -802,11 +802,11 @@ export function TeamsHealthTable({
 
       {/* ─── MAC-STYLE GLASS CREATE / EDIT PROJECT MODAL ─────────────────────── */}
       {isProjectModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop overlay */}
           <div
             onClick={() => setIsProjectModalOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
+            className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
           />
 
           {/* Modal Container */}

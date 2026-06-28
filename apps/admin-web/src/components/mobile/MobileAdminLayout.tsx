@@ -159,7 +159,7 @@ export function MobileAdminLayout({ profile, activeSection, onNavigate, children
                         {profile.fullName || profile.username}
                       </span>
                       <span className="text-[9px] font-bold text-text-muted capitalize block mt-1 tracking-wider">
-                        {profile.role} • Admin Panel HQ
+                        {profile.role} • Admin Panel
                       </span>
                     </div>
                   </div>

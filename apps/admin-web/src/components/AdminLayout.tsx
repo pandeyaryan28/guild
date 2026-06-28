@@ -32,7 +32,7 @@ export function AdminLayout({ profile, children }: AdminLayoutProps) {
             </span>
             <div className="h-4 w-[1px] bg-white/10 shrink-0" />
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none">
-              Administrative Control Centre
+              Admin Dashboard
             </span>
           </div>
         </header>

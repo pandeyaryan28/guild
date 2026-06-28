@@ -336,7 +336,7 @@ export function DashboardPage({
             Guild Orbit / {activeSection}
           </h1>
           <p className="text-xs text-[--muted-foreground] font-semibold mt-0.5 tracking-wide">
-            HQ Brain operations visible center · Live sync at {format(now, "h:mm a")}
+            Live updates · Last synced at {format(now, "h:mm a")}
           </p>
         </div>
         <button
@@ -362,15 +362,11 @@ export function DashboardPage({
 
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-indigo-50 text-indigo-600 border border-indigo-100">
-                  <Crown className="w-3.5 h-3.5" />
-                  Owner / Administrator Console
-                </div>
                 <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900">
                   {activeOrg?.name || 'Workspace'}
                 </h2>
                 <p className="text-sm text-zinc-500 max-w-xl">
-                  Welcome to your administrative workspace control deck. Coordinate teams, track active projects, review pending requests, and manage task assignments seamlessly.
+                  Manage your organization's members, projects, requests, and tasks.
                 </p>
                 
                 {/* Org Details badges */}
@@ -1148,6 +1144,7 @@ export function DashboardPage({
             project={selectedProject}
             users={users}
             tasks={tasks}
+            goals={goals}
             actor={{
               uid: currentUser?.uid || '',
               name: currentUser?.fullName || currentUser?.username || 'Admin',

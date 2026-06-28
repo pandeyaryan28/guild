@@ -538,7 +538,7 @@ export function RequestsMappingTable({
 
       {/* ─── MAC-STYLE GLASS ACTION DETAILS SIDE SHEET DRAWER ─── */}
       {isDrawerOpen && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex justify-end select-none">
+        <div className="fixed inset-0 z-50 flex justify-end">
           {/* Backdrop overlay */}
           <div
             onClick={() => {
@@ -547,7 +547,7 @@ export function RequestsMappingTable({
                 setSelectedRequest(null);
               }
             }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
+            className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
           />
 
           {/* Frosted Glass Side Drawer */}
@@ -560,8 +560,8 @@ export function RequestsMappingTable({
             {/* Drawer Header */}
             <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
               <div>
-                <h3 className="text-xs font-black uppercase tracking-wider text-[--foreground]">Request Operations Console</h3>
-                <p className="text-[9px] text-[--muted-foreground] mt-0.5 leading-none">Map, audit, and action organizational workspace requests</p>
+                <h3 className="text-xs font-black uppercase tracking-wider text-[--foreground]">Request Details</h3>
+                <p className="text-[9px] text-[--muted-foreground] mt-0.5 leading-none">Review and manage this request</p>
               </div>
               <button
                 onClick={() => {

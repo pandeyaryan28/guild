@@ -435,14 +435,14 @@ export function PeopleWorkloadTable({
 
       {/* ─── MAC-STYLE FROSTED GLASS EDIT DIRECTORY DRAWER ─────────────────────── */}
       {isManageDrawerOpen && selectedUser && (
-        <div className="fixed inset-0 z-50 flex justify-end select-none">
+        <div className="fixed inset-0 z-50 flex justify-end">
           {/* Backdrop overlay */}
           <div
             onClick={() => {
               setIsManageDrawerOpen(false);
               setSelectedUser(null);
             }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
+            className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
           />
 
           {/* Frosted Glass Side Sheet */}
@@ -630,11 +630,11 @@ export function PeopleWorkloadTable({
 
       {/* ─── MAC-STYLE GLASS INVITE MEMBER MODAL ──────────────────────────────── */}
       {isInviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop overlay */}
           <div
             onClick={() => setIsInviteModalOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
+            className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
           />
 
           {/* Modal Container Card */}
