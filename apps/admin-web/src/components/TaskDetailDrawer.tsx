@@ -75,7 +75,7 @@ export function TaskDetailDrawer({
   const handleTitleBlur = async () => {
     if (!title.trim() || title === task.title) return;
     try {
-      await updateTask(task.id, { title: title.trim() });
+      await updateTask(task.id, task.orgId, { title: title.trim() }, actor);
       refresh();
     } catch (err) {
       console.error('Failed to update task title:', err);
@@ -85,7 +85,7 @@ export function TaskDetailDrawer({
   const handleDescBlur = async () => {
     if (description === task.description) return;
     try {
-      await updateTask(task.id, { description });
+      await updateTask(task.id, task.orgId, { description }, actor);
       refresh();
     } catch (err) {
       console.error('Failed to update task description:', err);
@@ -95,7 +95,7 @@ export function TaskDetailDrawer({
   const handleStatusChange = async (newStatus: TaskStatus) => {
     try {
       setStatus(newStatus);
-      await updateTask(task.id, { status: newStatus });
+      await updateTask(task.id, task.orgId, { status: newStatus }, actor);
       refresh();
     } catch (err) {
       console.error('Failed to update task status:', err);
@@ -105,7 +105,7 @@ export function TaskDetailDrawer({
   const handlePriorityChange = async (newPriority: TaskPriority) => {
     try {
       setPriority(newPriority);
-      await updateTask(task.id, { priority: newPriority });
+      await updateTask(task.id, task.orgId, { priority: newPriority }, actor);
       refresh();
     } catch (err) {
       console.error('Failed to update task priority:', err);
@@ -134,7 +134,7 @@ export function TaskDetailDrawer({
     try {
       setDueDate(dateStr);
       const date = dateStr ? new Date(dateStr) : null;
-      await updateTask(task.id, { dueDate: date ? Timestamp.fromDate(date) : null });
+      await updateTask(task.id, task.orgId, { dueDate: date ? Timestamp.fromDate(date) : null }, actor);
       refresh();
     } catch (err) {
       console.error('Failed to update task due date:', err);
@@ -144,7 +144,7 @@ export function TaskDetailDrawer({
   const handleProjectChange = async (newProjectId: string) => {
     try {
       setProjectId(newProjectId);
-      await updateTask(task.id, { projectId: newProjectId || null });
+      await updateTask(task.id, task.orgId, { projectId: newProjectId || null }, actor);
       refresh();
     } catch (err) {
       console.error('Failed to update task project:', err);
@@ -154,7 +154,7 @@ export function TaskDetailDrawer({
   const handleGoalChange = async (newGoalId: string) => {
     try {
       setGoalId(newGoalId);
-      await updateTask(task.id, { goalId: newGoalId || null });
+      await updateTask(task.id, task.orgId, { goalId: newGoalId || null }, actor);
       refresh();
     } catch (err) {
       console.error('Failed to update task goal:', err);
@@ -183,7 +183,7 @@ export function TaskDetailDrawer({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-xs transition-opacity duration-300"
+            className="fixed inset-0 bg-black/15 dark:bg-black/30 backdrop-blur-xs transition-opacity duration-300"
           />
 
           {/* Canvas Slide Over Panel */}
@@ -192,12 +192,12 @@ export function TaskDetailDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-            className="relative w-full max-w-lg h-screen bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col justify-between overflow-hidden z-10 text-zinc-850 dark:text-zinc-100"
+            className="relative w-full max-w-lg h-screen bg-white border-l border-zinc-200 shadow-2xl flex flex-col justify-between overflow-hidden z-10 text-zinc-800"
           >
             {/* Header controls */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-white shrink-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-500 px-2 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-500 px-2 py-0.5 rounded-md border border-zinc-200 bg-zinc-50">
                   Task Workspace
                 </span>
                 <span className="text-[9px] font-mono text-zinc-400">ID: {task.id.slice(0, 8)}</span>
@@ -206,13 +206,13 @@ export function TaskDetailDrawer({
                 <button
                   onClick={handleDelete}
                   title="Delete Task"
-                  className="h-8 w-8 rounded-full border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/40 flex items-center justify-center text-red-500 hover:text-red-600 active:scale-95 transition-all cursor-pointer"
+                  className="h-8 w-8 rounded-full border border-red-200 bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-500 hover:text-red-600 active:scale-95 transition-all cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={onClose}
-                  className="h-8 w-8 rounded-full border border-zinc-200 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 active:scale-95 transition-all cursor-pointer"
+                  className="h-8 w-8 rounded-full border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-500 hover:text-zinc-800 active:scale-95 transition-all cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -220,71 +220,71 @@ export function TaskDetailDrawer({
             </div>
 
             {/* Scrollable details view */}
-            <div className="flex-1 min-h-0 overflow-y-auto aether-scroll p-6 space-y-6 bg-zinc-50/30 dark:bg-zinc-900/10">
+            <div className="flex-1 min-h-0 overflow-y-auto aether-scroll p-6 pb-32 space-y-6 bg-zinc-50/50">
               {/* Editable Title */}
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block px-1">Task Title</label>
+                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block px-1">Task Title</label>
                 <input
                   ref={titleRef}
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   onBlur={handleTitleBlur}
-                  className="w-full text-base font-black tracking-tight text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 focus:outline-none bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-85/50 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-xs"
+                  className="w-full text-base font-black tracking-tight text-zinc-800 border border-zinc-200 rounded-xl px-4 py-3 focus:outline-none bg-white hover:bg-zinc-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-xs"
                   placeholder="Task title..."
                 />
               </div>
 
               {/* Status and Priority Grid */}
-              <div className="grid grid-cols-2 gap-4 border-t border-zinc-200/60 dark:border-zinc-850 pt-5">
+              <div className="grid grid-cols-2 gap-4 border-t border-zinc-200/60 pt-5">
                 {/* Status selector */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-550 dark:text-zinc-400 block px-1">Status</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-550 block px-1">Status</label>
                   <select
                     value={status}
                     onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
-                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-850 dark:text-zinc-150 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
+                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   >
-                    <option value="todo" className="bg-white dark:bg-zinc-900 text-zinc-500 font-semibold">Todo</option>
-                    <option value="in_progress" className="bg-white dark:bg-zinc-900 text-blue-500 font-semibold">In Progress</option>
-                    <option value="review" className="bg-white dark:bg-zinc-900 text-amber-500 font-semibold">Review</option>
-                    <option value="done" className="bg-white dark:bg-zinc-900 text-emerald-500 font-semibold">Done</option>
+                    <option value="todo" className="bg-white text-zinc-500 font-semibold">Todo</option>
+                    <option value="in_progress" className="bg-white text-blue-500 font-semibold">In Progress</option>
+                    <option value="review" className="bg-white text-amber-500 font-semibold">Review</option>
+                    <option value="done" className="bg-white text-emerald-500 font-semibold">Done</option>
                   </select>
                 </div>
 
                 {/* Priority selector */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-550 dark:text-zinc-400 block px-1">Priority</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 block px-1">Priority</label>
                   <select
                     value={priority}
                     onChange={(e) => handlePriorityChange(e.target.value as TaskPriority)}
-                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-850 dark:text-zinc-150 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
+                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   >
-                    <option value="none" className="bg-white dark:bg-zinc-900 text-zinc-500">None</option>
-                    <option value="low" className="bg-white dark:bg-zinc-900 text-sky-500">Low</option>
-                    <option value="medium" className="bg-white dark:bg-zinc-900 text-amber-500">Medium</option>
-                    <option value="high" className="bg-white dark:bg-zinc-900 text-orange-500 font-semibold">High</option>
-                    <option value="urgent" className="bg-white dark:bg-zinc-900 text-rose-650 font-semibold">Urgent</option>
+                    <option value="none" className="bg-white text-zinc-500">None</option>
+                    <option value="low" className="bg-white text-sky-500">Low</option>
+                    <option value="medium" className="bg-white text-amber-500">Medium</option>
+                    <option value="high" className="bg-white text-orange-500 font-semibold">High</option>
+                    <option value="urgent" className="bg-white text-rose-650 font-semibold">Urgent</option>
                   </select>
                 </div>
               </div>
 
               {/* Relational Bindings: Project & Goal */}
-              <div className="grid grid-cols-2 gap-4 border-t border-zinc-200/60 dark:border-zinc-850 pt-5">
+              <div className="grid grid-cols-2 gap-4 border-t border-zinc-200/60 pt-5">
                 {/* Project Selector */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 dark:text-zinc-400 block px-1 flex items-center gap-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 block px-1 flex items-center gap-1.5">
                     <Folder className="w-3.5 h-3.5 text-indigo-500" />
                     Project Binder
                   </label>
                   <select
                     value={projectId}
                     onChange={(e) => handleProjectChange(e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-850 dark:text-zinc-150 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
+                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   >
                     <option value="">Unscoped (No project)</option>
                     {projects.map(proj => (
-                      <option key={proj.id} value={proj.id} className="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-150">
+                      <option key={proj.id} value={proj.id} className="bg-white text-zinc-800">
                         {proj.name}
                       </option>
                     ))}
@@ -293,18 +293,18 @@ export function TaskDetailDrawer({
 
                 {/* Goal Selector */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 dark:text-zinc-400 block px-1 flex items-center gap-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 block px-1 flex items-center gap-1.5">
                     <Target className="w-3.5 h-3.5 text-cyan-550" />
                     Strategic Goal Binder
                   </label>
                   <select
                     value={goalId}
                     onChange={(e) => handleGoalChange(e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-855 dark:text-zinc-150 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
+                    className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   >
                     <option value="">Unlinked (No goal)</option>
                     {goals.map(gl => (
-                      <option key={gl.id} value={gl.id} className="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-150">
+                      <option key={gl.id} value={gl.id} className="bg-white text-zinc-800">
                         {gl.title}
                       </option>
                     ))}
@@ -313,10 +313,10 @@ export function TaskDetailDrawer({
               </div>
 
               {/* Due Date & Assignees */}
-              <div className="space-y-5 border-t border-zinc-200/60 dark:border-zinc-850 pt-5">
+              <div className="space-y-5 border-t border-zinc-200/60 pt-5">
                 {/* Due Date */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 dark:text-zinc-400 block px-1 flex items-center gap-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 block px-1 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-zinc-400" />
                     Due Date Deadline
                   </label>
@@ -324,13 +324,13 @@ export function TaskDetailDrawer({
                     type="date"
                     value={dueDate}
                     onChange={(e) => handleDueDateChange(e.target.value)}
-                    className="w-full px-3.5 py-3 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-850 dark:text-zinc-150 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
+                    className="w-full px-3.5 py-3 border border-zinc-200 bg-white text-xs font-semibold text-zinc-850 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer shadow-xs"
                   />
                 </div>
 
                 {/* Assignees Checklist */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 dark:text-zinc-400 block px-1 flex items-center gap-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 block px-1 flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-zinc-400" />
                     Assignees Roster
                   </label>
@@ -345,20 +345,20 @@ export function TaskDetailDrawer({
                       placeholder="Search assignees..."
                       value={memberSearch}
                       onChange={(e) => setMemberSearch(e.target.value)}
-                      className="w-full pl-9 pr-8 py-2 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-800 dark:text-zinc-150 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-xs"
+                      className="w-full pl-9 pr-8 py-2 border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-xs"
                     />
                     {memberSearch && (
                       <button
                         type="button"
                         onClick={() => setMemberSearch('')}
-                        className="absolute inset-y-0 right-2.5 flex items-center text-zinc-450 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                        className="absolute inset-y-0 right-2.5 flex items-center text-zinc-450 hover:text-zinc-700 transition-colors"
                       >
                         <X className="h-3 w-3" />
                       </button>
                     )}
                   </div>
 
-                  <div className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl p-3 max-h-[160px] overflow-y-auto space-y-2.5 aether-scroll shadow-xs">
+                  <div className="border border-zinc-200 bg-white rounded-xl p-3 max-h-[160px] overflow-y-auto space-y-2.5 aether-scroll shadow-xs">
                     {(() => {
                       const filteredUsers = users.filter(u => 
                         (u.fullName || '').toLowerCase().includes(memberSearch.toLowerCase()) ||
@@ -381,17 +381,17 @@ export function TaskDetailDrawer({
                                 type="checkbox"
                                 checked={isAssigned}
                                 onChange={() => handleAssigneeToggle(u.uid)}
-                                className="rounded border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-indigo-650 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                                className="rounded border-zinc-300 bg-zinc-50 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                               />
                               <div>
-                                <p className="text-xs font-bold text-zinc-800 dark:text-zinc-150 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                <p className="text-xs font-bold text-zinc-800 group-hover:text-indigo-600 transition-colors">
                                   {u.fullName || u.username}
                                 </p>
                                 <p className="text-[9px] text-zinc-400 font-mono">@{u.username}</p>
                               </div>
                             </div>
                             {u.designation && (
-                              <span className="text-[9px] font-semibold text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2 py-0.5 rounded">
+                              <span className="text-[9px] font-semibold text-zinc-500 border border-zinc-200 bg-zinc-50 px-2 py-0.5 rounded">
                                 {u.designation}
                               </span>
                             )}
@@ -404,21 +404,21 @@ export function TaskDetailDrawer({
               </div>
 
               {/* Editable Description */}
-              <div className="space-y-1.5 border-t border-zinc-200/60 dark:border-zinc-850 pt-5">
-                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 dark:text-zinc-400 block px-1">Description</label>
+              <div className="space-y-1.5 border-t border-zinc-200/60 pt-5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-555 block px-1">Description</label>
                 <textarea
                   ref={descRef}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   onBlur={handleDescBlur}
-                  className="w-full px-3.5 py-3 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-800 dark:text-zinc-150 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all min-h-[120px] placeholder:text-zinc-400 dark:placeholder:text-zinc-650 resize-none shadow-xs"
+                  className="w-full px-3.5 py-3 border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 rounded-xl outline-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all min-h-[120px] placeholder:text-zinc-400 resize-none shadow-xs"
                   placeholder="Describe the details and deliverables of this task..."
                 />
               </div>
             </div>
 
             {/* Footer with helpful info */}
-            <div className="px-6 py-4 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 shrink-0 text-center text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold tracking-wide">
+            <div className="px-6 py-4 bg-white border-t border-zinc-200 shrink-0 text-center text-[10px] text-zinc-400 font-semibold tracking-wide">
               * Edits auto-save immediately on input selection or clicking out of input fields.
             </div>
           </motion.div>

@@ -442,18 +442,18 @@ export function PeopleWorkloadTable({
               setIsManageDrawerOpen(false);
               setSelectedUser(null);
             }}
-            className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
+            className="fixed inset-0 bg-black/15 dark:bg-black/30 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
           />
 
           {/* Frosted Glass Side Sheet */}
           <div
-            className="relative w-full sm:w-[480px] h-full aether-glass border-y-0 border-r-0 border-l border-white/10 shadow-2xl flex flex-col z-10 p-6 overflow-hidden bg-white/85 dark:bg-white/[0.05] backdrop-blur-3xl animate-slide-left"
+            className="relative w-full sm:w-[480px] h-full aether-glass border-y-0 border-r-0 border-l border-zinc-200 shadow-2xl flex flex-col z-10 p-6 overflow-hidden bg-white backdrop-blur-3xl animate-slide-left"
             style={{
               animation: 'slide-left 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-200 shrink-0">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[--foreground]">Edit Profile</h3>
                 <p className="text-[9px] text-[--muted-foreground] mt-0.5 leading-none">Manage employee profile and platform permissions</p>
@@ -463,14 +463,14 @@ export function PeopleWorkloadTable({
                   setIsManageDrawerOpen(false);
                   setSelectedUser(null);
                 }}
-                className="h-8 w-8 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-[--muted-foreground] hover:text-[--foreground] active:scale-95 transition-all cursor-pointer"
+                className="h-8 w-8 rounded-full border border-zinc-200 bg-zinc-50 flex items-center justify-center text-[--muted-foreground] hover:text-[--foreground] active:scale-95 transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Scrolling Settings Panel */}
-            <form onSubmit={handleSaveProfile} className="flex-1 overflow-y-auto aether-scroll space-y-6 pt-5 pr-1 pb-6">
+            <form onSubmit={handleSaveProfile} className="flex-1 overflow-y-auto aether-scroll space-y-6 pt-5 pr-1 pb-32">
               {saveError && (
                 <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -479,7 +479,7 @@ export function PeopleWorkloadTable({
               )}
 
               {/* Cockpit Card banner */}
-              <div className="flex items-center gap-4 p-4 rounded-2xl border border-white/5 bg-white/[0.02] shadow-inner">
+              <div className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 bg-zinc-50/50 shadow-inner">
                 <div
                   className="h-14 w-14 rounded-2xl flex items-center justify-center text-lg font-black text-white shrink-0 shadow-lg border border-white/10"
                   style={{
@@ -506,7 +506,7 @@ export function PeopleWorkloadTable({
                     required
                     value={editFullName}
                     onChange={e => setEditFullName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
+                    className="w-full px-3.5 py-2.5 border border-zinc-200 bg-white text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
                   />
                 </div>
 
@@ -517,7 +517,7 @@ export function PeopleWorkloadTable({
                     type="text"
                     value={editDesignation}
                     onChange={e => setEditDesignation(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
+                    className="w-full px-3.5 py-2.5 border border-zinc-200 bg-white text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
                     placeholder="e.g. Lead Logistics, Operation Specialist, Member"
                   />
                 </div>
@@ -529,7 +529,7 @@ export function PeopleWorkloadTable({
                     type="text"
                     value={editEmployeeId}
                     onChange={e => setEditEmployeeId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
+                    className="w-full px-3.5 py-2.5 border border-zinc-200 bg-white text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
                     placeholder="e.g. EMP-1092"
                   />
                 </div>
@@ -541,7 +541,7 @@ export function PeopleWorkloadTable({
                     type="number"
                     value={editAge || ''}
                     onChange={e => setEditAge(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
+                    className="w-full px-3.5 py-2.5 border border-zinc-200 bg-white text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all"
                     placeholder="e.g. 28"
                   />
                 </div>
@@ -557,7 +557,7 @@ export function PeopleWorkloadTable({
                   <select
                     value={editRole}
                     onChange={e => setEditRole(e.target.value as UserRole)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
+                    className="w-full px-3.5 py-2.5 border border-zinc-200 bg-white text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                   >
                     <option value="member">Member</option>
                     <option value="manager">Manager</option>
@@ -575,7 +575,7 @@ export function PeopleWorkloadTable({
                   <select
                     value={editManagerId}
                     onChange={e => setEditManagerId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-white/10 bg-white/[0.05] text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
+                    className="w-full px-3.5 py-2.5 border border-zinc-200 bg-white text-xs font-semibold text-[--foreground] rounded-xl outline-none focus:border-[--ring] cursor-pointer"
                   >
                     <option value="">No Manager</option>
                     {users
@@ -590,7 +590,7 @@ export function PeopleWorkloadTable({
               </div>
 
               {/* Danger Actions Area */}
-              <div className="pt-4 border-t border-white/10 space-y-4">
+              <div className="pt-4 border-t border-zinc-200 space-y-4">
                 <h5 className="text-[9px] font-black uppercase tracking-widest text-red-400 px-1">Danger Zone</h5>
                 <button
                   type="button"
@@ -603,14 +603,14 @@ export function PeopleWorkloadTable({
               </div>
 
               {/* Footer Save Operations */}
-              <div className="flex justify-end gap-2.5 pt-5 border-t border-white/10 font-semibold shrink-0">
+              <div className="flex justify-end gap-2.5 pt-5 border-t border-zinc-200 font-semibold shrink-0">
                 <button
                   type="button"
                   onClick={() => {
                     setIsManageDrawerOpen(false);
                     setSelectedUser(null);
                   }}
-                  className="px-4 py-2.5 border border-white/10 hover:bg-white/5 rounded-xl text-xs font-bold text-[--foreground] transition-colors"
+                  className="px-4 py-2.5 border border-zinc-200 hover:bg-zinc-50 rounded-xl text-xs font-bold text-[--foreground] transition-colors"
                 >
                   Cancel
                 </button>

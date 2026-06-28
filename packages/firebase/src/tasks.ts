@@ -125,7 +125,7 @@ export async function createTask(params: {
 
 export async function updateTask(
   taskId: string, orgId: string,
-  patch: Partial<Pick<Task, 'title' | 'description'>>,
+  patch: Partial<Pick<Task, 'title' | 'description' | 'status' | 'priority' | 'dueDate' | 'projectId' | 'goalId'>>,
   actor: ActorInfo,
 ): Promise<void> {
   await updateDoc(doc(db, 'tasks', taskId), { ...patch, updatedAt: serverTimestamp() });

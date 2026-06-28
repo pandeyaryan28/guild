@@ -547,18 +547,18 @@ export function RequestsMappingTable({
                 setSelectedRequest(null);
               }
             }}
-            className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
+            className="fixed inset-0 bg-black/15 dark:bg-black/30 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
           />
 
           {/* Frosted Glass Side Drawer */}
           <div
-            className="relative w-full sm:w-[500px] h-full aether-glass border-y-0 border-r-0 border-l border-white/10 shadow-2xl flex flex-col z-10 p-6 overflow-hidden bg-white/85 dark:bg-white/[0.05] backdrop-blur-3xl"
+            className="relative w-full sm:w-[500px] h-full aether-glass border-y-0 border-r-0 border-l border-zinc-200 shadow-2xl flex flex-col z-10 p-6 overflow-hidden bg-white backdrop-blur-3xl"
             style={{
               animation: 'slide-left 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
           >
             {/* Drawer Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-200 shrink-0">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[--foreground]">Request Details</h3>
                 <p className="text-[9px] text-[--muted-foreground] mt-0.5 leading-none">Review and manage this request</p>
@@ -569,14 +569,14 @@ export function RequestsMappingTable({
                   setSelectedRequest(null);
                 }}
                 disabled={isSubmittingAction}
-                className="h-8 w-8 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-[--muted-foreground] hover:text-[--foreground] active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                className="h-8 w-8 rounded-full border border-zinc-200 bg-zinc-50 flex items-center justify-center text-[--muted-foreground] hover:text-[--foreground] active:scale-95 transition-all cursor-pointer disabled:opacity-50"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Scrollable Drawer Content */}
-            <div className="flex-1 overflow-y-auto aether-scroll space-y-6 pt-5 pr-1 pb-6">
+            <div className="flex-1 overflow-y-auto aether-scroll space-y-6 pt-5 pr-1 pb-32">
               {actionError && (
                 <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -591,7 +591,7 @@ export function RequestsMappingTable({
               )}
 
               {/* Submitter Info banner card */}
-              <div className="flex items-center gap-4 p-4 rounded-2xl border border-white/5 bg-white/[0.02] shadow-inner">
+              <div className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 bg-zinc-50/50 shadow-inner">
                 <div
                   className="h-14 w-14 rounded-2xl flex items-center justify-center text-lg font-black text-white shrink-0 shadow-lg border border-white/10"
                   style={{
@@ -613,7 +613,7 @@ export function RequestsMappingTable({
                 <h5 className="text-[9px] font-black uppercase tracking-widest text-[--muted-foreground]/60 px-1">Request Details</h5>
 
                 {/* Title */}
-                <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04]">
+                <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50">
                   <div className="text-[9px] font-bold text-[--muted-foreground] uppercase tracking-wider">Request Header</div>
                   <div className="text-sm font-bold text-[--foreground] mt-1">{selectedRequest.title}</div>
                 </div>
@@ -621,7 +621,7 @@ export function RequestsMappingTable({
                 {/* Grid Type & Dates */}
                 <div className="grid grid-cols-2 gap-4">
                   {/* Type */}
-                  <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04]">
+                  <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50">
                     <div className="text-[9px] font-bold text-[--muted-foreground] uppercase tracking-wider">Type</div>
                     <div className="flex items-center gap-2 mt-1.5">
                       <RequestTypeIcon type={selectedRequest.type} className="w-4 h-4 shrink-0" />
@@ -630,7 +630,7 @@ export function RequestsMappingTable({
                   </div>
 
                   {/* Window */}
-                  <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04]">
+                  <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50">
                     <div className="text-[9px] font-bold text-[--muted-foreground] uppercase tracking-wider">Duration Window</div>
                     <div className="font-bold text-xs text-[--foreground] mt-1.5 tabular-nums">
                       {selectedRequest.startDate ? (
@@ -648,7 +648,7 @@ export function RequestsMappingTable({
                 </div>
 
                 {/* Reason description */}
-                <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04] space-y-1.5">
+                <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 space-y-1.5">
                   <div className="text-[9px] font-bold text-[--muted-foreground] uppercase tracking-wider">Detailed Statement / Reason</div>
                   <div className="text-xs text-[--foreground] font-medium leading-relaxed max-h-36 overflow-y-auto aether-scroll pr-1 whitespace-pre-wrap">
                     {selectedRequest.description || 'No detailed statement provided.'}
@@ -659,7 +659,7 @@ export function RequestsMappingTable({
               {/* Status & Audit timeline details */}
               <div className="space-y-4">
                 <h5 className="text-[9px] font-black uppercase tracking-widest text-[--muted-foreground]/60 px-1">Audit timeline</h5>
-                <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04] space-y-3">
+                <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 space-y-3">
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-semibold text-[--muted-foreground]">Current Status</span>
                     <span
@@ -704,11 +704,11 @@ export function RequestsMappingTable({
                       value={approverNote}
                       onChange={e => setApproverNote(e.target.value)}
                       placeholder="Add an optional explanation or feedback for your decision (approving or rejecting)..."
-                      className="w-full h-24 p-3.5 border border-white/10 bg-white/[0.05] text-xs font-medium text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all resize-none placeholder:text-[--muted-foreground]/40 leading-relaxed"
+                      className="w-full h-24 p-3.5 border border-zinc-200 bg-white text-xs font-medium text-[--foreground] rounded-xl outline-none focus:border-[--ring] transition-all resize-none placeholder:text-zinc-400 leading-relaxed"
                       disabled={isSubmittingAction}
                     />
                   ) : (
-                    <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.04] text-xs font-medium leading-relaxed italic text-[--muted-foreground]">
+                    <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 text-xs font-medium leading-relaxed italic text-[--muted-foreground]">
                       {selectedRequest.approverNote || 'No additional comments provided.'}
                     </div>
                   )}
@@ -717,7 +717,7 @@ export function RequestsMappingTable({
             </div>
 
             {/* Decision Actions Panel (Footer) */}
-            <div className="flex items-center justify-between pt-5 border-t border-white/10 shrink-0 font-semibold">
+            <div className="flex items-center justify-between pt-5 border-t border-zinc-200 shrink-0 font-semibold">
               <button
                 type="button"
                 onClick={() => {
@@ -725,7 +725,7 @@ export function RequestsMappingTable({
                   setSelectedRequest(null);
                 }}
                 disabled={isSubmittingAction}
-                className="px-4 py-2.5 border border-white/10 hover:bg-white/5 rounded-xl text-xs font-bold text-[--foreground] transition-colors disabled:opacity-50"
+                className="px-4 py-2.5 border border-zinc-200 hover:bg-zinc-50 rounded-xl text-xs font-bold text-[--foreground] transition-colors disabled:opacity-50"
               >
                 Close Panel
               </button>

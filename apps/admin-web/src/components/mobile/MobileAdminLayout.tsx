@@ -131,7 +131,7 @@ export function MobileAdminLayout({ profile, activeSection, onNavigate, children
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowMobileMore(false)}
-              className="fixed inset-0 bg-black/70 backdrop-blur-xs z-[200] pointer-events-auto"
+              className="fixed inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-xs z-[200] pointer-events-auto"
             />
             
             <motion.div
@@ -139,12 +139,12 @@ export function MobileAdminLayout({ profile, activeSection, onNavigate, children
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-              className="fixed bottom-0 left-0 right-0 max-h-[85vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-white/10 px-6 pb-8 pt-2 z-[210] shadow-2xl flex flex-col pointer-events-auto bg-white/85 dark:bg-white/[0.05] backdrop-blur-3xl"
+              className="fixed bottom-0 left-0 right-0 max-h-[85vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-zinc-200 px-6 pb-32 pt-2 z-[210] shadow-2xl flex flex-col pointer-events-auto bg-white backdrop-blur-3xl"
             >
-              <div className="aether-mobile-handle shrink-0 bg-white/10 w-10 h-1.5 rounded-full mx-auto my-3" />
+              <div className="aether-mobile-handle shrink-0 bg-zinc-200 w-10 h-1.5 rounded-full mx-auto my-3" />
               
-              <div className="flex-1 overflow-y-auto aether-scroll space-y-6 pb-6 pr-1">
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 shadow-inner">
+              <div className="flex-1 overflow-y-auto aether-scroll space-y-6 pb-32 pr-1">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-200 shadow-inner">
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div 
                       className="w-11 h-11 rounded-full flex items-center justify-center font-extrabold text-xs text-white border-2 border-white/20 shadow-md shrink-0"
@@ -165,7 +165,7 @@ export function MobileAdminLayout({ profile, activeSection, onNavigate, children
                   </div>
                   <button 
                     onClick={() => setShowMobileMore(false)}
-                    className="h-8 w-8 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground cursor-pointer"
+                    className="h-8 w-8 rounded-full border border-zinc-200 bg-zinc-50 flex items-center justify-center text-muted-foreground cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -188,7 +188,7 @@ export function MobileAdminLayout({ profile, activeSection, onNavigate, children
                         "w-full flex items-center gap-3.5 rounded-xl px-4 py-3 text-xs font-bold transition-all border select-none cursor-pointer",
                         activeSection === item.id
                           ? "bg-primary border-primary/20 text-white shadow-md"
-                          : "bg-white/[0.02] border-white/5 text-muted-foreground hover:text-foreground"
+                          : "bg-zinc-50 border-zinc-200 text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <item.icon className="w-4.5 h-4.5 shrink-0" />

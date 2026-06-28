@@ -71,12 +71,12 @@ export function Sidebar({ profile, activeSection, onNavigate }: SidebarProps) {
   return (
     <div className="aether-dock-wrapper select-none">
       {/* macOS-Style Floating Dock */}
-      <div className="aether-dock aether-glass flex flex-col items-center gap-3 border border-white/10 dark:border-white/5 bg-white/5 dark:bg-white/[0.04] shadow-2xl" style={{ borderRadius: '32px' }}>
+      <div className="aether-dock aether-glass flex flex-col items-center gap-3 border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 shadow-2xl" style={{ borderRadius: '32px' }}>
         
         {/* User Profile Bubble (Avatar) */}
         <div className="relative group cursor-pointer mb-2">
           <div
-            className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-xs text-white border-2 border-white/20 dark:border-white/10 shadow-lg hover:scale-105 active:scale-95 transition-all duration-300"
+            className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-xs text-white border-2 border-zinc-200 dark:border-zinc-800 shadow-lg hover:scale-105 active:scale-95 transition-all duration-300"
             style={{
               background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
             }}
@@ -88,7 +88,7 @@ export function Sidebar({ profile, activeSection, onNavigate }: SidebarProps) {
           </div>
         </div>
 
-        <div className="w-8 h-[1px] bg-white/10 mb-2" />
+        <div className="w-8 h-[1px] bg-zinc-200 dark:bg-zinc-800 mb-2" />
 
         {/* Core Nav Items */}
         <div className="flex flex-col gap-2 relative">
@@ -100,7 +100,7 @@ export function Sidebar({ profile, activeSection, onNavigate }: SidebarProps) {
               <button
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
-                className={`aether-dock-item relative cursor-pointer ${isActive ? 'text-white' : 'text-foreground/75 hover:text-foreground'}`}
+                className={`aether-dock-item relative cursor-pointer ${isActive ? 'text-white' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'}`}
                 style={{
                   outline: 'none',
                   border: 'none',
@@ -123,12 +123,12 @@ export function Sidebar({ profile, activeSection, onNavigate }: SidebarProps) {
           })}
         </div>
 
-        <div className="w-8 h-[1px] bg-white/10 my-2" />
+        <div className="w-8 h-[1px] bg-zinc-200 dark:bg-zinc-800 my-2" />
 
         {/* Log Out Button */}
         <button
           onClick={handleLogout}
-          className="aether-dock-item text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-all duration-300"
+          className="aether-dock-item text-rose-500/80 hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer transition-all duration-300"
           style={{ outline: 'none', border: 'none', background: 'transparent' }}
         >
           <LogOut className="w-5 h-5" />
