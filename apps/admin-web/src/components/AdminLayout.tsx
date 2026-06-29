@@ -11,7 +11,7 @@ export function AdminLayout({ profile, children }: AdminLayoutProps) {
   const [activeSection, setActiveSection] = useState('overview');
 
   return (
-    <div className="aether-app-container flex min-h-screen w-full overflow-hidden select-none">
+    <div className="aether-app-container flex min-h-screen w-full overflow-hidden">
       {/* 1. Shifting Aurora Mesh Layer in the Background */}
       <div className="aether-aurora" />
 

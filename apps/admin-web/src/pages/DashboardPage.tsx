@@ -327,7 +327,7 @@ export function DashboardPage({
 
   // ─── RENDER ENGINE FOR SELECTED TAB ──────────────────────────────────────
   return (
-    <div className="p-6 lg:p-8 space-y-8 max-w-7xl mx-auto pb-20 select-none">
+    <div className="p-6 lg:p-8 space-y-8 max-w-7xl mx-auto pb-20">
       
       {/* ─── HEADER ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-up">

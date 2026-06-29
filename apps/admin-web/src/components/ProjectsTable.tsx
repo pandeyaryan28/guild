@@ -561,7 +561,7 @@ export function ProjectsTable({
       ) : (
         /* TABLE VIEW LAYOUT */
         <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-black/10 shadow-xl">
-          <table className="w-full text-sm border-collapse select-none">
+          <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-white/10 dark:border-white/5 text-[10px] font-bold uppercase tracking-wider text-[--muted-foreground]" style={{ background: 'oklch(from var(--muted) l c h / 40%)' }}>
                 <th className="text-left px-5 py-4 first:rounded-tl-2xl">Project Name</th>

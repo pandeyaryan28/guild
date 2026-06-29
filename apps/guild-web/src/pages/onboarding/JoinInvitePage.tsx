@@ -103,7 +103,7 @@ export function JoinInvitePage() {
   // ── Render: global loading (Firebase Auth still resolving) ─────────────────
   if (authLoading || isValidating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden select-none">
+      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
         <div className="aether-aurora opacity-50" />
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
@@ -111,7 +111,7 @@ export function JoinInvitePage() {
   }
 
   return (
-    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 select-none">
+    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4">
       <div className="aether-aurora opacity-50" />
 
       {/* Floating Theme Mode Toggle */}

@@ -94,7 +94,7 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
   }, []);
 
   return (
-    <div className="aether-app-container flex min-h-screen w-full overflow-hidden select-none print:min-h-0 print:h-auto print:overflow-visible">
+    <div className="aether-app-container flex min-h-screen w-full overflow-hidden print:min-h-0 print:h-auto print:overflow-visible">
       {/* PWA State Managers */}
       <div className="print:hidden">
         <OfflineIndicator />

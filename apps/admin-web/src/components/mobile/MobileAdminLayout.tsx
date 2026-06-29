@@ -43,7 +43,7 @@ export function MobileAdminLayout({ profile, activeSection, onNavigate, children
   ];
 
   return (
-    <div className="aether-app-container flex flex-col h-[100dvh] w-full overflow-hidden select-none bg-background relative">
+    <div className="aether-app-container flex flex-col h-[100dvh] w-full overflow-hidden bg-background relative">
       {/* 1. Shifting Aurora background */}
       <div className="aether-aurora" />
 

@@ -131,7 +131,7 @@ export function VerifyEmailPage() {
   }
 
   return (
-    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 select-none">
+    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4">
       <div className="aether-aurora opacity-50" />
 
       {/* Floating Theme Mode Toggle */}

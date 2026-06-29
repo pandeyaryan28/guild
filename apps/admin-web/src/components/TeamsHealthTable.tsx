@@ -337,7 +337,7 @@ export function TeamsHealthTable({
 
       {/* ─── TAB 1: SQUADS & HIERARCHY ────────────────────────────────────────── */}
       {activeTab === 'squads' && (
-        <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-white/[0.02] dark:bg-white/[0.02] select-none">
+        <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-white/[0.02] dark:bg-white/[0.02]">
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="border-b border-white/5 text-[10px] font-extrabold uppercase tracking-wider text-[--muted-foreground]" style={{ background: 'oklch(from var(--muted) l c h / 30%)' }}>
@@ -561,7 +561,7 @@ export function TeamsHealthTable({
 
       {/* ─── TAB 2: PROJECTS & PIPELINES ──────────────────────────────────────── */}
       {activeTab === 'projects' && (
-        <div className="space-y-4 select-none">
+        <div className="space-y-4">
           {projects.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center aether-glass bg-white/[0.02] dark:bg-white/[0.02] border border-white/5">
               <FolderHeart className="h-12 w-12 text-[--muted-foreground] mb-4 opacity-50" />
