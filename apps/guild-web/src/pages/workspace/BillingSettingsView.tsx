@@ -13,6 +13,7 @@ import { useBilling } from '../../hooks/useBilling';
 import {
   detectCurrency, getPricing, formatMoney, toSmallestUnit,
   openRazorpayCheckout, activateSubscription, activateCreditTopUp,
+  activateTrial,
   ANNUAL_OFFER_END, ENTERPRISE_CONTACT_URL, FREE_SEAT_LIMIT,
 } from '../../lib/billing';
 import type { UserProfile, BillingCurrency } from '@guild/types';
@@ -69,20 +70,44 @@ function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency
   currency: BillingCurrency;
 }) {
   const pricing = getPricing(currency);
+  const nextBillingDateVal = billing.nextBillingDate
+    ? ((billing.nextBillingDate as any).toDate?.() ?? new Date((billing.nextBillingDate as any)))
+    : null;
+  const isTrialExpired = billing.status === 'trialing' && nextBillingDateVal && nextBillingDateVal.getTime() < Date.now();
+
   const planLabel: Record<string, string> = {
-    free: 'Free', pro_monthly: 'Pro · Monthly', pro_annual: 'Pro · Annual',
-    credit: 'Credit Wallet', enterprise: 'Enterprise',
+    free: 'Free',
+    pro_monthly: billing.status === 'trialing'
+      ? (isTrialExpired ? 'Pro · Trial (Expired)' : 'Pro · Trial')
+      : 'Pro · Monthly',
+    pro_annual: 'Pro · Annual',
+    credit: 'Credit Wallet',
+    enterprise: 'Enterprise',
   };
   const planPillClass: Record<string, string> = {
     free: 'text-muted-foreground border-border bg-muted/40',
-    pro_monthly: 'text-violet-600 dark:text-violet-300 border-violet-400/30 bg-violet-50 dark:bg-violet-500/10',
+    pro_monthly: billing.status === 'trialing'
+      ? (isTrialExpired
+          ? 'text-rose-600 dark:text-rose-300 border-rose-400/30 bg-rose-50 dark:bg-rose-500/10'
+          : 'text-amber-600 dark:text-amber-300 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10')
+      : 'text-violet-600 dark:text-violet-300 border-violet-400/30 bg-violet-50 dark:bg-violet-500/10',
     pro_annual: 'text-amber-600 dark:text-amber-300 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10',
     credit: 'text-emerald-600 dark:text-emerald-300 border-emerald-400/30 bg-emerald-50 dark:bg-emerald-500/10',
     enterprise: 'text-sky-600 dark:text-sky-300 border-sky-400/30 bg-sky-50 dark:bg-sky-500/10',
   };
   const statusDot: Record<string, string> = {
-    active: 'bg-emerald-500', past_due: 'bg-red-500', cancelled: 'bg-muted-foreground',
+    active: 'bg-emerald-500',
+    past_due: 'bg-red-500',
+    cancelled: 'bg-muted-foreground',
+    trialing: isTrialExpired ? 'bg-rose-500' : 'bg-amber-500',
   };
+  const statusText = billing.status === 'active'
+    ? 'Active'
+    : billing.status === 'past_due'
+    ? 'Past due'
+    : billing.status === 'trialing'
+    ? (isTrialExpired ? 'Expired' : 'Trialing')
+    : 'Cancelled';
 
   return (
     <Card>
@@ -94,7 +119,7 @@ function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency
           </Pill>
           <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
             <span className={cn('w-1.5 h-1.5 rounded-full', statusDot[billing.status] ?? 'bg-muted-foreground')} />
-            {billing.status === 'active' ? 'Active' : billing.status === 'past_due' ? 'Past due' : 'Cancelled'}
+            {statusText}
           </span>
         </div>
 
@@ -117,7 +142,9 @@ function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency
               </div>
               {billing.nextBillingDate && (
                 <div>
-                  <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Next bill</p>
+                  <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {billing.status === 'trialing' ? 'Trial ends' : 'Next bill'}
+                  </p>
                   <p className="text-sm font-bold text-foreground">
                     {new Date((billing.nextBillingDate as any).toDate?.() ?? billing.nextBillingDate)
                       .toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
@@ -131,7 +158,7 @@ function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency
             <p className="text-sm font-bold text-foreground">
               {memberCount}
               <span className="text-[9px] font-medium text-muted-foreground">
-                /{billing.plan === 'free' ? FREE_SEAT_LIMIT : '∞'}
+                /{billing.plan === 'free' || isTrialExpired ? FREE_SEAT_LIMIT : '∞'}
               </span>
             </p>
           </div>
@@ -340,12 +367,18 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
   const [processing, setProcessing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
+  const [trialCode, setTrialCode] = React.useState('');
 
   // Seat configuration modal state
   const [subscribeCycle, setSubscribeCycle] = React.useState<'monthly' | 'annual' | null>(null);
   const [selectedSeats, setSelectedSeats] = React.useState<number>(1);
 
-  const plan = billing?.plan ?? 'free';
+  const nextBillingDateVal = billing?.nextBillingDate
+    ? ((billing.nextBillingDate as any).toDate?.() ?? new Date((billing.nextBillingDate as any)))
+    : null;
+  const isTrialExpired = billing?.status === 'trialing' && nextBillingDateVal && nextBillingDateVal.getTime() < Date.now();
+
+  const plan = isTrialExpired ? 'free' : (billing?.plan ?? 'free');
   const seats = Math.max(memberCount, 1);
 
   const countdownStr = countdown.expired ? '' : 'Limited time offer';
@@ -353,6 +386,22 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
   const handleOpenSubscribeModal = (c: 'monthly' | 'annual') => {
     setSelectedSeats(Math.max(memberCount, 1));
     setSubscribeCycle(c);
+  };
+
+  const handleActivateTrial = async () => {
+    if (!orgId || !trialCode) return;
+    if (trialCode !== 'GUILD100') {
+      setError('Invalid trial code. Please check and try again.');
+      return;
+    }
+    setProcessing(true); setError(null);
+    try {
+      await activateTrial({ orgId, currency, trialCode });
+      setSuccess('7-day Pro trial successfully activated!');
+      setTrialCode('');
+    } catch (e: any) {
+      setError(e?.message ?? 'Failed to activate trial. Please try again.');
+    } finally { setProcessing(false); }
   };
 
   const confirmSubscribe = async () => {
@@ -496,7 +545,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 ]}
                 cta={plan === 'free' ? 'Current plan' : 'Downgrade'}
                 ctaVariant="ghost"
-                disabled={plan === 'free' || processing}
+                disabled={plan !== 'free' || processing}
                 onSelect={() => {}}
               />
               <PlanCard
@@ -521,7 +570,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 bonus={cycle === 'annual' ? '1 yr free access to upcoming HR & Accounting' : undefined}
                 countdownLabel={cycle === 'annual' && !countdown.expired ? countdownStr : undefined}
                 cta={processing ? 'Processing…' : `Get Pro ${cycle === 'annual' ? 'Annual' : 'Monthly'}`}
-                disabled={processing || plan === (cycle === 'annual' ? 'pro_annual' : 'pro_monthly')}
+                disabled={processing || (plan === (cycle === 'annual' ? 'pro_annual' : 'pro_monthly') && billing?.status !== 'trialing')}
                 onSelect={() => handleOpenSubscribeModal(cycle)}
               />
               <PlanCard
@@ -534,6 +583,43 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 onSelect={() => window.open(ENTERPRISE_CONTACT_URL, '_blank')}
               />
             </div>
+
+            {/* Trial Activation Code Section */}
+            {plan === 'free' && (
+              <Card className="mt-4 border-violet-500/20 bg-violet-500/[0.02]">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Gift className="h-4 w-4 text-violet-500" />
+                      <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                        Have a Trial Code?
+                      </h4>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Unlock a 7-day trial of the Pro plan with all premium features. No credit card required.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <input
+                      type="text"
+                      placeholder="Enter code"
+                      value={trialCode}
+                      onChange={(e) => setTrialCode(e.target.value.toUpperCase().trim())}
+                      disabled={processing}
+                      className="w-40 px-3 py-1.5 text-[11px] font-mono font-bold bg-background border border-border rounded-xl focus:outline-none focus:border-violet-500 uppercase text-foreground"
+                    />
+                    <button
+                      onClick={handleActivateTrial}
+                      disabled={processing || !trialCode}
+                      className="px-4 py-1.5 rounded-xl text-[11px] font-bold bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                      Activate
+                    </button>
+                  </div>
+                </div>
+              </Card>
+            )}
           </motion.div>
         )}
 

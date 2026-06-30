@@ -9,7 +9,7 @@ import {
   serverTimestamp, query, orderBy, limit, getDocs, where,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { BillingInfo, BillingPlan, BillingCurrency, BillingTransaction } from '@guild/types';
+import type { BillingInfo, BillingPlan, BillingStatus, BillingCurrency, BillingTransaction } from '@guild/types';
 
 // ─── Pricing Constants ────────────────────────────────────────────────────────
 
@@ -411,6 +411,53 @@ export async function activateCreditTopUp(params: {
     status: 'success',
     razorpayPaymentId: params.razorpayPaymentId,
     razorpayOrderId: params.razorpayOrderId,
+  });
+}
+
+/** Activate a 7-day Pro trial using a code */
+export async function activateTrial(params: {
+  orgId: string;
+  currency: BillingCurrency;
+  trialCode: string;
+}): Promise<void> {
+  const now = serverTimestamp();
+
+  // Check if they already used a trial code
+  const existing = await getOrgBilling(params.orgId);
+  if (existing?.trialCodeUsed) {
+    throw new Error('This organization has already used a trial code.');
+  }
+
+  // Calculate trial end date (7 days from now)
+  const trialEndDate = new Date();
+  trialEndDate.setDate(trialEndDate.getDate() + 7);
+
+  // Get current member count as default seats
+  const memberCount = await getOrgMemberCount(params.orgId);
+
+  const billingInfo: Omit<BillingInfo, 'updatedAt'> & { updatedAt: ReturnType<typeof serverTimestamp> } = {
+    plan: 'pro_monthly',
+    status: 'trialing',
+    seats: Math.max(memberCount, 1),
+    currency: params.currency,
+    nextBillingDate: trialEndDate as any,
+    razorpaySubscriptionId: null,
+    annualBonusActivated: false,
+    trialCodeUsed: params.trialCode,
+    updatedAt: now,
+  };
+
+  await setDoc(billingDocRef(params.orgId), billingInfo, { merge: true });
+
+  // Log the transaction
+  await addDoc(transactionsRef(params.orgId), {
+    id: '',
+    orgId: params.orgId,
+    description: `7-Day Pro Trial Activated (Code: ${params.trialCode})`,
+    amount: 0,
+    currency: params.currency,
+    type: 'subscription',
+    status: 'success',
     createdAt: now,
   });
 }

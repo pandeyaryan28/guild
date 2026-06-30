@@ -527,6 +527,8 @@ export interface BillingInfo {
   lastTopUpAt?: Timestamp | null;
   /** Whether the annual HR & Accounting bonus has been activated */
   annualBonusActivated?: boolean;
+  /** Secret code used to activate the trial, if any */
+  trialCodeUsed?: string | null;
   updatedAt: Timestamp;
 }
 
