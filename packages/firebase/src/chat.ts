@@ -192,6 +192,16 @@ export async function getOrCreateDM(uid1: string, uid2: string, orgId: string): 
 
 // ─── Messaging ────────────────────────────────────────────────────────────────
 
+function removeUndefined<T extends Record<string, any>>(obj: T): T {
+  const result = { ...obj };
+  Object.keys(result).forEach(key => {
+    if (result[key] === undefined) {
+      delete result[key];
+    }
+  });
+  return result;
+}
+
 export async function sendChannelMessage(params: {
   channelId: string; orgId: string;
   senderId: string; senderName: string; senderUsername: string;
@@ -206,9 +216,10 @@ export async function sendChannelMessage(params: {
 }): Promise<string> {
   const msgRef = doc(collection(db, 'messages'));
   const id = msgRef.id;
+  const cleanedParams = removeUndefined(params);
   await setDoc(msgRef, {
     id,
-    ...params,
+    ...cleanedParams,
     files: params.files || [],
     createdAt: serverTimestamp(),
     deleted: false,
@@ -259,9 +270,10 @@ export async function sendDMMessage(params: {
 }): Promise<string> {
   const msgRef = doc(collection(db, 'messages'));
   const id = msgRef.id;
+  const cleanedParams = removeUndefined(params);
   await setDoc(msgRef, {
     id,
-    ...params,
+    ...cleanedParams,
     files: params.files || [],
     createdAt: serverTimestamp(),
     deleted: false,
