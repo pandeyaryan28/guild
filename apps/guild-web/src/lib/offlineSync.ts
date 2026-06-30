@@ -12,6 +12,12 @@ export interface OfflineMessage {
   body: string;
   mentions: string[];
   files?: MessageAttachment[];
+  parentMessageId?: string;
+  parentMessage?: {
+    id: string;
+    senderName: string;
+    body: string;
+  };
   createdAt: number;
 }
 
@@ -83,6 +89,8 @@ export async function syncOfflineMessages(
         body: msg.body,
         mentions: msg.mentions,
         files: msg.files,
+        parentMessageId: msg.parentMessageId,
+        parentMessage: msg.parentMessage,
       };
 
       if (msg.channelId) {

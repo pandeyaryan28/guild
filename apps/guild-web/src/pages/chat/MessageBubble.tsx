@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
-import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink, Play, Maximize2, Target, ClipboardList, Smile, MessageSquare, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink, Play, Maximize2, Target, ClipboardList, Smile, MessageSquare, Loader2, CornerUpLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Message } from '../../lib/chat';
 import { editMessage, deleteMessage } from '../../lib/chat';
@@ -26,6 +26,7 @@ interface MessageBubbleProps {
   orgId?: string;
   currentUser?: { uid: string; displayName: string } | null;
   onOpenDiscussion?: (msg: Message) => void;
+  onQuoteMessage?: (msg: Message) => void;
 }
 
 function parseMentions(body: string, isOwn: boolean) {
@@ -69,7 +70,7 @@ function getSenderColor(username: string) {
   return colors[index];
 }
 
-export function MessageBubble({ message, isOwn, isGrouped, members, orgId, currentUser, onOpenDiscussion }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, isGrouped, members, orgId, currentUser, onOpenDiscussion, onQuoteMessage }: MessageBubbleProps) {
   const sender = members.find((m) => m.uid === message.senderId);
   const photoURL = sender?.photoURL;
   const [, setSearchParams] = useSearchParams();
@@ -80,6 +81,22 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
   const [saving, setSaving] = React.useState(false);
   const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
+
+  const isEditable = React.useMemo(() => {
+    if (!message.createdAt) return false;
+    let createdTime: number;
+    if (typeof message.createdAt.toDate === 'function') {
+      createdTime = message.createdAt.toDate().getTime();
+    } else if (message.createdAt instanceof Date) {
+      createdTime = (message.createdAt as Date).getTime();
+    } else if (typeof message.createdAt === 'object' && 'seconds' in message.createdAt) {
+      createdTime = (message.createdAt as any).seconds * 1000;
+    } else {
+      createdTime = new Date(message.createdAt as any).getTime();
+    }
+    const oneHour = 60 * 60 * 1000;
+    return Date.now() - createdTime < oneHour;
+  }, [message.createdAt]);
 
   const [isRepliesExpanded, setIsRepliesExpanded] = React.useState(false);
   const [replies, setReplies] = React.useState<MessageReply[] | null>(null);
@@ -170,9 +187,15 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
   const handleEdit = async () => {
     if (!editBody.trim() || editBody === message.body) { setEditing(false); return; }
     setSaving(true);
-    await editMessage(message.id, editBody.trim());
-    setSaving(false);
-    setEditing(false);
+    try {
+      await editMessage(message.id, editBody.trim());
+      setEditing(false);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Failed to edit message.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -741,6 +764,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
 
   return (
     <div
+      id={`msg-${message.id}`}
       className={cn(
         'group relative flex w-full gap-3 px-4 py-0.5 transition-colors hover:bg-white/[0.01] rounded-lg',
         isOwn ? 'justify-end' : 'justify-start',
@@ -797,8 +821,36 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                 )
               : 'relative text-left',
             isGrouped && isOwn && 'rounded-tr-2xl',
-            isGrouped && !isOwn && 'rounded-tl-2xl'
+             isGrouped && !isOwn && 'rounded-tl-2xl'
           )}>
+            {message.parentMessage && (
+              <div
+                className={cn(
+                  "mb-2 flex flex-col border-l-2 pl-2.5 py-0.5 text-xs rounded-r-md max-w-md cursor-pointer hover:opacity-90 select-none text-left",
+                  isOwn
+                    ? "border-white/60 bg-white/10 text-primary-foreground/90"
+                    : "border-primary/55 bg-primary/5 text-text-muted"
+                )}
+                onClick={() => {
+                  const el = document.getElementById(`msg-${message.parentMessage?.id}`);
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.classList.add('bg-primary/15', 'transition-all');
+                    setTimeout(() => {
+                      el.classList.remove('bg-primary/15');
+                    }, 2000);
+                  }
+                }}
+              >
+                <span className={cn(
+                  "font-bold text-[10px] uppercase tracking-wider mb-0.5",
+                  isOwn ? "text-white/80" : "text-primary"
+                )}>
+                  {message.parentMessage.senderName}
+                </span>
+                <span className="truncate block max-w-full">{message.parentMessage.body}</span>
+              </div>
+            )}
             {renderMessageContent()}
             {renderAttachments()}
           </div>
@@ -861,16 +913,29 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                 <MessageSquare className="h-3 w-3" />
               </button>
 
+              {/* Quote Reply Trigger Button */}
+              {onQuoteMessage && (
+                <button
+                  onClick={() => onQuoteMessage(message)}
+                  className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+                  title="Quote reply"
+                >
+                  <CornerUpLeft className="h-3.5 w-3.5" />
+                </button>
+              )}
+
               {/* Edit/Delete options for own messages */}
               {isOwn && (
                 <>
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
-                    title="Edit message"
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </button>
+                  {isEditable && (
+                    <button
+                      onClick={() => setEditing(true)}
+                      className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+                      title="Edit message"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  )}
                   <button
                     onClick={handleDelete}
                     className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"

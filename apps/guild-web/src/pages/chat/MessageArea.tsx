@@ -51,6 +51,12 @@ export function MessageArea({
   const [channel, setChannel] = React.useState<Channel | null>(null);
   const [showInviteModal, setShowInviteModal] = React.useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [quotedMessage, setQuotedMessage] = React.useState<Message | null>(null);
+
+  // Reset quote when switching channel or DM
+  React.useEffect(() => {
+    setQuotedMessage(null);
+  }, [channelId, dmId]);
 
   // PWA Offline Message Sync Hooks
   const isOnline = useOnlineStatus();
@@ -119,7 +125,13 @@ export function MessageArea({
     if (dmId) markDMRead(dmId, currentUser.uid);
   }, [channelId, dmId, currentUser?.uid, messages?.length, orgId]);
 
-  const handleSend = async (body: string, mentions: string[], files?: MessageAttachment[]) => {
+  const handleSend = async (
+    body: string,
+    mentions: string[],
+    files?: MessageAttachment[],
+    parentMessageId?: string,
+    parentMessage?: { id: string; senderName: string; body: string }
+  ) => {
     if (!currentUser || !orgId) return;
     const base = {
       orgId,
@@ -129,6 +141,8 @@ export function MessageArea({
       body,
       mentions,
       files,
+      parentMessageId,
+      parentMessage,
     };
 
     if (!isOnline) {
@@ -142,6 +156,8 @@ export function MessageArea({
         body,
         mentions,
         files,
+        parentMessageId,
+        parentMessage,
       });
       setOfflineToast("Operating offline. Message queued for automatic sync.");
       setTimeout(() => setOfflineToast(null), 4000);
@@ -370,6 +386,7 @@ export function MessageArea({
     } else if (dmId) {
       await sendDMMessage({ ...base, dmId });
     }
+    setQuotedMessage(null);
   };
 
   const headerTitle = channelId ? `${channel?.isPrivate ? '' : '#'}\u200B${channel?.name ?? '…'}` : dmPartnerName || '…';
@@ -497,6 +514,7 @@ export function MessageArea({
         loadOlderMessages={loadOlderMessages}
         loadingOlder={loadingOlder}
         hasMore={hasMore}
+        onQuoteMessage={(msg) => setQuotedMessage(msg)}
       />
 
       {/* Input */}
@@ -512,6 +530,8 @@ export function MessageArea({
         members={members}
         disabled={!currentUser || !orgId || !canPost}
         chatId={channelId || dmId || ''}
+        quotedMessage={quotedMessage}
+        onClearQuote={() => setQuotedMessage(null)}
       />
 
       {/* Modals */}

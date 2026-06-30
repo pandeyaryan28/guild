@@ -342,6 +342,12 @@ export interface Message {
   editedAt?: Timestamp;
   deleted?: boolean;
   files?: MessageAttachment[];
+  parentMessageId?: string;
+  parentMessage?: {
+    id: string;
+    senderName: string;
+    body: string;
+  };
 }
 
 export interface DirectMessageThread {

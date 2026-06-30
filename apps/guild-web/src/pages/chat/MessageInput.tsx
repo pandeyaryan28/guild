@@ -5,17 +5,33 @@ import { MentionDropdown } from './MentionDropdown';
 import { CommandDropdown } from './CommandDropdown';
 import { type UserProfile } from '../../lib/firestore';
 import { uploadMessageAttachment } from '../../lib/storage';
-import { type MessageAttachment } from '@guild/types';
+import { type MessageAttachment, type Message } from '@guild/types';
 
 interface MessageInputProps {
-  onSend: (body: string, mentions: string[], files?: MessageAttachment[]) => Promise<void>;
+  onSend: (
+    body: string,
+    mentions: string[],
+    files?: MessageAttachment[],
+    parentMessageId?: string,
+    parentMessage?: { id: string; senderName: string; body: string }
+  ) => Promise<void>;
   placeholder?: string;
   members: UserProfile[];
   disabled?: boolean;
   chatId: string;
+  quotedMessage?: Message | null;
+  onClearQuote?: () => void;
 }
 
-export function MessageInput({ onSend, placeholder = 'Message...', members, disabled, chatId }: MessageInputProps) {
+export function MessageInput({
+  onSend,
+  placeholder = 'Message...',
+  members,
+  disabled,
+  chatId,
+  quotedMessage,
+  onClearQuote,
+}: MessageInputProps) {
   const [body, setBody] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
@@ -148,7 +164,21 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
     });
 
     try {
-      await onSend(trimmed, mentionUids, uploadedAttachments);
+      if (quotedMessage) {
+        await onSend(
+          trimmed,
+          mentionUids,
+          uploadedAttachments,
+          quotedMessage.id,
+          {
+            id: quotedMessage.id,
+            senderName: quotedMessage.senderName,
+            body: quotedMessage.body,
+          }
+        );
+      } else {
+        await onSend(trimmed, mentionUids, uploadedAttachments);
+      }
     } finally {
       setSending(false);
       textareaRef.current?.focus();
@@ -157,6 +187,27 @@ export function MessageInput({ onSend, placeholder = 'Message...', members, disa
 
   return (
     <div className="relative px-4 pb-4">
+      {/* Quoted Message Preview Banner */}
+      {quotedMessage && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-border-default bg-surface/90 backdrop-blur-md px-4 py-2 mb-2 shadow-sm animate-in slide-in-from-bottom-2 duration-150">
+          <div className="flex-1 min-w-0 border-l-2 border-primary/50 pl-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+              Replying to {quotedMessage.senderName}
+            </p>
+            <p className="text-xs text-text-muted truncate mt-0.5">
+              {quotedMessage.body}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClearQuote}
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-foreground hover:bg-bg-tertiary transition-colors"
+            title="Cancel reply"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       {mentionQuery !== null && (
         <MentionDropdown
           query={mentionQuery}

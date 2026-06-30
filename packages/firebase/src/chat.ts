@@ -197,6 +197,12 @@ export async function sendChannelMessage(params: {
   senderId: string; senderName: string; senderUsername: string;
   body: string; mentions: string[];
   files?: MessageAttachment[];
+  parentMessageId?: string;
+  parentMessage?: {
+    id: string;
+    senderName: string;
+    body: string;
+  };
 }): Promise<string> {
   const msgRef = doc(collection(db, 'messages'));
   const id = msgRef.id;
@@ -244,6 +250,12 @@ export async function sendDMMessage(params: {
   senderId: string; senderName: string; senderUsername: string;
   body: string; mentions: string[];
   files?: MessageAttachment[];
+  parentMessageId?: string;
+  parentMessage?: {
+    id: string;
+    senderName: string;
+    body: string;
+  };
 }): Promise<string> {
   const msgRef = doc(collection(db, 'messages'));
   const id = msgRef.id;
@@ -303,7 +315,21 @@ export async function sendDMMessage(params: {
 }
 
 export async function editMessage(messageId: string, newBody: string): Promise<void> {
-  await updateDoc(doc(db, 'messages', messageId), { body: newBody, editedAt: serverTimestamp() });
+  const msgRef = doc(db, 'messages', messageId);
+  const snap = await getDoc(msgRef);
+  if (!snap.exists()) {
+    throw new Error('Message does not exist.');
+  }
+  const msgData = snap.data();
+  const createdAt = msgData.createdAt;
+  if (createdAt && typeof createdAt.toDate === 'function') {
+    const createdTime = createdAt.toDate().getTime();
+    const oneHour = 60 * 60 * 1000;
+    if (Date.now() - createdTime >= oneHour) {
+      throw new Error('Messages cannot be edited after 1 hour.');
+    }
+  }
+  await updateDoc(msgRef, { body: newBody, editedAt: serverTimestamp() });
 }
 
 export async function deleteMessage(messageId: string): Promise<void> {

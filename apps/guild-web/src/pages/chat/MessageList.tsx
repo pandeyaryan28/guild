@@ -13,6 +13,7 @@ interface MessageListProps {
   loadOlderMessages?: () => void;
   loadingOlder?: boolean;
   hasMore?: boolean;
+  onQuoteMessage?: (msg: Message) => void;
 }
 
 const GROUP_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
@@ -35,6 +36,7 @@ export function MessageList({
   loadOlderMessages,
   loadingOlder = false,
   hasMore = false,
+  onQuoteMessage,
 }: MessageListProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const bottomRef = React.useRef<HTMLDivElement>(null);
@@ -211,6 +213,7 @@ export function MessageList({
               orgId={orgId}
               currentUser={currentUser}
               onOpenDiscussion={onOpenDiscussion}
+              onQuoteMessage={onQuoteMessage}
             />
           ),
         )}
