@@ -57,7 +57,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
     try {
       await createTask({
         orgId, title: title.trim(), description, status, priority,
-        assigneeIds: assigneeIds.length > 0 ? assigneeIds : [actor.uid], labelIds,
+        assigneeIds, labelIds,
         dueDate: dueDate ? new Date(dueDate) : null,
         actor,
         // Scope fields — null if not provided
@@ -178,7 +178,7 @@ export function CreateTaskModal({ open, onClose, orgId, defaultStatus = 'todo', 
               <div>
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Assignees</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {members.map((m) => (
+                  {members.filter(m => m.uid !== actor.uid).map((m) => (
                     <button
                       key={m.uid} type="button"
                       onClick={() => toggleAssignee(m.uid)}

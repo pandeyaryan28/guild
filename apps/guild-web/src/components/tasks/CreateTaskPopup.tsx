@@ -385,7 +385,7 @@ export function CreateTaskPopup({
               {showAssignees && members.length > 0 && (
                 <div className="absolute bottom-full mb-2 left-0 z-20 w-52 rounded-2xl border border-white/10 bg-surface/95 backdrop-blur shadow-2xl overflow-hidden p-1">
                   <div className="py-1">
-                    {members.map((m) => {
+                    {members.filter(m => m.uid !== actor.uid).map((m) => {
                       const name = m.fullName || m.username || m.uid;
                       const selected = assigneeIds.includes(m.uid);
                       return (

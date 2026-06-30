@@ -102,15 +102,35 @@ export async function createTask(params: {
   const ref = doc(collection(db, 'tasks'));
   const status = params.status ?? 'todo';
   const orderIndex = await getNextOrderIndex(params.orgId, status);
+
+  let approved = true;
+  if (!params.parentTaskId) {
+    const creatorDoc = await getDoc(doc(db, 'users', params.actor.uid));
+    const creatorProfile = creatorDoc.exists() ? creatorDoc.data() : null;
+    const managerId = creatorProfile?.managerId || null;
+
+    if (managerId) {
+      approved = false;
+    } else {
+      const orgDoc = await getDoc(doc(db, 'organizations', params.orgId));
+      const orgData = orgDoc.exists() ? orgDoc.data() : null;
+      const ownerId = orgData?.ownerId || null;
+      if (params.actor.uid !== ownerId) {
+        approved = false;
+      }
+    }
+  }
+
   await setDoc(ref, {
     id: ref.id, orgId: params.orgId, title: params.title,
     description: params.description ?? '', status,
     priority: params.priority ?? 'none',
-    assigneeIds: (params.assigneeIds && params.assigneeIds.length > 0) ? params.assigneeIds : [params.actor.uid],
+    assigneeIds: params.assigneeIds ?? [],
     creatorId: params.actor.uid,
     labelIds: params.labelIds ?? [],
     dueDate: params.dueDate ? Timestamp.fromDate(params.dueDate) : null,
     orderIndex, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    approved,
     // Scope fields — null means unscoped (backward compatible)
     projectId: params.projectId ?? null,
     goalId: params.goalId ?? null,
@@ -125,7 +145,7 @@ export async function createTask(params: {
 
 export async function updateTask(
   taskId: string, orgId: string,
-  patch: Partial<Pick<Task, 'title' | 'description' | 'status' | 'priority' | 'dueDate' | 'projectId' | 'goalId'>>,
+  patch: Partial<Pick<Task, 'title' | 'description' | 'status' | 'priority' | 'dueDate' | 'projectId' | 'goalId' | 'approved'>>,
   actor: ActorInfo,
 ): Promise<void> {
   await updateDoc(doc(db, 'tasks', taskId), { ...patch, updatedAt: serverTimestamp() });
@@ -139,6 +159,20 @@ export async function moveTask(
 ): Promise<void> {
   const taskDoc = await getDoc(doc(db, 'tasks', taskId));
   const taskData = taskDoc.exists() ? (taskDoc.data() as Task) : null;
+
+  if (taskData) {
+    const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, review: 2, done: 3 };
+    const oldStatusVal = STATUS_ORDER[oldStatus] ?? STATUS_ORDER[taskData.status] ?? 0;
+    const newStatusVal = STATUS_ORDER[newStatus] ?? 0;
+
+    if (newStatusVal < oldStatusVal) {
+      // Backward status transition
+      const isRejection = oldStatus === 'review' && newStatus === 'in_progress' && taskData.creatorId === actor.uid;
+      if (!isRejection) {
+        throw new Error("Backward status transitions are not allowed unless the creator rejects a review.");
+      }
+    }
+  }
 
   const completedAtPatch =
     newStatus === 'done'

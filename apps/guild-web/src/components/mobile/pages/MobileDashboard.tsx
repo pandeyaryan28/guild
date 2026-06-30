@@ -25,7 +25,7 @@ import { useOrgMembers, useChannels, useDMs } from '../../../hooks/useChat';
 import { useRequests } from '../../../hooks/useRequests';
 import { useTeams } from '../../../hooks/useTeams';
 import { updateRequestStatus } from '../../../lib/requests';
-import { type Task, moveTask, createTask } from '../../../lib/tasks';
+import { type Task, moveTask, createTask, deleteTask, updateTask } from '../../../lib/tasks';
 import { updateUserProfile, type UserProfile } from '../../../lib/firestore';
 import { Timestamp } from 'firebase/firestore';
 import { avatarInitials, avatarHue } from '../../MemberProfileDrawer';
@@ -37,7 +37,7 @@ export function MobileDashboard() {
   const orgId = userProfile?.organizationId;
   const { isInstallable, isStandalone, isDismissed, isIOS, install, dismiss } = usePwaInstall();
 
-  const { tasks, loading: tasksLoading } = useTasks(orgId);
+  const { tasks, loading: tasksLoading } = useTasks(orgId, undefined, true);
   const { teams } = useTeams(orgId);
   const members = useOrgMembers(orgId);
   const { received: receivedRequests } = useRequests(orgId);
@@ -133,7 +133,7 @@ export function MobileDashboard() {
 
   const myTasks = React.useMemo(() => {
     if (!userProfile?.uid) return [];
-    return tasks.filter((t) => t.assigneeIds.includes(userProfile.uid) && t.status !== 'done' && t.status !== 'review');
+    return tasks.filter((t) => t.approved !== false && t.assigneeIds.includes(userProfile.uid) && t.status !== 'done' && t.status !== 'review');
   }, [tasks, userProfile?.uid]);
 
   const isManager = React.useMemo(() => {
@@ -159,12 +159,31 @@ export function MobileDashboard() {
   }, [userProfile, isManager, teams, members]);
 
   const reviewTasksForTeam = React.useMemo(() => {
-    if (!isManager || managedTeammateUids.size === 0) return [];
+    if (!userProfile) return [];
     return tasks.filter(t => 
-      t.status === 'review' && 
-      t.assigneeIds.some(id => managedTeammateUids.has(id))
+      t.status === 'review' && (
+        (isManager && t.assigneeIds.some(id => managedTeammateUids.has(id))) ||
+        (t.creatorId === userProfile.uid && !t.assigneeIds.includes(userProfile.uid))
+      )
     );
-  }, [isManager, managedTeammateUids, tasks]);
+  }, [isManager, managedTeammateUids, tasks, userProfile]);
+
+  const tasksAwaitingApproval = React.useMemo(() => {
+    if (!userProfile) return [];
+    return tasks.filter(t => {
+      if (t.approved === false) {
+        const creatorProfile = members.find(m => m.uid === t.creatorId);
+        if (!creatorProfile) return false;
+
+        if (creatorProfile.managerId) {
+          return creatorProfile.managerId === userProfile.uid;
+        }
+
+        return userProfile.role === 'owner';
+      }
+      return false;
+    });
+  }, [tasks, members, userProfile]);
 
   const [completingTaskId, setCompletingTaskId] = React.useState<string | null>(null);
   const handleToggleComplete = async (task: Task) => {
@@ -401,12 +420,12 @@ export function MobileDashboard() {
       </div>
 
       {/* 4. Approvals Drawer widget */}
-      {(pendingRequests.length > 0 || (isManager && reviewTasksForTeam.length > 0)) && (
+      {(pendingRequests.length > 0 || reviewTasksForTeam.length > 0 || tasksAwaitingApproval.length > 0) && (
         <div className="aether-glass p-5 space-y-4 bg-white/2 border border-white/5">
           <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Action Needed</span>
             <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 animate-pulse">
-              Pending approvals
+              {pendingRequests.length + reviewTasksForTeam.length + tasksAwaitingApproval.length} Pending
             </span>
           </div>
 
@@ -441,7 +460,7 @@ export function MobileDashboard() {
               </div>
             ))}
 
-            {isManager && reviewTasksForTeam.slice(0, 2).map((task) => {
+            {reviewTasksForTeam.slice(0, 2).map((task) => {
               const assigneeName = task.assigneeIds.map(id => memberMap.get(id)?.fullName).filter(Boolean).join(', ');
               return (
                 <div key={task.id} className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02] space-y-3">
@@ -470,6 +489,40 @@ export function MobileDashboard() {
                       className="flex-1 py-2 rounded-lg bg-white/5 border border-white/5 text-[10px] font-black text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
                     >
                       Needs Changes
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+
+            {tasksAwaitingApproval.slice(0, 2).map((task) => {
+              const creatorName = members.find(m => m.uid === task.creatorId)?.fullName || 'Teammate';
+              return (
+                <div key={task.id} className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02] space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-foreground block truncate">{task.title}</span>
+                      <span className="text-[9px] text-muted-foreground block mt-1 font-semibold">Creation for {creatorName}</span>
+                    </div>
+                    <Shield className="w-4.5 h-4.5 text-rose-400 shrink-0" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        const actionActor = { uid: userProfile!.uid, name: userProfile!.fullName || 'Manager' };
+                        await updateTask(task.id, orgId!, { approved: true } as any, actionActor);
+                      }}
+                      className="flex-1 py-2 rounded-lg bg-primary text-white text-[10px] font-black hover:bg-primary/95 transition-all active:scale-95 cursor-pointer shadow-md"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await deleteTask(task.id);
+                      }}
+                      className="flex-1 py-2 rounded-lg bg-white/5 border border-white/5 text-[10px] font-black text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
+                    >
+                      Reject
                     </button>
                   </div>
                 </div>

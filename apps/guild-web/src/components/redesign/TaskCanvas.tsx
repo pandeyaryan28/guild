@@ -243,15 +243,11 @@ export function TaskCanvas() {
       if (selectedProjectId !== 'all' && t.projectId !== selectedProjectId) return false;
       if (selectedPriority !== 'all' && t.priority !== selectedPriority) return false;
 
-      if (isTeamManager) {
-        // Manager views all tasks assigned to team members
-        return t.assigneeIds.some(uid => teamUids.includes(uid));
-      } else {
-        // Non-manager views only tasks they assigned to others in the team
-        return t.creatorId === user?.uid && t.assigneeIds.some(uid => uid !== user?.uid && teamUids.includes(uid));
-      }
+      const isAssignedByMe = t.creatorId === user?.uid;
+      const isAssignedToTeam = t.assigneeIds.some(uid => teamUids.includes(uid));
+      return isAssignedByMe || isAssignedToTeam;
     });
-  }, [tasks, selectedTeam, isTeamManager, user?.uid, searchQuery, selectedProjectId, selectedPriority]);
+  }, [tasks, selectedTeam, user?.uid, searchQuery, selectedProjectId, selectedPriority]);
 
   const teamGoals = React.useMemo(() => {
     if (!selectedTeam) return [];
@@ -364,7 +360,7 @@ export function TaskCanvas() {
         priority: taskForm.priority,
         projectId: taskForm.projectId || null,
         goalId: taskForm.goalId || null,
-        assigneeIds: taskForm.assigneeId ? [taskForm.assigneeId] : [actor.uid],
+        assigneeIds: taskForm.assigneeId ? [taskForm.assigneeId] : [],
         dueDate: taskForm.dueDate ? new Date(taskForm.dueDate) : null,
         actor
       });
@@ -394,7 +390,8 @@ export function TaskCanvas() {
       }
       newStatus = 'done';
     } else if (oldStatus === 'done') {
-      newStatus = 'todo';
+      setToastMessage("Status is permanent and cannot be changed back.");
+      return;
     }
 
     try {
@@ -406,6 +403,19 @@ export function TaskCanvas() {
 
   const handleUpdateTaskStatus = async (task: Task, newStatus: TaskStatus) => {
     if (!orgId) return;
+    const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, review: 2, done: 3 };
+    const oldStatusVal = STATUS_ORDER[task.status] ?? 0;
+    const newStatusVal = STATUS_ORDER[newStatus] ?? 0;
+
+    if (newStatusVal < oldStatusVal) {
+      // Backward status transition
+      const isRejection = task.status === 'review' && newStatus === 'in_progress' && task.creatorId === user?.uid;
+      if (!isRejection) {
+        setToastMessage("Status cannot go backward once moved.");
+        return;
+      }
+    }
+
     if (newStatus === 'done' && task.status === 'review' && task.creatorId !== user?.uid) {
       setToastMessage("Only the creator of this task can approve it from In Review.");
       return;
@@ -661,13 +671,6 @@ export function TaskCanvas() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <button
-            onClick={(e) => handleDeleteTaskItem(e, task.id)}
-            className="text-muted-foreground hover:text-red-400 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 p-1 shrink-0 cursor-pointer"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
     );
@@ -805,9 +808,6 @@ export function TaskCanvas() {
                     Send Back Feedback
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={(e) => handleDeleteTaskItem(e, task.id)} className="gap-2 font-semibold text-xs text-red-500 focus:text-red-600 focus:bg-red-500/10 cursor-pointer border-t border-border-default/45 mt-1">
-                  Delete
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -924,7 +924,7 @@ export function TaskCanvas() {
 
           <button
             onClick={() => {
-              setTaskForm({ title: '', description: '', priority: 'none', projectId: '', goalId: '', assigneeId: actor.uid, dueDate: '' });
+              setTaskForm({ title: '', description: '', priority: 'none', projectId: '', goalId: '', assigneeId: '', dueDate: '' });
               setCreateType('task');
               setShowCreateDrawer(true);
             }}
@@ -1262,12 +1262,6 @@ export function TaskCanvas() {
                                           {task.title}
                                         </span>
                                       </div>
-                                      <button
-                                        onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                        className="text-muted-foreground hover:text-red-400 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
                                     </div>
                                   ))}
 
@@ -1307,12 +1301,6 @@ export function TaskCanvas() {
                                                     {task.title}
                                                   </span>
                                                 </div>
-                                                <button
-                                                  onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                                  className="text-muted-foreground hover:text-red-400 transition-colors"
-                                                >
-                                                  <X className="w-3.5 h-3.5" />
-                                                </button>
                                               </div>
                                             ))}
                                           </motion.div>
@@ -1678,13 +1666,6 @@ export function TaskCanvas() {
                               >
                                 <Settings className="w-3.5 h-3.5" />
                               </button>
-                              <button
-                                onClick={(e) => handleDeleteProjectItem(e, project.id)}
-                                className="text-muted-foreground hover:text-red-400 p-1 transition-colors shrink-0"
-                                title="Delete Project"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
                             </div>
 
                             {/* Timeline Dates */}
@@ -1866,13 +1847,6 @@ export function TaskCanvas() {
                                         title="Project Settings"
                                       >
                                         <Settings className="w-3.5 h-3.5" />
-                                      </button>
-                                      <button
-                                        onClick={(e) => handleDeleteProjectItem(e, project.id)}
-                                        className="text-muted-foreground hover:text-red-400 p-1 transition-colors shrink-0"
-                                        title="Delete Project"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
                                       </button>
                                     </div>
 
@@ -2210,7 +2184,7 @@ export function TaskCanvas() {
                         <SearchableSelect
                           value={taskForm.assigneeId}
                           onChange={(val) => setTaskForm({ ...taskForm, assigneeId: val })}
-                          options={members.map(m => ({
+                          options={members.filter(m => m.uid !== actor.uid).map(m => ({
                             value: m.uid,
                             label: m.fullName || m.username,
                             detail: m.designation || 'Member',

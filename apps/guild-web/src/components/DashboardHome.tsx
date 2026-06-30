@@ -24,7 +24,7 @@ import { useTeams } from '../hooks/useTeams';
 import { useProjects } from '../hooks/useProjects';
 import { useGoals } from '../hooks/useGoals';
 import { updateRequestStatus, type OrgRequest } from '../lib/requests';
-import { type Task, moveTask, createTask } from '../lib/tasks';
+import { type Task, moveTask, createTask, deleteTask, updateTask } from '../lib/tasks';
 import { updateGoal } from '../lib/goals';
 import { updateUserProfile, type UserProfile } from '../lib/firestore';
 import { Timestamp, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
@@ -85,7 +85,7 @@ export function DashboardHome() {
   const { userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
 
-  const { tasks, loading: tasksLoading } = useTasks(orgId);
+  const { tasks, loading: tasksLoading } = useTasks(orgId, undefined, true);
   const { goals } = useGoals(orgId);
   const { channels } = useChannels(orgId);
   const { teams } = useTeams(orgId);
@@ -224,7 +224,7 @@ export function DashboardHome() {
   // Task metrics
   const myTasks = React.useMemo(() => {
     if (!userProfile?.uid) return [];
-    return tasks.filter((t) => t.assigneeIds.includes(userProfile.uid) && t.status !== 'done' && t.status !== 'review');
+    return tasks.filter((t) => t.approved !== false && t.assigneeIds.includes(userProfile.uid) && t.status !== 'done' && t.status !== 'review');
   }, [tasks, userProfile?.uid]);
 
   const todayTasks = React.useMemo(() => {
@@ -268,6 +268,7 @@ export function DashboardHome() {
     endOfWeek.setHours(23, 59, 59, 999);
 
     const weekTasks = tasks.filter(t => {
+      if (t.approved === false) return false;
       const isAssignee = t.assigneeIds.includes(userProfile.uid);
       if (!isAssignee) return false;
       if (!t.dueDate) return false;
@@ -276,7 +277,7 @@ export function DashboardHome() {
     });
 
     if (weekTasks.length === 0) {
-      return tasks.filter(t => t.assigneeIds.includes(userProfile.uid));
+      return tasks.filter(t => t.approved !== false && t.assigneeIds.includes(userProfile.uid));
     }
     return weekTasks;
   }, [tasks, userProfile?.uid]);
@@ -292,7 +293,7 @@ export function DashboardHome() {
 
   // Recent task activity: tasks sorted by updatedAt desc
   const recentActivity = React.useMemo((): { task: Task; actor: string }[] => {
-    return [...tasks]
+    return tasks.filter(t => t.approved !== false)
       .sort((a, b) => (b.updatedAt?.toMillis() ?? 0) - (a.updatedAt?.toMillis() ?? 0))
       .slice(0, 4)
       .map((task) => ({
@@ -339,12 +340,31 @@ export function DashboardHome() {
   }, [userProfile, isManager, teams, members]);
 
   const reviewTasksForTeam = React.useMemo(() => {
-    if (!isManager || managedTeammateUids.size === 0) return [];
+    if (!userProfile) return [];
     return tasks.filter(t => 
-      t.status === 'review' && 
-      t.assigneeIds.some(id => managedTeammateUids.has(id))
+      t.status === 'review' && (
+        (isManager && t.assigneeIds.some(id => managedTeammateUids.has(id))) ||
+        (t.creatorId === userProfile.uid && !t.assigneeIds.includes(userProfile.uid))
+      )
     );
-  }, [isManager, managedTeammateUids, tasks]);
+  }, [isManager, managedTeammateUids, tasks, userProfile]);
+
+  const tasksAwaitingApproval = React.useMemo(() => {
+    if (!userProfile) return [];
+    return tasks.filter(t => {
+      if (t.approved === false) {
+        const creatorProfile = members.find(m => m.uid === t.creatorId);
+        if (!creatorProfile) return false;
+
+        if (creatorProfile.managerId) {
+          return creatorProfile.managerId === userProfile.uid;
+        }
+
+        return userProfile.role === 'owner';
+      }
+      return false;
+    });
+  }, [tasks, members, userProfile]);
 
   // Handle in-line review actions
   const handleReviewAction = async (task: Task, action: 'approve' | 'reject') => {
@@ -757,7 +777,7 @@ export function DashboardHome() {
           </div>
 
           {/* Pending Approvals / Reviews Stream (Managers & Approvers) */}
-          {(pendingRequests.length > 0 || (isManager && reviewTasksForTeam.length > 0)) && (
+          {(pendingRequests.length > 0 || reviewTasksForTeam.length > 0 || tasksAwaitingApproval.length > 0) && (
             <div className="backdrop-blur-2xl bg-surface/80 dark:bg-surface/50 border border-border-default dark:border-border-strong/75 rounded-3xl p-6 shadow-xl space-y-4 hover:shadow-2xl hover:border-primary/20 dark:hover:border-primary/45 transition-all duration-300">
               <div className="flex items-center justify-between border-b border-border-default/20 pb-4">
                 <div className="space-y-1">
@@ -765,7 +785,7 @@ export function DashboardHome() {
                   <p className="text-[11px] text-muted-foreground">Items requiring your active sign-off</p>
                 </div>
                 <div className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[9px] font-bold">
-                  {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0)} Pending
+                  {pendingRequests.length + reviewTasksForTeam.length + tasksAwaitingApproval.length} Pending
                 </div>
               </div>
               
@@ -799,7 +819,7 @@ export function DashboardHome() {
                 ))}
 
                 {/* Manager reviews */}
-                {isManager && reviewTasksForTeam.map((task) => {
+                {reviewTasksForTeam.map((task) => {
                   const assigneeName = task.assigneeIds.map(id => memberMap.get(id)?.fullName).filter(Boolean).join(', ');
                   return (
                     <div key={task.id} className="p-4 border border-border-default rounded-2xl bg-bg-tertiary/10 space-y-3 hover:border-primary/20 transition-all shadow-sm">
@@ -819,6 +839,38 @@ export function DashboardHome() {
                           className="flex-1 py-1.5 rounded-lg border border-border-default hover:bg-bg-tertiary/10 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
                         >
                           Needs Changes
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Task Creation Approvals */}
+                {tasksAwaitingApproval.map((task) => {
+                  const creatorName = members.find(m => m.uid === task.creatorId)?.fullName || 'Teammate';
+                  return (
+                    <div key={task.id} className="p-4 border border-border-default rounded-2xl bg-bg-tertiary/10 space-y-3 hover:border-primary/20 transition-all shadow-sm">
+                      <div>
+                        <p className="text-xs font-bold text-foreground line-clamp-1">{task.title}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Task creation approval for {creatorName}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            const actionActor = { uid: userProfile!.uid, name: userProfile!.fullName };
+                            await updateTask(task.id, orgId!, { approved: true } as any, actionActor);
+                          }}
+                          className="flex-1 py-1.5 rounded-lg bg-foreground text-background text-[10px] font-bold hover:bg-foreground/90 transition-all shadow-md active:scale-95 cursor-pointer"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={async () => {
+                            await deleteTask(task.id);
+                          }}
+                          className="flex-1 py-1.5 rounded-lg border border-border-default hover:bg-bg-tertiary/10 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
+                        >
+                          Reject
                         </button>
                       </div>
                     </div>

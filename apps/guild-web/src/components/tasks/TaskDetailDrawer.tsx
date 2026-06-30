@@ -124,6 +124,19 @@ export function TaskDetailDrawer({
   };
 
   const handleStatusChange = async (newStatus: TaskStatus) => {
+    const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, review: 2, done: 3 };
+    const oldStatusVal = STATUS_ORDER[task.status] ?? 0;
+    const newStatusVal = STATUS_ORDER[newStatus] ?? 0;
+
+    if (newStatusVal < oldStatusVal) {
+      // Backward status transition
+      const isRejection = task.status === 'review' && newStatus === 'in_progress' && task.creatorId === actor.uid;
+      if (!isRejection) {
+        setToastMessage("Status cannot go backward once moved.");
+        return;
+      }
+    }
+
     if (newStatus === 'done' && task.status === 'review' && task.creatorId !== actor.uid) {
       setToastMessage("Only the creator of this task can approve it from In Review.");
       return;
@@ -208,7 +221,7 @@ export function TaskDetailDrawer({
         title: newSubtaskTitle.trim(),
         status: 'todo',
         priority: 'none',
-        assigneeIds: [actor.uid],
+        assigneeIds: (task.assigneeIds && task.assigneeIds.length > 0) ? task.assigneeIds : [],
         dueDate: null,
         actor,
         projectId: task.projectId || null,
@@ -492,15 +505,6 @@ export function TaskDetailDrawer({
               >
                 <Share2 className="w-4 h-4" />
               </button>
-              {canDelete && (
-                <button
-                  onClick={handleDeleteTask}
-                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:border-rose-200/40 hover:bg-rose-50/20 dark:hover:border-rose-900/20 text-neutral-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
-                  title="Delete Task"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
               <div className="h-6 w-[1px] bg-neutral-200 dark:bg-neutral-800 mx-1 shrink-0" />
               <button
                 onClick={onClose}
@@ -1007,7 +1011,7 @@ export function TaskDetailDrawer({
                   Team Assignees
                 </label>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin pr-1">
-                  {members.map((m) => {
+                  {members.filter(m => m.uid !== actor.uid).map((m) => {
                     const isAssigned = task.assigneeIds.includes(m.uid);
                     return (
                       <button
@@ -1140,15 +1144,6 @@ export function TaskDetailDrawer({
               >
                 <Share2 className="w-4 h-4" />
               </button>
-              {canDelete && (
-                <button
-                  onClick={handleDeleteTask}
-                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:border-rose-200/40 hover:bg-rose-50/20 dark:hover:border-rose-900/20 text-neutral-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
-                  title="Delete Task"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
               <div className="h-6 w-[1px] bg-neutral-200 dark:bg-neutral-800 mx-1 shrink-0" />
               <button
                 onClick={onClose}
@@ -1659,7 +1654,7 @@ export function TaskDetailDrawer({
                   Team Assignees
                 </label>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin pr-1">
-                  {members.map((m) => {
+                  {members.filter(m => m.uid !== actor.uid).map((m) => {
                     const isAssigned = task.assigneeIds.includes(m.uid);
                     return (
                       <button

@@ -226,6 +226,7 @@ export interface Task {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   completedAt?: Timestamp | null;
+  approved?: boolean;
   // Execution OS — optional relational fields (backward compatible)
   projectId?: string | null;
   goalId?: string | null;

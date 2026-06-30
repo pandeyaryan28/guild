@@ -180,6 +180,16 @@ export function ProjectDetailPage() {
     if (!orgId) return;
     const oldStatus = task.status;
     const newStatus: TaskStatus = oldStatus === 'done' ? 'todo' : 'done';
+
+    const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, review: 2, done: 3 };
+    const oldStatusVal = STATUS_ORDER[oldStatus] ?? 0;
+    const newStatusVal = STATUS_ORDER[newStatus] ?? 0;
+
+    if (newStatusVal < oldStatusVal) {
+      alert("Status cannot go backward once moved.");
+      return;
+    }
+
     try {
       await moveTask(task.id, orgId, newStatus, task.orderIndex || 1000, oldStatus, actor);
     } catch (err) {
@@ -662,12 +672,6 @@ export function ProjectDetailPage() {
                                       </div>
                                     )
                                   )}
-                                  <button
-                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="p-1.5 rounded-lg border border-transparent text-neutral-400 hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
                                 </div>
                               </motion.div>
                             ))
@@ -728,12 +732,6 @@ export function ProjectDetailPage() {
                                               </div>
                                             )
                                           )}
-                                          <button
-                                            onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                            className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all cursor-pointer"
-                                          >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                          </button>
                                         </div>
                                       </div>
                                     ))}

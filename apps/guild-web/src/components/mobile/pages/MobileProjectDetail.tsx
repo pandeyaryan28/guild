@@ -113,6 +113,16 @@ export function MobileProjectDetail() {
     if (!orgId) return;
     const oldStatus = task.status;
     const newStatus: TaskStatus = oldStatus === 'done' ? 'todo' : 'done';
+
+    const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, review: 2, done: 3 };
+    const oldStatusVal = STATUS_ORDER[oldStatus] ?? 0;
+    const newStatusVal = STATUS_ORDER[newStatus] ?? 0;
+
+    if (newStatusVal < oldStatusVal) {
+      alert("Status cannot go backward once moved.");
+      return;
+    }
+
     try {
       await moveTask(task.id, orgId, newStatus, task.orderIndex || 1000, oldStatus, actor);
     } catch (err) {
@@ -468,12 +478,6 @@ export function MobileProjectDetail() {
                               {getInitials(task.assigneeIds[0])}
                             </div>
                           )}
-                          <button
-                            onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                            className="p-1 text-muted-foreground hover:text-red-400 cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
                         </div>
                       </div>
                     ))}
@@ -514,12 +518,6 @@ export function MobileProjectDetail() {
                                 </button>
                                 <span className="text-xs font-semibold text-muted-foreground line-through truncate">{task.title}</span>
                               </div>
-                              <button
-                                onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                className="p-1 text-muted-foreground hover:text-red-400 cursor-pointer"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
                             </div>
                           ))}
                         </motion.div>

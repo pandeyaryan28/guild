@@ -497,16 +497,6 @@ export function GoalDetailDrawer({
               >
                 <Share2 className="w-4 h-4" />
               </button>
-              {canDelete && (
-                <button
-                  onClick={handleDeleteGoal}
-                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:border-rose-200/40 hover:bg-rose-50/20 dark:hover:border-rose-900/20 text-neutral-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
-                  title="Delete Goal"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-              <div className="h-6 w-[1px] bg-neutral-200 dark:bg-neutral-850 mx-1 shrink-0" />
               <button
                 onClick={onClose}
                 className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
@@ -712,12 +702,6 @@ export function GoalDetailDrawer({
                                       )}
                                     </div>
                                   ))}
-                                  <button
-                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-855 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
                                 </div>
                               </div>
                             ))}
@@ -769,12 +753,6 @@ export function GoalDetailDrawer({
                                           {task.title}
                                         </span>
                                       </div>
-                                      <button
-                                        onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                        className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all cursor-pointer"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
                                     </div>
                                   ))}
                                 </motion.div>
@@ -1051,15 +1029,6 @@ export function GoalDetailDrawer({
               >
                 <Share2 className="w-4 h-4" />
               </button>
-              {canDelete && (
-                <button
-                  onClick={handleDeleteGoal}
-                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:border-rose-200/40 hover:bg-rose-50/20 dark:hover:border-rose-900/20 text-neutral-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
-                  title="Delete Goal"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
               <div className="h-6 w-[1px] bg-neutral-200 dark:bg-neutral-800 mx-1 shrink-0" />
               <button
                 onClick={onClose}
@@ -1266,12 +1235,6 @@ export function GoalDetailDrawer({
                                       )}
                                     </div>
                                   ))}
-                                  <button
-                                    onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                    className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-855 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
                                 </div>
                               </div>
                             ))}
@@ -1323,12 +1286,6 @@ export function GoalDetailDrawer({
                                           {task.title}
                                         </span>
                                       </div>
-                                      <button
-                                        onClick={(e) => handleDeleteTaskItem(e, task.id)}
-                                        className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-all cursor-pointer"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
                                     </div>
                                   ))}
                                 </motion.div>

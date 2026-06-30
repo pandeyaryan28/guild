@@ -8,7 +8,7 @@ import {
 } from '../lib/tasks';
 import { useAuth } from './useAuth';
 
-export function useTasks(orgId: string | undefined, scope?: TaskScopeFilter) {
+export function useTasks(orgId: string | undefined, scope?: TaskScopeFilter, includeUnapproved = false) {
   const [tasks, setTasks] = React.useState<Task[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -18,9 +18,13 @@ export function useTasks(orgId: string | undefined, scope?: TaskScopeFilter) {
   React.useEffect(() => {
     if (!orgId) return;
     setLoading(true);
-    return listenToTasks(orgId, (t) => { setTasks(t); setLoading(false); }, scope);
+    return listenToTasks(orgId, (t) => {
+      const filtered = includeUnapproved ? t : t.filter(x => x.approved !== false);
+      setTasks(filtered);
+      setLoading(false);
+    }, scope);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId, scopeKey]);
+  }, [orgId, scopeKey, includeUnapproved]);
 
   const columns = React.useMemo(() => {
     const map = new Map<TaskStatus, Task[]>();
