@@ -106,7 +106,7 @@ function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency
     : billing.status === 'past_due'
     ? 'Past due'
     : billing.status === 'trialing'
-    ? (isTrialExpired ? 'Expired' : 'Trialing')
+    ? (isTrialExpired ? 'Expired' : 'Trial')
     : 'Cancelled';
 
   return (
