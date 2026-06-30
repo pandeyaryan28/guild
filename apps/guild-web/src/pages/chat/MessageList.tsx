@@ -2,6 +2,7 @@ import * as React from 'react';
 import { type Message } from '../../lib/chat';
 import { MessageBubble } from './MessageBubble';
 import { Loader2, MessageSquare, ArrowDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface MessageListProps {
   messages: Message[] | null;
@@ -196,12 +197,13 @@ export function MessageList({
 
         {items.map((item, i) =>
           item.type === 'divider' ? (
-            <div key={`divider-${i}`} className="flex items-center gap-3 px-4 py-3">
-              <div className="flex-1 h-px bg-border/20" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">
+            <div key={`divider-${i}`} className="flex items-center justify-center my-6 relative px-4">
+              <div className="absolute inset-x-4 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-border-default/45" />
+              </div>
+              <span className="relative z-10 glass bg-surface-elevated/85 dark:bg-surface-elevated/75 border border-border-default/50 px-3.5 py-1 rounded-full text-[9.5px] font-bold tracking-widest text-text-secondary uppercase shadow-sm">
                 {item.label}
               </span>
-              <div className="flex-1 h-px bg-border/20" />
             </div>
           ) : (
             <MessageBubble
@@ -221,15 +223,22 @@ export function MessageList({
       </div>
 
       {/* Scroll-to-bottom FAB */}
-      {showScrollBtn && (
-        <button
-          onClick={scrollToBottom}
-          className="absolute bottom-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition-opacity"
-          title="Scroll to latest"
-        >
-          <ArrowDown className="h-4 w-4" />
-        </button>
-      )}
+      <AnimatePresence>
+        {showScrollBtn && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+            whileHover={{ scale: 1.08, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={scrollToBottom}
+            className="absolute bottom-5 right-5 z-20 flex h-9.5 w-9.5 items-center justify-center rounded-full glass bg-surface-elevated/95 border border-border-default text-primary shadow-xl hover:bg-surface active:scale-95 transition-colors cursor-pointer"
+            title="Scroll to latest"
+          >
+            <ArrowDown className="h-4.5 w-4.5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -252,17 +252,18 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
         <div
           onClick={() => taskId && setSearchParams({ task: taskId })}
           className={cn(
-            "mt-1.5 max-w-lg rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-4 shadow-md shadow-primary/5 backdrop-blur-sm transition-all text-left",
-            taskId ? "cursor-pointer hover:bg-primary/12 hover:border-primary/45 hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.01]" : ""
+            "mt-2 w-full max-w-md rounded-2xl border border-border-default/80 bg-surface-elevated/45 backdrop-blur-md p-4 pl-6 relative overflow-hidden shadow-md shadow-black/5 transition-all text-left",
+            taskId ? "cursor-pointer hover:bg-surface-elevated/70 hover:border-primary/30 hover:shadow-lg hover:scale-[1.01]" : ""
           )}
         >
-          <div className="flex items-center justify-between gap-4 mb-2.5">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-2xl" />
+          <div className="flex items-center justify-between gap-4 mb-3">
             <div className="flex items-center gap-2 text-primary">
-              <CheckSquare className="h-4 w-4 shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/95">Task</span>
+              <CheckSquare className="h-4.5 w-4.5 shrink-0" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary/95">Task</span>
             </div>
             <span className={cn(
-              "rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+              "rounded-full border px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider",
               statusConfig.border,
               statusConfig.bg,
               statusConfig.text
@@ -271,7 +272,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
             </span>
           </div>
 
-          <div className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 text-sm font-semibold text-foreground leading-relaxed shadow-inner">
+          <div className="text-sm font-semibold text-foreground leading-relaxed">
             {taskTitle}
           </div>
         </div>
@@ -288,17 +289,18 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
         <div
           onClick={() => goalId && setSearchParams({ goal: goalId })}
           className={cn(
-            "mt-1.5 max-w-lg rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4 shadow-md shadow-emerald-500/5 backdrop-blur-sm transition-all text-left",
-            goalId ? "cursor-pointer hover:bg-emerald-500/12 hover:border-emerald-500/45 hover:shadow-lg hover:shadow-emerald-500/5 hover:scale-[1.01]" : ""
+            "mt-2 w-full max-w-md rounded-2xl border border-border-default/80 bg-surface-elevated/45 backdrop-blur-md p-4 pl-6 relative overflow-hidden shadow-md shadow-black/5 transition-all text-left",
+            goalId ? "cursor-pointer hover:bg-surface-elevated/70 hover:border-emerald-500/30 hover:shadow-lg hover:scale-[1.01]" : ""
           )}
         >
-          <div className="flex items-center justify-between gap-4 mb-2.5">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500 rounded-l-2xl" />
+          <div className="flex items-center justify-between gap-4 mb-3">
             <div className="flex items-center gap-2 text-emerald-500">
-              <Target className="h-4 w-4 shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/95">Goal</span>
+              <Target className="h-4.5 w-4.5 shrink-0" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500/95">Goal</span>
             </div>
             <span className={cn(
-              "rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+              "rounded-full border px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider",
               displayStatus === 'completed'
                 ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
                 : displayStatus === 'cancelled'
@@ -309,7 +311,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
             </span>
           </div>
 
-          <div className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 text-sm font-semibold text-foreground leading-relaxed shadow-inner">
+          <div className="text-sm font-semibold text-foreground leading-relaxed">
             {goalTitle}
           </div>
         </div>
@@ -393,17 +395,18 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
         <div
           onClick={() => rId && setSearchParams({ request: rId })}
           className={cn(
-            "mt-1.5 max-w-lg rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-amber-500/5 p-4 shadow-md shadow-amber-500/5 backdrop-blur-sm transition-all text-left",
-            rId ? "cursor-pointer hover:bg-amber-500/12 hover:border-amber-500/45 hover:shadow-lg hover:shadow-amber-500/5 hover:scale-[1.01]" : ""
+            "mt-2 w-full max-w-md rounded-2xl border border-border-default/80 bg-surface-elevated/45 backdrop-blur-md p-4 pl-6 relative overflow-hidden shadow-md shadow-black/5 transition-all text-left",
+            rId ? "cursor-pointer hover:bg-surface-elevated/70 hover:border-amber-500/30 hover:shadow-lg hover:scale-[1.01]" : ""
           )}
         >
-          <div className="flex items-center justify-between gap-4 mb-2.5">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500 rounded-l-2xl" />
+          <div className="flex items-center justify-between gap-4 mb-3">
             <div className="flex items-center gap-2 text-amber-500">
-              <ClipboardList className="h-4 w-4 shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500/95">Request</span>
+              <ClipboardList className="h-4.5 w-4.5 shrink-0" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-500/95">Request</span>
             </div>
             <span className={cn(
-              "rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+              "rounded-full border px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider",
               displayStatus === 'approved' 
                 ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
                 : displayStatus === 'rejected'
@@ -414,31 +417,35 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
             </span>
           </div>
 
-          <div className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 text-sm font-semibold text-foreground leading-relaxed shadow-inner">
+          <div className="text-sm font-semibold text-foreground leading-relaxed">
             {requestTitle}
           </div>
           
-          <div className="mt-2.5 text-[10px] text-text-muted flex items-center justify-between gap-1.5 flex-wrap">
+          <div className="mt-3.5 text-[10.5px] text-text-muted flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-1.5">
               <span>Approver:</span>
-              <span className="font-semibold text-foreground bg-white/5 rounded px-1.5 py-0.5">{approverName}</span>
+              <span className="font-semibold text-foreground bg-surface-elevated px-2 py-0.5 rounded-lg border border-border-default/50 shadow-xs">{approverName}</span>
             </div>
             {isApprover && displayStatus === 'pending' && (
-              <div className="flex items-center gap-1.5 mt-1 sm:mt-0">
-                <button
+              <div className="flex items-center gap-2 mt-1.5 sm:mt-0">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleApprove}
                   disabled={saving}
-                  className="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-bold transition-all text-[9px] flex items-center gap-0.5 cursor-pointer border border-emerald-500/10"
+                  className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white font-bold transition-all text-xs flex items-center gap-1 cursor-pointer border border-emerald-500/20 shadow-xs"
                 >
-                  <Check className="h-2.5 w-2.5" /> Approve
-                </button>
-                <button
+                  <Check className="h-3 w-3" /> Approve
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleReject}
                   disabled={saving}
-                  className="px-2 py-0.5 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold transition-all text-[9px] flex items-center gap-0.5 cursor-pointer border border-red-500/10"
+                  className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold transition-all text-xs flex items-center gap-1 cursor-pointer border border-red-500/20 shadow-xs"
                 >
-                  <X className="h-2.5 w-2.5" /> Reject
-                </button>
+                  <X className="h-3 w-3" /> Reject
+                </motion.button>
               </div>
             )}
           </div>
@@ -589,7 +596,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     if (reactionEntries.length === 0) return null;
 
     return (
-      <div className="flex flex-wrap gap-1 mt-1.5">
+      <div className="flex flex-wrap gap-1.5 mt-2">
         {reactionEntries.map(([emoji, userIds]) => {
           if (!userIds || (userIds as string[]).length === 0) return null;
           const hasReacted = currentUser && (userIds as string[]).includes(currentUser.uid);
@@ -598,7 +605,9 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
             .join(', ');
 
           return (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               key={emoji}
               onClick={(e) => {
                 e.stopPropagation();
@@ -606,15 +615,15 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
               }}
               title={`Reacted by: ${reactorNames}`}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs border transition-all cursor-pointer select-none",
+                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all duration-200 cursor-pointer select-none shadow-xs font-medium",
                 hasReacted
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "bg-surface hover:bg-bg-tertiary border-border-default text-text-muted"
+                  ? "bg-primary/10 border-primary/35 text-primary"
+                  : "bg-surface-elevated/65 hover:bg-surface-elevated border-border-default/80 text-text-secondary"
               )}
             >
-              <span>{emoji}</span>
+              <span className="text-sm leading-none">{emoji}</span>
               <span className="text-[10px] font-bold">{(userIds as string[]).length}</span>
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -628,26 +637,28 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     if (replyCount === 0) return null;
 
     return (
-      <button
+      <motion.button
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.98 }}
         onClick={(e) => {
           e.stopPropagation();
           setIsRepliesExpanded(!isRepliesExpanded);
         }}
         className={cn(
-          "mt-1.5 flex items-center gap-1.5 text-[10px] font-bold cursor-pointer select-none border rounded-lg px-2.5 py-1.5 w-fit shadow-sm transition-all",
+          "mt-2 flex items-center gap-2 text-[10px] font-bold cursor-pointer select-none border rounded-full px-3 py-1.5 w-fit shadow-xs transition-all duration-200",
           isRepliesExpanded
-            ? "bg-primary/10 border-primary/25 text-primary"
-            : "bg-primary/5 border-primary/10 text-primary hover:bg-primary/10"
+            ? "bg-primary/15 border-primary/30 text-primary"
+            : "bg-primary/5 border-primary/15 text-primary hover:bg-primary/10"
         )}
       >
-        <MessageSquare className="h-3 w-3 shrink-0" />
+        <MessageSquare className="h-3.5 w-3.5 shrink-0 text-primary/80" />
         <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
         {isRepliesExpanded ? (
-          <span className="text-[8px] text-text-muted font-normal ml-0.5">(click to collapse)</span>
+          <span className="text-[8.5px] text-text-muted/80 font-normal ml-1">(click to collapse)</span>
         ) : lastReplyTime ? (
-          <span className="text-[8px] text-text-muted font-normal">Last reply {lastReplyTime}</span>
+          <span className="text-[8.5px] text-text-muted/80 font-normal ml-1">· Last reply {lastReplyTime}</span>
         ) : null}
-      </button>
+      </motion.button>
     );
   };
 
@@ -655,7 +666,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     if (!isRepliesExpanded) return null;
 
     return (
-      <div className="mt-3.5 w-full flex flex-col gap-3.5 border-l-2 border-primary/25 dark:border-primary/40 pl-4.5 ml-1.5 mb-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
+      <div className="mt-3.5 w-full flex flex-col gap-3.5 border-l border-dashed border-border-strong/40 pl-4.5 ml-3 mb-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
         {/* Replies List */}
         {replies === null ? (
           <div className="flex items-center gap-2 py-2 pl-1.5">
@@ -663,7 +674,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
             <p className="text-[10px] text-text-muted font-medium">Loading replies...</p>
           </div>
         ) : replies.length > 0 ? (
-          <div className="flex flex-col gap-3 w-full max-w-xl">
+          <div className="flex flex-col gap-3.5 w-full max-w-xl">
             {replies.map((reply) => {
               const replySender = members.find((m) => m.uid === reply.senderId);
               const replyPhotoURL = replySender?.photoURL;
@@ -679,7 +690,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
               return (
                 <div key={reply.id} className="flex gap-2.5 items-start group/reply">
                   {/* Reply Sender Avatar */}
-                  <div className="h-6.5 w-6.5 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-[8px] font-bold text-primary border border-primary/15 shrink-0 overflow-hidden shadow-sm mt-0.5">
+                  <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-[8.5px] font-bold text-primary border border-primary/15 shrink-0 overflow-hidden shadow-xs mt-0.5">
                     {replyPhotoURL ? (
                       <img src={replyPhotoURL} alt={reply.senderName} className="h-full w-full object-cover" />
                     ) : (
@@ -690,13 +701,13 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                   {/* Reply Bubble content */}
                   <div className="flex-1 min-w-0 flex flex-col items-start">
                     <div className="flex items-baseline gap-1.5 flex-wrap px-0.5">
-                      <span className={cn('text-[10px] font-bold', isOwnReply ? 'text-primary/90' : getSenderColor(reply.senderUsername))}>
+                      <span className={cn('text-[10.5px] font-bold', isOwnReply ? 'text-primary/95' : getSenderColor(reply.senderUsername))}>
                         {isOwnReply ? 'You' : reply.senderName}
                       </span>
-                      <span className="text-[8.5px] text-text-muted font-medium">@{reply.senderUsername}</span>
-                      <span className="text-[8px] text-text-muted font-mono ml-1">{formatTime(reply.createdAt as any)}</span>
+                      <span className="text-[9px] text-text-muted font-semibold">@{reply.senderUsername}</span>
+                      <span className="text-[8.5px] text-text-muted font-mono ml-1">{formatTime(reply.createdAt as any)}</span>
                     </div>
-                    <div className="mt-0.5 rounded-xl px-3 py-1.5 text-xs bg-surface/50 border border-border-default/50 leading-relaxed text-foreground select-text break-words w-fit max-w-full shadow-inner hover:border-primary/15 hover:bg-surface/85 transition-all">
+                    <div className="mt-1 rounded-2xl rounded-tl-none px-3.5 py-2 text-xs bg-surface-elevated/45 dark:bg-surface-elevated/35 border border-border-subtle/50 leading-relaxed text-foreground select-text break-words w-fit max-w-full shadow-xs hover:border-primary/20 hover:bg-surface-elevated/70 transition-all duration-200">
                       {reply.body}
                     </div>
                   </div>
@@ -710,9 +721,9 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
 
         {/* Reply Input Box */}
         {currentUser && orgId && (
-          <div className="w-full max-w-xl mt-1 flex gap-2.5 items-start">
+          <div className="w-full max-w-xl mt-1.5 flex gap-2.5 items-start">
             {/* Current user mini-initials avatar */}
-            <div className="h-6.5 w-6.5 rounded-full bg-primary/10 flex items-center justify-center text-[8px] font-bold text-primary border border-primary/15 shrink-0 overflow-hidden mt-1 shadow-sm">
+            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[8.5px] font-bold text-primary border border-primary/15 shrink-0 overflow-hidden mt-1 shadow-xs">
               {currentUser.displayName ? (
                 currentUser.displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
               ) : (
@@ -721,7 +732,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
             </div>
 
             {/* Input textarea and send button */}
-            <div className="flex-1 flex items-end gap-1.5 rounded-xl border border-border-default bg-surface/80 dark:bg-surface/65 backdrop-blur-xs px-2.5 py-1.5 shadow-inner focus-within:border-primary/45 transition-colors">
+            <div className="flex-1 flex items-end gap-2 rounded-full border border-border-default/80 bg-surface-elevated/40 backdrop-blur-xs pl-4 pr-1.5 py-1 focus-within:border-primary/45 focus-within:ring-1 focus-within:ring-primary/20 transition-all duration-200 shadow-sm">
               <textarea
                 ref={replyTextareaRef}
                 value={replyBody}
@@ -736,14 +747,16 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                 disabled={replySending}
                 maxLength={1000}
                 rows={1}
-                className="flex-1 resize-none bg-transparent text-xs text-foreground placeholder:text-text-muted focus:outline-none disabled:opacity-50 leading-relaxed scrollbar-hide py-0.5 min-h-[18px]"
+                className="flex-1 resize-none bg-transparent text-xs text-foreground placeholder:text-text-muted focus:outline-none disabled:opacity-50 leading-relaxed scrollbar-hide py-1 min-h-[20px]"
                 style={{ maxHeight: '80px' }}
               />
-              <button
+              <motion.button
+                whileHover={replyBody.trim() && !replySending ? { scale: 1.05 } : {}}
+                whileTap={replyBody.trim() && !replySending ? { scale: 0.95 } : {}}
                 onClick={handleSendReply}
                 disabled={!replyBody.trim() || replySending}
                 className={cn(
-                  'flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-lg transition-all border cursor-pointer',
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all border cursor-pointer mb-0.5',
                   replyBody.trim() && !replySending
                     ? 'bg-primary text-primary-foreground border-transparent shadow shadow-primary/20 hover:bg-primary/95'
                     : 'bg-bg-tertiary text-text-muted border-border-default cursor-not-allowed'
@@ -752,9 +765,9 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                 {replySending ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
-                  <Check className="h-3.5 w-3.5" />
+                  <Check className="h-4 w-4" />
                 )}
-              </button>
+              </motion.button>
             </div>
           </div>
         )}
@@ -814,14 +827,18 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
           <div className={cn(
             !(isTaskCommand || isGoalCommand || isRequestCommand)
               ? cn(
-                  'relative rounded-2xl px-4 py-2.5 shadow-sm text-sm leading-relaxed border transition-all text-left',
+                  'relative px-4 py-2.5 text-sm leading-relaxed border transition-all duration-200 text-left shadow-sm',
                   isOwn 
-                    ? 'bg-gradient-to-br from-primary via-primary to-primary/95 border-transparent rounded-tr-none text-primary-foreground shadow-md shadow-primary/10'
-                    : 'bg-surface border-border-default/60 rounded-tl-none text-foreground'
+                    ? cn(
+                        'bg-gradient-to-tr from-primary via-primary to-primary/90 border-transparent text-primary-foreground shadow-md shadow-primary/15',
+                        isGrouped ? 'rounded-2xl' : 'rounded-2xl rounded-tr-none'
+                      )
+                    : cn(
+                        'bg-surface-elevated/45 dark:bg-surface-elevated/35 hover:bg-surface-elevated/70 border-border-default/50 dark:border-border-default/20 text-foreground backdrop-blur-xs hover:border-primary/20',
+                        isGrouped ? 'rounded-2xl' : 'rounded-2xl rounded-tl-none'
+                      )
                 )
-              : 'relative text-left',
-            isGrouped && isOwn && 'rounded-tr-2xl',
-             isGrouped && !isOwn && 'rounded-tl-2xl'
+              : 'relative text-left'
           )}>
             {message.parentMessage && (
               <div
@@ -861,88 +878,100 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
               initial={{ opacity: 0, x: isOwn ? -4 : 4 }}
               animate={{ opacity: 1, x: 0 }}
               className={cn(
-                "absolute top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-xl border border-border-default bg-surface backdrop-blur-md px-1.5 py-1 shadow-lg z-30",
+                "absolute top-1/2 -translate-y-1/2 flex items-center gap-1 px-1 py-1 rounded-xl border border-border-default/80 bg-surface/90 backdrop-blur-md shadow-lg shadow-black/10 z-30",
                 isOwn ? "right-full mr-2" : "left-full ml-2"
               )}
             >
               {/* Reaction Trigger Button */}
               <div className="relative flex">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.12 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   className={cn(
-                    "flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer",
+                    "flex h-7.5 w-7.5 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer",
                     showEmojiPicker && "bg-bg-tertiary text-foreground"
                   )}
                   title="Add reaction"
                 >
-                  <Smile className="h-3.5 w-3.5" />
-                </button>
+                  <Smile className="h-4 w-4" />
+                </motion.button>
                 
                 {/* Reaction Popover Dropdeck */}
                 {showEmojiPicker && (
                   <div className={cn(
-                    "absolute bottom-full mb-2 bg-surface border border-border-default rounded-xl shadow-2xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100",
+                    "absolute bottom-full mb-2 bg-surface/95 dark:bg-surface/90 backdrop-blur-md border border-border-default/80 rounded-2xl shadow-xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100",
                     isOwn ? "right-0" : "left-0"
                   )}>
                     {['👍', '❤️', '🔥', '😂', '🎉', '🚀'].map(emoji => (
-                      <button
+                      <motion.button
                         key={emoji}
+                        whileHover={{ scale: 1.25 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (currentUser) toggleReaction(message.id, emoji, currentUser.uid);
                           setShowEmojiPicker(false);
                         }}
-                        className="text-base p-1.5 hover:bg-bg-tertiary rounded transition-colors cursor-pointer"
+                        className="text-base p-1.5 hover:bg-bg-tertiary rounded-lg transition-colors cursor-pointer"
                       >
                         {emoji}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 )}
               </div>
 
               {/* Reply Trigger Button */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.12 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => {
                   setIsRepliesExpanded(true);
                   setTimeout(() => replyTextareaRef.current?.focus(), 100);
                 }}
-                className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+                className="flex h-7.5 w-7.5 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
                 title="Reply to message"
               >
-                <MessageSquare className="h-3 w-3" />
-              </button>
+                <MessageSquare className="h-3.5 w-3.5" />
+              </motion.button>
 
               {/* Quote Reply Trigger Button */}
               {onQuoteMessage && (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.12 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => onQuoteMessage(message)}
-                  className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+                  className="flex h-7.5 w-7.5 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
                   title="Quote reply"
                 >
-                  <CornerUpLeft className="h-3.5 w-3.5" />
-                </button>
+                  <CornerUpLeft className="h-4 w-4" />
+                </motion.button>
               )}
 
               {/* Edit/Delete options for own messages */}
               {isOwn && (
                 <>
                   {isEditable && (
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.12 }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => setEditing(true)}
-                      className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+                      className="flex h-7.5 w-7.5 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
                       title="Edit message"
                     >
-                      <Pencil className="h-3 w-3" />
-                    </button>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </motion.button>
                   )}
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.12 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={handleDelete}
-                    className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                    className="flex h-7.5 w-7.5 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                     title="Delete message"
                   >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </motion.button>
                 </>
               )}
             </motion.div>

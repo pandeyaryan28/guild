@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { MentionDropdown } from './MentionDropdown';
 import { CommandDropdown } from './CommandDropdown';
 import { type UserProfile } from '../../lib/firestore';
+import { motion } from 'motion/react';
 import { uploadMessageAttachment } from '../../lib/storage';
 import { type MessageAttachment, type Message } from '@guild/types';
 
@@ -189,8 +190,8 @@ export function MessageInput({
     <div className="relative px-4 pb-4">
       {/* Quoted Message Preview Banner */}
       {quotedMessage && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-border-default bg-surface/90 backdrop-blur-md px-4 py-2 mb-2 shadow-sm animate-in slide-in-from-bottom-2 duration-150">
-          <div className="flex-1 min-w-0 border-l-2 border-primary/50 pl-3">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-border-default/80 bg-surface-elevated/85 backdrop-blur-md px-4 py-2.5 mb-2 shadow-sm animate-in slide-in-from-bottom-2 duration-150 border-l-3 border-l-primary">
+          <div className="flex-1 min-w-0 pl-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
               Replying to {quotedMessage.senderName}
             </p>
@@ -201,10 +202,10 @@ export function MessageInput({
           <button
             type="button"
             onClick={onClearQuote}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-foreground hover:bg-bg-tertiary transition-colors"
+            className="flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
             title="Cancel reply"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4.5 w-4.5" />
           </button>
         </div>
       )}
@@ -227,16 +228,16 @@ export function MessageInput({
 
       {/* Selected Files Preview Deck */}
       {selectedFiles.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2 max-h-40 overflow-y-auto px-1 py-1 scrollbar-hide">
+        <div className="flex flex-wrap gap-2.5 mb-3 max-h-40 overflow-y-auto px-1 py-1 scrollbar-hide">
           {selectedFiles.map((file, idx) => {
             const isImg = file.type.startsWith('image/');
             return (
               <div
                 key={idx}
-                className="relative flex items-center gap-2 rounded-xl border border-border-default bg-surface/80 backdrop-blur-md pl-2 pr-8 py-1.5 shadow-sm max-w-[200px] group transition-all hover:border-primary/30 animate-in fade-in zoom-in-95 duration-150"
+                className="relative flex items-center gap-2.5 rounded-2xl border border-border-default bg-surface-elevated/75 backdrop-blur-md pl-2 pr-9 py-2 shadow-sm max-w-[210px] group transition-all duration-200 hover:border-primary/40 hover:shadow-md animate-in fade-in zoom-in-95 duration-150"
               >
                 {isImg ? (
-                  <div className="h-8 w-8 rounded-lg overflow-hidden border border-border-default bg-bg-tertiary shrink-0">
+                  <div className="h-8.5 w-8.5 rounded-xl overflow-hidden border border-border-default bg-bg-tertiary shrink-0">
                     <img
                       src={URL.createObjectURL(file)}
                       alt={file.name}
@@ -244,8 +245,8 @@ export function MessageInput({
                     />
                   </div>
                 ) : (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/5 text-primary border border-primary/10">
-                    <File className="h-4 w-4" />
+                  <div className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-xl bg-primary/5 text-primary border border-primary/10">
+                    <File className="h-4.5 w-4.5" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
@@ -257,9 +258,9 @@ export function MessageInput({
                 <button
                   type="button"
                   onClick={() => removeFile(idx)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-lg bg-bg-tertiary text-text-muted hover:text-foreground hover:bg-zinc-500/20 transition-all opacity-80 hover:opacity-100"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-bg-tertiary text-text-muted hover:text-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200 opacity-80 hover:opacity-100 cursor-pointer shadow-xs"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             );
@@ -267,17 +268,19 @@ export function MessageInput({
         </div>
       )}
 
-      <div className="flex items-end gap-3 rounded-2xl border border-border-default bg-surface backdrop-blur-xl px-4 py-3 shadow-xl shadow-black/20 focus-within:border-primary/40 transition-colors">
+      <div className="flex items-end gap-3.5 rounded-2xl border border-border-default/80 bg-surface/85 backdrop-blur-lg px-4 py-3.5 shadow-lg shadow-black/5 focus-within:border-primary/35 focus-within:ring-1 focus-within:ring-primary/20 transition-all duration-200">
         {/* Attachment Button */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={sending || disabled || uploading}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-text-muted hover:text-foreground hover:bg-bg-tertiary transition-colors"
+          className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full text-text-muted hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer border border-transparent hover:border-border-default/50 shadow-xs"
           title="Attach files or media"
         >
           <Paperclip className="h-4.5 w-4.5" />
-        </button>
+        </motion.button>
         <input
           type="file"
           ref={fileInputRef}
@@ -295,28 +298,30 @@ export function MessageInput({
           disabled={sending || disabled || uploading}
           maxLength={2000}
           rows={1}
-          className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-text-muted focus:outline-none disabled:opacity-50 leading-relaxed scrollbar-hide"
+          className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-text-muted focus:outline-none disabled:opacity-50 leading-relaxed scrollbar-hide py-1"
           style={{ minHeight: '24px', maxHeight: '160px' }}
         />
-        <button
+        <motion.button
+          whileHover={(body.trim() || selectedFiles.length > 0) && !sending && !uploading ? { scale: 1.05 } : {}}
+          whileTap={(body.trim() || selectedFiles.length > 0) && !sending && !uploading ? { scale: 0.95 } : {}}
           onClick={handleSend}
           disabled={(!body.trim() && selectedFiles.length === 0) || sending || disabled || uploading}
           className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all',
+            'flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full transition-all border mb-0.5',
             (body.trim() || selectedFiles.length > 0) && !sending && !uploading
-              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90'
-              : 'bg-bg-tertiary text-text-muted cursor-not-allowed',
+              ? 'bg-primary text-primary-foreground border-transparent shadow shadow-primary/20 hover:bg-primary/95 cursor-pointer'
+              : 'bg-bg-tertiary text-text-muted border-border-default cursor-not-allowed',
           )}
         >
           {sending || uploading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Send className="h-4 w-4" />
+            <Send className="h-4.5 w-4.5 animate-in fade-in zoom-in duration-100" />
           )}
-        </button>
+        </motion.button>
       </div>
 
-      <p className="mt-1.5 px-1 text-[10px] text-text-muted">
+      <p className="mt-1.5 px-1.5 text-[10px] text-text-muted/80">
         <kbd className="font-mono">Enter</kbd> to send · <kbd className="font-mono">Shift+Enter</kbd> for new line · <kbd className="font-mono">@</kbd> to mention · Max 50MB per file
       </p>
     </div>
