@@ -10,7 +10,8 @@ import {
   BarChart3, 
   Palette, 
   LogOut,
-  Trello
+  Trello,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
@@ -127,6 +128,20 @@ export function NavDock() {
               </div>
             );
           })}
+          
+          {(userProfile?.role === 'owner' || userProfile?.role === 'admin') && (
+            <div
+              onClick={() => window.open("https://admin.guildorbit.com", "_blank", "noopener,noreferrer")}
+              className="aether-dock-item relative cursor-pointer text-foreground/75 hover:text-foreground"
+            >
+              <span className="relative z-10 flex items-center justify-center">
+                <Shield className="w-5 h-5" />
+              </span>
+              <div className="aether-dock-item-tooltip font-bold tracking-tight">
+                Admin Panel
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="w-8 h-[1px] bg-white/10 my-2" />

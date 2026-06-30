@@ -33,9 +33,10 @@ export function SignupPage() {
   React.useEffect(() => {
     if (!loading && user) {
       // If the user came from a /join/:token URL, send them back after signup
-      const fromPath = (location.state as any)?.from as string | undefined;
-      if (fromPath?.startsWith('/join/')) {
-        navigate(fromPath, { replace: true });
+      const fromState = (location.state as any)?.from;
+      const fromPath = typeof fromState === 'string' ? fromState : fromState?.pathname;
+      if (fromPath && typeof fromPath === 'string' && fromPath.startsWith('/join/')) {
+        navigate(fromState || fromPath, { replace: true });
         return;
       }
       const savedToken = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
