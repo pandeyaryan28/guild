@@ -23,6 +23,7 @@ import {
   LayoutGrid,
   PanelLeftClose,
   PanelLeftOpen,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -415,6 +416,14 @@ export function Sidebar() {
                 <NavItem icon={Settings} label="Settings" active={isActive} collapsed={collapsed} />
               )}
             </NavLink>
+            {(userProfile?.role === 'owner' || userProfile?.role === 'admin') && (
+              <NavItem 
+                icon={Shield} 
+                label="Admin Panel" 
+                collapsed={collapsed} 
+                onClick={() => window.open("https://admin.guildorbit.com", "_blank", "noopener,noreferrer")}
+              />
+            )}
           </div>
 
           {/* User Profile Card */}
