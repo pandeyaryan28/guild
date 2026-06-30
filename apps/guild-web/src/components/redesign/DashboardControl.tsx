@@ -493,11 +493,11 @@ export function DashboardControl() {
           </div>
           <div className="flex-1 min-w-0">
             <label className="text-[9px] font-black text-primary uppercase tracking-widest block leading-none">
-              Today's Main Goal
+              Status
             </label>
             <input 
               type="text" 
-              placeholder="What is your focus for today? Declare it here..."
+              placeholder="What are you doing right now?"
               value={focusInput}
               onChange={(e) => setFocusInput(e.target.value)}
               onKeyDown={(e) => {
@@ -519,14 +519,14 @@ export function DashboardControl() {
                 disabled={savingFocus}
                 className="px-4.5 py-2 rounded-xl bg-foreground text-background text-xs font-black tracking-wider hover:bg-foreground/90 transition-all cursor-pointer shadow-md active:scale-98"
               >
-                {savingFocus ? 'SAVING...' : 'SYNC OBJECTIVE'}
+                {savingFocus ? 'SAVING...' : 'SYNC STATUS'}
               </motion.button>
             )}
           </AnimatePresence>
           
           {focusSavedNotif && (
             <span className="text-xs text-emerald-500 font-extrabold px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 animate-fluid-pop">
-              Goal Updated!
+              Status Updated!
             </span>
           )}
         </div>
@@ -756,7 +756,7 @@ export function DashboardControl() {
                           </p>
                         ) : (
                           <p className="text-[10px] text-muted-foreground/60 mt-0.5 italic">
-                            No daily goal declared
+                            No status declared
                           </p>
                         )}
                       </div>

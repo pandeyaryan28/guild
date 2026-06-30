@@ -216,6 +216,15 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
                         {dmInitials}
                       </div>
                     )}
+                    {/* Status dot in Sidebar */}
+                    <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-surface flex items-center justify-center shadow-sm z-10">
+                      <span className={cn(
+                        "h-1.2 w-1.2 rounded-full",
+                        otherMember?.availabilityStatus === 'focus' ? "bg-red-500" :
+                        otherMember?.availabilityStatus === 'away' ? "bg-amber-500" :
+                        otherMember?.availabilityStatus === 'active' ? "bg-emerald-500" : "bg-zinc-400"
+                      )} />
+                    </span>
                   </div>
                   <span className="flex-1 truncate">{dmName}</span>
                   {unread && !isActive && (

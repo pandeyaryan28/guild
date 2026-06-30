@@ -140,6 +140,31 @@ export function MemberProfileDrawer({ isOpen, member, onClose, tasks, teams }: M
             </div>
           </div>
 
+          {/* Current Status Block */}
+          <div className="space-y-2">
+            <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Current Status</h5>
+            <div className="p-4 rounded-2xl border border-border-default bg-surface/50 text-xs text-foreground/80 flex items-center gap-3">
+              <span className="h-2.5 w-2.5 rounded-full flex items-center justify-center bg-white/5 border border-white/10 shadow-sm shrink-0">
+                <span className={`h-1.5 w-1.5 rounded-full ${
+                  member.availabilityStatus === 'focus' ? "bg-red-500 animate-pulse" :
+                  member.availabilityStatus === 'away' ? "bg-amber-500" :
+                  member.availabilityStatus === 'active' ? "bg-emerald-500" : "bg-zinc-400"
+                }`} />
+              </span>
+              <div className="min-w-0 flex-1">
+                {member.focusStatus?.text ? (
+                  <p className="font-semibold text-foreground italic">
+                    "{member.focusStatus.text}"
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground/60 italic">
+                    No status declared
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Details list */}
           <div className="space-y-3.5">
             <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contact & Org Info</h5>

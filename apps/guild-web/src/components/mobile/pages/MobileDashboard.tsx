@@ -321,7 +321,7 @@ export function MobileDashboard() {
           )}
         </div>
 
-        {/* 2. Sleek Custom Mobile Focus Target */}
+        {/* 2. Sleek Custom Mobile Status Target */}
         <div className="pt-3.5 border-t border-white/5 flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <div className="p-1.5 rounded-lg bg-white/5 text-primary shrink-0">
@@ -330,7 +330,7 @@ export function MobileDashboard() {
             <div className="flex-1 min-w-0">
               <input 
                 type="text" 
-                placeholder="What is your focus point today?"
+                placeholder="What are you doing right now?"
                 value={focusInput}
                 onChange={(e) => setFocusInput(e.target.value)}
                 onBlur={handleSaveFocus}
@@ -341,7 +341,7 @@ export function MobileDashboard() {
           </div>
           {focusSavedNotif && (
             <span className="text-[9px] text-emerald-500 font-bold block ml-8 animate-pulse">
-              Goal synced to cloud
+              Status synced to cloud
             </span>
           )}
         </div>

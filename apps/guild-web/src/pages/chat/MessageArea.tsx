@@ -18,6 +18,7 @@ import { createTask } from '../../lib/tasks';
 import { createGoal } from '../../lib/goals';
 import { createRequest } from '../../lib/requests';
 import { InviteChannelMembersModal } from '../../components/chat/InviteChannelMembersModal';
+import { avatarInitials, avatarHue } from '../../components/MemberProfileDrawer';
 import { type MessageAttachment } from '@guild/types';
 
 interface MessageAreaProps {
@@ -85,17 +86,28 @@ export function MessageArea({
     );
   }, [channelId, channel, currentUser, profile]);
 
-  // Find DM partner name
+  const [dmPartner, setDmPartner] = React.useState<UserProfile | null>(null);
+
+  // Find DM partner profile and name
   React.useEffect(() => {
-    if (!dmId || !currentUser) return;
+    if (!dmId || !currentUser) {
+      setDmPartner(null);
+      setDmPartnerName('');
+      return;
+    }
     const parts = dmId.split('_');
     const otherId = parts.find((p) => p !== currentUser.uid) ?? '';
     const m = members.find((m) => m.uid === otherId);
     if (m) {
+      setDmPartner(m);
       setDmPartnerName(m.fullName);
     } else if (otherId) {
       getDoc(doc(db, 'users', otherId)).then((snap) => {
-        if (snap.exists()) setDmPartnerName(snap.data().fullName ?? 'Unknown');
+        if (snap.exists()) {
+          const profileData = snap.data() as UserProfile;
+          setDmPartner(profileData);
+          setDmPartnerName(profileData.fullName ?? 'Unknown');
+        }
       });
     }
   }, [dmId, currentUser?.uid, members]);
@@ -363,7 +375,9 @@ export function MessageArea({
   const headerTitle = channelId ? `${channel?.isPrivate ? '' : '#'}\u200B${channel?.name ?? '…'}` : dmPartnerName || '…';
   const headerSub = channelId
     ? channel?.description ?? ''
-    : `Direct message`;
+    : dmPartner?.focusStatus?.text 
+      ? `Status: "${dmPartner.focusStatus.text}"`
+      : `Direct message`;
   const Icon = channelId ? (channel?.isPrivate ? Lock : Hash) : MessageSquare;
 
   const isChannelAdmin = React.useMemo(() => {
@@ -402,10 +416,37 @@ export function MessageArea({
           </button>
         )}
 
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-          <Icon className="h-4 w-4 text-primary/70" />
-        </div>
-        <div className="min-w-0">
+        {dmId ? (
+          (() => {
+            const parts = dmId.split('_');
+            const otherId = parts.find((p) => p !== currentUser?.uid) ?? '';
+            return (
+              <div 
+                className="w-8 h-8 flex items-center justify-center rounded-full shrink-0 border border-white/10 relative shadow-sm"
+                style={{ background: `hsl(${avatarHue(otherId)} 55% 45%)` }}
+              >
+                {dmPartner?.photoURL ? (
+                  <img src={dmPartner.photoURL} alt={dmPartnerName} className="h-full w-full object-cover rounded-full" />
+                ) : (
+                  <span className="text-xs font-bold text-white">{avatarInitials(dmPartnerName || '?')}</span>
+                )}
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-surface flex items-center justify-center shadow-sm">
+                  <span className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    dmPartner?.availabilityStatus === 'focus' ? "bg-red-500" :
+                    dmPartner?.availabilityStatus === 'away' ? "bg-amber-500" :
+                    dmPartner?.availabilityStatus === 'active' ? "bg-emerald-500" : "bg-zinc-400"
+                  )} />
+                </span>
+              </div>
+            );
+          })()
+        ) : (
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
+            <Icon className="h-4 w-4 text-primary/70" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
           <h1 className="text-sm font-bold text-foreground flex items-center gap-1">{headerTitle}</h1>
           {headerSub && <p className="text-[11px] text-text-muted truncate">{headerSub}</p>}
         </div>
