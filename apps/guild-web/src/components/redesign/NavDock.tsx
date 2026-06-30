@@ -92,6 +92,7 @@ export function NavDock() {
             return (
               <div
                 key={item.path}
+                id={`tour-nav-${item.label.toLowerCase()}`}
                 onClick={() => navigate(item.path)}
                 className={cn(
                   "aether-dock-item relative cursor-pointer",

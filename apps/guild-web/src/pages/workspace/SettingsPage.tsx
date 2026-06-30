@@ -1081,6 +1081,42 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
           );
         })}
       </div>
+
+      <div className="h-[1px] bg-white/10 my-6" />
+
+      <div className="aether-glass border border-white/10 dark:border-white/5 bg-white/[0.015] dark:bg-white/[0.005] rounded-3xl p-6 text-left relative overflow-hidden">
+        {/* Glow ambient light */}
+        <div className="absolute -right-16 -top-16 w-32 h-32 rounded-full bg-accent/5 blur-xl pointer-events-none" />
+        
+        <div className="flex gap-4">
+          <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
+            <Info className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+          </div>
+          <div className="space-y-1.5 flex-1">
+            <h3 className="text-xs font-black uppercase text-foreground tracking-wider leading-none">Product Tour</h3>
+            <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed">
+              Need a quick refresher on how to navigate Guild and use its core operational features? You can restart the onboarding product tour at any time.
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await updateUserProfile(profile.uid, { tourCompleted: false });
+                    window.location.href = '/';
+                  } catch (err) {
+                    console.error('Failed to reset product tour status:', err);
+                  }
+                }}
+                className="px-4 py-2 bg-accent text-accent-foreground rounded-xl text-xs font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-md"
+                style={{ backgroundColor: 'var(--accent)' }}
+              >
+                Restart Product Tour
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -29,6 +29,7 @@ export interface UserProfile {
   availabilityStatus?: 'active' | 'focus' | 'away';
   photoURL?: string;
   phoneNumber?: string;
+  tourCompleted?: boolean;
 }
 
 export interface FocusStatus {

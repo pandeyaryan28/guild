@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useLocation } from 'react-router-dom';
 import { NavDock } from './NavDock';
 import { GlobalSearch } from '../GlobalSearch';
+import { TourGuide } from '../TourGuide';
 import { Search, Bell, Command, Sun, Moon } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../hooks/useAuth';
@@ -217,6 +218,7 @@ export function RedesignLayout({ children }: RedesignLayoutProps) {
       {/* Search overlay component */}
       <div className="print:hidden">
         <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+        <TourGuide />
       </div>
     </div>
   );
