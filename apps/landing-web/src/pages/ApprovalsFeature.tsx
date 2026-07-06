@@ -9,8 +9,15 @@ import {
 } from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
 import { CTABanner } from '../components/landing/CTABanner';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 export function ApprovalsFeature() {
+  useDocumentMetadata({
+    title: 'Requests & Approvals Flow',
+    description: 'Simplify sign-offs with custom vacation requests, expense approvals, and automated workflow pathways.',
+    canonicalPath: '/features/approvals'
+  });
+
   const { navigate } = useNavigation();
 
   return (

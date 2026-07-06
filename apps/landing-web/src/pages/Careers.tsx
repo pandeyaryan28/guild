@@ -1,7 +1,14 @@
 import { motion } from 'motion/react';
 import { Mail, ArrowRight } from 'lucide-react';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 export function Careers() {
+  useDocumentMetadata({
+    title: 'Careers',
+    description: 'Join the Guild Orbit team. We are always looking for exceptional engineers, designers, and operators who want to build the future of team coordination.',
+    canonicalPath: '/careers'
+  });
+
   return (
     <div className="min-h-[85vh] flex items-center justify-center relative overflow-hidden bg-slate-50/20 grid-pattern px-6 pt-20">
       {/* Background glow blobs */}

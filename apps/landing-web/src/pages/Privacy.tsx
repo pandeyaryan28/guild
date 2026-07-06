@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { Shield, Eye, Lock, FileText, Share2, Bell } from 'lucide-react';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 interface Section {
   id: string;
@@ -18,6 +19,12 @@ const SECTIONS: Section[] = [
 ];
 
 export function Privacy() {
+  useDocumentMetadata({
+    title: 'Privacy Policy',
+    description: 'Read the Guild Orbit Privacy Policy. Understand how we collect, use, store, and protect your team\'s operational data and information.',
+    canonicalPath: '/privacy'
+  });
+
   const [activeSection, setActiveSection] = useState('introduction');
 
   useEffect(() => {

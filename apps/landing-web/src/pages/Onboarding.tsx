@@ -22,6 +22,7 @@ import {
   Check
 } from 'lucide-react';
 import { APP_URL } from '../config/landingData';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 interface Step {
   id: number;
@@ -85,6 +86,12 @@ const JOIN_STEPS: Step[] = [
 ];
 
 export function Onboarding() {
+  useDocumentMetadata({
+    title: 'Workspace Onboarding',
+    description: 'Set up your Guild Orbit workspace, select your industry, invite your team members, and configure your first operational channels.',
+    canonicalPath: '/onboarding'
+  });
+
   const [path, setPath] = useState<'create' | 'join' | null>(null);
   const [activeStep, setActiveStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);

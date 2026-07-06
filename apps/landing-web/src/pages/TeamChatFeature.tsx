@@ -14,8 +14,15 @@ import {
 } from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
 import { CTABanner } from '../components/landing/CTABanner';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 export function TeamChatFeature() {
+  useDocumentMetadata({
+    title: 'Team Chat & Channels',
+    description: 'Keep discussions focused with department channels, private group threads, direct messaging, and contextual task comments.',
+    canonicalPath: '/features/team-chat'
+  });
+
   const { navigate } = useNavigation();
 
   return (

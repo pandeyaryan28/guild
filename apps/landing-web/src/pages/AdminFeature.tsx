@@ -12,8 +12,15 @@ import {
 } from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
 import { CTABanner } from '../components/landing/CTABanner';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 export function AdminFeature() {
+  useDocumentMetadata({
+    title: 'Admin Console & Workload Allotment',
+    description: 'Track member task allocation, project and goal health, overdue items, and manage secure workspace roles and invite links.',
+    canonicalPath: '/features/admin-console'
+  });
+
   const { navigate } = useNavigation();
 
   return (

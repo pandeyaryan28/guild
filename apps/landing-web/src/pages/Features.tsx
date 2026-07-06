@@ -12,6 +12,7 @@ import {
 import { useNavigation } from '../context/NavigationContext';
 import { ScrollReveal } from '../components/landing/ScrollReveal';
 import { CTABanner } from '../components/landing/CTABanner';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 // Feature details with metadata
 const featuresList = [
@@ -93,6 +94,12 @@ const featuresList = [
 ];
 
 export function Features() {
+  useDocumentMetadata({
+    title: 'Features',
+    description: 'Explore the powerful features of Guild Orbit, including visual task boards, real-time team chat channels, expense approvals, and comprehensive admin workloads.',
+    canonicalPath: '/features'
+  });
+
   const { navigate } = useNavigation();
   const [activeTab, setActiveTab] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);

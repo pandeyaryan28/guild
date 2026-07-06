@@ -11,8 +11,15 @@ import {
 } from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
 import { CTABanner } from '../components/landing/CTABanner';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 export function VisibilityFeature() {
+  useDocumentMetadata({
+    title: 'Visibility & Dashboards',
+    description: 'Get real-time updates and full overview dashboards showing what tasks are in progress, what needs review, and team activity feeds.',
+    canonicalPath: '/features/visibility'
+  });
+
   const { navigate } = useNavigation();
 
   return (

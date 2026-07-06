@@ -9,8 +9,15 @@ import {
   Building2, 
   Users 
 } from 'lucide-react';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 export function Contact() {
+  useDocumentMetadata({
+    title: 'Contact Us',
+    description: 'Get in touch with the Guild Orbit team. Request a personalized demo, ask a question about our workspaces, or inquire about custom team pricing.',
+    canonicalPath: '/contact'
+  });
+
   const [formType, setFormType] = useState<'demo' | 'inquiry'>('demo');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);

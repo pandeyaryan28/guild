@@ -18,6 +18,7 @@ import {
   FileSpreadsheet,
   Send
 } from 'lucide-react';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 interface MotionScene {
   id: string;
@@ -76,6 +77,12 @@ const MOTION_SCENES: MotionScene[] = [
 const TOTAL_DURATION = 24; // seconds (Snappy & Fast)
 
 export function Demo() {
+  useDocumentMetadata({
+    title: 'Interactive Demo',
+    description: 'Experience Guild Orbit firsthand. Try out our simulated live dashboard, chat channels, workload manager, and approvals dashboard.',
+    canonicalPath: '/demo'
+  });
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [isMuted, setIsMuted] = useState(false);

@@ -1,8 +1,15 @@
 import { motion } from 'motion/react';
 import { PricingCards } from '../components/landing/PricingCards';
 import { CTABanner } from '../components/landing/CTABanner';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 export function Pricing() {
+  useDocumentMetadata({
+    title: 'Pricing Plans',
+    description: 'Find the right plan for your team. Check out simple, transparent pricing options for Guild Orbit. Get started for free today!',
+    canonicalPath: '/pricing'
+  });
+
   return (
     <div className="pt-28 pb-8">
       {/* Header */}

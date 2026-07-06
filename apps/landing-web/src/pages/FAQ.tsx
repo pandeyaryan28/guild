@@ -1,9 +1,32 @@
 import { motion } from 'motion/react';
 import { FAQAccordion } from '../components/landing/FAQAccordion';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
+import { JsonLd } from '../components/seo/JsonLd';
+import { FAQ_ITEMS } from '../config/landingData';
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  'mainEntity': FAQ_ITEMS.map((item) => ({
+    '@type': 'Question',
+    'name': item.q,
+    'acceptedAnswer': {
+      '@type': 'Answer',
+      'text': item.a,
+    },
+  })),
+};
 
 export function FAQ() {
+  useDocumentMetadata({
+    title: 'FAQ',
+    description: 'Find answers to frequently asked questions about Guild Orbit, including setup time, billing details, and department permissions.',
+    canonicalPath: '/faq',
+  });
+
   return (
     <div className="pt-28 pb-20 px-6">
+      <JsonLd schema={faqSchema} />
       {/* Header */}
       <section className="max-w-3xl mx-auto text-center mb-14">
         <motion.h1

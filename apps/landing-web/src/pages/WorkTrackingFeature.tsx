@@ -12,8 +12,15 @@ import {
 } from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
 import { CTABanner } from '../components/landing/CTABanner';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 export function WorkTrackingFeature() {
+  useDocumentMetadata({
+    title: 'Work Tracking & Task Flow',
+    description: 'Coordinate your team operations on lightweight Kanban boards designed for team speed and absolute transparency.',
+    canonicalPath: '/features/work-tracking'
+  });
+
   const { navigate } = useNavigation();
 
   return (

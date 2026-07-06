@@ -1,0 +1,10 @@
+# Robots.txt for Guild Orbit
+User-agent: *
+Allow: /
+
+# Prevent indexing of sensitive or interactive routes that don't need search visibility
+Disallow: /onboarding
+Disallow: /demo
+
+# Link to sitemap.xml
+Sitemap: https://guildorbit.com/sitemap.xml

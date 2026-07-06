@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { FileText, ShieldAlert, UserCheck, Settings, Scale, AlertTriangle } from 'lucide-react';
+import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 
 interface Section {
   id: string;
@@ -18,6 +19,12 @@ const SECTIONS: Section[] = [
 ];
 
 export function Terms() {
+  useDocumentMetadata({
+    title: 'Terms of Service',
+    description: 'Read the Guild Orbit Terms of Service. Understand the terms, user responsibilities, and legal agreement for using our coordination platform.',
+    canonicalPath: '/terms'
+  });
+
   const [activeSection, setActiveSection] = useState('acceptance');
 
   useEffect(() => {
