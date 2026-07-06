@@ -187,7 +187,7 @@ export function VisibilityFeature() {
               <p className="text-xs text-slate-500 font-semibold leading-relaxed">
                 By indexing all text metadata, Guild Orbit makes it easy to find specific tasks or comments. Type a keyword like "budget" and instantly see task descriptions, chat comments, and approvals.
               </p>
-              <div className="flex gap-4 pt-2 font-sans text-xs font-bold text-slate-700">
+              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-4 pt-2 font-sans text-xs font-bold text-slate-700">
                 <div className="flex items-center gap-1.5">
                   <Eye className="h-4 w-4 text-rose-500" />
                   <span>Immediate comment previews</span>

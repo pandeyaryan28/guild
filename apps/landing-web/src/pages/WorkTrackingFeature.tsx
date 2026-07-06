@@ -188,7 +188,7 @@ export function WorkTrackingFeature() {
               <p className="text-xs text-slate-500 font-semibold leading-relaxed">
                 Every update, comment, and attachment is logged into a secure history. Resolve issues in the comment threads, and drag-and-drop file receipts or layouts directly onto task tickets for reference.
               </p>
-              <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 pt-2">
                 <div className="flex gap-2 items-center text-xs font-bold text-slate-700">
                   <Tag className="h-4 w-4 text-indigo-500" />
                   <span>Category Tags</span>

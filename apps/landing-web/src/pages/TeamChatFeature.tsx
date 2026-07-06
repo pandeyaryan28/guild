@@ -193,7 +193,7 @@ export function TeamChatFeature() {
               <p className="text-xs text-slate-400 font-semibold leading-relaxed font-sans">
                 Never lose track of assignments discussed in chat. By using the integrated chat command, managers and operators create tickets and assign owners without leaving the discussion.
               </p>
-              <div className="flex gap-4 pt-2 font-sans text-xs font-semibold">
+              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-4 pt-2 font-sans text-xs font-semibold">
                 <div className="flex items-center gap-2 text-slate-300">
                   <ShieldCheck className="h-4 w-4 text-cyan-400" />
                   <span>Strict permissions</span>

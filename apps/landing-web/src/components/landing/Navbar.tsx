@@ -293,7 +293,7 @@ export function Navbar() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="mx-4 mt-2 rounded-2xl glass-nav p-5 flex flex-col gap-4 md:hidden z-40 relative"
+              className="mx-4 mt-2 rounded-2xl glass-nav p-5 flex flex-col gap-4 md:hidden z-40 relative max-h-[calc(100dvh-120px)] overflow-y-auto custom-scroll"
             >
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">
                 Core Modules

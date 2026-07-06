@@ -270,7 +270,7 @@ export function Onboarding() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1">
                     <label className="text-[9px] font-extrabold uppercase text-slate-400">Industry</label>
                     <select
@@ -450,7 +450,7 @@ export function Onboarding() {
             </h4>
             
             <div className="flex flex-col gap-2.5">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[8px] font-extrabold uppercase text-slate-400">Full Name</label>
                   <input
@@ -486,7 +486,7 @@ export function Onboarding() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[8px] font-extrabold uppercase text-slate-400">Designation</label>
                   <input
@@ -509,7 +509,7 @@ export function Onboarding() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[8px] font-extrabold uppercase text-slate-400">Age</label>
                   <input

@@ -1090,7 +1090,7 @@ export function Demo() {
                   opacity: 1
                 }}
                 transition={{ duration: 2.2, ease: "easeInOut" }}
-                className="absolute z-30 pointer-events-none"
+                className="absolute z-30 pointer-events-none hidden lg:block"
                 style={{ left: "20px", top: "10px" }}
               >
                 <svg className="w-5 h-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" viewBox="0 0 24 24" fill="none">

@@ -99,6 +99,7 @@ const MouseCursor = ({ x, y, isGrabbing }: { x: number; y: number; isGrabbing: b
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     transition={{ duration: 0.2 }}
+    className="hidden lg:block"
   >
     <svg
       width="18"

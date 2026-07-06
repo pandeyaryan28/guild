@@ -188,7 +188,7 @@ export function AdminFeature() {
               <p className="text-xs text-slate-500 font-semibold leading-relaxed">
                 As a workspace administrator, easily configure global settings. Control onboarding security by generating invite links, resetting active credentials, or disabling links entirely.
               </p>
-              <div className="flex gap-4 pt-2 font-sans text-xs font-bold text-slate-700">
+              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-4 pt-2 font-sans text-xs font-bold text-slate-700">
                 <div className="flex items-center gap-1.5">
                   <Sliders className="h-4 w-4 text-indigo-500" />
                   <span>Global admin settings</span>
