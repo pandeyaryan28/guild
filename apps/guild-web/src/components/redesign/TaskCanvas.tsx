@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
+  Calendar,
   Trash2,
   SlidersHorizontal,
   Folder,
@@ -2128,104 +2129,165 @@ export function TaskCanvas() {
                 )}
 
                 {createType === 'task' && (
-                  <form onSubmit={handleCreateTaskSubmit} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Task Action</label>
-                      <input
-                        type="text"
-                        placeholder="Task Title..."
-                        value={taskForm.title}
-                        onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
-                        required
-                        className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Execution Steps</label>
-                      <textarea
-                        placeholder="Parameters to fulfill..."
-                        value={taskForm.description}
-                        onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-                        rows={4}
-                        className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-text-muted outline-none focus:border-accent/40 font-semibold resize-none"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Link to Project</label>
-                        <select
-                          value={taskForm.projectId}
-                          onChange={(e) => setTaskForm({ ...taskForm, projectId: e.target.value })}
-                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                        >
-                          <option value="" className="bg-surface text-foreground font-semibold">No Project</option>
-                          {projects.map(p => (
-                            <option key={p.id} value={p.id} className="bg-surface text-foreground font-semibold">{p.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Link to Goal</label>
-                        <select
-                          value={taskForm.goalId}
-                          onChange={(e) => setTaskForm({ ...taskForm, goalId: e.target.value })}
-                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                        >
-                          <option value="" className="bg-surface text-foreground font-semibold">No Goal</option>
-                          {goals.map(g => (
-                            <option key={g.id} value={g.id} className="bg-surface text-foreground font-semibold">{g.title}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="col-span-2">
-                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Assignee</label>
-                        <SearchableSelect
-                          value={taskForm.assigneeId}
-                          onChange={(val) => setTaskForm({ ...taskForm, assigneeId: val })}
-                          options={members.filter(m => m.uid !== actor.uid).map(m => ({
-                            value: m.uid,
-                            label: m.fullName || m.username,
-                            detail: m.designation || 'Member',
-                            photoURL: m.photoURL
-                          }))}
-                          placeholder="Select Member..."
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Priority</label>
-                        <select
-                          value={taskForm.priority}
-                          onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value as any })}
-                          className="w-full bg-surface border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
-                        >
-                          <option value="none" className="bg-surface text-foreground font-semibold">None</option>
-                          <option value="low" className="bg-surface text-foreground font-semibold">Low</option>
-                          <option value="medium" className="bg-surface text-foreground font-semibold">Medium</option>
-                          <option value="high" className="bg-surface text-foreground font-semibold">High</option>
-                          <option value="urgent" className="bg-surface text-foreground font-semibold">Urgent</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold block mb-1">Due Date</label>
+                  <form onSubmit={handleCreateTaskSubmit} className="space-y-5">
+                    {/* Title & Description Document Card */}
+                    <div className="bg-bg-primary/40 dark:bg-black/15 border border-border-default/45 rounded-2xl p-4.5 space-y-4 shadow-sm">
+                      {/* Title */}
+                      <div className="space-y-1">
                         <input
-                          type="date"
-                          value={taskForm.dueDate}
-                          onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
-                          className="w-full bg-bg-primary/50 border border-border-default rounded-xl px-3 py-2 text-xs text-foreground outline-none cursor-pointer focus:border-accent/40 font-semibold"
+                          type="text"
+                          placeholder="What needs to be done?"
+                          value={taskForm.title}
+                          onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+                          required
+                          className="w-full bg-transparent border-none text-base font-bold text-foreground placeholder:text-muted-foreground/45 outline-none focus:ring-0 p-0"
+                        />
+                      </div>
+                      
+                      {/* Description */}
+                      <div className="space-y-1 border-t border-border-default/20 pt-3">
+                        <textarea
+                          placeholder="Add description or execution steps..."
+                          value={taskForm.description}
+                          onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+                          rows={3}
+                          className="w-full bg-transparent border-none text-xs text-foreground placeholder:text-muted-foreground/45 outline-none resize-none focus:ring-0 p-0"
                         />
                       </div>
                     </div>
+
+                    {/* Metadata Settings */}
+                    <div className="space-y-4">
+                      {/* Project and Goal Selectors */}
+                      <div className="grid grid-cols-2 gap-3.5">
+                        <div>
+                          <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-extrabold block mb-1.5 flex items-center gap-1.5">
+                            <Folder className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                            <span>Link to Project</span>
+                          </label>
+                          <SearchableSelect
+                            value={taskForm.projectId}
+                            onChange={(val) => setTaskForm({ ...taskForm, projectId: val })}
+                            options={[
+                              { value: '', label: 'No Project', detail: 'Standalone Task' },
+                              ...projects.map(p => ({
+                                value: p.id,
+                                label: p.name,
+                                detail: p.description ? p.description.slice(0, 45) + (p.description.length > 45 ? '...' : '') : 'Initiative project'
+                              }))
+                            ]}
+                            placeholder="Select Project..."
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-extrabold block mb-1.5 flex items-center gap-1.5">
+                            <Target className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+                            <span>Link to Goal</span>
+                          </label>
+                          <SearchableSelect
+                            value={taskForm.goalId}
+                            onChange={(val) => setTaskForm({ ...taskForm, goalId: val })}
+                            options={[
+                              { value: '', label: 'No Goal', detail: 'No mapped goal focus' },
+                              ...goals.map(g => ({
+                                value: g.id,
+                                label: g.title,
+                                detail: g.description ? g.description.slice(0, 45) + (g.description.length > 45 ? '...' : '') : `Horizon: ${g.horizon === 'short_term' ? 'Short Term' : 'Long Term'}`
+                              }))
+                            ]}
+                            placeholder="Select Goal..."
+                          />
+                        </div>
+                      </div>
+
+                      {/* Assignee and Due Date */}
+                      <div className="grid grid-cols-2 gap-3.5">
+                        <div>
+                          <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-extrabold block mb-1.5 flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                            <span>Assignee</span>
+                          </label>
+                          <SearchableSelect
+                            value={taskForm.assigneeId}
+                            onChange={(val) => setTaskForm({ ...taskForm, assigneeId: val })}
+                            options={members.filter(m => m.uid !== actor.uid).map(m => ({
+                              value: m.uid,
+                              label: m.fullName || m.username,
+                              detail: m.designation || 'Member',
+                              photoURL: m.photoURL
+                            }))}
+                            placeholder="Select Member..."
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-extrabold block mb-1.5 flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span>Due Date</span>
+                          </label>
+                          <div className="relative w-full flex items-center bg-surface border border-border-default rounded-xl px-3.5 py-2.5 text-xs text-foreground hover:border-accent/30 focus-within:border-accent/40 font-semibold transition-all shadow-xs">
+                            <input
+                              type="date"
+                              value={taskForm.dueDate}
+                              onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
+                              className="w-full bg-transparent border-none outline-none text-xs text-foreground cursor-pointer font-semibold [color-scheme:dark]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Priority Segmented Control */}
+                      <div className="space-y-2">
+                        <label className="text-[9px] text-muted-foreground uppercase tracking-widest font-extrabold block mb-1 flex items-center gap-1.5">
+                          <SlidersHorizontal className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                          <span>Priority</span>
+                        </label>
+                        <div className="flex gap-1.5 bg-bg-secondary/40 dark:bg-black/10 p-1 rounded-xl border border-border-default/40">
+                          {(['none', 'low', 'medium', 'high', 'urgent'] as TaskPriority[]).map((p) => {
+                            const isSelected = taskForm.priority === p;
+                            const config = PRIORITY_CONFIG[p];
+                            return (
+                              <button
+                                key={p}
+                                type="button"
+                                onClick={() => setTaskForm({ ...taskForm, priority: p })}
+                                className={cn(
+                                  "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer capitalize text-center border border-transparent active:scale-95",
+                                  isSelected
+                                    ? "shadow-xs"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-bg-secondary/30 bg-transparent"
+                                )}
+                                style={
+                                  isSelected
+                                    ? {
+                                        backgroundColor: `${config.color}15`,
+                                        color: config.color,
+                                        borderColor: `${config.color}35`
+                                      }
+                                    : undefined
+                                }
+                              >
+                                {config.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
                     <button
                       type="submit"
                       disabled={isSubmitting || !taskForm.title.trim()}
-                      className="w-full py-3 bg-accent text-white font-bold rounded-xl text-xs active:scale-98 transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer shadow-lg mt-6"
+                      className="w-full py-3.5 bg-accent hover:opacity-95 text-white font-extrabold rounded-2xl text-xs active:scale-98 hover:scale-[1.01] transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer shadow-lg mt-6 shadow-accent/15"
                       style={{ background: 'var(--accent)' }}
                     >
-                      {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Assign Task'}
+                      {isSubmitting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4" />
+                          <span>Assign Task</span>
+                        </>
+                      )}
                     </button>
                   </form>
                 )}
