@@ -100,7 +100,6 @@ export async function toggleReaction(
           uid: userId,
           name: reactorName,
         },
-        approved: true,
       });
 
       // 7. Track task link on the message

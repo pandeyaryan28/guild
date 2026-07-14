@@ -18,6 +18,64 @@ const TASK_STATUS_CONFIG: Record<string, { label: string; border: string; bg: st
   done: { label: 'Done', border: 'border-emerald-500/20', bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
 };
 
+interface MessageTaskCardProps {
+  taskId: string;
+  creatorName: string;
+  assigneeName: string;
+  setSearchParams: any;
+}
+
+const MessageTaskCard = ({ taskId, creatorName, assigneeName, setSearchParams }: MessageTaskCardProps) => {
+  const [task, setTask] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'tasks', taskId), (snap) => {
+      if (snap.exists()) {
+        setTask(snap.data());
+      }
+    });
+    return () => unsub();
+  }, [taskId]);
+
+  if (!task) return null;
+
+  const statusKey = task.status || 'todo';
+  const statusConfig = TASK_STATUS_CONFIG[statusKey] || TASK_STATUS_CONFIG.todo;
+
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        setSearchParams({ task: taskId });
+      }}
+      className="mt-2 w-full max-w-sm rounded-2xl border border-border-default/80 bg-surface-elevated/45 backdrop-blur-md p-4 pl-6 relative overflow-hidden shadow-md shadow-black/5 transition-all text-left cursor-pointer hover:bg-surface-elevated/70 hover:border-primary/30 hover:shadow-lg hover:scale-[1.01]"
+    >
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-2xl" />
+      <div className="flex items-center justify-between gap-4 mb-3">
+        <div className="flex items-center gap-2 text-primary">
+          <CheckSquare className="h-4.5 w-4.5 shrink-0" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-primary/95">Task</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] text-text-muted">Assigned to {assigneeName}</span>
+          <span className={cn(
+            "rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-wider",
+            statusConfig.border,
+            statusConfig.bg,
+            statusConfig.text
+          )}>
+            {statusConfig.label}
+          </span>
+        </div>
+      </div>
+
+      <div className="text-xs font-semibold text-foreground leading-relaxed">
+        {task.title}
+      </div>
+    </div>
+  );
+};
+
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
@@ -453,13 +511,37 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
       );
     }
 
+    const taskReactions = (message as any).taskReactions || {};
+    const taskReactionEntries = Object.entries(taskReactions);
+
     return (
-      <p className={cn('text-sm leading-relaxed', message.deleted && 'italic text-text-muted')}>
-        {parseMentions(message.body, isOwn)}
-        {message.editedAt && !message.deleted && (
-          <span className="ml-1.5 text-[10px] text-text-muted">(edited)</span>
-        )}
-      </p>
+      <div className="flex flex-col gap-1">
+        <p className={cn('text-sm leading-relaxed', message.deleted && 'italic text-text-muted')}>
+          {parseMentions(message.body, isOwn)}
+          {message.editedAt && !message.deleted && (
+            <span className="ml-1.5 text-[10px] text-text-muted">(edited)</span>
+          )}
+        </p>
+        {!message.deleted && taskReactionEntries.map(([reactorId, taskId]) => {
+          const reactor = members.find(m => m.uid === reactorId);
+          const reactorName = reactor?.fullName || 'Someone';
+
+          const parts = (message as any).dmId ? (message as any).dmId.split('_') : [];
+          const otherId = parts.find((p: string) => p !== reactorId);
+          const assignee = members.find(m => m.uid === otherId);
+          const assigneeName = assignee?.fullName || 'Someone';
+
+          return (
+            <MessageTaskCard
+              key={taskId as string}
+              taskId={taskId as string}
+              creatorName={reactorName}
+              assigneeName={assigneeName}
+              setSearchParams={setSearchParams}
+            />
+          );
+        })}
+      </div>
     );
   };
 
