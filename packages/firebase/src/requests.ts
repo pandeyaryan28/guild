@@ -1,5 +1,5 @@
 import {
-  collection, doc, updateDoc, serverTimestamp
+  collection, doc, updateDoc, deleteDoc, getDoc, serverTimestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notifications';
@@ -21,8 +21,12 @@ export async function updateRequestStatus(
   requestTitle: string,
   approverNote?: string | null,
 ): Promise<void> {
+  const reqRef = doc(db, 'requests', requestId);
+  const reqSnap = await getDoc(reqRef);
+  const reqData = reqSnap.exists() ? reqSnap.data() : null;
+
   // Update the request document in Firestore
-  await updateDoc(doc(db, 'requests', requestId), {
+  await updateDoc(reqRef, {
     status,
     approverId,
     approverName,
@@ -30,6 +34,19 @@ export async function updateRequestStatus(
     approverNote: approverNote ?? null,
     updatedAt: serverTimestamp(),
   });
+
+  // If there is an associated taskId, approve or delete the task
+  if (reqData && reqData.taskId) {
+    const taskRef = doc(db, 'tasks', reqData.taskId);
+    if (status === 'approved') {
+      await updateDoc(taskRef, {
+        approved: true,
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      await deleteDoc(taskRef);
+    }
+  }
 
   // Dispatch the status update notification to the creator
   await createNotification({

@@ -144,6 +144,63 @@ export async function createTask(params: {
   if (params.goalId) {
     await syncGoalProgress(params.goalId);
   }
+
+  // Create associated approval request if task requires approval
+  if (approved === false) {
+    try {
+      const creatorDoc = await getDoc(doc(db, 'users', params.actor.uid));
+      const creatorProfile = creatorDoc.exists() ? creatorDoc.data() : null;
+      const managerId = creatorProfile?.managerId || null;
+      let approverId = managerId;
+
+      if (!approverId) {
+        const orgDoc = await getDoc(doc(db, 'organizations', params.orgId));
+        const orgData = orgDoc.exists() ? orgDoc.data() : null;
+        approverId = orgData?.ownerId || null;
+      }
+
+      if (approverId) {
+        const approverSnap = await getDoc(doc(db, 'users', approverId));
+        const approverData = approverSnap.exists() ? approverSnap.data() : null;
+        const approverName = approverData?.fullName || approverData?.name || 'Manager';
+        const approverUsername = approverData?.username || 'manager';
+
+        const requestRef = doc(collection(db, 'requests'));
+        await setDoc(requestRef, {
+          id: requestRef.id,
+          orgId: params.orgId,
+          creatorId: params.actor.uid,
+          creatorName: params.actor.name,
+          creatorUsername: creatorProfile?.username || 'member',
+          approverId,
+          approverName,
+          approverUsername,
+          type: 'other',
+          title: `Approve Task: "${params.title}"`,
+          description: params.description || `Approval request to create task: "${params.title}"`,
+          status: 'pending',
+          taskId: ref.id,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+
+        await createNotification({
+          orgId: params.orgId,
+          recipientId: approverId,
+          category: 'requests',
+          type: 'request_pending',
+          urgency: 'medium',
+          actor: { id: params.actor.uid, name: params.actor.name },
+          title: 'New Approval Request',
+          body: `${params.actor.name} submitted: "Approve Task: ${params.title}"`,
+          link: '/requests',
+        });
+      }
+    } catch (e) {
+      console.error('Failed to create associated approval request:', e);
+    }
+  }
+
   return ref.id;
 }
 
@@ -154,6 +211,24 @@ export async function updateTask(
 ): Promise<void> {
   await updateDoc(doc(db, 'tasks', taskId), { ...patch, updatedAt: serverTimestamp() });
   await logActivity(taskId, orgId, actor, 'edited', patch);
+
+  // Synchronize approval status to associated requests collection
+  if (patch.approved === true) {
+    try {
+      const q = query(collection(db, 'requests'), where('taskId', '==', taskId));
+      const snap = await getDocs(q);
+      for (const d of snap.docs) {
+        await updateDoc(doc(db, 'requests', d.id), {
+          status: 'approved',
+          approverId: actor.uid,
+          approverName: actor.name,
+          updatedAt: serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      console.error('Failed to sync task approval to requests:', e);
+    }
+  }
 }
 
 export async function moveTask(
@@ -263,6 +338,20 @@ export async function deleteTask(taskId: string): Promise<void> {
 
   if (taskData?.goalId) {
     await syncGoalProgress(taskData.goalId);
+  }
+
+  // Synchronize deletion (rejection) to associated requests collection
+  try {
+    const q = query(collection(db, 'requests'), where('taskId', '==', taskId));
+    const snap = await getDocs(q);
+    for (const d of snap.docs) {
+      await updateDoc(doc(db, 'requests', d.id), {
+        status: 'rejected',
+        updatedAt: serverTimestamp(),
+      });
+    }
+  } catch (e) {
+    console.error('Failed to sync task deletion to requests:', e);
   }
 }
 
