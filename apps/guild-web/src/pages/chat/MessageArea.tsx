@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen, FileText } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useChannels } from '../../hooks/useChat';
@@ -467,38 +467,66 @@ export function MessageArea({
           <h1 className="text-sm font-bold text-foreground flex items-center gap-1">{headerTitle}</h1>
           {headerSub && <p className="text-[11px] text-text-muted truncate">{headerSub}</p>}
         </div>
-        {channelId && channel && (
-          <div className="ml-auto flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-text-muted">
-              <Users className="h-3.5 w-3.5" />
-              <span className="text-[11px]">{channel.memberCount}</span>
-            </div>
-
-            {/* Invite Button */}
+        {/* Right Header Actions */}
+        <div className="ml-auto flex items-center gap-2">
+          {/* Canvas Toggle Button (Visible if either channelId or dmId is open) */}
+          {(channelId || dmId) && (
             <button
-              onClick={() => setShowInviteModal(true)}
-              title="Add members"
-              className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors shrink-0"
+              onClick={() => {
+                const newParams = new URLSearchParams(searchParams);
+                const isCanvasOpen = newParams.get('canvas') === 'true';
+                if (isCanvasOpen) {
+                  newParams.delete('canvas');
+                } else {
+                  newParams.set('canvas', 'true');
+                }
+                setSearchParams(newParams);
+              }}
+              title="Show Canvas"
+              className={cn(
+                "flex h-8 w-8 items-center justify-center rounded-xl transition-colors shrink-0 cursor-pointer border",
+                searchParams.get('canvas') === 'true'
+                  ? "bg-primary/10 border-primary/20 text-primary hover:bg-primary/15"
+                  : "border-transparent text-muted-foreground hover:bg-bg-tertiary hover:text-foreground"
+              )}
             >
-              <UserPlus className="h-4 w-4" />
+              <FileText className="h-4 w-4" />
             </button>
+          )}
 
-            {/* Settings Gear Button */}
-            {isChannelAdmin && (
+          {channelId && channel && (
+            <>
+              <div className="flex items-center gap-1.5 text-text-muted ml-1">
+                <Users className="h-3.5 w-3.5" />
+                <span className="text-[11px]">{channel.memberCount}</span>
+              </div>
+
+              {/* Invite Button */}
               <button
-                onClick={() => {
-                  const newParams = new URLSearchParams(searchParams);
-                  newParams.set('settings', 'true');
-                  setSearchParams(newParams);
-                }}
-                title="Channel settings"
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors shrink-0"
+                onClick={() => setShowInviteModal(true)}
+                title="Add members"
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors shrink-0 cursor-pointer"
               >
-                <Settings className="h-4 w-4" />
+                <UserPlus className="h-4 w-4" />
               </button>
-            )}
-          </div>
-        )}
+
+              {/* Settings Gear Button */}
+              {isChannelAdmin && (
+                <button
+                  onClick={() => {
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.set('settings', 'true');
+                    setSearchParams(newParams);
+                  }}
+                  title="Channel settings"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors shrink-0 cursor-pointer"
+                >
+                  <Settings className="h-4 w-4" />
+                </button>
+              )}
+            </>
+          )}
+        </div>
 
 
       </div>

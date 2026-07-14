@@ -21,6 +21,7 @@ import { useSearchParams } from 'react-router-dom';
 import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
 import { GoalDetailDrawer } from '../../components/tasks/GoalDetailDrawer';
 import { RequestDetailDrawer } from '../../components/tasks/RequestDetailDrawer';
+import { CanvasPanel } from '../../components/chat/CanvasPanel';
 import { useSingleTask, useTasks } from '../../hooks/useTasks';
 import { useGoal, useGoals } from '../../hooks/useGoals';
 import { useRequest } from '../../hooks/useRequests';
@@ -264,6 +265,7 @@ export function ChatLayout() {
   const openGoalId = searchParams.get('goal');
   const openRequestId = searchParams.get('request');
   const openSettings = searchParams.get('settings') === 'true';
+  const openCanvas = searchParams.get('canvas') === 'true';
 
   const openTask = useSingleTask(openTaskId);
   const { goal: openGoal } = useGoal(openGoalId ?? undefined);
@@ -402,6 +404,13 @@ export function ChatLayout() {
                   onClose={() => handleClosePanel('settings')}
                   onUpdated={() => {}}
                   inline={true}
+                />
+              )}
+
+              {openCanvas && (channelId || dmId) && (
+                <CanvasPanel
+                  chatId={channelId || dmId || ''}
+                  onClose={() => handleClosePanel('canvas')}
                 />
               )}
             </>

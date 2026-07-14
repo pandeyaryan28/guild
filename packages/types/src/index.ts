@@ -361,6 +361,20 @@ export interface DirectMessageThread {
   lastSenderId: string;
 }
 
+export interface Canvas {
+  id: string;
+  orgId: string;
+  chatId: string; // channelId or dmId
+  title: string;
+  content: string;
+  createdAt: Timestamp;
+  createdBy: string;
+  updatedAt: Timestamp;
+  updatedBy: string;
+  updatedByName: string;
+}
+
+
 // ─── Search ───────────────────────────────────────────────────────────────────
 
 export type SearchResultType = 'task' | 'channel' | 'person' | 'message';

@@ -17,5 +17,7 @@ export * from './teams';
 export * from './reports';
 export * from './replies';
 export * from './requests';
+export * from './canvases';
+
 
 
