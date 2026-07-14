@@ -361,6 +361,7 @@ export function MessageArea({
             uid: currentUser.uid,
             name: base.senderName,
           },
+          approved: true,
         });
 
         // Send the original message body as typed

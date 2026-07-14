@@ -94,6 +94,7 @@ export async function createTask(params: {
   status?: TaskStatus; priority?: TaskPriority;
   assigneeIds?: string[]; labelIds?: string[];
   dueDate?: Date | null; actor: ActorInfo;
+  approved?: boolean;
   // Execution OS — optional scope fields
   projectId?: string | null;
   goalId?: string | null;
@@ -103,20 +104,23 @@ export async function createTask(params: {
   const status = params.status ?? 'todo';
   const orderIndex = await getNextOrderIndex(params.orgId, status);
 
-  let approved = true;
-  if (!params.parentTaskId) {
-    const creatorDoc = await getDoc(doc(db, 'users', params.actor.uid));
-    const creatorProfile = creatorDoc.exists() ? creatorDoc.data() : null;
-    const managerId = creatorProfile?.managerId || null;
+  let approved = params.approved;
+  if (approved === undefined) {
+    approved = true;
+    if (!params.parentTaskId) {
+      const creatorDoc = await getDoc(doc(db, 'users', params.actor.uid));
+      const creatorProfile = creatorDoc.exists() ? creatorDoc.data() : null;
+      const managerId = creatorProfile?.managerId || null;
 
-    if (managerId) {
-      approved = false;
-    } else {
-      const orgDoc = await getDoc(doc(db, 'organizations', params.orgId));
-      const orgData = orgDoc.exists() ? orgDoc.data() : null;
-      const ownerId = orgData?.ownerId || null;
-      if (params.actor.uid !== ownerId) {
+      if (managerId) {
         approved = false;
+      } else {
+        const orgDoc = await getDoc(doc(db, 'organizations', params.orgId));
+        const orgData = orgDoc.exists() ? orgDoc.data() : null;
+        const ownerId = orgData?.ownerId || null;
+        if (params.actor.uid !== ownerId) {
+          approved = false;
+        }
       }
     }
   }
