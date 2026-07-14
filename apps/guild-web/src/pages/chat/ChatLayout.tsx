@@ -317,6 +317,14 @@ export function ChatLayout() {
     }
   }, [channelId, dmId, hasContent]);
 
+  // Automatically collapse left directory sidebar when Canvas is opened
+  React.useEffect(() => {
+    if (openCanvas) {
+      setIsSidebarCollapsed(true);
+    }
+  }, [openCanvas]);
+
+
   return (
     <RedesignLayout>
       <div className={cn(

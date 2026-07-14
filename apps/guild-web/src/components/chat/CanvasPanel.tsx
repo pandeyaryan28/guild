@@ -87,7 +87,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
   const { received, sent } = useRequests(orgId);
   const allRequests = React.useMemo(() => [...received, ...sent], [received, sent]);
 
-  const [showWorkspaceSidebar, setShowWorkspaceSidebar] = React.useState(true);
+  const [showWorkspaceSidebar, setShowWorkspaceSidebar] = React.useState(false);
   const [sidebarTab, setSidebarTab] = React.useState<'tasks' | 'goals' | 'requests'>('tasks');
   const [focusedBlockIndex, setFocusedBlockIndex] = React.useState<number | null>(null);
 
@@ -580,7 +580,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
 
   if (canvasLoading) {
     return (
-      <div className="w-[450px] border-l border-white/5 bg-surface/95 dark:bg-surface/90 backdrop-blur-xl flex flex-col items-center justify-center shrink-0 h-full z-45">
+      <div className="h-full border-l border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/70 backdrop-blur-3xl flex flex-col items-center justify-center z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[500px] lg:relative lg:w-[480px] xl:w-[600px] 2xl:w-[700px] shadow-2xl lg:shadow-none shrink-0">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
         <span className="text-xs text-muted-foreground mt-3 font-semibold tracking-wider">LOADING CANVAS...</span>
       </div>
@@ -590,7 +590,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
   const isCanvasEmpty = !localContent || localContent.trim() === '';
 
   return (
-    <div className="w-[480px] md:w-[650px] border-l border-white/5 bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl flex shrink-0 h-full z-40 relative">
+    <div className="h-full border-l border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/70 backdrop-blur-3xl flex z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[500px] lg:relative lg:w-[480px] xl:w-[600px] 2xl:w-[700px] shadow-2xl lg:shadow-none shrink-0">
       
       {/* Main Canvas Document Editor */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
