@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
   X, Check, Plus, Loader2, Sparkles, AlertCircle, Play, 
-  HelpCircle, ChevronRight, ListTodo, FileText, Layout,
+  HelpCircle, ChevronRight, ChevronLeft, ListTodo, FileText, Layout,
   Layers, Users, Star, Settings, CheckSquare, ClipboardList,
   Target, Send, PlusCircle, ArrowRight, BookOpen, Calendar,
   CheckCircle2, Flame, UserPlus, Info, AlertTriangle, ListChecks,
@@ -87,7 +87,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
   const { received, sent } = useRequests(orgId);
   const allRequests = React.useMemo(() => [...received, ...sent], [received, sent]);
 
-  const [showWorkspaceSidebar, setShowWorkspaceSidebar] = React.useState(false);
+  const [viewMode, setViewMode] = React.useState<'document' | 'workspace'>('document');
   const [sidebarTab, setSidebarTab] = React.useState<'tasks' | 'goals' | 'requests'>('tasks');
   const [focusedBlockIndex, setFocusedBlockIndex] = React.useState<number | null>(null);
 
@@ -592,151 +592,166 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
   return (
     <div className="h-full border-l border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/70 backdrop-blur-3xl flex z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[500px] lg:relative lg:w-[480px] xl:w-[600px] 2xl:w-[700px] shadow-2xl lg:shadow-none shrink-0">
       
-      {/* Main Canvas Document Editor */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        
-        {/* Canvas Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-3">
-            <div className="h-7 w-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-primary">
-              <FileText className="h-4 w-4" />
-            </div>
-            <input
-              type="text"
-              value={localTitle}
-              onChange={(e) => updateCanvas(localContent, e.target.value)}
-              placeholder="Untitled Canvas"
-              className="text-sm font-bold text-foreground bg-transparent border-none outline-none focus:ring-0 p-0 truncate flex-1"
-            />
-          </div>
+      {viewMode === 'document' ? (
+        /* Main Canvas Document Editor */
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
           
-          <div className="flex items-center gap-2">
-            {isSaving && (
-              <span className="text-[10px] text-primary/70 font-semibold uppercase tracking-wider animate-pulse flex items-center gap-1.5 mr-2">
-                <Loader2 className="h-3 w-3 animate-spin" /> Saving
-              </span>
-            )}
-            
-            <button
-              onClick={() => setShowWorkspaceSidebar(!showWorkspaceSidebar)}
-              className={cn(
-                "h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors border",
-                showWorkspaceSidebar 
-                  ? "bg-primary/10 border-primary/20 text-primary hover:bg-primary/15" 
-                  : "border-white/5 text-muted-foreground hover:bg-white/5 hover:text-foreground"
-              )}
-              title="Toggle Workspace Items"
-            >
-              <Layout className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Workspace</span>
-            </button>
-
-            <button
-              onClick={onClose}
-              className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer transition-colors"
-            >
-              <X className="h-4.5 w-4.5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Canvas Body Pane */}
-        <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-3.5">
-          {isCanvasEmpty ? (
-            <div className="space-y-6 py-6 animate-fluid-pop">
-              <div className="text-center">
-                <h3 className="text-sm font-black tracking-wide text-foreground uppercase">Choose a Canvas Template</h3>
-                <p className="text-[11px] text-muted-foreground mt-1">Get started quickly with standard document outlines</p>
+          {/* Canvas Header */}
+          <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-3">
+              <div className="h-7 w-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-primary">
+                <FileText className="h-4 w-4" />
               </div>
-              <div className="grid grid-cols-1 gap-3.5">
-                {TEMPLATES.map((tmpl, idx) => {
-                  const Icon = tmpl.icon;
+              <input
+                type="text"
+                value={localTitle}
+                onChange={(e) => updateCanvas(localContent, e.target.value)}
+                placeholder="Untitled Canvas"
+                className="text-sm font-bold text-foreground bg-transparent border-none outline-none focus:ring-0 p-0 truncate flex-1"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {isSaving && (
+                <span className="text-[10px] text-primary/70 font-semibold uppercase tracking-wider animate-pulse flex items-center gap-1.5 mr-2">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Saving
+                </span>
+              )}
+              
+              <button
+                onClick={() => setViewMode('workspace')}
+                className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-xs font-semibold cursor-pointer border border-white/5 text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors"
+                title="Open Workspace Items"
+              >
+                <Layout className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Workspace</span>
+              </button>
+
+              <button
+                onClick={onClose}
+                className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer transition-colors"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Canvas Body Pane */}
+          <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-3.5">
+            {isCanvasEmpty ? (
+              <div className="space-y-6 py-6 animate-fluid-pop">
+                <div className="text-center">
+                  <h3 className="text-sm font-black tracking-wide text-foreground uppercase">Choose a Canvas Template</h3>
+                  <p className="text-[11px] text-muted-foreground mt-1">Get started quickly with standard document outlines</p>
+                </div>
+                <div className="grid grid-cols-1 gap-3.5">
+                  {TEMPLATES.map((tmpl, idx) => {
+                    const Icon = tmpl.icon;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleApplyTemplate(tmpl.content)}
+                        className="w-full text-left aether-glass p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/5 hover:border-primary/20 transition-all flex items-start gap-4 group cursor-pointer"
+                      >
+                        <div className="h-9 w-9 rounded-xl bg-indigo-500/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-bold text-foreground leading-snug">{tmpl.name}</h4>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{tmpl.description}</p>
+                        </div>
+                        <div className="h-6 w-6 rounded-lg bg-white/5 flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors mt-1">
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 select-text font-sans">
+                {blocks.map((block, idx) => {
+                  const isFocused = focusedBlockIndex === idx;
+                  
                   return (
-                    <button
+                    <div
                       key={idx}
-                      onClick={() => handleApplyTemplate(tmpl.content)}
-                      className="w-full text-left aether-glass p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/5 hover:border-primary/20 transition-all flex items-start gap-4 group cursor-pointer"
+                      onClick={() => {
+                        if (!isFocused) {
+                          setFocusedBlockIndex(idx);
+                          // Delay to let React render textarea
+                          setTimeout(() => blockRefs.current[idx]?.focus(), 20);
+                        }
+                      }}
+                      className={cn(
+                        "rounded-lg px-2 py-1.5 transition-all group relative border border-transparent",
+                        isFocused 
+                          ? "bg-white/5 border-primary/20 shadow-inner" 
+                          : "hover:bg-white/[0.01] hover:border-white/5"
+                      )}
                     >
-                      <div className="h-9 w-9 rounded-xl bg-indigo-500/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-bold text-foreground leading-snug">{tmpl.name}</h4>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">{tmpl.description}</p>
-                      </div>
-                      <div className="h-6 w-6 rounded-lg bg-white/5 flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors mt-1">
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </div>
-                    </button>
+                      {isFocused ? (
+                        <textarea
+                          ref={(el) => { blockRefs.current[idx] = el; }}
+                          value={block.content}
+                          onChange={(e) => handleBlockChange(block, e.target.value)}
+                          onBlur={() => {
+                            // Allow cursor clicks on sidebar items to not immediately blur
+                            setTimeout(() => setFocusedBlockIndex(null), 150);
+                          }}
+                          onKeyDown={(e) => handleBlockKeyDown(idx, block, e)}
+                          className="w-full bg-transparent resize-none border-none outline-none font-mono text-[11px] leading-relaxed focus:ring-0 p-0 text-indigo-200"
+                          rows={Math.max(1, block.content.split('\n').length)}
+                          placeholder="Type markdown..."
+                        />
+                      ) : (
+                        renderBlockContent(block)
+                      )}
+                      
+                      {/* Tiny Edit Tip Overlay */}
+                      {!isFocused && (
+                        <span className="absolute right-2.5 top-1.5 text-[8px] font-bold text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity select-none uppercase tracking-wider">
+                          Click to edit
+                        </span>
+                      )}
+                    </div>
                   );
                 })}
               </div>
-            </div>
-          ) : (
-            <div className="space-y-2 select-text font-sans">
-              {blocks.map((block, idx) => {
-                const isFocused = focusedBlockIndex === idx;
-                
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => {
-                      if (!isFocused) {
-                        setFocusedBlockIndex(idx);
-                        // Delay to let React render textarea
-                        setTimeout(() => blockRefs.current[idx]?.focus(), 20);
-                      }
-                    }}
-                    className={cn(
-                      "rounded-lg px-2 py-1.5 transition-all group relative border border-transparent",
-                      isFocused 
-                        ? "bg-white/5 border-primary/20 shadow-inner" 
-                        : "hover:bg-white/[0.01] hover:border-white/5"
-                    )}
-                  >
-                    {isFocused ? (
-                      <textarea
-                        ref={(el) => { blockRefs.current[idx] = el; }}
-                        value={block.content}
-                        onChange={(e) => handleBlockChange(block, e.target.value)}
-                        onBlur={() => {
-                          // Allow cursor clicks on sidebar items to not immediately blur
-                          setTimeout(() => setFocusedBlockIndex(null), 150);
-                        }}
-                        onKeyDown={(e) => handleBlockKeyDown(idx, block, e)}
-                        className="w-full bg-transparent resize-none border-none outline-none font-mono text-[11px] leading-relaxed focus:ring-0 p-0 text-indigo-200"
-                        rows={Math.max(1, block.content.split('\n').length)}
-                        placeholder="Type markdown..."
-                      />
-                    ) : (
-                      renderBlockContent(block)
-                    )}
-                    
-                    {/* Tiny Edit Tip Overlay */}
-                    {!isFocused && (
-                      <span className="absolute right-2.5 top-1.5 text-[8px] font-bold text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity select-none uppercase tracking-wider">
-                        Click to edit
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Workspace Active Items Panel (Right Sidebar) */}
-      {showWorkspaceSidebar && (
-        <div className="w-[200px] border-l border-white/5 bg-surface/98 flex flex-col h-full shrink-0 overflow-hidden animate-slide-in">
+      ) : (
+        /* Workspace Active Items Panel (Replaces Document Editor) */
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
           
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 shrink-0 bg-white/2">
+            <button
+              onClick={() => setViewMode('document')}
+              className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-xs font-bold text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer transition-colors border border-white/5"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>Back to Canvas</span>
+            </button>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onClose}
+                className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground cursor-pointer transition-colors"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+          </div>
+
           {/* Tabs */}
           <div className="flex border-b border-white/5 p-1.5 bg-white/2 shrink-0">
             {(['tasks', 'goals', 'requests'] as const).map((tab) => {
               const config = {
-                tasks: { label: 'Tasks', icon: ListTodo },
-                goals: { label: 'Goals', icon: Target },
-                requests: { label: 'Requests', icon: ClipboardList }
+                tasks: { label: 'Active Tasks', icon: ListTodo },
+                goals: { label: 'Workspace Goals', icon: Target },
+                requests: { label: 'Approval Requests', icon: ClipboardList }
               }[tab];
               
               const Icon = config.icon;
@@ -747,9 +762,9 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
                   key={tab}
                   onClick={() => setSidebarTab(tab)}
                   className={cn(
-                    "flex-1 flex flex-col items-center justify-center py-2 rounded-lg text-[9px] font-extrabold uppercase tracking-wider gap-1 cursor-pointer transition-colors border",
+                    "flex-1 flex items-center justify-center py-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-widest gap-2 cursor-pointer transition-colors border",
                     isActive 
-                      ? "bg-primary border-primary/20 text-white shadow-md shadow-primary/15" 
+                      ? "bg-primary border-primary/20 text-white shadow-lg shadow-primary/15" 
                       : "border-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
                   )}
                 >
@@ -761,34 +776,40 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
           </div>
 
           {/* List Area */}
-          <div className="flex-1 overflow-y-auto aether-scroll p-3 space-y-2.5">
+          <div className="flex-1 overflow-y-auto aether-scroll p-5 space-y-3">
             
             {/* TASKS TAB */}
             {sidebarTab === 'tasks' && (
               <>
                 {tasks.length === 0 ? (
-                  <p className="text-[10px] text-muted-foreground/60 italic text-center pt-8">No active tasks</p>
+                  <p className="text-xs text-muted-foreground/60 italic text-center pt-12">No active tasks found in this organization.</p>
                 ) : (
                   tasks.map((task) => (
-                    <div key={task.id} className="aether-glass p-2.5 rounded-lg border border-white/5 bg-white/[0.01] hover:bg-white/2 hover:border-white/10 transition-all flex flex-col gap-1.5 group">
-                      <span className="text-[10px] font-bold text-foreground/90 truncate leading-snug">{task.title}</span>
-                      <div className="flex items-center justify-between">
-                        <span className={cn(
-                          "text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border",
-                          task.status === 'done' ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400" :
-                          task.status === 'in_progress' ? "bg-blue-500/10 border-blue-500/25 text-blue-400" :
-                          task.status === 'review' ? "bg-amber-500/10 border-amber-500/25 text-amber-400" :
-                          "bg-zinc-500/10 border-white/5 text-zinc-400"
-                        )}>
-                          {task.status.replace('_', ' ')}
-                        </span>
-                        <button
-                          onClick={() => handleInsertItem('Task', task.title, task.id)}
-                          className="text-[8px] font-black uppercase text-primary hover:text-primary-foreground hover:bg-primary/20 px-1.5 py-0.5 rounded border border-primary/20 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        >
-                          Insert Card
-                        </button>
+                    <div key={task.id} className="aether-glass p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/2 hover:border-white/10 transition-all flex items-center justify-between gap-4 group">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-bold text-foreground/95 block truncate leading-snug">{task.title}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={cn(
+                            "text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border",
+                            task.status === 'done' ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400" :
+                            task.status === 'in_progress' ? "bg-blue-500/10 border-blue-500/25 text-blue-400" :
+                            task.status === 'review' ? "bg-amber-500/10 border-amber-500/25 text-amber-400" :
+                            "bg-zinc-500/10 border-white/5 text-zinc-400"
+                          )}>
+                            {task.status.replace('_', ' ')}
+                          </span>
+                          <span className="text-[8px] text-muted-foreground uppercase font-black tracking-wider">{task.priority} priority</span>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => {
+                          handleInsertItem('Task', task.title, task.id);
+                          setViewMode('document');
+                        }}
+                        className="text-[10px] font-black uppercase text-primary hover:text-primary-foreground hover:bg-primary/20 px-2.5 py-1 rounded-lg border border-primary/20 transition-all cursor-pointer shadow-sm"
+                      >
+                        Insert Card
+                      </button>
                     </div>
                   ))
                 )}
@@ -799,22 +820,28 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
             {sidebarTab === 'goals' && (
               <>
                 {goals.length === 0 ? (
-                  <p className="text-[10px] text-muted-foreground/60 italic text-center pt-8">No active goals</p>
+                  <p className="text-xs text-muted-foreground/60 italic text-center pt-12">No active goals found in this organization.</p>
                 ) : (
                   goals.map((goal) => (
-                    <div key={goal.id} className="aether-glass p-2.5 rounded-lg border border-white/5 bg-white/[0.01] hover:bg-white/2 hover:border-white/10 transition-all flex flex-col gap-1.5 group">
-                      <span className="text-[10px] font-bold text-foreground/90 truncate leading-snug">{goal.title}</span>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[8px] text-muted-foreground uppercase font-black tracking-wider">
-                          {goal.horizon.replace('_', ' ')}
-                        </span>
-                        <button
-                          onClick={() => handleInsertItem('Goal', goal.title, goal.id)}
-                          className="text-[8px] font-black uppercase text-primary hover:text-primary-foreground hover:bg-primary/20 px-1.5 py-0.5 rounded border border-primary/20 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        >
-                          Insert Card
-                        </button>
+                    <div key={goal.id} className="aether-glass p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/2 hover:border-white/10 transition-all flex items-center justify-between gap-4 group">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-bold text-foreground/95 block truncate leading-snug">{goal.title}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[8px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-black uppercase">Goal</span>
+                          <span className="text-[8px] text-muted-foreground uppercase font-black tracking-wider">
+                            {goal.horizon.replace('_', ' ')}
+                          </span>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => {
+                          handleInsertItem('Goal', goal.title, goal.id);
+                          setViewMode('document');
+                        }}
+                        className="text-[10px] font-black uppercase text-primary hover:text-primary-foreground hover:bg-primary/20 px-2.5 py-1 rounded-lg border border-primary/20 transition-all cursor-pointer shadow-sm"
+                      >
+                        Insert Card
+                      </button>
                     </div>
                   ))
                 )}
@@ -825,27 +852,33 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
             {sidebarTab === 'requests' && (
               <>
                 {allRequests.length === 0 ? (
-                  <p className="text-[10px] text-muted-foreground/60 italic text-center pt-8">No active requests</p>
+                  <p className="text-xs text-muted-foreground/60 italic text-center pt-12">No active requests found in this organization.</p>
                 ) : (
                   allRequests.map((req) => (
-                    <div key={req.id} className="aether-glass p-2.5 rounded-lg border border-white/5 bg-white/[0.01] hover:bg-white/2 hover:border-white/10 transition-all flex flex-col gap-1.5 group">
-                      <span className="text-[10px] font-bold text-foreground/90 truncate leading-snug">{req.title}</span>
-                      <div className="flex items-center justify-between">
-                        <span className={cn(
-                          "text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border",
-                          req.status === 'approved' ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400" :
-                          req.status === 'rejected' ? "bg-red-500/10 border-red-500/25 text-red-400" :
-                          "bg-amber-500/10 border-amber-500/25 text-amber-400"
-                        )}>
-                          {req.status}
-                        </span>
-                        <button
-                          onClick={() => handleInsertItem('Request', req.title, req.id)}
-                          className="text-[8px] font-black uppercase text-primary hover:text-primary-foreground hover:bg-primary/20 px-1.5 py-0.5 rounded border border-primary/20 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        >
-                          Insert Card
-                        </button>
+                    <div key={req.id} className="aether-glass p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/2 hover:border-white/10 transition-all flex items-center justify-between gap-4 group">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-bold text-foreground/95 block truncate leading-snug">{req.title}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={cn(
+                            "text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border",
+                            req.status === 'approved' ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400" :
+                            req.status === 'rejected' ? "bg-red-500/10 border-red-500/25 text-red-400" :
+                            "bg-amber-500/10 border-amber-500/25 text-amber-400"
+                          )}>
+                            {req.status}
+                          </span>
+                          <span className="text-[8px] text-muted-foreground uppercase font-black tracking-wider">Submitted by {req.creatorName}</span>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => {
+                          handleInsertItem('Request', req.title, req.id);
+                          setViewMode('document');
+                        }}
+                        className="text-[10px] font-black uppercase text-primary hover:text-primary-foreground hover:bg-primary/20 px-2.5 py-1 rounded-lg border border-primary/20 transition-all cursor-pointer shadow-sm"
+                      >
+                        Insert Card
+                      </button>
                     </div>
                   ))
                 )}
