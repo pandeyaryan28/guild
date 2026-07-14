@@ -609,9 +609,15 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               key={emoji}
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                if (currentUser) toggleReaction(message.id, emoji, currentUser.uid);
+                if (currentUser) {
+                  try {
+                    await toggleReaction(message.id, emoji, currentUser.uid);
+                  } catch (err: any) {
+                    alert(err.message || 'Failed to toggle reaction.');
+                  }
+                }
               }}
               title={`Reacted by: ${reactorNames}`}
               className={cn(
@@ -903,14 +909,20 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                     "absolute bottom-full mb-2 bg-surface/95 dark:bg-surface/90 backdrop-blur-md border border-border-default/80 rounded-2xl shadow-xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100",
                     isOwn ? "right-0" : "left-0"
                   )}>
-                    {['👍', '❤️', '🔥', '😂', '🎉', '🚀'].map(emoji => (
+                    {['👍', '❤️', '🔥', '😂', '🎉', '🚀', '📋'].map(emoji => (
                       <motion.button
                         key={emoji}
                         whileHover={{ scale: 1.25 }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          if (currentUser) toggleReaction(message.id, emoji, currentUser.uid);
+                          if (currentUser) {
+                            try {
+                              await toggleReaction(message.id, emoji, currentUser.uid);
+                            } catch (err: any) {
+                              alert(err.message || 'Failed to toggle reaction.');
+                            }
+                          }
                           setShowEmojiPicker(false);
                         }}
                         className="text-base p-1.5 hover:bg-bg-tertiary rounded-lg transition-colors cursor-pointer"
