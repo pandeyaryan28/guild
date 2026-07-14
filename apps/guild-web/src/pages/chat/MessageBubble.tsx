@@ -10,6 +10,7 @@ import { db } from '../../lib/firebase';
 import { updateRequestStatus } from '../../lib/requests';
 import { toggleReaction, addMessageReply, listenToReplies, type MessageReply } from '../../lib/replies';
 import { useSearchParams } from 'react-router-dom';
+import { updateTask } from '../../lib/tasks';
 
 const TASK_STATUS_CONFIG: Record<string, { label: string; border: string; bg: string; text: string }> = {
   todo: { label: 'To Do', border: 'border-zinc-500/20', bg: 'bg-zinc-500/10', text: 'text-zinc-400' },
@@ -23,9 +24,12 @@ interface MessageTaskCardProps {
   creatorName: string;
   assigneeName: string;
   setSearchParams: any;
+  members: any[];
+  currentUser: any;
+  orgId?: string;
 }
 
-const MessageTaskCard = ({ taskId, creatorName, assigneeName, setSearchParams }: MessageTaskCardProps) => {
+const MessageTaskCard = ({ taskId, creatorName, assigneeName, setSearchParams, members, currentUser, orgId }: MessageTaskCardProps) => {
   const [task, setTask] = React.useState<any>(null);
 
   React.useEffect(() => {
@@ -42,6 +46,15 @@ const MessageTaskCard = ({ taskId, creatorName, assigneeName, setSearchParams }:
   const statusKey = task.status || 'todo';
   const statusConfig = TASK_STATUS_CONFIG[statusKey] || TASK_STATUS_CONFIG.todo;
 
+  const reactorProfile = members.find(m => m.uid === task.creatorId);
+  const currentUserProfile = members.find(m => m.uid === currentUser?.uid);
+
+  const isManager = reactorProfile?.managerId && reactorProfile.managerId === currentUser?.uid;
+  const isOwner = currentUserProfile?.role === 'owner';
+  const isAdmin = currentUserProfile?.role === 'admin';
+  const canApprove = isManager || isOwner || isAdmin;
+  const isApproved = task.approved !== false;
+
   return (
     <div
       onClick={(e) => {
@@ -57,21 +70,45 @@ const MessageTaskCard = ({ taskId, creatorName, assigneeName, setSearchParams }:
           <span className="text-[10px] font-black uppercase tracking-widest text-primary/95">Task</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[9px] text-text-muted">Assigned to {assigneeName}</span>
-          <span className={cn(
-            "rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-wider",
-            statusConfig.border,
-            statusConfig.bg,
-            statusConfig.text
-          )}>
-            {statusConfig.label}
-          </span>
+          <span className="text-[9px] text-text-muted font-medium">Assigned to {assigneeName}</span>
+          {isApproved ? (
+            <span className={cn(
+              "rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-wider",
+              statusConfig.border,
+              statusConfig.bg,
+              statusConfig.text
+            )}>
+              {statusConfig.label}
+            </span>
+          ) : (
+            <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-400">
+              Awaiting Approval
+            </span>
+          )}
         </div>
       </div>
 
       <div className="text-xs font-semibold text-foreground leading-relaxed">
         {task.title}
       </div>
+
+      {!isApproved && canApprove && (
+        <button
+          onClick={async (e) => {
+            e.stopPropagation();
+            if (!orgId || !currentUserProfile) return;
+            try {
+              const actionActor = { uid: currentUser.uid, name: currentUserProfile.fullName };
+              await updateTask(taskId, orgId, { approved: true } as any, actionActor);
+            } catch (err: any) {
+              alert(err.message || 'Failed to approve task.');
+            }
+          }}
+          className="mt-3 w-full py-1.5 rounded-xl bg-primary text-white text-[10px] font-bold hover:bg-primary/95 transition-all shadow-xs active:scale-95 cursor-pointer text-center border border-primary/10"
+        >
+          Approve Task
+        </button>
+      )}
     </div>
   );
 };
@@ -538,6 +575,9 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
               creatorName={reactorName}
               assigneeName={assigneeName}
               setSearchParams={setSearchParams}
+              members={members}
+              currentUser={currentUser}
+              orgId={orgId}
             />
           );
         })}
