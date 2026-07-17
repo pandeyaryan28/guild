@@ -78,8 +78,16 @@ export async function syncGoalProgress(goalId: string): Promise<void> {
     return;
   }
   const allTasks = tasksSnap.docs.map((d) => d.data() as Task);
-  const doneTasks = allTasks.filter((t) => t.status === 'done');
-  const progressPercent = Math.round((doneTasks.length / allTasks.length) * 100);
+  const approvedTasks = allTasks.filter((t) => t.approved !== false);
+  if (approvedTasks.length === 0) {
+    await updateDoc(doc(db, 'goals', goalId), {
+      progressRollup: 0,
+      updatedAt: serverTimestamp(),
+    });
+    return;
+  }
+  const doneTasks = approvedTasks.filter((t) => t.status === 'done');
+  const progressPercent = Math.round((doneTasks.length / approvedTasks.length) * 100);
 
   await updateDoc(doc(db, 'goals', goalId), {
     progressRollup: progressPercent,
@@ -209,6 +217,10 @@ export async function updateTask(
   patch: Partial<Pick<Task, 'title' | 'description' | 'status' | 'priority' | 'dueDate' | 'projectId' | 'goalId' | 'approved'>>,
   actor: ActorInfo,
 ): Promise<void> {
+  const taskDoc = await getDoc(doc(db, 'tasks', taskId));
+  const taskData = taskDoc.exists() ? (taskDoc.data() as Task) : null;
+  const oldGoalId = taskData?.goalId;
+
   await updateDoc(doc(db, 'tasks', taskId), { ...patch, updatedAt: serverTimestamp() });
   await logActivity(taskId, orgId, actor, 'edited', patch);
 
@@ -228,6 +240,15 @@ export async function updateTask(
     } catch (e) {
       console.error('Failed to sync task approval to requests:', e);
     }
+  }
+
+  // Sync goal progress if goalId, status, or approved status was changed, or if task is linked to a goal
+  const newGoalId = patch.goalId !== undefined ? patch.goalId : oldGoalId;
+  if (oldGoalId) {
+    await syncGoalProgress(oldGoalId);
+  }
+  if (newGoalId && newGoalId !== oldGoalId) {
+    await syncGoalProgress(newGoalId);
   }
 }
 

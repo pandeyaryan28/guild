@@ -5,6 +5,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notifications';
+import { syncGoalProgress } from './tasks';
 import type { RequestStatus, RequestType, OrgRequest } from '@guild/types';
 
 export async function createRequest(params: {
@@ -87,13 +88,22 @@ export async function updateRequestStatus(
   // If there is an associated taskId, approve or delete the task
   if (reqData && reqData.taskId) {
     const taskRef = doc(db, 'tasks', reqData.taskId);
+    const taskSnap = await getDoc(taskRef);
+    const taskData = taskSnap.exists() ? taskSnap.data() : null;
+
     if (status === 'approved') {
       await updateDoc(taskRef, {
         approved: true,
         updatedAt: serverTimestamp(),
       });
+      if (taskData?.goalId) {
+        await syncGoalProgress(taskData.goalId);
+      }
     } else {
       await deleteDoc(taskRef);
+      if (taskData?.goalId) {
+        await syncGoalProgress(taskData.goalId);
+      }
     }
   }
 
