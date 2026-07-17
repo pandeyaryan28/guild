@@ -800,7 +800,7 @@ export function DashboardHome() {
                     <div className="flex gap-2">
                       <button
                         onClick={async () => {
-                          await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
+                          await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, userProfile!.username, req.creatorId, req.title);
                         }}
                         className="flex-1 py-1.5 rounded-lg bg-foreground text-background text-[10px] font-bold hover:bg-foreground/90 transition-all shadow-md active:scale-95 cursor-pointer"
                       >
@@ -808,7 +808,7 @@ export function DashboardHome() {
                       </button>
                       <button
                         onClick={async () => {
-                          await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
+                          await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, userProfile!.username, req.creatorId, req.title);
                         }}
                         className="flex-1 py-1.5 rounded-lg border border-border-default hover:bg-bg-tertiary/10 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
                       >

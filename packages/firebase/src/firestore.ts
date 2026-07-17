@@ -426,7 +426,7 @@ export async function updateOrganizationDetails(
   await updateDoc(orgRef, data);
 }
 
-async function deleteCollectionByQuery(q: any): Promise<void> {
+export async function deleteCollectionByQuery(q: any): Promise<void> {
   const snap = await getDocs(q);
   if (snap.empty) return;
   const docs = snap.docs;
@@ -726,9 +726,10 @@ export async function executeOwnerOnboardingCreate(payload: OwnerOnboardingPaylo
     orgId,
     createdBy: uid,
     expiresAt,
-    used: false,
-    isGlobal: false,
-    usageCount: 0,
+    maxUses: 5,
+    useCount: 0,
+    isActive: true,
+    role: 'member',
   });
 
   // 6. Complete onboarding journey

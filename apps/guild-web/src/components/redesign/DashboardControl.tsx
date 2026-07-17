@@ -647,7 +647,7 @@ export function DashboardControl() {
                     <div className="flex gap-2">
                       <button
                         onClick={async () => {
-                          await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
+                          await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, userProfile!.username, req.creatorId, req.title);
                         }}
                         className="flex-1 py-1.5 rounded-xl bg-gradient-to-b from-indigo-500/90 to-indigo-600/90 hover:brightness-105 text-white text-[10px] font-bold border-t border-white/20 shadow-md active:scale-98 transition-all cursor-pointer"
                       >
@@ -655,7 +655,7 @@ export function DashboardControl() {
                       </button>
                       <button
                         onClick={async () => {
-                          await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
+                          await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, userProfile!.username, req.creatorId, req.title);
                         }}
                         className="flex-1 py-1.5 rounded-xl border border-white/10 hover:bg-white/10 bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
                       >

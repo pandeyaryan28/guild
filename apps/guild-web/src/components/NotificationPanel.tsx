@@ -258,7 +258,7 @@ function NotifRow({
       const reqDoc = snap.docs[0];
       const reqData = reqDoc.data();
       await updateRequestStatus(reqDoc.id, n.orgId, status, userProfile.uid, userProfile.fullName,
-        n.actor.id, reqData.title || 'Request', 'Handled via notification hub');
+        userProfile.username, n.actor.id, reqData.title || 'Request', 'Handled via notification hub');
       setActionStatus('success');
       setActionMessage(status === 'approved' ? 'Approved ✓' : 'Rejected');
       synthSound('success');

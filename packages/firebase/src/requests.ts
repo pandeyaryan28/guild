@@ -1,15 +1,64 @@
 import {
-  collection, doc, updateDoc, deleteDoc, getDoc, serverTimestamp
+  collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
+  query, where, orderBy, onSnapshot, getDocs,
+  serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notifications';
-import type { RequestStatus } from '@guild/types';
+import type { RequestStatus, RequestType, OrgRequest } from '@guild/types';
 
-/**
- * Updates the status of an existing request, logs the approver details, 
- * and dispatches a notification to the request creator.
- * Strictly scopes updating to the request ID, preventing cross-organization mutation.
- */
+export async function createRequest(params: {
+  orgId: string;
+  creatorId: string;
+  creatorName: string;
+  creatorUsername: string;
+  approverId: string;
+  approverName: string;
+  approverUsername: string;
+  type: RequestType;
+  title: string;
+  description: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<string> {
+  const ref = doc(collection(db, 'requests'));
+  const now = serverTimestamp();
+  await setDoc(ref, {
+    id: ref.id,
+    orgId: params.orgId,
+    creatorId: params.creatorId,
+    creatorName: params.creatorName,
+    creatorUsername: params.creatorUsername,
+    approverId: params.approverId,
+    approverName: params.approverName,
+    approverUsername: params.approverUsername,
+    type: params.type,
+    title: params.title,
+    description: params.description,
+    status: 'pending',
+    startDate: params.startDate ?? null,
+    endDate: params.endDate ?? null,
+    approverNote: null,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  // Notify the approver
+  await createNotification({
+    orgId: params.orgId,
+    recipientId: params.approverId,
+    category: 'requests',
+    type: 'request_pending',
+    urgency: 'medium',
+    actor: { id: params.creatorId, name: params.creatorName },
+    title: 'New Approval Request',
+    body: `${params.creatorName} submitted: "${params.title}"`,
+    link: '/requests',
+  });
+
+  return ref.id;
+}
+
 export async function updateRequestStatus(
   requestId: string,
   orgId: string,
@@ -60,4 +109,76 @@ export async function updateRequestStatus(
     body: `Your request "${requestTitle}" was ${status} by ${approverName}`,
     link: '/requests',
   });
+}
+
+export async function deleteRequest(requestId: string): Promise<void> {
+  await deleteDoc(doc(db, 'requests', requestId));
+}
+
+export async function sendRequestReminder(params: {
+  orgId: string;
+  creatorId: string;
+  creatorName: string;
+  approverId: string;
+  title: string;
+}): Promise<void> {
+  await createNotification({
+    orgId: params.orgId,
+    recipientId: params.approverId,
+    category: 'requests',
+    type: 'request_pending',
+    urgency: 'high',
+    actor: { id: params.creatorId, name: params.creatorName },
+    title: 'Reminder: Approval Request',
+    body: `${params.creatorName} is waiting for review on: "${params.title}"`,
+    link: '/requests',
+  });
+}
+
+export function listenToSentRequests(
+  orgId: string,
+  creatorId: string,
+  cb: (requests: OrgRequest[]) => void,
+): () => void {
+  return onSnapshot(
+    query(
+      collection(db, 'requests'),
+      where('orgId', '==', orgId),
+      where('creatorId', '==', creatorId),
+      orderBy('createdAt', 'desc'),
+    ),
+    (snap) => cb(snap.docs.map((d) => d.data() as OrgRequest)),
+  );
+}
+
+export function listenToReceivedRequests(
+  orgId: string,
+  approverId: string,
+  cb: (requests: OrgRequest[]) => void,
+): () => void {
+  return onSnapshot(
+    query(
+      collection(db, 'requests'),
+      where('orgId', '==', orgId),
+      where('approverId', '==', approverId),
+      orderBy('createdAt', 'desc'),
+    ),
+    (snap) => cb(snap.docs.map((d) => d.data() as OrgRequest)),
+  );
+}
+
+export function listenToRequest(
+  requestId: string,
+  cb: (req: OrgRequest | null) => void,
+): () => void {
+  return onSnapshot(
+    doc(db, 'requests', requestId),
+    (snap) => {
+      if (snap.exists()) {
+        cb(snap.data() as OrgRequest);
+      } else {
+        cb(null);
+      }
+    }
+  );
 }

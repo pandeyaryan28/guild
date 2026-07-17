@@ -442,7 +442,7 @@ export function MobileDashboard() {
                 <div className="flex gap-2">
                   <button
                     onClick={async () => {
-                      await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
+                      await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, userProfile!.username, req.creatorId, req.title);
                     }}
                     className="flex-1 py-2 rounded-lg bg-primary text-white text-[10px] font-black hover:bg-primary/95 transition-all active:scale-95 cursor-pointer shadow-md"
                   >
@@ -450,7 +450,7 @@ export function MobileDashboard() {
                   </button>
                   <button
                     onClick={async () => {
-                      await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, req.creatorId, req.title);
+                      await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, userProfile!.username, req.creatorId, req.title);
                     }}
                     className="flex-1 py-2 rounded-lg bg-white/5 border border-white/5 text-[10px] font-black text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
                   >

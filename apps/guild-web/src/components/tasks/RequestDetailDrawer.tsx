@@ -286,6 +286,7 @@ export function RequestDetailDrawer({
       status,
       currentUser.uid,
       currentUser.fullName,
+      currentUser.username,
       request.creatorId,
       request.title,
       note || undefined

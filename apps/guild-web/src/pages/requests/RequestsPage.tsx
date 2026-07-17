@@ -354,7 +354,17 @@ function RequestCard({
 
   async function act(status: 'approved' | 'rejected') {
     setActing(true);
-    await updateRequestStatus(req.id, orgId, status, currentUser.uid, currentUser.fullName, req.creatorId, req.title, note || undefined);
+    await updateRequestStatus(
+      req.id,
+      orgId,
+      status,
+      currentUser.uid,
+      currentUser.fullName,
+      currentUser.username,
+      req.creatorId,
+      req.title,
+      note || undefined
+    );
     setActing(false);
     setNoteOpen(false);
     onAction?.();

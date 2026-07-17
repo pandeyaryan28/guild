@@ -6,6 +6,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notifications';
+import { deleteCollectionByQuery } from './firestore';
 import type {
   Channel, ChannelMember, Message, DirectMessageThread, MessageAttachment,
 } from '@guild/types';
@@ -146,16 +147,23 @@ export async function createChannel(
 }
 
 export async function joinChannel(channelId: string, userId: string, orgId: string): Promise<void> {
+  const memberRef = doc(db, 'channelMembers', `${channelId}_${userId}`);
+  const memberSnap = await getDoc(memberRef);
+  const isAlreadyMember = memberSnap.exists();
+
   await setDoc(
-    doc(db, 'channelMembers', `${channelId}_${userId}`),
+    memberRef,
     { channelId, userId, orgId, joinedAt: serverTimestamp(), lastRead: serverTimestamp() },
     { merge: true },
   );
-  const snap = await getDoc(doc(db, 'channels', channelId));
-  if (snap.exists()) {
-    await updateDoc(doc(db, 'channels', channelId), {
-      memberCount: (snap.data().memberCount || 0) + 1,
-    });
+
+  if (!isAlreadyMember) {
+    const snap = await getDoc(doc(db, 'channels', channelId));
+    if (snap.exists()) {
+      await updateDoc(doc(db, 'channels', channelId), {
+        memberCount: (snap.data().memberCount || 0) + 1,
+      });
+    }
   }
 }
 
@@ -671,31 +679,43 @@ export async function addChannelMembers(
   const snap = await getDoc(doc(db, 'channels', channelId));
   const channelName = snap.exists() ? snap.data().name : '';
 
-  for (const uid of memberIds) {
+  // Fetch all existing membership docs in parallel
+  const checkPromises = memberIds.map(uid => getDoc(doc(db, 'channelMembers', `${channelId}_${uid}`)));
+  const memberSnaps = await Promise.all(checkPromises);
+  
+  let newMembersCount = 0;
+
+  for (let i = 0; i < memberIds.length; i++) {
+    const uid = memberIds[i];
+    const memberSnap = memberSnaps[i];
     const memberRef = doc(db, 'channelMembers', `${channelId}_${uid}`);
+    
     batch.set(
       memberRef,
       { channelId, userId: uid, orgId, joinedAt: serverTimestamp(), lastRead: serverTimestamp() },
       { merge: true }
     );
 
-    // Send a notification
-    createNotification({
-      orgId,
-      recipientId: uid,
-      category: 'inbox',
-      type: 'channel_invite',
-      urgency: 'medium',
-      actor: { id: inviterId, name: inviterName },
-      title: `Added to #${channelName || 'channel'}`,
-      body: `${inviterName} invited you to join #${channelName || 'channel'}`,
-      link: `/chat/c/${channelId}`,
-    }).catch((e) => console.error('Failed to create channel_invite notification:', e));
+    if (!memberSnap.exists()) {
+      newMembersCount++;
+      // Send a notification
+      createNotification({
+        orgId,
+        recipientId: uid,
+        category: 'inbox',
+        type: 'channel_invite',
+        urgency: 'medium',
+        actor: { id: inviterId, name: inviterName },
+        title: `Added to #${channelName || 'channel'}`,
+        body: `${inviterName} invited you to join #${channelName || 'channel'}`,
+        link: `/chat/c/${channelId}`,
+      }).catch((e) => console.error('Failed to create channel_invite notification:', e));
+    }
   }
 
-  if (snap.exists()) {
+  if (snap.exists() && newMembersCount > 0) {
     batch.update(doc(db, 'channels', channelId), {
-      memberCount: (snap.data().memberCount || 0) + memberIds.length,
+      memberCount: (snap.data().memberCount || 0) + newMembersCount,
     });
   }
 
@@ -715,6 +735,14 @@ export async function removeChannelMember(channelId: string, userId: string): Pr
 }
 
 export async function deleteChannel(channelId: string): Promise<void> {
+  // Fetch messages in the channel to delete their replies
+  const msgsSnap = await getDocs(query(collection(db, 'messages'), where('channelId', '==', channelId)));
+  for (const msgDoc of msgsSnap.docs) {
+    await deleteCollectionByQuery(query(collection(db, 'messageReplies'), where('messageId', '==', msgDoc.id)));
+  }
+
+  await deleteCollectionByQuery(query(collection(db, 'messages'), where('channelId', '==', channelId)));
+  await deleteCollectionByQuery(query(collection(db, 'channelMembers'), where('channelId', '==', channelId)));
   await deleteDoc(doc(db, 'channels', channelId));
 }
 

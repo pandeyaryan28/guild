@@ -186,7 +186,17 @@ function MobileRequestCard({
   async function act(status: 'approved' | 'rejected') {
     setActing(true);
     try {
-      await updateRequestStatus(req.id, orgId, status, currentUser.uid, currentUser.fullName, req.creatorId, req.title, note || undefined);
+      await updateRequestStatus(
+        req.id,
+        orgId,
+        status,
+        currentUser.uid,
+        currentUser.fullName,
+        currentUser.username,
+        req.creatorId,
+        req.title,
+        note || undefined
+      );
     } catch (err) {
       console.error(err);
     } finally {
