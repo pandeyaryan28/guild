@@ -8,6 +8,12 @@ import {
   CheckCircle2, Flame, UserPlus, Info, AlertTriangle, ListChecks,
   ChevronDown
 } from 'lucide-react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
+import { WorkspaceCardNode, CanvasContext } from './WorkspaceCardNode';
+import { markdownToHtml, htmlToMarkdown } from '../../utils/markdownConverter';
 import { useCanvas } from '../../hooks/useCanvas';
 import { useTasks } from '../../hooks/useTasks';
 import { useGoals } from '../../hooks/useGoals';
@@ -61,6 +67,206 @@ const TEMPLATES = [
   }
 ];
 
+const customEditorStyles = `
+.ProseMirror {
+  outline: none;
+}
+.ProseMirror h1 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--color-foreground, #0f172a);
+  padding-bottom: 0.25rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+.dark .ProseMirror h1 {
+  color: #ffffff;
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+.ProseMirror h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.9);
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.dark .ProseMirror h2 {
+  color: rgba(255, 255, 255, 0.9);
+}
+.ProseMirror h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.8);
+  margin-top: 1rem;
+  margin-bottom: 0.375rem;
+}
+.dark .ProseMirror h3 {
+  color: rgba(255, 255, 255, 0.8);
+}
+.ProseMirror p {
+  font-size: 0.75rem;
+  color: rgba(15, 23, 42, 0.85);
+  line-height: 1.625;
+  margin-bottom: 0.5rem;
+}
+.dark .ProseMirror p {
+  color: rgba(255, 255, 255, 0.85);
+}
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+.ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: start;
+  gap: 0.625rem;
+  margin-bottom: 0.375rem;
+}
+.ProseMirror ul[data-type="taskList"] li > label {
+  margin-top: 0.125rem;
+  user-select: none;
+}
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  background-color: rgba(15, 23, 42, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+.dark .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+  background-color: #6366f1;
+  border-color: #6366f1;
+}
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked::after {
+  content: '';
+  display: block;
+  width: 0.25rem;
+  height: 0.5rem;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  position: absolute;
+  top: 15%;
+  left: 35%;
+}
+.ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
+  text-decoration: line-through;
+  color: rgba(15, 23, 42, 0.4);
+}
+.dark .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: rgba(255, 255, 255, 0.4);
+}
+.ProseMirror ul:not([data-type="taskList"]) {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+.ProseMirror ul:not([data-type="taskList"]) li {
+  font-size: 0.75rem;
+  color: rgba(15, 23, 42, 0.85);
+  margin-bottom: 0.25rem;
+}
+.dark .ProseMirror ul:not([data-type="taskList"]) li {
+  color: rgba(255, 255, 255, 0.85);
+}
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+.ProseMirror ol li {
+  font-size: 0.75rem;
+  color: rgba(15, 23, 42, 0.85);
+  margin-bottom: 0.25rem;
+}
+.dark .ProseMirror ol li {
+  color: rgba(255, 255, 255, 0.85);
+}
+.ProseMirror blockquote {
+  border-left: 4px solid #6366f1;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  background-color: rgba(99, 102, 241, 0.03);
+  border-radius: 0 0.75rem 0.75rem 0;
+  padding: 0.75rem 1rem;
+}
+.ProseMirror blockquote[data-type="callout"] {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  border-left: 4px solid #6366f1;
+  background-color: rgba(99, 102, 241, 0.05);
+}
+.ProseMirror blockquote[data-type="callout"][data-callout-type="note"] {
+  border-color: rgba(59, 130, 246, 0.1);
+  border-left-color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.05);
+}
+.ProseMirror blockquote[data-type="callout"][data-callout-type="important"] {
+  border-color: rgba(16, 185, 129, 0.1);
+  border-left-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.05);
+}
+.ProseMirror blockquote[data-type="callout"][data-callout-type="warning"] {
+  border-color: rgba(245, 158, 11, 0.1);
+  border-left-color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.05);
+}
+.ProseMirror pre {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-family: monospace;
+  font-size: 0.7rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+.ProseMirror code {
+  font-family: monospace;
+  font-size: 0.7rem;
+  background-color: rgba(99, 102, 241, 0.08);
+  color: #818cf8;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+.ProseMirror pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+}
+.ProseMirror table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.75rem;
+}
+.ProseMirror th, .ProseMirror td {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.ProseMirror th {
+  background-color: rgba(255, 255, 255, 0.02);
+  font-weight: 700;
+}
+`;
+
 export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, userProfile } = useAuth();
@@ -86,495 +292,62 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
   const { goals } = useGoals(orgId);
   const { received, sent } = useRequests(orgId);
   const allRequests = React.useMemo(() => [...received, ...sent], [received, sent]);
-
   const [viewMode, setViewMode] = React.useState<'document' | 'workspace'>('document');
   const [sidebarTab, setSidebarTab] = React.useState<'tasks' | 'goals' | 'requests'>('tasks');
-  const [focusedBlockIndex, setFocusedBlockIndex] = React.useState<number | null>(null);
 
-  const blockRefs = React.useRef<(HTMLTextAreaElement | null)[]>([]);
+  // TipTap Editor instance
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+      WorkspaceCardNode,
+    ],
+    content: markdownToHtml(localContent),
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm dark:prose-invert focus:outline-none max-w-none text-xs text-foreground/85 leading-relaxed min-h-[200px] select-text',
+      },
+    },
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      const markdown = htmlToMarkdown(html);
+      updateCanvas(markdown, localTitle);
+    },
+  }, [canvas?.id]);
 
-  // Split content into blocks
-  const blocks = React.useMemo(() => {
-    if (!localContent) return [];
-    
-    const lines = localContent.split('\n');
-    const parsedBlocks: Block[] = [];
-    let i = 0;
-    
-    while (i < lines.length) {
-      const line = lines[i];
-      
-      // Code block
-      if (line.trim().startsWith('```')) {
-        const start = i;
-        let content = line;
-        i++;
-        while (i < lines.length && !lines[i].trim().startsWith('```')) {
-          content += '\n' + lines[i];
-          i++;
-        }
-        if (i < lines.length) {
-          content += '\n' + lines[i];
-          i++;
-        }
-        parsedBlocks.push({ type: 'code', startLine: start, endLine: i - 1, content });
-        continue;
-      }
-      
-      // Table block
-      if (line.trim().startsWith('|')) {
-        const start = i;
-        let content = line;
-        i++;
-        while (i < lines.length && lines[i].trim().startsWith('|')) {
-          content += '\n' + lines[i];
-          i++;
-        }
-        parsedBlocks.push({ type: 'table', startLine: start, endLine: i - 1, content });
-        continue;
-      }
-      
-      // Callout block
-      if (line.trim().startsWith('>')) {
-        const start = i;
-        let content = line;
-        i++;
-        while (i < lines.length && lines[i].trim().startsWith('>')) {
-          content += '\n' + lines[i];
-          i++;
-        }
-        parsedBlocks.push({ type: 'callout', startLine: start, endLine: i - 1, content });
-        continue;
-      }
-      
-      // Header block
-      if (line.trim().startsWith('#')) {
-        parsedBlocks.push({ type: 'header', startLine: i, endLine: i, content: line });
-        i++;
-        continue;
-      }
-      
-      // List block (single-line items for checkboxes or bullets)
-      if (line.trim().startsWith('-') || line.trim().startsWith('*') || /^\d+\.\s/.test(line.trim())) {
-        parsedBlocks.push({ type: 'list', startLine: i, endLine: i, content: line });
-        i++;
-        continue;
-      }
-      
-      // Regular paragraph
-      parsedBlocks.push({ type: 'paragraph', startLine: i, endLine: i, content: line });
-      i++;
+  // Sync editor content with external changes (e.g. from database)
+  React.useEffect(() => {
+    if (!editor) return;
+    const currentHtml = editor.getHTML();
+    const targetHtml = markdownToHtml(localContent);
+    const norm = (html: string) => html.replace(/\s+/g, '').toLowerCase();
+    if (norm(currentHtml) !== norm(targetHtml)) {
+      editor.commands.setContent(targetHtml, { emitUpdate: false });
     }
-    
-    return parsedBlocks;
-  }, [localContent]);
+  }, [localContent, editor]);
 
-  // Handle in-place editing of a block
-  const handleBlockChange = (block: Block, newContent: string) => {
-    const originalLines = localContent.split('\n');
-    const before = originalLines.slice(0, block.startLine);
-    const after = originalLines.slice(block.endLine + 1);
-    const updated = before.concat(newContent.split('\n')).concat(after);
-    updateCanvas(updated.join('\n'), localTitle);
-  };
-
-  // Keyboard navigation inside block row textareas
-  const handleBlockKeyDown = (
-    index: number,
-    block: Block,
-    e: React.KeyboardEvent<HTMLTextAreaElement>
-  ) => {
-    if (e.key === 'Enter' && !e.shiftKey && block.type !== 'code' && block.type !== 'table') {
-      e.preventDefault();
-      // Split the block
-      const textarea = e.currentTarget;
-      const caretPos = textarea.selectionStart;
-      const text = textarea.value;
-      const leftPart = text.slice(0, caretPos);
-      const rightPart = text.slice(caretPos);
-
-      const originalLines = localContent.split('\n');
-      const before = originalLines.slice(0, block.startLine);
-      const after = originalLines.slice(block.endLine + 1);
-      
-      // If we are splitting a list block, preserve list prefix
-      let nextLinePrefix = '';
-      if (block.type === 'list') {
-        const matchChecklist = leftPart.match(/^(\s*-\s*\[[ x]\]\s*)/);
-        const matchBullet = leftPart.match(/^(\s*[-\*]\s*)/);
-        const matchNumbered = leftPart.match(/^(\s*\d+\.\s*)/);
-        if (matchChecklist) nextLinePrefix = '- [ ] ';
-        else if (matchBullet) nextLinePrefix = '- ';
-        else if (matchNumbered) {
-          const num = parseInt(matchNumbered[1]);
-          nextLinePrefix = `${num + 1}. `;
-        }
-      }
-
-      const updated = before
-        .concat(leftPart.split('\n'))
-        .concat([nextLinePrefix + rightPart])
-        .concat(after);
-
-      updateCanvas(updated.join('\n'), localTitle);
-      
-      // Delay focus to let React re-render
-      setTimeout(() => {
-        setFocusedBlockIndex(index + 1);
-        const nextTextarea = blockRefs.current[index + 1];
-        if (nextTextarea) {
-          nextTextarea.focus();
-          nextTextarea.setSelectionRange(nextLinePrefix.length, nextLinePrefix.length);
-        }
-      }, 50);
-
-    } else if (e.key === 'Backspace' && e.currentTarget.selectionStart === 0) {
-      // Merge with block above if allowed
-      if (index > 0) {
-        e.preventDefault();
-        const prevBlock = blocks[index - 1];
-        if (prevBlock.type === 'code' || prevBlock.type === 'table') return;
-
-        const currentVal = e.currentTarget.value;
-        const prevVal = prevBlock.content;
-
-        const originalLines = localContent.split('\n');
-        const before = originalLines.slice(0, prevBlock.startLine);
-        const after = originalLines.slice(block.endLine + 1);
-        
-        // Merge texts
-        const mergedLines = (prevVal + currentVal).split('\n');
-        const updated = before.concat(mergedLines).concat(after);
-
-        updateCanvas(updated.join('\n'), localTitle);
-
-        setTimeout(() => {
-          setFocusedBlockIndex(index - 1);
-          const prevTextarea = blockRefs.current[index - 1];
-          if (prevTextarea) {
-            prevTextarea.focus();
-            prevTextarea.setSelectionRange(prevVal.length, prevVal.length);
-          }
-        }, 50);
-      }
-    } else if (e.key === 'ArrowUp' && e.currentTarget.selectionStart === 0) {
-      if (index > 0) {
-        e.preventDefault();
-        setFocusedBlockIndex(index - 1);
-        setTimeout(() => blockRefs.current[index - 1]?.focus(), 20);
-      }
-    } else if (e.key === 'ArrowDown' && e.currentTarget.selectionStart === e.currentTarget.value.length) {
-      if (index < blocks.length - 1) {
-        e.preventDefault();
-        setFocusedBlockIndex(index + 1);
-        setTimeout(() => blockRefs.current[index + 1]?.focus(), 20);
-      }
-    }
-  };
-
-  // Checklist checkbox clicking
-  const toggleCheckbox = async (block: Block, checked: boolean) => {
-    let newContent = block.content;
-    if (checked) {
-      newContent = newContent.replace('- [ ]', '- [x]').replace('* [ ]', '* [x]');
-    } else {
-      newContent = newContent.replace('- [x]', '- [ ]').replace('* [x]', '* [ ]');
-    }
-    const originalLines = localContent.split('\n');
-    const before = originalLines.slice(0, block.startLine);
-    const after = originalLines.slice(block.endLine + 1);
-    const updated = before.concat(newContent.split('\n')).concat(after);
-    
-    // Save to Firestore immediately
-    await forceSave(updated.join('\n'), localTitle);
-  };
-
-  // Insert workspace item tag into the focused block (or append)
+  // Insert workspace item tag into the editor selection
   const handleInsertItem = (type: 'Task' | 'Goal' | 'Request', title: string, id: string) => {
-    const tag = `[${type}: ${title}](/chat?${type.toLowerCase()}=${id})`;
-    
-    let newContent = '';
-    if (focusedBlockIndex !== null && focusedBlockIndex >= 0 && focusedBlockIndex < blocks.length) {
-      const block = blocks[focusedBlockIndex];
-      newContent = block.content + ' ' + tag;
-      handleBlockChange(block, newContent);
-    } else {
-      // Append as a new paragraph block
-      const updatedContent = localContent ? `${localContent}\n${tag}` : tag;
-      updateCanvas(updatedContent, localTitle);
-    }
+    if (!editor) return;
+    editor.chain()
+      .focus()
+      .insertContent({
+        type: 'workspaceCard',
+        attrs: {
+          type,
+          id,
+          title,
+        },
+      })
+      .run();
   };
-
-  // Parse inline elements (bold, italic, code, interactive cards)
-  const parseInlineElements = (text: string) => {
-    // Regex for workspace cards: [Task: Title](/chat?task=XYZ)
-    const cardRegex = /\[(Task|Goal|Request):\s*([^\]]+)\]\(([^)]+)\)/g;
-    
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = cardRegex.exec(text)) !== null) {
-      const matchIndex = match.index;
-      // Add text before the card
-      if (matchIndex > lastIndex) {
-        parts.push(parseTextFormatting(text.substring(lastIndex, matchIndex)));
-      }
-
-      const type = match[1] as 'Task' | 'Goal' | 'Request';
-      const title = match[2];
-      const url = match[3];
-
-      // Extract ID
-      const urlObj = new URL(url, window.location.origin);
-      const taskId = urlObj.searchParams.get('task');
-      const goalId = urlObj.searchParams.get('goal');
-      const requestId = urlObj.searchParams.get('request');
-      const id = taskId || goalId || requestId || '';
-
-      parts.push(
-        <WorkspaceCard
-          key={`${type}-${id}-${matchIndex}`}
-          type={type}
-          id={id}
-          title={title}
-          orgId={orgId ?? ''}
-          actor={actor}
-          tasks={tasks}
-          goals={goals}
-          requests={allRequests}
-          onOpenCard={(paramKey, val) => {
-            const params = new URLSearchParams(searchParams);
-            params.set(paramKey, val);
-            setSearchParams(params);
-          }}
-        />
-      );
-
-      lastIndex = cardRegex.lastIndex;
-    }
-
-    if (lastIndex < text.length) {
-      parts.push(parseTextFormatting(text.substring(lastIndex)));
-    }
-
-    return parts.length > 0 ? parts : text;
-  };
-
-  // Bold, italic, code formatting
-  const parseTextFormatting = (text: string) => {
-    // Escape standard HTML first
-    const parts: React.ReactNode[] = [];
-    
-    // Simplistic markdown parsing for bold (**), italic (*), code (`)
-    const regex = /(\*\*|`|\*)(.*?)\1/g;
-    let lastIndex = 0;
-    let match;
-
-    while ((match = regex.exec(text)) !== null) {
-      const matchIndex = match.index;
-      if (matchIndex > lastIndex) {
-        parts.push(text.substring(lastIndex, matchIndex));
-      }
-
-      const token = match[1];
-      const innerText = match[2];
-
-      if (token === '**') {
-        parts.push(<strong key={matchIndex} className="font-extrabold text-foreground">{innerText}</strong>);
-      } else if (token === '*') {
-        parts.push(<em key={matchIndex} className="italic text-foreground/90">{innerText}</em>);
-      } else if (token === '`') {
-        parts.push(
-          <code key={matchIndex} className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 font-mono text-[11px] text-indigo-300">
-            {innerText}
-          </code>
-        );
-      }
-
-      lastIndex = regex.lastIndex;
-    }
-
-    if (lastIndex < text.length) {
-      parts.push(text.substring(lastIndex));
-    }
-
-    return parts.length > 0 ? <React.Fragment>{parts}</React.Fragment> : text;
-  };
-
-  // Render a single block in views
-  const renderBlockContent = (block: Block) => {
-    const cleaned = block.content.trim();
-
-    // 1. Headers
-    if (block.type === 'header') {
-      const match = block.content.match(/^(#{1,6})\s+(.*)$/);
-      if (match) {
-        const level = match[1].length;
-        const text = match[2];
-        const formatted = parseInlineElements(text);
-
-        if (level === 1) return <h1 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent pb-1 mb-2 border-b border-white/5">{formatted}</h1>;
-        if (level === 2) return <h2 className="text-base font-bold text-foreground/90 mt-4 mb-2">{formatted}</h2>;
-        return <h3 className="text-sm font-semibold text-foreground/80 mt-3 mb-1.5">{formatted}</h3>;
-      }
-    }
-
-    // 2. Checklists or bullet lists
-    if (block.type === 'list') {
-      // Check for checklist: - [ ] or - [x]
-      const matchChecklist = block.content.match(/^(\s*-\s*\[([ x])\]\s*)(.*)$/);
-      if (matchChecklist) {
-        const checked = matchChecklist[2].toLowerCase() === 'x';
-        const text = matchChecklist[3];
-        return (
-          <div className="flex items-start gap-2.5 py-0.5 group">
-            <button
-              onClick={() => toggleCheckbox(block, !checked)}
-              className={cn(
-                "flex h-4 w-4 shrink-0 items-center justify-center rounded border mt-0.5 transition-all cursor-pointer",
-                checked 
-                  ? "bg-primary border-primary text-white shadow-md shadow-primary/20" 
-                  : "border-white/20 hover:border-white/40 bg-white/2"
-              )}
-            >
-              {checked && <Check className="h-3 w-3 stroke-[3]" />}
-            </button>
-            <span className={cn(
-              "text-xs leading-relaxed transition-all",
-              checked ? "text-muted-foreground line-through decoration-white/20" : "text-foreground/85"
-            )}>
-              {parseInlineElements(text)}
-            </span>
-          </div>
-        );
-      }
-
-      // Standard bullets
-      const matchBullet = block.content.match(/^(\s*[-\*]\s*)(.*)$/);
-      if (matchBullet) {
-        const text = matchBullet[2];
-        return (
-          <div className="flex items-start gap-2.5 py-0.5 pl-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-400/80 mt-1.5 shrink-0" />
-            <span className="text-xs text-foreground/85 leading-relaxed">{parseInlineElements(text)}</span>
-          </div>
-        );
-      }
-
-      // Numbered items
-      const matchNumbered = block.content.match(/^(\s*\d+\.\s*)(.*)$/);
-      if (matchNumbered) {
-        const prefix = matchNumbered[1];
-        const text = matchNumbered[2];
-        return (
-          <div className="flex items-start gap-2 py-0.5 pl-1">
-            <span className="text-xs font-bold text-indigo-400/60 font-mono mt-0.5 shrink-0 select-none">{prefix}</span>
-            <span className="text-xs text-foreground/85 leading-relaxed">{parseInlineElements(text)}</span>
-          </div>
-        );
-      }
-    }
-
-    // 3. Callouts
-    if (block.type === 'callout') {
-      const lines = block.content.split('\n');
-      const headerLine = lines[0].trim();
-      
-      // Determine callout type
-      let calloutType: 'note' | 'tip' | 'important' | 'warning' = 'note';
-      let cleanContentLines = lines;
-
-      const typeMatch = headerLine.match(/^>\s*\[!(NOTE|TIP|IMPORTANT|WARNING)\]/i);
-      if (typeMatch) {
-        calloutType = typeMatch[1].toLowerCase() as any;
-        cleanContentLines = lines.slice(1);
-      }
-
-      const bodyText = cleanContentLines.map(l => l.replace(/^>\s?/, '')).join('\n');
-
-      const config = {
-        note: { icon: Info, border: 'border-blue-500/20 bg-blue-500/5', text: 'text-blue-400' },
-        tip: { icon: Sparkles, border: 'border-indigo-500/20 bg-indigo-500/5', text: 'text-indigo-400' },
-        important: { icon: CheckCircle2, border: 'border-emerald-500/20 bg-emerald-500/5', text: 'text-emerald-400' },
-        warning: { icon: AlertTriangle, border: 'border-amber-500/20 bg-amber-500/5', text: 'text-amber-400' }
-      }[calloutType];
-
-      const IconComponent = config.icon;
-
-      return (
-        <div className={cn("my-3 p-3.5 rounded-xl border flex gap-3 aether-glass", config.border)}>
-          <IconComponent className={cn("h-4 w-4 shrink-0 mt-0.5", config.text)} />
-          <div className="text-xs text-foreground/80 leading-relaxed min-w-0 flex-1 whitespace-pre-wrap">
-            {parseInlineElements(bodyText)}
-          </div>
-        </div>
-      );
-    }
-
-    // 4. Code Blocks
-    if (block.type === 'code') {
-      const lines = block.content.split('\n');
-      const language = lines[0].replace('```', '').trim() || 'code';
-      const code = lines.slice(1, lines.length - 1).join('\n');
-
-      return (
-        <div className="my-3 rounded-xl border border-white/5 bg-[#030712]/60 overflow-hidden font-mono">
-          <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/5 bg-white/2">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground/80">{language}</span>
-          </div>
-          <pre className="p-3.5 text-xs text-indigo-200/90 overflow-x-auto whitespace-pre">
-            <code>{code}</code>
-          </pre>
-        </div>
-      );
-    }
-
-    // 5. Tables
-    if (block.type === 'table') {
-      const rows = block.content.split('\n');
-      const tableRows = rows
-        .map(row => row.split('|').map(cell => cell.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1))
-        .filter(row => row.length > 0);
-
-      // Check if separator exists
-      const hasSeparator = tableRows[1] && tableRows[1].every(cell => /^:-*-*:?|^-+$/.test(cell));
-      const headers = tableRows[0];
-      const dataRows = hasSeparator ? tableRows.slice(2) : tableRows.slice(1);
-
-      return (
-        <div className="my-3.5 overflow-x-auto rounded-xl border border-white/5 aether-glass bg-white/[0.01]">
-          <table className="min-w-full text-xs text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/5 bg-white/2">
-                {headers.map((h, idx) => (
-                  <th key={idx} className="px-4 py-2 font-bold text-foreground/80">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {dataRows.map((row, rIdx) => (
-                <tr key={rIdx} className="border-b border-white/5 hover:bg-white/[0.02] last:border-b-0">
-                  {row.map((cell, cIdx) => (
-                    <td key={cIdx} className="px-4 py-2 text-foreground/75 whitespace-pre-wrap">{parseInlineElements(cell)}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    }
-
-    // 6. Regular Paragraph
-    return (
-      <p className="text-xs text-foreground/85 leading-relaxed min-h-[1rem]">
-        {cleaned ? parseInlineElements(block.content) : '\u200B'}
-      </p>
-    );
-  };
-
   const handleApplyTemplate = (content: string) => {
+    if (editor) {
+      editor.commands.setContent(markdownToHtml(content));
+    }
     updateCanvas(content, localTitle);
   };
 
@@ -669,54 +442,22 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
                 </div>
               </div>
             ) : (
-              <div className="space-y-2 select-text font-sans">
-                {blocks.map((block, idx) => {
-                  const isFocused = focusedBlockIndex === idx;
-                  
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => {
-                        if (!isFocused) {
-                          setFocusedBlockIndex(idx);
-                          // Delay to let React render textarea
-                          setTimeout(() => blockRefs.current[idx]?.focus(), 20);
-                        }
-                      }}
-                      className={cn(
-                        "rounded-lg px-2 py-1.5 transition-all group relative border border-transparent",
-                        isFocused 
-                          ? "bg-white/5 border-primary/20 shadow-inner" 
-                          : "hover:bg-white/[0.01] hover:border-white/5"
-                      )}
-                    >
-                      {isFocused ? (
-                        <textarea
-                          ref={(el) => { blockRefs.current[idx] = el; }}
-                          value={block.content}
-                          onChange={(e) => handleBlockChange(block, e.target.value)}
-                          onBlur={() => {
-                            // Allow cursor clicks on sidebar items to not immediately blur
-                            setTimeout(() => setFocusedBlockIndex(null), 150);
-                          }}
-                          onKeyDown={(e) => handleBlockKeyDown(idx, block, e)}
-                          className="w-full bg-transparent resize-none border-none outline-none font-mono text-[11px] leading-relaxed focus:ring-0 p-0 text-indigo-200"
-                          rows={Math.max(1, block.content.split('\n').length)}
-                          placeholder="Type markdown..."
-                        />
-                      ) : (
-                        renderBlockContent(block)
-                      )}
-                      
-                      {/* Tiny Edit Tip Overlay */}
-                      {!isFocused && (
-                        <span className="absolute right-2.5 top-1.5 text-[8px] font-bold text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity select-none uppercase tracking-wider">
-                          Click to edit
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="select-text font-sans w-full h-full max-h-full overflow-y-auto">
+                <style dangerouslySetInnerHTML={{ __html: customEditorStyles }} />
+                <CanvasContext.Provider value={{
+                  orgId: orgId ?? '',
+                  actor,
+                  tasks,
+                  goals,
+                  requests: allRequests,
+                  onOpenCard: (paramKey, val) => {
+                    const params = new URLSearchParams(searchParams);
+                    params.set(paramKey, val);
+                    setSearchParams(params);
+                  }
+                }}>
+                  <EditorContent editor={editor} />
+                </CanvasContext.Provider>
               </div>
             )}
           </div>
@@ -907,7 +648,7 @@ interface WorkspaceCardProps {
   onOpenCard: (paramKey: string, val: string) => void;
 }
 
-function WorkspaceCard({
+export function WorkspaceCard({
   type,
   id,
   title,
