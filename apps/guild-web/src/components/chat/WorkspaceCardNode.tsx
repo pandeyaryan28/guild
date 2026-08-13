@@ -78,16 +78,19 @@ export const WorkspaceCardNode = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
+    const type = HTMLAttributes.type || 'Task';
+    const id = HTMLAttributes.id || '';
+    const title = HTMLAttributes.title || '';
     return [
       'a',
       mergeAttributes(HTMLAttributes, {
         'data-workspace-card': '',
-        'data-type': HTMLAttributes.type,
-        'data-id': HTMLAttributes.id,
-        'data-title': HTMLAttributes.title,
-        href: `/chat?${HTMLAttributes.type.toLowerCase()}=${HTMLAttributes.id}`,
+        'data-type': type,
+        'data-id': id,
+        'data-title': title,
+        href: `/chat?${type.toLowerCase()}=${id}`,
       }),
-      `${HTMLAttributes.type}: ${HTMLAttributes.title}`,
+      `${type}: ${title}`,
     ];
   },
 

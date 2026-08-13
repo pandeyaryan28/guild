@@ -317,7 +317,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
       const markdown = htmlToMarkdown(html);
       updateCanvas(markdown, localTitle);
     },
-  }, [canvas?.id]);
+  }, []);
 
   // Sync editor content with external changes (e.g. from database)
   React.useEffect(() => {
@@ -457,7 +457,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
                     setSearchParams(params);
                   }
                 }}>
-                  <EditorContent editor={editor} />
+                  {editor && <EditorContent editor={editor} />}
                 </CanvasContext.Provider>
               </div>
             )}
