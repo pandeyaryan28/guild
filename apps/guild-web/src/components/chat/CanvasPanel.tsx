@@ -313,6 +313,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
       },
     },
     onUpdate: ({ editor }) => {
+      if (editor.isDestroyed) return;
       const html = editor.getHTML();
       const markdown = htmlToMarkdown(html);
       updateCanvas(markdown, localTitle);
@@ -321,7 +322,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
 
   // Sync editor content with external changes (e.g. from database)
   React.useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
     const currentHtml = editor.getHTML();
     const targetHtml = markdownToHtml(localContent);
     const norm = (html: string) => html.replace(/\s+/g, '').toLowerCase();
@@ -457,7 +458,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
                     setSearchParams(params);
                   }
                 }}>
-                  {editor && <EditorContent editor={editor} />}
+                  {editor && !editor.isDestroyed && <EditorContent editor={editor} />}
                 </CanvasContext.Provider>
               </div>
             )}

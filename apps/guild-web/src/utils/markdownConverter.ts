@@ -228,7 +228,7 @@ export function htmlToMarkdown(html: string | null | undefined): string {
 }
 
 function processBlockNode(node: Node): string {
-  if (node.nodeType !== Node.ELEMENT_NODE) {
+  if (node.nodeType !== 1) {
     const text = node.textContent?.trim();
     return text ? text : '';
   }
@@ -338,9 +338,9 @@ function processInlineNodes(node: HTMLElement): string {
   const childNodes = Array.from(node.childNodes);
 
   childNodes.forEach(child => {
-    if (child.nodeType === Node.TEXT_NODE) {
+    if (child.nodeType === 3) {
       text += child.textContent;
-    } else if (child.nodeType === Node.ELEMENT_NODE) {
+    } else if (child.nodeType === 1) {
       const childEl = child as HTMLElement;
       const childTag = childEl.tagName.toUpperCase();
 
