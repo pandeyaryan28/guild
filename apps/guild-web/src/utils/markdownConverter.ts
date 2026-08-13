@@ -26,6 +26,9 @@ function inlineMarkdownToHtml(text: string): string {
   // 3. Bold: **text**
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
+  // Highlight: ==text==
+  html = html.replace(/==([^=]+)==/g, '<mark>$1</mark>');
+
   // 4. Italic: *text*
   html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
@@ -349,6 +352,8 @@ function processInlineNodes(node: HTMLElement): string {
         text += `**${processInlineNodes(childEl)}**`;
       } else if (childTag === 'EM' || childTag === 'I') {
         text += `*${processInlineNodes(childEl)}*`;
+      } else if (childTag === 'MARK') {
+        text += `==${processInlineNodes(childEl)}==`;
       } else if (childTag === 'CODE') {
         text += `\`${childEl.textContent}\``;
       } else if (childTag === 'BR') {

@@ -6,12 +6,14 @@ import {
   Layers, Users, Star, Settings, CheckSquare, ClipboardList,
   Target, Send, PlusCircle, ArrowRight, BookOpen, Calendar,
   CheckCircle2, Flame, UserPlus, Info, AlertTriangle, ListChecks,
-  ChevronDown
+  ChevronDown,
+  Bold, Italic, Highlighter, List, ListOrdered, Code
 } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
+import Highlight from '@tiptap/extension-highlight';
 import { WorkspaceCardNode, CanvasContext } from './WorkspaceCardNode';
 import { markdownToHtml, htmlToMarkdown } from '../../utils/markdownConverter';
 import { WorkspaceCard } from './WorkspaceCard';
@@ -266,6 +268,16 @@ const customEditorStyles = `
   background-color: rgba(255, 255, 255, 0.02);
   font-weight: 700;
 }
+.ProseMirror mark {
+  background-color: rgba(234, 179, 8, 0.25);
+  color: #eab308;
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.15rem;
+}
+.dark .ProseMirror mark {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: #fef08a;
+}
 `;
 
 export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
@@ -305,6 +317,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
         nested: true,
       }),
       WorkspaceCardNode,
+      Highlight,
     ],
     content: markdownToHtml(localContent),
     editorProps: {
@@ -438,6 +451,128 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
               </button>
             </div>
           </div>
+
+          {/* Rich Text Editor Formatting Toolbar */}
+          {!isCanvasEmpty && editor && (
+            <div className="flex flex-wrap items-center gap-1 px-4 py-1.5 border-b border-white/5 bg-white/[0.01] shrink-0 select-none">
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                className={cn(
+                  "p-1.5 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all cursor-pointer",
+                  editor.isActive('bold') && "bg-primary/20 text-primary hover:bg-primary/25"
+                )}
+                title="Bold (Ctrl+B)"
+              >
+                <Bold className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                className={cn(
+                  "p-1.5 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all cursor-pointer",
+                  editor.isActive('italic') && "bg-primary/20 text-primary hover:bg-primary/25"
+                )}
+                title="Italic (Ctrl+I)"
+              >
+                <Italic className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleHighlight().run()}
+                className={cn(
+                  "p-1.5 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all cursor-pointer",
+                  editor.isActive('highlight') && "bg-primary/20 text-primary hover:bg-primary/25"
+                )}
+                title="Highlight"
+              >
+                <Highlighter className="w-3.5 h-3.5" />
+              </button>
+
+              <div className="w-[1px] h-4 bg-white/10 mx-1" />
+
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                className={cn(
+                  "px-2 py-1 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all font-black text-[10px] tracking-tight cursor-pointer",
+                  editor.isActive('heading', { level: 1 }) && "bg-primary/20 text-primary hover:bg-primary/25"
+                )}
+                title="Heading 1"
+              >
+                H1
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                className={cn(
+                  "px-2 py-1 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all font-black text-[10px] tracking-tight cursor-pointer",
+                  editor.isActive('heading', { level: 2 }) && "bg-primary/20 text-primary hover:bg-primary/25"
+                )}
+                title="Heading 2"
+              >
+                H2
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                className={cn(
+                  "px-2 py-1 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all font-black text-[10px] tracking-tight cursor-pointer",
+                  editor.isActive('heading', { level: 3 }) && "bg-primary/20 text-primary hover:bg-primary/25"
+                )}
+                title="Heading 3"
+              >
+                H3
+              </button>
+
+              <div className="w-[1px] h-4 bg-white/10 mx-1" />
+
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                className={cn(
+                  "p-1.5 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all cursor-pointer",
+                  editor.isActive('bulletList') && "bg-primary/20 text-primary hover:bg-primary/25"
+                )}
+                title="Bullet List"
+              >
+                <List className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                className={cn(
+                  "p-1.5 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all cursor-pointer",
+                  editor.isActive('orderedList') && "bg-primary/20 text-primary hover:bg-primary/25"
+                )}
+                title="Numbered List"
+              >
+                <ListOrdered className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleTaskList().run()}
+                className={cn(
+                  "p-1.5 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all cursor-pointer",
+                  editor.isActive('taskList') && "bg-primary/20 text-primary hover:bg-primary/25"
+                )}
+                title="Checklist"
+              >
+                <ListTodo className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                className={cn(
+                  "p-1.5 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all cursor-pointer",
+                  editor.isActive('codeBlock') && "bg-primary/20 text-primary hover:bg-primary/25"
+                )}
+                title="Code Block"
+              >
+                <Code className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* Canvas Body Pane */}
           <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-3.5">

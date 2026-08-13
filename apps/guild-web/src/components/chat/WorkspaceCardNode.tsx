@@ -29,7 +29,7 @@ export function WorkspaceCardNodeView({ node }: any) {
   }
 
   return (
-    <NodeViewWrapper className="inline-block align-middle my-1 w-full max-w-[400px]">
+    <NodeViewWrapper as="div" className="inline-block align-middle my-1 w-full max-w-[400px]">
       <WorkspaceCard
         type={type}
         id={id}
