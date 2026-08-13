@@ -140,7 +140,7 @@ export function markdownToHtml(markdown: string | null | undefined): string {
 
         const checked = itemMatch[2].toLowerCase() === 'x';
         const text = itemMatch[3];
-        checklistHtml += `<li data-checked="${checked}">${inlineMarkdownToHtml(text)}</li>`;
+        checklistHtml += `<li data-type="taskItem" data-checked="${checked}">${inlineMarkdownToHtml(text)}</li>`;
         i++;
       }
       checklistHtml += '</ul>';
@@ -198,6 +198,7 @@ export function markdownToHtml(markdown: string | null | undefined): string {
 
     // 8. Paragraph / Empty space
     if (line.trim() === '') {
+      htmlBlocks.push('<p></p>');
       i++;
       continue;
     }

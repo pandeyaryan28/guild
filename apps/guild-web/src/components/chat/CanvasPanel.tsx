@@ -311,6 +311,30 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
       attributes: {
         class: 'prose prose-sm dark:prose-invert focus:outline-none max-w-none text-xs text-foreground/85 leading-relaxed min-h-[200px] select-text',
       },
+      handleClick: (view, pos, event) => {
+        const target = event.target as HTMLElement;
+        const anchor = target.closest('a');
+        if (anchor) {
+          event.preventDefault();
+          const isCard = anchor.hasAttribute('data-workspace-card');
+          if (isCard) {
+            const type = anchor.getAttribute('data-type');
+            const id = anchor.getAttribute('data-id');
+            if (type && id) {
+              const params = new URLSearchParams(searchParams);
+              params.set(type.toLowerCase(), id);
+              setSearchParams(params);
+            }
+          } else {
+            const href = anchor.getAttribute('href');
+            if (href) {
+              window.open(href, '_blank', 'noopener,noreferrer');
+            }
+          }
+          return true;
+        }
+        return false;
+      }
     },
     onUpdate: ({ editor }) => {
       if (editor.isDestroyed) return;
@@ -323,6 +347,10 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
   // Sync editor content with external changes (e.g. from database)
   React.useEffect(() => {
     if (!editor || editor.isDestroyed) return;
+    
+    // Prevent overwriting the editor content while the user is actively typing/focused
+    if (editor.isFocused) return;
+
     const currentHtml = editor.getHTML();
     const targetHtml = markdownToHtml(localContent);
     const norm = (html: string) => html.replace(/\s+/g, '').toLowerCase();

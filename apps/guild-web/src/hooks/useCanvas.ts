@@ -11,6 +11,7 @@ export function useCanvas(chatId: string | null | undefined) {
   const [canvas, setCanvas] = React.useState<Canvas | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
+  const isInitialLoadRef = React.useRef(true);
   
   // Local state during edits so typing is fast
   const [localTitle, setLocalTitle] = React.useState('');
@@ -26,6 +27,7 @@ export function useCanvas(chatId: string | null | undefined) {
     }
 
     setLoading(true);
+    isInitialLoadRef.current = true;
     let unsubListener: (() => void) | null = null;
     let isActive = true;
 
@@ -37,8 +39,13 @@ export function useCanvas(chatId: string | null | undefined) {
           if (!isActive) return;
           setCanvas(updatedCanvas);
           if (updatedCanvas) {
-            setLocalTitle(updatedCanvas.title);
-            setLocalContent(updatedCanvas.content);
+            // Only update local state if it's a remote change or initial load
+            const isRemoteChange = updatedCanvas.updatedBy !== user.uid;
+            if (isRemoteChange || isInitialLoadRef.current) {
+              setLocalTitle(updatedCanvas.title);
+              setLocalContent(updatedCanvas.content);
+              isInitialLoadRef.current = false;
+            }
           }
           setLoading(false);
         });
