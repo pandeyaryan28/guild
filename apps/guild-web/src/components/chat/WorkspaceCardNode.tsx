@@ -1,8 +1,7 @@
 import * as React from 'react';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
-// We will export WorkspaceCard from CanvasPanel
-import { WorkspaceCard } from './CanvasPanel';
+import { WorkspaceCard } from './WorkspaceCard';
 
 export interface CanvasContextType {
   orgId: string;
