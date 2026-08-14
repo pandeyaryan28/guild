@@ -4,7 +4,8 @@ import {
   Bold, Italic, Strikethrough, Highlighter, 
   Heading1, Heading2, Heading3, 
   List, ListOrdered, ListTodo, 
-  Quote, Code, Minus, Undo, Redo, Copy, Sparkles, Trash2, Clock
+  Quote, Code, Minus, Undo, Redo, Copy, Sparkles, Trash2, Clock,
+  MoreVertical
 } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -37,8 +38,24 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
 
   const [isTemplatesModalOpen, setIsTemplatesModalOpen] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
-  const [isTitleEditing, setIsTitleEditing] = React.useState(false);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
   const titleInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Close 3-dot menu on click outside
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   // TipTap Editor instance
   const editor = useEditor({
@@ -137,11 +154,11 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
     <div className="h-full border-l border-border-default bg-surface dark:bg-bg-primary backdrop-blur-3xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[520px] lg:relative lg:w-[480px] xl:w-[580px] 2xl:w-[680px] shadow-2xl lg:shadow-none shrink-0 transition-all duration-300">
       
       {/* ─── Top Header Bar ──────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border-default bg-surface-elevated/50 dark:bg-bg-secondary/40 shrink-0 gap-3">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-default bg-surface-elevated/50 dark:bg-bg-secondary/40 shrink-0 gap-3">
         
-        {/* Title Input & Icon */}
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-xs">
+        {/* Title Input & Save Status */}
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="h-7 w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
             <FileText className="h-4 w-4" />
           </div>
           
@@ -154,80 +171,102 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
             placeholder="Untitled Canvas"
             className="text-sm font-bold text-foreground bg-transparent border-none outline-none focus:ring-0 p-0 truncate flex-1 hover:bg-bg-tertiary/40 focus:bg-bg-tertiary/60 rounded px-1.5 py-0.5 transition-colors"
           />
-        </div>
 
-        {/* Right Header Controls */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          
-          {/* Real-time Save Status Indicator */}
-          <div className="hidden sm:flex items-center mr-1">
+          {/* Compact Save Status */}
+          <div className="shrink-0 flex items-center">
             {saveStatus === 'saving' && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary animate-pulse">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary animate-pulse" title="Saving changes...">
                 <Loader2 className="h-3 w-3 animate-spin" />
-                <span>Saving...</span>
+                <span className="hidden sm:inline">Saving</span>
               </span>
             )}
             {saveStatus === 'saved' && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-500 dark:text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-                <span>Saved</span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-500" title="All changes saved">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="hidden sm:inline text-muted-foreground text-[10px]">Saved</span>
               </span>
             )}
             {saveStatus === 'unsaved' && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-500" title="Unsaved changes">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                <span>Editing...</span>
               </span>
             )}
             {saveStatus === 'error' && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-danger">
-                <span>Sync error</span>
+              <span className="text-[10px] font-semibold text-danger" title="Failed to save">
+                Sync error
               </span>
             )}
           </div>
+        </div>
 
-          {/* Templates Trigger */}
+        {/* Right Actions: 3-dot dropdown menu + Close button */}
+        <div className="flex items-center gap-1 shrink-0 relative" ref={menuRef}>
+          
+          {/* Three-dot Trigger Button */}
           <button
-            onClick={() => setIsTemplatesModalOpen(true)}
-            className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer border border-border-subtle"
-            title="Browse Templates"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden md:inline">Templates</span>
-          </button>
-
-          {/* Copy as Markdown Button */}
-          <button
-            onClick={handleCopyMarkdown}
-            className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer border border-border-subtle"
-            title="Copy as Markdown"
-          >
-            {copied ? (
-              <>
-                <Check className="h-3.5 w-3.5 text-emerald-500" />
-                <span className="text-emerald-500 font-bold hidden md:inline">Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Export</span>
-              </>
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={cn(
+              "h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer",
+              isMenuOpen && "bg-bg-tertiary text-foreground"
             )}
-          </button>
-
-          {/* Clear Canvas */}
-          <button
-            onClick={handleClearCanvas}
-            className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
-            title="Clear Canvas"
+            title="More Options"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <MoreVertical className="h-4 w-4" />
           </button>
 
-          {/* Close Panel */}
+          {/* Dropdown Menu Popover */}
+          {isMenuOpen && (
+            <div className="absolute right-0 top-9 z-50 w-48 rounded-xl bg-surface border border-border-default shadow-xl py-1 animate-scale-in">
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setIsTemplatesModalOpen(true);
+                }}
+                className="w-full px-3.5 py-2 text-left text-xs font-semibold text-foreground hover:bg-bg-secondary flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <span>Templates</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleCopyMarkdown();
+                  setIsMenuOpen(false);
+                }}
+                className="w-full px-3.5 py-2 text-left text-xs font-semibold text-foreground hover:bg-bg-secondary flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    <span className="text-emerald-500">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>Copy Markdown</span>
+                  </>
+                )}
+              </button>
+
+              <div className="h-[1px] bg-border-subtle my-1" />
+
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleClearCanvas();
+                }}
+                className="w-full px-3.5 py-2 text-left text-xs font-semibold text-danger hover:bg-danger/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Clear Canvas</span>
+              </button>
+            </div>
+          )}
+
+          {/* Close Panel Button */}
           <button
             onClick={onClose}
-            className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer ml-1"
+            className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
             title="Close Canvas"
           >
             <X className="h-4 w-4" />
@@ -235,20 +274,14 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
         </div>
       </div>
 
-      {/* ─── Collaborator Presence & Last Edited Bar ────────────────────── */}
+      {/* ─── Collaborator Presence & Last Edited Bar (Without "Live") ────────── */}
       {lastEditedInfo && (
-        <div className="px-5 py-1.5 bg-bg-secondary/40 border-b border-border-subtle flex items-center justify-between text-[11px] text-muted-foreground shrink-0 select-none">
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-3 w-3 text-muted-foreground/70" />
-            <span>
-              Last edited by <strong className="font-semibold text-foreground">{lastEditedInfo.name}</strong>{' '}
-              {formatDistanceToNow(lastEditedInfo.time, { addSuffix: true })}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
-            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">Live</span>
-          </div>
+        <div className="px-4 py-1.5 bg-bg-secondary/40 border-b border-border-subtle flex items-center text-[11px] text-muted-foreground shrink-0 select-none">
+          <Clock className="h-3 w-3 text-muted-foreground/70 mr-1.5 shrink-0" />
+          <span className="truncate">
+            Last edited by <strong className="font-semibold text-foreground">{lastEditedInfo.name}</strong>{' '}
+            {formatDistanceToNow(lastEditedInfo.time, { addSuffix: true })}
+          </span>
         </div>
       )}
 
@@ -448,41 +481,41 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
       )}
 
       {/* ─── Main Document Body ──────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-thin">
         {isCanvasEmpty ? (
-          <div className="space-y-6 py-6 max-w-xl mx-auto animate-fade-in">
-            <div className="text-center space-y-1.5">
-              <div className="inline-flex p-3 rounded-2xl bg-primary/10 text-primary mb-1">
-                <Sparkles className="h-6 w-6" />
+          <div className="space-y-5 py-4 max-w-lg mx-auto animate-fade-in">
+            <div className="text-center space-y-1">
+              <div className="inline-flex p-2.5 rounded-xl bg-primary/10 text-primary mb-1">
+                <Sparkles className="h-5 w-5" />
               </div>
-              <h3 className="text-sm font-extrabold tracking-wide text-foreground uppercase">This Canvas is Empty</h3>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                Collaborate with your channel on notes, sprint plans, or specifications. Start typing below or choose a template.
+              <h3 className="text-sm font-extrabold tracking-wide text-foreground uppercase">Empty Canvas</h3>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                Collaborate with your channel on notes, sprint plans, or specifications.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-1 gap-2.5 pt-1">
               {CANVAS_TEMPLATES.slice(0, 4).map((tmpl) => {
                 const Icon = tmpl.icon;
                 return (
                   <button
                     key={tmpl.id}
                     onClick={() => handleSelectTemplate(tmpl)}
-                    className="text-left p-3.5 rounded-xl border border-border-default bg-surface hover:bg-bg-secondary hover:border-primary/40 transition-all flex items-start gap-3 group cursor-pointer shadow-xs hover:shadow-md"
+                    className="w-full text-left p-3 rounded-xl border border-border-default bg-surface hover:bg-bg-secondary hover:border-primary/40 transition-all flex items-start gap-3 group cursor-pointer shadow-xs hover:shadow-sm"
                   >
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Icon className="h-4 w-4" />
+                    <div className="h-7 w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform mt-0.5">
+                      <Icon className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-bold text-foreground leading-snug">{tmpl.title}</h4>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{tmpl.description}</p>
+                      <h4 className="text-xs font-bold text-foreground truncate">{tmpl.title}</h4>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed break-words">{tmpl.description}</p>
                     </div>
                   </button>
                 );
               })}
             </div>
 
-            <div className="flex justify-center pt-2">
+            <div className="flex justify-center pt-1">
               <button
                 onClick={() => {
                   if (editor) {
@@ -521,35 +554,35 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
         }
         
         .canvas-editor-content h1 {
-          font-size: 1.5rem;
+          font-size: 1.4rem;
           font-weight: 800;
           letter-spacing: -0.025em;
           color: var(--text-primary);
-          margin-top: 1.5rem;
-          margin-bottom: 0.75rem;
+          margin-top: 1.25rem;
+          margin-bottom: 0.65rem;
           padding-bottom: 0.35rem;
           border-bottom: 1px solid var(--border-subtle);
         }
 
         .canvas-editor-content h2 {
-          font-size: 1.2rem;
+          font-size: 1.15rem;
           font-weight: 700;
           letter-spacing: -0.015em;
           color: var(--text-primary);
-          margin-top: 1.25rem;
-          margin-bottom: 0.5rem;
+          margin-top: 1.1rem;
+          margin-bottom: 0.45rem;
         }
 
         .canvas-editor-content h3 {
-          font-size: 1rem;
+          font-size: 0.95rem;
           font-weight: 600;
           color: var(--text-primary);
-          margin-top: 1rem;
-          margin-bottom: 0.35rem;
+          margin-top: 0.9rem;
+          margin-bottom: 0.3rem;
         }
 
         .canvas-editor-content p {
-          margin-bottom: 0.75rem;
+          margin-bottom: 0.65rem;
           color: var(--text-primary);
           opacity: 0.95;
         }
@@ -578,12 +611,12 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
         .canvas-editor-content blockquote {
           border-left: 3px solid var(--accent, #6366f1);
           padding-left: 1rem;
-          margin: 1rem 0;
+          margin: 0.85rem 0;
           color: var(--text-secondary);
           background-color: var(--bg-tertiary);
           border-radius: 0 0.5rem 0.5rem 0;
-          padding-top: 0.5rem;
-          padding-bottom: 0.5rem;
+          padding-top: 0.45rem;
+          padding-bottom: 0.45rem;
         }
 
         .canvas-editor-content blockquote p {
@@ -598,7 +631,7 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
           border-radius: 0.5rem;
           font-family: var(--font-mono);
           font-size: 0.8125rem;
-          margin: 1rem 0;
+          margin: 0.85rem 0;
           overflow-x: auto;
         }
 
@@ -615,23 +648,23 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
         .canvas-editor-content hr {
           border: none;
           border-top: 1px solid var(--border-default);
-          margin: 1.5rem 0;
+          margin: 1.25rem 0;
         }
 
         .canvas-editor-content ul:not([data-type="taskList"]) {
           list-style-type: disc;
-          padding-left: 1.5rem;
-          margin: 0.75rem 0;
+          padding-left: 1.35rem;
+          margin: 0.65rem 0;
         }
 
         .canvas-editor-content ol {
           list-style-type: decimal;
-          padding-left: 1.5rem;
-          margin: 0.75rem 0;
+          padding-left: 1.35rem;
+          margin: 0.65rem 0;
         }
 
         .canvas-editor-content li {
-          margin-bottom: 0.25rem;
+          margin-bottom: 0.2rem;
         }
 
         .canvas-editor-content li p {
@@ -642,14 +675,14 @@ export function CanvasPanel({ chatId, onClose }: CanvasPanelProps) {
         .canvas-editor-content ul[data-type="taskList"] {
           list-style: none;
           padding-left: 0;
-          margin: 0.75rem 0;
+          margin: 0.65rem 0;
         }
 
         .canvas-editor-content ul[data-type="taskList"] li {
           display: flex;
           align-items: flex-start;
           gap: 0.5rem;
-          margin-bottom: 0.4rem;
+          margin-bottom: 0.35rem;
         }
 
         .canvas-editor-content ul[data-type="taskList"] li > label {

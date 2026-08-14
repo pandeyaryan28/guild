@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { 
   X, FileText, Play, ClipboardList, ListTodo, Bug, Sparkles, 
-  ArrowRight, Check, AlertCircle 
+  Check, AlertCircle, ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -182,32 +182,35 @@ export function CanvasTemplatesModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
       <div 
-        className="w-full max-w-3xl rounded-2xl bg-surface border border-border-default shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-scale-in"
+        className="w-full max-w-4xl rounded-2xl bg-surface border border-border-default shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border-default bg-surface/50 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-              <FileText className="h-5 w-5" />
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-b border-border-default bg-surface-elevated/50 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <FileText className="h-4 w-4" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-foreground">Canvas Templates</h2>
-              <p className="text-xs text-muted-foreground">Choose a starter template for your channel canvas</p>
+            <div className="min-w-0">
+              <h2 className="text-sm font-bold text-foreground truncate">Canvas Templates</h2>
+              <p className="text-[11px] text-muted-foreground truncate">Pick a starter document outline</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer shrink-0 ml-2"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Category Tabs */}
-        <div className="flex items-center gap-1.5 px-6 py-2.5 border-b border-border-default bg-bg-secondary/40 shrink-0 overflow-x-auto">
+        <div className="flex items-center gap-1.5 px-5 sm:px-6 py-2 border-b border-border-default bg-bg-secondary/40 shrink-0 overflow-x-auto scrollbar-hide">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -216,9 +219,9 @@ export function CanvasTemplatesModal({
                 setConfirmReplace(false);
               }}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                "px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0",
                 selectedCategory === cat
-                  ? "bg-primary text-primary-foreground shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-xs"
                   : "text-muted-foreground hover:text-foreground hover:bg-bg-tertiary"
               )}
             >
@@ -227,10 +230,11 @@ export function CanvasTemplatesModal({
           ))}
         </div>
 
-        {/* Modal Body: Split view (List on left, Preview on right) */}
-        <div className="flex-1 flex min-h-0 divide-x divide-border-default overflow-hidden">
+        {/* Modal Body: Responsive Layout (Stacked on mobile, side-by-side on desktop) */}
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 divide-y md:divide-y-0 md:divide-x divide-border-default overflow-hidden">
+          
           {/* Templates List */}
-          <div className="w-1/2 overflow-y-auto p-4 space-y-2 scrollbar-thin">
+          <div className="w-full md:w-5/12 lg:w-4/12 overflow-y-auto p-3 sm:p-4 space-y-2 scrollbar-thin shrink-0">
             {filteredTemplates.map((template) => {
               const Icon = template.icon;
               const isSelected = selectedTemplate.id === template.id;
@@ -242,28 +246,28 @@ export function CanvasTemplatesModal({
                     setConfirmReplace(false);
                   }}
                   className={cn(
-                    "w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 cursor-pointer group",
+                    "w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 cursor-pointer group min-w-0",
                     isSelected
-                      ? "bg-primary/10 border-primary/40 text-foreground shadow-sm"
+                      ? "bg-primary/10 border-primary/40 text-foreground shadow-xs"
                       : "bg-surface border-border-subtle hover:border-border-default hover:bg-bg-secondary/60 text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <div className={cn(
-                    "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
+                    "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 mt-0.5",
                     isSelected ? "bg-primary text-primary-foreground" : "bg-bg-tertiary text-muted-foreground"
                   )}>
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-3.5 w-3.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <span className="text-xs font-bold text-foreground truncate">{template.title}</span>
                       {template.badge && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-primary/20 text-primary uppercase">
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-primary/20 text-primary uppercase shrink-0">
                           {template.badge}
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
+                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed break-words">
                       {template.description}
                     </p>
                   </div>
@@ -272,15 +276,16 @@ export function CanvasTemplatesModal({
             })}
           </div>
 
-          {/* Template Preview Pane */}
-          <div className="w-1/2 flex flex-col overflow-hidden bg-bg-secondary/20">
-            <div className="px-5 py-3 border-b border-border-default/60 flex items-center justify-between shrink-0 bg-surface/30">
-              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Preview</span>
-              <span className="text-[11px] text-muted-foreground">{selectedTemplate.category}</span>
+          {/* Template Preview Pane (Desktop) */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-bg-secondary/15">
+            <div className="px-5 py-2.5 border-b border-border-default/60 flex items-center justify-between shrink-0 bg-surface/40">
+              <span className="text-[11px] font-bold text-foreground uppercase tracking-wider">Preview: {selectedTemplate.title}</span>
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-bg-tertiary text-muted-foreground">{selectedTemplate.category}</span>
             </div>
+            
             <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
               <div 
-                className="prose prose-sm dark:prose-invert max-w-none text-xs text-foreground/90 space-y-2 pointer-events-none opacity-90"
+                className="prose prose-sm dark:prose-invert max-w-none text-xs text-foreground/90 space-y-2 pointer-events-none break-words"
                 dangerouslySetInnerHTML={{ __html: selectedTemplate.content }}
               />
             </div>
@@ -288,26 +293,27 @@ export function CanvasTemplatesModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-border-default bg-surface/80 flex items-center justify-between shrink-0">
-          <div>
+        <div className="px-5 sm:px-6 py-3 border-t border-border-default bg-surface-elevated/70 flex items-center justify-between shrink-0 gap-3">
+          <div className="min-w-0 flex-1">
             {confirmReplace && (
-              <div className="flex items-center gap-1.5 text-xs text-amber-500 font-medium">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>This will overwrite current canvas text. Click again to confirm.</span>
+              <div className="flex items-center gap-1.5 text-xs text-amber-500 font-medium truncate">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">Overwrites current canvas. Click again to confirm.</span>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2.5">
+          
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleApply}
               className={cn(
-                "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md",
+                "px-4 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs",
                 confirmReplace
                   ? "bg-amber-500 hover:bg-amber-600 text-white animate-pulse"
                   : "bg-primary hover:bg-primary/90 text-primary-foreground"
