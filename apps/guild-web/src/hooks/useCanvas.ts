@@ -3,19 +3,27 @@ import { getOrCreateCanvas, listenToCanvas, updateCanvasContent } from '../lib/c
 import { useAuth } from './useAuth';
 import type { Canvas } from '@guild/types';
 
+export type SaveStatus = 'saved' | 'saving' | 'error' | 'unsaved';
+
 export function useCanvas(chatId: string | null | undefined) {
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
-  const userName = userProfile?.fullName ?? 'User';
-  
+  const userName = userProfile?.fullName || user?.displayName || 'User';
+
   const [canvas, setCanvas] = React.useState<Canvas | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const [isSaving, setIsSaving] = React.useState(false);
-  const isInitialLoadRef = React.useRef(true);
-  
-  // Local state during edits so typing is fast
+  const [saveStatus, setSaveStatus] = React.useState<SaveStatus>('saved');
+
+  // Local state for fast responsiveness
   const [localTitle, setLocalTitle] = React.useState('');
   const [localContent, setLocalContent] = React.useState('');
+
+  const isInitialLoadRef = React.useRef(true);
+  const saveTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestStateRef = React.useRef({ content: '', title: '' });
+
+  // Keep latestStateRef in sync
+  latestStateRef.current = { content: localContent, title: localTitle };
 
   React.useEffect(() => {
     if (!orgId || !chatId || !user) {
@@ -34,16 +42,16 @@ export function useCanvas(chatId: string | null | undefined) {
     getOrCreateCanvas(orgId, chatId, user.uid, userName)
       .then((canvasId) => {
         if (!isActive) return;
-        
+
         unsubListener = listenToCanvas(canvasId, (updatedCanvas) => {
           if (!isActive) return;
           setCanvas(updatedCanvas);
+
           if (updatedCanvas) {
-            // Only update local state if it's a remote change or initial load
             const isRemoteChange = updatedCanvas.updatedBy !== user.uid;
             if (isRemoteChange || isInitialLoadRef.current) {
-              setLocalTitle(updatedCanvas.title);
-              setLocalContent(updatedCanvas.content);
+              setLocalTitle(updatedCanvas.title || 'Untitled Canvas');
+              setLocalContent(updatedCanvas.content || '');
               isInitialLoadRef.current = false;
             }
           }
@@ -52,77 +60,98 @@ export function useCanvas(chatId: string | null | undefined) {
       })
       .catch((err) => {
         console.error('Failed to get/create canvas:', err);
-        if (isActive) setLoading(false);
+        if (isActive) {
+          setLoading(false);
+          setSaveStatus('error');
+        }
       });
 
     return () => {
       isActive = false;
       if (unsubListener) unsubListener();
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
   }, [orgId, chatId, user?.uid, userName]);
 
-  // Debounced auto-save logic
-  const saveTimeoutRef = React.useRef<any>(null);
-
-  const saveCanvas = React.useCallback(
-    async (newContent: string, newTitle: string) => {
-      if (!canvas || !user) return;
-      setIsSaving(true);
+  // Actual Firestore save routine
+  const performSave = React.useCallback(
+    async (contentToSave: string, titleToSave: string) => {
+      if (!canvas?.id || !user) return;
       try {
-        await updateCanvasContent(canvas.id, newContent, newTitle, user.uid, userName);
+        setSaveStatus('saving');
+        await updateCanvasContent(
+          canvas.id,
+          contentToSave,
+          titleToSave.trim() || 'Untitled Canvas',
+          user.uid,
+          userName
+        );
+        setSaveStatus('saved');
       } catch (err) {
-        console.error('Failed to auto-save canvas:', err);
-      } finally {
-        setIsSaving(false);
+        console.error('Failed to save canvas content:', err);
+        setSaveStatus('error');
       }
     },
-    [canvas, user, userName]
+    [canvas?.id, user, userName]
   );
 
-  const handleUpdate = React.useCallback(
-    (newContent: string, newTitle: string) => {
+  // Debounced updater
+  const updateCanvas = React.useCallback(
+    (newContent: string, newTitle?: string) => {
+      const resolvedTitle = newTitle !== undefined ? newTitle : latestStateRef.current.title;
       setLocalContent(newContent);
-      setLocalTitle(newTitle);
-      
+      if (newTitle !== undefined) {
+        setLocalTitle(newTitle);
+      }
+      setSaveStatus('unsaved');
+
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      
+
       saveTimeoutRef.current = setTimeout(() => {
-        saveCanvas(newContent, newTitle);
-      }, 1000); // 1-second debounce
+        performSave(newContent, resolvedTitle);
+      }, 600); // 600ms debounce
     },
-    [saveCanvas]
+    [performSave]
   );
 
-  // Force immediate save (useful on blur or when clicking checklist buttons)
+  // Force immediate save (on blur or actions)
   const forceSave = React.useCallback(
-    async (newContent: string, newTitle: string) => {
+    async (content?: string, title?: string) => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      setLocalContent(newContent);
-      setLocalTitle(newTitle);
-      await saveCanvas(newContent, newTitle);
+      const c = content !== undefined ? content : latestStateRef.current.content;
+      const t = title !== undefined ? title : latestStateRef.current.title;
+      setLocalContent(c);
+      setLocalTitle(t);
+      await performSave(c, t);
     },
-    [saveCanvas]
+    [performSave]
   );
 
-  React.useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+  // Derive last edited information
+  const lastEditedInfo = React.useMemo(() => {
+    if (!canvas?.updatedAt) return null;
+    const date = canvas.updatedAt.toDate ? canvas.updatedAt.toDate() : new Date();
+    return {
+      name: canvas.updatedByName || 'Collaborator',
+      time: date,
+      isCurrentUser: canvas.updatedBy === user?.uid,
     };
-  }, []);
+  }, [canvas?.updatedAt, canvas?.updatedByName, canvas?.updatedBy, user?.uid]);
 
   return {
     canvas,
     loading,
-    isSaving,
+    saveStatus,
     localTitle,
     localContent,
     setLocalTitle,
     setLocalContent,
-    updateCanvas: handleUpdate,
-    forceSave
+    updateCanvas,
+    forceSave,
+    lastEditedInfo,
   };
 }
