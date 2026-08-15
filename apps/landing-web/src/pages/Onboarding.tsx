@@ -117,7 +117,12 @@ export function Onboarding() {
   const [employeeId, setEmployeeId] = useState('');
   const [age, setAge] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [themePreference, setThemePreference] = useState<'light' | 'dark'>('dark');
+  const [themePreference, setThemePreference] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  });
   const [inviteEmails, setInviteEmails] = useState<string[]>(['alex@acme.com', 'developer@acme.com']);
   const [newInviteEmail, setNewInviteEmail] = useState('');
   const [isUsernameChecking, setIsUsernameChecking] = useState(false);
@@ -153,7 +158,12 @@ export function Onboarding() {
     setEmployeeId('');
     setAge('');
     setPhoneNumber('');
-    setThemePreference('dark');
+    setThemePreference(() => {
+      if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+      return 'light';
+    });
     setInviteEmails(['alex@acme.com', 'developer@acme.com']);
     setNewInviteEmail('');
     setIsUsernameAvailable(null);

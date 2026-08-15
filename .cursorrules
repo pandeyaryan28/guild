@@ -1,4 +1,18 @@
 # Project Guidelines
 
-- Never use pill badges, next-gen labels, or decorative tags (such as `inline-flex items-center gap-2 ... rounded-full`) with Sparkles/icons at the top of landing page sections, hero sections, feature pages, or anywhere else in the project. This is considered AI slop. Ensure this type of div is never used anytime anywhere.
-- Never use floating micro-widgets (such as absolute positioned glass divs with `absolute -bottom-6 -left-6` or `-right-6` showing status or metadata like "Active Workspace Operations Board", "Workspace Authority", etc.) next to the main hero screenshots in the feature pages. Keep the screenshot/graphic presentations clean.
+## 1. Dual-Theme Parity (Light & Dark Mode Mandatory)
+- **Every new feature, screen, drawer, modal, table, card, and UI element MUST be designed and developed to support BOTH Light Mode and Dark Mode with equal visual quality.**
+- **Never develop for Dark Mode only.** When creating or updating UI, always ensure high-contrast readability, balanced contrast ratios, and clean aesthetics in Light Mode as well as Dark Mode.
+- **Use Semantic Design Tokens**:
+  - Backgrounds: `bg-background`, `bg-card`, `bg-surface`, `bg-surface-elevated`, `bg-surface-hover`, `bg-secondary`, `bg-muted` or `var(--bg-primary)`, `var(--surface)`, etc.
+  - Text: `text-foreground`, `text-muted-foreground`, `text-text-primary`, `text-text-secondary`, `text-text-muted`, `text-text-disabled`.
+  - Borders: `border-border`, `border-border-default`, `border-border-strong`, `border-border-subtle`, `border-input`.
+  - Accents: `bg-primary`, `text-primary-foreground`, `bg-accent`, `text-accent-foreground`.
+- **Avoid One-Sided Glassmorphic/Opacity Hacks**:
+  - Never hardcode dark-mode-only alpha utilities like `bg-white/5` or `border-white/10` without corresponding light/dark classes or semantic variables. In light mode, `border-white/10` and `bg-white/5` are invisible or produce illegible contrast.
+  - If using glassmorphic surfaces, pair them properly: `bg-white/85 dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 backdrop-blur-xl` or use semantic glass classes like `aether-glass` with dynamic variable bindings.
+  - Never use static `text-white` on transparent surfaces that will be rendered on a light background.
+
+## 2. UI Anti-Patterns & Clean Aesthetics
+- **No Decorative AI Slop**: Never use pill badges, next-gen labels, or decorative tags (such as `inline-flex items-center gap-2 ... rounded-full`) with Sparkles/icons at the top of landing page sections, hero sections, feature pages, or anywhere else in the project. Ensure this type of div is never used anytime anywhere.
+- **No Floating Hero Micro-Widgets**: Never use floating micro-widgets (such as absolute positioned glass divs with `absolute -bottom-6 -left-6` or `-right-6` showing status or metadata like "Active Workspace Operations Board", "Workspace Authority", etc.) next to the main hero screenshots in the feature pages. Keep screenshot and graphic presentations clean.

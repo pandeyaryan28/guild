@@ -89,7 +89,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return isNaN(parsed) ? 0 : parsed;
     }
     const storedMode = localStorage.getItem('guild-mode');
-    return storedMode === 'dark' ? 1 : 0;
+    if (storedMode === 'dark') return 1;
+    if (storedMode === 'light') return 0;
+    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 1;
+    }
+    return 0;
   });
 
   // Mode is dynamically derived from themeProgress to maintain full compatibility
