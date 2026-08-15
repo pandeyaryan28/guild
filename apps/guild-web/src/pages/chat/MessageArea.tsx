@@ -408,12 +408,12 @@ export function MessageArea({
 
   return (
     <div className="flex flex-1 min-w-0 flex-col bg-background relative h-full overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border-default bg-surface backdrop-blur-sm px-5 py-3.5 pt-[calc(0.875rem+env(safe-area-inset-top,0px))] md:pt-3.5 shrink-0">
+      {/* Precision Linear Header */}
+      <div className="flex items-center gap-3 border-b border-white/10 bg-surface/80 dark:bg-surface/60 backdrop-blur-xl px-5 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] md:py-3 shrink-0 z-10">
         <button
           onClick={() => navigate('/chat')}
-          className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent/40 hover:text-foreground shrink-0 transition-colors"
-          title="Back to Channels"
+          className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-white/10 hover:text-foreground shrink-0 transition-colors cursor-pointer"
+          title="Back to Directory"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -422,7 +422,7 @@ export function MessageArea({
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent/40 hover:text-foreground shrink-0 transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-white/10 hover:text-foreground shrink-0 transition-colors cursor-pointer"
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
             {isSidebarCollapsed ? (
@@ -439,7 +439,7 @@ export function MessageArea({
             const otherId = parts.find((p) => p !== currentUser?.uid) ?? '';
             return (
               <div 
-                className="w-8 h-8 flex items-center justify-center rounded-full shrink-0 border border-white/10 relative shadow-sm"
+                className="w-8 h-8 flex items-center justify-center rounded-full shrink-0 border border-white/15 relative shadow-xs"
                 style={{ background: `hsl(${avatarHue(otherId)} 55% 45%)` }}
               >
                 {dmPartner?.photoURL ? (
@@ -447,7 +447,7 @@ export function MessageArea({
                 ) : (
                   <span className="text-xs font-bold text-white">{avatarInitials(dmPartnerName || '?')}</span>
                 )}
-                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-surface flex items-center justify-center shadow-sm">
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-surface flex items-center justify-center shadow-xs">
                   <span className={cn(
                     "h-1.5 w-1.5 rounded-full",
                     dmPartner?.availabilityStatus === 'focus' ? "bg-red-500" :
@@ -459,17 +459,23 @@ export function MessageArea({
             );
           })()
         ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-            <Icon className="h-4 w-4 text-primary/70" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary">
+            <Icon className="h-4 w-4" />
           </div>
         )}
-        <div className="min-w-0 flex-1">
-          <h1 className="text-sm font-bold text-foreground flex items-center gap-1">{headerTitle}</h1>
-          {headerSub && <p className="text-[11px] text-text-muted truncate">{headerSub}</p>}
+
+        <div className="min-w-0 flex-1 flex items-center gap-3">
+          <div className="min-w-0">
+            <h1 className="text-sm font-bold text-foreground flex items-center gap-1.5 truncate">
+              {headerTitle}
+            </h1>
+            {headerSub && <p className="text-[11px] text-muted-foreground truncate leading-tight">{headerSub}</p>}
+          </div>
         </div>
+
         {/* Right Header Actions */}
         <div className="ml-auto flex items-center gap-2">
-          {/* Canvas Toggle Button (Visible if either channelId or dmId is open) */}
+          {/* Canvas Toggle Button */}
           {(channelId || dmId) && (
             <button
               onClick={() => {
@@ -482,12 +488,12 @@ export function MessageArea({
                 }
                 setSearchParams(newParams);
               }}
-              title="Show Canvas"
+              title="Toggle Canvas"
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-xl transition-colors shrink-0 cursor-pointer border",
+                "flex h-8 w-8 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer border",
                 searchParams.get('canvas') === 'true'
-                  ? "bg-primary/10 border-primary/20 text-primary hover:bg-primary/15"
-                  : "border-transparent text-muted-foreground hover:bg-bg-tertiary hover:text-foreground"
+                  ? "bg-primary/15 border-primary/30 text-primary shadow-xs"
+                  : "border-transparent text-muted-foreground hover:bg-white/10 hover:text-foreground"
               )}
             >
               <FileText className="h-4 w-4" />
@@ -496,16 +502,16 @@ export function MessageArea({
 
           {channelId && channel && (
             <>
-              <div className="flex items-center gap-1.5 text-text-muted ml-1">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/5 text-muted-foreground text-[11px] font-mono">
                 <Users className="h-3.5 w-3.5" />
-                <span className="text-[11px]">{channel.memberCount}</span>
+                <span>{channel.memberCount}</span>
               </div>
 
               {/* Invite Button */}
               <button
                 onClick={() => setShowInviteModal(true)}
                 title="Add members"
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors shrink-0 cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-white/10 hover:text-foreground transition-colors shrink-0 cursor-pointer"
               >
                 <UserPlus className="h-4 w-4" />
               </button>
@@ -519,7 +525,7 @@ export function MessageArea({
                     setSearchParams(newParams);
                   }}
                   title="Channel settings"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-bg-tertiary hover:text-foreground transition-colors shrink-0 cursor-pointer"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-white/10 hover:text-foreground transition-colors shrink-0 cursor-pointer"
                 >
                   <Settings className="h-4 w-4" />
                 </button>
@@ -527,8 +533,6 @@ export function MessageArea({
             </>
           )}
         </div>
-
-
       </div>
 
       {/* Messages */}

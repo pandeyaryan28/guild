@@ -197,11 +197,11 @@ export function MessageList({
 
         {items.map((item, i) =>
           item.type === 'divider' ? (
-            <div key={`divider-${i}`} className="flex items-center justify-center my-6 relative px-4">
-              <div className="absolute inset-x-4 flex items-center" aria-hidden="true">
-                <div className="w-full border-t border-border-default/45" />
+            <div key={`divider-${i}`} className="flex items-center justify-center my-5 relative px-4">
+              <div className="absolute inset-x-6 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-white/10 dark:border-white/10" />
               </div>
-              <span className="relative z-10 glass bg-surface-elevated/85 dark:bg-surface-elevated/75 border border-border-default/50 px-3.5 py-1 rounded-full text-[9.5px] font-bold tracking-widest text-text-secondary uppercase shadow-sm">
+              <span className="relative z-10 bg-surface-elevated/90 dark:bg-surface/90 backdrop-blur-md border border-white/10 px-3 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-widest text-muted-foreground uppercase shadow-xs">
                 {item.label}
               </span>
             </div>
@@ -232,10 +232,10 @@ export function MessageList({
             whileHover={{ scale: 1.08, y: -2 }}
             whileTap={{ scale: 0.95 }}
             onClick={scrollToBottom}
-            className="absolute bottom-5 right-5 z-20 flex h-9.5 w-9.5 items-center justify-center rounded-full glass bg-surface-elevated/95 border border-border-default text-primary shadow-xl hover:bg-surface active:scale-95 transition-colors cursor-pointer"
+            className="absolute bottom-5 right-5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-surface-elevated/95 dark:bg-surface/90 backdrop-blur-xl border border-white/15 text-primary shadow-xl hover:bg-surface active:scale-95 transition-all cursor-pointer"
             title="Scroll to latest"
           >
-            <ArrowDown className="h-4.5 w-4.5" />
+            <ArrowDown className="h-4 w-4" />
           </motion.button>
         )}
       </AnimatePresence>

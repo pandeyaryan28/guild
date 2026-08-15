@@ -1,123 +1,21 @@
 import * as React from 'react';
-import { motion } from 'motion/react';
-import { Pencil, Trash2, Check, X, CheckSquare, User, Users, File, FileText, FileAudio, FileVideo, Download, ExternalLink, Play, Maximize2, Target, ClipboardList, Smile, MessageSquare, Loader2, CornerUpLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  Pencil, Trash2, Check, X, File, FileText,
+  FileAudio, Download, Play, Maximize2, Smile,
+  MessageSquare, Loader2, CornerUpLeft
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { type Message } from '../../lib/chat';
-import { editMessage, deleteMessage } from '../../lib/chat';
+import { type Message, editMessage, deleteMessage } from '../../lib/chat';
 import { MediaLightbox } from './MediaLightbox';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
-import { updateRequestStatus } from '../../lib/requests';
 import { toggleReaction, addMessageReply, listenToReplies, type MessageReply } from '../../lib/replies';
-import { useSearchParams } from 'react-router-dom';
-import { updateTask } from '../../lib/tasks';
-
-const TASK_STATUS_CONFIG: Record<string, { label: string; border: string; bg: string; text: string }> = {
-  todo: { label: 'To Do', border: 'border-zinc-500/20', bg: 'bg-zinc-500/10', text: 'text-zinc-400' },
-  in_progress: { label: 'In Progress', border: 'border-blue-500/20', bg: 'bg-blue-500/10', text: 'text-blue-400' },
-  review: { label: 'Review', border: 'border-amber-500/20', bg: 'bg-amber-500/10', text: 'text-amber-400' },
-  done: { label: 'Done', border: 'border-emerald-500/20', bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
-};
-
-interface MessageTaskCardProps {
-  taskId: string;
-  creatorName: string;
-  assigneeName: string;
-  setSearchParams: any;
-  members: any[];
-  currentUser: any;
-  orgId?: string;
-}
-
-const MessageTaskCard = ({ taskId, creatorName, assigneeName, setSearchParams, members, currentUser, orgId }: MessageTaskCardProps) => {
-  const [task, setTask] = React.useState<any>(null);
-
-  React.useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'tasks', taskId), (snap) => {
-      if (snap.exists()) {
-        setTask(snap.data());
-      }
-    });
-    return () => unsub();
-  }, [taskId]);
-
-  if (!task) return null;
-
-  const statusKey = task.status || 'todo';
-  const statusConfig = TASK_STATUS_CONFIG[statusKey] || TASK_STATUS_CONFIG.todo;
-
-  const reactorProfile = members.find(m => m.uid === task.creatorId);
-  const currentUserProfile = members.find(m => m.uid === currentUser?.uid);
-
-  const isManager = reactorProfile?.managerId && reactorProfile.managerId === currentUser?.uid;
-  const isOwner = currentUserProfile?.role === 'owner';
-  const isAdmin = currentUserProfile?.role === 'admin';
-  const canApprove = isManager || isOwner || isAdmin;
-  const isApproved = task.approved !== false;
-
-  return (
-    <div
-      onClick={(e) => {
-        e.stopPropagation();
-        setSearchParams({ task: taskId });
-      }}
-      className="mt-2 w-full max-w-sm rounded-2xl border border-border-default/80 bg-surface-elevated/45 backdrop-blur-md p-4 pl-6 relative overflow-hidden shadow-md shadow-black/5 transition-all text-left cursor-pointer hover:bg-surface-elevated/70 hover:border-primary/30 hover:shadow-lg hover:scale-[1.01]"
-    >
-      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-2xl" />
-      <div className="flex items-center justify-between gap-4 mb-3">
-        <div className="flex items-center gap-2 text-primary">
-          <CheckSquare className="h-4.5 w-4.5 shrink-0" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-primary/95">Task</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[9px] text-text-muted font-medium">Assigned to {assigneeName}</span>
-          {isApproved ? (
-            <span className={cn(
-              "rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-wider",
-              statusConfig.border,
-              statusConfig.bg,
-              statusConfig.text
-            )}>
-              {statusConfig.label}
-            </span>
-          ) : (
-            <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-400">
-              Awaiting Approval
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="text-xs font-semibold text-foreground leading-relaxed">
-        {task.title}
-      </div>
-
-      {!isApproved && canApprove && (
-        <button
-          onClick={async (e) => {
-            e.stopPropagation();
-            if (!orgId || !currentUserProfile) return;
-            try {
-              const actionActor = { uid: currentUser.uid, name: currentUserProfile.fullName };
-              await updateTask(taskId, orgId, { approved: true } as any, actionActor);
-            } catch (err: any) {
-              alert(err.message || 'Failed to approve task.');
-            }
-          }}
-          className="mt-3 w-full py-1.5 rounded-xl bg-primary text-white text-[10px] font-bold hover:bg-primary/95 transition-all shadow-xs active:scale-95 cursor-pointer text-center border border-primary/10"
-        >
-          Approve Task
-        </button>
-      )}
-    </div>
-  );
-};
+import { TaskMessageCard, GoalMessageCard, RequestMessageCard } from '../../components/chat/cards';
 
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
   isGrouped: boolean; // true = hide avatar + name (consecutive from same sender)
-  members: Array<{ uid: string; fullName: string; username: string; photoURL?: string }>;
+  members: Array<{ uid: string; fullName: string; username: string; photoURL?: string; role?: string; managerId?: string }>;
   orgId?: string;
   currentUser?: { uid: string; displayName: string } | null;
   onOpenDiscussion?: (msg: Message) => void;
@@ -128,10 +26,15 @@ function parseMentions(body: string, isOwn: boolean) {
   const parts = body.split(/(@\w+)/g);
   return parts.map((part, i) =>
     part.startsWith('@') ? (
-      <span key={i} className={cn(
-        "font-semibold rounded px-0.5",
-        isOwn ? "text-white bg-white/25" : "text-primary bg-primary/10"
-      )}>
+      <span
+        key={i}
+        className={cn(
+          'font-semibold rounded px-1 py-0.5 mx-0.5 text-xs',
+          isOwn
+            ? 'text-white bg-white/20'
+            : 'text-primary bg-primary/10 border border-primary/20',
+        )}
+      >
         {part}
       </span>
     ) : (
@@ -142,20 +45,20 @@ function parseMentions(body: string, isOwn: boolean) {
 
 function formatTime(ts: { toDate: () => Date } | undefined) {
   if (!ts) return '';
-  const d = ts.toDate();
+  const d = typeof (ts as any).toDate === 'function' ? ts.toDate() : new Date((ts as any).seconds ? (ts as any).seconds * 1000 : (ts as any));
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function getSenderColor(username: string) {
   const colors = [
-    'text-red-400 dark:text-red-300 font-bold',
-    'text-amber-500 dark:text-amber-400 font-bold',
-    'text-emerald-500 dark:text-emerald-400 font-bold',
-    'text-cyan-500 dark:text-cyan-400 font-bold',
-    'text-blue-500 dark:text-blue-400 font-bold',
-    'text-indigo-500 dark:text-indigo-400 font-bold',
-    'text-violet-500 dark:text-violet-400 font-bold',
-    'text-pink-500 dark:text-pink-400 font-bold',
+    'text-red-400 dark:text-red-300 font-semibold',
+    'text-amber-500 dark:text-amber-400 font-semibold',
+    'text-emerald-500 dark:text-emerald-400 font-semibold',
+    'text-cyan-500 dark:text-cyan-400 font-semibold',
+    'text-blue-500 dark:text-blue-400 font-semibold',
+    'text-indigo-500 dark:text-indigo-400 font-semibold',
+    'text-violet-500 dark:text-violet-400 font-semibold',
+    'text-pink-500 dark:text-pink-400 font-semibold',
   ];
   let hash = 0;
   for (let i = 0; i < username.length; i++) {
@@ -165,10 +68,18 @@ function getSenderColor(username: string) {
   return colors[index];
 }
 
-export function MessageBubble({ message, isOwn, isGrouped, members, orgId, currentUser, onOpenDiscussion, onQuoteMessage }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  isOwn,
+  isGrouped,
+  members,
+  orgId,
+  currentUser,
+  onOpenDiscussion,
+  onQuoteMessage,
+}: MessageBubbleProps) {
   const sender = members.find((m) => m.uid === message.senderId);
   const photoURL = sender?.photoURL;
-  const [, setSearchParams] = useSearchParams();
 
   const [hovered, setHovered] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
@@ -239,48 +150,11 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     }
   };
 
-  const [realtimeRequestStatus, setRealtimeRequestStatus] = React.useState<string | null>(null);
-  const [realtimeGoalStatus, setRealtimeGoalStatus] = React.useState<string | null>(null);
-  const [realtimeTaskStatus, setRealtimeTaskStatus] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    const rId = (message as any).requestId;
-    if (!rId) return;
-
-    const unsub = onSnapshot(doc(db, 'requests', rId), (snap) => {
-      if (snap.exists()) {
-        setRealtimeRequestStatus(snap.data().status);
-      }
-    });
-    return () => unsub();
-  }, [message]);
-
-  React.useEffect(() => {
-    const gId = (message as any).goalId;
-    if (!gId) return;
-
-    const unsub = onSnapshot(doc(db, 'goals', gId), (snap) => {
-      if (snap.exists()) {
-        setRealtimeGoalStatus(snap.data().status);
-      }
-    });
-    return () => unsub();
-  }, [message]);
-
-  React.useEffect(() => {
-    const tId = (message as any).taskId;
-    if (!tId) return;
-
-    const unsub = onSnapshot(doc(db, 'tasks', tId), (snap) => {
-      if (snap.exists()) {
-        setRealtimeTaskStatus(snap.data().status);
-      }
-    });
-    return () => unsub();
-  }, [message]);
-
   const handleEdit = async () => {
-    if (!editBody.trim() || editBody === message.body) { setEditing(false); return; }
+    if (!editBody.trim() || editBody === message.body) {
+      setEditing(false);
+      return;
+    }
     setSaving(true);
     try {
       await editMessage(message.id, editBody.trim());
@@ -318,17 +192,33 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
             onChange={(e) => setEditBody(e.target.value)}
             autoFocus
             rows={2}
-            className="w-full resize-none rounded-lg border border-primary/30 bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+            className="w-full resize-none rounded-xl border border-primary/40 bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 shadow-inner"
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleEdit(); }
-              if (e.key === 'Escape') { setEditing(false); setEditBody(message.body); }
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleEdit();
+              }
+              if (e.key === 'Escape') {
+                setEditing(false);
+                setEditBody(message.body);
+              }
             }}
           />
-          <div className="flex gap-2 mt-1.5">
-            <button onClick={handleEdit} disabled={saving} className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10 text-xs text-primary font-medium hover:bg-primary/20 transition-colors">
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={handleEdit}
+              disabled={saving}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors shadow-xs cursor-pointer"
+            >
               <Check className="h-3 w-3" /> Save
             </button>
-            <button onClick={() => { setEditing(false); setEditBody(message.body); }} className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-bg-tertiary text-xs text-muted-foreground font-medium hover:bg-bg-tertiary transition-colors">
+            <button
+              onClick={() => {
+                setEditing(false);
+                setEditBody(message.body);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-muted-foreground font-semibold transition-colors cursor-pointer"
+            >
               <X className="h-3 w-3" /> Cancel
             </button>
           </div>
@@ -340,76 +230,30 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
       const args = message.body.trim().slice(5).trim();
       const taskTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
       const taskId = (message as any).taskId;
-      const statusKey = realtimeTaskStatus || 'todo';
-      const statusConfig = TASK_STATUS_CONFIG[statusKey] || TASK_STATUS_CONFIG.todo;
 
       return (
-        <div
-          onClick={() => taskId && setSearchParams({ task: taskId })}
-          className={cn(
-            "mt-2 w-full max-w-md rounded-2xl border border-border-default/80 bg-surface-elevated/45 backdrop-blur-md p-4 pl-6 relative overflow-hidden shadow-md shadow-black/5 transition-all text-left",
-            taskId ? "cursor-pointer hover:bg-surface-elevated/70 hover:border-primary/30 hover:shadow-lg hover:scale-[1.01]" : ""
-          )}
-        >
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-2xl" />
-          <div className="flex items-center justify-between gap-4 mb-3">
-            <div className="flex items-center gap-2 text-primary">
-              <CheckSquare className="h-4.5 w-4.5 shrink-0" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary/95">Task</span>
-            </div>
-            <span className={cn(
-              "rounded-full border px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider",
-              statusConfig.border,
-              statusConfig.bg,
-              statusConfig.text
-            )}>
-              {statusConfig.label}
-            </span>
-          </div>
-
-          <div className="text-sm font-semibold text-foreground leading-relaxed">
-            {taskTitle}
-          </div>
-        </div>
+        <TaskMessageCard
+          taskId={taskId}
+          fallbackTitle={taskTitle}
+          creatorName={message.senderName}
+          members={members}
+          currentUser={currentUser}
+          orgId={orgId}
+        />
       );
     }
 
     if (isGoalCommand) {
       const args = message.body.trim().slice(5).trim();
       const goalTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
-      const displayStatus = realtimeGoalStatus || (message as any).goalStatus || 'active';
       const goalId = (message as any).goalId;
 
       return (
-        <div
-          onClick={() => goalId && setSearchParams({ goal: goalId })}
-          className={cn(
-            "mt-2 w-full max-w-md rounded-2xl border border-border-default/80 bg-surface-elevated/45 backdrop-blur-md p-4 pl-6 relative overflow-hidden shadow-md shadow-black/5 transition-all text-left",
-            goalId ? "cursor-pointer hover:bg-surface-elevated/70 hover:border-emerald-500/30 hover:shadow-lg hover:scale-[1.01]" : ""
-          )}
-        >
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500 rounded-l-2xl" />
-          <div className="flex items-center justify-between gap-4 mb-3">
-            <div className="flex items-center gap-2 text-emerald-500">
-              <Target className="h-4.5 w-4.5 shrink-0" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500/95">Goal</span>
-            </div>
-            <span className={cn(
-              "rounded-full border px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider",
-              displayStatus === 'completed'
-                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                : displayStatus === 'cancelled'
-                ? 'border-zinc-500/20 bg-zinc-500/10 text-zinc-400'
-                : 'border-cyan-500/20 bg-cyan-500/10 text-cyan-400'
-            )}>
-              {displayStatus}
-            </span>
-          </div>
-
-          <div className="text-sm font-semibold text-foreground leading-relaxed">
-            {goalTitle}
-          </div>
-        </div>
+        <GoalMessageCard
+          goalId={goalId}
+          fallbackTitle={goalTitle}
+          members={members}
+        />
       );
     }
 
@@ -417,12 +261,12 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
       const args = message.body.trim().slice(8).trim();
       const requestTitle = args.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
       const rawMentions = message.body.match(/@\w+/g) || [];
-      
+
       let approverName = 'Approver';
       let approverId = '';
       if (rawMentions.length > 0) {
         const username = rawMentions[0].slice(1);
-        const approverUser = members.find(m => m.username === username);
+        const approverUser = members.find((m) => m.username === username);
         if (approverUser) {
           approverName = approverUser.fullName;
           approverId = approverUser.uid;
@@ -432,119 +276,25 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
       } else if (message.dmId) {
         const parts = message.dmId.split('_');
         approverId = parts.find((p) => p !== message.senderId) ?? '';
-        const approverUser = members.find(m => m.uid === approverId);
+        const approverUser = members.find((m) => m.uid === approverId);
         if (approverUser) {
           approverName = approverUser.fullName;
         }
       }
 
       const rId = (message as any).requestId;
-      const displayStatus = realtimeRequestStatus || (message as any).requestStatus || 'pending';
-      const isApprover = currentUser && approverId === currentUser.uid;
-
-      const handleApprove = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!rId || !orgId || !currentUser) return;
-        setSaving(true);
-        try {
-          await updateRequestStatus(
-            rId,
-            orgId,
-            'approved',
-            currentUser.uid,
-            currentUser.displayName || 'Approver',
-            message.senderId,
-            requestTitle,
-            'Approved via chat discussion.'
-          );
-        } catch (err) {
-          console.error('Failed to approve request:', err);
-        } finally {
-          setSaving(false);
-        }
-      };
-
-      const handleReject = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!rId || !orgId || !currentUser) return;
-        setSaving(true);
-        try {
-          await updateRequestStatus(
-            rId,
-            orgId,
-            'rejected',
-            currentUser.uid,
-            currentUser.displayName || 'Approver',
-            message.senderId,
-            requestTitle,
-            'Rejected via chat discussion.'
-          );
-        } catch (err) {
-          console.error('Failed to reject request:', err);
-        } finally {
-          setSaving(false);
-        }
-      };
 
       return (
-        <div
-          onClick={() => rId && setSearchParams({ request: rId })}
-          className={cn(
-            "mt-2 w-full max-w-md rounded-2xl border border-border-default/80 bg-surface-elevated/45 backdrop-blur-md p-4 pl-6 relative overflow-hidden shadow-md shadow-black/5 transition-all text-left",
-            rId ? "cursor-pointer hover:bg-surface-elevated/70 hover:border-amber-500/30 hover:shadow-lg hover:scale-[1.01]" : ""
-          )}
-        >
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500 rounded-l-2xl" />
-          <div className="flex items-center justify-between gap-4 mb-3">
-            <div className="flex items-center gap-2 text-amber-500">
-              <ClipboardList className="h-4.5 w-4.5 shrink-0" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-500/95">Request</span>
-            </div>
-            <span className={cn(
-              "rounded-full border px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider",
-              displayStatus === 'approved' 
-                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                : displayStatus === 'rejected'
-                ? 'border-red-500/20 bg-red-500/10 text-red-400'
-                : 'border-amber-500/20 bg-amber-500/10 text-amber-400'
-            )}>
-              {displayStatus}
-            </span>
-          </div>
-
-          <div className="text-sm font-semibold text-foreground leading-relaxed">
-            {requestTitle}
-          </div>
-          
-          <div className="mt-3.5 text-[10.5px] text-text-muted flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <span>Approver:</span>
-              <span className="font-semibold text-foreground bg-surface-elevated px-2 py-0.5 rounded-lg border border-border-default/50 shadow-xs">{approverName}</span>
-            </div>
-            {isApprover && displayStatus === 'pending' && (
-              <div className="flex items-center gap-2 mt-1.5 sm:mt-0">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={handleApprove}
-                  disabled={saving}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white font-bold transition-all text-xs flex items-center gap-1 cursor-pointer border border-emerald-500/20 shadow-xs"
-                >
-                  <Check className="h-3 w-3" /> Approve
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={handleReject}
-                  disabled={saving}
-                  className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold transition-all text-xs flex items-center gap-1 cursor-pointer border border-red-500/20 shadow-xs"
-                >
-                  <X className="h-3 w-3" /> Reject
-                </motion.button>
-              </div>
-            )}
-          </div>
-        </div>
+        <RequestMessageCard
+          requestId={rId}
+          fallbackTitle={requestTitle}
+          fallbackApproverName={approverName}
+          fallbackApproverId={approverId}
+          senderId={message.senderId}
+          currentUser={currentUser}
+          orgId={orgId}
+          members={members}
+        />
       );
     }
 
@@ -552,35 +302,35 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     const taskReactionEntries = Object.entries(taskReactions);
 
     return (
-      <div className="flex flex-col gap-1">
-        <p className={cn('text-sm leading-relaxed', message.deleted && 'italic text-text-muted')}>
+      <div className="flex flex-col gap-1.5">
+        <p className={cn('text-sm leading-relaxed select-text', message.deleted && 'italic text-muted-foreground')}>
           {parseMentions(message.body, isOwn)}
           {message.editedAt && !message.deleted && (
-            <span className="ml-1.5 text-[10px] text-text-muted">(edited)</span>
+            <span className="ml-1.5 text-[10px] text-muted-foreground opacity-75">(edited)</span>
           )}
         </p>
-        {!message.deleted && taskReactionEntries.map(([reactorId, taskId]) => {
-          const reactor = members.find(m => m.uid === reactorId);
-          const reactorName = reactor?.fullName || 'Someone';
+        {!message.deleted &&
+          taskReactionEntries.map(([reactorId, taskId]) => {
+            const reactor = members.find((m) => m.uid === reactorId);
+            const reactorName = reactor?.fullName || 'Someone';
 
-          const parts = (message as any).dmId ? (message as any).dmId.split('_') : [];
-          const otherId = parts.find((p: string) => p !== reactorId);
-          const assignee = members.find(m => m.uid === otherId);
-          const assigneeName = assignee?.fullName || 'Someone';
+            const parts = (message as any).dmId ? (message as any).dmId.split('_') : [];
+            const otherId = parts.find((p: string) => p !== reactorId);
+            const assignee = members.find((m) => m.uid === otherId);
+            const assigneeName = assignee?.fullName || 'Someone';
 
-          return (
-            <MessageTaskCard
-              key={taskId as string}
-              taskId={taskId as string}
-              creatorName={reactorName}
-              assigneeName={assigneeName}
-              setSearchParams={setSearchParams}
-              members={members}
-              currentUser={currentUser}
-              orgId={orgId}
-            />
-          );
-        })}
+            return (
+              <TaskMessageCard
+                key={taskId as string}
+                taskId={taskId as string}
+                creatorName={reactorName}
+                assigneeName={assigneeName}
+                members={members}
+                currentUser={currentUser}
+                orgId={orgId}
+              />
+            );
+          })}
       </div>
     );
   };
@@ -592,16 +342,17 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     const nonMedia = message.files.filter((f) => !f.type.startsWith('image/') && !f.type.startsWith('video/'));
 
     return (
-      <div className="mt-2 flex flex-col gap-2">
-        {/* Media Grid (Images and Videos) */}
+      <div className="mt-2.5 flex flex-col gap-2">
+        {/* Media Grid */}
         {media.length > 0 && (
-          <div className={cn(
-            "grid gap-2 max-w-2xl",
-            media.length === 1 ? "grid-cols-1 max-w-md" : "grid-cols-2 sm:grid-cols-3"
-          )}>
+          <div
+            className={cn(
+              'grid gap-2 max-w-xl',
+              media.length === 1 ? 'grid-cols-1 max-w-sm' : 'grid-cols-2 sm:grid-cols-3',
+            )}
+          >
             {media.map((file, idx) => {
               const isImage = file.type.startsWith('image/');
-              const isVideo = file.type.startsWith('video/');
 
               return (
                 <div
@@ -610,7 +361,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                     e.stopPropagation();
                     setLightboxIndex(idx);
                   }}
-                  className="group/img relative rounded-xl overflow-hidden border border-border-default bg-bg-tertiary shadow-sm aspect-video max-h-60 transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
+                  className="group/img relative rounded-xl overflow-hidden border border-white/10 bg-bg-tertiary shadow-sm aspect-video max-h-56 transition-all hover:shadow-md hover:border-primary/30 cursor-pointer"
                 >
                   {isImage ? (
                     <img
@@ -620,28 +371,24 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                       loading="lazy"
                     />
                   ) : (
-                    // Video Preview Card with Play Overlay
                     <div className="h-full w-full relative flex items-center justify-center bg-zinc-950 dark:bg-black overflow-hidden">
-                      <video
-                        src={file.url}
-                        className="h-full w-full object-cover opacity-75 blur-[0.5px]"
-                        muted
-                        playsInline
-                      />
-                      {/* Translucent glass play overlay */}
+                      <video src={file.url} className="h-full w-full object-cover opacity-75" muted playsInline />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/img:bg-black/35 transition-colors">
-                        <div className="h-11 w-11 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/20 hover:scale-105 transition-all shadow-lg shadow-black/20">
-                          <Play className="h-5.5 w-5.5 fill-white ml-0.5" />
+                        <div className="h-10 w-10 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/20 hover:scale-105 transition-all shadow-lg">
+                          <Play className="h-5 w-5 fill-white ml-0.5" />
                         </div>
                       </div>
-                      <span className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded text-[8px] font-black tracking-wide bg-black/60 text-white border border-white/5 font-mono uppercase">
+                      <span className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded text-[8px] font-mono uppercase bg-black/60 text-white border border-white/5 font-bold">
                         Video
                       </span>
                     </div>
                   )}
 
-                  {/* Actions overlay on Hover */}
-                  <div className="absolute inset-0 bg-black/45 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  {/* Overlay Actions */}
+                  <div
+                    className="absolute inset-0 bg-black/45 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
                       onClick={() => setLightboxIndex(idx)}
                       className="p-1.5 rounded-lg bg-surface/90 hover:bg-surface text-foreground shadow transition-colors cursor-pointer"
@@ -680,16 +427,16 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
               return (
                 <div
                   key={idx}
-                  className="group/file flex items-center gap-3 rounded-xl border border-border-default bg-surface/40 hover:bg-surface/80 backdrop-blur-sm px-3 py-2 shadow-sm transition-all hover:border-primary/25 hover:shadow-md"
+                  className="group/file flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm px-3 py-2 shadow-xs transition-all hover:border-primary/25"
                 >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/5 text-primary border border-primary/10">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
                     <FileIcon className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] font-semibold text-foreground truncate group-hover/file:text-primary transition-colors">
                       {file.name}
                     </p>
-                    <p className="text-[9px] text-text-muted font-medium">
+                    <p className="text-[9px] text-muted-foreground font-medium">
                       {(file.size / 1024).toFixed(1)} KB · {file.type.split('/')[1]?.toUpperCase() || 'FILE'}
                     </p>
                   </div>
@@ -698,7 +445,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                     download={file.name}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-foreground hover:bg-bg-tertiary border border-transparent hover:border-border-default transition-all"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all"
                     title="Download File"
                   >
                     <Download className="h-3.5 w-3.5" />
@@ -723,7 +470,7 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
           if (!userIds || (userIds as string[]).length === 0) return null;
           const hasReacted = currentUser && (userIds as string[]).includes(currentUser.uid);
           const reactorNames = (userIds as string[])
-            .map(uid => members.find(m => m.uid === uid)?.fullName || 'Someone')
+            .map((uid) => members.find((m) => m.uid === uid)?.fullName || 'Someone')
             .join(', ');
 
           return (
@@ -743,10 +490,10 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
               }}
               title={`Reacted by: ${reactorNames}`}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all duration-200 cursor-pointer select-none shadow-xs font-medium",
+                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all duration-150 cursor-pointer select-none font-medium',
                 hasReacted
-                  ? "bg-primary/10 border-primary/35 text-primary"
-                  : "bg-surface-elevated/65 hover:bg-surface-elevated border-border-default/80 text-text-secondary"
+                  ? 'bg-primary/15 border-primary/40 text-primary shadow-xs'
+                  : 'bg-surface-elevated/70 dark:bg-white/5 hover:bg-surface-elevated border-white/10 text-muted-foreground hover:text-foreground',
               )}
             >
               <span className="text-sm leading-none">{emoji}</span>
@@ -766,25 +513,27 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
 
     return (
       <motion.button
-        whileHover={{ scale: 1.03 }}
+        whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={(e) => {
           e.stopPropagation();
           setIsRepliesExpanded(!isRepliesExpanded);
         }}
         className={cn(
-          "mt-2 flex items-center gap-2 text-[10px] font-bold cursor-pointer select-none border rounded-full px-3 py-1.5 w-fit shadow-xs transition-all duration-200",
+          'mt-2 flex items-center gap-2 text-[10.5px] font-bold cursor-pointer select-none border rounded-full px-3 py-1.5 w-fit shadow-xs transition-all duration-150',
           isRepliesExpanded
-            ? "bg-primary/15 border-primary/30 text-primary"
-            : "bg-primary/5 border-primary/15 text-primary hover:bg-primary/10"
+            ? 'bg-primary/15 border-primary/30 text-primary'
+            : 'bg-white/5 border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/10',
         )}
       >
-        <MessageSquare className="h-3.5 w-3.5 shrink-0 text-primary/80" />
-        <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+        <MessageSquare className="h-3.5 w-3.5 shrink-0 text-primary" />
+        <span>
+          {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+        </span>
         {isRepliesExpanded ? (
-          <span className="text-[8.5px] text-text-muted/80 font-normal ml-1">(click to collapse)</span>
+          <span className="text-[9px] text-muted-foreground font-normal ml-0.5">(collapse)</span>
         ) : lastReplyTime ? (
-          <span className="text-[8.5px] text-text-muted/80 font-normal ml-1">· Last reply {lastReplyTime}</span>
+          <span className="text-[9px] text-muted-foreground font-normal ml-0.5">· Last {lastReplyTime}</span>
         ) : null}
       </motion.button>
     );
@@ -794,15 +543,14 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     if (!isRepliesExpanded) return null;
 
     return (
-      <div className="mt-3.5 w-full flex flex-col gap-3.5 border-l border-dashed border-border-strong/40 pl-4.5 ml-3 mb-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
-        {/* Replies List */}
+      <div className="mt-3.5 w-full flex flex-col gap-3.5 border-l-2 border-white/10 pl-4 ml-2 mb-2">
         {replies === null ? (
-          <div className="flex items-center gap-2 py-2 pl-1.5">
+          <div className="flex items-center gap-2 py-2">
             <Loader2 className="h-3.5 w-3.5 animate-spin text-primary/60" />
-            <p className="text-[10px] text-text-muted font-medium">Loading replies...</p>
+            <p className="text-[10px] text-muted-foreground">Loading replies...</p>
           </div>
         ) : replies.length > 0 ? (
-          <div className="flex flex-col gap-3.5 w-full max-w-xl">
+          <div className="flex flex-col gap-3 w-full max-w-xl">
             {replies.map((reply) => {
               const replySender = members.find((m) => m.uid === reply.senderId);
               const replyPhotoURL = replySender?.photoURL;
@@ -817,25 +565,23 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
 
               return (
                 <div key={reply.id} className="flex gap-2.5 items-start group/reply">
-                  {/* Reply Sender Avatar */}
-                  <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-[8.5px] font-bold text-primary border border-primary/15 shrink-0 overflow-hidden shadow-xs mt-0.5">
+                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[8px] font-bold text-primary border border-primary/20 shrink-0 overflow-hidden mt-0.5">
                     {replyPhotoURL ? (
                       <img src={replyPhotoURL} alt={reply.senderName} className="h-full w-full object-cover" />
                     ) : (
                       replyInitials
                     )}
                   </div>
-                  
-                  {/* Reply Bubble content */}
+
                   <div className="flex-1 min-w-0 flex flex-col items-start">
-                    <div className="flex items-baseline gap-1.5 flex-wrap px-0.5">
-                      <span className={cn('text-[10.5px] font-bold', isOwnReply ? 'text-primary/95' : getSenderColor(reply.senderUsername))}>
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <span className={cn('text-[10.5px] font-semibold', isOwnReply ? 'text-primary' : getSenderColor(reply.senderUsername))}>
                         {isOwnReply ? 'You' : reply.senderName}
                       </span>
-                      <span className="text-[9px] text-text-muted font-semibold">@{reply.senderUsername}</span>
-                      <span className="text-[8.5px] text-text-muted font-mono ml-1">{formatTime(reply.createdAt as any)}</span>
+                      <span className="text-[9px] text-muted-foreground font-mono">@{reply.senderUsername}</span>
+                      <span className="text-[8.5px] text-muted-foreground font-mono">{formatTime(reply.createdAt as any)}</span>
                     </div>
-                    <div className="mt-1 rounded-2xl rounded-tl-none px-3.5 py-2 text-xs bg-surface-elevated/45 dark:bg-surface-elevated/35 border border-border-subtle/50 leading-relaxed text-foreground select-text break-words w-fit max-w-full shadow-xs hover:border-primary/20 hover:bg-surface-elevated/70 transition-all duration-200">
+                    <div className="mt-1 rounded-2xl rounded-tl-none px-3 py-1.5 text-xs bg-white/5 border border-white/10 leading-relaxed text-foreground select-text break-words w-fit max-w-full">
                       {reply.body}
                     </div>
                   </div>
@@ -844,23 +590,12 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
             })}
           </div>
         ) : (
-          <p className="text-[10px] text-text-muted italic pl-1.5 py-1">No replies yet. Be the first to add a comment!</p>
+          <p className="text-[10px] text-muted-foreground italic py-1">No replies yet.</p>
         )}
 
-        {/* Reply Input Box */}
         {currentUser && orgId && (
-          <div className="w-full max-w-xl mt-1.5 flex gap-2.5 items-start">
-            {/* Current user mini-initials avatar */}
-            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[8.5px] font-bold text-primary border border-primary/15 shrink-0 overflow-hidden mt-1 shadow-xs">
-              {currentUser.displayName ? (
-                currentUser.displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
-              ) : (
-                'U'
-              )}
-            </div>
-
-            {/* Input textarea and send button */}
-            <div className="flex-1 flex items-end gap-2 rounded-full border border-border-default/80 bg-surface-elevated/40 backdrop-blur-xs pl-4 pr-1.5 py-1 focus-within:border-primary/45 focus-within:ring-1 focus-within:ring-primary/20 transition-all duration-200 shadow-sm">
+          <div className="w-full max-w-xl mt-1 flex gap-2 items-center">
+            <div className="flex-1 flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
               <textarea
                 ref={replyTextareaRef}
                 value={replyBody}
@@ -871,31 +606,24 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                     handleSendReply();
                   }
                 }}
-                placeholder="Write a comment..."
+                placeholder="Reply in thread..."
                 disabled={replySending}
                 maxLength={1000}
                 rows={1}
-                className="flex-1 resize-none bg-transparent text-xs text-foreground placeholder:text-text-muted focus:outline-none disabled:opacity-50 leading-relaxed scrollbar-hide py-1 min-h-[20px]"
-                style={{ maxHeight: '80px' }}
+                className="flex-1 resize-none bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 scrollbar-hide py-0.5"
               />
-              <motion.button
-                whileHover={replyBody.trim() && !replySending ? { scale: 1.05 } : {}}
-                whileTap={replyBody.trim() && !replySending ? { scale: 0.95 } : {}}
+              <button
                 onClick={handleSendReply}
                 disabled={!replyBody.trim() || replySending}
                 className={cn(
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all border cursor-pointer mb-0.5',
+                  'h-6 px-2.5 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center cursor-pointer',
                   replyBody.trim() && !replySending
-                    ? 'bg-primary text-primary-foreground border-transparent shadow shadow-primary/20 hover:bg-primary/95'
-                    : 'bg-bg-tertiary text-text-muted border-border-default cursor-not-allowed'
+                    ? 'bg-primary text-white hover:bg-primary/90'
+                    : 'bg-white/5 text-muted-foreground cursor-not-allowed',
                 )}
               >
-                {replySending ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Check className="h-4 w-4" />
-                )}
-              </motion.button>
+                {replySending ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Reply'}
+              </button>
             </div>
           </div>
         )}
@@ -903,22 +631,24 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
     );
   };
 
+  const isCard = isTaskCommand || isGoalCommand || isRequestCommand;
+
   return (
     <div
       id={`msg-${message.id}`}
       className={cn(
-        'group relative flex w-full gap-3 px-4 py-0.5 transition-colors hover:bg-white/[0.01] rounded-lg',
+        'group relative flex w-full gap-3 px-4 py-1 transition-colors hover:bg-white/[0.015] rounded-xl',
         isOwn ? 'justify-end' : 'justify-start',
-        isGrouped ? 'mt-0.5' : 'mt-3.5'
+        isGrouped ? 'mt-0.5' : 'mt-3.5',
       )}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Received Message Avatar (Left side) */}
+      {/* Received Message Avatar */}
       {!isOwn && (
-        <div className="w-9 shrink-0 flex items-start justify-center">
+        <div className="w-8 shrink-0 flex items-start justify-center">
           {!isGrouped ? (
-            <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary/10 text-xs font-bold text-primary border border-primary/20 overflow-hidden shadow-sm shrink-0">
+            <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-[11px] font-bold text-primary border border-primary/20 overflow-hidden shadow-xs shrink-0">
               {photoURL ? (
                 <img src={photoURL} alt={message.senderName} className="h-full w-full object-cover" />
               ) : (
@@ -926,116 +656,105 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
               )}
             </div>
           ) : (
-            <div className="w-9" />
+            <div className="w-8" />
           )}
         </div>
       )}
 
       {/* Message Bubble Container */}
-      <div className={cn(
-        'flex flex-col min-w-0 max-w-[70%]',
-        isOwn ? 'items-end' : 'items-start'
-      )}>
-        {/* Name and metadata */}
+      <div className={cn('flex flex-col min-w-0 max-w-[76%]', isOwn ? 'items-end' : 'items-start')}>
+        {/* Name & Timestamp Header */}
         {!isGrouped && !isOwn && (
           <div className="flex items-baseline gap-2 mb-1 px-1">
             <span className={cn('text-xs', getSenderColor(message.senderUsername))}>
               {message.senderName}
             </span>
-            <span className="text-[9px] text-text-muted">
+            <span className="text-[9.5px] text-muted-foreground font-mono">
               @{message.senderUsername}
             </span>
-            <span className="text-[9px] text-text-muted">{formatTime(message.createdAt as any)}</span>
+            <span className="text-[9px] text-muted-foreground font-mono">{formatTime(message.createdAt as any)}</span>
           </div>
         )}
 
-        {/* Relative wrapper for bubble + action bar */}
+        {/* Bubble Relative Wrapper */}
         <div className="relative w-fit max-w-full group/bubble">
-          {/* Message bubble styling */}
-          <div className={cn(
-            !(isTaskCommand || isGoalCommand || isRequestCommand)
-              ? cn(
-                  'relative px-4 py-2.5 text-sm leading-relaxed border transition-all duration-200 text-left shadow-sm',
-                  isOwn 
-                    ? cn(
-                        'bg-gradient-to-tr from-primary via-primary to-primary/90 border-transparent text-primary-foreground shadow-md shadow-primary/15',
-                        isGrouped ? 'rounded-2xl' : 'rounded-2xl rounded-tr-none'
-                      )
-                    : cn(
-                        'bg-surface-elevated/45 dark:bg-surface-elevated/35 hover:bg-surface-elevated/70 border-border-default/50 dark:border-border-default/20 text-foreground backdrop-blur-xs hover:border-primary/20',
-                        isGrouped ? 'rounded-2xl' : 'rounded-2xl rounded-tl-none'
-                      )
-                )
-              : 'relative text-left'
-          )}>
+          <div
+            className={cn(
+              !isCard
+                ? cn(
+                    'relative px-4 py-2.5 text-sm leading-relaxed border transition-all duration-150 text-left',
+                    isOwn
+                      ? cn(
+                          'bg-primary text-white border-primary/30 shadow-md shadow-primary/10',
+                          isGrouped ? 'rounded-2xl' : 'rounded-2xl rounded-tr-sm',
+                        )
+                      : cn(
+                          'bg-surface-elevated/75 dark:bg-white/[0.04] hover:bg-surface-elevated border-white/10 dark:border-white/10 text-foreground backdrop-blur-md hover:border-primary/30 shadow-xs',
+                          isGrouped ? 'rounded-2xl' : 'rounded-2xl rounded-tl-sm',
+                        ),
+                  )
+                : 'relative text-left',
+            )}
+          >
+            {/* Quoted Message Reference */}
             {message.parentMessage && (
               <div
                 className={cn(
-                  "mb-2 flex flex-col border-l-2 pl-2.5 py-0.5 text-xs rounded-r-md max-w-md cursor-pointer hover:opacity-90 select-none text-left",
+                  'mb-2 flex flex-col border-l-2 pl-2.5 py-1 text-xs rounded-r-lg max-w-md cursor-pointer hover:opacity-90 select-none text-left',
                   isOwn
-                    ? "border-white/60 bg-white/10 text-primary-foreground/90"
-                    : "border-primary/55 bg-primary/5 text-text-muted"
+                    ? 'border-white/70 bg-white/10 text-white'
+                    : 'border-primary/60 bg-primary/5 text-muted-foreground',
                 )}
                 onClick={() => {
                   const el = document.getElementById(`msg-${message.parentMessage?.id}`);
                   if (el) {
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    el.classList.add('bg-primary/15', 'transition-all');
-                    setTimeout(() => {
-                      el.classList.remove('bg-primary/15');
-                    }, 2000);
+                    el.classList.add('bg-primary/20', 'transition-all');
+                    setTimeout(() => el.classList.remove('bg-primary/20'), 2000);
                   }
                 }}
               >
-                <span className={cn(
-                  "font-bold text-[10px] uppercase tracking-wider mb-0.5",
-                  isOwn ? "text-white/80" : "text-primary"
-                )}>
+                <span className={cn('font-bold text-[9.5px] uppercase tracking-wider mb-0.5', isOwn ? 'text-white' : 'text-primary')}>
                   {message.parentMessage.senderName}
                 </span>
-                <span className="truncate block max-w-full">{message.parentMessage.body}</span>
+                <span className="truncate block max-w-full text-[11px]">{message.parentMessage.body}</span>
               </div>
             )}
+
             {renderMessageContent()}
             {renderAttachments()}
           </div>
 
-          {/* Action Bar (Reactions, Reply, Edit, Delete) */}
+          {/* Floating Linear Action Ribbon */}
           {!message.deleted && !editing && hovered && (
             <motion.div
-              initial={{ opacity: 0, x: isOwn ? -4 : 4 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, scale: 0.95, y: '-50%' }}
+              animate={{ opacity: 1, scale: 1, y: '-50%' }}
               className={cn(
-                "absolute top-1/2 -translate-y-1/2 flex items-center gap-1 px-1 py-1 rounded-xl border border-border-default/80 bg-surface/90 backdrop-blur-md shadow-lg shadow-black/10 z-30",
-                isOwn ? "right-full mr-2" : "left-full ml-2"
+                'absolute top-1/2 flex items-center gap-0.5 p-1 rounded-xl border border-white/15 bg-surface-elevated/95 dark:bg-surface/90 backdrop-blur-xl shadow-xl z-30',
+                isOwn ? 'right-full mr-2' : 'left-full ml-2',
               )}
             >
-              {/* Reaction Trigger Button */}
+              {/* Emoji Reaction Popover */}
               <div className="relative flex">
-                <motion.button
-                  whileHover={{ scale: 1.12 }}
-                  whileTap={{ scale: 0.9 }}
+                <button
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className={cn(
-                    "flex h-7.5 w-7.5 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer",
-                    showEmojiPicker && "bg-bg-tertiary text-foreground"
-                  )}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors cursor-pointer"
                   title="Add reaction"
                 >
-                  <Smile className="h-4 w-4" />
-                </motion.button>
-                
-                {/* Reaction Popover Dropdeck */}
+                  <Smile className="h-3.5 w-3.5" />
+                </button>
+
                 {showEmojiPicker && (
-                  <div className={cn(
-                    "absolute bottom-full mb-2 bg-surface/95 dark:bg-surface/90 backdrop-blur-md border border-border-default/80 rounded-2xl shadow-xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100",
-                    isOwn ? "right-0" : "left-0"
-                  )}>
-                    {['👍', '❤️', '🔥', '😂', '🎉', '🚀', '📋'].map(emoji => (
-                      <motion.button
+                  <div
+                    className={cn(
+                      'absolute bottom-full mb-2 bg-surface-elevated/95 dark:bg-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100',
+                      isOwn ? 'right-0' : 'left-0',
+                    )}
+                  >
+                    {['👍', '❤️', '🔥', '🎉', '🚀', '✅', '👀'].map((emoji) => (
+                      <button
                         key={emoji}
-                        whileHover={{ scale: 1.25 }}
-                        whileTap={{ scale: 0.9 }}
                         onClick={async (e) => {
                           e.stopPropagation();
                           if (currentUser) {
@@ -1047,90 +766,84 @@ export function MessageBubble({ message, isOwn, isGrouped, members, orgId, curre
                           }
                           setShowEmojiPicker(false);
                         }}
-                        className="text-base p-1.5 hover:bg-bg-tertiary rounded-lg transition-colors cursor-pointer"
+                        className="text-base p-1.5 hover:bg-white/10 rounded-lg transition-transform hover:scale-125 cursor-pointer"
                       >
                         {emoji}
-                      </motion.button>
+                      </button>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Reply Trigger Button */}
-              <motion.button
-                whileHover={{ scale: 1.12 }}
-                whileTap={{ scale: 0.9 }}
+              {/* Reply in thread */}
+              <button
                 onClick={() => {
                   setIsRepliesExpanded(true);
                   setTimeout(() => replyTextareaRef.current?.focus(), 100);
                 }}
-                className="flex h-7.5 w-7.5 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
-                title="Reply to message"
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors cursor-pointer"
+                title="Reply in thread"
               >
                 <MessageSquare className="h-3.5 w-3.5" />
-              </motion.button>
+              </button>
 
-              {/* Quote Reply Trigger Button */}
+              {/* Quote Reply */}
               {onQuoteMessage && (
-                <motion.button
-                  whileHover={{ scale: 1.12 }}
-                  whileTap={{ scale: 0.9 }}
+                <button
                   onClick={() => onQuoteMessage(message)}
-                  className="flex h-7.5 w-7.5 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
-                  title="Quote reply"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Quote message"
                 >
-                  <CornerUpLeft className="h-4 w-4" />
-                </motion.button>
+                  <CornerUpLeft className="h-3.5 w-3.5" />
+                </button>
               )}
 
-              {/* Edit/Delete options for own messages */}
+              {/* Edit / Delete for author */}
               {isOwn && (
                 <>
                   {isEditable && (
-                    <motion.button
-                      whileHover={{ scale: 1.12 }}
-                      whileTap={{ scale: 0.9 }}
+                    <button
                       onClick={() => setEditing(true)}
-                      className="flex h-7.5 w-7.5 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-bg-tertiary transition-colors cursor-pointer"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors cursor-pointer"
                       title="Edit message"
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                    </motion.button>
+                    </button>
                   )}
-                  <motion.button
-                    whileHover={{ scale: 1.12 }}
-                    whileTap={{ scale: 0.9 }}
+                  <button
                     onClick={handleDelete}
-                    className="flex h-7.5 w-7.5 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                     title="Delete message"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
-                  </motion.button>
+                  </button>
                 </>
               )}
             </motion.div>
           )}
         </div>
 
-        {/* Emojis reactions and replies list */}
+        {/* Reactions, Replies summary, and inline tree */}
         {renderReactions()}
         {renderReplySummary()}
         {renderInlineReplies()}
 
-        {/* Small own timestamp below bubble if not consecutive */}
-        {!isGrouped && isOwn && !(isTaskCommand || isGoalCommand || isRequestCommand) && (
-          <div className="mt-1 px-1.5 flex items-center justify-end text-[9px] text-text-muted/75 font-mono">
+        {/* Own timestamp below non-grouped non-card message */}
+        {!isGrouped && isOwn && !isCard && (
+          <div className="mt-1 px-1 flex items-center justify-end text-[9px] text-muted-foreground font-mono">
             {formatTime(message.createdAt as any)}
           </div>
         )}
       </div>
 
-      {/* Grouped timestamp on hover */}
+      {/* Hover timestamp for grouped messages */}
       {isGrouped && hovered && (
-        <span className={cn(
-          "absolute top-1/2 -translate-y-1/2 text-[9px] text-text-muted font-mono opacity-80",
-          isOwn ? "right-full mr-3" : "left-full ml-3"
-        )}>
+        <span
+          className={cn(
+            'absolute top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-mono opacity-80',
+            isOwn ? 'right-full mr-3' : 'left-full ml-3',
+          )}
+        >
           {formatTime(message.createdAt as any)}
         </span>
       )}
