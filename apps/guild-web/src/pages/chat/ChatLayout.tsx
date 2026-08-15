@@ -64,12 +64,12 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
 
   return (
     <aside className={cn(
-      "flex h-full flex-col aether-glass bg-surface/95 dark:bg-surface/90 backdrop-blur-xl border-r border-white/5 overflow-hidden transition-all duration-300 ease-in-out shrink-0 z-30",
+      "flex h-full flex-col bg-surface/95 dark:bg-surface/90 backdrop-blur-xl border-r border-border-default/80 dark:border-white/10 overflow-hidden transition-all duration-300 ease-in-out shrink-0 z-30",
       "fixed inset-y-0 left-0 lg:relative lg:inset-auto",
-      isCollapsed ? "-translate-x-full opacity-0 pointer-events-none w-0 lg:w-0" : "translate-x-0 opacity-100 w-[240px]"
+      isCollapsed ? "-translate-x-full opacity-0 pointer-events-none w-0 lg:w-0" : "translate-x-0 opacity-100 w-[230px]"
     )}>
       {/* Workspace Branding Header */}
-      <div className="flex items-center gap-2.5 border-b border-white/5 px-4 py-4 select-none">
+      <div className="flex items-center gap-2.5 border-b border-border-default/80 dark:border-white/10 px-4 py-3 select-none">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/30 relative overflow-hidden border border-white/10 shrink-0">
           {localOrg?.photoURL ? (
             <img src={localOrg.photoURL} alt={localOrg.name} className="h-full w-full object-cover" />
@@ -326,10 +326,10 @@ export function ChatLayout() {
 
 
   return (
-    <RedesignLayout>
+    <RedesignLayout hideHeader={true} fullBleed={true}>
       <div className={cn(
-        "flex h-full w-full overflow-hidden animate-fluid-pop transition-all duration-300 ease-in-out relative",
-        isSidebarCollapsed ? "gap-0" : "gap-6"
+        "flex h-full w-full overflow-hidden transition-all duration-300 ease-in-out relative rounded-2xl border border-border-default/80 dark:border-white/10 shadow-2xl bg-background",
+        isSidebarCollapsed ? "gap-0" : "gap-0"
       )}>
         {/* Mobile sidebar backdrop overlay */}
         {!isSidebarCollapsed && (
@@ -348,7 +348,7 @@ export function ChatLayout() {
         />
 
         {/* Message Thread Workspace */}
-        <div className="flex-1 flex min-w-0 aether-glass bg-white/2 border border-white/5 overflow-hidden relative">
+        <div className="flex-1 flex min-w-0 bg-background overflow-hidden relative">
           {hasContent ? (
             <>
               <MessageArea

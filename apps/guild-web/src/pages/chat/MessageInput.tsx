@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {
-  Send, Loader2, Paperclip, X, File,
-  CheckSquare, Target, ClipboardList, Sparkles
+  Send, Loader2, Paperclip, X, File
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MentionDropdown } from './MentionDropdown';
@@ -230,36 +229,6 @@ export function MessageInput({
         />
       )}
 
-      {/* Quick Action Slash Command Chips */}
-      {!disabled && !quotedMessage && (
-        <div className="flex items-center gap-1.5 mb-2 px-1 overflow-x-auto scrollbar-hide py-0.5">
-          <button
-            type="button"
-            onClick={() => insertCommand('task')}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface/80 dark:bg-surface-elevated/60 hover:bg-primary/10 border border-border-default/80 dark:border-white/10 hover:border-primary/40 text-muted-foreground hover:text-primary transition-all cursor-pointer shrink-0 shadow-xs"
-          >
-            <CheckSquare className="h-3.5 w-3.5 text-primary" />
-            <span>/task</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => insertCommand('goal')}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface/80 dark:bg-surface-elevated/60 hover:bg-emerald-500/10 border border-border-default/80 dark:border-white/10 hover:border-emerald-500/40 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-all cursor-pointer shrink-0 shadow-xs"
-          >
-            <Target className="h-3.5 w-3.5 text-emerald-500" />
-            <span>/goal</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => insertCommand('request')}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface/80 dark:bg-surface-elevated/60 hover:bg-amber-500/10 border border-border-default/80 dark:border-white/10 hover:border-amber-500/40 text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-all cursor-pointer shrink-0 shadow-xs"
-          >
-            <ClipboardList className="h-3.5 w-3.5 text-amber-500" />
-            <span>/request</span>
-          </button>
-        </div>
-      )}
-
       {/* Selected Files Staging Deck */}
       {selectedFiles.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2.5 max-h-40 overflow-y-auto px-1 py-1 scrollbar-hide">
@@ -343,17 +312,6 @@ export function MessageInput({
             <Send className="h-4 w-4" />
           )}
         </motion.button>
-      </div>
-
-      <div className="mt-1.5 px-3 text-[11px] text-muted-foreground flex items-center justify-between">
-        <span className="flex items-center gap-1.5 flex-wrap">
-          <span><kbd className="font-mono bg-surface-elevated px-1.5 py-0.5 rounded-md border border-border-default/80 text-[10px]">Enter</kbd> send</span>
-          <span>·</span>
-          <span><kbd className="font-mono bg-surface-elevated px-1.5 py-0.5 rounded-md border border-border-default/80 text-[10px]">Shift+Enter</kbd> newline</span>
-          <span>·</span>
-          <span><kbd className="font-mono bg-surface-elevated px-1.5 py-0.5 rounded-md border border-border-default/80 text-[10px]">/</kbd> commands</span>
-        </span>
-        <span className="font-mono text-[10px] opacity-75">Max 50MB</span>
       </div>
     </div>
   );

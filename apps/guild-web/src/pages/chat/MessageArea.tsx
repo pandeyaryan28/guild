@@ -396,7 +396,7 @@ export function MessageArea({
   return (
     <div className="flex flex-1 min-w-0 flex-col bg-background relative h-full overflow-hidden">
       {/* Precision Floating Glassmorphic Conversation Header */}
-      <div className="flex items-center gap-3 border-b border-border-default/80 dark:border-white/10 bg-surface/90 dark:bg-surface-elevated/70 backdrop-blur-2xl px-5 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] md:py-3 shrink-0 z-10 select-none shadow-xs">
+      <div className="flex items-center gap-3 border-b border-border-default/80 dark:border-white/10 bg-surface/90 dark:bg-surface-elevated/70 backdrop-blur-2xl px-4 py-2.5 shrink-0 z-10 select-none shadow-xs">
         <button
           type="button"
           onClick={() => navigate('/chat')}
