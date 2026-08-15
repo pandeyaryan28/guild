@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { MentionDropdown } from './MentionDropdown';
 import { CommandDropdown } from './CommandDropdown';
 import { type UserProfile } from '../../lib/firestore';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { uploadMessageAttachment } from '../../lib/storage';
 import { type MessageAttachment, type Message } from '@guild/types';
 
@@ -29,7 +29,7 @@ interface MessageInputProps {
 
 export function MessageInput({
   onSend,
-  placeholder = 'Message...',
+  placeholder = 'Type a message or "/" for commands...',
   members,
   disabled,
   chatId,
@@ -44,7 +44,7 @@ export function MessageInput({
   const [mentionStart, setMentionStart] = React.useState<number>(-1);
   const [commandQuery, setCommandQuery] = React.useState<string | null>(null);
   const [commandStart, setCommandStart] = React.useState<number>(-1);
-  const [pendingMentions, setPendingMentions] = React.useState<Map<string, string>>(new Map()); // username → uid
+  const [pendingMentions, setPendingMentions] = React.useState<Map<string, string>>(new Map());
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -184,26 +184,33 @@ export function MessageInput({
   const hasContent = body.trim().length > 0 || selectedFiles.length > 0;
 
   return (
-    <div className="relative px-4 pb-4">
+    <div className="relative px-4 pb-4 select-none">
       {/* Quoted Message Preview Banner */}
-      {quotedMessage && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-surface-elevated/90 dark:bg-surface/80 backdrop-blur-xl px-4 py-2 mb-2 shadow-sm animate-in slide-in-from-bottom-2 duration-150 border-l-2 border-l-primary">
-          <div className="flex-1 min-w-0 pl-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
-              Replying to {quotedMessage.senderName}
-            </p>
-            <p className="text-xs text-muted-foreground truncate mt-0.5">{quotedMessage.body}</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClearQuote}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors cursor-pointer"
-            title="Cancel reply"
+      <AnimatePresence>
+        {quotedMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            className="flex items-center justify-between gap-3 rounded-2xl border border-border-default/80 dark:border-white/10 bg-surface/95 dark:bg-surface-elevated/95 backdrop-blur-xl px-4 py-2 mb-2 shadow-sm border-l-4 border-l-primary"
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+            <div className="flex-1 min-w-0 pl-1">
+              <p className="text-[10.5px] font-bold uppercase tracking-wider text-primary">
+                Replying to {quotedMessage.senderName}
+              </p>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">{quotedMessage.body}</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClearQuote}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-hover dark:hover:bg-white/10 transition-colors cursor-pointer"
+              title="Cancel reply"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Autocomplete Dropdowns */}
       {mentionQuery !== null && (
@@ -223,37 +230,37 @@ export function MessageInput({
         />
       )}
 
-      {/* Quick Action Slash Command Chips (Visible when input is idle or empty) */}
+      {/* Quick Action Slash Command Chips */}
       {!disabled && !quotedMessage && (
         <div className="flex items-center gap-1.5 mb-2 px-1 overflow-x-auto scrollbar-hide py-0.5">
           <button
             type="button"
             onClick={() => insertCommand('task')}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/30 text-muted-foreground hover:text-primary transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface/80 dark:bg-surface-elevated/60 hover:bg-primary/10 border border-border-default/80 dark:border-white/10 hover:border-primary/40 text-muted-foreground hover:text-primary transition-all cursor-pointer shrink-0 shadow-xs"
           >
-            <CheckSquare className="h-3 w-3 text-primary" />
+            <CheckSquare className="h-3.5 w-3.5 text-primary" />
             <span>/task</span>
           </button>
           <button
             type="button"
             onClick={() => insertCommand('goal')}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-white/5 hover:bg-emerald-500/10 border border-white/10 hover:border-emerald-500/30 text-muted-foreground hover:text-emerald-400 transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface/80 dark:bg-surface-elevated/60 hover:bg-emerald-500/10 border border-border-default/80 dark:border-white/10 hover:border-emerald-500/40 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-all cursor-pointer shrink-0 shadow-xs"
           >
-            <Target className="h-3 w-3 text-emerald-400" />
+            <Target className="h-3.5 w-3.5 text-emerald-500" />
             <span>/goal</span>
           </button>
           <button
             type="button"
             onClick={() => insertCommand('request')}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-white/5 hover:bg-amber-500/10 border border-white/10 hover:border-amber-500/30 text-muted-foreground hover:text-amber-400 transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface/80 dark:bg-surface-elevated/60 hover:bg-amber-500/10 border border-border-default/80 dark:border-white/10 hover:border-amber-500/40 text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-all cursor-pointer shrink-0 shadow-xs"
           >
-            <ClipboardList className="h-3 w-3 text-amber-400" />
+            <ClipboardList className="h-3.5 w-3.5 text-amber-500" />
             <span>/request</span>
           </button>
         </div>
       )}
 
-      {/* Selected Files Preview Deck */}
+      {/* Selected Files Staging Deck */}
       {selectedFiles.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2.5 max-h-40 overflow-y-auto px-1 py-1 scrollbar-hide">
           {selectedFiles.map((file, idx) => {
@@ -261,27 +268,27 @@ export function MessageInput({
             return (
               <div
                 key={idx}
-                className="relative flex items-center gap-2 rounded-xl border border-white/10 bg-surface-elevated/80 dark:bg-white/5 backdrop-blur-md pl-2 pr-8 py-1.5 shadow-sm max-w-[200px] group transition-all animate-in fade-in zoom-in-95 duration-150"
+                className="relative flex items-center gap-2 rounded-2xl border border-border-default/80 dark:border-white/10 bg-surface/90 dark:bg-surface-elevated/80 backdrop-blur-md pl-2 pr-8 py-1.5 shadow-sm max-w-[200px] group transition-all"
               >
                 {isImg ? (
-                  <div className="h-8 w-8 rounded-lg overflow-hidden border border-white/10 bg-bg-tertiary shrink-0">
+                  <div className="h-8 w-8 rounded-xl overflow-hidden border border-border-subtle bg-surface shrink-0">
                     <img src={URL.createObjectURL(file)} alt={file.name} className="h-full w-full object-cover" />
                   </div>
                 ) : (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
                     <File className="h-4 w-4" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-foreground truncate">{file.name}</p>
-                  <p className="text-[9px] text-muted-foreground font-mono">{(file.size / 1024).toFixed(1)} KB</p>
+                  <p className="text-xs font-medium text-foreground truncate">{file.name}</p>
+                  <p className="text-[10px] text-muted-foreground font-mono">{(file.size / 1024).toFixed(1)} KB</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => removeFile(idx)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-muted-foreground hover:text-foreground hover:bg-red-500/20 hover:text-red-400 transition-all cursor-pointer"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-surface-elevated/80 text-muted-foreground hover:text-foreground hover:bg-red-500/20 hover:text-red-500 transition-all cursor-pointer"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             );
@@ -289,14 +296,14 @@ export function MessageInput({
         </div>
       )}
 
-      {/* Linear Precision Input Box */}
-      <div className="flex items-end gap-3 rounded-2xl border border-white/10 bg-surface-elevated/70 dark:bg-surface/60 backdrop-blur-xl px-4 py-3 shadow-md focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
-        {/* Attachment Button */}
+      {/* Modern Floating Island Composer Dock */}
+      <div className="flex items-end gap-3 rounded-2xl border border-border-default/80 dark:border-white/15 bg-surface/95 dark:bg-surface-elevated/90 backdrop-blur-2xl px-4 py-3 shadow-xl focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+        {/* Attachment Upload Button */}
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={sending || disabled || uploading}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors cursor-pointer border border-transparent hover:border-white/10"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-hover dark:hover:bg-white/10 transition-colors cursor-pointer border border-transparent"
           title="Attach files or media"
         >
           <Paperclip className="h-4 w-4" />
@@ -326,26 +333,28 @@ export function MessageInput({
           className={cn(
             'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all border mb-0.5',
             hasContent && !sending && !uploading
-              ? 'bg-primary text-white border-primary shadow-sm hover:bg-primary/90 cursor-pointer'
-              : 'bg-white/5 text-muted-foreground border-white/5 cursor-not-allowed opacity-50',
+              ? 'bg-primary text-primary-foreground border-primary shadow-sm hover:bg-primary/90 cursor-pointer'
+              : 'bg-surface-elevated text-muted-foreground border-border-subtle dark:border-white/5 cursor-not-allowed opacity-50',
           )}
         >
           {sending || uploading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Send className="h-3.5 w-3.5" />
+            <Send className="h-4 w-4" />
           )}
         </motion.button>
       </div>
 
-      <p className="mt-1.5 px-2 text-[10px] text-muted-foreground flex items-center justify-between">
-        <span>
-          <kbd className="font-mono bg-white/5 px-1 py-0.5 rounded border border-white/10">Enter</kbd> to send ·{' '}
-          <kbd className="font-mono bg-white/5 px-1 py-0.5 rounded border border-white/10">Shift+Enter</kbd> newline ·{' '}
-          <kbd className="font-mono bg-white/5 px-1 py-0.5 rounded border border-white/10">/</kbd> commands
+      <div className="mt-1.5 px-3 text-[11px] text-muted-foreground flex items-center justify-between">
+        <span className="flex items-center gap-1.5 flex-wrap">
+          <span><kbd className="font-mono bg-surface-elevated px-1.5 py-0.5 rounded-md border border-border-default/80 text-[10px]">Enter</kbd> send</span>
+          <span>·</span>
+          <span><kbd className="font-mono bg-surface-elevated px-1.5 py-0.5 rounded-md border border-border-default/80 text-[10px]">Shift+Enter</kbd> newline</span>
+          <span>·</span>
+          <span><kbd className="font-mono bg-surface-elevated px-1.5 py-0.5 rounded-md border border-border-default/80 text-[10px]">/</kbd> commands</span>
         </span>
-        <span className="font-mono text-[9px] opacity-60">Max 50MB</span>
-      </p>
+        <span className="font-mono text-[10px] opacity-75">Max 50MB</span>
+      </div>
     </div>
   );
 }

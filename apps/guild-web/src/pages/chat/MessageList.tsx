@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { type Message } from '../../lib/chat';
 import { MessageBubble } from './MessageBubble';
-import { Loader2, MessageSquare, ArrowDown } from 'lucide-react';
+import { Loader2, MessageSquare, ArrowDown, Sparkles, CheckSquare, Target, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '@/lib/utils';
 
 interface MessageListProps {
   messages: Message[] | null;
@@ -41,7 +42,6 @@ export function MessageList({
 }: MessageListProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const bottomRef = React.useRef<HTMLDivElement>(null);
-  const topSentinelRef = React.useRef<HTMLDivElement>(null);
 
   // Track whether user is near the bottom for auto-scroll on new messages
   const [atBottom, setAtBottom] = React.useState(true);
@@ -52,19 +52,15 @@ export function MessageList({
   const prevScrollTopRef = React.useRef<number>(0);
   const isPrependingRef = React.useRef(false);
 
-  // On initial load: jump to bottom immediately (no animation)
-  // isInitialRef must be reset to true whenever messages goes null (channel switch)
+  // On initial load: jump to bottom immediately
   const isInitialRef = React.useRef(true);
   React.useEffect(() => {
     if (messages === null) {
-      // Channel/DM changed — prepare to scroll on next load
       isInitialRef.current = true;
       return;
     }
     if (isInitialRef.current) {
       isInitialRef.current = false;
-      // rAF ensures the browser has finished laying out the new messages
-      // before we try to read scrollHeight / call scrollIntoView
       requestAnimationFrame(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
       });
@@ -106,7 +102,7 @@ export function MessageList({
     const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     const nowAtBottom = distFromBottom < 80;
     setAtBottom(nowAtBottom);
-    setShowScrollBtn(!nowAtBottom && distFromBottom > 300);
+    setShowScrollBtn(!nowAtBottom && distFromBottom > 240);
 
     // Load older messages when near the top
     if (el.scrollTop < 120 && hasMore && !loadingOlder && !isPrependingRef.current) {
@@ -124,9 +120,9 @@ export function MessageList({
   if (messages === null) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-5 w-5 animate-spin text-primary/60" />
-          <p className="text-xs text-text-muted">Loading messages…</p>
+        <div className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-surface/60 dark:bg-white/5 backdrop-blur-xl border border-border-default/80 dark:border-white/10 shadow-lg">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-xs font-semibold text-muted-foreground">Loading conversations…</p>
         </div>
       </div>
     );
@@ -134,12 +130,16 @@ export function MessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5 border border-primary/10 text-primary shadow-sm">
-          <MessageSquare className="h-6 w-6" />
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center px-6 py-12">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 border border-primary/20 text-primary shadow-lg shadow-primary/5">
+          <MessageSquare className="h-7 w-7" />
         </div>
-        <p className="text-sm font-semibold text-foreground">No messages yet</p>
-        <p className="text-xs text-text-muted">Be the first to say something!</p>
+        <div className="max-w-sm space-y-1.5">
+          <h3 className="text-base font-bold text-foreground">No messages yet</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Start the conversation or run operational commands to coordinate work with your team.
+          </p>
+        </div>
       </div>
     );
   }
@@ -148,68 +148,76 @@ export function MessageList({
   const items: Array<{ type: 'divider'; label: string } | { type: 'msg'; msg: Message; isGrouped: boolean }> = [];
   let lastDate = '';
   let lastSenderId = '';
-  let lastTs = 0;
+  let lastTime = 0;
 
   for (const msg of messages) {
-    const ts = (msg.createdAt as any)?.toDate?.() ?? new Date();
-    const dateLabel = formatDateLabel(ts);
+    if (!msg.createdAt) {
+      items.push({ type: 'msg', msg, isGrouped: false });
+      continue;
+    }
 
+    const msgDate =
+      typeof (msg.createdAt as any).toDate === 'function'
+        ? (msg.createdAt as any).toDate()
+        : new Date((msg.createdAt as any).seconds ? (msg.createdAt as any).seconds * 1000 : (msg.createdAt as any));
+
+    const dateLabel = formatDateLabel(msgDate);
     if (dateLabel !== lastDate) {
       items.push({ type: 'divider', label: dateLabel });
       lastDate = dateLabel;
       lastSenderId = '';
-      lastTs = 0;
+      lastTime = 0;
     }
 
-    const isGrouped =
-      msg.senderId === lastSenderId && ts.getTime() - lastTs < GROUP_THRESHOLD_MS;
+    const msgTime = msgDate.getTime();
+    const isConsecutive =
+      msg.senderId === lastSenderId &&
+      msgTime - lastTime < GROUP_THRESHOLD_MS &&
+      !msg.parentMessage;
 
-    items.push({ type: 'msg', msg, isGrouped });
+    items.push({ type: 'msg', msg, isGrouped: isConsecutive });
     lastSenderId = msg.senderId;
-    lastTs = ts.getTime();
+    lastTime = msgTime;
   }
 
   return (
-    <div className="relative flex flex-1 min-h-0 flex-col">
+    <div className="relative flex-1 min-h-0 overflow-hidden flex flex-col">
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto aether-scroll scrollbar-hide py-4"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-1 scrollbar-thin"
       >
-        {/* Load-older sentinel / indicator */}
-        <div ref={topSentinelRef} className="px-4 pb-2 flex flex-col items-center gap-1.5">
-          {loadingOlder && (
-            <div className="flex items-center gap-2 text-text-muted">
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary/50" />
-              <span className="text-[10px] font-semibold tracking-wider uppercase">Loading older messages…</span>
+        {/* Loading older historical messages indicator */}
+        {loadingOlder && (
+          <div className="flex justify-center py-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-elevated/90 dark:bg-white/5 border border-border-default/80 dark:border-white/10 shadow-xs">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              <span className="text-[11px] font-medium text-muted-foreground">Loading earlier messages...</span>
             </div>
-          )}
-          {!hasMore && !loadingOlder && (
-            <div className="flex items-center gap-3 w-full py-2">
-              <div className="flex-1 h-px bg-border/20" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted/60 whitespace-nowrap">
-                Beginning of conversation
-              </span>
-              <div className="flex-1 h-px bg-border/20" />
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {items.map((item, i) =>
-          item.type === 'divider' ? (
-            <div key={`divider-${i}`} className="flex items-center justify-center my-5 relative px-4">
-              <div className="absolute inset-x-6 flex items-center" aria-hidden="true">
-                <div className="w-full border-t border-white/10 dark:border-white/10" />
+        {/* Message Items and Floating Date Dividers */}
+        {items.map((item, idx) => {
+          if (item.type === 'divider') {
+            return (
+              <div key={`divider-${item.label}-${idx}`} className="flex items-center justify-center my-4 select-none">
+                <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface/90 dark:bg-surface-elevated/80 border border-border-default/80 dark:border-white/10 backdrop-blur-xl shadow-xs">
+                  <span className="text-[11px] font-bold text-muted-foreground tracking-wide">
+                    {item.label}
+                  </span>
+                </div>
               </div>
-              <span className="relative z-10 bg-surface-elevated/90 dark:bg-surface/90 backdrop-blur-md border border-white/10 px-3 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-widest text-muted-foreground uppercase shadow-xs">
-                {item.label}
-              </span>
-            </div>
-          ) : (
+            );
+          }
+
+          const isOwn = item.msg.senderId === currentUserId;
+
+          return (
             <MessageBubble
               key={item.msg.id}
               message={item.msg}
-              isOwn={item.msg.senderId === currentUserId}
+              isOwn={isOwn}
               isGrouped={item.isGrouped}
               members={members}
               orgId={orgId}
@@ -217,26 +225,30 @@ export function MessageList({
               onOpenDiscussion={onOpenDiscussion}
               onQuoteMessage={onQuoteMessage}
             />
-          ),
-        )}
-        <div ref={bottomRef} />
+          );
+        })}
+
+        <div ref={bottomRef} className="h-1" />
       </div>
 
-      {/* Scroll-to-bottom FAB */}
+      {/* Floating Jump to Latest Button */}
       <AnimatePresence>
         {showScrollBtn && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 10 }}
-            whileHover={{ scale: 1.08, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={scrollToBottom}
-            className="absolute bottom-5 right-5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-surface-elevated/95 dark:bg-surface/90 backdrop-blur-xl border border-white/15 text-primary shadow-xl hover:bg-surface active:scale-95 transition-all cursor-pointer"
-            title="Scroll to latest"
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.9 }}
+            className="absolute bottom-4 right-6 z-20"
           >
-            <ArrowDown className="h-4 w-4" />
-          </motion.button>
+            <button
+              type="button"
+              onClick={scrollToBottom}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-surface/95 dark:bg-surface-elevated/95 border border-border-default/80 dark:border-white/15 text-primary text-xs font-bold shadow-xl backdrop-blur-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              <ArrowDown className="h-3.5 w-3.5" />
+              <span>Jump to latest</span>
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

@@ -1,19 +1,42 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckSquare, Target, ClipboardList } from 'lucide-react';
+import { CheckSquare, Target, ClipboardList, Sparkles, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface CommandItem {
   name: string;
   description: string;
   syntax: string;
+  badge: string;
   icon: React.ComponentType<{ className?: string }>;
+  color: string;
 }
 
 const COMMANDS: CommandItem[] = [
-  { name: 'task', description: 'Create and assign a task', syntax: '/task <title> [@users]', icon: CheckSquare },
-  { name: 'goal', description: 'Create and assign a goal', syntax: '/goal <title> [@user]', icon: Target },
-  { name: 'request', description: 'Submit a request to an approver', syntax: '/request <title> @approver', icon: ClipboardList },
+  { 
+    name: 'task', 
+    description: 'Create & assign an operational task to teammates', 
+    syntax: '/task <title> [@users]', 
+    badge: 'Task',
+    icon: CheckSquare,
+    color: 'text-primary bg-primary/10 border-primary/20'
+  },
+  { 
+    name: 'goal', 
+    description: 'Set a high-level strategic goal or milestone', 
+    syntax: '/goal <title> [@owner]', 
+    badge: 'Goal',
+    icon: Target,
+    color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+  },
+  { 
+    name: 'request', 
+    description: 'Submit an approval request to a lead or manager', 
+    syntax: '/request <title> @approver', 
+    badge: 'Approval',
+    icon: ClipboardList,
+    color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20'
+  },
 ];
 
 interface CommandDropdownProps {
@@ -59,47 +82,61 @@ export function CommandDropdown({ query, onSelect, onClose }: CommandDropdownPro
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: 6, scale: 0.97 }}
+        initial={{ opacity: 0, y: 8, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 6 }}
-        transition={{ duration: 0.15 }}
-        className="absolute bottom-full mb-2 left-0 w-80 rounded-xl border border-border-default bg-popover/95 backdrop-blur-xl shadow-2xl shadow-black/40 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100"
+        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute bottom-full mb-3 left-4 w-84 rounded-2xl border border-border-default/80 dark:border-white/15 bg-surface/95 dark:bg-surface-elevated/95 backdrop-blur-2xl shadow-2xl overflow-hidden z-50 select-none"
       >
-        <div className="px-3.5 py-2.5 border-b border-border-default bg-surface/50">
-          <span className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5">
-            <span>✨</span> Slash Commands
+        <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-border-subtle dark:border-white/5 bg-surface-elevated/50 dark:bg-white/[0.02]">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span>Slash Commands</span>
+          </span>
+          <span className="text-[9px] font-mono text-muted-foreground">
+            ↑↓ navigate · ↵ select
           </span>
         </div>
-        <div className="py-1 max-h-72 overflow-y-auto">
+
+        <div className="p-1.5 space-y-1 max-h-72 overflow-y-auto">
           {filtered.map((cmd, i) => {
             const Icon = cmd.icon;
+            const isSelected = i === activeIdx;
+
             return (
               <button
                 key={cmd.name}
+                type="button"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   onSelect(cmd.name);
                 }}
                 onMouseEnter={() => setActiveIdx(i)}
                 className={cn(
-                  'flex w-full items-start gap-3.5 px-4 py-3 text-left transition-colors border-b border-white/[0.02] last:border-0',
-                  i === activeIdx ? 'bg-primary/10' : 'hover:bg-bg-tertiary',
+                  'flex w-full items-start gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer',
+                  isSelected
+                    ? 'bg-primary/10 dark:bg-white/10 shadow-xs'
+                    : 'hover:bg-surface-hover dark:hover:bg-white/5'
                 )}
               >
                 <div className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors',
-                  i === activeIdx 
-                    ? 'bg-primary/20 text-primary border-primary/20' 
-                    : 'bg-primary/5 text-primary border-primary/10'
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-transform',
+                  cmd.color,
+                  isSelected && 'scale-105'
                 )}>
-                  <Icon className="h-4.5 w-4.5" />
+                  <Icon className="h-4 w-4" />
                 </div>
+
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs font-bold text-foreground">/{cmd.name}</p>
-                    <p className="text-[10px] font-mono text-text-muted">{cmd.syntax}</p>
+                  <div className="flex items-center justify-between gap-1.5">
+                    <span className="text-xs font-bold text-foreground">
+                      /{cmd.name}
+                    </span>
+                    <span className="text-[9.5px] font-mono text-muted-foreground truncate">
+                      {cmd.syntax}
+                    </span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed truncate">
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug line-clamp-1">
                     {cmd.description}
                   </p>
                 </div>

@@ -1,9 +1,8 @@
 import * as React from 'react';
-import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen, FileText } from 'lucide-react';
+import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen, FileText, Sparkles } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useChannels } from '../../hooks/useChat';
-import { useMessages } from '../../hooks/useChat';
+import { useChannels, useMessages } from '../../hooks/useChat';
 import { sendChannelMessage, sendDMMessage, markChannelRead, markDMRead } from '../../lib/chat';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
@@ -67,7 +66,7 @@ export function MessageArea({
       syncOfflineMessages((msg) => {
         setOfflineToast(`Synced offline message: "${msg.body.slice(0, 15)}..."`);
         setTimeout(() => setOfflineToast(null), 3500);
-      }).catch(err => console.error("Failed to sync offline messages", err));
+      }).catch((err) => console.error('Failed to sync offline messages', err));
     }
   }, [isOnline, currentUser, orgId]);
 
@@ -159,7 +158,7 @@ export function MessageArea({
         parentMessageId,
         parentMessage,
       });
-      setOfflineToast("Operating offline. Message queued for automatic sync.");
+      setOfflineToast('Operating offline. Message queued for automatic sync.');
       setTimeout(() => setOfflineToast(null), 4000);
       return;
     }
@@ -173,7 +172,6 @@ export function MessageArea({
       const commandArgs = trimmed.slice(5).trim();
       let goalTitle = commandArgs.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
 
-      // Extract raw mentions from the body and look up their user IDs
       const textMentions = (trimmed.match(/@\w+/g) || [])
         .map((m) => m.slice(1))
         .map((uname) => members.find((m) => m.username.toLowerCase() === uname.toLowerCase())?.uid)
@@ -218,7 +216,6 @@ export function MessageArea({
           recurrence: 'none',
         });
 
-        // Send the original message body as typed
         if (channelId) {
           await sendChannelMessage({ ...base, body, channelId, goalId, goalStatus: 'active' } as any);
         } else if (dmId) {
@@ -240,7 +237,6 @@ export function MessageArea({
       const commandArgs = trimmed.slice(8).trim();
       let requestTitle = commandArgs.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
 
-      // Extract raw mentions from the body and look up their user IDs
       const rawMentions = (trimmed.match(/@\w+/g) || [])
         .map((m) => m.slice(1))
         .map((uname) => members.find((m) => m.username.toLowerCase() === uname.toLowerCase())?.uid)
@@ -248,7 +244,6 @@ export function MessageArea({
 
       let approverId = rawMentions[0] || mentions[0];
 
-      // If no approver is explicitly mentioned and we are in a DM, default to the DM partner
       if (!approverId && dmId && currentUser) {
         const parts = dmId.split('_');
         approverId = parts.find((p) => p !== currentUser.uid) ?? '';
@@ -282,7 +277,6 @@ export function MessageArea({
             : `Request submitted via Direct Message chat by ${base.senderName}.`,
         });
 
-        // Send the original message body as typed
         if (channelId) {
           await sendChannelMessage({ ...base, body, channelId, requestId, requestStatus: 'pending' } as any);
         } else if (dmId) {
@@ -302,8 +296,6 @@ export function MessageArea({
 
     if (isTask) {
       const commandArgs = trimmed.slice(5).trim();
-      
-      // Clean task title by removing @username patterns
       let taskTitle = commandArgs.replace(/@\w+/g, '').replace(/\s+/g, ' ').trim();
 
       if (!taskTitle) {
@@ -322,13 +314,11 @@ export function MessageArea({
       try {
         let assigneeIds: string[] = [];
 
-        // Extract raw mentions from the body and look up their user IDs
         const textMentions = (trimmed.match(/@\w+/g) || [])
           .map((m) => m.slice(1))
           .map((uname) => members.find((m) => m.username.toLowerCase() === uname.toLowerCase())?.uid)
           .filter((id): id is string => !!id);
 
-        // Combine mentions resolved by both methods (dropdown + manual)
         const combinedMentions = Array.from(new Set([...mentions, ...textMentions]));
 
         if (combinedMentions.length > 0) {
@@ -339,7 +329,6 @@ export function MessageArea({
             const otherId = parts.find((p) => p !== currentUser.uid) ?? '';
             assigneeIds = [otherId];
           } else if (channelId) {
-            // Fetch all members of the channel
             const snap = await getDocs(
               query(collection(db, 'channelMembers'), where('channelId', '==', channelId))
             );
@@ -347,7 +336,6 @@ export function MessageArea({
           }
         }
 
-        // Create the task
         const taskId = await createTask({
           orgId,
           title: taskTitle,
@@ -363,7 +351,6 @@ export function MessageArea({
           },
         });
 
-        // Send the original message body as typed
         if (channelId) {
           await sendChannelMessage({ ...base, body, channelId, taskId } as any);
         } else if (dmId) {
@@ -394,7 +381,7 @@ export function MessageArea({
     ? channel?.description ?? ''
     : dmPartner?.focusStatus?.text 
       ? `Status: "${dmPartner.focusStatus.text}"`
-      : `Direct message`;
+      : `Direct Message`;
   const Icon = channelId ? (channel?.isPrivate ? Lock : Hash) : MessageSquare;
 
   const isChannelAdmin = React.useMemo(() => {
@@ -408,21 +395,23 @@ export function MessageArea({
 
   return (
     <div className="flex flex-1 min-w-0 flex-col bg-background relative h-full overflow-hidden">
-      {/* Precision Linear Header */}
-      <div className="flex items-center gap-3 border-b border-white/10 bg-surface/80 dark:bg-surface/60 backdrop-blur-xl px-5 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] md:py-3 shrink-0 z-10">
+      {/* Precision Floating Glassmorphic Conversation Header */}
+      <div className="flex items-center gap-3 border-b border-border-default/80 dark:border-white/10 bg-surface/90 dark:bg-surface-elevated/70 backdrop-blur-2xl px-5 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] md:py-3 shrink-0 z-10 select-none shadow-xs">
         <button
+          type="button"
           onClick={() => navigate('/chat')}
-          className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-white/10 hover:text-foreground shrink-0 transition-colors cursor-pointer"
+          className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-surface-hover dark:hover:bg-white/10 hover:text-foreground shrink-0 transition-colors cursor-pointer"
           title="Back to Directory"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
 
-        {/* Sidebar Toggle Button */}
+        {/* Sidebar Collapse Toggle */}
         {onToggleSidebar && (
           <button
+            type="button"
             onClick={onToggleSidebar}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-white/10 hover:text-foreground shrink-0 transition-colors cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-surface-hover dark:hover:bg-white/10 hover:text-foreground shrink-0 transition-colors cursor-pointer"
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
             {isSidebarCollapsed ? (
@@ -433,13 +422,14 @@ export function MessageArea({
           </button>
         )}
 
+        {/* Channel or DM Avatar */}
         {dmId ? (
           (() => {
             const parts = dmId.split('_');
             const otherId = parts.find((p) => p !== currentUser?.uid) ?? '';
             return (
               <div 
-                className="w-8 h-8 flex items-center justify-center rounded-full shrink-0 border border-white/15 relative shadow-xs"
+                className="w-9 h-9 flex items-center justify-center rounded-full shrink-0 border border-white/20 relative shadow-xs"
                 style={{ background: `hsl(${avatarHue(otherId)} 55% 45%)` }}
               >
                 {dmPartner?.photoURL ? (
@@ -447,7 +437,7 @@ export function MessageArea({
                 ) : (
                   <span className="text-xs font-bold text-white">{avatarInitials(dmPartnerName || '?')}</span>
                 )}
-                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-surface flex items-center justify-center shadow-xs">
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface flex items-center justify-center shadow-xs">
                   <span className={cn(
                     "h-1.5 w-1.5 rounded-full",
                     dmPartner?.availabilityStatus === 'focus' ? "bg-red-500" :
@@ -459,25 +449,31 @@ export function MessageArea({
             );
           })()
         ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary">
-            <Icon className="h-4 w-4" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary">
+            <Icon className="h-4.5 w-4.5" />
           </div>
         )}
 
+        {/* Title and Subtitle / Status */}
         <div className="min-w-0 flex-1 flex items-center gap-3">
           <div className="min-w-0">
             <h1 className="text-sm font-bold text-foreground flex items-center gap-1.5 truncate">
               {headerTitle}
             </h1>
-            {headerSub && <p className="text-[11px] text-muted-foreground truncate leading-tight">{headerSub}</p>}
+            {headerSub && (
+              <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+                {headerSub}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Right Header Actions */}
+        {/* Right Header Controls */}
         <div className="ml-auto flex items-center gap-2">
-          {/* Canvas Toggle Button */}
+          {/* Canvas Drawer Toggle */}
           {(channelId || dmId) && (
             <button
+              type="button"
               onClick={() => {
                 const newParams = new URLSearchParams(searchParams);
                 const isCanvasOpen = newParams.get('canvas') === 'true';
@@ -490,10 +486,10 @@ export function MessageArea({
               }}
               title="Toggle Canvas"
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer border",
+                "flex h-8.5 w-8.5 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer border",
                 searchParams.get('canvas') === 'true'
-                  ? "bg-primary/15 border-primary/30 text-primary shadow-xs"
-                  : "border-transparent text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                  ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                  : "border-border-default/80 dark:border-white/10 bg-surface/80 dark:bg-white/5 text-muted-foreground hover:text-foreground hover:bg-surface-hover"
               )}
             >
               <FileText className="h-4 w-4" />
@@ -502,30 +498,32 @@ export function MessageArea({
 
           {channelId && channel && (
             <>
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/5 text-muted-foreground text-[11px] font-mono">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-surface-elevated/80 dark:bg-white/5 border border-border-default/80 dark:border-white/10 text-muted-foreground text-xs font-mono">
                 <Users className="h-3.5 w-3.5" />
-                <span>{channel.memberCount}</span>
+                <span className="font-semibold">{channel.memberCount}</span>
               </div>
 
-              {/* Invite Button */}
+              {/* Invite Teammates */}
               <button
+                type="button"
                 onClick={() => setShowInviteModal(true)}
                 title="Add members"
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-white/10 hover:text-foreground transition-colors shrink-0 cursor-pointer"
+                className="flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-border-default/80 dark:border-white/10 bg-surface/80 dark:bg-white/5 text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
               >
                 <UserPlus className="h-4 w-4" />
               </button>
 
-              {/* Settings Gear Button */}
+              {/* Channel Settings Gear */}
               {isChannelAdmin && (
                 <button
+                  type="button"
                   onClick={() => {
                     const newParams = new URLSearchParams(searchParams);
                     newParams.set('settings', 'true');
                     setSearchParams(newParams);
                   }}
                   title="Channel settings"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-white/10 hover:text-foreground transition-colors shrink-0 cursor-pointer"
+                  className="flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-border-default/80 dark:border-white/10 bg-surface/80 dark:bg-white/5 text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
                 >
                   <Settings className="h-4 w-4" />
                 </button>
@@ -535,7 +533,7 @@ export function MessageArea({
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Message List Feed */}
       <MessageList
         messages={messages}
         currentUserId={currentUser?.uid ?? ''}
@@ -549,7 +547,7 @@ export function MessageArea({
         onQuoteMessage={(msg) => setQuotedMessage(msg)}
       />
 
-      {/* Input */}
+      {/* Floating Island Composer */}
       <MessageInput
         onSend={handleSend}
         placeholder={
@@ -566,7 +564,7 @@ export function MessageArea({
         onClearQuote={() => setQuotedMessage(null)}
       />
 
-      {/* Modals */}
+      {/* Invite Modal */}
       {showInviteModal && channelId && orgId && (
         <InviteChannelMembersModal
           channelId={channelId}
@@ -576,19 +574,17 @@ export function MessageArea({
         />
       )}
 
-
-
       {/* Offline Messaging Indicator Toast */}
       <AnimatePresence>
         {offlineToast && (
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[9995] pointer-events-none px-4"
           >
-            <div className="aether-glass px-4 py-2.5 rounded-full border border-amber-500/25 bg-amber-950/60 backdrop-blur-md text-amber-300 font-extrabold text-[10px] tracking-widest shadow-2xl flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping shrink-0" />
+            <div className="px-4 py-2 rounded-full border border-amber-500/30 bg-amber-950/80 backdrop-blur-xl text-amber-300 font-extrabold text-[10px] tracking-widest shadow-2xl flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
               <span>{offlineToast.toUpperCase()}</span>
             </div>
           </motion.div>
