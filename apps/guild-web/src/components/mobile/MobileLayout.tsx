@@ -104,13 +104,13 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
       <div className="aether-aurora" />
 
       {/* 2. Top Spatial mobile control bar */}
-      <header className="flex h-[calc(3.5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] w-full items-center justify-between px-5 shrink-0 z-30 border-b border-white/5 bg-surface/40 backdrop-blur-md">
+      <header className="flex h-[calc(3.5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] w-full items-center justify-between px-4 sm:px-5 shrink-0 z-30 border-b border-border/70 bg-surface/85 dark:bg-surface/60 backdrop-blur-xl">
         {/* Brand */}
         <div className="flex items-center gap-2 max-w-[60%] min-w-0">
           {org ? (
             <div className="flex items-center gap-2 min-w-0">
               <div 
-                className="w-6 h-6 rounded-md flex items-center justify-center font-black text-white text-[9px] border border-white/10 relative overflow-hidden shrink-0 shadow-sm"
+                className="w-6 h-6 rounded-md flex items-center justify-center font-black text-white text-[9px] border border-border-default/40 relative overflow-hidden shrink-0 shadow-xs"
                 style={!org.photoURL ? {
                   background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
                 } : undefined}
@@ -130,17 +130,18 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
               Loading...
             </span>
           )}
-          <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 border-l border-white/10 pl-2 shrink-0">
+          <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-70 border-l border-border/80 pl-2 shrink-0">
             {getHeaderTitle()}
           </span>
         </div>
 
         {/* Action icons */}
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-2.5 sm:gap-3.5">
           {/* Elegant search trigger */}
           <button
             onClick={() => setSearchOpen(true)}
-            className="h-8 w-8 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-foreground/80 hover:text-foreground active:scale-90 transition-all cursor-pointer"
+            className="h-8 w-8 rounded-full border border-border/80 bg-secondary/80 hover:bg-secondary flex items-center justify-center text-foreground/80 hover:text-foreground active:scale-90 transition-all cursor-pointer shadow-xs"
+            title="Search"
           >
             <Search className="w-4 h-4" />
           </button>
@@ -150,9 +151,10 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
             <button
               onClick={() => setNotifOpen(!notifOpen)}
               className={cn(
-                "h-8 w-8 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-foreground/80 hover:text-foreground active:scale-90 transition-all cursor-pointer",
-                notifOpen ? "bg-white/10" : ""
+                "h-8 w-8 rounded-full border border-border/80 bg-secondary/80 hover:bg-secondary flex items-center justify-center text-foreground/80 hover:text-foreground active:scale-90 transition-all cursor-pointer shadow-xs",
+                notifOpen ? "bg-primary/15 text-primary border-primary/40" : ""
               )}
+              title="Notifications"
             >
               <Bell className="w-4 h-4" />
               {hasNewUnread && (
@@ -187,7 +189,7 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
           {/* Avatar Profile Trigger */}
           <div 
             onClick={() => navigate('/settings')}
-            className="w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[10px] text-white border border-white/20 dark:border-white/10 shadow-md active:scale-90 transition-all cursor-pointer"
+            className="w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[10px] text-white border border-border-default/40 shadow-sm active:scale-90 transition-all cursor-pointer"
             style={{
               background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
             }}
@@ -199,8 +201,8 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
 
       {/* 3. Mobile Canvas View Area */}
       <main className={cn(
-        "flex-1 overflow-y-auto aether-scroll relative px-4 pt-4 z-10 scrollbar-hide",
-        hideDock ? "pb-4" : "pb-[88px]" // Ensure bottom tab dock does not block content
+        "flex-1 overflow-y-auto aether-scroll relative px-3.5 sm:px-4 pt-3.5 sm:pt-4 z-10 scrollbar-hide",
+        hideDock ? "pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]" : "pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))]" // Ensure bottom tab dock does not block content
       )}>
         {children}
       </main>

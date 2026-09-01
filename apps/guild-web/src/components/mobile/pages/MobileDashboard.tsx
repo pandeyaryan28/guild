@@ -232,14 +232,14 @@ export function MobileDashboard() {
               <button
                 onClick={dismiss}
                 title="Dismiss"
-                className="h-6 w-6 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all cursor-pointer shrink-0 ml-2"
+                className="h-6 w-6 rounded-full border border-border bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all cursor-pointer shrink-0 ml-2"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {isIOS ? (
-              <div className="text-[9px] font-bold text-muted-foreground flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-2 rounded-xl justify-center">
+              <div className="text-[9px] font-bold text-muted-foreground flex items-center gap-1.5 bg-secondary border border-border px-3 py-2 rounded-xl justify-center">
                 <Share2 className="w-3.5 h-3.5 text-primary shrink-0" />
                 <span>Tap Safari Share &rarr; <b>"Add to Home Screen"</b></span>
               </div>
@@ -256,14 +256,14 @@ export function MobileDashboard() {
       </AnimatePresence>
 
       {/* 1. Mobile Friendly Greeting and Active Profile Status Panel */}
-      <div className="aether-glass p-5 flex flex-col gap-4 bg-white/2 border border-white/5 shadow-lg">
+      <div className="aether-glass p-4 sm:p-5 flex flex-col gap-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
               <button 
                 type="button"
                 onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                className="w-11 h-11 flex items-center justify-center rounded-full border-2 border-white/20 relative shadow-inner cursor-pointer"
+                className="w-11 h-11 flex items-center justify-center rounded-full border-2 border-border-default/50 relative shadow-inner cursor-pointer"
                 style={{ background: `hsl(${avatarHue(userProfile?.uid || '')} 55% 45%)` }}
               >
                 {userProfile?.photoURL ? (
@@ -289,9 +289,9 @@ export function MobileDashboard() {
                       initial={{ opacity: 0, y: 8, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      className="absolute left-0 mt-2.5 w-44 aether-glass bg-surface/98 p-1 shadow-2xl z-50 rounded-xl"
+                      className="absolute left-0 mt-2.5 w-44 aether-glass bg-surface/98 dark:bg-surface/95 border border-border p-1 shadow-2xl z-50 rounded-xl"
                     >
-                      <div className="px-2.5 py-1 text-[8px] font-black text-muted-foreground uppercase tracking-widest border-b border-white/5 mb-1">
+                      <div className="px-2.5 py-1 text-[8px] font-black text-muted-foreground uppercase tracking-widest border-b border-border mb-1">
                         Status Dashboard
                       </div>
                       {['active', 'focus', 'away'].map((st) => (
@@ -300,8 +300,8 @@ export function MobileDashboard() {
                           type="button"
                           onClick={() => handleUpdateStatus(st as any)}
                           className={cn(
-                            "w-full text-left px-2.5 py-1.5 text-xs font-bold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-all capitalize",
-                            currentStatus === st ? "text-foreground" : "text-muted-foreground"
+                            "w-full text-left px-2.5 py-1.5 text-xs font-bold rounded-lg flex items-center gap-2 cursor-pointer hover:bg-secondary transition-all capitalize",
+                            currentStatus === st ? "text-foreground bg-secondary/60 font-black" : "text-muted-foreground"
                           )}
                         >
                           <span className={cn(
@@ -309,7 +309,7 @@ export function MobileDashboard() {
                             st === 'active' ? "bg-emerald-500" : st === 'focus' ? "bg-red-500" : "bg-amber-500"
                           )} />
                           <span>{st}</span>
-                          {currentStatus === st && <Check className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
+                          {currentStatus === st && <Check className="w-3.5 h-3.5 ml-auto text-primary" />}
                         </button>
                       ))}
                     </motion.div>
@@ -332,7 +332,7 @@ export function MobileDashboard() {
               href="https://admin.guildorbit.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-650 hover:from-indigo-500 hover:to-violet-550 text-white font-extrabold text-[10px] shadow-[0_3px_12px_rgba(99,102,241,0.3)] transition-all hover:scale-[1.03] active:scale-[0.97] shrink-0 cursor-pointer border border-white/10 tracking-wide uppercase animate-fluid-pop"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-650 hover:from-indigo-500 hover:to-violet-550 text-white font-extrabold text-[10px] shadow-[0_3px_12px_rgba(99,102,241,0.3)] transition-all hover:scale-[1.03] active:scale-[0.97] shrink-0 cursor-pointer border border-border-default/30 tracking-wide uppercase animate-fluid-pop"
             >
               <Shield className="w-3.5 h-3.5 text-white animate-pulse" />
               <span>Admin</span>
@@ -341,9 +341,9 @@ export function MobileDashboard() {
         </div>
 
         {/* 2. Sleek Custom Mobile Status Target */}
-        <div className="pt-3.5 border-t border-white/5 flex flex-col gap-2">
+        <div className="pt-3 border-t border-border flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-lg bg-white/5 text-primary shrink-0">
+            <div className="p-1.5 rounded-lg bg-secondary text-primary shrink-0 border border-border/60">
               <Target className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -354,7 +354,7 @@ export function MobileDashboard() {
                 onChange={(e) => setFocusInput(e.target.value)}
                 onBlur={handleSaveFocus}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSaveFocus(); }}
-                className="bg-transparent border-none w-full p-0 text-xs font-extrabold placeholder:text-muted-foreground/50 text-foreground focus:ring-0 focus:outline-none"
+                className="bg-transparent border-none w-full p-0 text-xs font-bold placeholder:text-muted-foreground/60 text-foreground focus:ring-0 focus:outline-none"
               />
             </div>
           </div>
@@ -367,8 +367,8 @@ export function MobileDashboard() {
       </div>
 
       {/* 3. Task Overview Card Stream */}
-      <div className="aether-glass p-5 space-y-4 bg-white/2 border border-white/5">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+      <div className="aether-glass p-4 sm:p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
+        <div className="flex items-center justify-between border-b border-border pb-2.5">
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">My Today's Work</span>
           <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary">
             {myTasks.length} left
@@ -381,7 +381,7 @@ export function MobileDashboard() {
             <span className="text-xs text-muted-foreground font-bold">Retrieving tickets...</span>
           </div>
         ) : myTasks.length === 0 ? (
-          <div className="py-8 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-xl">
+          <div className="py-8 text-center bg-secondary/25 border border-dashed border-border rounded-xl">
             <Check className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
             <span className="text-xs font-bold text-foreground block">Workspace is pristine!</span>
             <span className="text-[9px] text-muted-foreground mt-0.5 block">Enjoy a fully cleared agenda.</span>
@@ -392,25 +392,25 @@ export function MobileDashboard() {
               <div 
                 key={task.id}
                 onClick={() => navigate('/workspace')}
-                className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.02] border border-white/5 active:scale-98 transition-all"
+                className="flex items-center justify-between p-3.5 rounded-xl bg-surface/90 dark:bg-surface/50 border border-border hover:border-primary/30 active:scale-98 transition-all cursor-pointer shadow-xs"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <button
                     onClick={(e) => { e.stopPropagation(); handleToggleComplete(task); }}
-                    className="w-5 h-5 rounded-lg border border-white/10 flex items-center justify-center bg-white/5"
+                    className="w-5 h-5 rounded-lg border border-border flex items-center justify-center bg-secondary hover:bg-secondary/80 cursor-pointer"
                   >
-                    <Check className="w-3 h-3 text-emerald-400 opacity-80" />
+                    <Check className="w-3 h-3 text-emerald-500 opacity-90" />
                   </button>
                   <span className="text-xs font-bold text-foreground truncate">{task.title}</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
               </div>
             ))}
 
             {myTasks.length > 3 && (
               <button 
                 onClick={() => navigate('/workspace')}
-                className="w-full py-2.5 text-center text-xs font-black text-primary border border-white/5 bg-white/2 rounded-xl active:scale-95 transition-all"
+                className="w-full py-2.5 text-center text-xs font-black text-primary border border-border bg-secondary/50 hover:bg-secondary rounded-xl active:scale-95 transition-all cursor-pointer"
               >
                 VIEW ALL {myTasks.length} TASKS
               </button>
@@ -421,23 +421,23 @@ export function MobileDashboard() {
 
       {/* 4. Approvals Drawer widget */}
       {(pendingRequests.length > 0 || reviewTasksForTeam.length > 0 || tasksAwaitingApproval.length > 0) && (
-        <div className="aether-glass p-5 space-y-4 bg-white/2 border border-white/5">
-          <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+        <div className="aether-glass p-4 sm:p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
+          <div className="flex items-center justify-between border-b border-border pb-2.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Action Needed</span>
-            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 animate-pulse">
+            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-500 dark:text-amber-400 animate-pulse">
               {pendingRequests.length + reviewTasksForTeam.length + tasksAwaitingApproval.length} Pending
             </span>
           </div>
 
           <div className="space-y-3">
             {pendingRequests.slice(0, 2).map((req) => (
-              <div key={req.id} className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02] space-y-3">
+              <div key={req.id} className="p-3.5 rounded-xl border border-border bg-surface/90 dark:bg-surface/50 space-y-3 shadow-xs">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <span className="text-xs font-bold text-foreground block truncate">{req.title}</span>
                     <span className="text-[9px] text-muted-foreground block mt-1 font-semibold">From {req.creatorName}</span>
                   </div>
-                  <FileCheck className="w-4.5 h-4.5 text-amber-400 shrink-0" />
+                  <FileCheck className="w-4.5 h-4.5 text-amber-500 dark:text-amber-400 shrink-0" />
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -452,7 +452,7 @@ export function MobileDashboard() {
                     onClick={async () => {
                       await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, userProfile!.username, req.creatorId, req.title);
                     }}
-                    className="flex-1 py-2 rounded-lg bg-white/5 border border-white/5 text-[10px] font-black text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
+                    className="flex-1 py-2 rounded-lg bg-secondary border border-border text-[10px] font-black text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
                   >
                     Reject
                   </button>
@@ -463,13 +463,13 @@ export function MobileDashboard() {
             {reviewTasksForTeam.slice(0, 2).map((task) => {
               const assigneeName = task.assigneeIds.map(id => memberMap.get(id)?.fullName).filter(Boolean).join(', ');
               return (
-                <div key={task.id} className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02] space-y-3">
+                <div key={task.id} className="p-3.5 rounded-xl border border-border bg-surface/90 dark:bg-surface/50 space-y-3 shadow-xs">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <span className="text-xs font-bold text-foreground block truncate">{task.title}</span>
                       <span className="text-[9px] text-muted-foreground block mt-1 font-semibold">Review for {assigneeName}</span>
                     </div>
-                    <UserCheck className="w-4.5 h-4.5 text-indigo-400 shrink-0" />
+                    <UserCheck className="w-4.5 h-4.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -486,7 +486,7 @@ export function MobileDashboard() {
                         const actionActor = { uid: userProfile!.uid, name: userProfile!.fullName || 'Manager' };
                         await moveTask(task.id, orgId!, 'in_progress', task.orderIndex, task.status, actionActor);
                       }}
-                      className="flex-1 py-2 rounded-lg bg-white/5 border border-white/5 text-[10px] font-black text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
+                      className="flex-1 py-2 rounded-lg bg-secondary border border-border text-[10px] font-black text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
                     >
                       Needs Changes
                     </button>
@@ -498,13 +498,13 @@ export function MobileDashboard() {
             {tasksAwaitingApproval.slice(0, 2).map((task) => {
               const creatorName = members.find(m => m.uid === task.creatorId)?.fullName || 'Teammate';
               return (
-                <div key={task.id} className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02] space-y-3">
+                <div key={task.id} className="p-3.5 rounded-xl border border-border bg-surface/90 dark:bg-surface/50 space-y-3 shadow-xs">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <span className="text-xs font-bold text-foreground block truncate">{task.title}</span>
                       <span className="text-[9px] text-muted-foreground block mt-1 font-semibold">Creation for {creatorName}</span>
                     </div>
-                    <Shield className="w-4.5 h-4.5 text-rose-400 shrink-0" />
+                    <Shield className="w-4.5 h-4.5 text-rose-500 dark:text-rose-400 shrink-0" />
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -520,7 +520,7 @@ export function MobileDashboard() {
                       onClick={async () => {
                         await deleteTask(task.id);
                       }}
-                      className="flex-1 py-2 rounded-lg bg-white/5 border border-white/5 text-[10px] font-black text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
+                      className="flex-1 py-2 rounded-lg bg-secondary border border-border text-[10px] font-black text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
                     >
                       Reject
                     </button>
@@ -533,11 +533,11 @@ export function MobileDashboard() {
       )}
 
       {/* 5. Mobile Dynamic Unread Inbox stream */}
-      <div className="aether-glass p-5 space-y-4 bg-white/2 border border-white/5">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+      <div className="aether-glass p-4 sm:p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
+        <div className="flex items-center justify-between border-b border-border pb-2.5">
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Inbox</span>
           {unreadChannels.length + unreadDMs.length > 0 && (
-            <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-semibold animate-pulse">
+            <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-500 dark:text-blue-400 text-[9px] font-semibold animate-pulse">
               {unreadChannels.length + unreadDMs.length} new
             </span>
           )}
@@ -558,11 +558,11 @@ export function MobileDashboard() {
                 <div 
                   key={thread.id}
                   onClick={() => navigate(`/chat/dm/${thread.id}`)}
-                  className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 active:scale-98 transition-all cursor-pointer"
+                  className="flex items-center justify-between p-3 rounded-xl bg-surface/90 dark:bg-surface/50 border border-border hover:bg-secondary/40 active:scale-98 transition-all cursor-pointer shadow-xs"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center border border-white/10 shrink-0"
+                      className="w-8 h-8 rounded-full flex items-center justify-center border border-border-default/40 shrink-0"
                       style={{ background: `hsl(${avatarHue(otherUid || '')} 55% 45%)` }}
                     >
                       {otherMember?.photoURL ? (
@@ -587,10 +587,10 @@ export function MobileDashboard() {
               <div 
                 key={channel.id}
                 onClick={() => navigate(`/chat/c/${channel.id}`)}
-                className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 active:scale-98 transition-all cursor-pointer"
+                className="flex items-center justify-between p-3 rounded-xl bg-surface/90 dark:bg-surface/50 border border-border hover:bg-secondary/40 active:scale-98 transition-all cursor-pointer shadow-xs"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/5 text-muted-foreground shrink-0 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-secondary border border-border text-muted-foreground shrink-0 flex items-center justify-center">
                     <Hash className="w-4 h-4 text-primary" />
                   </div>
                   <div className="min-w-0">
@@ -608,10 +608,10 @@ export function MobileDashboard() {
       </div>
 
       {/* 6. Active Team Focus overview */}
-      <div className="aether-glass p-5 space-y-4 bg-white/2 border border-white/5">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+      <div className="aether-glass p-4 sm:p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
+        <div className="flex items-center justify-between border-b border-border pb-2.5">
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Team availability</span>
-          <span className="text-[9px] font-semibold text-muted-foreground/60">
+          <span className="text-[9px] font-semibold text-muted-foreground">
             {teammates.filter(t => t.availabilityStatus === 'active').length} active now
           </span>
         </div>
@@ -627,7 +627,7 @@ export function MobileDashboard() {
                 title={member.fullName}
               >
                 <div 
-                  className="w-10 h-10 flex items-center justify-center rounded-full border border-white/10 relative"
+                  className="w-10 h-10 flex items-center justify-center rounded-full border border-border-default/40 relative shadow-xs"
                   style={{ background: `hsl(${avatarHue(member.uid)} 55% 45%)` }}
                 >
                   {member.photoURL ? (

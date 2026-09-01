@@ -117,7 +117,7 @@ export function MobileWorkspace() {
     <div className="flex flex-col space-y-4 animate-fluid-pop pb-6">
       
       {/* 0. Top Level Tab Switcher (Tasks vs Goals) */}
-      <div className="aether-glass p-1.5 flex bg-white/2 border border-white/5 shadow-inner" style={{ borderRadius: '18px' }}>
+      <div className="aether-glass p-1.5 flex bg-secondary/50 border border-border shadow-xs" style={{ borderRadius: '18px' }}>
         {[
           { id: 'tasks', label: 'Tasks Canvas' },
           { id: 'goals', label: 'Strategic Goals' }
@@ -129,13 +129,13 @@ export function MobileWorkspace() {
               onClick={() => setWorkspaceTab(tab.id as any)}
               className={cn(
                 "relative flex-1 py-2 text-center text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer",
-                isActive ? "text-white" : "text-muted-foreground hover:text-foreground"
+                isActive ? "text-primary-foreground font-black" : "text-muted-foreground hover:text-foreground"
               )}
             >
               {isActive && (
                 <motion.div 
                   layoutId="workspaceModeTab"
-                  className="absolute inset-0 bg-primary rounded-xl shadow-lg z-0"
+                  className="absolute inset-0 bg-primary rounded-xl shadow-md z-0"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
@@ -148,7 +148,7 @@ export function MobileWorkspace() {
       {workspaceTab === 'tasks' ? (
         <>
           {/* 1. Task State Navigation Tabs */}
-          <div className="aether-glass p-1.5 flex bg-white/2 border border-white/5 shadow-inner" style={{ borderRadius: '18px' }}>
+          <div className="aether-glass p-1.5 flex bg-secondary/50 border border-border shadow-xs" style={{ borderRadius: '18px' }}>
             {[
               { id: 'todo', label: 'To Do' },
               { id: 'in_progress', label: 'Active' },
@@ -164,13 +164,13 @@ export function MobileWorkspace() {
                   onClick={() => setActiveTab(tab.id as any)}
                   className={cn(
                     "relative flex-1 py-2 text-center text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer",
-                    isActive ? "text-white" : "text-muted-foreground"
+                    isActive ? "text-primary-foreground font-black" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {isActive && (
                     <motion.div 
                       layoutId="workspaceActiveTab"
-                      className="absolute inset-0 bg-primary rounded-xl shadow-lg z-0"
+                      className="absolute inset-0 bg-primary rounded-xl shadow-md z-0"
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -178,7 +178,7 @@ export function MobileWorkspace() {
                     <span>{tab.label}</span>
                     <span className={cn(
                       "px-1.5 py-0.2 rounded-md text-[8px] font-black",
-                      isActive ? "bg-white/20 text-white" : "bg-white/5 text-muted-foreground/60"
+                      isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-secondary text-muted-foreground"
                     )}>
                       {count}
                     </span>
@@ -189,13 +189,13 @@ export function MobileWorkspace() {
           </div>
 
           {/* 2. Quick task input */}
-          <form onSubmit={handleCreateTask} className="aether-glass p-3 flex gap-2 bg-white/2 border border-white/5">
+          <form onSubmit={handleCreateTask} className="aether-glass p-3 flex gap-2 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-xs">
             <input
               type="text"
               placeholder={`Add task to ${activeTab.replace('_', ' ')}...`}
               value={quickTitle}
               onChange={(e) => setQuickTitle(e.target.value)}
-              className="flex-1 bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
+              className="flex-1 bg-secondary/60 border border-border rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
             />
             <button
               type="submit"
@@ -213,8 +213,8 @@ export function MobileWorkspace() {
               <span className="text-xs text-muted-foreground font-bold">Assembling tasks...</span>
             </div>
           ) : filteredTasks.length === 0 ? (
-            <div className="aether-glass p-8 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-2xl py-16">
-              <CheckCircle className="w-8 h-8 text-emerald-500/80 mx-auto mb-3" />
+            <div className="aether-glass p-8 text-center bg-secondary/25 border border-dashed border-border rounded-2xl py-16">
+              <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
               <span className="text-xs font-black text-foreground block uppercase tracking-wider">Tab is Clear</span>
               <span className="text-[10px] text-muted-foreground mt-1 block">No tasks currently pending in this queue.</span>
             </div>
@@ -232,7 +232,7 @@ export function MobileWorkspace() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95, y: -8 }}
                       onClick={() => setSelectedTask(task)}
-                      className="aether-glass p-4 bg-white/2 border border-white/5 flex flex-col gap-3 shadow-md active:scale-98 transition-all cursor-pointer"
+                      className="aether-glass p-4 bg-surface/90 dark:bg-surface/50 border border-border dark:border-border-strong flex flex-col gap-3 shadow-xs active:scale-98 transition-all cursor-pointer hover:border-primary/30"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <span className="text-xs font-black text-foreground leading-snug flex-1">
@@ -258,11 +258,11 @@ export function MobileWorkspace() {
                       )}
 
                       {/* Tactile state triggers */}
-                      <div className="pt-3 border-t border-white/5 flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="pt-3 border-t border-border flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                         {activeTab !== 'todo' && (
                           <button
                             onClick={() => handleMoveStatus(task, 'todo')}
-                            className="p-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-muted-foreground text-[10px] font-black flex items-center gap-1 cursor-pointer"
+                            className="p-1.5 rounded-lg border border-border bg-secondary hover:bg-secondary/80 text-foreground text-[10px] font-black flex items-center gap-1 cursor-pointer"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                             <span>Reset</span>
@@ -301,7 +301,7 @@ export function MobileWorkspace() {
                           ) : (
                             <button
                               onClick={() => alert("Only the creator of this task can approve it from In Review.")}
-                              className="py-1.5 px-3 rounded-lg bg-emerald-500/10 text-emerald-400/50 border border-emerald-500/20 text-[10px] font-black flex items-center gap-1.5 cursor-not-allowed opacity-60"
+                              className="py-1.5 px-3 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black flex items-center gap-1.5 cursor-not-allowed opacity-60"
                               title="Creator approval required"
                             >
                               <Lock className="w-3 h-3" />
@@ -320,13 +320,13 @@ export function MobileWorkspace() {
       ) : (
         <>
           {/* Quick goal input */}
-          <form onSubmit={handleCreateGoal} className="aether-glass p-3 flex gap-2 bg-white/2 border border-white/5">
+          <form onSubmit={handleCreateGoal} className="aether-glass p-3 flex gap-2 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-xs">
             <input
               type="text"
               placeholder="Create new strategic goal..."
               value={quickGoalTitle}
               onChange={(e) => setQuickGoalTitle(e.target.value)}
-              className="flex-1 bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
+              className="flex-1 bg-secondary/60 border border-border rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
             />
             <button
               type="submit"
@@ -338,8 +338,8 @@ export function MobileWorkspace() {
           </form>
 
           {/* Goals Workspace Panel */}
-          <div className="aether-glass p-5 space-y-4 bg-white/2 border border-white/5">
-            <div className="flex items-center gap-2 border-b border-white/5 pb-2.5">
+          <div className="aether-glass p-4 sm:p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
+            <div className="flex items-center gap-2 border-b border-border pb-2.5">
               <Target className="w-4 h-4 text-primary shrink-0" />
               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Horizon Goals & Targets</span>
             </div>
@@ -350,8 +350,8 @@ export function MobileWorkspace() {
                 <span className="text-xs text-muted-foreground font-bold">Synchronizing goals...</span>
               </div>
             ) : mySpaceGoals.length === 0 ? (
-              <div className="py-12 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-2xl">
-                <Target className="w-8 h-8 text-muted-foreground/35 mx-auto mb-2 animate-pulse" />
+              <div className="py-12 text-center bg-secondary/25 border border-dashed border-border rounded-2xl">
+                <Target className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2 animate-pulse" />
                 <span className="text-xs font-black text-foreground block">No Goals Established</span>
                 <span className="text-[10px] text-muted-foreground mt-1 block">Establish strategic horizon goals in your projects.</span>
               </div>
@@ -365,13 +365,13 @@ export function MobileWorkspace() {
                     <div
                       key={goal.id}
                       onClick={() => setSelectedGoal(goal)}
-                      className="flex flex-col p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-primary/20 hover:bg-white/[0.04] active:scale-98 transition-all cursor-pointer shadow-md gap-2"
+                      className="flex flex-col p-4 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border hover:border-primary/30 active:scale-98 transition-all cursor-pointer shadow-xs gap-2"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <span className="text-xs font-black text-foreground line-clamp-2 leading-tight flex-1">{goal.title}</span>
                         <span className={cn(
                           "text-[7px] font-black uppercase tracking-widest px-1.5 py-0.2 rounded border shrink-0",
-                          goal.status === 'completed' ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" : "border-primary/20 bg-primary/5 text-primary"
+                          goal.status === 'completed' ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400" : "border-primary/20 bg-primary/5 text-primary"
                         )}>
                           {goal.status}
                         </span>
@@ -383,7 +383,7 @@ export function MobileWorkspace() {
                           <span>Progress completion</span>
                           <span>{progress}%</span>
                         </div>
-                        <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden shadow-inner">
+                        <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden shadow-inner">
                           <div 
                             className="bg-primary h-full rounded-full transition-all duration-300" 
                             style={{ width: `${progress}%` }}
@@ -391,7 +391,7 @@ export function MobileWorkspace() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-muted-foreground/85 mt-1">
+                      <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-muted-foreground mt-1">
                         <span className="text-primary">{goal.horizon.replace('_', ' ')}</span>
                         {targetDate && (
                           <span className="flex items-center gap-1">

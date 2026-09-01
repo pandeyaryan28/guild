@@ -168,7 +168,7 @@ export function MobilePeople() {
     <div className="flex flex-col space-y-5 animate-fluid-pop pb-6">
       
       {/* 1. Directory Search and Invite header */}
-      <div className="aether-glass p-4 bg-white/2 border border-white/5 space-y-4">
+      <div className="aether-glass p-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong space-y-4 shadow-sm">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -177,7 +177,7 @@ export function MobilePeople() {
               placeholder={activeTab === 'people' ? "Search directory..." : "Search squads..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground font-bold focus:outline-none focus:border-primary/50"
+              className="w-full bg-secondary/60 border border-border rounded-xl pl-9 pr-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground font-bold focus:outline-none focus:border-primary/50"
             />
           </div>
 
@@ -206,7 +206,7 @@ export function MobilePeople() {
         </div>
 
         {/* Tab switchers */}
-        <div className="aether-glass p-1 flex bg-white/2 border border-white/5 shadow-inner" style={{ borderRadius: '14px' }}>
+        <div className="aether-glass p-1 flex bg-secondary/50 border border-border shadow-xs" style={{ borderRadius: '14px' }}>
           {[
             { id: 'people', label: `Directory (${members.length})` },
             { id: 'teams', label: `Squads (${teams.length})` }
@@ -221,13 +221,13 @@ export function MobilePeople() {
                 }}
                 className={cn(
                   "relative flex-1 py-1.5 text-center text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer",
-                  isActive ? "text-white" : "text-muted-foreground"
+                  isActive ? "text-primary-foreground font-black" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {isActive && (
                   <motion.div 
                     layoutId="peopleActiveTab"
-                    className="absolute inset-0 bg-primary rounded-xl shadow-lg z-0"
+                    className="absolute inset-0 bg-primary rounded-xl shadow-md z-0"
                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                   />
                 )}
@@ -255,7 +255,7 @@ export function MobilePeople() {
                     onClick={() => setRoleFilter(r)}
                     className={cn(
                       "px-3 py-1.5 rounded-lg border text-[8px] font-black uppercase tracking-wider cursor-pointer capitalize shrink-0 select-none",
-                      isSel ? "border-primary bg-primary/10 text-primary" : "border-white/5 bg-white/2 text-muted-foreground"
+                      isSel ? "border-primary bg-primary/10 text-primary" : "border-border bg-secondary/50 text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {r}s
@@ -266,7 +266,7 @@ export function MobilePeople() {
 
             {/* List */}
             {filteredMembers.length === 0 ? (
-              <div className="aether-glass p-8 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-xl">
+              <div className="aether-glass p-8 text-center bg-secondary/25 border border-dashed border-border rounded-xl">
                 <span className="text-xs font-bold text-foreground">No teammates match search</span>
               </div>
             ) : (
@@ -282,8 +282,8 @@ export function MobilePeople() {
                       key={member.uid}
                       onClick={accessible ? () => setSelectedMember(member) : undefined}
                       className={cn(
-                        "aether-glass p-3.5 bg-white/2 border border-white/5 flex items-center justify-between shadow-xs relative overflow-hidden",
-                        accessible ? "active:scale-98 transition-all cursor-pointer hover:border-primary/20" : "opacity-75 cursor-default"
+                        "aether-glass p-3.5 bg-surface/90 dark:bg-surface/50 border border-border dark:border-border-strong flex items-center justify-between shadow-xs relative overflow-hidden",
+                        accessible ? "active:scale-98 transition-all cursor-pointer hover:border-primary/30" : "opacity-75 cursor-default"
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -291,11 +291,11 @@ export function MobilePeople() {
                           <img
                             src={member.photoURL}
                             alt={member.fullName}
-                            className="h-10 w-10 rounded-xl object-cover shrink-0 border border-white/10"
+                            className="h-10 w-10 rounded-xl object-cover shrink-0 border border-border-default/40"
                           />
                         ) : (
                           <div
-                            className="h-10 w-10 rounded-xl flex items-center justify-center font-bold text-[10px] text-white shrink-0 shadow-md"
+                            className="h-10 w-10 rounded-xl flex items-center justify-center font-bold text-[10px] text-white shrink-0 shadow-sm"
                             style={{ background: `hsl(${avatarHue(member.uid)} 55% 45%)` }}
                           >
                             {initials}
@@ -305,7 +305,7 @@ export function MobilePeople() {
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-black text-foreground block truncate">{member.fullName}</span>
                             {isSelf && (
-                              <span className="text-[7px] font-black uppercase tracking-widest px-1.5 py-0.2 rounded border border-primary/20 bg-primary/5 text-primary shrink-0 leading-none">
+                              <span className="text-[7px] font-black uppercase tracking-widest px-1.5 py-0.2 rounded border border-primary/20 bg-primary/10 text-primary shrink-0 leading-none">
                                 You
                               </span>
                             )}
@@ -335,7 +335,7 @@ export function MobilePeople() {
                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
               </div>
             ) : filteredTeams.length === 0 ? (
-              <div className="aether-glass p-8 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-xl">
+              <div className="aether-glass p-8 text-center bg-secondary/25 border border-dashed border-border rounded-xl">
                 <span className="text-xs font-bold text-foreground">No squads configured</span>
               </div>
             ) : (
@@ -345,7 +345,7 @@ export function MobilePeople() {
                   const squadMembers = members.filter((m) => team.memberIds?.includes(m.uid));
 
                   return (
-                    <div key={team.id} className="aether-glass p-4 bg-white/2 border border-white/5 space-y-3.5 shadow-md">
+                    <div key={team.id} className="aether-glass p-4 bg-surface/90 dark:bg-surface/50 border border-border dark:border-border-strong space-y-3.5 shadow-sm">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <span className="text-xs font-black text-foreground block truncate leading-tight">{team.name}</span>
@@ -363,13 +363,13 @@ export function MobilePeople() {
                                 setEditingTeam(team);
                                 setIsTeamModalOpen(true);
                               }}
-                              className="h-7 w-7 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-muted-foreground cursor-pointer"
+                              className="h-7 w-7 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer shadow-xs"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteTeamClick(team.id, team.name)}
-                              className="h-7 w-7 rounded-lg bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-400 cursor-pointer"
+                              className="h-7 w-7 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500 dark:text-red-400 cursor-pointer shadow-xs"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -378,8 +378,8 @@ export function MobilePeople() {
                       </div>
 
                       {/* Lead card */}
-                      <div className="p-2.5 rounded-xl bg-white/[0.01] border border-white/5 space-y-1">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1">
+                      <div className="p-2.5 rounded-xl bg-secondary/40 border border-border space-y-1">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
                           <Shield className="w-3 h-3 text-amber-500 shrink-0" />
                           <span>Squad Lead / Lead manager</span>
                         </span>
@@ -391,20 +391,20 @@ export function MobilePeople() {
                             <span className="text-[10px] font-bold text-foreground">{manager.fullName}</span>
                           </div>
                         ) : (
-                          <span className="text-[9px] text-red-400 font-bold block">No lead manager assigned.</span>
+                          <span className="text-[9px] text-red-500 dark:text-red-400 font-bold block">No lead manager assigned.</span>
                         )}
                       </div>
 
                       {/* Members horizontal block */}
                       <div className="space-y-1.5">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60 block">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground block">
                           Squad Teammates ({squadMembers.length})
                         </span>
                         <div className="flex items-center -space-x-1.5 overflow-hidden">
                           {squadMembers.slice(0, 8).map((m) => (
                             <div
                               key={m.uid}
-                              className="w-5.5 h-5.5 rounded-full flex items-center justify-center font-bold text-white text-[7px] ring-2 ring-surface border border-white/10 shrink-0"
+                              className="w-5.5 h-5.5 rounded-full flex items-center justify-center font-bold text-white text-[7px] ring-2 ring-surface border border-border-default/40 shrink-0"
                               style={{ background: `hsl(${avatarHue(m.uid)} 55% 45%)` }}
                               title={m.fullName}
                             >
@@ -447,27 +447,27 @@ export function MobilePeople() {
       {/* sliding drawer bottom sheet for Squad Config */}
       <AnimatePresence>
         {isTeamModalOpen && orgId && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 dark:bg-black/80 backdrop-blur-xs">
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-white/10 px-6 pb-6 pt-3 flex flex-col bg-surface/98 backdrop-blur-3xl overflow-hidden"
+              className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border px-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-3 flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl overflow-hidden"
             >
-              <div className="w-10 h-1.5 rounded-full bg-white/10 mx-auto mb-4 shrink-0" />
-              <div className="flex items-center justify-between border-b border-white/5 pb-3 shrink-0">
+              <div className="w-10 h-1.5 rounded-full bg-muted-foreground/25 mx-auto mb-4 shrink-0" />
+              <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
                 <span className="text-xs font-black text-foreground flex items-center gap-2">
                   <Workflow className="w-4.5 h-4.5 text-primary" />
                   <span>{editingTeam ? 'EDIT SQUAD CONFIGURATION' : 'CREATE NEW FUNCTIONAL SQUAD'}</span>
                 </span>
-                <button onClick={() => setIsTeamModalOpen(false)} className="h-7 w-7 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground cursor-pointer active:scale-90">
+                <button onClick={() => setIsTeamModalOpen(false)} className="h-7 w-7 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer active:scale-90">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <form onSubmit={handleSquadSubmit} className="flex-1 overflow-y-auto aether-scroll py-4 space-y-4 pr-1">
-                {squadError && <span className="text-xs text-red-400 font-bold block bg-red-500/10 border border-red-500/20 p-3 rounded-xl">{squadError}</span>}
+                {squadError && <span className="text-xs text-red-500 font-bold block bg-red-500/10 border border-red-500/20 p-3 rounded-xl">{squadError}</span>}
 
                 <div className="space-y-1.5">
                   <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">SQUAD NAME</span>
@@ -477,7 +477,7 @@ export function MobilePeople() {
                     placeholder="e.g. Frontend Core, logistics group"
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/2 text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold"
                   />
                 </div>
 
@@ -487,7 +487,7 @@ export function MobilePeople() {
                     value={managerId}
                     required
                     onChange={(e) => setManagerId(e.target.value)}
-                    className="w-full p-3 rounded-xl border border-white/5 bg-white/2 text-xs text-foreground outline-none cursor-pointer [color-scheme:dark] font-bold"
+                    className="w-full p-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground outline-none cursor-pointer font-bold"
                   >
                     <option value="" className="bg-surface text-foreground font-bold">Select lead lead...</option>
                     {members.map((m) => (
@@ -505,21 +505,21 @@ export function MobilePeople() {
                     placeholder="Brief group charter description..."
                     value={teamDesc}
                     onChange={(e) => setTeamDesc(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/2 text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold resize-none"
                   />
                 </div>
 
                 {/* Checklist members */}
                 <div className="space-y-2">
                   <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">Squad members</span>
-                  <div className="border border-white/5 bg-white/2 rounded-xl p-3 max-h-40 overflow-y-auto space-y-2.5 aether-scroll">
+                  <div className="border border-border bg-secondary/30 rounded-xl p-3 max-h-40 overflow-y-auto space-y-2.5 aether-scroll">
                     {members.map((m) => (
                       <label key={m.uid} className="flex items-center gap-3 cursor-pointer select-none">
                         <input
                           type="checkbox"
                           checked={selectedMembers.includes(m.uid)}
                           onChange={(e) => handleMemberCheck(m.uid, e.target.checked)}
-                          className="rounded border-white/10 bg-white/5 text-primary focus:ring-0 h-4 w-4 cursor-pointer"
+                          className="rounded border-border bg-secondary text-primary focus:ring-0 h-4 w-4 cursor-pointer"
                         />
                         <span className="text-[11px] font-bold text-foreground truncate">{m.fullName}</span>
                       </label>
@@ -528,8 +528,8 @@ export function MobilePeople() {
                 </div>
               </form>
 
-              <div className="pt-3 border-t border-white/5 flex gap-3 shrink-0">
-                <button onClick={() => setIsTeamModalOpen(false)} className="flex-1 py-3 text-xs font-black text-muted-foreground rounded-xl border border-white/5 cursor-pointer bg-white/2">
+              <div className="pt-3 border-t border-border flex gap-3 shrink-0">
+                <button onClick={() => setIsTeamModalOpen(false)} className="flex-1 py-3 text-xs font-black text-muted-foreground hover:text-foreground rounded-xl border border-border cursor-pointer bg-secondary/50">
                   CANCEL
                 </button>
                 <button

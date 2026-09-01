@@ -211,7 +211,7 @@ export function MobileProjectDetail() {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center gap-3">
         <span className="text-xs text-muted-foreground font-semibold">Initiative project not found.</span>
-        <button onClick={() => navigate('/')} className="px-4 py-2 border border-white/10 bg-white/5 rounded-xl text-xs font-bold text-foreground">
+        <button onClick={() => navigate('/')} className="px-4 py-2 border border-border bg-secondary hover:bg-secondary/80 rounded-xl text-xs font-bold text-foreground cursor-pointer transition-colors shadow-xs">
           Go Home
         </button>
       </div>
@@ -224,11 +224,12 @@ export function MobileProjectDetail() {
     <div className="flex flex-col space-y-5 animate-fluid-pop pb-6">
       
       {/* 1. Project Title & Safe Return Header Card */}
-      <div className="aether-glass p-4 bg-white/2 border border-white/5 space-y-4">
+      <div className="aether-glass p-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong space-y-4 shadow-sm">
         <div className="flex items-center gap-3">
           <button 
             onClick={() => navigate('/')}
-            className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground shrink-0 active:scale-90 transition-transform"
+            className="w-9 h-9 rounded-xl border border-border bg-secondary hover:bg-secondary/80 flex items-center justify-center text-foreground shrink-0 active:scale-90 transition-transform shadow-xs"
+            title="Back"
           >
             <ArrowLeft className="w-4.5 h-4.5" />
           </button>
@@ -241,13 +242,13 @@ export function MobileProjectDetail() {
         </div>
 
         {/* Progress horizontal status indicators */}
-        <div className="pt-2 border-t border-white/5 space-y-1.5">
+        <div className="pt-2 border-t border-border space-y-1.5">
           <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground">
             <span>Overall completion</span>
             <span className="font-mono text-foreground font-black">{progressRate}%</span>
           </div>
-          <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden border border-white/[0.02]">
-            <div className="bg-primary h-full rounded-full transition-all duration-500 shadow-lg shadow-primary/20" style={{ width: `${progressRate}%` }} />
+          <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden border border-border/40">
+            <div className="bg-primary h-full rounded-full transition-all duration-500 shadow-md shadow-primary/20" style={{ width: `${progressRate}%` }} />
           </div>
         </div>
 
@@ -262,13 +263,13 @@ export function MobileProjectDetail() {
                   key={uid}
                   src={photoURL}
                   alt={fullName}
-                  className="w-5.5 h-5.5 rounded-full object-cover shrink-0 ring-2 ring-surface border border-white/10"
+                  className="w-5.5 h-5.5 rounded-full object-cover shrink-0 ring-2 ring-surface border border-border-default/40"
                   title={fullName}
                 />
               ) : (
                 <div
                   key={uid}
-                  className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0 ring-2 ring-surface"
+                  className="w-5.5 h-5.5 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0 ring-2 ring-surface"
                   title={fullName}
                 >
                   {getInitials(uid)}
@@ -280,7 +281,7 @@ export function MobileProjectDetail() {
           <div className="relative">
             <button
               onClick={() => setShowMemberPicker(!showMemberPicker)}
-              className="flex items-center justify-center h-6 px-2 rounded-lg border border-dashed border-white/10 bg-white/2 hover:bg-white/5 text-[9px] font-black text-primary cursor-pointer active:scale-95"
+              className="flex items-center justify-center h-6 px-2 rounded-lg border border-dashed border-border bg-secondary/50 hover:bg-secondary text-[9px] font-black text-primary cursor-pointer active:scale-95 transition-all"
             >
               + ADD MEMBERS
             </button>
@@ -293,7 +294,7 @@ export function MobileProjectDetail() {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-52 max-h-48 overflow-y-auto rounded-xl border border-white/10 bg-surface/98 p-1.5 shadow-2xl z-50 aether-scroll"
+                    className="absolute right-0 mt-2 w-52 max-h-48 overflow-y-auto rounded-xl border border-border bg-surface/98 dark:bg-surface/95 p-1.5 shadow-2xl z-50 aether-scroll"
                   >
                     {members.map((member) => {
                       const isIncluded = (project.memberIds || []).includes(member.uid);
@@ -302,8 +303,8 @@ export function MobileProjectDetail() {
                           key={member.uid}
                           onClick={() => handleToggleProjectMember(member.uid)}
                           className={cn(
-                            "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-left cursor-pointer hover:bg-white/5",
-                            isIncluded ? "text-primary bg-primary/5" : "text-muted-foreground"
+                            "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-left cursor-pointer hover:bg-secondary transition-colors",
+                            isIncluded ? "text-primary bg-primary/10 font-black" : "text-muted-foreground hover:text-foreground"
                           )}
                         >
                           <span className="truncate">{member.fullName}</span>
@@ -320,7 +321,7 @@ export function MobileProjectDetail() {
       </div>
 
       {/* 2. Top Segmented Selector Drawer */}
-      <div className="aether-glass p-1.5 flex bg-white/2 border border-white/5 shadow-inner" style={{ borderRadius: '18px' }}>
+      <div className="aether-glass p-1.5 flex bg-secondary/50 border border-border shadow-xs" style={{ borderRadius: '18px' }}>
         {[
           { id: 'overview', label: 'Overview' },
           { id: 'tasks', label: `Tasks (${allTasks.length})` },
@@ -333,13 +334,13 @@ export function MobileProjectDetail() {
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
                 "relative flex-1 py-2 text-center text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer",
-                isActive ? "text-white" : "text-muted-foreground"
+                isActive ? "text-primary-foreground font-black" : "text-muted-foreground hover:text-foreground"
               )}
             >
               {isActive && (
                 <motion.div 
                   layoutId="projDetailActiveTab"
-                  className="absolute inset-0 bg-primary rounded-xl shadow-lg z-0"
+                  className="absolute inset-0 bg-primary rounded-xl shadow-md z-0"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
@@ -356,7 +357,7 @@ export function MobileProjectDetail() {
             
             {/* Project description card */}
             {project.description && (
-              <div className="aether-glass p-4 bg-white/2 border border-white/5 space-y-2">
+              <div className="aether-glass p-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong space-y-2 shadow-sm">
                 <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground block">
                   Project Scope
                 </span>
@@ -367,8 +368,8 @@ export function MobileProjectDetail() {
             )}
 
             {/* Conversation Feed */}
-            <div className="aether-glass p-4 bg-white/2 border border-white/5 space-y-4">
-              <div className="flex items-center gap-1.5 border-b border-white/5 pb-2.5">
+            <div className="aether-glass p-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong space-y-4 shadow-sm">
+              <div className="flex items-center gap-1.5 border-b border-border pb-2.5">
                 <MessageSquare className="w-4 h-4 text-primary shrink-0" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-foreground">
                   Discussion feed
@@ -381,14 +382,14 @@ export function MobileProjectDetail() {
                   <p className="text-xs text-muted-foreground font-semibold italic text-center py-4">No comments posted yet.</p>
                 ) : (
                   comments.map((comment) => (
-                    <div key={comment.id} className="bg-white/[0.01] border border-white/5 p-3 rounded-xl space-y-1.5 shadow-sm">
+                    <div key={comment.id} className="bg-surface/90 dark:bg-surface/50 border border-border p-3 rounded-xl space-y-1.5 shadow-xs">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] font-black text-foreground">{comment.authorName}</span>
                         <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
                           {new Date(comment.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="text-[11px] text-muted-foreground font-semibold leading-relaxed">
+                      <p className="text-[11px] text-foreground/90 dark:text-muted-foreground font-semibold leading-relaxed">
                         {comment.body}
                       </p>
                     </div>
@@ -397,18 +398,18 @@ export function MobileProjectDetail() {
               </div>
 
               {/* Compose bar */}
-              <form onSubmit={handleAddComment} className="flex gap-2 pt-2 border-t border-white/5">
+              <form onSubmit={handleAddComment} className="flex gap-2 pt-2 border-t border-border">
                 <input
                   type="text"
                   placeholder="Share a project status update..."
                   value={commentBody}
                   onChange={(e) => setCommentBody(e.target.value)}
-                  className="flex-1 bg-white/5 border border-white/5 rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-bold"
+                  className="flex-1 bg-secondary/50 focus:bg-surface border border-border rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary font-bold"
                 />
                 <button
                   type="submit"
                   disabled={!commentBody.trim() || uploading}
-                  className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/95 disabled:opacity-50"
+                  className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/95 disabled:opacity-50 active:scale-95 transition-all"
                 >
                   {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </button>
@@ -427,13 +428,13 @@ export function MobileProjectDetail() {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                <div className="flex justify-between items-center border-b border-border pb-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                     Active Tasks checklist
                   </span>
                   <button
                     onClick={() => setCreateOpen(true)}
-                    className="flex items-center gap-1 px-2.5 py-1.5 h-7 text-[9px] font-black uppercase tracking-widest rounded-xl border border-primary/20 bg-primary/10 text-primary cursor-pointer active:scale-95"
+                    className="flex items-center gap-1 px-2.5 py-1.5 h-7 text-[9px] font-black uppercase tracking-widest rounded-xl border border-primary/30 bg-primary/10 text-primary cursor-pointer active:scale-95"
                   >
                     <Plus className="w-3 h-3 stroke-[2.5]" />
                     <span>Create Task</span>
@@ -441,7 +442,7 @@ export function MobileProjectDetail() {
                 </div>
 
                 {activeTasks.length === 0 ? (
-                  <div className="py-8 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-xl">
+                  <div className="py-8 text-center bg-secondary/25 border border-dashed border-border rounded-xl">
                     <span className="text-xs font-bold text-foreground block">Zero pending project tickets!</span>
                   </div>
                 ) : (
@@ -450,12 +451,12 @@ export function MobileProjectDetail() {
                       <div
                         key={task.id}
                         onClick={() => setSelectedTask(task)}
-                        className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.02] border border-white/5 active:scale-98 transition-all cursor-pointer shadow-xs"
+                        className="flex items-center justify-between p-3.5 rounded-xl bg-surface/90 dark:bg-surface/50 border border-border hover:bg-secondary/40 active:scale-98 transition-all cursor-pointer shadow-xs"
                       >
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <button
                             onClick={(e) => handleToggleTaskStatus(e, task)}
-                            className="h-4.5 w-4.5 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center shrink-0"
+                            className="h-5 w-5 rounded-lg border border-border bg-secondary hover:bg-secondary/80 flex items-center justify-center shrink-0 cursor-pointer"
                           >
                             <div className="h-1.5 w-1.5 rounded-full bg-transparent hover:bg-primary" />
                           </button>
@@ -472,7 +473,7 @@ export function MobileProjectDetail() {
                         <div className="flex items-center gap-3 shrink-0 ml-2">
                           {task.assigneeIds.length > 0 && (
                             <div 
-                              className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-[8px] text-white shrink-0"
+                              className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-[8px] text-white shrink-0 border border-border-default/40"
                               style={{ background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.1) c h) 100%)` }}
                             >
                               {getInitials(task.assigneeIds[0])}
@@ -489,7 +490,7 @@ export function MobileProjectDetail() {
                   <div className="space-y-2 pt-2">
                     <button
                       onClick={() => setShowCompleted(!showCompleted)}
-                      className="w-full flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/2 text-[10px] font-black uppercase tracking-widest text-muted-foreground active:scale-99 transition-all cursor-pointer"
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-secondary/40 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground active:scale-99 transition-all cursor-pointer"
                     >
                       <span>Completed Tasks ({completedTasks.length})</span>
                       <ChevronDown className={cn("w-4 h-4 transition-transform", showCompleted ? "rotate-180" : "")} />
@@ -507,12 +508,12 @@ export function MobileProjectDetail() {
                             <div
                               key={task.id}
                               onClick={() => setSelectedTask(task)}
-                              className="flex items-center justify-between p-3 rounded-xl bg-white/[0.01] border border-white/5 opacity-55 cursor-pointer shadow-xs"
+                              className="flex items-center justify-between p-3 rounded-xl bg-secondary/20 border border-border opacity-60 cursor-pointer shadow-xs"
                             >
                               <div className="flex items-center gap-3 min-w-0 flex-1">
                                 <button
                                   onClick={(e) => handleToggleTaskStatus(e, task)}
-                                  className="h-4.5 w-4.5 rounded-lg border border-emerald-500 bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0"
+                                  className="h-5 w-5 rounded-lg border border-emerald-500 bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0 cursor-pointer"
                                 >
                                   <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                                 </button>
@@ -533,13 +534,13 @@ export function MobileProjectDetail() {
         {activeTab === 'goals' && (
           <div className="space-y-4">
             
-            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+            <div className="flex justify-between items-center border-b border-border pb-2">
               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 Horizon Goals & Targets
               </span>
               <button
                 onClick={() => setGoalCreateOpen(true)}
-                className="flex items-center gap-1 px-2.5 py-1.5 h-7 text-[9px] font-black uppercase tracking-widest rounded-xl border border-primary/20 bg-primary/10 text-primary cursor-pointer active:scale-95"
+                className="flex items-center gap-1 px-2.5 py-1.5 h-7 text-[9px] font-black uppercase tracking-widest rounded-xl border border-primary/30 bg-primary/10 text-primary cursor-pointer active:scale-95"
               >
                 <Plus className="w-3 h-3 stroke-[2.5]" />
                 <span>Add Goal</span>
@@ -547,7 +548,7 @@ export function MobileProjectDetail() {
             </div>
 
             {projectGoals.length === 0 ? (
-              <div className="py-10 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-xl">
+              <div className="py-10 text-center bg-secondary/25 border border-dashed border-border rounded-xl">
                 <p className="text-xs font-semibold text-muted-foreground italic">No goals registered for this project.</p>
               </div>
             ) : (
@@ -556,13 +557,13 @@ export function MobileProjectDetail() {
                   <div
                     key={goal.id}
                     onClick={() => setSelectedGoal(goal)}
-                    className="flex flex-col p-3.5 rounded-xl bg-white/[0.02] border border-white/5 active:scale-98 transition-all cursor-pointer shadow-xs gap-1.5"
+                    className="flex flex-col p-3.5 rounded-xl bg-surface/90 dark:bg-surface/50 border border-border hover:bg-secondary/40 active:scale-98 transition-all cursor-pointer shadow-xs gap-1.5"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <span className="text-xs font-black text-foreground truncate flex-1">{goal.title}</span>
                       <span className={cn(
                         "text-[7px] font-black uppercase tracking-widest px-1.5 py-0.2 rounded border shrink-0",
-                        goal.status === 'completed' ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-450" : "border-primary/20 bg-primary/5 text-primary"
+                        goal.status === 'completed' ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-primary/20 bg-primary/10 text-primary"
                       )}>
                         {goal.status}
                       </span>
@@ -621,21 +622,21 @@ export function MobileProjectDetail() {
       {/* Add Goal Dialog Bottom Sheet */}
       <AnimatePresence>
         {goalCreateOpen && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 dark:bg-black/80 backdrop-blur-xs">
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-white/10 px-6 pb-6 pt-3 flex flex-col bg-surface/98 backdrop-blur-3xl overflow-hidden"
+              className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border px-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-3 flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl overflow-hidden shadow-2xl"
             >
-              <div className="w-10 h-1.5 rounded-full bg-white/10 mx-auto mb-4 shrink-0" />
-              <div className="flex items-center justify-between border-b border-white/5 pb-3 shrink-0">
+              <div className="w-10 h-1.5 rounded-full bg-muted-foreground/25 mx-auto mb-4 shrink-0" />
+              <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
                 <span className="text-xs font-black text-foreground flex items-center gap-2">
                   <Target className="w-4.5 h-4.5 text-primary" />
                   <span>ADD PROJECT HORIZON GOAL</span>
                 </span>
-                <button onClick={() => setGoalCreateOpen(false)} className="h-7 w-7 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground cursor-pointer active:scale-90">
+                <button onClick={() => setGoalCreateOpen(false)} className="h-7 w-7 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer active:scale-90">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -649,7 +650,7 @@ export function MobileProjectDetail() {
                     placeholder="e.g. Launch beta releases"
                     value={newGoalTitle}
                     onChange={(e) => setNewGoalTitle(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/2 text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -659,7 +660,7 @@ export function MobileProjectDetail() {
                     required
                     value={newGoalTargetDate}
                     onChange={(e) => setNewGoalTargetDate(e.target.value)}
-                    className="w-full p-3 rounded-xl border border-white/5 bg-white/2 text-xs text-foreground outline-none [color-scheme:dark]"
+                    className="w-full p-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground outline-none"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -669,13 +670,13 @@ export function MobileProjectDetail() {
                     placeholder="Write detailed criteria..."
                     value={newGoalDesc}
                     onChange={(e) => setNewGoalDesc(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/2 text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold resize-none"
                   />
                 </div>
               </form>
 
-              <div className="pt-3 border-t border-white/5 flex gap-3 shrink-0">
-                <button onClick={() => setGoalCreateOpen(false)} className="flex-1 py-3 text-xs font-black text-muted-foreground rounded-xl border border-white/5 cursor-pointer bg-white/2">
+              <div className="pt-3 border-t border-border flex gap-3 shrink-0">
+                <button onClick={() => setGoalCreateOpen(false)} className="flex-1 py-3 text-xs font-black text-muted-foreground hover:text-foreground rounded-xl border border-border cursor-pointer bg-secondary/50">
                   CANCEL
                 </button>
                 <button

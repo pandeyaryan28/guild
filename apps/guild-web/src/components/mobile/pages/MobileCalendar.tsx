@@ -208,30 +208,30 @@ export function MobileCalendar() {
     <div className="flex flex-col space-y-5 animate-fluid-pop pb-6">
       
       {/* 1. Scrolling Weekly Header Card */}
-      <div className="aether-glass p-4 bg-white/2 border border-white/5 space-y-4">
+      <div className="aether-glass p-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <CalendarIcon className="w-4.5 h-4.5 text-primary shrink-0" />
             <span className="text-xs font-black uppercase tracking-widest text-foreground">
               {format(currentDate, 'MMMM yyyy')}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button 
               onClick={handlePrevWeek} 
-              className="h-8 w-8 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground cursor-pointer active:scale-90 transition-transform"
+              className="h-8 w-8 rounded-xl border border-border bg-secondary hover:bg-secondary/80 flex items-center justify-center text-foreground cursor-pointer active:scale-90 transition-transform shadow-xs"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button 
               onClick={handleToday} 
-              className="px-3.5 py-1.5 rounded-xl border border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer active:scale-95"
+              className="px-3.5 py-1.5 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer active:scale-95 shadow-xs"
             >
               Today
             </button>
             <button 
               onClick={handleNextWeek} 
-              className="h-8 w-8 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground cursor-pointer active:scale-90 transition-transform"
+              className="h-8 w-8 rounded-xl border border-border bg-secondary hover:bg-secondary/80 flex items-center justify-center text-foreground cursor-pointer active:scale-90 transition-transform shadow-xs"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -239,7 +239,7 @@ export function MobileCalendar() {
         </div>
 
         {/* 7 Days of Selected Week */}
-        <div className="grid grid-cols-7 gap-1.5">
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
           {weekDays.map((day) => {
             const isSel = isSameDay(day, selectedDate);
             const isTday = isToday(day);
@@ -253,16 +253,16 @@ export function MobileCalendar() {
                 key={day.toString()}
                 onClick={() => setSelectedDate(day)}
                 className={cn(
-                  "relative flex flex-col items-center justify-center py-2.5 rounded-2xl border transition-all cursor-pointer select-none",
+                  "relative flex flex-col items-center justify-center py-2 sm:py-2.5 rounded-2xl border transition-all cursor-pointer select-none",
                   isSel
-                    ? "bg-primary border-primary/20 text-white shadow-lg shadow-primary/10"
-                    : "border-white/5 bg-white/[0.01] text-muted-foreground hover:text-foreground"
+                    ? "bg-primary border-primary/30 text-white shadow-md shadow-primary/20"
+                    : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:bg-secondary/70"
                 )}
               >
                 <span className="text-[9px] font-black tracking-widest uppercase mb-1">{format(day, 'eee').slice(0, 1)}</span>
                 <span className={cn(
                   "text-xs font-black h-6 w-6 rounded-full flex items-center justify-center",
-                  isTday && !isSel ? "bg-primary/20 text-primary" : ""
+                  isTday && !isSel ? "bg-primary/15 text-primary" : ""
                 )}>
                   {format(day, 'd')}
                 </span>
@@ -281,14 +281,14 @@ export function MobileCalendar() {
       </div>
 
       {/* 2. Tasks Agenda stream */}
-      <div className="aether-glass p-5 space-y-4 bg-white/2 border border-white/5">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+      <div className="aether-glass p-4 sm:p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
+        <div className="flex items-center justify-between border-b border-border pb-2.5">
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
             Agenda for {format(selectedDate, 'MMM d, yyyy')}
           </span>
           <button
             onClick={() => handleQuickAddClick(selectedDate)}
-            className="flex items-center gap-1 px-2.5 py-1.5 h-7 text-[9px] font-black uppercase tracking-widest rounded-xl border border-primary/20 bg-primary/10 text-primary cursor-pointer active:scale-95"
+            className="flex items-center gap-1 px-2.5 py-1.5 h-7 text-[9px] font-black uppercase tracking-widest rounded-xl border border-primary/30 bg-primary/10 text-primary cursor-pointer active:scale-95"
           >
             <Plus className="w-3 h-3 stroke-[2.5]" />
             <span>Schedule</span>
@@ -301,7 +301,7 @@ export function MobileCalendar() {
             <span className="text-[10px] font-bold text-muted-foreground uppercase">Syncing agenda...</span>
           </div>
         ) : selectedDayTasks.length === 0 ? (
-          <div className="py-8 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-xl">
+          <div className="py-8 text-center bg-secondary/25 border border-dashed border-border rounded-xl">
             <span className="text-xs font-bold text-foreground block">Agenda is completely clear</span>
             <span className="text-[9px] text-muted-foreground mt-0.5 block">No tasks scheduled for this day.</span>
           </div>
@@ -319,8 +319,8 @@ export function MobileCalendar() {
                   className={cn(
                     "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer shadow-xs",
                     isDone 
-                      ? "border-white/5 bg-white/[0.01] opacity-40 line-through" 
-                      : "bg-white/[0.02] border-white/5 hover:border-primary/20 hover:bg-white/[0.04]"
+                      ? "border-border bg-secondary/20 opacity-50 line-through" 
+                      : "bg-surface/90 dark:bg-surface/50 border-border hover:border-primary/30 hover:bg-secondary/40"
                   )}
                   style={!isDone ? { borderLeft: `3px solid ${priorityColor}` } : undefined}
                 >
@@ -328,8 +328,8 @@ export function MobileCalendar() {
                     <button
                       onClick={(e) => handleToggleTaskStatus(e, task)}
                       className={cn(
-                        "h-4.5 w-4.5 rounded-lg border flex items-center justify-center shrink-0 transition-colors",
-                        isDone ? "border-emerald-500 bg-emerald-500/10 text-emerald-400" : "border-white/10 bg-white/5"
+                        "h-5 w-5 rounded-lg border flex items-center justify-center shrink-0 transition-colors cursor-pointer",
+                        isDone ? "border-emerald-500 bg-emerald-500/15 text-emerald-500" : "border-border bg-secondary"
                       )}
                     >
                       {isDone && <Check className="h-3 w-3 stroke-[2.5]" />}
@@ -346,7 +346,7 @@ export function MobileCalendar() {
 
                   {task.assigneeIds.length > 0 && (
                     <div 
-                      className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-[8px] text-white shrink-0 border border-white/10"
+                      className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-[8px] text-white shrink-0 border border-border-default/40"
                       style={{
                         background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.1) c h) 100%)`,
                       }}
@@ -365,15 +365,15 @@ export function MobileCalendar() {
       </div>
 
       {/* 3. Daily Hourly Time Blocks scheduler widget */}
-      <div className="aether-glass p-5 space-y-4 bg-white/2 border border-white/5">
-        <div className="flex items-center gap-2 border-b border-white/5 pb-2.5">
+      <div className="aether-glass p-4 sm:p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
+        <div className="flex items-center gap-2 border-b border-border pb-2.5">
           <Clock className="w-4 h-4 text-primary shrink-0" />
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
             Day Schedule Blocking
           </span>
         </div>
 
-        <div className="divide-y divide-white/5 space-y-0.5">
+        <div className="divide-y divide-border space-y-0.5">
           {hours.map(({ value, label }) => {
             const block = timeBlocks.find(
               (b) => b.dateStr === format(selectedDate, 'yyyy-MM-dd') && b.hour === value
@@ -382,19 +382,19 @@ export function MobileCalendar() {
 
             return (
               <div key={value} className="flex items-center gap-3.5 py-3.5 first:pt-1">
-                <span className="w-14 text-[9px] font-black text-muted-foreground/60 tracking-wider text-right uppercase shrink-0">
+                <span className="w-14 text-[9px] font-black text-muted-foreground tracking-wider text-right uppercase shrink-0">
                   {label}
                 </span>
 
                 <div className="flex-1 min-w-0">
                   {isEditing ? (
-                    <div className="flex flex-col gap-2 bg-white/2 border border-white/5 p-2 rounded-xl">
+                    <div className="flex flex-col gap-2 bg-secondary/50 border border-border p-2.5 rounded-xl shadow-xs">
                       <input
                         type="text"
                         placeholder="Block title..."
                         value={newBlockTitle}
                         onChange={(e) => setNewBlockTitle(e.target.value)}
-                        className="w-full bg-white/5 border border-white/5 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground font-bold focus:outline-none"
+                        className="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground font-bold focus:outline-none focus:border-primary"
                       />
                       <div className="flex gap-1">
                         {['focus', 'meeting', 'review', 'routine'].map((cat) => (
@@ -406,7 +406,7 @@ export function MobileCalendar() {
                               "flex-1 py-1 rounded border text-[8px] font-black uppercase tracking-wider capitalize",
                               newBlockCategory === cat 
                                 ? "border-primary bg-primary/10 text-primary" 
-                                : "border-white/5 bg-white/5 text-muted-foreground"
+                                : "border-border bg-secondary text-muted-foreground hover:text-foreground"
                             )}
                           >
                             {cat}
@@ -416,29 +416,29 @@ export function MobileCalendar() {
                       <div className="flex gap-1.5 justify-end mt-1.5">
                         <button
                           onClick={() => setEditingBlockHour(null)}
-                          className="px-2.5 py-1 rounded text-[8px] font-black text-muted-foreground hover:text-foreground cursor-pointer bg-white/5 border border-white/5"
+                          className="px-2.5 py-1 rounded text-[8px] font-black text-muted-foreground hover:text-foreground cursor-pointer bg-secondary border border-border"
                         >
                           CANCEL
                         </button>
                         <button
                           onClick={() => handleAddTimeBlock(value)}
-                          className="px-3 py-1 rounded bg-primary text-white text-[8px] font-black cursor-pointer shadow"
+                          className="px-3 py-1 rounded bg-primary text-white text-[8px] font-black cursor-pointer shadow-md"
                         >
                           SAVE
                         </button>
                       </div>
                     </div>
                   ) : block ? (
-                    <div className={cn("px-3.5 py-2 rounded-xl border flex items-center justify-between shadow-inner animate-fluid-pop", block.color)}>
+                    <div className={cn("px-3.5 py-2 rounded-xl border flex items-center justify-between shadow-xs animate-fluid-pop", block.color)}>
                       <div className="min-w-0">
                         <span className="text-xs font-black block leading-none">{block.title}</span>
-                        <span className="text-[8px] font-bold block uppercase tracking-widest mt-1 opacity-70">
+                        <span className="text-[8px] font-bold block uppercase tracking-widest mt-1 opacity-80">
                           {block.category} block
                         </span>
                       </div>
                       <button 
                         onClick={() => handleDeleteTimeBlock(block.id)}
-                        className="h-6 w-6 rounded-lg bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-400 cursor-pointer hover:bg-red-500/20"
+                        className="h-6 w-6 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500 dark:text-red-400 cursor-pointer hover:bg-red-500/20"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -449,7 +449,7 @@ export function MobileCalendar() {
                         setEditingBlockHour(value);
                         setNewBlockTitle('');
                       }}
-                      className="w-full py-2.5 text-center text-[9px] font-black text-muted-foreground/40 border border-dashed border-white/5 bg-transparent hover:bg-white/[0.01] hover:text-muted-foreground/60 transition-all rounded-xl cursor-pointer"
+                      className="w-full py-2.5 text-center text-[9px] font-black text-muted-foreground border border-dashed border-border bg-transparent hover:bg-secondary/40 hover:text-foreground transition-all rounded-xl cursor-pointer"
                     >
                       + ADD TIME BLOCK SLOT
                     </button>

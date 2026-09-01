@@ -84,12 +84,13 @@ export function MobileChat() {
     <div className="flex flex-col space-y-5 animate-fluid-pop pb-6">
       
       {/* Channels section */}
-      <div className="aether-glass p-4 bg-white/2 border border-white/5 space-y-3">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+      <div className="aether-glass p-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong space-y-3 shadow-sm">
+        <div className="flex items-center justify-between border-b border-border pb-2">
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">CHANNELS</span>
           <button 
             onClick={() => setShowChannelModal(true)}
-            className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-secondary hover:bg-secondary/80 border border-border flex items-center justify-center transition-colors cursor-pointer shadow-xs"
+            title="Create Channel"
           >
             <Plus className="w-4 h-4 text-primary" />
           </button>
@@ -101,7 +102,7 @@ export function MobileChat() {
             <span className="text-xs text-muted-foreground font-bold">Syncing channels...</span>
           </div>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {channels.map((ch) => {
               const unread = hasUnread(ch);
               const IconComponent = ch.isPrivate ? Lock : Hash;
@@ -112,7 +113,7 @@ export function MobileChat() {
                     markChannelRead(ch.id, user!.uid, orgId);
                     navigate(`/chat/c/${ch.id}`);
                   }}
-                  className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.02] border border-white/5 active:scale-98 transition-all cursor-pointer"
+                  className="flex items-center justify-between p-3.5 rounded-xl bg-surface/90 dark:bg-surface/50 border border-border hover:border-primary/30 hover:bg-secondary/40 active:scale-98 transition-all cursor-pointer shadow-xs"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/25 text-primary flex items-center justify-center shrink-0">
@@ -126,7 +127,7 @@ export function MobileChat() {
                   </div>
                   <div className="flex items-center gap-2">
                     {unread && <span className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.6)]" />}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
                   </div>
                 </div>
               );
@@ -136,18 +137,19 @@ export function MobileChat() {
       </div>
 
       {/* Direct messages section */}
-      <div className="aether-glass p-4 bg-white/2 border border-white/5 space-y-3">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+      <div className="aether-glass p-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong space-y-3 shadow-sm">
+        <div className="flex items-center justify-between border-b border-border pb-2">
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">DIRECT MESSAGES</span>
           <button 
             onClick={() => setShowDMModal(true)}
-            className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-secondary hover:bg-secondary/80 border border-border flex items-center justify-center transition-colors cursor-pointer shadow-xs"
+            title="New Direct Message"
           >
             <Plus className="w-4 h-4 text-primary" />
           </button>
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {dmThreads.map((thread) => {
             const unread = hasUnreadDM(thread);
             const dmInitials = getDMInitials(thread.participants);
@@ -160,10 +162,10 @@ export function MobileChat() {
                   markDMRead(thread.id, user!.uid);
                   navigate(`/chat/dm/${thread.id}`);
                 }}
-                className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.02] border border-white/5 active:scale-98 transition-all cursor-pointer"
+                className="flex items-center justify-between p-3.5 rounded-xl bg-surface/90 dark:bg-surface/50 border border-border hover:border-primary/30 hover:bg-secondary/40 active:scale-98 transition-all cursor-pointer shadow-xs"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-extrabold text-[10px] flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 dark:text-emerald-400 font-extrabold text-[10px] flex items-center justify-center shrink-0">
                     {dmInitials}
                   </div>
                   <div className="min-w-0">
@@ -177,15 +179,15 @@ export function MobileChat() {
                 </div>
                 <div className="flex items-center gap-2">
                   {unread && <span className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.6)]" />}
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
                 </div>
               </div>
             );
           })}
 
           {dmThreads.length === 0 && (
-            <div className="py-8 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-xl">
-              <MessageCircle className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
+            <div className="py-8 text-center bg-secondary/25 border border-dashed border-border rounded-xl">
+              <MessageCircle className="w-7 h-7 text-muted-foreground/50 mx-auto mb-2" />
               <span className="text-xs font-bold text-foreground block">No active threads</span>
               <span className="text-[9px] text-muted-foreground mt-0.5 block">Tap '+' above to start direct discussions.</span>
             </div>

@@ -137,9 +137,9 @@ export function MobileSettings() {
     <div className="flex flex-col space-y-5 animate-fluid-pop pb-6">
       
       {/* Profile Info Header */}
-      <div className="aether-glass p-5 bg-white/2 border border-white/5 flex items-center gap-4">
+      <div className="aether-glass p-5 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong flex items-center gap-4 shadow-sm">
         <div 
-          className="w-14 h-14 rounded-full flex items-center justify-center font-extrabold text-sm text-white border-2 border-white/20 dark:border-white/10 shadow-md shrink-0 select-none animate-float"
+          className="w-14 h-14 rounded-full flex items-center justify-center font-extrabold text-sm text-white border-2 border-border-default/40 shadow-sm shrink-0 select-none animate-float"
           style={{
             background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
           }}
@@ -170,7 +170,7 @@ export function MobileSettings() {
           </p>
 
           {isIOS ? (
-            <div className="text-[9px] font-bold text-muted-foreground flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-2 rounded-xl justify-center">
+            <div className="text-[9px] font-bold text-muted-foreground flex items-center gap-1.5 bg-secondary border border-border px-3 py-2 rounded-xl justify-center">
               <Share2 className="w-3.5 h-3.5 text-primary shrink-0" />
               <span>Tap Safari Share &rarr; <b>"Add to Home Screen"</b></span>
             </div>
@@ -185,23 +185,24 @@ export function MobileSettings() {
         </div>
       )}
  
-      {/* Cosmic Theme selector Panel */}
-      <div id="cosmic-themes" className="aether-glass p-5 space-y-4 bg-white/2 border border-white/5">
-        <div className="flex items-center gap-2 border-b border-white/5 pb-2.5">
+      {/* Theme selector Panel */}
+      <div id="cosmic-themes" className="aether-glass p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
+        <div className="flex items-center gap-2 border-b border-border pb-2.5">
           <Palette className="w-4 h-4 text-primary" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Cosmic Theme Customization</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Theme Customization</span>
         </div>
 
         <div className="grid grid-cols-4 gap-3">
-          {themes.filter(t => t.id !== 'light').map((t) => (
+          {themes.map((t) => (
             <button
               key={t.id}
               onClick={() => setTheme(t.id)}
               className={cn(
                 "h-10 rounded-xl border-2 flex items-center justify-center hover:scale-[1.02] active:scale-95 transition-all relative cursor-pointer",
-                themeId === t.id ? 'border-primary shadow-lg shadow-primary/25' : 'border-white/10'
+                themeId === t.id ? 'border-primary shadow-lg shadow-primary/25' : 'border-border hover:border-primary/40'
               )}
               style={{ background: t.swatch }}
+              title={t.name}
             >
               {themeId === t.id && (
                 <div className="h-2 w-2 rounded-full bg-white shadow-md animate-fluid-pop" />
@@ -210,16 +211,16 @@ export function MobileSettings() {
           ))}
         </div>
         <p className="text-[9px] text-muted-foreground font-semibold italic text-center pt-1 leading-normal">
-          Swipe and tap any Cosmic Canvas to adjust the ambient shifting mesh aurora in real-time.
+          Select any theme swatch to adjust colors and contrast across all mobile views in real-time.
         </p>
       </div>
 
       {/* Account Settings Menu stack */}
-      <div className="aether-glass p-4 bg-white/2 border border-white/5 divide-y divide-white/5">
+      <div className="aether-glass p-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong divide-y divide-border shadow-sm">
         {[
-          { icon: User, label: 'Edit Profile Details', detail: 'Update name, title and avatar status', onClick: () => setEditProfileOpen(true) },
+          { icon: User, label: 'Edit Profile Details', detail: 'Update name, title and contact info', onClick: () => setEditProfileOpen(true) },
           { icon: Lock, label: 'Account Security', detail: 'Manage sign-in settings and sessions', onClick: () => setAccountSecurityOpen(true) },
-          { icon: Sparkles, label: 'Visual Interface Preference', detail: 'Control ambient grid and glow properties', onClick: () => document.getElementById('cosmic-themes')?.scrollIntoView({ behavior: 'smooth' }) }
+          { icon: Sparkles, label: 'Visual Interface Preference', detail: 'Control themes, canvas mode and styling', onClick: () => document.getElementById('cosmic-themes')?.scrollIntoView({ behavior: 'smooth' }) }
         ].map((item, idx) => (
           <div 
             key={idx} 
@@ -227,7 +228,7 @@ export function MobileSettings() {
             className="flex items-center justify-between py-3.5 first:pt-1 last:pb-1 cursor-pointer active:scale-[0.99] transition-all"
           >
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-muted-foreground shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center text-muted-foreground shrink-0 shadow-xs">
                 <item.icon className="w-4.5 h-4.5" />
               </div>
               <div className="min-w-0">
@@ -235,7 +236,7 @@ export function MobileSettings() {
                 <span className="text-[9px] text-muted-foreground block truncate mt-0.5 font-semibold">{item.detail}</span>
               </div>
             </div>
-            <ChevronRight className="w-4.5 h-4.5 text-muted-foreground/30 shrink-0" />
+            <ChevronRight className="w-4.5 h-4.5 text-muted-foreground/40 shrink-0" />
           </div>
         ))}
       </div>
@@ -244,7 +245,7 @@ export function MobileSettings() {
       <div className="pt-2">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/25 text-red-400 py-3.5 text-xs font-black tracking-widest transition-all active:scale-98 cursor-pointer shadow-lg shadow-red-500/5 select-none"
+          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/30 text-red-500 dark:text-red-400 py-3.5 text-xs font-black tracking-widest transition-all active:scale-98 cursor-pointer shadow-lg shadow-red-500/5 select-none"
         >
           <LogOut className="w-4.5 h-4.5 shrink-0" />
           <span>TERMINATE USER SESSION</span>
@@ -256,7 +257,7 @@ export function MobileSettings() {
         <AnimatePresence>
           {/* Edit Profile Sheet */}
           {editProfileOpen && (
-            <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/75 backdrop-blur-xs">
+            <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 dark:bg-black/80 backdrop-blur-xs">
               {/* Backdrop */}
               <div className="absolute inset-0 bg-transparent" onClick={() => setEditProfileOpen(false)} />
               
@@ -265,18 +266,18 @@ export function MobileSettings() {
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-                className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-white/10 px-6 pb-8 pt-3 flex flex-col bg-surface/98 backdrop-blur-3xl overflow-hidden pointer-events-auto"
+                className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border px-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-3 flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl overflow-hidden pointer-events-auto shadow-2xl"
               >
-                <div className="w-10 h-1.5 rounded-full bg-white/10 mx-auto mb-4 shrink-0" />
+                <div className="w-10 h-1.5 rounded-full bg-muted-foreground/25 mx-auto mb-4 shrink-0" />
                 
-                <div className="flex items-center justify-between border-b border-white/5 pb-3 shrink-0">
+                <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
                   <span className="text-xs font-black text-foreground flex items-center gap-2">
                     <User className="w-4.5 h-4.5 text-primary" />
                     <span>EDIT PROFILE DETAILS</span>
                   </span>
                   <button 
                     onClick={() => setEditProfileOpen(false)}
-                    className="h-7 w-7 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90"
+                    className="h-7 w-7 rounded-full border border-border bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -284,13 +285,13 @@ export function MobileSettings() {
 
                 <form onSubmit={handleSaveProfile} className="flex-1 overflow-y-auto space-y-4 pt-4 pb-2 pr-1 text-left">
                   {saveSuccess && (
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-xl flex items-center gap-2">
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-xl flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 shrink-0" />
                       <span>PROFILE UPDATED SUCCESSFULLY!</span>
                     </div>
                   )}
                   {saveError && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-xl flex items-center gap-2">
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400 text-[10px] font-bold rounded-xl flex items-center gap-2">
                       <ShieldAlert className="w-4 h-4 shrink-0 animate-bounce" />
                       <span>{saveError.toUpperCase()}</span>
                     </div>
@@ -303,7 +304,7 @@ export function MobileSettings() {
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
+                      className="w-full bg-secondary/50 focus:bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all font-bold"
                     />
                   </div>
 
@@ -314,7 +315,7 @@ export function MobileSettings() {
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
+                      className="w-full bg-secondary/50 focus:bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all font-bold"
                     />
                   </div>
 
@@ -324,7 +325,7 @@ export function MobileSettings() {
                       type="text"
                       value={designation}
                       onChange={(e) => setDesignation(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
+                      className="w-full bg-secondary/50 focus:bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all font-bold"
                       placeholder="Lead Engineer"
                     />
                   </div>
@@ -335,7 +336,7 @@ export function MobileSettings() {
                       type="text"
                       value={employeeId}
                       onChange={(e) => setEmployeeId(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
+                      className="w-full bg-secondary/50 focus:bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all font-bold"
                       placeholder="G-1025"
                     />
                   </div>
@@ -346,7 +347,7 @@ export function MobileSettings() {
                       type="number"
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
+                      className="w-full bg-secondary/50 focus:bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all font-bold"
                       placeholder="26"
                     />
                   </div>
@@ -357,7 +358,7 @@ export function MobileSettings() {
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all font-bold"
+                      className="w-full bg-secondary/50 focus:bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all font-bold"
                       placeholder="+1 (555) 000-0000"
                     />
                   </div>
@@ -376,7 +377,7 @@ export function MobileSettings() {
 
           {/* Account Security Sheet */}
           {accountSecurityOpen && (
-            <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/75 backdrop-blur-xs">
+            <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 dark:bg-black/80 backdrop-blur-xs">
               {/* Backdrop */}
               <div className="absolute inset-0 bg-transparent" onClick={() => setAccountSecurityOpen(false)} />
               
@@ -385,18 +386,18 @@ export function MobileSettings() {
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-                className="w-full aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-white/10 px-6 pb-8 pt-3 flex flex-col bg-surface/98 backdrop-blur-3xl overflow-hidden pointer-events-auto"
+                className="w-full aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border px-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-3 flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl overflow-hidden pointer-events-auto shadow-2xl"
               >
-                <div className="w-10 h-1.5 rounded-full bg-white/10 mx-auto mb-4 shrink-0" />
+                <div className="w-10 h-1.5 rounded-full bg-muted-foreground/25 mx-auto mb-4 shrink-0" />
                 
-                <div className="flex items-center justify-between border-b border-white/5 pb-3 shrink-0">
+                <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
                   <span className="text-xs font-black text-foreground flex items-center gap-2">
                     <Lock className="w-4.5 h-4.5 text-primary" />
                     <span>ACCOUNT SECURITY & RESET</span>
                   </span>
                   <button 
                     onClick={() => setAccountSecurityOpen(false)}
-                    className="h-7 w-7 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90"
+                    className="h-7 w-7 rounded-full border border-border bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -413,8 +414,8 @@ export function MobileSettings() {
                     <div className={cn(
                       "p-3 text-[10px] font-bold rounded-xl border max-w-sm mx-auto animate-fluid-pop",
                       resetMessageType === 'success' 
-                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
-                        : "bg-red-500/10 border-red-500/20 text-red-400"
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                        : "bg-red-500/10 border-red-500/20 text-red-500 dark:text-red-400"
                     )}>
                       {resetMessage.toUpperCase()}
                     </div>
