@@ -46,11 +46,11 @@ export const PRICING = {
 } as const;
 
 export const ANNUAL_OFFER_END = new Date(
-  import.meta.env.VITE_ANNUAL_OFFER_END_DATE || '2026-09-30'
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ANNUAL_OFFER_END_DATE) || '2026-09-30'
 );
 
 export const ENTERPRISE_CONTACT_URL =
-  import.meta.env.VITE_ENTERPRISE_CONTACT_URL || 'mailto:enterprise@guildhq.com';
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ENTERPRISE_CONTACT_URL) || 'mailto:enterprise@guildhq.com';
 
 // ─── Currency Detection ────────────────────────────────────────────────────────
 

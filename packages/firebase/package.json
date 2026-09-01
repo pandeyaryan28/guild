@@ -24,6 +24,9 @@
     "./requests": "./src/requests.ts",
     "./canvases": "./src/canvases.ts"
   },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "peerDependencies": {
     "firebase": ">=11"
   },

@@ -26,6 +26,47 @@ interface MessageInputProps {
   onClearQuote?: () => void;
 }
 
+function FilePreviewItem({ file, onRemove }: { file: File; onRemove: () => void }) {
+  const isImg = file.type.startsWith('image/');
+  const [objectUrl, setObjectUrl] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!isImg) return;
+    const url = URL.createObjectURL(file);
+    setObjectUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [file, isImg]);
+
+  return (
+    <div className="relative flex items-center gap-2 rounded-2xl border border-border bg-surface/90 dark:bg-surface-elevated/80 backdrop-blur-md pl-2 pr-8 py-1.5 shadow-sm max-w-[200px] group transition-all">
+      {isImg && objectUrl ? (
+        <div className="h-8 w-8 rounded-xl overflow-hidden border border-border bg-surface shrink-0">
+          <img src={objectUrl} alt={file.name} className="h-full w-full object-cover" />
+        </div>
+      ) : (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+          <File className="h-4 w-4" />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-foreground truncate">{file.name}</p>
+        <p className="text-[10px] text-muted-foreground font-mono">{(file.size / 1024).toFixed(1)} KB</p>
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-surface-elevated text-muted-foreground hover:text-foreground hover:bg-red-500/20 hover:text-red-500 transition-all cursor-pointer"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function MessageInput({
   onSend,
   placeholder = 'Type a message or "/" for commands...',
@@ -232,41 +273,14 @@ export function MessageInput({
       {/* Selected Files Staging Deck */}
       {selectedFiles.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2.5 max-h-40 overflow-y-auto px-1 py-1 scrollbar-hide">
-          {selectedFiles.map((file, idx) => {
-            const isImg = file.type.startsWith('image/');
-            return (
-              <div
-                key={idx}
-                className="relative flex items-center gap-2 rounded-2xl border border-border-default/80 dark:border-white/10 bg-surface/90 dark:bg-surface-elevated/80 backdrop-blur-md pl-2 pr-8 py-1.5 shadow-sm max-w-[200px] group transition-all"
-              >
-                {isImg ? (
-                  <div className="h-8 w-8 rounded-xl overflow-hidden border border-border-subtle bg-surface shrink-0">
-                    <img src={URL.createObjectURL(file)} alt={file.name} className="h-full w-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
-                    <File className="h-4 w-4" />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-foreground truncate">{file.name}</p>
-                  <p className="text-[10px] text-muted-foreground font-mono">{(file.size / 1024).toFixed(1)} KB</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeFile(idx)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-surface-elevated/80 text-muted-foreground hover:text-foreground hover:bg-red-500/20 hover:text-red-500 transition-all cursor-pointer"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            );
-          })}
+          {selectedFiles.map((file, idx) => (
+            <FilePreviewItem key={`${file.name}-${idx}`} file={file} onRemove={() => removeFile(idx)} />
+          ))}
         </div>
       )}
 
       {/* Modern Floating Island Composer Dock */}
-      <div className="flex items-end gap-3 rounded-2xl border border-border-default/80 dark:border-white/15 bg-surface/95 dark:bg-surface-elevated/90 backdrop-blur-2xl px-4 py-3 shadow-xl focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+      <div className="flex items-end gap-3 rounded-2xl border border-border dark:border-border-strong bg-surface/95 dark:bg-surface-elevated/90 backdrop-blur-2xl px-4 py-3 shadow-xl focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
         {/* Attachment Upload Button */}
         <button
           type="button"

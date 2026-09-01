@@ -15,10 +15,15 @@ export function escapeHtml(str: string): string {
 export function inlineMarkdownToHtml(text: string): string {
   if (!text) return '';
 
-  let html = escapeHtml(text);
+  // 1. Extract markdown links to protect URLs from formatting regex
+  const links: string[] = [];
+  let html = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, url) => {
+    const placeholder = `\x00LINK_${links.length}\x00`;
+    links.push(`<a href="${url}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`);
+    return placeholder;
+  });
 
-  // 1. Standard markdown links: [Label](url)
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  html = escapeHtml(html);
 
   // 2. Bold: **text**
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -31,6 +36,11 @@ export function inlineMarkdownToHtml(text: string): string {
 
   // 5. Inline code: `code`
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // 6. Restore preserved links
+  links.forEach((linkHtml, idx) => {
+    html = html.replace(`\x00LINK_${idx}\x00`, linkHtml);
+  });
 
   return html;
 }
@@ -156,6 +166,9 @@ export function templateToHtml(markdown: string | null | undefined): string {
  */
 export function exportHtmlToMarkdown(html: string | null | undefined): string {
   if (!html) return '';
+  if (typeof DOMParser === 'undefined') {
+    return html.replace(/<[^>]*>/g, '').trim();
+  }
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');

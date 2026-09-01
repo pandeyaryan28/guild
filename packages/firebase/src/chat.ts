@@ -6,7 +6,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notifications';
-import { deleteCollectionByQuery } from './firestore';
+import { deleteCollectionByQuery } from './firestore-helpers';
 import type {
   Channel, ChannelMember, Message, DirectMessageThread, MessageAttachment,
 } from '@guild/types';
@@ -303,8 +303,14 @@ export async function sendDMMessage(params: {
     lastMessageAt: serverTimestamp(),
     lastSenderId: params.senderId,
   });
-  const [uid1, uid2] = params.dmId.split('_');
-  const recipientId = uid1 === params.senderId ? uid2 : uid1;
+  let recipientId: string | undefined;
+  try {
+    const dmSnap = await getDoc(doc(db, 'directMessages', params.dmId));
+    const participants: string[] = dmSnap.data()?.participants ?? [];
+    recipientId = participants.find((id) => id !== params.senderId);
+  } catch (err) {
+    console.error('Failed to resolve DM recipient for notification', err);
+  }
   if (recipientId) {
     createNotification({
       orgId: params.orgId,

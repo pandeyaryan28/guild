@@ -70,8 +70,9 @@ export async function toggleReaction(
     if (!taskReactions[userId]) {
       // 3. Find the assignee (the OTHER person in the DM thread)
       const dmId = data.dmId as string;
-      const parts = dmId.split('_');
-      const otherId = parts.find((p) => p !== userId);
+      const dmSnap = await getDoc(doc(db, 'directMessages', dmId));
+      const participants: string[] = dmSnap.data()?.participants ?? [];
+      const otherId = participants.find((p) => p !== userId);
 
       if (!otherId) {
         throw new Error('Cannot assign task: DM participant could not be resolved.');

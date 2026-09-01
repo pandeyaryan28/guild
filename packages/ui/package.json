@@ -20,6 +20,9 @@
     "./separator": "./src/components/separator.tsx",
     "./calendar": "./src/components/calendar.tsx"
   },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18"
@@ -28,6 +31,7 @@
     "@guild/utils": "*",
     "@base-ui/react": "*",
     "class-variance-authority": "*",
-    "lucide-react": "*"
+    "lucide-react": "*",
+    "react-day-picker": "^9.0.0 || ^10.0.0"
   }
 }

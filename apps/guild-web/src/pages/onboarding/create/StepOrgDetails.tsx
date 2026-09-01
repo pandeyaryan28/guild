@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
 import { useAuth } from '../../../hooks/useAuth';
 import { generateInviteToken } from '../../../lib/validation';
-import type { OnboardingData } from '../OnboardingRoot';
+import type { OnboardingData } from '../../../types/onboarding';
 
 const INDUSTRIES = [
   'Technology', 'Logistics & Supply Chain', 'Marketing & Creative Agency',

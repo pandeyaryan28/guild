@@ -38,7 +38,14 @@ function getDateRange(filters: ReportFilters): { from: Date; to: Date } {
 
 function isOverdue(task: Task): boolean {
   if (!task.dueDate || task.status === 'done') return false;
-  return task.dueDate.toDate() < new Date();
+  try {
+    const due = typeof (task.dueDate as any)?.toDate === 'function'
+      ? (task.dueDate as any).toDate()
+      : new Date(task.dueDate as any);
+    return due < new Date();
+  } catch {
+    return false;
+  }
 }
 
 function taskInWindow(task: Task, from: Date, to: Date): boolean {

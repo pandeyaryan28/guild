@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Building2, Users } from 'lucide-react';
-import type { OnboardingData } from './OnboardingRoot';
+import type { OnboardingData } from '../../types/onboarding';
 import { StepHeader } from '../../components/onboarding/StepHeader';
 
 interface Props {

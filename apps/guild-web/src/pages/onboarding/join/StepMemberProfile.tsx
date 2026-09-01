@@ -6,7 +6,7 @@ import { executeMemberOnboardingJoin, checkUsernameUnique } from '../../../lib/f
 import { isValidUsername, isValidEmployeeId, isValidAge, isValidPhoneNumber } from '../../../lib/validation';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
-import type { OnboardingData } from '../OnboardingRoot';
+import type { OnboardingData } from '../../../types/onboarding';
 
 interface Props {
   data: OnboardingData;

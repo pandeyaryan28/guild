@@ -91,16 +91,15 @@ export async function updateRequestStatus(
     const taskSnap = await getDoc(taskRef);
     const taskData = taskSnap.exists() ? taskSnap.data() : null;
 
-    if (status === 'approved') {
-      await updateDoc(taskRef, {
-        approved: true,
-        updatedAt: serverTimestamp(),
-      });
-      if (taskData?.goalId) {
-        await syncGoalProgress(taskData.goalId);
+    if (taskSnap.exists()) {
+      if (status === 'approved') {
+        await updateDoc(taskRef, {
+          approved: true,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        await deleteDoc(taskRef);
       }
-    } else {
-      await deleteDoc(taskRef);
       if (taskData?.goalId) {
         await syncGoalProgress(taskData.goalId);
       }

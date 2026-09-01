@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { createHmac } from 'crypto';
 
 /**
  * Razorpay credentials — loaded from environment variables only.
@@ -77,8 +77,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
-    const expectedSignature = crypto
-      .createHmac('sha256', RAZORPAY_KEY_SECRET)
+    const expectedSignature = createHmac('sha256', RAZORPAY_KEY_SECRET)
       .update(body)
       .digest('hex');
 

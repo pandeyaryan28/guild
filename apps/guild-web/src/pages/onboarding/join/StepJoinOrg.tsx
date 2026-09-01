@@ -5,7 +5,7 @@ import { StepHeader } from '../../../components/onboarding/StepHeader';
 import { validateInviteToken, getOrgById, type Organization } from '../../../lib/firestore';
 import { setOnboardingState } from '../../../lib/firestore';
 import { useAuth } from '../../../hooks/useAuth';
-import type { OnboardingData } from '../OnboardingRoot';
+import type { OnboardingData } from '../../../types/onboarding';
 
 interface Props {
   data: OnboardingData;

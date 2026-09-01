@@ -8,23 +8,19 @@ import { getStorage } from 'firebase/storage';
 // In Vite apps: VITE_FIREBASE_*
 // In Next.js apps: NEXT_PUBLIC_FIREBASE_*
 // We detect which prefix is available at runtime.
-function env(key: string): string {
-  // Vite
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env[`VITE_${key}`] ?? import.meta.env[`NEXT_PUBLIC_${key}`] ?? '';
-  }
-  // Node / Next.js SSR
+const getEnv = (viteVal: string | undefined, nodeKey: string): string => {
+  if (viteVal) return viteVal;
   const proc = (globalThis as any).process;
-  return proc?.env?.[`NEXT_PUBLIC_${key}`] ?? proc?.env?.[`VITE_${key}`] ?? '';
-}
+  return proc?.env?.[nodeKey] ?? proc?.env?.[`NEXT_PUBLIC_${nodeKey}`] ?? proc?.env?.[`VITE_${nodeKey}`] ?? '';
+};
 
 const firebaseConfig = {
-  apiKey:            env('FIREBASE_API_KEY'),
-  authDomain:        env('FIREBASE_AUTH_DOMAIN'),
-  projectId:         env('FIREBASE_PROJECT_ID'),
-  storageBucket:     env('FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: env('FIREBASE_MESSAGING_SENDER_ID'),
-  appId:             env('FIREBASE_APP_ID'),
+  apiKey:            getEnv(typeof import.meta !== 'undefined' ? import.meta.env?.VITE_FIREBASE_API_KEY : undefined, 'FIREBASE_API_KEY') || 'mock-api-key',
+  authDomain:        getEnv(typeof import.meta !== 'undefined' ? import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN : undefined, 'FIREBASE_AUTH_DOMAIN') || 'mock-app.firebaseapp.com',
+  projectId:         getEnv(typeof import.meta !== 'undefined' ? import.meta.env?.VITE_FIREBASE_PROJECT_ID : undefined, 'FIREBASE_PROJECT_ID') || 'mock-project',
+  storageBucket:     getEnv(typeof import.meta !== 'undefined' ? import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET : undefined, 'FIREBASE_STORAGE_BUCKET') || 'mock-app.appspot.com',
+  messagingSenderId: getEnv(typeof import.meta !== 'undefined' ? import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID : undefined, 'FIREBASE_MESSAGING_SENDER_ID') || '123456789',
+  appId:             getEnv(typeof import.meta !== 'undefined' ? import.meta.env?.VITE_FIREBASE_APP_ID : undefined, 'FIREBASE_APP_ID') || '1:123456789:web:mockapp',
 };
 
 // Prevent re-initialization in hot-reload environments

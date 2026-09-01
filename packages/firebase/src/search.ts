@@ -100,17 +100,32 @@ export async function searchMessages(orgId: string, queryStr: string): Promise<S
 // ─── Highlight helper ─────────────────────────────────────────────────────────
 
 /** Splits `text` into segments: [text, isMatch] */
-export function highlightSegments(text: string, query: string): Array<[string, boolean]> {
-  if (!query) return [[text, false]];
+export function highlightSegments(text?: string | null, query?: string | null): Array<[string, boolean]> {
+  if (!text) return [];
+  if (!query || !query.trim()) return [[text, false]];
+
   const lower = text.toLowerCase();
-  const q = query.toLowerCase();
-  const idx = lower.indexOf(q);
-  if (idx === -1) return [[text, false]];
-  return [
-    [text.slice(0, idx), false],
-    [text.slice(idx, idx + q.length), true],
-    [text.slice(idx + q.length), false],
-  ];
+  const q = query.toLowerCase().trim();
+  if (!q) return [[text, false]];
+
+  const segments: Array<[string, boolean]> = [];
+  let lastIndex = 0;
+  let idx = lower.indexOf(q, lastIndex);
+
+  while (idx !== -1) {
+    if (idx > lastIndex) {
+      segments.push([text.slice(lastIndex, idx), false]);
+    }
+    segments.push([text.slice(idx, idx + q.length), true]);
+    lastIndex = idx + q.length;
+    idx = lower.indexOf(q, lastIndex);
+  }
+
+  if (lastIndex < text.length) {
+    segments.push([text.slice(lastIndex), false]);
+  }
+
+  return segments.length > 0 ? segments : [[text, false]];
 }
 
 export type { SearchResultType, SearchResultItem, SearchResults };

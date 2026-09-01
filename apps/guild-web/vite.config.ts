@@ -77,11 +77,26 @@ export default defineConfig(({ mode }) => {
               if (id.includes('firebase')) {
                 return 'vendor-firebase';
               }
+              if (id.includes('@tiptap') || id.includes('prosemirror')) {
+                return 'vendor-editor';
+              }
+              if (id.includes('@dnd-kit')) {
+                return 'vendor-dnd';
+              }
+              if (id.includes('react-router-dom') || id.includes('react-router') || id.includes('@remix-run')) {
+                return 'vendor-router';
+              }
               if (id.includes('lucide-react')) {
                 return 'vendor-lucide';
               }
               if (id.includes('motion') || id.includes('framer-motion')) {
                 return 'vendor-motion';
+              }
+              if (id.includes('@base-ui') || id.includes('@radix-ui')) {
+                return 'vendor-ui';
+              }
+              if (id.includes('date-fns') || id.includes('react-day-picker')) {
+                return 'vendor-date';
               }
               return 'vendor-core';
             }

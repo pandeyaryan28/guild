@@ -18,6 +18,8 @@ import {
 import { db } from './firebase';
 import { generateInviteToken, isValidEmail } from './validation';
 import { seedDefaultChannels } from './chat';
+import { deleteCollectionByQuery } from './firestore-helpers';
+export { deleteCollectionByQuery };
 import type {
   UserRole,
   UserProfile,
@@ -426,19 +428,6 @@ export async function updateOrganizationDetails(
   await updateDoc(orgRef, data);
 }
 
-export async function deleteCollectionByQuery(q: any): Promise<void> {
-  const snap = await getDocs(q);
-  if (snap.empty) return;
-  const docs = snap.docs;
-  for (let i = 0; i < docs.length; i += 200) {
-    const batch = writeBatch(db);
-    const chunk = docs.slice(i, i + 200);
-    chunk.forEach((d) => {
-      batch.delete(d.ref);
-    });
-    await batch.commit();
-  }
-}
 
 export async function deleteOrganization(
   orgId: string,

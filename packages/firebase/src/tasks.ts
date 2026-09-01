@@ -267,9 +267,10 @@ export async function moveTask(
 
     if (newStatusVal < oldStatusVal) {
       // Backward status transition
-      const isRejection = oldStatus === 'review' && newStatus === 'in_progress' && taskData.creatorId === actor.uid;
-      if (!isRejection) {
-        throw new Error("Backward status transitions are not allowed unless the creator rejects a review.");
+      const isRejection = oldStatus === 'review' && newStatus === 'in_progress';
+      const isReopen = oldStatus === 'done' && (newStatus === 'in_progress' || newStatus === 'todo');
+      if (!isRejection && !isReopen) {
+        throw new Error("Backward status transitions are not allowed except when rejecting a review or reopening a task.");
       }
     }
   }
