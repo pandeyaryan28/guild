@@ -5,13 +5,6 @@ import { createHmac } from 'crypto';
  * Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in your Vercel project settings.
  * Never hardcode these values here.
  */
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
-
-if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
-  throw new Error('[razorpay] Missing RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET environment variables.');
-}
-
 // ─── POST /api/razorpay ────────────────────────────────────────────────────────
 // Handles two actions:
 //   action: 'create_order'   → creates a Razorpay order, returns { orderId, amount, currency }
@@ -21,11 +14,20 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { action } = req.body;
+  const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+  const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+    console.error('[razorpay] Missing RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET environment variables.');
+    return res.status(500).json({ error: 'Razorpay configuration error on server' });
+  }
+
+  const reqBody = req.body || {};
+  const { action } = reqBody;
 
   // ── Create Order ──────────────────────────────────────────────────────────
   if (action === 'create_order') {
-    const { amount, currency, receipt, notes } = req.body;
+    const { amount, currency, receipt, notes } = reqBody;
 
     if (!amount || !currency) {
       return res.status(400).json({ error: 'amount and currency are required' });
@@ -70,7 +72,7 @@ export default async function handler(req: any, res: any) {
 
   // ── Verify Payment Signature ──────────────────────────────────────────────
   if (action === 'verify_payment') {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = reqBody;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({ error: 'Missing payment verification fields' });

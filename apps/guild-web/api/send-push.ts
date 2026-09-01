@@ -1,15 +1,5 @@
 import webpush from 'web-push';
 
-// VAPID keys — must match the Firebase Console Web Push certificate
-const VAPID_PUBLIC_KEY =
-  process.env.VAPID_PUBLIC_KEY ||
-  'BLrZp1urQa3pn0DUqt8AfPXOrLGHTUZ_gHhxZI7CjjyXQ3b5Xbx2qE2n7pdgE-cY98JIoeJn1Qq16OmgzckmWzw';
-const VAPID_PRIVATE_KEY =
-  process.env.VAPID_PRIVATE_KEY || 'M_n8jJxkZLdYFZNqb2WNDH3ZGeaczT8E72wI-3HuMKE';
-const SENDER_EMAIL = process.env.SENDER_EMAIL || 'mailto:support@guildhq.com';
-
-webpush.setVapidDetails(SENDER_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-
 /**
  * POST /api/send-push
  *
@@ -25,7 +15,24 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { subscriptions, title, body, url } = req.body;
+  const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+  const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+  const SENDER_EMAIL = process.env.SENDER_EMAIL || 'mailto:support@guildhq.com';
+
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+    console.error('[send-push] Missing VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY environment variables.');
+    return res.status(500).json({ error: 'Web push is not configured on server' });
+  }
+
+  try {
+    webpush.setVapidDetails(SENDER_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+  } catch (err: any) {
+    console.error('[send-push] Failed to initialize VAPID credentials:', err);
+    return res.status(500).json({ error: 'Invalid VAPID credentials' });
+  }
+
+  const reqBody = req.body || {};
+  const { subscriptions, title, body, url } = reqBody;
 
   if (!subscriptions || !Array.isArray(subscriptions) || subscriptions.length === 0 || !title) {
     return res.status(400).json({ error: 'Missing required fields: subscriptions[] and title' });

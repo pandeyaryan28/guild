@@ -37,7 +37,17 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { uid } = req.body as { uid?: string };
+  const authHeader = req.headers?.authorization || '';
+  const token = authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7)
+    : req.body?.idToken;
+
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized: Missing authentication token' });
+  }
+
+  const body = req.body || {};
+  const { uid } = body as { uid?: string };
 
   if (!uid || typeof uid !== 'string' || uid.trim() === '') {
     return res.status(400).json({ error: 'uid is required' });
@@ -45,12 +55,21 @@ export default async function handler(req: any, res: any) {
 
   try {
     const adminAuth = getAdminAuth();
+    const decodedToken = await adminAuth.verifyIdToken(token);
+
+    if (!decodedToken?.uid) {
+      return res.status(401).json({ error: 'Invalid authentication token' });
+    }
+
     // Disable the account — the user can no longer sign in but their data is
     // preserved (already wiped from Firestore by deleteUserProfile).
     await adminAuth.updateUser(uid.trim(), { disabled: true });
     console.log(`[disable-user] Disabled Firebase Auth for uid: ${uid}`);
     return res.status(200).json({ success: true });
   } catch (err: any) {
+    if (err?.code === 'auth/id-token-expired' || err?.code === 'auth/argument-error') {
+      return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
+    }
     // auth/user-not-found is fine — user may have already been deleted
     if (err?.code === 'auth/user-not-found') {
       return res.status(200).json({ success: true, note: 'User not found in Auth — already removed.' });

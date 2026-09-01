@@ -13,6 +13,22 @@ import { toggleReaction, addMessageReply, listenToReplies, type MessageReply } f
 import { TaskMessageCard, GoalMessageCard, RequestMessageCard } from '../../components/chat/cards';
 import { avatarInitials, avatarHue } from '../../components/MemberProfileDrawer';
 
+function resolveDmOtherUserId(dmId: string, currentUid: string, membersList?: Array<{ uid: string }>): string {
+  if (!dmId || !currentUid) return '';
+  if (dmId.startsWith(currentUid + '_')) {
+    return dmId.slice(currentUid.length + 1);
+  }
+  if (dmId.endsWith('_' + currentUid)) {
+    return dmId.slice(0, -(currentUid.length + 1));
+  }
+  if (membersList && membersList.length > 0) {
+    const matched = membersList.find((m) => m.uid !== currentUid && dmId.includes(m.uid));
+    if (matched) return matched.uid;
+  }
+  const parts = dmId.split('_');
+  return parts.find((p) => p !== currentUid) ?? '';
+}
+
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
@@ -283,8 +299,7 @@ export function MessageBubble({
           approverName = rawMentions[0];
         }
       } else if (message.dmId) {
-        const parts = message.dmId.split('_');
-        approverId = parts.find((p) => p !== message.senderId) ?? '';
+        approverId = resolveDmOtherUserId(message.dmId, message.senderId, members);
         const approverUser = members.find((m) => m.uid === approverId);
         if (approverUser) {
           approverName = approverUser.fullName;
@@ -326,8 +341,9 @@ export function MessageBubble({
             const reactor = members.find((m) => m.uid === reactorId);
             const reactorName = reactor?.fullName || 'Someone';
 
-            const parts = (message as any).dmId ? (message as any).dmId.split('_') : [];
-            const otherId = parts.find((p: string) => p !== reactorId);
+            const otherId = (message as any).dmId
+              ? resolveDmOtherUserId((message as any).dmId, reactorId, members)
+              : '';
             const assignee = members.find((m) => m.uid === otherId);
             const assigneeName = assignee?.fullName || 'Someone';
 

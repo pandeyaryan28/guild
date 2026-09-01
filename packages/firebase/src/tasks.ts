@@ -258,20 +258,21 @@ export async function moveTask(
   actor: ActorInfo,
 ): Promise<void> {
   const taskDoc = await getDoc(doc(db, 'tasks', taskId));
-  const taskData = taskDoc.exists() ? (taskDoc.data() as Task) : null;
+  if (!taskDoc.exists()) {
+    throw new Error(`Task with id "${taskId}" not found or has already been deleted.`);
+  }
+  const taskData = taskDoc.data() as Task;
 
-  if (taskData) {
-    const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, review: 2, done: 3 };
-    const oldStatusVal = STATUS_ORDER[oldStatus] ?? STATUS_ORDER[taskData.status] ?? 0;
-    const newStatusVal = STATUS_ORDER[newStatus] ?? 0;
+  const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, review: 2, done: 3 };
+  const oldStatusVal = STATUS_ORDER[oldStatus] ?? STATUS_ORDER[taskData.status] ?? 0;
+  const newStatusVal = STATUS_ORDER[newStatus] ?? 0;
 
-    if (newStatusVal < oldStatusVal) {
-      // Backward status transition
-      const isRejection = oldStatus === 'review' && newStatus === 'in_progress';
-      const isReopen = oldStatus === 'done' && (newStatus === 'in_progress' || newStatus === 'todo');
-      if (!isRejection && !isReopen) {
-        throw new Error("Backward status transitions are not allowed except when rejecting a review or reopening a task.");
-      }
+  if (newStatusVal < oldStatusVal) {
+    // Backward status transition
+    const isRejection = oldStatus === 'review' && newStatus === 'in_progress';
+    const isReopen = oldStatus === 'done' && (newStatus === 'in_progress' || newStatus === 'todo');
+    if (!isRejection && !isReopen) {
+      throw new Error("Backward status transitions are not allowed except when rejecting a review or reopening a task.");
     }
   }
 

@@ -15,7 +15,7 @@ import {
   writeBatch,
   runTransaction,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { generateInviteToken, isValidEmail } from './validation';
 import { seedDefaultChannels } from './chat';
 import { deleteCollectionByQuery } from './firestore-helpers';
@@ -545,9 +545,13 @@ export async function deleteUserProfile(
   // 0b. Disable the Firebase Auth account server-side so the user cannot log in
   //     again even in a fresh browser session.
   try {
+    const idToken = await auth.currentUser?.getIdToken();
     await fetch('/api/disable-user', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}),
+      },
       body: JSON.stringify({ uid }),
     });
   } catch (err) {

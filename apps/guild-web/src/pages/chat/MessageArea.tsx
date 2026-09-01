@@ -20,6 +20,22 @@ import { InviteChannelMembersModal } from '../../components/chat/InviteChannelMe
 import { avatarInitials, avatarHue } from '../../components/MemberProfileDrawer';
 import { type MessageAttachment } from '@guild/types';
 
+function resolveDmOtherUserId(dmId: string, currentUid: string, membersList?: Array<{ uid: string }>): string {
+  if (!dmId || !currentUid) return '';
+  if (dmId.startsWith(currentUid + '_')) {
+    return dmId.slice(currentUid.length + 1);
+  }
+  if (dmId.endsWith('_' + currentUid)) {
+    return dmId.slice(0, -(currentUid.length + 1));
+  }
+  if (membersList && membersList.length > 0) {
+    const matched = membersList.find((m) => m.uid !== currentUid && dmId.includes(m.uid));
+    if (matched) return matched.uid;
+  }
+  const parts = dmId.split('_');
+  return parts.find((p) => p !== currentUid) ?? '';
+}
+
 interface MessageAreaProps {
   channelId: string | null;
   dmId: string | null;
@@ -100,8 +116,7 @@ export function MessageArea({
       setDmPartnerName('');
       return;
     }
-    const parts = dmId.split('_');
-    const otherId = parts.find((p) => p !== currentUser.uid) ?? '';
+    const otherId = resolveDmOtherUserId(dmId, currentUser.uid, members);
     const m = members.find((m) => m.uid === otherId);
     if (m) {
       setDmPartner(m);
@@ -181,8 +196,7 @@ export function MessageArea({
 
       let ownerId = currentUser.uid;
       if (dmId) {
-        const parts = dmId.split('_');
-        const otherId = parts.find((p) => p !== currentUser.uid) ?? currentUser.uid;
+        const otherId = resolveDmOtherUserId(dmId, currentUser.uid, members) || currentUser.uid;
         ownerId = combinedMentions[0] || otherId;
       } else if (channelId) {
         ownerId = combinedMentions[0] || '';
@@ -245,8 +259,7 @@ export function MessageArea({
       let approverId = rawMentions[0] || mentions[0];
 
       if (!approverId && dmId && currentUser) {
-        const parts = dmId.split('_');
-        approverId = parts.find((p) => p !== currentUser.uid) ?? '';
+        approverId = resolveDmOtherUserId(dmId, currentUser.uid, members);
       }
 
       const approver = approverId ? members.find((m) => m.uid === approverId) : null;
@@ -325,8 +338,7 @@ export function MessageArea({
           assigneeIds = combinedMentions;
         } else {
           if (dmId) {
-            const parts = dmId.split('_');
-            const otherId = parts.find((p) => p !== currentUser.uid) ?? '';
+            const otherId = resolveDmOtherUserId(dmId, currentUser.uid, members);
             assigneeIds = [otherId];
           } else if (channelId) {
             const snap = await getDocs(
@@ -425,8 +437,7 @@ export function MessageArea({
         {/* Channel or DM Avatar */}
         {dmId ? (
           (() => {
-            const parts = dmId.split('_');
-            const otherId = parts.find((p) => p !== currentUser?.uid) ?? '';
+            const otherId = resolveDmOtherUserId(dmId, currentUser?.uid || '', members);
             return (
               <div 
                 className="w-9 h-9 flex items-center justify-center rounded-full shrink-0 border border-white/20 relative shadow-xs"

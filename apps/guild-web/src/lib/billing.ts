@@ -470,9 +470,8 @@ export function estimateCreditMonthsRemaining(
 ): number {
   if (memberCount <= FREE_SEAT_LIMIT) return Infinity;
   const billableSeats = memberCount - FREE_SEAT_LIMIT; // first 5 are free
-  // Actually all seats beyond free tier are billed
   const monthlyCostSmallest = toSmallestUnit(
-    getPricing(currency).monthly * memberCount,
+    getPricing(currency).monthly * billableSeats,
     currency
   );
   if (monthlyCostSmallest <= 0) return Infinity;

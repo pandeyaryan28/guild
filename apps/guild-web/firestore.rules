@@ -86,7 +86,10 @@ service cloud.firestore {
     match /usernames/{username} {
       // Publicly readable for uniqueness checking during registration
       allow read: if true;
-      allow write: if isAuth();
+      // Allow creation only if claiming for oneself
+      allow create: if isAuth() && request.resource.data.uid == request.auth.uid;
+      // Allow update or delete only by the owner of the username
+      allow update, delete: if isAuth() && resource.data.uid == request.auth.uid;
     }
 
     match /onboardingState/{userId} {
@@ -101,8 +104,8 @@ service cloud.firestore {
     // ─── ORGANIZATIONS & MEMBERSHIP ──────────────────────────────────────────
 
     match /organizations/{orgId} {
-      // Any authenticated user can create an organization
-      allow create: if isAuth();
+      // Any authenticated user can create an organization with themselves as owner
+      allow create: if isAuth() && request.resource.data.ownerId == request.auth.uid;
       // Members of the organization can read/update it
       allow read: if isMemberOfOrg(orgId);
       // Only owners/admins can update organization details or delete it
@@ -247,12 +250,30 @@ service cloud.firestore {
 
     match /messages/{messageId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isDocInMyOrg() && (
+        request.auth.uid == resource.data.senderId ||
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'taskReactions', 'replyCount', 'lastReplyAt'])
+      );
+      allow delete: if isDocInMyOrg() && (
+        request.auth.uid == resource.data.senderId ||
+        isOrgAdminOrOwner(resource.data.orgId)
+      );
     }
 
     match /messageReplies/{replyId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isDocInMyOrg() && (
+        request.auth.uid == resource.data.senderId ||
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'taskReactions'])
+      );
+      allow delete: if isDocInMyOrg() && (
+        request.auth.uid == resource.data.senderId ||
+        isOrgAdminOrOwner(resource.data.orgId)
+      );
     }
 
     match /directMessages/{threadId} {
