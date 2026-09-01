@@ -647,8 +647,8 @@ export function GoalDetailDrawer({
                           type="text"
                           placeholder="Add an active task to this goal..."
                           value={inlineTaskTitle}
-                          onChange={(e) => inlineTaskTitle}
-                          className="flex-1 bg-neutral-50/70 dark:bg-neutral-850/20 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-neutral-855 dark:text-neutral-200 placeholder:text-neutral-450 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold"
+                          onChange={(e) => setInlineTaskTitle(e.target.value)}
+                          className="flex-1 bg-neutral-50/70 dark:bg-neutral-850/20 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-450 outline-none hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-primary/50 transition-all font-semibold"
                         />
                         <button
                           type="submit"
