@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserPlus, X, Link2, Copy, Check, Loader2, Mail, ShieldAlert, Sparkles } from 'lucide-react';
+import { UserPlus, X, Link2, Copy, Check, Loader2, Mail, ShieldAlert, Sparkles, Clock } from 'lucide-react';
 import { createInviteLink } from '../../lib/firestore';
 import { cn } from '@/lib/utils';
 import { isValidEmail } from '../../lib/validation';
+import { useBilling } from '../../hooks/useBilling';
 
 interface InviteModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface InviteModalProps {
 type InviteTab = 'email' | 'link';
 
 export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps) {
+  const { memberCount, graceInfo } = useBilling(isOpen ? orgId : undefined);
   const [activeTab, setActiveTab] = React.useState<InviteTab>('email');
   
   // Tab: Email
@@ -166,6 +168,15 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                   <div className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive font-semibold flex items-center gap-2">
                     <ShieldAlert className="h-4 w-4 flex-shrink-0" />
                     {error}
+                  </div>
+                )}
+
+                {graceInfo.allocatedSeats !== Infinity && memberCount >= graceInfo.allocatedSeats && (
+                  <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 font-medium flex items-start gap-2.5">
+                    <Clock className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                    <p className="text-[11px] leading-relaxed">
+                      Your team currently has {memberCount} member{memberCount !== 1 ? 's' : ''} on a {graceInfo.allocatedSeats}-seat plan. Newly invited colleagues will get a 7-day grace period upon joining to allow time for seat upgrades.
+                    </p>
                   </div>
                 )}
 

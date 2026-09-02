@@ -15,6 +15,7 @@ import type { BillingInfo, BillingPlan, BillingStatus, BillingCurrency, BillingT
 
 export const FREE_SEAT_LIMIT = 5;
 export const FREE_STORAGE_LIMIT_MB = 10;
+export const GRACE_PERIOD_DAYS = 7;
 
 export const PRICING = {
   INR: {
@@ -113,7 +114,7 @@ export interface PromoCoupon {
 export const PROMO_COUPONS: Record<string, PromoCoupon> = {
   GUILD99: {
     code: 'GUILD99',
-    name: 'Guild99 Special Launch Promo',
+    name: 'Special Launch Promo',
     discountPercent: 99,
     description: 'Special 99% discount across all Guild Pro plans',
     applicablePlans: ['pro_monthly', 'pro_annual'],
@@ -207,6 +208,128 @@ export async function isOrgAtFreeLimit(orgId: string): Promise<boolean> {
   const count = await getOrgMemberCount(orgId);
   return count >= FREE_SEAT_LIMIT;
 }
+
+// ─── Grace Period Helpers ───────────────────────────────────────────────────
+
+export interface GracePeriodInfo {
+  allocatedSeats: number;
+  isOverage: boolean;
+  overageCount: number;
+  isGracePeriodActive: boolean;
+  isGracePeriodExpired: boolean;
+  graceDaysRemaining: number;
+  gracePeriodUntil: Date | null;
+}
+
+/**
+ * Calculates current seat allocation and grace period status for an organization.
+ */
+export function getGracePeriodInfo(
+  billing: BillingInfo | null,
+  memberCount: number
+): GracePeriodInfo {
+  const nextBillingDateVal = billing?.nextBillingDate
+    ? ((billing.nextBillingDate as any).toDate?.() ?? new Date(billing.nextBillingDate as any))
+    : null;
+  const isTrialExpired =
+    billing?.status === 'trialing' &&
+    nextBillingDateVal &&
+    nextBillingDateVal.getTime() < Date.now();
+
+  const plan = isTrialExpired ? 'free' : (billing?.plan ?? 'free');
+
+  let allocatedSeats = FREE_SEAT_LIMIT;
+  if (plan === 'pro_monthly' || plan === 'pro_annual') {
+    allocatedSeats = billing?.seats || FREE_SEAT_LIMIT;
+  } else if (plan === 'credit' || plan === 'enterprise') {
+    allocatedSeats = Infinity;
+  }
+
+  const isOverage = memberCount > allocatedSeats;
+  const overageCount = Math.max(0, memberCount - allocatedSeats);
+
+  let gracePeriodUntil: Date | null = null;
+  if (billing?.gracePeriodUntil) {
+    gracePeriodUntil = (billing.gracePeriodUntil as any).toDate?.() ?? new Date(billing.gracePeriodUntil as any);
+  }
+
+  let isGracePeriodActive = false;
+  let isGracePeriodExpired = false;
+  let graceDaysRemaining = 0;
+
+  if (isOverage) {
+    const now = Date.now();
+    if (gracePeriodUntil) {
+      const diffMs = gracePeriodUntil.getTime() - now;
+      if (diffMs > 0) {
+        isGracePeriodActive = true;
+        graceDaysRemaining = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+      } else {
+        isGracePeriodExpired = true;
+        graceDaysRemaining = 0;
+      }
+    } else {
+      // Grace period has just been triggered (or not yet stored) - treat as active
+      isGracePeriodActive = true;
+      graceDaysRemaining = GRACE_PERIOD_DAYS;
+      gracePeriodUntil = new Date(now + GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000);
+    }
+  }
+
+  return {
+    allocatedSeats,
+    isOverage,
+    overageCount,
+    isGracePeriodActive,
+    isGracePeriodExpired,
+    graceDaysRemaining,
+    gracePeriodUntil,
+  };
+}
+
+/**
+ * Persists or clears grace period timestamps in Firestore when seat counts change.
+ */
+export async function syncOrgGracePeriod(
+  orgId: string,
+  memberCount: number,
+  billing: BillingInfo | null
+): Promise<void> {
+  if (!orgId) return;
+  const graceInfo = getGracePeriodInfo(billing, memberCount);
+
+  if (graceInfo.isOverage && !billing?.gracePeriodUntil) {
+    const graceUntilDate = new Date(Date.now() + GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000);
+    try {
+      await setDoc(
+        billingDocRef(orgId),
+        {
+          gracePeriodUntil: graceUntilDate,
+          overageCount: graceInfo.overageCount,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn('[Billing] Failed to sync grace period:', e);
+    }
+  } else if (!graceInfo.isOverage && billing?.gracePeriodUntil) {
+    try {
+      await setDoc(
+        billingDocRef(orgId),
+        {
+          gracePeriodUntil: null,
+          overageCount: 0,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn('[Billing] Failed to clear grace period:', e);
+    }
+  }
+}
+
 
 export async function getRecentTransactions(
   orgId: string,
@@ -399,13 +522,15 @@ export async function activateSubscription(params: {
   const billingInfo: Omit<BillingInfo, 'updatedAt'> & { updatedAt: ReturnType<typeof serverTimestamp> } = {
     plan: params.plan,
     status: 'active',
-    seats: params.seats,
+    seats: Math.max(1, params.seats),
     currency: params.currency,
     nextBillingDate: null, // will be set via Firestore Timestamp
     razorpaySubscriptionId: null,
     annualBonusActivated: params.plan === 'pro_annual',
     appliedCoupon: params.appliedCoupon || null,
     discountPercent: params.discountPercent || null,
+    gracePeriodUntil: null,
+    overageCount: 0,
     updatedAt: now,
   };
 

@@ -3,15 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Building2,
   Users,
-  Search,
-  Sliders,
-  ExternalLink,
   ChevronDown,
   ChevronUp,
-  HardDrive,
-  Calendar,
-  Layers,
-  Sparkles,
 } from 'lucide-react';
 import {
   superAdminService,
@@ -25,12 +18,10 @@ import { PlanOverrideModal } from '../components/subscriptions/PlanOverrideModal
 
 const PLAN_OPTIONS: SelectOption[] = [
   { value: 'free', label: 'Free Tier' },
-  { value: 'starter', label: 'Starter' },
   { value: 'pro_monthly', label: 'Pro (Monthly)' },
   { value: 'pro_annual', label: 'Pro (Annual)' },
-  { value: 'enterprise', label: 'Enterprise' },
-  { value: 'comped', label: 'Comped Lifetime' },
   { value: 'credit', label: 'Credit Wallet' },
+  { value: 'enterprise', label: 'Enterprise' },
 ];
 
 const STATUS_OPTIONS: SelectOption[] = [
@@ -163,7 +154,8 @@ export function WorkspacesPage() {
   const totalSeats = orgs.reduce((acc, o) => acc + (o.maxSeats || 5), 0);
   const totalUsed = orgs.reduce((acc, o) => acc + (o.memberCount || 1), 0);
   const activeCount = orgs.filter((o) => o.billingStatus === 'active').length;
-  const paidCount = orgs.filter((o) => o.billingStatus === 'active' && o.plan !== 'free' && o.plan !== 'comped').length;
+  const isCompedOrg = (o: AdminOrganization) => !!o.customOverrides?.compedReason || !!o.customOverrides?.compedBy;
+  const paidCount = orgs.filter((o) => o.billingStatus === 'active' && o.plan !== 'free' && !isCompedOrg(o)).length;
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
@@ -181,7 +173,7 @@ export function WorkspacesPage() {
 
       {/* Summary Metrics Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-2xl bg-surface/80 border border-border flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase">Total Workspaces</span>
             <div className="text-lg font-extrabold text-foreground font-mono">{orgs.length}</div>
@@ -189,7 +181,7 @@ export function WorkspacesPage() {
           <Building2 className="w-5 h-5 text-primary opacity-80" />
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-surface/80 border border-border flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase">Active Tenancies</span>
             <div className="text-lg font-extrabold text-foreground font-mono">{activeCount}</div>
@@ -197,7 +189,7 @@ export function WorkspacesPage() {
           <StatusBadge status="active" />
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-surface/80 border border-border flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase">Paid Subscriptions</span>
             <div className="text-lg font-extrabold text-success font-mono">{paidCount}</div>
@@ -207,7 +199,7 @@ export function WorkspacesPage() {
           </span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-surface/80 border border-border flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase">Seat Capacity</span>
             <div className="text-lg font-extrabold text-foreground font-mono">
@@ -309,6 +301,8 @@ export function WorkspacesPage() {
                       })
                     : '—';
 
+                  const isComped = isCompedOrg(org);
+
                   return (
                     <tr
                       key={org.id}
@@ -345,7 +339,7 @@ export function WorkspacesPage() {
                       {/* Plan Tier Badge */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <PlanBadge plan={org.plan} size="sm" />
+                          <PlanBadge plan={org.plan} size="sm" isComped={isComped} />
                           {org.customOverrides?.customPlanName && (
                             <span className="font-mono text-[9px] font-bold px-1.5 py-0.2 rounded bg-accent/10 text-accent border border-accent/20">
                               CUSTOM
@@ -372,7 +366,7 @@ export function WorkspacesPage() {
                             <div
                               className={`h-full rounded-full ${
                                 ratio >= 90
-                                  ? 'bg-danger'
+                                   ? 'bg-danger'
                                   : ratio >= 75
                                   ? 'bg-warning'
                                   : 'bg-primary'
@@ -428,3 +422,4 @@ export function WorkspacesPage() {
     </div>
   );
 }
+

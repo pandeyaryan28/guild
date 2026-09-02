@@ -10,12 +10,10 @@ import type { AdminOrganization, AdminUser, AdminPlanType } from '../services/su
 export const PRICING = {
   PRO_MONTHLY_INR: 499,
   PRO_MONTHLY_USD: 8.12,
-  PRO_ANNUAL_INR_MO: 249.5, // ₹2,994/yr
+  PRO_ANNUAL_INR_MO: 249.5, // ₹2,994/yr (50% discount)
   PRO_ANNUAL_USD_MO: 4.06,  // $48.72/yr
   ENTERPRISE_INR_MO: 1500,  // Baseline per seat
   ENTERPRISE_USD_MO: 20.0,
-  STARTER_INR_MO: 199,
-  STARTER_USD_MO: 2.50,
   USD_TO_INR_RATE: 83.5,
 };
 
@@ -76,48 +74,44 @@ export function computeWorkspaceMrr(org: AdminOrganization): { inr: number; usd:
     return { inr: 0, usd: 0 };
   }
 
+  // Check 100% Platform Comped Waiver
+  if (org.customOverrides?.compedReason || org.customOverrides?.compedBy) {
+    return { inr: 0, usd: 0 };
+  }
+
   const seats = org.seats || 1;
   const isUSD = org.currency === 'USD';
+  const discountMultiplier = org.discountPercent ? Math.max(0, 1 - org.discountPercent / 100) : 1;
 
   switch (org.plan) {
     case 'pro_monthly': {
       if (isUSD) {
-        const usd = seats * PRICING.PRO_MONTHLY_USD;
+        const usd = seats * PRICING.PRO_MONTHLY_USD * discountMultiplier;
         return { inr: usd * PRICING.USD_TO_INR_RATE, usd };
       } else {
-        const inr = seats * PRICING.PRO_MONTHLY_INR;
+        const inr = seats * PRICING.PRO_MONTHLY_INR * discountMultiplier;
         return { inr, usd: inr / PRICING.USD_TO_INR_RATE };
       }
     }
     case 'pro_annual': {
       if (isUSD) {
-        const usd = seats * PRICING.PRO_ANNUAL_USD_MO;
+        const usd = seats * PRICING.PRO_ANNUAL_USD_MO * discountMultiplier;
         return { inr: usd * PRICING.USD_TO_INR_RATE, usd };
       } else {
-        const inr = seats * PRICING.PRO_ANNUAL_INR_MO;
+        const inr = seats * PRICING.PRO_ANNUAL_INR_MO * discountMultiplier;
         return { inr, usd: inr / PRICING.USD_TO_INR_RATE };
       }
     }
     case 'enterprise': {
       if (isUSD) {
-        const usd = seats * PRICING.ENTERPRISE_USD_MO;
+        const usd = seats * PRICING.ENTERPRISE_USD_MO * discountMultiplier;
         return { inr: usd * PRICING.USD_TO_INR_RATE, usd };
       } else {
-        const inr = seats * PRICING.ENTERPRISE_INR_MO;
-        return { inr, usd: inr / PRICING.USD_TO_INR_RATE };
-      }
-    }
-    case 'starter': {
-      if (isUSD) {
-        const usd = seats * PRICING.STARTER_USD_MO;
-        return { inr: usd * PRICING.USD_TO_INR_RATE, usd };
-      } else {
-        const inr = seats * PRICING.STARTER_INR_MO;
+        const inr = seats * PRICING.ENTERPRISE_INR_MO * discountMultiplier;
         return { inr, usd: inr / PRICING.USD_TO_INR_RATE };
       }
     }
     case 'credit':
-    case 'comped':
     case 'free':
     default:
       return { inr: 0, usd: 0 };
@@ -221,10 +215,12 @@ export function calculatePlatformMetrics(
   const trialingWorkspaces = orgs.filter((o) => o.billingStatus === 'trialing').length;
   const pastDueWorkspaces = orgs.filter((o) => o.billingStatus === 'past_due').length;
 
+  const isCompedOrg = (o: AdminOrganization) => !!o.customOverrides?.compedReason || !!o.customOverrides?.compedBy;
+
   const payingSubscriptionsCount = orgs.filter(
-    (o) => o.billingStatus === 'active' && o.plan !== 'free' && o.plan !== 'comped'
+    (o) => o.billingStatus === 'active' && o.plan !== 'free' && !isCompedOrg(o)
   ).length;
-  const compedSubscriptionsCount = orgs.filter((o) => o.plan === 'comped').length;
+  const compedSubscriptionsCount = orgs.filter(isCompedOrg).length;
 
   const conversionRate = totalWorkspaces > 0
     ? Math.round((payingSubscriptionsCount / totalWorkspaces) * 1000) / 10
@@ -235,7 +231,7 @@ export function calculatePlatformMetrics(
   let mrrInr = 0;
   let mrrUsd = 0;
 
-  // Plan Breakdown Map
+  // Plan Breakdown Map (Canonical Plans)
   const planMap: Record<
     AdminPlanType,
     { label: string; count: number; seats: number; mrrInr: number; mrrUsd: number; colorClass: string }
@@ -244,8 +240,8 @@ export function calculatePlatformMetrics(
     pro_annual: { label: 'Pro Annual', count: 0, seats: 0, mrrInr: 0, mrrUsd: 0, colorClass: 'bg-purple-500' },
     pro_monthly: { label: 'Pro Monthly', count: 0, seats: 0, mrrInr: 0, mrrUsd: 0, colorClass: 'bg-blue-500' },
     starter: { label: 'Starter', count: 0, seats: 0, mrrInr: 0, mrrUsd: 0, colorClass: 'bg-cyan-500' },
-    credit: { label: 'Credit Wallet', count: 0, seats: 0, mrrInr: 0, mrrUsd: 0, colorClass: 'bg-emerald-500' },
     comped: { label: 'Comped Lifetime', count: 0, seats: 0, mrrInr: 0, mrrUsd: 0, colorClass: 'bg-amber-500' },
+    credit: { label: 'Credit Wallet', count: 0, seats: 0, mrrInr: 0, mrrUsd: 0, colorClass: 'bg-emerald-500' },
     free: { label: 'Free Tier', count: 0, seats: 0, mrrInr: 0, mrrUsd: 0, colorClass: 'bg-zinc-400' },
   };
 
@@ -363,3 +359,4 @@ export function formatNumber(val: number): string {
 export function formatPercent(val: number): string {
   return `${val >= 0 ? '+' : ''}${val.toFixed(1)}%`;
 }
+

@@ -69,8 +69,20 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ success: false, error: 'Method Not Allowed' });
   }
 
-  const { organizationId, plan, billingStatus, seats, maxSeats, storageLimitMb, customOverrides, reason, adminEmail } =
-    req.body || {};
+  const {
+    organizationId,
+    plan,
+    billingStatus,
+    seats,
+    maxSeats,
+    storageLimitMb,
+    creditBalance,
+    currency,
+    customOverrides,
+    reason,
+    adminEmail,
+    previousState,
+  } = req.body || {};
 
   if (!organizationId) {
     return res.status(400).json({ success: false, error: 'organizationId is required' });
@@ -83,73 +95,156 @@ export default async function handler(req: any, res: any) {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
 
-    const docUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/organizations/${organizationId}`;
+    const baseUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+    const nowIso = new Date().toISOString();
+    const seatsVal = maxSeats ?? seats ?? 5;
 
-    const updateFields: Record<string, any> = {};
-    const fieldPaths: string[] = [];
+    // 1. Patch Root Organization Document
+    const orgDocUrl = `${baseUrl}/organizations/${organizationId}`;
+    const orgUpdateFields: Record<string, any> = {};
+    const orgFieldPaths: string[] = [];
 
     if (plan !== undefined) {
-      updateFields.plan = toFirestoreField(plan);
-      fieldPaths.push('plan');
+      orgUpdateFields.plan = toFirestoreField(plan);
+      orgFieldPaths.push('plan');
     }
     if (billingStatus !== undefined) {
-      updateFields.billingStatus = toFirestoreField(billingStatus);
-      fieldPaths.push('billingStatus');
+      orgUpdateFields.billingStatus = toFirestoreField(billingStatus);
+      orgFieldPaths.push('billingStatus');
     }
     if (maxSeats !== undefined || seats !== undefined) {
-      const seatsVal = maxSeats ?? seats;
-      updateFields.maxSeats = toFirestoreField(seatsVal);
-      fieldPaths.push('maxSeats');
+      orgUpdateFields.maxSeats = toFirestoreField(seatsVal);
+      orgFieldPaths.push('maxSeats');
     }
     if (storageLimitMb !== undefined) {
-      updateFields.storageLimitMb = toFirestoreField(storageLimitMb);
-      fieldPaths.push('storageLimitMb');
+      orgUpdateFields.storageLimitMb = toFirestoreField(storageLimitMb);
+      orgFieldPaths.push('storageLimitMb');
+    }
+    if (creditBalance !== undefined) {
+      orgUpdateFields.creditBalance = toFirestoreField(creditBalance);
+      orgFieldPaths.push('creditBalance');
+    }
+    if (currency !== undefined) {
+      orgUpdateFields.currency = toFirestoreField(currency);
+      orgFieldPaths.push('currency');
     }
     if (customOverrides !== undefined) {
-      updateFields.customOverrides = toFirestoreField(customOverrides);
-      fieldPaths.push('customOverrides');
+      orgUpdateFields.customOverrides = toFirestoreField(customOverrides);
+      orgFieldPaths.push('customOverrides');
     }
 
-    updateFields.updatedAt = { timestampValue: new Date().toISOString() };
-    fieldPaths.push('updatedAt');
+    orgUpdateFields.updatedAt = { timestampValue: nowIso };
+    orgFieldPaths.push('updatedAt');
 
-    const updateMask = fieldPaths.map((p) => `updateMask.fieldPaths=${encodeURIComponent(p)}`).join('&');
-    const patchUrl = `${docUrl}?${updateMask}`;
-
-    const patchRes = await fetch(patchUrl, {
+    const orgUpdateMask = orgFieldPaths.map((p) => `updateMask.fieldPaths=${encodeURIComponent(p)}`).join('&');
+    const orgPatchRes = await fetch(`${orgDocUrl}?${orgUpdateMask}`, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify({ fields: updateFields }),
+      body: JSON.stringify({ fields: orgUpdateFields }),
     });
 
-    if (!patchRes.ok) {
-      const errData = await patchRes.json();
-      console.error('[command-center-sub] Failed to patch Firestore:', errData);
-      return res.status(patchRes.status).json({ success: false, error: 'Failed to update Firestore document', details: errData });
+    if (!orgPatchRes.ok) {
+      const errData = await orgPatchRes.json();
+      console.error('[command-center-sub] Failed to patch org document:', errData);
+      return res.status(orgPatchRes.status).json({ success: false, error: 'Failed to update organization document', details: errData });
     }
 
-    // Record audit log entry in Firestore /commandCenterAuditLogs
-    const auditLogUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/commandCenterAuditLogs`;
-    fetch(auditLogUrl, {
+    // 2. Patch Billing Subdocument /organizations/{orgId}/billing/info
+    const billingDocUrl = `${baseUrl}/organizations/${organizationId}/billing/info`;
+    const billingFields: Record<string, any> = {
+      plan: toFirestoreField(plan || 'free'),
+      status: toFirestoreField(billingStatus || 'active'),
+      seats: toFirestoreField(seatsVal),
+      currency: toFirestoreField(currency || 'INR'),
+      annualBonusActivated: toFirestoreField(plan === 'pro_annual' || !!customOverrides?.annualBonusActivated),
+      updatedAt: { timestampValue: nowIso },
+    };
+    const billingFieldPaths = ['plan', 'status', 'seats', 'currency', 'annualBonusActivated', 'updatedAt'];
+
+    if (creditBalance !== undefined) {
+      billingFields.creditBalance = toFirestoreField(creditBalance);
+      billingFieldPaths.push('creditBalance');
+    }
+
+    if (plan === 'pro_monthly' || plan === 'pro_annual') {
+      const nextDate = new Date();
+      nextDate.setMonth(nextDate.getMonth() + (plan === 'pro_annual' ? 12 : 1));
+      billingFields.nextBillingDate = { timestampValue: nextDate.toISOString() };
+      billingFieldPaths.push('nextBillingDate');
+    }
+
+    const billingUpdateMask = billingFieldPaths.map((p) => `updateMask.fieldPaths=${encodeURIComponent(p)}`).join('&');
+    await fetch(`${billingDocUrl}?${billingUpdateMask}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ fields: billingFields }),
+    });
+
+    // 3. Record superadmin audit log in /commandCenterAuditLogs
+    const auditLogUrl = `${baseUrl}/commandCenterAuditLogs`;
+    await fetch(auditLogUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify({
         fields: {
-          timestamp: { timestampValue: new Date().toISOString() },
+          timestamp: { timestampValue: nowIso },
+          actorUid: { stringValue: 'usr_superadmin' },
+          actorEmail: { stringValue: adminEmail || 'pandeyaryan28@gmail.com' },
+          actorName: { stringValue: 'Aryan Pandey (Platform SuperAdmin)' },
           action: { stringValue: 'PLAN_OVERRIDE' },
           targetType: { stringValue: 'organization' },
           targetId: { stringValue: organizationId },
-          actorEmail: { stringValue: adminEmail || 'pandeyaryan28@gmail.com' },
-          actorName: { stringValue: 'Aryan Pandey (Platform SuperAdmin)' },
-          reason: { stringValue: reason || 'Manual platform plan modification' },
-          newPlan: { stringValue: plan || 'free' },
+          targetName: { stringValue: req.body.organizationName || organizationId },
+          reason: { stringValue: reason || 'Manual platform entitlement override' },
+          previousState: toFirestoreField(previousState || {}),
+          newState: toFirestoreField({
+            plan: plan || 'free',
+            billingStatus: billingStatus || 'active',
+            maxSeats: seatsVal,
+            storageLimitMb,
+            customOverrides,
+          }),
         },
       }),
-    }).catch(() => {});
+    }).catch((err) => console.warn('[command-center-sub] Audit log write warning:', err));
 
-    return res.status(200).json({ success: true, organizationId, plan, billingStatus });
+    // 4. Record transaction in tenant's /organizations/{orgId}/billingTransactions
+    if (plan !== 'free') {
+      const txUrl = `${baseUrl}/organizations/${organizationId}/billingTransactions`;
+      const isComped = !!customOverrides?.compedReason || plan === 'enterprise';
+      const desc = isComped
+        ? `Platform Grant: ${plan.toUpperCase()} (${seatsVal} seats) · Comped VIP Waiver`
+        : `SuperAdmin Adjustment: Plan updated to ${plan.toUpperCase()} (${seatsVal} seats)`;
+
+      await fetch(txUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          fields: {
+            id: { stringValue: `tx_admin_${Date.now()}` },
+            orgId: { stringValue: organizationId },
+            description: { stringValue: desc },
+            amount: { integerValue: '0' },
+            currency: { stringValue: currency || 'INR' },
+            type: { stringValue: 'subscription' },
+            status: { stringValue: 'success' },
+            createdAt: { timestampValue: nowIso },
+          },
+        }),
+      }).catch(() => {});
+    }
+
+    return res.status(200).json({
+      success: true,
+      organizationId,
+      plan,
+      billingStatus,
+      seats: seatsVal,
+      storageLimitMb,
+    });
   } catch (err: any) {
     console.error('[command-center-sub] Error updating subscription:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 }
+

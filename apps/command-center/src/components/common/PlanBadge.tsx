@@ -5,6 +5,7 @@ interface PlanBadgeProps {
   plan: AdminPlanType | string;
   className?: string;
   size?: 'sm' | 'md';
+  isComped?: boolean;
 }
 
 interface PlanConfig {
@@ -28,20 +29,10 @@ const PLAN_STYLES: Record<string, PlanConfig> = {
     classes:
       'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30',
   },
-  starter: {
-    label: 'Starter',
-    classes:
-      'bg-cyan-50 dark:bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30',
-  },
   credit: {
     label: 'Credit Wallet',
     classes:
       'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30',
-  },
-  comped: {
-    label: 'Comped Lifetime',
-    classes:
-      'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30 font-bold',
   },
   free: {
     label: 'Free Tier',
@@ -50,9 +41,9 @@ const PLAN_STYLES: Record<string, PlanConfig> = {
   },
 };
 
-export function PlanBadge({ plan, className = '', size = 'sm' }: PlanBadgeProps) {
+export function PlanBadge({ plan, className = '', size = 'sm', isComped = false }: PlanBadgeProps) {
   const config = PLAN_STYLES[plan] || {
-    label: plan.toUpperCase(),
+    label: plan ? plan.toUpperCase().replace('_', ' ') : 'UNKNOWN',
     classes: 'bg-secondary text-muted-foreground border-border',
   };
 
@@ -60,9 +51,15 @@ export function PlanBadge({ plan, className = '', size = 'sm' }: PlanBadgeProps)
 
   return (
     <span
-      className={`inline-flex items-center font-mono font-medium rounded-lg border transition-colors ${config.classes} ${sizeClasses} ${className}`}
+      className={`inline-flex items-center gap-1 font-mono font-medium rounded-lg border transition-colors ${config.classes} ${sizeClasses} ${className}`}
     >
       {config.label}
+      {isComped && (
+        <span className="ml-1 px-1 py-0.2 text-[8px] uppercase tracking-wider font-bold rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+          VIP
+        </span>
+      )}
     </span>
   );
 }
+

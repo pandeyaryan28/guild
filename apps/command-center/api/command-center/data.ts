@@ -65,6 +65,7 @@ function parseFirestoreValue(v: any): any {
 }
 
 function parseFirestoreDoc(doc: any): any {
+  if (!doc || !doc.name) return null;
   const id = doc.name.split('/').pop();
   const fields: Record<string, any> = {};
   for (const [k, v] of Object.entries(doc.fields || {})) {
@@ -87,25 +88,79 @@ export default async function handler(req: any, res: any) {
 
     const baseUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 
-    const [orgsRes, usersRes, projectsRes] = await Promise.all([
+    // 1. Fetch core collections in parallel
+    const [orgsRes, usersRes, projectsRes, bannedRes, auditRes] = await Promise.all([
       fetch(`${baseUrl}/organizations`, { headers }),
       fetch(`${baseUrl}/users`, { headers }),
       fetch(`${baseUrl}/projects`, { headers }),
+      fetch(`${baseUrl}/bannedUsers`, { headers }),
+      fetch(`${baseUrl}/commandCenterAuditLogs`, { headers }),
     ]);
 
-    const [orgsData, usersData, projectsData] = await Promise.all([
-      orgsRes.json() as Promise<any>,
-      usersRes.json() as Promise<any>,
-      projectsRes.json() as Promise<any>,
+    const [orgsData, usersData, projectsData, bannedData, auditData] = await Promise.all([
+      orgsRes.json().catch(() => ({ documents: [] })),
+      usersRes.json().catch(() => ({ documents: [] })),
+      projectsRes.json().catch(() => ({ documents: [] })),
+      bannedRes.json().catch(() => ({ documents: [] })),
+      auditRes.json().catch(() => ({ documents: [] })),
     ]);
 
-    const rawUsers = (usersData.documents || []).map(parseFirestoreDoc);
-    const rawOrgs = (orgsData.documents || []).map(parseFirestoreDoc);
-    const rawProjects = (projectsData.documents || []).map(parseFirestoreDoc);
+    const rawUsers = (usersData.documents || []).map(parseFirestoreDoc).filter(Boolean);
+    const rawOrgs = (orgsData.documents || []).map(parseFirestoreDoc).filter(Boolean);
+    const rawProjects = (projectsData.documents || []).map(parseFirestoreDoc).filter(Boolean);
+    const rawBannedUsers = (bannedData.documents || []).map(parseFirestoreDoc).filter(Boolean);
+    const rawAuditLogs = (auditData.documents || []).map(parseFirestoreDoc).filter(Boolean);
+
+    const bannedMap = new Map<string, any>();
+    rawBannedUsers.forEach((b: any) => {
+      if (b && b.id) bannedMap.set(b.id, b);
+      if (b && b.uid) bannedMap.set(b.uid, b);
+    });
+
+    // 2. Fetch billing info subdocuments and transactions for all organizations in parallel
+    const orgBillingMap = new Map<string, any>();
+    const allTransactions: any[] = [];
+
+    await Promise.all(
+      rawOrgs.map(async (o: any) => {
+        try {
+          const [billingRes, txRes] = await Promise.all([
+            fetch(`${baseUrl}/organizations/${o.id}/billing/info`, { headers }),
+            fetch(`${baseUrl}/organizations/${o.id}/billingTransactions`, { headers }),
+          ]);
+
+          if (billingRes.ok) {
+            const bDoc = await billingRes.json();
+            const parsedBilling = parseFirestoreDoc(bDoc);
+            if (parsedBilling) {
+              orgBillingMap.set(o.id, parsedBilling);
+            }
+          }
+
+          if (txRes.ok) {
+            const txDoc = await txRes.json();
+            const txList = (txDoc.documents || []).map(parseFirestoreDoc).filter(Boolean);
+            txList.forEach((tx: any) => {
+              allTransactions.push({
+                ...tx,
+                organizationId: o.id,
+                organizationName: o.name || 'Workspace',
+                timestamp: tx.createdAt || new Date().toISOString(),
+              });
+            });
+          }
+        } catch {
+          // ignore individual org billing errors
+        }
+      })
+    );
 
     // Format Users
     const users = rawUsers.map((u: any) => {
       const org = rawOrgs.find((o: any) => o.id === u.organizationId);
+      const isBanned = !!u.isBanned || bannedMap.has(u.uid || u.id);
+      const banInfo = bannedMap.get(u.uid || u.id);
+
       return {
         uid: u.uid || u.id,
         email: u.email || 'no-email@guildorbit.com',
@@ -116,19 +171,36 @@ export default async function handler(req: any, res: any) {
         organizationId: u.organizationId || '',
         organizationName: org ? org.name : (u.organizationId ? 'Guild Workspace' : 'Unassigned'),
         role: u.role || 'member',
-        status: 'active',
+        status: isBanned ? 'banned' : (u.status || 'active'),
         createdAt: u.createdAt || new Date().toISOString(),
         authProvider: u.email && u.email.endsWith('@gmail.com') ? 'google.com' : 'password',
         photoURL: u.photoURL,
-        isBanned: false,
+        isBanned,
+        banReason: u.banReason || banInfo?.reason,
+        bannedAt: u.bannedAt || banInfo?.bannedAt,
+        bannedBy: u.bannedBy || banInfo?.bannedBy,
       };
     });
 
     // Format Organizations
     const organizations = rawOrgs.map((o: any) => {
       const orgUsers = users.filter((u: any) => u.organizationId === o.id);
-      const owner = users.find((u: any) => u.uid === o.ownerId || u.organizationId === o.id && u.role === 'owner') ||
-                    users.find((u: any) => u.organizationId === o.id);
+      const owner =
+        users.find((u: any) => u.uid === o.ownerId || (u.organizationId === o.id && u.role === 'owner')) ||
+        users.find((u: any) => u.organizationId === o.id);
+
+      const billingInfo = orgBillingMap.get(o.id) || {};
+
+      // Canonical Plan normalization
+      const plan = billingInfo.plan || o.plan || 'free';
+      const billingStatus = billingInfo.status || o.billingStatus || 'active';
+      const seatsCount = billingInfo.seats || orgUsers.length || 1;
+      const maxSeats =
+        o.maxSeats ||
+        billingInfo.seats ||
+        (plan === 'enterprise' ? 100 : plan.startsWith('pro') ? 25 : 5);
+
+      const creditBalance = billingInfo.creditBalance !== undefined ? billingInfo.creditBalance : (o.creditBalance || 0);
 
       return {
         id: o.id,
@@ -138,27 +210,50 @@ export default async function handler(req: any, res: any) {
         ownerEmail: owner ? owner.email : (o.emailDomain ? `owner@${o.emailDomain}` : 'admin@guildorbit.com'),
         industry: o.industry || 'Technology',
         companySize: o.companySize || '1–10',
-        plan: o.plan || 'free',
-        billingStatus: o.billingStatus || 'active',
-        seats: orgUsers.length || 1,
-        maxSeats: o.maxSeats || (o.plan === 'enterprise' ? 100 : o.plan === 'pro_monthly' || o.plan === 'pro_annual' ? 25 : 5),
+        plan,
+        billingStatus,
+        seats: seatsCount,
+        maxSeats,
         storageLimitMb: o.storageLimitMb || 500,
-        currency: o.currency || 'INR',
-        creditBalance: o.creditBalance || 0,
+        currency: billingInfo.currency || o.currency || 'INR',
+        creditBalance,
         memberCount: orgUsers.length || 1,
         domainAutoJoin: !!o.domainAutoJoin,
         emailDomain: o.emailDomain || (owner && owner.email ? owner.email.split('@')[1] : 'guildorbit.com'),
         createdAt: o.createdAt || new Date().toISOString(),
-        updatedAt: o.updatedAt,
-        lastActiveAt: o.updatedAt || o.createdAt || new Date().toISOString(),
+        updatedAt: o.updatedAt || billingInfo.updatedAt,
+        lastActiveAt: o.updatedAt || billingInfo.updatedAt || o.createdAt || new Date().toISOString(),
+        nextBillingDate: billingInfo.nextBillingDate || null,
+        annualBonusActivated: !!billingInfo.annualBonusActivated,
+        appliedCoupon: billingInfo.appliedCoupon || null,
+        discountPercent: billingInfo.discountPercent || null,
         customOverrides: o.customOverrides || null,
         photoURL: o.photoURL,
       };
     });
 
-    // Extract Audit Logs & Transactions
-    const auditLogs: any[] = [];
-    const transactions: any[] = [];
+    // Format Audit Logs
+    const auditLogs = rawAuditLogs
+      .map((log: any) => ({
+        id: log.id,
+        timestamp: log.timestamp || log.createdAt || new Date().toISOString(),
+        actorUid: log.actorUid || 'usr_superadmin',
+        actorEmail: log.actorEmail || 'pandeyaryan28@gmail.com',
+        actorName: log.actorName || 'Aryan Pandey (Platform SuperAdmin)',
+        action: log.action || 'PLAN_OVERRIDE',
+        targetType: log.targetType || 'organization',
+        targetId: log.targetId || '',
+        targetName: log.targetName || log.targetId || 'Platform Resource',
+        previousState: log.previousState || {},
+        newState: log.newState || {},
+        reason: log.reason || 'Administrative platform modification',
+      }))
+      .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    // Format Transactions
+    const transactions = allTransactions.sort(
+      (a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
 
     return res.status(200).json({
       success: true,

@@ -8,7 +8,8 @@ import {
   Flag,
   Server,
   Building2,
-  Calendar,
+  Gift,
+  Coins,
 } from 'lucide-react';
 import type {
   AdminOrganization,
@@ -28,13 +29,31 @@ interface PlanOverrideModalProps {
 }
 
 const AVAILABLE_PLANS: { value: AdminPlanType; label: string; description: string }[] = [
-  { value: 'free', label: 'Free Tier', description: 'Default free tier (5 seats, 500MB storage)' },
-  { value: 'starter', label: 'Starter', description: 'Early-stage startup tier (10 seats, 5GB storage)' },
-  { value: 'pro_monthly', label: 'Pro (Monthly)', description: 'Full features, billed monthly (₹499 / $8.12 per seat)' },
-  { value: 'pro_annual', label: 'Pro (Annual)', description: 'Full features, billed annually (₹249.5 / $4.06 per seat)' },
-  { value: 'enterprise', label: 'Enterprise Contract', description: 'Dedicated SLA, custom quotas, priority support' },
-  { value: 'comped', label: 'Comped Lifetime', description: '100% complimentary VIP lifetime grant' },
-  { value: 'credit', label: 'Credit Wallet', description: 'Prepaid usage wallet deduction model' },
+  {
+    value: 'free',
+    label: 'Free Tier',
+    description: 'Default free tier (5 seats, 500MB storage, base tools)',
+  },
+  {
+    value: 'pro_monthly',
+    label: 'Pro (Monthly)',
+    description: '₹499 / $8.12 per seat/month · Orbit Admin access & scale seats',
+  },
+  {
+    value: 'pro_annual',
+    label: 'Pro (Annual)',
+    description: '₹249.50 / $4.06 per seat/mo (₹2,994 / $48.72 / yr, 50% off) + 1-yr HR & Accounting bonus',
+  },
+  {
+    value: 'credit',
+    label: 'Credit Wallet',
+    description: 'Prepaid usage wallet deduction model with rolling balance',
+  },
+  {
+    value: 'enterprise',
+    label: 'Enterprise Contract',
+    description: '100+ seats, custom SLA, dedicated VPC, priority support',
+  },
 ];
 
 export function PlanOverrideModal({
@@ -44,13 +63,16 @@ export function PlanOverrideModal({
   onSuccess,
 }: PlanOverrideModalProps) {
   const { adminProfile, user } = useSuperAdminAuth();
-  const adminEmail = adminProfile?.email || user?.email || 'admin@guild.so';
+  const adminEmail = adminProfile?.email || user?.email || 'pandeyaryan28@gmail.com';
 
   const [activeTab, setActiveTab] = useState<'plan' | 'quotas' | 'flags'>('plan');
   const [selectedPlan, setSelectedPlan] = useState<AdminPlanType>('free');
   const [billingStatus, setBillingStatus] = useState<any>('active');
   const [seats, setSeats] = useState<number>(5);
   const [storageLimitMb, setStorageLimitMb] = useState<number>(500);
+  const [creditBalance, setCreditBalance] = useState<number>(0);
+  const [isComped, setIsComped] = useState<boolean>(false);
+  const [compedReason, setCompedReason] = useState<string>('');
 
   // Quotas
   const [maxProjects, setMaxProjects] = useState<number>(20);
@@ -75,10 +97,21 @@ export function PlanOverrideModal({
   // Sync state when organization opens
   useEffect(() => {
     if (organization) {
-      setSelectedPlan(organization.plan || 'free');
+      const canonicalPlan: AdminPlanType = (
+        ['free', 'pro_monthly', 'pro_annual', 'credit', 'enterprise'].includes(organization.plan)
+          ? organization.plan
+          : 'free'
+      ) as AdminPlanType;
+
+      setSelectedPlan(canonicalPlan);
       setBillingStatus(organization.billingStatus || 'active');
       setSeats(organization.maxSeats || organization.seats || 5);
       setStorageLimitMb(organization.storageLimitMb || 500);
+      setCreditBalance(organization.creditBalance || 0);
+
+      const hasComped = !!organization.customOverrides?.compedReason || !!organization.customOverrides?.compedBy;
+      setIsComped(hasComped);
+      setCompedReason(organization.customOverrides?.compedReason || '');
 
       const customQuotas = organization.customOverrides?.customQuotas;
       if (customQuotas) {
@@ -105,12 +138,12 @@ export function PlanOverrideModal({
       } else {
         setFlags({
           aiAssistantEnabled: true,
-          customDomainEnabled: organization.plan === 'enterprise',
-          advancedAnalyticsEnabled: organization.plan === 'enterprise' || organization.plan.startsWith('pro'),
-          auditLogsExportEnabled: organization.plan === 'enterprise',
-          apiAccessEnabled: organization.plan === 'enterprise' || organization.plan.startsWith('pro'),
-          prioritySupport: organization.plan === 'enterprise',
-          dedicatedVpc: organization.plan === 'enterprise',
+          customDomainEnabled: canonicalPlan === 'enterprise',
+          advancedAnalyticsEnabled: canonicalPlan === 'enterprise' || canonicalPlan.startsWith('pro'),
+          auditLogsExportEnabled: canonicalPlan === 'enterprise',
+          apiAccessEnabled: canonicalPlan === 'enterprise' || canonicalPlan.startsWith('pro'),
+          prioritySupport: canonicalPlan === 'enterprise',
+          dedicatedVpc: canonicalPlan === 'enterprise',
         });
       }
 
@@ -132,17 +165,6 @@ export function PlanOverrideModal({
     setErrorMsg('');
 
     try {
-      // 1. Override Plan & Status
-      await superAdminService.overrideWorkspacePlan(
-        organization.id,
-        selectedPlan,
-        billingStatus,
-        seats,
-        reason.trim(),
-        adminEmail
-      );
-
-      // 2. Update Custom Quotas & Feature Flags
       const quotas: CustomQuotas = {
         maxProjects,
         maxGoals,
@@ -150,12 +172,22 @@ export function PlanOverrideModal({
         storageLimitMb,
       };
 
-      await superAdminService.updateCustomQuotas(
+      // 1. Override Plan, Seats, Status, Quotas, Flags in a single authoritative call
+      await superAdminService.overrideWorkspacePlan(
         organization.id,
-        quotas,
-        flags,
-        reason.trim(),
-        adminEmail
+        selectedPlan,
+        {
+          seats,
+          maxSeats: seats,
+          storageLimitMb,
+          creditBalance: selectedPlan === 'credit' ? creditBalance : organization.creditBalance,
+          billingStatus,
+          customQuotas: quotas,
+          featureFlags: flags,
+          compedReason: isComped ? (compedReason || reason.trim()) : undefined,
+          reason: reason.trim(),
+          actorEmail: adminEmail,
+        }
       );
 
       if (onSuccess) onSuccess();
@@ -173,7 +205,7 @@ export function PlanOverrideModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="cc-glass-elevated rounded-2xl w-full max-w-2xl overflow-hidden border border-border shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-surface/95 dark:bg-surface/90 rounded-2xl w-full max-w-2xl overflow-hidden border border-border shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-surface/60">
           <div className="flex items-center gap-3">
@@ -185,7 +217,7 @@ export function PlanOverrideModal({
                 <h2 className="text-base font-bold text-foreground">
                   Override Workspace Entitlements
                 </h2>
-                <PlanBadge plan={organization.plan} size="sm" />
+                <PlanBadge plan={organization.plan} size="sm" isComped={isComped} />
               </div>
               <p className="text-xs text-muted-foreground font-mono truncate max-w-md">
                 Target: <span className="text-foreground font-semibold">{organization.name}</span> ({organization.id})
@@ -255,10 +287,10 @@ export function PlanOverrideModal({
 
           {/* TAB 1: Plan & Seats */}
           {activeTab === 'plan' && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-2">
-                  Subscription Tier Override
+                  Official Guild Tier
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {AVAILABLE_PLANS.map((p) => {
@@ -286,7 +318,69 @@ export function PlanOverrideModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {/* VIP 100% Comped Waiver Toggle */}
+              <div className="p-3.5 rounded-xl border border-amber-300/40 dark:border-amber-500/30 bg-amber-500/5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Gift className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <span className="text-xs font-bold text-foreground">
+                      VIP Comped Platform Sponsorship
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsComped(!isComped)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      isComped
+                        ? 'bg-amber-500 text-white shadow-xs'
+                        : 'bg-secondary text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {isComped ? 'COMPED (100% WAIVED)' : 'NORMAL BILLING'}
+                  </button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Grants 100% complimentary platform billing waiver on the selected tier. The workspace will not be charged recurring subscription fees.
+                </p>
+                {isComped && (
+                  <input
+                    type="text"
+                    placeholder="Sponsorship rationale (e.g. Strategic Partner, Investor, Key Executive)"
+                    value={compedReason}
+                    onChange={(e) => setCompedReason(e.target.value)}
+                    className="w-full mt-2 px-3 py-1.5 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  />
+                )}
+              </div>
+
+              {/* Credit Wallet Balance Adjustment */}
+              {selectedPlan === 'credit' && (
+                <div className="p-3.5 rounded-xl border border-emerald-300/40 dark:border-emerald-500/30 bg-emerald-500/5 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-xs font-bold text-foreground">
+                      Credit Wallet Balance Adjustment
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <input
+                        type="number"
+                        min={0}
+                        step={1000}
+                        value={creditBalance}
+                        onChange={(e) => setCreditBalance(parseInt(e.target.value, 10) || 0)}
+                        className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                      {organization.currency === 'USD' ? `$${creditBalance}` : `₹${creditBalance.toLocaleString('en-IN')}`}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div>
                   <label className="block text-xs font-bold text-foreground mb-1.5">
                     Billing Status
@@ -453,7 +547,7 @@ export function PlanOverrideModal({
             <input
               type="text"
               required
-              placeholder="e.g. Enterprise expansion agreement signed; upgraded to 150 seats."
+              placeholder="e.g. Enterprise agreement verified; upgraded to 50 seats with dedicated VPC."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
@@ -499,3 +593,4 @@ export function PlanOverrideModal({
     </div>
   );
 }
+

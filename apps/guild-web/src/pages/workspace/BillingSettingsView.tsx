@@ -16,6 +16,7 @@ import {
   openRazorpayCheckout, activateSubscription, activateCreditTopUp,
   activateTrial, applyPromoCoupon, validatePromoCoupon, PROMO_COUPONS,
   ANNUAL_OFFER_END, ENTERPRISE_CONTACT_URL, FREE_SEAT_LIMIT,
+  type GracePeriodInfo,
 } from '../../lib/billing';
 import type { UserProfile, BillingCurrency } from '@guild/types';
 
@@ -65,10 +66,11 @@ function Pill({ children, className }: { children: React.ReactNode; className?: 
 }
 
 // ─── Current Plan Strip ───────────────────────────────────────────────────────
-function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency }: {
+function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency, graceInfo }: {
   billing: NonNullable<ReturnType<typeof useBilling>['billing']>;
   memberCount: number; creditBalanceDisplay: number;
   currency: BillingCurrency;
+  graceInfo?: GracePeriodInfo;
 }) {
   const pricing = getPricing(currency);
   const nextBillingDateVal = billing.nextBillingDate
@@ -109,6 +111,10 @@ function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency
     : billing.status === 'trialing'
     ? (isTrialExpired ? 'Expired' : 'Trial')
     : 'Cancelled';
+
+  const allocatedSeatsDisplay = graceInfo?.allocatedSeats === Infinity
+    ? '∞'
+    : (graceInfo?.allocatedSeats ?? (billing.plan === 'free' || isTrialExpired ? FREE_SEAT_LIMIT : (billing.seats || FREE_SEAT_LIMIT)));
 
   return (
     <Card>
@@ -156,11 +162,16 @@ function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency
           )}
           <div>
             <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Members</p>
-            <p className="text-sm font-bold text-foreground">
+            <p className="text-sm font-bold text-foreground flex items-center justify-end gap-1.5">
               {memberCount}
               <span className="text-[9px] font-medium text-muted-foreground">
-                /{billing.plan === 'free' || isTrialExpired ? FREE_SEAT_LIMIT : '∞'}
+                /{allocatedSeatsDisplay}
               </span>
+              {graceInfo?.isGracePeriodActive && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20">
+                  Grace ({graceInfo.graceDaysRemaining}d)
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -178,22 +189,32 @@ function CurrentPlanStrip({ billing, memberCount, creditBalanceDisplay, currency
 }
 
 // ─── Seat bar (free plan) ──────────────────────────────────────────────────────
-function SeatBar({ memberCount }: { memberCount: number }) {
-  const pct = Math.min((memberCount / FREE_SEAT_LIMIT) * 100, 100);
-  const atLimit = memberCount >= FREE_SEAT_LIMIT;
+function SeatBar({ memberCount, graceInfo }: { memberCount: number; graceInfo?: GracePeriodInfo }) {
+  const maxSeats = graceInfo?.allocatedSeats && graceInfo.allocatedSeats !== Infinity ? graceInfo.allocatedSeats : FREE_SEAT_LIMIT;
+  const pct = Math.min((memberCount / maxSeats) * 100, 100);
+  const atLimit = memberCount >= maxSeats;
+  const inGrace = graceInfo?.isGracePeriodActive;
+  const graceExpired = graceInfo?.isGracePeriodExpired;
+
   return (
     <Card className={atLimit ? 'border-amber-400/30 bg-amber-50/50 dark:bg-amber-500/[0.04]' : ''}>
       <div className="flex items-center mb-2.5">
         <div className="flex items-center gap-2">
-          <Users className={cn('h-3.5 w-3.5', atLimit ? 'text-amber-500' : 'text-muted-foreground')} />
-          <span className={cn('text-[11px] font-semibold', atLimit ? 'text-amber-600 dark:text-amber-400' : 'text-foreground')}>
-            {atLimit ? 'Member limit reached' : `${memberCount} / ${FREE_SEAT_LIMIT} members`}
+          <Users className={cn('h-3.5 w-3.5', atLimit ? (graceExpired ? 'text-rose-500' : 'text-amber-500') : 'text-muted-foreground')} />
+          <span className={cn('text-[11px] font-semibold', atLimit ? (graceExpired ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400') : 'text-foreground')}>
+            {inGrace
+              ? `${memberCount} / ${maxSeats} members (${graceInfo.overageCount} in grace · ${graceInfo.graceDaysRemaining}d remaining)`
+              : graceExpired
+              ? `${memberCount} / ${maxSeats} members (Grace period expired)`
+              : atLimit
+              ? 'Member limit reached'
+              : `${memberCount} / ${maxSeats} members`}
           </span>
         </div>
       </div>
       <div className="h-1 w-full rounded-full bg-border overflow-hidden">
         <motion.div
-          className={cn('h-full rounded-full', atLimit ? 'bg-amber-500' : 'bg-accent')}
+          className={cn('h-full rounded-full', atLimit ? (graceExpired ? 'bg-rose-500' : 'bg-amber-500') : 'bg-accent')}
           style={{ background: atLimit ? undefined : 'var(--accent)' }}
           initial={{ width: 0 }} animate={{ width: `${pct}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -360,7 +381,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
   const currency = detectCurrency();
   const pricing = getPricing(currency);
   const countdown = useCountdown(ANNUAL_OFFER_END);
-  const { billing, loading, memberCount, transactions, transactionsLoading,
+  const { billing, loading, memberCount, graceInfo, transactions, transactionsLoading,
     creditBalanceDisplay, creditMonthsRemaining } = useBilling(orgId, currency);
 
   const [tab, setTab] = React.useState<'plans' | 'credits'>('plans');
@@ -370,9 +391,11 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
   const [success, setSuccess] = React.useState<string | null>(null);
   const [promoCodeInput, setPromoCodeInput] = React.useState('');
 
+  const minSeats = Math.max(memberCount, 1);
+
   // Seat configuration & coupon modal state
   const [subscribeCycle, setSubscribeCycle] = React.useState<'monthly' | 'annual' | null>(null);
-  const [selectedSeats, setSelectedSeats] = React.useState<number>(1);
+  const [selectedSeats, setSelectedSeats] = React.useState<number>(minSeats);
   const [appliedCoupon, setAppliedCoupon] = React.useState<string>('');
   const [modalCouponInput, setModalCouponInput] = React.useState<string>('');
   const [modalCouponError, setModalCouponError] = React.useState<string | null>(null);
@@ -402,7 +425,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
       setModalCouponError(null);
       setModalCouponInput('');
     } else {
-      setModalCouponError("Invalid coupon. Try 'Guild99' for 99% discount!");
+      setModalCouponError("Invalid promo code. Please check and try again.");
     }
   };
 
@@ -415,11 +438,11 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
     if (!orgId || !promoCodeInput.trim()) return;
     const cleanCode = promoCodeInput.trim().toUpperCase();
 
-    // 1. Check if it's a 99% promotional coupon like Guild99
+    // 1. Check if it's a promotional coupon
     const couponCheck = validatePromoCoupon(cleanCode);
     if (couponCheck.valid && couponCheck.coupon) {
       setAppliedCoupon(couponCheck.coupon.code);
-      setSuccess(`🎉 Promo code "${couponCheck.coupon.code}" applied! 99% discount unlocked on all Pro plans.`);
+      setSuccess(`🎉 Promo code applied! ${couponCheck.coupon.discountPercent}% discount unlocked on Pro plans.`);
       setPromoCodeInput('');
       setSelectedSeats(Math.max(memberCount, 1));
       setSubscribeCycle('annual');
@@ -442,13 +465,13 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
       return;
     }
 
-    setError("Invalid coupon or trial code. Use 'Guild99' for 99% off or 'GUILD100' for a 7-day trial.");
+    setError("Invalid promo code or trial voucher. Please check and try again.");
   };
 
   const confirmSubscribe = async () => {
     if (!orgId || !subscribeCycle) return;
     const c = subscribeCycle;
-    const seatsToBuy = selectedSeats;
+    const seatsToBuy = Math.max(selectedSeats, minSeats);
     setSubscribeCycle(null);
     setProcessing(true);
     setError(null);
@@ -484,7 +507,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
         paidAmount: finalPayable,
       });
 
-      const couponNotice = couponResult.valid ? ` with ${couponResult.discountPercent}% Guild99 discount!` : '!';
+      const couponNotice = couponResult.valid ? ` with ${couponResult.discountPercent}% promo discount!` : '!';
       setSuccess(`You're now on Pro ${c === 'annual' ? 'Annual' : 'Monthly'}${couponNotice}`);
     } catch (e: any) {
       if (e?.message !== 'Payment cancelled') setError(e?.message ?? 'Payment failed. Try again.');
@@ -546,11 +569,68 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
       {billing && (
         <CurrentPlanStrip billing={billing} memberCount={memberCount}
           creditBalanceDisplay={creditBalanceDisplay}
-          currency={currency} />
+          currency={currency}
+          graceInfo={graceInfo} />
+      )}
+
+      {/* Grace Period Alert Banner (Dual-Theme Parity) */}
+      {graceInfo.isOverage && (
+        <Card className={cn(
+          'border transition-all',
+          graceInfo.isGracePeriodActive
+            ? 'border-amber-500/30 bg-amber-500/10 text-foreground'
+            : 'border-rose-500/30 bg-rose-500/10 text-foreground'
+        )}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className={cn(
+                'p-2 rounded-xl mt-0.5 shrink-0',
+                graceInfo.isGracePeriodActive
+                  ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                  : 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
+              )}>
+                <Clock className="h-4 w-4" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className={cn(
+                    'text-xs font-bold',
+                    graceInfo.isGracePeriodActive
+                      ? 'text-amber-800 dark:text-amber-300'
+                      : 'text-rose-800 dark:text-rose-300'
+                  )}>
+                    {graceInfo.isGracePeriodActive ? 'Grace Period Active' : 'Grace Period Expired'}
+                  </h4>
+                  {graceInfo.isGracePeriodActive && (
+                    <span className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                      {graceInfo.graceDaysRemaining} day{graceInfo.graceDaysRemaining !== 1 ? 's' : ''} left
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {graceInfo.isGracePeriodActive
+                    ? `Your workspace has ${memberCount} active members on a ${graceInfo.allocatedSeats}-seat plan (${graceInfo.overageCount} newly joined). Upgrade or add seats before the grace period ends to maintain uninterrupted access.`
+                    : `Your workspace has ${memberCount} active members, exceeding your ${graceInfo.allocatedSeats}-seat plan limit. Please upgrade your seats to maintain full workspace access.`}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => handleOpenSubscribeModal(cycle)}
+              className={cn(
+                'px-3.5 py-1.5 rounded-xl text-[11px] font-bold transition-all shrink-0 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm',
+                graceInfo.isGracePeriodActive
+                  ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                  : 'bg-rose-600 hover:bg-rose-500 text-white'
+              )}
+            >
+              Upgrade Seats <ArrowRight className="h-3 w-3" />
+            </button>
+          </div>
+        </Card>
       )}
 
       {/* Free seat bar */}
-      {plan === 'free' && <SeatBar memberCount={memberCount} />}
+      {plan === 'free' && <SeatBar memberCount={memberCount} graceInfo={graceInfo} />}
 
       {/* Tab bar */}
       <div className="flex gap-1 rounded-xl bg-muted border border-border p-1">
@@ -646,7 +726,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
               />
             </div>
 
-            {/* Promotional Code & Trial Section */}
+            {/* Promotional Code & Voucher Section (Obfuscated) */}
             {plan === 'free' && (
               <Card className="mt-4 border-violet-500/20 bg-violet-500/[0.02]">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -654,17 +734,17 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                     <div className="flex items-center gap-2">
                       <Tag className="h-4 w-4 text-violet-500" />
                       <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                        Have a Promo Code or Trial Voucher?
+                        Have a Promo Code or Voucher?
                       </h4>
                     </div>
                     <p className="text-[11px] text-muted-foreground">
-                      Enter <span className="font-mono font-bold text-violet-600 dark:text-violet-400">Guild99</span> for <span className="font-bold text-emerald-600 dark:text-emerald-400">99% off</span> any Pro plan, or <span className="font-mono font-bold text-violet-600 dark:text-violet-400">GUILD100</span> for a 7-day free trial.
+                      Enter your redemption code or promotional voucher to apply special discounts to your subscription.
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <input
                       type="text"
-                      placeholder="e.g. Guild99"
+                      placeholder="Enter code"
                       value={promoCodeInput}
                       onChange={(e) => setPromoCodeInput(e.target.value)}
                       disabled={processing}
@@ -803,32 +883,43 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                 </div>
 
                 {/* Seat control input */}
-                <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-muted/50 border border-border">
-                  <span className="text-[11px] font-semibold text-foreground">Number of seats</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setSelectedSeats(s => Math.max(1, s - 1))}
-                      className="p-1 rounded bg-background border border-border hover:bg-muted font-bold text-xs w-6 h-6 flex items-center justify-center text-foreground cursor-pointer"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      value={selectedSeats}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        setSelectedSeats(isNaN(val) ? 1 : Math.max(1, val));
-                      }}
-                      className="w-12 text-center text-[11px] font-bold bg-background border border-border rounded py-0.5 focus:outline-none focus:border-accent text-foreground"
-                    />
-                    <button
-                      onClick={() => setSelectedSeats(s => s + 1)}
-                      className="p-1 rounded bg-background border border-border hover:bg-muted font-bold text-xs w-6 h-6 flex items-center justify-center text-foreground cursor-pointer"
-                    >
-                      +
-                    </button>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-muted/50 border border-border">
+                    <span className="text-[11px] font-semibold text-foreground">Number of seats</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setSelectedSeats(s => Math.max(minSeats, s - 1))}
+                        disabled={selectedSeats <= minSeats}
+                        className="p-1 rounded bg-background border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs w-6 h-6 flex items-center justify-center text-foreground cursor-pointer"
+                        title={selectedSeats <= minSeats ? `Minimum ${minSeats} seats required for your current team` : undefined}
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min={minSeats}
+                        value={selectedSeats}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          setSelectedSeats(isNaN(val) ? minSeats : Math.max(minSeats, val));
+                        }}
+                        onBlur={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (isNaN(val) || val < minSeats) setSelectedSeats(minSeats);
+                        }}
+                        className="w-12 text-center text-[11px] font-bold bg-background border border-border rounded py-0.5 focus:outline-none focus:border-accent text-foreground"
+                      />
+                      <button
+                        onClick={() => setSelectedSeats(s => s + 1)}
+                        className="p-1 rounded bg-background border border-border hover:bg-muted font-bold text-xs w-6 h-6 flex items-center justify-center text-foreground cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
+                  <p className="text-[10px] text-muted-foreground pl-0.5">
+                    Minimum {minSeats} seat{minSeats > 1 ? 's' : ''} required to cover your current team ({memberCount} member{memberCount !== 1 ? 's' : ''}).
+                  </p>
                 </div>
 
                 {/* Coupon Code Section */}
@@ -839,7 +930,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                         <Sparkles className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                         <div>
                           <p className="text-[11px] font-bold">
-                            Coupon {appliedCoupon} Applied!
+                            Coupon Applied!
                           </p>
                           <p className="text-[9px] text-emerald-600 dark:text-emerald-400">
                             {couponResult.discountPercent}% promotional discount active
@@ -859,7 +950,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                       <div className="flex items-center gap-2">
                         <input
                           type="text"
-                          placeholder="Promo code (e.g. Guild99)"
+                          placeholder="Enter promo code"
                           value={modalCouponInput}
                           onChange={(e) => {
                             setModalCouponInput(e.target.value);
@@ -910,7 +1001,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                         </span>
                       </div>
                       <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-                        <span>Guild99 Discount (−{couponResult.discountPercent}%):</span>
+                        <span>Promo Discount (−{couponResult.discountPercent}%):</span>
                         <span>−{formatMoney(couponResult.discountAmount, currency)}</span>
                       </div>
                     </>

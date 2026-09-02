@@ -7,16 +7,10 @@
 import type {
   BillingStatus,
   BillingCurrency,
+  BillingPlan,
 } from '@guild/types';
 
-export type AdminPlanType =
-  | 'free'
-  | 'starter'
-  | 'pro_monthly'
-  | 'pro_annual'
-  | 'credit'
-  | 'enterprise'
-  | 'comped';
+export type AdminPlanType = BillingPlan | 'starter' | 'comped';
 
 export interface CustomQuotas {
   maxProjects?: number;
@@ -58,6 +52,9 @@ export interface AdminOrganization {
   updatedAt?: string;
   lastActiveAt?: string;
   nextBillingDate?: string | null;
+  annualBonusActivated?: boolean;
+  appliedCoupon?: string | null;
+  discountPercent?: number | null;
   customOverrides?: {
     customPlanName?: string;
     seatLimitOverride?: number;
@@ -123,281 +120,36 @@ export interface BillingTransaction {
   organizationName: string;
   amount: number;
   currency: BillingCurrency;
-  type: 'subscription_charge' | 'credit_topup' | 'refund' | 'manual_credit';
-  status: 'succeeded' | 'pending' | 'failed';
+  type: 'subscription' | 'topup' | 'deduction' | 'refund';
+  status: 'success' | 'pending' | 'failed';
   plan?: AdminPlanType;
   seats?: number;
   timestamp: string;
   invoiceId?: string;
-  gateway?: 'razorpay' | 'stripe' | 'manual';
+  description?: string;
+  appliedCoupon?: string | null;
+  discountPercent?: number | null;
+  razorpayPaymentId?: string;
+  razorpayOrderId?: string;
 }
-
-// ── Real Guild Initial State ───────────────────────────────────────────────────
-
-const REAL_INITIAL_ORGS: AdminOrganization[] = [
-  {
-    id: '167RNZJcBxeMHo1dGUQr',
-    name: 'Guild Orbit',
-    ownerId: 'fQ6c26dOhcVzhgA5n8jDyaHS5bv2',
-    ownerName: 'Aryan Pandey',
-    ownerEmail: 'aryan@guildorbit.com',
-    industry: 'Technology',
-    companySize: '1–10',
-    plan: 'pro_annual',
-    billingStatus: 'active',
-    seats: 5,
-    maxSeats: 25,
-    storageLimitMb: 51200,
-    currency: 'INR',
-    creditBalance: 0,
-    memberCount: 5,
-    domainAutoJoin: true,
-    emailDomain: 'guildorbit.com',
-    createdAt: '2026-06-14T01:53:25.076Z',
-    lastActiveAt: '2026-09-02T12:00:00.000Z',
-    customOverrides: {
-      customPlanName: 'Guild Orbit Team',
-      featureFlags: { aiAssistantEnabled: true, customDomainEnabled: true, advancedAnalyticsEnabled: true, auditLogsExportEnabled: true },
-    },
-  },
-  {
-    id: 'vCt1D1UVAXZ9r2C6jbwR',
-    name: 'Guild Orbit (Primary)',
-    ownerId: 'mD2e3URkzHdNqLrhwPHtRdQrHBn1',
-    ownerName: 'Aryan Pandey',
-    ownerEmail: 'aaryanpandey28@gmail.com',
-    industry: 'Technology',
-    companySize: '1–10',
-    plan: 'enterprise',
-    billingStatus: 'active',
-    seats: 1,
-    maxSeats: 100,
-    storageLimitMb: 102400,
-    currency: 'INR',
-    creditBalance: 0,
-    memberCount: 1,
-    domainAutoJoin: false,
-    emailDomain: 'gmail.com',
-    createdAt: '2026-05-15T12:09:45.239Z',
-    lastActiveAt: '2026-09-02T14:30:00.000Z',
-    customOverrides: {
-      customPlanName: 'Founder Enterprise Tier',
-      featureFlags: { aiAssistantEnabled: true, customDomainEnabled: true, advancedAnalyticsEnabled: true, auditLogsExportEnabled: true, prioritySupport: true, dedicatedVpc: true },
-    },
-  },
-  {
-    id: 'qBVBLNdba8xwpp65gF8i',
-    name: 'Vizitor',
-    ownerId: 'gfVUg8TEzLPrlT2Nep4SWqjp4hU2',
-    ownerName: 'Gaurav',
-    ownerEmail: 'startupkarwaan@gmail.com',
-    industry: 'Technology',
-    companySize: '1–10',
-    plan: 'free',
-    billingStatus: 'active',
-    seats: 1,
-    maxSeats: 5,
-    storageLimitMb: 500,
-    currency: 'INR',
-    creditBalance: 0,
-    memberCount: 1,
-    domainAutoJoin: false,
-    emailDomain: 'gmail.com',
-    createdAt: '2026-07-15T13:19:42.733Z',
-    lastActiveAt: '2026-08-20T10:15:00.000Z',
-  },
-  {
-    id: 'duWMIXpvbTrrLUaUCjne',
-    name: 'Test Team',
-    ownerId: 'xTkcdSRUywSO9DlSwOvGDYGyS1s1',
-    ownerName: 'Raj Jain',
-    ownerEmail: 'rajisded@icloud.com',
-    industry: 'Technology',
-    companySize: '1–10',
-    plan: 'free',
-    billingStatus: 'active',
-    seats: 1,
-    maxSeats: 5,
-    storageLimitMb: 500,
-    currency: 'INR',
-    creditBalance: 0,
-    memberCount: 1,
-    domainAutoJoin: true,
-    emailDomain: 'icloud.com',
-    createdAt: '2026-07-12T09:25:46.798Z',
-    lastActiveAt: '2026-08-15T16:00:00.000Z',
-  },
-  {
-    id: 'uep6HBb8xtZTHXtkDv1I',
-    name: 'Testing Space',
-    ownerId: '07n6ufTPVsOMxfWuybvNih1CHZS2',
-    ownerName: 'Arun Singh',
-    ownerEmail: 'test@guildhq.space',
-    industry: 'Other',
-    companySize: '1–10',
-    plan: 'free',
-    billingStatus: 'active',
-    seats: 1,
-    maxSeats: 5,
-    storageLimitMb: 500,
-    currency: 'INR',
-    creditBalance: 0,
-    memberCount: 1,
-    domainAutoJoin: false,
-    emailDomain: 'guildhq.space',
-    createdAt: '2026-05-29T04:20:09.713Z',
-    lastActiveAt: '2026-07-01T12:00:00.000Z',
-  },
-];
-
-const REAL_INITIAL_USERS: AdminUser[] = [
-  {
-    uid: 'mD2e3URkzHdNqLrhwPHtRdQrHBn1',
-    email: 'aaryanpandey28@gmail.com',
-    fullName: 'Aryan',
-    username: 'pandeyaryan28',
-    designation: 'Founder',
-    employeeId: 'emp01',
-    organizationId: 'vCt1D1UVAXZ9r2C6jbwR',
-    organizationName: 'Guild Orbit (Primary)',
-    role: 'owner',
-    status: 'active',
-    createdAt: '2026-05-15T12:10:18.725Z',
-    authProvider: 'google.com',
-    photoURL: 'https://firebasestorage.googleapis.com/v0/b/guild-app-f6c28.firebasestorage.app/o/profileImages%2FmD2e3URkzHdNqLrhwPHtRdQrHBn1%2Fpf.jpg?alt=media&token=d05f3de3-1cd5-4da8-aa55-91b4f6a82394',
-    isPlatformAdmin: true,
-  },
-  {
-    uid: 'usr_aryan_pandey',
-    email: 'aryan@guildorbit.com',
-    fullName: 'Aryan Pandey',
-    username: 'pandeyaryan',
-    designation: 'Platform Owner',
-    employeeId: 'EMP-001',
-    organizationId: '167RNZJcBxeMHo1dGUQr',
-    organizationName: 'Guild Orbit',
-    role: 'owner',
-    status: 'active',
-    createdAt: '2026-06-14T01:55:00.000Z',
-    authProvider: 'password',
-    isPlatformAdmin: true,
-  },
-  {
-    uid: 'gfVUg8TEzLPrlT2Nep4SWqjp4hU2',
-    email: 'startupkarwaan@gmail.com',
-    fullName: 'Gaurav',
-    username: 'gaurav',
-    designation: 'Director',
-    employeeId: 'test',
-    organizationId: 'qBVBLNdba8xwpp65gF8i',
-    organizationName: 'Vizitor',
-    role: 'owner',
-    status: 'active',
-    createdAt: '2026-07-15T13:19:42.733Z',
-    authProvider: 'google.com',
-  },
-  {
-    uid: 'xTkcdSRUywSO9DlSwOvGDYGyS1s1',
-    email: 'rajisded@icloud.com',
-    fullName: 'Raj Jain',
-    username: 'rajisded',
-    designation: 'Employee',
-    employeeId: 'HJA929',
-    organizationId: 'duWMIXpvbTrrLUaUCjne',
-    organizationName: 'Test Team',
-    role: 'owner',
-    status: 'active',
-    createdAt: '2026-07-12T09:25:46.798Z',
-    authProvider: 'password',
-  },
-  {
-    uid: 'usr_arun_singh',
-    email: 'test@guildhq.space',
-    fullName: 'Arun Singh',
-    username: 'arun',
-    designation: 'Member',
-    employeeId: 'EMP-005',
-    organizationId: 'uep6HBb8xtZTHXtkDv1I',
-    organizationName: 'Testing Space',
-    role: 'owner',
-    status: 'active',
-    createdAt: '2026-05-29T04:20:09.713Z',
-    authProvider: 'password',
-  },
-  {
-    uid: 'usr_devloper',
-    email: 'beingaryanpandey@gmail.com',
-    fullName: 'Devloper',
-    username: 'dev',
-    designation: 'Software Engineer',
-    employeeId: 'EMP-002',
-    organizationId: '167RNZJcBxeMHo1dGUQr',
-    organizationName: 'Guild Orbit',
-    role: 'member',
-    status: 'active',
-    createdAt: '2026-06-20T10:00:00.000Z',
-    authProvider: 'google.com',
-  },
-  {
-    uid: 'usr_cto',
-    email: 'cto@guildorbit.com',
-    fullName: 'CTO',
-    username: 'cto',
-    designation: 'Chief Technology Officer',
-    employeeId: 'EMP-003',
-    organizationId: '167RNZJcBxeMHo1dGUQr',
-    organizationName: 'Guild Orbit',
-    role: 'member',
-    status: 'active',
-    createdAt: '2026-06-25T14:30:00.000Z',
-    authProvider: 'password',
-  },
-  {
-    uid: 'vu0XZOPPYBfksRZuhS0RlE9Zhe93',
-    email: 'career@guildorbit.com',
-    fullName: 'Career',
-    username: 'career',
-    designation: 'HR',
-    employeeId: 'EMP-004',
-    organizationId: '167RNZJcBxeMHo1dGUQr',
-    organizationName: 'Guild Orbit',
-    role: 'member',
-    status: 'active',
-    createdAt: '2026-06-30T15:03:34.438Z',
-    authProvider: 'password',
-  },
-  {
-    uid: 'usr_hello',
-    email: 'hello@guildorbit.com',
-    fullName: 'Hello',
-    username: 'hello',
-    designation: 'Team Member',
-    employeeId: 'EMP-006',
-    organizationId: '167RNZJcBxeMHo1dGUQr',
-    organizationName: 'Guild Orbit',
-    role: 'member',
-    status: 'active',
-    createdAt: '2026-07-01T09:00:00.000Z',
-    authProvider: 'password',
-  },
-];
 
 // ── SuperAdminDataService Class ───────────────────────────────────────────────
 
 export class SuperAdminDataService {
   private static instance: SuperAdminDataService;
 
-  private orgs: AdminOrganization[] = [...REAL_INITIAL_ORGS];
-  private users: AdminUser[] = [...REAL_INITIAL_USERS];
+  private orgs: AdminOrganization[] = [];
+  private users: AdminUser[] = [];
   private auditLogs: SuperAdminAuditLog[] = [];
   private transactions: BillingTransaction[] = [];
+
+  private isInitialLoading = true;
+  private isPolling = false;
 
   private orgListeners: Set<(orgs: AdminOrganization[]) => void> = new Set();
   private userListeners: Set<(users: AdminUser[]) => void> = new Set();
   private auditListeners: Set<(logs: SuperAdminAuditLog[]) => void> = new Set();
   private txListeners: Set<(txs: BillingTransaction[]) => void> = new Set();
-
-  private isPolling = false;
 
   public static getInstance(): SuperAdminDataService {
     if (!SuperAdminDataService.instance) {
@@ -407,22 +159,33 @@ export class SuperAdminDataService {
     return SuperAdminDataService.instance;
   }
 
+  public getIsLoading(): boolean {
+    return this.isInitialLoading;
+  }
+
   private async fetchLiveFirestoreData() {
     try {
       const res = await fetch('/api/command-center/data');
       if (res.ok) {
         const data = await res.json();
-        if (data.success && Array.isArray(data.organizations) && data.organizations.length > 0) {
-          this.orgs = data.organizations;
-          this.notifyOrgListeners();
-        }
-        if (data.success && Array.isArray(data.users) && data.users.length > 0) {
-          this.users = data.users;
-          this.notifyUserListeners();
-        }
-        if (data.success && Array.isArray(data.auditLogs)) {
-          this.auditLogs = data.auditLogs;
-          this.notifyAuditListeners();
+        if (data.success) {
+          if (Array.isArray(data.organizations)) {
+            this.orgs = data.organizations;
+            this.notifyOrgListeners();
+          }
+          if (Array.isArray(data.users)) {
+            this.users = data.users;
+            this.notifyUserListeners();
+          }
+          if (Array.isArray(data.auditLogs)) {
+            this.auditLogs = data.auditLogs;
+            this.notifyAuditListeners();
+          }
+          if (Array.isArray(data.transactions)) {
+            this.transactions = data.transactions;
+            this.notifyTxListeners();
+          }
+          this.isInitialLoading = false;
         }
       }
     } catch (err) {
@@ -436,9 +199,23 @@ export class SuperAdminDataService {
     this.fetchLiveFirestoreData();
 
     if (typeof window !== 'undefined') {
+      // Periodic background polling every 6 seconds for live telemetry
       window.setInterval(() => {
         this.fetchLiveFirestoreData();
-      }, 15000);
+      }, 6000);
+
+      // Instant refresh on tab focus / visibility return
+      window.addEventListener('focus', () => {
+        this.fetchLiveFirestoreData();
+      });
+
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            this.fetchLiveFirestoreData();
+          }
+        });
+      }
     }
   }
 
@@ -447,10 +224,16 @@ export class SuperAdminDataService {
   }
 
   public async getAllOrganizations(): Promise<AdminOrganization[]> {
+    if (this.orgs.length === 0) {
+      await this.fetchLiveFirestoreData();
+    }
     return [...this.orgs];
   }
 
   public async getAllUsers(): Promise<AdminUser[]> {
+    if (this.users.length === 0) {
+      await this.fetchLiveFirestoreData();
+    }
     return [...this.users];
   }
 
@@ -515,9 +298,11 @@ export class SuperAdminDataService {
           seats?: number;
           maxSeats?: number;
           storageLimitMb?: number;
+          creditBalance?: number;
           billingStatus?: BillingStatus;
           customQuotas?: CustomQuotas;
           featureFlags?: FeatureFlags;
+          compedReason?: string;
           reason: string;
           actorEmail?: string;
         },
@@ -526,28 +311,30 @@ export class SuperAdminDataService {
     actorEmailParam?: string
   ): Promise<void> {
     const orgIndex = this.orgs.findIndex((o) => o.id === orgId);
-    if (orgIndex === -1) throw new Error(`Organization ${orgId} not found`);
+    const prevOrg = orgIndex !== -1 ? this.orgs[orgIndex] : null;
 
-    const prevOrg = this.orgs[orgIndex];
-
-    let billingStatus: BillingStatus = prevOrg.billingStatus;
-    let seats: number = prevOrg.seats;
-    let maxSeats: number = prevOrg.maxSeats;
-    let storageLimitMb: number = prevOrg.storageLimitMb;
+    let billingStatus: BillingStatus = prevOrg?.billingStatus || 'active';
+    let seats: number = prevOrg?.seats || 5;
+    let maxSeats: number = prevOrg?.maxSeats || 5;
+    let storageLimitMb: number = prevOrg?.storageLimitMb || 500;
+    let creditBalance: number | undefined = prevOrg?.creditBalance;
     let reason = 'Manual platform plan modification';
     let actorEmail = 'pandeyaryan28@gmail.com';
-    let customQuotas = prevOrg.customOverrides?.customQuotas;
-    let featureFlags = prevOrg.customOverrides?.featureFlags;
+    let customQuotas = prevOrg?.customOverrides?.customQuotas;
+    let featureFlags = prevOrg?.customOverrides?.featureFlags;
+    let compedReason = prevOrg?.customOverrides?.compedReason;
 
     if (typeof overridesOrStatus === 'object' && overridesOrStatus !== null) {
       if (overridesOrStatus.billingStatus) billingStatus = overridesOrStatus.billingStatus;
       if (overridesOrStatus.seats !== undefined) seats = overridesOrStatus.seats;
       if (overridesOrStatus.maxSeats !== undefined) maxSeats = overridesOrStatus.maxSeats;
       if (overridesOrStatus.storageLimitMb !== undefined) storageLimitMb = overridesOrStatus.storageLimitMb;
+      if (overridesOrStatus.creditBalance !== undefined) creditBalance = overridesOrStatus.creditBalance;
       if (overridesOrStatus.reason) reason = overridesOrStatus.reason;
       if (overridesOrStatus.actorEmail) actorEmail = overridesOrStatus.actorEmail;
       if (overridesOrStatus.customQuotas) customQuotas = overridesOrStatus.customQuotas;
       if (overridesOrStatus.featureFlags) featureFlags = overridesOrStatus.featureFlags;
+      if (overridesOrStatus.compedReason !== undefined) compedReason = overridesOrStatus.compedReason;
     } else {
       if (overridesOrStatus) billingStatus = overridesOrStatus as BillingStatus;
       if (seatsParam !== undefined) {
@@ -558,26 +345,30 @@ export class SuperAdminDataService {
       if (actorEmailParam) actorEmail = actorEmailParam;
     }
 
-    const updatedOrg: AdminOrganization = {
-      ...prevOrg,
-      plan: newPlan,
-      billingStatus,
-      seats,
-      maxSeats,
-      storageLimitMb,
-      customOverrides: {
-        ...prevOrg.customOverrides,
-        customQuotas,
-        featureFlags,
-        compedAt: newPlan === 'comped' ? new Date().toISOString() : prevOrg.customOverrides?.compedAt,
-        compedBy: newPlan === 'comped' ? actorEmail : prevOrg.customOverrides?.compedBy,
-        compedReason: newPlan === 'comped' ? reason : prevOrg.customOverrides?.compedReason,
-      },
-      updatedAt: new Date().toISOString(),
+    const updatedCustomOverrides = {
+      ...prevOrg?.customOverrides,
+      customQuotas,
+      featureFlags,
+      compedReason,
+      compedBy: compedReason ? actorEmail : undefined,
+      compedAt: compedReason ? (prevOrg?.customOverrides?.compedAt || new Date().toISOString()) : undefined,
     };
 
-    this.orgs[orgIndex] = updatedOrg;
-    this.notifyOrgListeners();
+    if (orgIndex !== -1 && prevOrg) {
+      const updatedOrg: AdminOrganization = {
+        ...prevOrg,
+        plan: newPlan,
+        billingStatus,
+        seats,
+        maxSeats,
+        storageLimitMb,
+        creditBalance: creditBalance !== undefined ? creditBalance : prevOrg.creditBalance,
+        customOverrides: updatedCustomOverrides,
+        updatedAt: new Date().toISOString(),
+      };
+      this.orgs[orgIndex] = updatedOrg;
+      this.notifyOrgListeners();
+    }
 
     const auditEntry: SuperAdminAuditLog = {
       id: `audit_${Date.now()}`,
@@ -588,9 +379,9 @@ export class SuperAdminDataService {
       action: 'PLAN_OVERRIDE',
       targetType: 'organization',
       targetId: orgId,
-      targetName: prevOrg.name,
-      previousState: { plan: prevOrg.plan, maxSeats: prevOrg.maxSeats },
-      newState: { plan: newPlan, maxSeats: updatedOrg.maxSeats },
+      targetName: prevOrg?.name || orgId,
+      previousState: { plan: prevOrg?.plan, maxSeats: prevOrg?.maxSeats, billingStatus: prevOrg?.billingStatus },
+      newState: { plan: newPlan, maxSeats, billingStatus, storageLimitMb, compedReason },
       reason,
     };
 
@@ -603,16 +394,20 @@ export class SuperAdminDataService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           organizationId: orgId,
+          organizationName: prevOrg?.name,
           plan: newPlan,
-          billingStatus: updatedOrg.billingStatus,
-          seats: updatedOrg.seats,
-          maxSeats: updatedOrg.maxSeats,
-          storageLimitMb: updatedOrg.storageLimitMb,
-          customOverrides: updatedOrg.customOverrides,
+          billingStatus,
+          seats,
+          maxSeats,
+          storageLimitMb,
+          creditBalance,
+          customOverrides: updatedCustomOverrides,
           reason,
           adminEmail: actorEmail,
+          previousState: auditEntry.previousState,
         }),
       });
+      await this.refresh();
     } catch (err) {
       console.warn('[superAdminService] Failed to persist subscription to Firestore API:', err);
     }
@@ -626,9 +421,7 @@ export class SuperAdminDataService {
     actorEmailParam?: string
   ): Promise<void> {
     const orgIndex = this.orgs.findIndex((o) => o.id === orgId);
-    if (orgIndex === -1) throw new Error(`Organization ${orgId} not found`);
-
-    const prevOrg = this.orgs[orgIndex];
+    const prevOrg = orgIndex !== -1 ? this.orgs[orgIndex] : null;
     let flags: FeatureFlags | undefined = undefined;
     let reason = 'Custom quota modification';
     let actorEmail = 'pandeyaryan28@gmail.com';
@@ -642,20 +435,24 @@ export class SuperAdminDataService {
       if (reasonParam) actorEmail = reasonParam;
     }
 
-    this.orgs[orgIndex] = {
-      ...prevOrg,
-      storageLimitMb: quotas.storageLimitMb ?? prevOrg.storageLimitMb,
-      customOverrides: {
-        ...prevOrg.customOverrides,
-        customQuotas: {
-          ...prevOrg.customOverrides?.customQuotas,
-          ...quotas,
-        },
-        featureFlags: flags || prevOrg.customOverrides?.featureFlags,
+    const updatedCustomOverrides = {
+      ...prevOrg?.customOverrides,
+      customQuotas: {
+        ...prevOrg?.customOverrides?.customQuotas,
+        ...quotas,
       },
-      updatedAt: new Date().toISOString(),
+      featureFlags: flags || prevOrg?.customOverrides?.featureFlags,
     };
-    this.notifyOrgListeners();
+
+    if (orgIndex !== -1 && prevOrg) {
+      this.orgs[orgIndex] = {
+        ...prevOrg,
+        storageLimitMb: quotas.storageLimitMb ?? prevOrg.storageLimitMb,
+        customOverrides: updatedCustomOverrides,
+        updatedAt: new Date().toISOString(),
+      };
+      this.notifyOrgListeners();
+    }
 
     const auditEntry: SuperAdminAuditLog = {
       id: `audit_${Date.now()}`,
@@ -666,11 +463,29 @@ export class SuperAdminDataService {
       action: 'QUOTA_OVERRIDE',
       targetType: 'organization',
       targetId: orgId,
-      targetName: prevOrg.name,
+      targetName: prevOrg?.name || orgId,
       reason,
     };
     this.auditLogs.unshift(auditEntry);
     this.notifyAuditListeners();
+
+    try {
+      await fetch('/api/command-center/subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organizationId: orgId,
+          organizationName: prevOrg?.name,
+          storageLimitMb: quotas.storageLimitMb,
+          customOverrides: updatedCustomOverrides,
+          reason,
+          adminEmail: actorEmail,
+        }),
+      });
+      await this.refresh();
+    } catch (err) {
+      console.warn('[superAdminService] Quota API sync error:', err);
+    }
   }
 
   public async setUserBanStatus(
@@ -680,18 +495,19 @@ export class SuperAdminDataService {
     actorEmail?: string
   ): Promise<void> {
     const userIndex = this.users.findIndex((u) => u.uid === uid);
-    if (userIndex === -1) throw new Error(`User ${uid} not found`);
+    const prevUser = userIndex !== -1 ? this.users[userIndex] : null;
 
-    const prevUser = this.users[userIndex];
-    this.users[userIndex] = {
-      ...prevUser,
-      isBanned,
-      status: isBanned ? 'banned' : 'active',
-      banReason: isBanned ? reason : undefined,
-      bannedAt: isBanned ? new Date().toISOString() : undefined,
-      bannedBy: isBanned ? (actorEmail || 'Platform SuperAdmin') : undefined,
-    };
-    this.notifyUserListeners();
+    if (userIndex !== -1 && prevUser) {
+      this.users[userIndex] = {
+        ...prevUser,
+        isBanned,
+        status: isBanned ? 'banned' : 'active',
+        banReason: isBanned ? reason : undefined,
+        bannedAt: isBanned ? new Date().toISOString() : undefined,
+        bannedBy: isBanned ? (actorEmail || 'Platform SuperAdmin') : undefined,
+      };
+      this.notifyUserListeners();
+    }
 
     const auditEntry: SuperAdminAuditLog = {
       id: `audit_${Date.now()}`,
@@ -702,15 +518,34 @@ export class SuperAdminDataService {
       action: 'USER_BAN_STATUS',
       targetType: 'user',
       targetId: uid,
-      targetName: prevUser.fullName || prevUser.email,
-      previousState: { isBanned: prevUser.isBanned, status: prevUser.status },
+      targetName: prevUser?.fullName || prevUser?.email || uid,
+      previousState: { isBanned: prevUser?.isBanned, status: prevUser?.status },
       newState: { isBanned, status: isBanned ? 'banned' : 'active' },
       reason,
     };
 
     this.auditLogs.unshift(auditEntry);
     this.notifyAuditListeners();
+
+    try {
+      await fetch('/api/command-center/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid,
+          action: isBanned ? 'ban' : 'unban',
+          isBanned,
+          reason,
+          adminEmail: actorEmail || 'pandeyaryan28@gmail.com',
+          userName: prevUser?.fullName || prevUser?.email,
+        }),
+      });
+      await this.refresh();
+    } catch (err) {
+      console.warn('[superAdminService] User ban status API sync error:', err);
+    }
   }
 }
 
 export const superAdminService = SuperAdminDataService.getInstance();
+

@@ -555,6 +555,10 @@ export interface BillingInfo {
   appliedCoupon?: string | null;
   /** Applied discount percentage, if any (e.g. 99) */
   discountPercent?: number | null;
+  /** Grace period expiration timestamp when member count exceeds plan capacity */
+  gracePeriodUntil?: Timestamp | null;
+  /** Number of members exceeding the plan capacity when grace period was activated */
+  overageCount?: number;
   updatedAt: Timestamp;
 }
 

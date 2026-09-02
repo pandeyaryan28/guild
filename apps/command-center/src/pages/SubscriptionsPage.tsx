@@ -4,14 +4,9 @@ import {
   CreditCard,
   Building2,
   Sliders,
-  DollarSign,
-  Clock,
   Sparkles,
   AlertCircle,
-  CheckCircle2,
-  HardDrive,
-  Users,
-  Layers,
+  Gift,
 } from 'lucide-react';
 import {
   superAdminService,
@@ -20,7 +15,6 @@ import {
 import {
   computeWorkspaceMrr,
   formatCurrency,
-  formatNumber,
 } from '../lib/metricsCalculator';
 import { FilterToolbar, SelectOption } from '../components/common/FilterToolbar';
 import { PlanBadge } from '../components/common/PlanBadge';
@@ -29,12 +23,10 @@ import { PlanOverrideModal } from '../components/subscriptions/PlanOverrideModal
 
 const PLAN_OPTIONS: SelectOption[] = [
   { value: 'free', label: 'Free Tier' },
-  { value: 'starter', label: 'Starter' },
   { value: 'pro_monthly', label: 'Pro (Monthly)' },
   { value: 'pro_annual', label: 'Pro (Annual)' },
-  { value: 'enterprise', label: 'Enterprise' },
-  { value: 'comped', label: 'Comped Lifetime' },
   { value: 'credit', label: 'Credit Wallet' },
+  { value: 'enterprise', label: 'Enterprise' },
 ];
 
 const STATUS_OPTIONS: SelectOption[] = [
@@ -112,13 +104,14 @@ export function SubscriptionsPage() {
   let pastDueCount = 0;
 
   orgs.forEach((o) => {
+    const isCompedOrg = !!o.customOverrides?.compedReason || !!o.customOverrides?.compedBy;
     const { inr, usd } = computeWorkspaceMrr(o);
     totalMrrInr += inr;
     totalMrrUsd += usd;
-    if (o.billingStatus === 'active' && o.plan !== 'free' && o.plan !== 'comped') {
+    if (o.billingStatus === 'active' && o.plan !== 'free' && !isCompedOrg) {
       payingCount++;
     }
-    if (o.plan === 'comped') compedCount++;
+    if (isCompedOrg) compedCount++;
     if (o.billingStatus === 'past_due') pastDueCount++;
   });
 
@@ -169,7 +162,7 @@ export function SubscriptionsPage() {
 
       {/* Summary Metrics Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-2xl bg-surface/80 border border-border flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase">Estimated MRR</span>
             <div className="text-lg font-extrabold text-foreground font-mono">
@@ -179,7 +172,7 @@ export function SubscriptionsPage() {
           <CreditCard className="w-5 h-5 text-primary opacity-80" />
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-surface/80 border border-border flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase">Paying Subscriptions</span>
             <div className="text-lg font-extrabold text-success font-mono">{payingCount}</div>
@@ -189,17 +182,17 @@ export function SubscriptionsPage() {
           </span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-surface/80 border border-border flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-muted-foreground uppercase">Comped Lifetime</span>
-            <div className="text-lg font-extrabold text-amber-700 dark:text-amber-300 font-mono">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase">Comped / Sponsored</span>
+            <div className="text-lg font-extrabold text-amber-600 dark:text-amber-400 font-mono">
               {compedCount}
             </div>
           </div>
-          <Sparkles className="w-5 h-5 text-amber-500 opacity-80" />
+          <Gift className="w-5 h-5 text-amber-500 opacity-80" />
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-surface/80 border border-border flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-muted-foreground uppercase">Past Due Overdue</span>
             <div className={`text-lg font-extrabold font-mono ${pastDueCount > 0 ? 'text-danger' : 'text-foreground'}`}>
@@ -261,10 +254,11 @@ export function SubscriptionsPage() {
                   const maxSeats = org.maxSeats || 5;
                   const used = org.memberCount || 1;
 
+                  const isCompedOrg = !!org.customOverrides?.compedReason || !!org.customOverrides?.compedBy;
                   const hasCustomOverrides =
                     !!org.customOverrides?.customPlanName ||
                     !!org.customOverrides?.seatLimitOverride ||
-                    !!org.customOverrides?.compedReason;
+                    isCompedOrg;
 
                   return (
                     <tr
@@ -290,7 +284,7 @@ export function SubscriptionsPage() {
 
                       {/* Current Tier */}
                       <td className="py-3 px-4">
-                        <PlanBadge plan={org.plan} size="sm" />
+                        <PlanBadge plan={org.plan} size="sm" isComped={isCompedOrg} />
                       </td>
 
                       {/* Billing Status */}
@@ -306,13 +300,23 @@ export function SubscriptionsPage() {
                       {/* Calculated MRR */}
                       <td className="py-3 px-4 font-mono text-[11px] font-bold text-foreground">
                         {formatCurrency(mrrValue, currency)}
+                        {org.appliedCoupon && (
+                          <span className="ml-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-mono font-normal">
+                            ({org.appliedCoupon})
+                          </span>
+                        )}
                       </td>
 
                       {/* Overrides Status */}
                       <td className="py-3 px-4">
-                        {hasCustomOverrides ? (
+                        {isCompedOrg ? (
                           <span className="inline-flex items-center gap-1 font-mono text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                            <Sparkles className="w-3 h-3 text-amber-500" />
+                            <Gift className="w-3 h-3 text-amber-500" />
+                            <span>VIP COMPED</span>
+                          </span>
+                        ) : hasCustomOverrides ? (
+                          <span className="inline-flex items-center gap-1 font-mono text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20">
+                            <Sparkles className="w-3 h-3 text-purple-500" />
                             <span>CUSTOM QUOTA</span>
                           </span>
                         ) : (
@@ -351,3 +355,4 @@ export function SubscriptionsPage() {
     </div>
   );
 }
+
