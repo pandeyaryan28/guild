@@ -1,0 +1,235 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/geist";
+@import "./styles/AetherGrid.css";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   OKLCH DESIGN TOKENS — 100% LIGHT & DARK MODE DUAL-THEME PARITY
+   Strictly compliant with Guild AGENTS.md & GEMINI.md design standards
+───────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --radius: 0.75rem;
+
+  /* Light Theme (Crisp, High-Legibility Control Canvas) */
+  --bg-primary: oklch(0.985 0.002 264);
+  --bg-secondary: oklch(0.960 0.005 264);
+  --bg-tertiary: oklch(0.935 0.008 264);
+
+  --surface: oklch(1 0 0);
+  --surface-elevated: oklch(1 0 0);
+  --surface-hover: oklch(0.970 0.005 264);
+
+  --text-primary: oklch(0.18 0.02 264);
+  --text-secondary: oklch(0.38 0.02 264);
+  --text-muted: oklch(0.55 0.02 264);
+  --text-disabled: oklch(0.72 0.01 264);
+
+  --border-default: oklch(0.88 0.01 264);
+  --border-strong: oklch(0.75 0.02 264);
+  --border-subtle: oklch(0.93 0.005 264);
+
+  --accent: oklch(0.55 0.18 260);
+  --accent-foreground: oklch(0.99 0 0);
+
+  --success: oklch(0.60 0.16 150);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.70 0.16 70);
+  --warning-foreground: oklch(0.15 0.02 70);
+  --danger: oklch(0.60 0.22 25);
+  --danger-foreground: oklch(0.99 0 0);
+  --info: oklch(0.60 0.16 240);
+  --info-foreground: oklch(0.99 0 0);
+
+  /* Semantic Bindings */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-elevated);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-foreground);
+  --secondary: var(--bg-secondary);
+  --secondary-foreground: var(--text-secondary);
+  --muted: var(--bg-tertiary);
+  --muted-foreground: var(--text-muted);
+  --border: var(--border-default);
+  --input: var(--border-default);
+  --ring: var(--accent);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--danger-foreground);
+}
+
+.dark {
+  /* Dark Theme (Layered Obsidian Command Center, High-Contrast Borders) */
+  --bg-primary: oklch(0.12 0.02 260);
+  --bg-secondary: oklch(0.16 0.02 260);
+  --bg-tertiary: oklch(0.20 0.02 260);
+
+  --surface: oklch(0.18 0.02 260);
+  --surface-elevated: oklch(0.22 0.02 260);
+  --surface-hover: oklch(0.25 0.02 260);
+
+  --text-primary: oklch(0.96 0.01 260);
+  --text-secondary: oklch(0.78 0.02 260);
+  --text-muted: oklch(0.60 0.02 260);
+  --text-disabled: oklch(0.42 0.02 260);
+
+  --border-default: oklch(0.28 0.02 260);
+  --border-strong: oklch(0.38 0.03 260);
+  --border-subtle: oklch(0.22 0.02 260);
+
+  --accent: oklch(0.65 0.16 260);
+  --accent-foreground: oklch(0.99 0 0);
+
+  --success: oklch(0.65 0.16 150);
+  --warning: oklch(0.75 0.16 70);
+  --danger: oklch(0.65 0.22 25);
+  --info: oklch(0.65 0.16 240);
+}
+
+@theme inline {
+  --font-sans: 'Geist Variable', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Menlo', 'Monaco', monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-hover: var(--surface-hover);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-border: var(--border);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-subtle: var(--border-subtle);
+
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BASE STYLES & TYPOGRAPHY
+───────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    border-color: var(--border);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+    margin: 0;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: oklch(from var(--primary) l c h / 25%);
+    color: var(--foreground);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DUAL-THEME UTILITIES & GLASSMORPHISM
+───────────────────────────────────────────────────────────────────────────── */
+
+@layer utilities {
+  /* Dynamic dot grid canvas */
+  .bg-dot-grid {
+    background-image: radial-gradient(circle at 1px 1px, oklch(from var(--text-primary) l c h / 6%) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  /* Dual-theme compliant command glass container */
+  .cc-glass {
+    background: oklch(from var(--surface) l c h / 85%);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    border: 1px solid var(--border-default);
+    box-shadow: 0 4px 20px -2px oklch(0 0 0 / 5%);
+  }
+
+  .dark .cc-glass {
+    background: oklch(from var(--surface) l c h / 65%);
+    backdrop-filter: blur(28px) saturate(1.8);
+    -webkit-backdrop-filter: blur(28px) saturate(1.8);
+    border: 1px solid var(--border-default);
+    box-shadow: 0 8px 32px -4px oklch(0 0 0 / 40%);
+  }
+
+  /* Elevated glass (Drawers, Modals, Popovers) */
+  .cc-glass-elevated {
+    background: oklch(from var(--surface-elevated) l c h / 95%);
+    backdrop-filter: blur(32px) saturate(1.8);
+    -webkit-backdrop-filter: blur(32px) saturate(1.8);
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 20px 48px -8px oklch(0 0 0 / 12%);
+  }
+
+  .dark .cc-glass-elevated {
+    background: oklch(from var(--surface-elevated) l c h / 88%);
+    backdrop-filter: blur(36px) saturate(2.0);
+    -webkit-backdrop-filter: blur(36px) saturate(2.0);
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 24px 64px -12px oklch(0 0 0 / 60%);
+  }
+
+  /* Interactive card hover */
+  .cc-card-interactive {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cc-card-interactive:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow: 0 8px 24px -4px oklch(from var(--primary) l c h / 12%);
+  }
+
+  /* High-density terminal scrollbar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: oklch(from var(--text-primary) l c h / 16%);
+    border-radius: 9999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: oklch(from var(--text-primary) l c h / 32%);
+  }
+}

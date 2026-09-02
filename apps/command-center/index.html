@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- Strict Anti-Discovery & Anti-Indexing Directives -->
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate" />
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate" />
+    <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate" />
+    
+    <!-- Internal App Shell Meta -->
+    <title>Command Center</title>
+    
+    <!-- Defense-in-Depth Cache Directives -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- Stealth Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Inline Early Theme Initializer (Dual-Theme Parity - Eliminates FOUC) -->
+    <script>
+      (function() {
+        try {
+          const stored = localStorage.getItem('guild-command-center-theme') || localStorage.getItem('guild_theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (stored === 'dark' || (!stored && prefersDark)) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.style.colorScheme = 'dark';
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch (e) {
+          // Graceful fallback
+        }
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

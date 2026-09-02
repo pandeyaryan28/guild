@@ -10,9 +10,11 @@
     "dev:guild": "npm run dev --workspace=apps/guild-web",
     "dev:admin": "npm run dev --workspace=apps/admin-web",
     "dev:landing": "npm run dev --workspace=apps/landing-web",
+    "dev:command-center": "npm run dev --workspace=apps/command-center",
     "build:guild": "npm run build --workspace=apps/guild-web",
     "build:admin": "npm run build --workspace=apps/admin-web",
     "build:landing": "npm run build --workspace=apps/landing-web",
+    "build:command-center": "npm run build --workspace=apps/command-center",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present"

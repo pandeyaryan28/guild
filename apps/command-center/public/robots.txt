@@ -1,0 +1,4 @@
+# Guild Super-Admin Command Center
+# STRICT INTERNAL ACCESS ONLY - ZERO PUBLIC INDEXING / CRAWLING
+User-agent: *
+Disallow: /
