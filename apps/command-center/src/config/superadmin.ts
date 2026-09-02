@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * @file superadmin.ts
  * Centralized RBAC configuration and whitelist definitions for Guild Command Center.

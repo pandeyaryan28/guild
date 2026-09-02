@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import { createHmac, timingSafeEqual } from 'crypto';
+import dataHandler from './api/command-center/data';
+import subHandler from './api/command-center/subscription';
 
 function devAuthPlugin() {
   const MASTER_CODE = process.env.SUPERADMIN_MASTER_CODE || process.env.ADMIN_CODE || '2809';
@@ -31,6 +33,19 @@ function devAuthPlugin() {
     } catch {
       return { valid: false };
     }
+  }
+
+  function adaptRes(res: any) {
+    res.status = (code: number) => {
+      res.statusCode = code;
+      return res;
+    };
+    res.json = (data: any) => {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(data));
+      return res;
+    };
+    return res;
   }
 
   return {
@@ -149,6 +164,31 @@ function devAuthPlugin() {
               res.statusCode = 401;
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ success: false, error: 'Invalid session' }));
+            }
+          });
+          return;
+        }
+
+        if (req.url === '/api/command-center/data') {
+          adaptRes(res);
+          await dataHandler(req, res);
+          return;
+        }
+
+        if (req.url === '/api/command-center/subscription' && req.method === 'POST') {
+          let bodyStr = '';
+          req.on('data', (chunk: any) => {
+            bodyStr += chunk;
+          });
+          req.on('end', async () => {
+            try {
+              req.body = JSON.parse(bodyStr || '{}');
+              adaptRes(res);
+              await subHandler(req, res);
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: false, error: err.message }));
             }
           });
           return;
