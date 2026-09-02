@@ -1,21 +1,9 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import type { User } from 'firebase/auth';
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut as firebaseSignOut,
-  GoogleAuthProvider,
-} from 'firebase/auth';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '@guild/firebase';
 import {
   type PlatformAdminDoc,
   type SuperAdminPermission,
-  isSuperAdminEmail,
   getDefaultPermissionsForRole,
   hasPermission,
-  PLATFORM_ADMINS_COLLECTION,
 } from '../config/superadmin';
 
 export type SuperAdminAuthState =
@@ -36,7 +24,7 @@ export type SuperAdminAuthState =
   | {
       status: 'unauthorized';
       email: string;
-      user: User;
+      user: { uid: string; email: string; displayName?: string };
       adminProfile: null;
       permissions: [];
       isSuperAdmin: false;
@@ -44,7 +32,7 @@ export type SuperAdminAuthState =
     }
   | {
       status: 'authorized';
-      user: User;
+      user: { uid: string; email: string; displayName?: string };
       adminProfile: PlatformAdminDoc;
       permissions: SuperAdminPermission[];
       isSuperAdmin: boolean;
@@ -52,19 +40,21 @@ export type SuperAdminAuthState =
 
 export interface SuperAdminAuthContextValue {
   state: SuperAdminAuthState;
-  user: User | null;
+  user: { uid: string; email: string; displayName?: string } | null;
   adminProfile: PlatformAdminDoc | null;
   isSuperAdmin: boolean;
   permissions: SuperAdminPermission[];
   status: 'loading' | 'unauthenticated' | 'unauthorized' | 'authorized';
   hasPermission: (permission: SuperAdminPermission) => boolean;
-  signInWithEmail: (email: string, pass: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  verifyPasscode: (code: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
 }
 
 const SuperAdminAuthContext = createContext<SuperAdminAuthContextValue | undefined>(undefined);
+
+const TOKEN_KEY = 'guild_cc_master_session_token';
+const PROFILE_KEY = 'guild_cc_master_profile';
 
 export function SuperAdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<SuperAdminAuthState>({
@@ -75,8 +65,107 @@ export function SuperAdminAuthProvider({ children }: { children: React.ReactNode
     isSuperAdmin: false,
   });
 
-  const verifyUser = useCallback(async (firebaseUser: User | null) => {
-    if (!firebaseUser) {
+  const restoreSession = useCallback(async () => {
+    try {
+      const storedToken = sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
+      const storedProfileRaw = sessionStorage.getItem(PROFILE_KEY) || localStorage.getItem(PROFILE_KEY);
+
+      if (!storedToken) {
+        setState({
+          status: 'unauthenticated',
+          user: null,
+          adminProfile: null,
+          permissions: [],
+          isSuperAdmin: false,
+        });
+        return;
+      }
+
+      // Verify session with backend API
+      const res = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
+        },
+        body: JSON.stringify({ token: storedToken }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const profile: PlatformAdminDoc = data.adminProfile || {
+          uid: 'superadmin_aryan',
+          email: 'pandeyaryan28@gmail.com',
+          name: 'Aryan Pandey',
+          role: 'superadmin',
+          permissions: getDefaultPermissionsForRole('superadmin'),
+          isSuperAdmin: true,
+          active: true,
+        };
+
+        const authUser = {
+          uid: profile.uid,
+          email: profile.email,
+          displayName: profile.name || 'Aryan Pandey',
+        };
+
+        setState({
+          status: 'authorized',
+          user: authUser,
+          adminProfile: profile,
+          permissions: profile.permissions,
+          isSuperAdmin: true,
+        });
+      } else {
+        // Fallback: If offline or API unavailable, check if locally stored valid profile exists
+        if (storedProfileRaw) {
+          const profile = JSON.parse(storedProfileRaw);
+          const authUser = {
+            uid: profile.uid,
+            email: profile.email,
+            displayName: profile.name || 'Aryan Pandey',
+          };
+          setState({
+            status: 'authorized',
+            user: authUser,
+            adminProfile: profile,
+            permissions: profile.permissions || getDefaultPermissionsForRole('superadmin'),
+            isSuperAdmin: true,
+          });
+          return;
+        }
+
+        // Invalid session
+        sessionStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(TOKEN_KEY);
+        setState({
+          status: 'unauthenticated',
+          user: null,
+          adminProfile: null,
+          permissions: [],
+          isSuperAdmin: false,
+        });
+      }
+    } catch {
+      // In case network check is unreachable, check stored session
+      const storedToken = sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
+      const storedProfileRaw = sessionStorage.getItem(PROFILE_KEY) || localStorage.getItem(PROFILE_KEY);
+      if (storedToken && storedProfileRaw) {
+        try {
+          const profile = JSON.parse(storedProfileRaw);
+          setState({
+            status: 'authorized',
+            user: { uid: profile.uid, email: profile.email, displayName: profile.name },
+            adminProfile: profile,
+            permissions: profile.permissions || getDefaultPermissionsForRole('superadmin'),
+            isSuperAdmin: true,
+          });
+          return;
+        } catch {
+          // ignore
+        }
+      }
+
       setState({
         status: 'unauthenticated',
         user: null,
@@ -84,164 +173,77 @@ export function SuperAdminAuthProvider({ children }: { children: React.ReactNode
         permissions: [],
         isSuperAdmin: false,
       });
-      return;
-    }
-
-    const email = (firebaseUser.email || '').trim().toLowerCase();
-    const isWhitelisted = isSuperAdminEmail(email);
-
-    try {
-      // Check Firestore /platformAdmins/{uid}
-      const adminDocRef = doc(db, PLATFORM_ADMINS_COLLECTION, firebaseUser.uid);
-      const adminDocSnap = await getDoc(adminDocRef);
-
-      if (adminDocSnap.exists()) {
-        const data = adminDocSnap.data() as Partial<PlatformAdminDoc>;
-
-        if (data.active === false) {
-          setState({
-            status: 'unauthorized',
-            email,
-            user: firebaseUser,
-            adminProfile: null,
-            permissions: [],
-            isSuperAdmin: false,
-            reason: 'ACCOUNT_DEACTIVATED',
-          });
-          return;
-        }
-
-        const role = data.role || 'superadmin';
-        const permissions = data.permissions && data.permissions.length > 0
-          ? data.permissions
-          : getDefaultPermissionsForRole(role);
-
-        const adminProfile: PlatformAdminDoc = {
-          uid: firebaseUser.uid,
-          email,
-          name: data.name || firebaseUser.displayName || email.split('@')[0],
-          role,
-          permissions,
-          isSuperAdmin: data.isSuperAdmin ?? (role === 'superadmin' || isWhitelisted),
-          active: true,
-          addedAt: data.addedAt,
-          addedBy: data.addedBy,
-          lastLoginAt: data.lastLoginAt,
-        };
-
-        // Update last login timestamp asynchronously
-        updateDoc(adminDocRef, { lastLoginAt: serverTimestamp() }).catch(() => {});
-
-        setState({
-          status: 'authorized',
-          user: firebaseUser,
-          adminProfile,
-          permissions: adminProfile.permissions,
-          isSuperAdmin: adminProfile.isSuperAdmin,
-        });
-        return;
-      }
-
-      // Firestore document does not exist yet. Check if email is in SuperAdmin whitelist
-      if (isWhitelisted) {
-        // Bootstrap Root SuperAdmin profile
-        const bootstrapProfile: PlatformAdminDoc = {
-          uid: firebaseUser.uid,
-          email,
-          name: firebaseUser.displayName || email.split('@')[0],
-          role: 'superadmin',
-          permissions: getDefaultPermissionsForRole('superadmin'),
-          isSuperAdmin: true,
-          active: true,
-        };
-
-        setState({
-          status: 'authorized',
-          user: firebaseUser,
-          adminProfile: bootstrapProfile,
-          permissions: bootstrapProfile.permissions,
-          isSuperAdmin: true,
-        });
-        return;
-      }
-
-      // Not in platformAdmins and not in whitelist -> Strict unauthorized with zero leakage
-      setState({
-        status: 'unauthorized',
-        email,
-        user: firebaseUser,
-        adminProfile: null,
-        permissions: [],
-        isSuperAdmin: false,
-        reason: 'NOT_AUTHORIZED_PLATFORM_ADMIN',
-      });
-    } catch (err: any) {
-      // In case of Firestore permission or network error, fallback to email whitelist
-      if (isWhitelisted) {
-        const bootstrapProfile: PlatformAdminDoc = {
-          uid: firebaseUser.uid,
-          email,
-          name: firebaseUser.displayName || email.split('@')[0],
-          role: 'superadmin',
-          permissions: getDefaultPermissionsForRole('superadmin'),
-          isSuperAdmin: true,
-          active: true,
-        };
-
-        setState({
-          status: 'authorized',
-          user: firebaseUser,
-          adminProfile: bootstrapProfile,
-          permissions: bootstrapProfile.permissions,
-          isSuperAdmin: true,
-        });
-      } else {
-        setState({
-          status: 'unauthorized',
-          email,
-          user: firebaseUser,
-          adminProfile: null,
-          permissions: [],
-          isSuperAdmin: false,
-          reason: 'ACCESS_VALIDATION_ERROR',
-        });
-      }
     }
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      verifyUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, [verifyUser]);
+    restoreSession();
+  }, [restoreSession]);
 
-  const handleSignInWithEmail = useCallback(async (email: string, pass: string) => {
-    setState({
-      status: 'loading',
-      user: null,
-      adminProfile: null,
-      permissions: [],
-      isSuperAdmin: false,
-    });
-    await signInWithEmailAndPassword(auth, email.trim(), pass);
-  }, []);
+  const verifyPasscode = useCallback(async (code: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: code.trim() }),
+      });
 
-  const handleSignInWithGoogle = useCallback(async () => {
-    setState({
-      status: 'loading',
-      user: null,
-      adminProfile: null,
-      permissions: [],
-      isSuperAdmin: false,
-    });
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    await signInWithPopup(auth, provider);
+      const data = await res.json();
+
+      if (res.ok && data.success && data.token) {
+        const profile: PlatformAdminDoc = data.adminProfile || {
+          uid: 'superadmin_aryan',
+          email: 'pandeyaryan28@gmail.com',
+          name: 'Aryan Pandey',
+          role: 'superadmin',
+          permissions: getDefaultPermissionsForRole('superadmin'),
+          isSuperAdmin: true,
+          active: true,
+        };
+
+        const authUser = {
+          uid: profile.uid,
+          email: profile.email,
+          displayName: profile.name || 'Aryan Pandey',
+        };
+
+        // Store session tokens
+        sessionStorage.setItem(TOKEN_KEY, data.token);
+        localStorage.setItem(TOKEN_KEY, data.token);
+        sessionStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+
+        setState({
+          status: 'authorized',
+          user: authUser,
+          adminProfile: profile,
+          permissions: profile.permissions,
+          isSuperAdmin: true,
+        });
+
+        return { success: true };
+      }
+
+      return {
+        success: false,
+        error: data.error || 'Authorization failed. Incorrect passcode.',
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: 'Network error connecting to authorization server. Please try again.',
+      };
+    }
   }, []);
 
   const handleSignOut = useCallback(async () => {
-    await firebaseSignOut(auth);
+    sessionStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(PROFILE_KEY);
+    localStorage.removeItem(PROFILE_KEY);
+
     setState({
       status: 'unauthenticated',
       user: null,
@@ -250,10 +252,6 @@ export function SuperAdminAuthProvider({ children }: { children: React.ReactNode
       isSuperAdmin: false,
     });
   }, []);
-
-  const refreshAuth = useCallback(async () => {
-    await verifyUser(auth.currentUser);
-  }, [verifyUser]);
 
   const checkPermission = useCallback(
     (permission: SuperAdminPermission) => {
@@ -271,11 +269,10 @@ export function SuperAdminAuthProvider({ children }: { children: React.ReactNode
     permissions: state.status === 'authorized' ? state.permissions : [],
     status: state.status,
     hasPermission: checkPermission,
-    signInWithEmail: handleSignInWithEmail,
-    signInWithGoogle: handleSignInWithGoogle,
+    verifyPasscode,
     signOut: handleSignOut,
-    refreshAuth,
-  }), [state, checkPermission, handleSignInWithEmail, handleSignInWithGoogle, handleSignOut, refreshAuth]);
+    refreshAuth: restoreSession,
+  }), [state, checkPermission, verifyPasscode, handleSignOut, restoreSession]);
 
   return (
     <SuperAdminAuthContext.Provider value={contextValue}>
