@@ -551,6 +551,10 @@ export interface BillingInfo {
   annualBonusActivated?: boolean;
   /** Secret code used to activate the trial, if any */
   trialCodeUsed?: string | null;
+  /** Applied promotional coupon code, if any (e.g. Guild99) */
+  appliedCoupon?: string | null;
+  /** Applied discount percentage, if any (e.g. 99) */
+  discountPercent?: number | null;
   updatedAt: Timestamp;
 }
 
@@ -568,5 +572,9 @@ export interface BillingTransaction {
   /** Razorpay payment/order ID for traceability */
   razorpayPaymentId?: string;
   razorpayOrderId?: string;
+  /** Applied promotional coupon code, if any */
+  appliedCoupon?: string | null;
+  /** Applied discount percentage, if any */
+  discountPercent?: number | null;
   createdAt: Timestamp;
 }

@@ -100,6 +100,86 @@ export function fromSmallestUnit(amount: number, currency: BillingCurrency): num
   return amount / 100;
 }
 
+// ─── Promo & Discount Coupons ───────────────────────────────────────────────
+
+export interface PromoCoupon {
+  code: string;
+  name: string;
+  discountPercent: number; // e.g. 99 for 99% off
+  description: string;
+  applicablePlans?: ('pro_monthly' | 'pro_annual')[];
+}
+
+export const PROMO_COUPONS: Record<string, PromoCoupon> = {
+  GUILD99: {
+    code: 'GUILD99',
+    name: 'Guild99 Special Launch Promo',
+    discountPercent: 99,
+    description: 'Special 99% discount across all Guild Pro plans',
+    applicablePlans: ['pro_monthly', 'pro_annual'],
+  },
+};
+
+/**
+ * Validates and applies a coupon code against a base amount.
+ * Returns discount details and final payable amount.
+ */
+export function applyPromoCoupon(
+  rawCode: string,
+  originalAmount: number
+): {
+  valid: boolean;
+  coupon?: PromoCoupon;
+  discountPercent: number;
+  discountAmount: number;
+  finalAmount: number;
+  error?: string;
+} {
+  const code = (rawCode || '').trim().toUpperCase();
+  if (!code) {
+    return {
+      valid: false,
+      discountPercent: 0,
+      discountAmount: 0,
+      finalAmount: originalAmount,
+    };
+  }
+
+  const coupon = PROMO_COUPONS[code];
+  if (!coupon) {
+    return {
+      valid: false,
+      discountPercent: 0,
+      discountAmount: 0,
+      finalAmount: originalAmount,
+      error: 'Invalid or expired coupon code',
+    };
+  }
+
+  // Calculate 99% discount
+  const discountAmount = Math.round(((originalAmount * coupon.discountPercent) / 100) * 100) / 100;
+  // Floor to minimum 1 rupee / dollar / cent to keep payment gateway valid
+  const finalAmount = Math.max(1, Math.round((originalAmount - discountAmount) * 100) / 100);
+
+  return {
+    valid: true,
+    coupon,
+    discountPercent: coupon.discountPercent,
+    discountAmount,
+    finalAmount,
+  };
+}
+
+export function validatePromoCoupon(rawCode: string): { valid: boolean; coupon?: PromoCoupon; error?: string } {
+  const code = (rawCode || '').trim().toUpperCase();
+  if (!code) return { valid: false };
+  const coupon = PROMO_COUPONS[code];
+  if (coupon) {
+    return { valid: true, coupon };
+  }
+  return { valid: false, error: 'Invalid or expired coupon code' };
+}
+
 // ─── Firestore Helpers ────────────────────────────────────────────────────────
 
 const billingDocRef = (orgId: string) =>
@@ -306,6 +386,9 @@ export async function activateSubscription(params: {
   razorpayPaymentId: string;
   razorpayOrderId: string;
   razorpaySignature: string;
+  appliedCoupon?: string | null;
+  discountPercent?: number | null;
+  paidAmount?: number;
 }): Promise<void> {
   const now = serverTimestamp();
   const nextBillingDate = new Date();
@@ -321,6 +404,8 @@ export async function activateSubscription(params: {
     nextBillingDate: null, // will be set via Firestore Timestamp
     razorpaySubscriptionId: null,
     annualBonusActivated: params.plan === 'pro_annual',
+    appliedCoupon: params.appliedCoupon || null,
+    discountPercent: params.discountPercent || null,
     updatedAt: now,
   };
 
@@ -329,22 +414,36 @@ export async function activateSubscription(params: {
     nextBillingDate: new Date(nextBillingDate),
   }, { merge: true });
 
+  const isDiscounted = !!params.appliedCoupon && (params.discountPercent || 0) > 0;
+  const baseDescription = params.plan === 'pro_annual'
+    ? `Annual Plan — ${params.seats} seat${params.seats > 1 ? 's' : ''}`
+    : `Monthly Plan — ${params.seats} seat${params.seats > 1 ? 's' : ''}`;
+
+  const description = isDiscounted
+    ? `${baseDescription} (${params.appliedCoupon} −${params.discountPercent}% Promo)`
+    : baseDescription;
+
+  const defaultTotal = params.seats * (
+    params.plan === 'pro_annual'
+      ? getPricing(params.currency).annualTotal
+      : getPricing(params.currency).monthly
+  );
+
+  const finalAmountInSmallestUnit = params.paidAmount !== undefined
+    ? toSmallestUnit(params.paidAmount, params.currency)
+    : toSmallestUnit(defaultTotal, params.currency);
+
   // Log the transaction
   await addDoc(transactionsRef(params.orgId), {
     id: '',
     orgId: params.orgId,
-    description: params.plan === 'pro_annual'
-      ? `Annual Plan — ${params.seats} seat${params.seats > 1 ? 's' : ''}`
-      : `Monthly Plan — ${params.seats} seat${params.seats > 1 ? 's' : ''}`,
-    amount: params.seats * toSmallestUnit(
-      params.plan === 'pro_annual'
-        ? getPricing(params.currency).annualTotal
-        : getPricing(params.currency).monthly,
-      params.currency
-    ),
+    description,
+    amount: finalAmountInSmallestUnit,
     currency: params.currency,
     type: 'subscription',
     status: 'success',
+    appliedCoupon: params.appliedCoupon || null,
+    discountPercent: params.discountPercent || null,
     razorpayPaymentId: params.razorpayPaymentId,
     razorpayOrderId: params.razorpayOrderId,
     createdAt: now,

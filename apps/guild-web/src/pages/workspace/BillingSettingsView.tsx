@@ -7,13 +7,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   CreditCard, CheckCircle2, AlertCircle, Loader2, ArrowRight,
   Gift, Clock, TrendingUp, Wallet, History, Star, Users, Zap,
+  Tag, Sparkles, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBilling } from '../../hooks/useBilling';
 import {
   detectCurrency, getPricing, formatMoney, toSmallestUnit,
   openRazorpayCheckout, activateSubscription, activateCreditTopUp,
-  activateTrial,
+  activateTrial, applyPromoCoupon, validatePromoCoupon, PROMO_COUPONS,
   ANNUAL_OFFER_END, ENTERPRISE_CONTACT_URL, FREE_SEAT_LIMIT,
 } from '../../lib/billing';
 import type { UserProfile, BillingCurrency } from '@guild/types';
@@ -367,11 +368,14 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
   const [processing, setProcessing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
-  const [trialCode, setTrialCode] = React.useState('');
+  const [promoCodeInput, setPromoCodeInput] = React.useState('');
 
-  // Seat configuration modal state
+  // Seat configuration & coupon modal state
   const [subscribeCycle, setSubscribeCycle] = React.useState<'monthly' | 'annual' | null>(null);
   const [selectedSeats, setSelectedSeats] = React.useState<number>(1);
+  const [appliedCoupon, setAppliedCoupon] = React.useState<string>('');
+  const [modalCouponInput, setModalCouponInput] = React.useState<string>('');
+  const [modalCouponError, setModalCouponError] = React.useState<string | null>(null);
 
   const nextBillingDateVal = billing?.nextBillingDate
     ? ((billing.nextBillingDate as any).toDate?.() ?? new Date((billing.nextBillingDate as any)))
@@ -385,23 +389,60 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
 
   const handleOpenSubscribeModal = (c: 'monthly' | 'annual') => {
     setSelectedSeats(Math.max(memberCount, 1));
+    setModalCouponError(null);
     setSubscribeCycle(c);
   };
 
-  const handleActivateTrial = async () => {
-    if (!orgId || !trialCode) return;
-    if (trialCode !== 'GUILD100') {
-      setError('Invalid trial code. Please check and try again.');
+  const handleApplyModalCoupon = () => {
+    const raw = modalCouponInput.trim().toUpperCase();
+    if (!raw) return;
+    const validation = validatePromoCoupon(raw);
+    if (validation.valid && validation.coupon) {
+      setAppliedCoupon(validation.coupon.code);
+      setModalCouponError(null);
+      setModalCouponInput('');
+    } else {
+      setModalCouponError("Invalid coupon. Try 'Guild99' for 99% discount!");
+    }
+  };
+
+  const handleRemoveModalCoupon = () => {
+    setAppliedCoupon('');
+    setModalCouponError(null);
+  };
+
+  const handleRedeemMainCode = async () => {
+    if (!orgId || !promoCodeInput.trim()) return;
+    const cleanCode = promoCodeInput.trim().toUpperCase();
+
+    // 1. Check if it's a 99% promotional coupon like Guild99
+    const couponCheck = validatePromoCoupon(cleanCode);
+    if (couponCheck.valid && couponCheck.coupon) {
+      setAppliedCoupon(couponCheck.coupon.code);
+      setSuccess(`🎉 Promo code "${couponCheck.coupon.code}" applied! 99% discount unlocked on all Pro plans.`);
+      setPromoCodeInput('');
+      setSelectedSeats(Math.max(memberCount, 1));
+      setSubscribeCycle('annual');
       return;
     }
-    setProcessing(true); setError(null);
-    try {
-      await activateTrial({ orgId, currency, trialCode });
-      setSuccess('7-day Pro trial successfully activated!');
-      setTrialCode('');
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to activate trial. Please try again.');
-    } finally { setProcessing(false); }
+
+    // 2. Check if it's a 7-day Pro trial code
+    if (cleanCode === 'GUILD100') {
+      setProcessing(true);
+      setError(null);
+      try {
+        await activateTrial({ orgId, currency, trialCode: cleanCode });
+        setSuccess('7-day Pro trial successfully activated!');
+        setPromoCodeInput('');
+      } catch (e: any) {
+        setError(e?.message ?? 'Failed to activate trial. Please try again.');
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+
+    setError("Invalid coupon or trial code. Use 'Guild99' for 99% off or 'GUILD100' for a 7-day trial.");
   };
 
   const confirmSubscribe = async () => {
@@ -409,26 +450,47 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
     const c = subscribeCycle;
     const seatsToBuy = selectedSeats;
     setSubscribeCycle(null);
-    setProcessing(true); setError(null);
+    setProcessing(true);
+    setError(null);
+
     try {
-      const total = seatsToBuy * (c === 'annual' ? pricing.annualTotal : pricing.monthly);
+      const baseTotal = seatsToBuy * (c === 'annual' ? pricing.annualTotal : pricing.monthly);
+      const couponResult = applyPromoCoupon(appliedCoupon, baseTotal);
+      const finalPayable = couponResult.valid ? couponResult.finalAmount : baseTotal;
+
+      const desc = couponResult.valid
+        ? `Guild Pro ${c === 'annual' ? 'Annual' : 'Monthly'} (${seatsToBuy} seats) — ${couponResult.coupon?.name} (${couponResult.discountPercent}% OFF)`
+        : `Guild Pro ${c === 'annual' ? 'Annual' : 'Monthly'} (${seatsToBuy} seats)`;
+
       const res = await openRazorpayCheckout({
-        amountInSmallestUnit: toSmallestUnit(total, currency),
-        currency, receipt: `sub_${orgId}_${Date.now()}`,
-        description: `Guild Pro ${c === 'annual' ? 'Annual' : 'Monthly'} (${seatsToBuy} seats)`,
-        userName: profile.fullName, userEmail: profile.email,
+        amountInSmallestUnit: toSmallestUnit(finalPayable, currency),
+        currency,
+        receipt: `sub_${orgId}_${Date.now()}`,
+        description: desc,
+        userName: profile.fullName,
+        userEmail: profile.email,
       });
+
       await activateSubscription({
-        orgId, plan: c === 'annual' ? 'pro_annual' : 'pro_monthly',
-        seats: seatsToBuy, currency,
+        orgId,
+        plan: c === 'annual' ? 'pro_annual' : 'pro_monthly',
+        seats: seatsToBuy,
+        currency,
         razorpayPaymentId: res.razorpay_payment_id,
         razorpayOrderId: res.razorpay_order_id,
         razorpaySignature: res.razorpay_signature,
+        appliedCoupon: couponResult.valid ? couponResult.coupon?.code : null,
+        discountPercent: couponResult.valid ? couponResult.discountPercent : null,
+        paidAmount: finalPayable,
       });
-      setSuccess(`You're on Pro ${c === 'annual' ? 'Annual' : 'Monthly'}`);
+
+      const couponNotice = couponResult.valid ? ` with ${couponResult.discountPercent}% Guild99 discount!` : '!';
+      setSuccess(`You're now on Pro ${c === 'annual' ? 'Annual' : 'Monthly'}${couponNotice}`);
     } catch (e: any) {
       if (e?.message !== 'Payment cancelled') setError(e?.message ?? 'Payment failed. Try again.');
-    } finally { setProcessing(false); }
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleTopUp = async (packId: 'starter' | 'growth') => {
@@ -584,37 +646,37 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
               />
             </div>
 
-            {/* Trial Activation Code Section */}
+            {/* Promotional Code & Trial Section */}
             {plan === 'free' && (
               <Card className="mt-4 border-violet-500/20 bg-violet-500/[0.02]">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <Gift className="h-4 w-4 text-violet-500" />
+                      <Tag className="h-4 w-4 text-violet-500" />
                       <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                        Have a Trial Code?
+                        Have a Promo Code or Trial Voucher?
                       </h4>
                     </div>
                     <p className="text-[11px] text-muted-foreground">
-                      Unlock a 7-day trial of the Pro plan with all premium features. No credit card required.
+                      Enter <span className="font-mono font-bold text-violet-600 dark:text-violet-400">Guild99</span> for <span className="font-bold text-emerald-600 dark:text-emerald-400">99% off</span> any Pro plan, or <span className="font-mono font-bold text-violet-600 dark:text-violet-400">GUILD100</span> for a 7-day free trial.
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <input
                       type="text"
-                      placeholder="Enter code"
-                      value={trialCode}
-                      onChange={(e) => setTrialCode(e.target.value.toUpperCase().trim())}
+                      placeholder="e.g. Guild99"
+                      value={promoCodeInput}
+                      onChange={(e) => setPromoCodeInput(e.target.value)}
                       disabled={processing}
-                      className="w-40 px-3 py-1.5 text-[11px] font-mono font-bold bg-background border border-border rounded-xl focus:outline-none focus:border-violet-500 uppercase text-foreground"
+                      className="w-40 px-3 py-1.5 text-[11px] font-mono font-bold bg-background border border-border rounded-xl focus:outline-none focus:border-violet-500 uppercase text-foreground placeholder:text-muted-foreground/50"
                     />
                     <button
-                      onClick={handleActivateTrial}
-                      disabled={processing || !trialCode}
+                      onClick={handleRedeemMainCode}
+                      disabled={processing || !promoCodeInput.trim()}
                       className="px-4 py-1.5 rounded-xl text-[11px] font-bold bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                       {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                      Activate
+                      Apply
                     </button>
                   </div>
                 </div>
@@ -710,99 +772,184 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
         )}
       </div>
 
-      {/* Seat Config Modal */}
+      {/* Seat Config & Coupon Modal */}
       <AnimatePresence>
-        {subscribeCycle && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm"
-          >
+        {subscribeCycle && (() => {
+          const baseTotal = selectedSeats * (subscribeCycle === 'annual' ? pricing.annualTotal : pricing.monthly);
+          const couponResult = applyPromoCoupon(appliedCoupon, baseTotal);
+          const isCouponActive = couponResult.valid;
+          const finalPayable = isCouponActive ? couponResult.finalAmount : baseTotal;
+
+          return (
             <motion.div
-              initial={{ scale: 0.95, y: 10 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 10 }}
-              className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl space-y-5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm"
             >
-              <div className="space-y-1.5">
-                <h3 className="text-sm font-bold text-foreground">Configure Seats</h3>
-                <p className="text-[11px] text-muted-foreground">
-                  Select the number of seats for your organization.
-                </p>
-              </div>
+              <motion.div
+                initial={{ scale: 0.95, y: 10 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 10 }}
+                className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl space-y-5"
+              >
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-bold text-foreground">
+                    Configure Pro {subscribeCycle === 'annual' ? 'Annual' : 'Monthly'}
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Select the number of seats for your organization.
+                  </p>
+                </div>
 
-              {/* Seat control input */}
-              <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-muted/50 border border-border">
-                <span className="text-[11px] font-semibold text-foreground">Number of seats</span>
-                <div className="flex items-center gap-2">
+                {/* Seat control input */}
+                <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-muted/50 border border-border">
+                  <span className="text-[11px] font-semibold text-foreground">Number of seats</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedSeats(s => Math.max(1, s - 1))}
+                      className="p-1 rounded bg-background border border-border hover:bg-muted font-bold text-xs w-6 h-6 flex items-center justify-center text-foreground cursor-pointer"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      value={selectedSeats}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setSelectedSeats(isNaN(val) ? 1 : Math.max(1, val));
+                      }}
+                      className="w-12 text-center text-[11px] font-bold bg-background border border-border rounded py-0.5 focus:outline-none focus:border-accent text-foreground"
+                    />
+                    <button
+                      onClick={() => setSelectedSeats(s => s + 1)}
+                      className="p-1 rounded bg-background border border-border hover:bg-muted font-bold text-xs w-6 h-6 flex items-center justify-center text-foreground cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Coupon Code Section */}
+                <div className="space-y-2">
+                  {isCouponActive ? (
+                    <div className="flex items-center justify-between p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                        <div>
+                          <p className="text-[11px] font-bold">
+                            Coupon {appliedCoupon} Applied!
+                          </p>
+                          <p className="text-[9px] text-emerald-600 dark:text-emerald-400">
+                            {couponResult.discountPercent}% promotional discount active
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleRemoveModalCoupon}
+                        className="p-1 rounded-md hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 cursor-pointer"
+                        title="Remove coupon"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Promo code (e.g. Guild99)"
+                          value={modalCouponInput}
+                          onChange={(e) => {
+                            setModalCouponInput(e.target.value);
+                            if (modalCouponError) setModalCouponError(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleApplyModalCoupon();
+                          }}
+                          className="flex-1 px-3 py-1.5 text-[11px] font-mono font-bold bg-muted/40 border border-border rounded-xl focus:outline-none focus:border-accent uppercase text-foreground placeholder:text-muted-foreground/50"
+                        />
+                        <button
+                          onClick={handleApplyModalCoupon}
+                          disabled={!modalCouponInput.trim()}
+                          className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-muted hover:bg-muted/80 text-foreground border border-border disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                      {modalCouponError && (
+                        <p className="text-[10px] text-rose-500 font-medium pl-1">
+                          {modalCouponError}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Details & Live calculation */}
+                <div className="space-y-2 text-[10px] text-muted-foreground border-t border-border pt-4">
+                  <div className="flex justify-between">
+                    <span>Current organization size:</span>
+                    <span className="font-semibold text-foreground">{memberCount} member{memberCount !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Price per seat:</span>
+                    <span className="font-semibold text-foreground">
+                      {formatMoney(subscribeCycle === 'annual' ? pricing.annualTotal : pricing.monthly, currency)}
+                      {subscribeCycle === 'annual' ? '/yr' : '/mo'}
+                    </span>
+                  </div>
+
+                  {isCouponActive && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Original total:</span>
+                        <span className="line-through text-muted-foreground">
+                          {formatMoney(baseTotal, currency)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+                        <span>Guild99 Discount (−{couponResult.discountPercent}%):</span>
+                        <span>−{formatMoney(couponResult.discountAmount, currency)}</span>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex justify-between text-[11px] font-bold text-foreground border-t border-border/50 pt-2 items-baseline">
+                    <span>Total amount:</span>
+                    <div className="text-right">
+                      {isCouponActive && (
+                        <span className="text-[9px] line-through text-muted-foreground mr-1.5 font-normal">
+                          {formatMoney(baseTotal, currency)}
+                        </span>
+                      )}
+                      <span className={cn('text-sm font-black', isCouponActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-accent')} style={isCouponActive ? undefined : { color: 'var(--accent)' }}>
+                        {formatMoney(finalPayable, currency)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-2">
                   <button
-                    onClick={() => setSelectedSeats(s => Math.max(1, s - 1))}
-                    className="p-1 rounded bg-background border border-border hover:bg-muted font-bold text-xs w-6 h-6 flex items-center justify-center text-foreground cursor-pointer"
+                    onClick={() => setSubscribeCycle(null)}
+                    className="flex-1 py-2 rounded-xl text-[11px] font-bold border border-border text-foreground hover:bg-muted cursor-pointer"
                   >
-                    −
+                    Cancel
                   </button>
-                  <input
-                    type="number"
-                    min="1"
-                    value={selectedSeats}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      setSelectedSeats(isNaN(val) ? 1 : Math.max(1, val));
-                    }}
-                    className="w-12 text-center text-[11px] font-bold bg-background border border-border rounded py-0.5 focus:outline-none focus:border-accent text-foreground"
-                  />
                   <button
-                    onClick={() => setSelectedSeats(s => s + 1)}
-                    className="p-1 rounded bg-background border border-border hover:bg-muted font-bold text-xs w-6 h-6 flex items-center justify-center text-foreground cursor-pointer"
+                    onClick={confirmSubscribe}
+                    className="flex-1 py-2 rounded-xl text-[11px] font-bold bg-accent text-accent-foreground hover:opacity-90 flex items-center justify-center gap-1 cursor-pointer shadow-sm"
                   >
-                    +
+                    Pay {formatMoney(finalPayable, currency)} <ArrowRight className="h-3 w-3" />
                   </button>
                 </div>
-              </div>
-
-              {/* Details & Live calculation */}
-              <div className="space-y-2 text-[10px] text-muted-foreground border-t border-border pt-4">
-                <div className="flex justify-between">
-                  <span>Current organization size:</span>
-                  <span className="font-semibold text-foreground">{memberCount} member{memberCount !== 1 ? 's' : ''}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Price per seat:</span>
-                  <span className="font-semibold text-foreground">
-                    {formatMoney(subscribeCycle === 'annual' ? pricing.annualTotal : pricing.monthly, currency)}
-                    {subscribeCycle === 'annual' ? '/yr' : '/mo'}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[11px] font-bold text-foreground border-t border-border/50 pt-2">
-                  <span>Total amount:</span>
-                  <span className="text-accent" style={{ color: 'var(--accent)' }}>
-                    {formatMoney(
-                      selectedSeats * (subscribeCycle === 'annual' ? pricing.annualTotal : pricing.monthly),
-                      currency
-                    )}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setSubscribeCycle(null)}
-                  className="flex-1 py-2 rounded-xl text-[11px] font-bold border border-border text-foreground hover:bg-muted cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmSubscribe}
-                  className="flex-1 py-2 rounded-xl text-[11px] font-bold bg-accent text-accent-foreground hover:opacity-90 flex items-center justify-center gap-1 cursor-pointer"
-                >
-                  Pay Now <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
 
       {/* Processing overlay */}
