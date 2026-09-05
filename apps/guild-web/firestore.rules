@@ -325,5 +325,14 @@ service cloud.firestore {
       );
       allow update: if false;
     }
+
+    // ─── DEMO REQUESTS (INBOUND LEADS FROM MARKETING WEBSITE) ──────────────────
+    match /demoRequests/{requestId} {
+      // Allow prospective leads from the marketing website to submit demo requests
+      allow create: if request.resource.data.name is string &&
+                       request.resource.data.email is string;
+      // Reading, updating, and deleting is reserved for backend APIs and SuperAdmins
+      allow read, update, delete: if false;
+    }
   }
 }

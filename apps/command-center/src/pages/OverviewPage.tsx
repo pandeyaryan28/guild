@@ -17,12 +17,14 @@ import {
   Activity,
   Layers,
   ChevronRight,
+  CalendarClock,
 } from 'lucide-react';
 import {
   superAdminService,
   AdminOrganization,
   AdminUser,
   SuperAdminAuditLog,
+  AdminDemoRequest,
 } from '../services/superAdminService';
 import {
   calculatePlatformMetrics,
@@ -41,6 +43,7 @@ export function OverviewPage() {
   const [orgs, setOrgs] = useState<AdminOrganization[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<SuperAdminAuditLog[]>([]);
+  const [demoRequests, setDemoRequests] = useState<AdminDemoRequest[]>([]);
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
@@ -50,11 +53,13 @@ export function OverviewPage() {
     const unsubOrgs = superAdminService.subscribeToOrganizations((data) => setOrgs(data));
     const unsubUsers = superAdminService.subscribeToUsers((data) => setUsers(data));
     const unsubLogs = superAdminService.subscribeToAuditLogs((data) => setAuditLogs(data));
+    const unsubDemos = superAdminService.subscribeToDemoRequests((data) => setDemoRequests(data));
 
     return () => {
       unsubOrgs();
       unsubUsers();
       unsubLogs();
+      unsubDemos();
     };
   }, []);
 
@@ -342,6 +347,86 @@ export function OverviewPage() {
         </div>
       </div>
 
+      {/* Live Inbound Demo Requests Stream */}
+      <div className="cc-glass rounded-2xl p-5 space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <CalendarClock className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-foreground">
+                  Inbound Demo Requests & Marketing Leads
+                </h2>
+                {demoRequests.filter((d) => d.status === 'pending').length > 0 && (
+                  <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                    {demoRequests.filter((d) => d.status === 'pending').length} Pending Review
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Real-time inbound inquiries from the marketing website, live synced with Firestore.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/demo-requests')}
+            className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+          >
+            Manage All Leads ({demoRequests.length}) <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {demoRequests.length === 0 ? (
+          <div className="py-6 text-center text-xs text-muted-foreground bg-secondary/30 rounded-xl border border-border/50">
+            No demo requests received yet. Submissions from the main website will appear here in real time.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {demoRequests.slice(0, 3).map((req) => (
+              <div
+                key={req.id}
+                onClick={() => navigate('/demo-requests')}
+                className="p-3.5 rounded-xl bg-secondary/30 hover:bg-secondary/60 border border-border transition-all cursor-pointer space-y-2 group"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate block">
+                      {req.name}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground truncate block font-mono">
+                      {req.email}
+                    </span>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase border ${
+                      req.status === 'pending'
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                        : req.status === 'scheduled'
+                        ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30'
+                        : req.status === 'contacted'
+                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                    }`}
+                  >
+                    {req.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+                  <span className="truncate">{req.company || 'Enterprise'} • {req.teamSize} seats</span>
+                  <span className="font-mono text-[10px] shrink-0">
+                    {new Date(req.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Bottom Row: Recent Audit Trail & Fast Action Shortcuts */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Recent Audit Trail Stream (8 cols) */}
@@ -434,6 +519,24 @@ export function OverviewPage() {
                   <CreditCard className="w-4 h-4 text-success" /> Entitlements & Overrides
                 </span>
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/demo-requests')}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl border border-border bg-secondary/40 hover:bg-secondary/70 text-xs font-semibold text-foreground transition-colors cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <CalendarClock className="w-4 h-4 text-amber-500" /> Demo Requests & Leads
+                </span>
+                <span className="flex items-center gap-1.5">
+                  {demoRequests.filter((d) => d.status === 'pending').length > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-500">
+                      {demoRequests.filter((d) => d.status === 'pending').length}
+                    </span>
+                  )}
+                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                </span>
               </button>
 
               <button

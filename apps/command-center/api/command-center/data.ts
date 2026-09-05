@@ -1,4 +1,9 @@
 import { createHmac, timingSafeEqual } from 'crypto';
+import dns from 'dns';
+
+if (typeof (dns as any).setDefaultResultOrder === 'function') {
+  (dns as any).setDefaultResultOrder('ipv4first');
+}
 
 const JWT_SECRET = process.env.SUPERADMIN_JWT_SECRET || 'guild-superadmin-secret-key-2809-alpha';
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'guild-app-f6c28';
@@ -89,20 +94,22 @@ export default async function handler(req: any, res: any) {
     const baseUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 
     // 1. Fetch core collections in parallel
-    const [orgsRes, usersRes, projectsRes, bannedRes, auditRes] = await Promise.all([
+    const [orgsRes, usersRes, projectsRes, bannedRes, auditRes, demoRes] = await Promise.all([
       fetch(`${baseUrl}/organizations`, { headers }),
       fetch(`${baseUrl}/users`, { headers }),
       fetch(`${baseUrl}/projects`, { headers }),
       fetch(`${baseUrl}/bannedUsers`, { headers }),
       fetch(`${baseUrl}/commandCenterAuditLogs`, { headers }),
+      fetch(`${baseUrl}/demoRequests`, { headers }),
     ]);
 
-    const [orgsData, usersData, projectsData, bannedData, auditData] = await Promise.all([
+    const [orgsData, usersData, projectsData, bannedData, auditData, demoData] = await Promise.all([
       orgsRes.json().catch(() => ({ documents: [] })),
       usersRes.json().catch(() => ({ documents: [] })),
       projectsRes.json().catch(() => ({ documents: [] })),
       bannedRes.json().catch(() => ({ documents: [] })),
       auditRes.json().catch(() => ({ documents: [] })),
+      demoRes.json().catch(() => ({ documents: [] })),
     ]);
 
     const rawUsers = (usersData.documents || []).map(parseFirestoreDoc).filter(Boolean);
@@ -110,6 +117,7 @@ export default async function handler(req: any, res: any) {
     const rawProjects = (projectsData.documents || []).map(parseFirestoreDoc).filter(Boolean);
     const rawBannedUsers = (bannedData.documents || []).map(parseFirestoreDoc).filter(Boolean);
     const rawAuditLogs = (auditData.documents || []).map(parseFirestoreDoc).filter(Boolean);
+    const rawDemoRequests = (demoData.documents || []).map(parseFirestoreDoc).filter(Boolean);
 
     const bannedMap = new Map<string, any>();
     rawBannedUsers.forEach((b: any) => {
@@ -255,6 +263,26 @@ export default async function handler(req: any, res: any) {
       (a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
+    // Format Demo Requests
+    const demoRequests = rawDemoRequests
+      .map((d: any) => ({
+        id: d.id,
+        name: d.name || 'Inbound Lead',
+        email: d.email || '',
+        company: d.company || (d.email ? d.email.split('@')[1]?.split('.')[0]?.toUpperCase() : '') || 'Organization',
+        teamSize: d.teamSize || '5-20',
+        message: d.message || '',
+        source: d.source || (d.form_type === 'demo_page_booking' ? 'demo_page' : 'contact_page'),
+        formType: d.formType || d.form_type || 'demo',
+        status: d.status || 'pending',
+        priority: d.priority || (d.teamSize === '100+' || d.teamSize === '200+' ? 'high' : d.teamSize === '20-100' || d.teamSize === '50-200' ? 'medium' : 'low'),
+        notes: d.notes || '',
+        assignedTo: d.assignedTo || '',
+        createdAt: d.createdAt || new Date().toISOString(),
+        updatedAt: d.updatedAt || d.createdAt || new Date().toISOString(),
+      }))
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
     return res.status(200).json({
       success: true,
       organizations,
@@ -262,6 +290,7 @@ export default async function handler(req: any, res: any) {
       projects: rawProjects,
       auditLogs,
       transactions,
+      demoRequests,
     });
   } catch (error: any) {
     console.error('[command-center-data] Error fetching Firestore data:', error);

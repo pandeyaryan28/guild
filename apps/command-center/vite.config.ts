@@ -6,6 +6,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import dataHandler from './api/command-center/data';
 import subHandler from './api/command-center/subscription';
 import userHandler from './api/command-center/user';
+import demoRequestHandler from './api/command-center/demo-request';
 
 function devAuthPlugin() {
   const MASTER_CODE = process.env.SUPERADMIN_MASTER_CODE || process.env.ADMIN_CODE || '2809';
@@ -205,6 +206,25 @@ function devAuthPlugin() {
               req.body = JSON.parse(bodyStr || '{}');
               adaptRes(res);
               await userHandler(req, res);
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: false, error: err.message }));
+            }
+          });
+          return;
+        }
+
+        if (req.url === '/api/command-center/demo-request') {
+          let bodyStr = '';
+          req.on('data', (chunk: any) => {
+            bodyStr += chunk;
+          });
+          req.on('end', async () => {
+            try {
+              req.body = bodyStr ? JSON.parse(bodyStr) : {};
+              adaptRes(res);
+              await demoRequestHandler(req, res);
             } catch (err: any) {
               res.statusCode = 500;
               res.setHeader('Content-Type', 'application/json');

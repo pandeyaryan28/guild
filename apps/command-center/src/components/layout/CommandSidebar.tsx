@@ -6,16 +6,19 @@ import {
   Users,
   CreditCard,
   ShieldCheck,
+  CalendarClock,
   Terminal,
   LogOut,
 } from 'lucide-react';
 import { useSuperAdminAuth } from '../../context/AuthContext';
+import { superAdminService } from '../../services/superAdminService';
 
 interface NavItem {
   to: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   exact?: boolean;
+  badge?: number;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -41,6 +44,11 @@ const NAV_ITEMS: NavItem[] = [
     icon: CreditCard,
   },
   {
+    to: '/demo-requests',
+    label: 'Demo Requests',
+    icon: CalendarClock,
+  },
+  {
     to: '/audit-logs',
     label: 'Audit Trail',
     icon: ShieldCheck,
@@ -49,6 +57,14 @@ const NAV_ITEMS: NavItem[] = [
 
 export function CommandSidebar() {
   const { adminProfile, user, signOut } = useSuperAdminAuth();
+  const [pendingDemoCount, setPendingDemoCount] = React.useState(0);
+
+  React.useEffect(() => {
+    return superAdminService.subscribeToDemoRequests((demos) => {
+      const pending = demos.filter((d) => d.status === 'pending').length;
+      setPendingDemoCount(pending);
+    });
+  }, []);
 
   const userEmail = adminProfile?.email || user?.email || 'admin';
   const roleName = adminProfile?.role || 'superadmin';
@@ -81,6 +97,9 @@ export function CommandSidebar() {
         <nav className="space-y-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
+            const isDemoItem = item.to === '/demo-requests';
+            const badgeCount = isDemoItem ? pendingDemoCount : item.badge;
+
             return (
               <NavLink
                 key={item.to}
@@ -95,7 +114,12 @@ export function CommandSidebar() {
                 }
               >
                 <Icon className="w-4 h-4 shrink-0" />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate flex-1">{item.label}</span>
+                {badgeCount !== undefined && badgeCount > 0 && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                    {badgeCount}
+                  </span>
+                )}
               </NavLink>
             );
           })}

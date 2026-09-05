@@ -6,6 +6,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
+import { submitDemoRequest } from '../services/demoService';
 
 export function Demo() {
   useDocumentMetadata({
@@ -24,50 +25,19 @@ export function Demo() {
     setIsSubmitting(true);
     setErrorMsg(null);
 
-    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
-
-    if (!accessKey || accessKey === 'your_web3forms_access_key_here') {
-      console.log('%c[Guild Demo Form - Mock Mode]', 'color: #6366f1; font-weight: bold;', {
-        ...formData,
-        timestamp: new Date().toISOString()
-      });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setIsSubmitting(false);
-      setFormSubmitted(true);
-      return;
-    }
-
     try {
-      const payload = {
-        access_key: accessKey,
-        subject: `New Demo Booking from ${formData.name}`,
-        from_name: 'Guild Orbit Website Demo Page',
+      await submitDemoRequest({
         name: formData.name,
         email: formData.email,
         teamSize: formData.teamSize,
         message: formData.message,
-        form_type: 'demo_page_booking'
-      };
-
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload)
+        source: 'demo_page',
+        formType: 'demo',
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setFormSubmitted(true);
-      } else {
-        throw new Error(data.message || 'Something went wrong. Please try again.');
-      }
+      setFormSubmitted(true);
     } catch (err: any) {
       console.error('Demo Form Submit Error:', err);
-      setErrorMsg(err.message || 'Failed to submit form. Please check your internet connection.');
+      setErrorMsg(err.message || 'Failed to submit demo request. Please check your internet connection.');
     } finally {
       setIsSubmitting(false);
     }

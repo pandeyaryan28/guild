@@ -1,7 +1,8 @@
-import React from 'react';
-import { Sun, Moon, Search, ShieldCheck, Radio } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sun, Moon, Search, ShieldCheck, Radio, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useSuperAdminAuth } from '../../context/AuthContext';
+import { superAdminService } from '../../services/superAdminService';
 
 interface CommandHeaderProps {
   onSearchOpen?: () => void;
@@ -10,6 +11,19 @@ interface CommandHeaderProps {
 export function CommandHeader({ onSearchOpen }: CommandHeaderProps) {
   const { mode, toggleTheme } = useTheme();
   const { adminProfile } = useSuperAdminAuth();
+
+  const [syncState, setSyncState] = useState<{ isSyncing: boolean; lastSyncedAt: Date }>({
+    isSyncing: false,
+    lastSyncedAt: new Date(),
+  });
+
+  useEffect(() => {
+    return superAdminService.subscribeToSyncStatus(setSyncState);
+  }, []);
+
+  const handleForceSync = async () => {
+    await superAdminService.refresh();
+  };
 
   return (
     <header className="h-14 w-full px-6 flex items-center justify-between gap-4 border-b border-border bg-surface/70 backdrop-blur-xl z-10 shrink-0">
@@ -27,8 +41,28 @@ export function CommandHeader({ onSearchOpen }: CommandHeaderProps) {
         </span>
       </div>
 
-      {/* Right: Quick Search + Theme Switcher + Status */}
+      {/* Right: Quick Search + Live Sync Status + Theme Switcher + Status */}
       <div className="flex items-center gap-3">
+        {/* Live Backend Sync Status Pill */}
+        <button
+          type="button"
+          onClick={handleForceSync}
+          title={`Last synchronized with Firestore: ${syncState.lastSyncedAt.toLocaleTimeString()}. Click to force sync.`}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-border bg-secondary/50 hover:bg-surface-hover text-xs font-mono transition-all cursor-pointer select-none"
+        >
+          {syncState.isSyncing ? (
+            <>
+              <RefreshCw className="w-3 h-3 text-primary animate-spin" />
+              <span className="text-primary text-[10px] font-bold">SYNCING...</span>
+            </>
+          ) : (
+            <>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-muted-foreground text-[10px] font-medium hidden sm:inline">SYNCED</span>
+            </>
+          )}
+        </button>
+
         {/* Quick Search trigger */}
         <button
           type="button"

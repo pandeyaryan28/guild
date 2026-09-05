@@ -9,6 +9,7 @@ import { OverviewPage } from './pages/OverviewPage';
 import { WorkspacesPage } from './pages/WorkspacesPage';
 import { UsersPage } from './pages/UsersPage';
 import { SubscriptionsPage } from './pages/SubscriptionsPage';
+import { DemoRequestsPage } from './pages/DemoRequestsPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 
 function SuperAdminGuard() {
@@ -40,6 +41,7 @@ function SuperAdminGuard() {
         <Route path="/workspaces" element={<WorkspacesPage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="/subscriptions" element={<SubscriptionsPage />} />
+        <Route path="/demo-requests" element={<DemoRequestsPage />} />
         <Route path="/audit-logs" element={<AuditLogsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

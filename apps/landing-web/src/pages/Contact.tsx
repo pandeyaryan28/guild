@@ -10,6 +10,7 @@ import {
   Users 
 } from 'lucide-react';
 import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
+import { submitDemoRequest } from '../services/demoService';
 
 export function Contact() {
   useDocumentMetadata({
@@ -43,48 +44,17 @@ export function Contact() {
     setIsSubmitting(true);
     setErrorMsg(null);
 
-    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
-
-    // If key doesn't exist, run in Mock Mode for developer testing
-    if (!accessKey || accessKey === 'your_web3forms_access_key_here') {
-      console.log('%c[Guild Contact Form - Mock Mode]', 'color: #6366f1; font-weight: bold;', {
-        type: formType,
-        ...formData,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Simulate API lag
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      setIsSubmitting(false);
-      setIsSuccess(true);
-      return;
-    }
-
     try {
-      const payload = {
-        access_key: accessKey,
-        subject: formType === 'demo' ? `New Demo Request from ${formData.name}` : `New General Inquiry from ${formData.name}`,
-        from_name: 'Guild Orbit Website',
-        ...formData,
-        form_type: formType
-      };
-
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload)
+      await submitDemoRequest({
+        name: formData.name,
+        email: formData.email,
+        company: formData.company,
+        teamSize: formData.teamSize,
+        message: formData.message,
+        source: 'contact_page',
+        formType: formType,
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setIsSuccess(true);
-      } else {
-        throw new Error(data.message || 'Something went wrong. Please try again.');
-      }
+      setIsSuccess(true);
     } catch (err: any) {
       console.error('Contact Form Error:', err);
       setErrorMsg(err.message || 'Failed to submit form. Please check your internet connection.');

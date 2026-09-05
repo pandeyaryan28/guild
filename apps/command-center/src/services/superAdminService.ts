@@ -133,6 +133,26 @@ export interface BillingTransaction {
   razorpayOrderId?: string;
 }
 
+export type DemoRequestStatus = 'pending' | 'contacted' | 'scheduled' | 'completed' | 'archived';
+export type DemoRequestPriority = 'low' | 'medium' | 'high';
+
+export interface AdminDemoRequest {
+  id: string;
+  name: string;
+  email: string;
+  company?: string;
+  teamSize?: string;
+  message?: string;
+  source: 'demo_page' | 'contact_page' | 'website' | 'command_center';
+  formType?: 'demo' | 'inquiry';
+  status: DemoRequestStatus;
+  priority: DemoRequestPriority;
+  notes?: string;
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 // ── SuperAdminDataService Class ───────────────────────────────────────────────
 
 export class SuperAdminDataService {
@@ -142,14 +162,19 @@ export class SuperAdminDataService {
   private users: AdminUser[] = [];
   private auditLogs: SuperAdminAuditLog[] = [];
   private transactions: BillingTransaction[] = [];
+  private demoRequests: AdminDemoRequest[] = [];
 
   private isInitialLoading = true;
   private isPolling = false;
+  private isSyncing = false;
+  private lastSyncedAt: Date = new Date();
 
   private orgListeners: Set<(orgs: AdminOrganization[]) => void> = new Set();
   private userListeners: Set<(users: AdminUser[]) => void> = new Set();
   private auditListeners: Set<(logs: SuperAdminAuditLog[]) => void> = new Set();
   private txListeners: Set<(txs: BillingTransaction[]) => void> = new Set();
+  private demoListeners: Set<(demos: AdminDemoRequest[]) => void> = new Set();
+  private syncListeners: Set<(state: { isSyncing: boolean; lastSyncedAt: Date }) => void> = new Set();
 
   public static getInstance(): SuperAdminDataService {
     if (!SuperAdminDataService.instance) {
@@ -163,7 +188,17 @@ export class SuperAdminDataService {
     return this.isInitialLoading;
   }
 
+  public getLastSyncedAt(): Date {
+    return this.lastSyncedAt;
+  }
+
+  public getIsSyncing(): boolean {
+    return this.isSyncing;
+  }
+
   private async fetchLiveFirestoreData() {
+    this.isSyncing = true;
+    this.notifySyncListeners();
     try {
       const res = await fetch('/api/command-center/data');
       if (res.ok) {
@@ -185,11 +220,19 @@ export class SuperAdminDataService {
             this.transactions = data.transactions;
             this.notifyTxListeners();
           }
+          if (Array.isArray(data.demoRequests)) {
+            this.demoRequests = data.demoRequests;
+            this.notifyDemoListeners();
+          }
           this.isInitialLoading = false;
+          this.lastSyncedAt = new Date();
         }
       }
     } catch (err) {
       console.warn('[superAdminService] Live sync fetch error:', err);
+    } finally {
+      this.isSyncing = false;
+      this.notifySyncListeners();
     }
   }
 
@@ -199,10 +242,10 @@ export class SuperAdminDataService {
     this.fetchLiveFirestoreData();
 
     if (typeof window !== 'undefined') {
-      // Periodic background polling every 6 seconds for live telemetry
+      // Periodic background polling every 4 seconds for live telemetry
       window.setInterval(() => {
         this.fetchLiveFirestoreData();
-      }, 6000);
+      }, 4000);
 
       // Instant refresh on tab focus / visibility return
       window.addEventListener('focus', () => {
@@ -269,6 +312,18 @@ export class SuperAdminDataService {
     return () => this.txListeners.delete(callback);
   }
 
+  public subscribeToDemoRequests(callback: (demos: AdminDemoRequest[]) => void): () => void {
+    this.demoListeners.add(callback);
+    callback([...this.demoRequests]);
+    return () => this.demoListeners.delete(callback);
+  }
+
+  public subscribeToSyncStatus(callback: (state: { isSyncing: boolean; lastSyncedAt: Date }) => void): () => void {
+    this.syncListeners.add(callback);
+    callback({ isSyncing: this.isSyncing, lastSyncedAt: this.lastSyncedAt });
+    return () => this.syncListeners.delete(callback);
+  }
+
   private notifyOrgListeners() {
     const copy = [...this.orgs];
     this.orgListeners.forEach((cb) => cb(copy));
@@ -287,6 +342,103 @@ export class SuperAdminDataService {
   private notifyTxListeners() {
     const copy = [...this.transactions];
     this.txListeners.forEach((cb) => cb(copy));
+  }
+
+  private notifyDemoListeners() {
+    const copy = [...this.demoRequests];
+    this.demoListeners.forEach((cb) => cb(copy));
+  }
+
+  private notifySyncListeners() {
+    const state = { isSyncing: this.isSyncing, lastSyncedAt: this.lastSyncedAt };
+    this.syncListeners.forEach((cb) => cb(state));
+  }
+
+  public async getAllDemoRequests(): Promise<AdminDemoRequest[]> {
+    if (this.demoRequests.length === 0) {
+      await this.fetchLiveFirestoreData();
+    }
+    return [...this.demoRequests];
+  }
+
+  public async updateDemoRequestStatus(
+    id: string,
+    status: DemoRequestStatus,
+    notes?: string,
+    priority?: DemoRequestPriority,
+    assignedTo?: string,
+    actorEmail: string = 'pandeyaryan28@gmail.com'
+  ): Promise<void> {
+    const idx = this.demoRequests.findIndex((d) => d.id === id);
+    const prev = idx !== -1 ? this.demoRequests[idx] : null;
+
+    if (idx !== -1 && prev) {
+      this.demoRequests[idx] = {
+        ...prev,
+        status,
+        ...(notes !== undefined ? { notes } : {}),
+        ...(priority !== undefined ? { priority } : {}),
+        ...(assignedTo !== undefined ? { assignedTo } : {}),
+        updatedAt: new Date().toISOString(),
+      };
+      this.notifyDemoListeners();
+    }
+
+    try {
+      await fetch('/api/command-center/demo-request', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          status,
+          notes,
+          priority,
+          assignedTo,
+          adminEmail: actorEmail,
+          leadName: prev?.name,
+        }),
+      });
+      await this.refresh();
+    } catch (err) {
+      console.error('[superAdminService] Failed to update demo request:', err);
+    }
+  }
+
+  public async deleteDemoRequest(id: string, actorEmail: string = 'pandeyaryan28@gmail.com'): Promise<void> {
+    this.demoRequests = this.demoRequests.filter((d) => d.id !== id);
+    this.notifyDemoListeners();
+
+    try {
+      await fetch('/api/command-center/demo-request', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, adminEmail: actorEmail }),
+      });
+      await this.refresh();
+    } catch (err) {
+      console.error('[superAdminService] Failed to delete demo request:', err);
+    }
+  }
+
+  public async createDemoRequest(data: {
+    name: string;
+    email: string;
+    company?: string;
+    teamSize?: string;
+    message?: string;
+    priority?: DemoRequestPriority;
+    actorEmail?: string;
+  }): Promise<void> {
+    try {
+      await fetch('/api/command-center/demo-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      await this.refresh();
+    } catch (err) {
+      console.error('[superAdminService] Failed to create demo request:', err);
+    }
   }
 
   public async overrideWorkspacePlan(

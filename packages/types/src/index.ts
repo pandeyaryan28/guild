@@ -582,3 +582,26 @@ export interface BillingTransaction {
   discountPercent?: number | null;
   createdAt: Timestamp;
 }
+
+// ─── Marketing Website Demo Requests ──────────────────────────────────────────
+
+export type DemoRequestStatus = 'pending' | 'contacted' | 'scheduled' | 'completed' | 'archived';
+export type DemoRequestPriority = 'low' | 'medium' | 'high';
+export type DemoRequestSource = 'demo_page' | 'contact_page' | 'website';
+
+export interface DemoRequest {
+  id: string;
+  name: string;
+  email: string;
+  company?: string;
+  teamSize?: string;
+  message?: string;
+  source: DemoRequestSource;
+  formType?: 'demo' | 'inquiry';
+  status: DemoRequestStatus;
+  priority?: DemoRequestPriority;
+  notes?: string;
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt?: string;
+}

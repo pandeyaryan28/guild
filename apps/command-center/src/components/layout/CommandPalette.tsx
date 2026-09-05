@@ -7,6 +7,7 @@ import {
   Users,
   CreditCard,
   ShieldCheck,
+  CalendarClock,
   Moon,
   Sun,
   X,
@@ -149,6 +150,18 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                 <div className="flex items-center gap-2.5">
                   <CreditCard className="w-4 h-4 text-warning" />
                   <span className="font-semibold">Subscription & Entitlements</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelect('/demo-requests')}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-secondary/70 text-foreground transition-colors text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <CalendarClock className="w-4 h-4 text-amber-500" />
+                  <span className="font-semibold">Demo Requests & Inbound Leads</span>
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
