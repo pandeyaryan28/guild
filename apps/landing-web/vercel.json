@@ -1,7 +1,4 @@
 {
-  "git": {
-    "deploymentEnabled": false
-  },
   "headers": [
     {
       "source": "/assets/(.*)",
@@ -23,6 +20,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/((?!assets/|.*\\.).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|assets/|.*\\.).*)", "destination": "/index.html" }
   ]
 }
