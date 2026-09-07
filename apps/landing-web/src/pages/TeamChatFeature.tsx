@@ -46,7 +46,7 @@ export function TeamChatFeature() {
           {/* Left Text Column */}
           <div className="lg:col-span-5 space-y-6">
             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Real-time Chat & <br/>
+              Real Time Chat & <br/>
               <span className="text-gradient">Task Shortcuts</span>
             </h1>
             <p className="text-slate-500 text-sm md:text-base font-semibold leading-relaxed">
@@ -86,7 +86,7 @@ export function TeamChatFeature() {
             >
               <img 
                 src="/team_chat.png" 
-                alt="Real-time Team Chat & Chat Shortcuts Mockup" 
+                alt="Real Time Team Chat & Chat Shortcuts Mockup" 
                 className="w-full h-auto rounded-2xl border border-slate-100/50 shadow-sm"
               />
             </motion.div>
@@ -113,7 +113,7 @@ export function TeamChatFeature() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-3">Department Channels</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
-                  Segment chat spaces by focus group. Create channels like `#operations`, `#logistics-delivery`, or `#marketing` to keep communication targeted and clean.
+                  Segment chat spaces by focus group. Create channels like `#operations`, `#logistics_delivery`, or `#marketing` to keep communication targeted and clean.
                 </p>
               </div>
               <ul className="space-y-2.5 pt-4 border-t border-slate-100">
@@ -145,7 +145,7 @@ export function TeamChatFeature() {
               <ul className="space-y-2.5 pt-4 border-t border-slate-100">
                 <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                  Auto-fill priorities and dates
+                  Auto fill priorities and dates
                 </li>
                 <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
@@ -162,17 +162,17 @@ export function TeamChatFeature() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-3">Mentions & Secure DMs</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
-                  Ping team coordinators directly with `@username` mentions to trigger push notifications. Message members privately for confidential, 1-on-1 coordination.
+                  Ping team coordinators directly with `@username` mentions to trigger push notifications. Message members privately for confidential, 1 on 1 coordination.
                 </p>
               </div>
               <ul className="space-y-2.5 pt-4 border-t border-slate-100">
                 <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-                  Instant push & in-app alerts
+                  Instant push & in app alerts
                 </li>
                 <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-                  Secure end-to-end data feeds
+                  Secure end to end data feeds
                 </li>
               </ul>
             </div>
@@ -200,7 +200,7 @@ export function TeamChatFeature() {
                 </div>
                 <div className="flex items-center gap-2 text-slate-300">
                   <Send className="h-4 w-4 text-cyan-400" />
-                  <span>Slack-like convenience</span>
+                  <span>Slack style convenience</span>
                 </div>
               </div>
             </div>

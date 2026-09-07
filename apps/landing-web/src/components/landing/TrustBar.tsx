@@ -2,9 +2,9 @@ import { Zap, Sparkles, Layers } from 'lucide-react';
 import { ScrollReveal } from './ScrollReveal';
 
 const points = [
-  { icon: Zap, label: '5 Minute Setup' },
+  { icon: Zap, label: 'Two Minute Whole Startup Status' },
+  { icon: Layers, label: 'Centralized Visibility Layer' },
   { icon: Sparkles, label: 'Zero Learning Curve' },
-  { icon: Layers, label: 'Fully Integrated' },
 ];
 
 export function TrustBar() {
@@ -13,7 +13,7 @@ export function TrustBar() {
       <ScrollReveal>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-sm text-ink-light font-bold uppercase tracking-wider mb-8">
-            Built for teams who want clarity, not complexity
+            Built for founders & managers who need operational clarity, not complexity
           </p>
           <div className="glass rounded-3xl p-6 md:p-8 flex flex-col sm:flex-row items-center justify-around gap-8 shadow-xl shadow-indigo-100/5 border-white/80 hover:scale-[1.005] transition-all duration-300">
             {points.map(({ icon: Icon, label }) => (

@@ -100,7 +100,7 @@ export function Onboarding() {
   const [orgName, setOrgName] = useState('Acme Corp');
   const [orgSlug, setOrgSlug] = useState('acme');
   const [orgIndustry, setOrgIndustry] = useState('Technology');
-  const [orgSize, setOrgSize] = useState('11–50');
+  const [orgSize, setOrgSize] = useState('11 to 50');
 
   // Simulation State - Join Path
   const [joinMethod, setJoinMethod] = useState<'slug' | 'invite'>('slug');
@@ -146,7 +146,7 @@ export function Onboarding() {
     setOrgName('Acme Corp');
     setOrgSlug('acme');
     setOrgIndustry('Technology');
-    setOrgSize('11–50');
+    setOrgSize('11 to 50');
     setJoinMethod('slug');
     setSlugInput('');
     setInviteInput('');
@@ -302,10 +302,10 @@ export function Onboarding() {
                       onChange={(e) => setOrgSize(e.target.value)}
                       className="bg-white border border-slate-200 rounded-xl px-2 py-2 text-xs font-semibold focus:outline-none"
                     >
-                      <option value="1–10">1–10 members</option>
-                      <option value="11–50">11–50 members</option>
-                      <option value="51–200">51–200 members</option>
-                      <option value="201–500">201–500 members</option>
+                      <option value="1 to 10">1 to 10 members</option>
+                      <option value="11 to 50">11 to 50 members</option>
+                      <option value="51 to 200">51 to 200 members</option>
+                      <option value="201 to 500">201 to 500 members</option>
                       <option value="500+">500+ members</option>
                     </select>
                   </div>
@@ -394,7 +394,7 @@ export function Onboarding() {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="e.g. guild-tkn-8f9d..."
+                      placeholder="e.g. guild_tkn_8f9d..."
                       value={inviteInput}
                       onChange={(e) => setInviteInput(e.target.value)}
                       className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-indigo-500 flex-grow"
@@ -511,7 +511,7 @@ export function Onboarding() {
                   <label className="text-[8px] font-extrabold uppercase text-slate-400">Employee ID</label>
                   <input
                     type="text"
-                    placeholder="EMP-492"
+                    placeholder="EMP 492"
                     value={employeeId}
                     onChange={(e) => setEmployeeId(e.target.value)}
                     className="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-indigo-500"
@@ -534,7 +534,7 @@ export function Onboarding() {
                   <label className="text-[8px] font-extrabold uppercase text-slate-400">Phone Number (Optional)</label>
                   <input
                     type="tel"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="+1 (555) 123 4567"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     className="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-indigo-500"

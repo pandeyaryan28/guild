@@ -18,7 +18,7 @@ function detectCurrency(): 'USD' | 'INR' {
     const lang = navigator.language || '';
     if (lang === 'en-IN' || lang.endsWith('-IN')) return 'INR';
   } catch {
-    // ignore — default to USD
+    // ignore, default to USD
   }
   return 'USD';
 }
@@ -252,7 +252,7 @@ export function PricingCards() {
                   <p className="text-3xl font-black text-slate-900">
                     {currency === 'INR' ? '₹50,000' : '$500'}
                   </p>
-                  <span className="text-xs font-semibold text-slate-400">one-time top-up</span>
+                  <span className="text-xs font-semibold text-slate-400">one time top up</span>
                 </div>
                 <div className="bg-indigo-50 border border-indigo-100/50 rounded-xl p-3 text-[11px] font-bold text-indigo-700 flex items-center justify-between mb-4">
                   <span>Total Wallet Credit:</span>
@@ -292,7 +292,7 @@ export function PricingCards() {
                   <p className="text-3xl font-black text-slate-900">
                     {currency === 'INR' ? '₹1,00,000' : '$1,000'}
                   </p>
-                  <span className="text-xs font-semibold text-slate-400">one-time top-up</span>
+                  <span className="text-xs font-semibold text-slate-400">one time top up</span>
                 </div>
                 <div className="bg-indigo-600 text-white rounded-xl p-3 text-[11px] font-bold flex items-center justify-between mb-4 shadow-sm">
                   <span>Total Wallet Credit:</span>

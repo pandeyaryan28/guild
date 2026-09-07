@@ -21,7 +21,7 @@ const featuresList = [
     category: 'Work Tracking',
     icon: CheckSquare,
     title: 'Visual Task Boards & Kanban',
-    description: 'Track operations with transparent Kanban boards, assigned task owners, and real-time statuses.',
+    description: 'Track operations with transparent Kanban boards, assigned task owners, and real time statuses.',
     bullets: ['Lightweight Kanban boards', 'Assigned owners & due dates', 'Auditable priority triage'],
     path: '/features/work-tracking',
     image: '/work_tracking.png',
@@ -35,9 +35,9 @@ const featuresList = [
     id: 'team-chat',
     category: 'Team Chat',
     icon: MessageSquare,
-    title: 'Real-time Channels & DMs',
+    title: 'Real Time Channels & DMs',
     description: 'Centralize communication in department chat channels, direct messages, and contextual task comments.',
-    bullets: ['Department-focused channels', 'Secure private messaging', 'Unique /task chat shortcut'],
+    bullets: ['Department focused channels', 'Secure private messaging', 'Unique /task chat shortcut'],
     path: '/features/team-chat',
     image: '/team_chat.png',
     color: 'cyan',
@@ -50,8 +50,8 @@ const featuresList = [
     id: 'approvals',
     category: 'Requests & Approvals',
     icon: FileCheck,
-    title: 'One-Click Administrative Sign-offs',
-    description: 'Submit, review, and authorize purchase orders, leave requests, and operational sign-offs instantly.',
+    title: 'One Click Administrative Approvals',
+    description: 'Submit, review, and authorize purchase orders, leave requests, and operational approvals instantly.',
     bullets: ['Leave & vacation requests', 'Purchase order approvals', 'Operational audit logs'],
     path: '/features/approvals',
     image: '/approvals.png',
@@ -96,7 +96,7 @@ const featuresList = [
 export function Features() {
   useDocumentMetadata({
     title: 'Features',
-    description: 'Explore the powerful features of Guild Orbit, including visual task boards, real-time team chat channels, expense approvals, and comprehensive admin workloads.',
+    description: 'Explore the powerful features of Guild Orbit, including visual task boards, real time team chat channels, expense approvals, and comprehensive admin workloads.',
     canonicalPath: '/features'
   });
 
@@ -353,7 +353,7 @@ export function Features() {
                             </div>
                           </div>
                           <p className="text-[8.5px] text-white font-extrabold uppercase tracking-wide">Signature Valid</p>
-                          <p className="text-[7.5px] text-slate-400 font-semibold mt-0.5">PO-1049 Approved</p>
+                          <p className="text-[7.5px] text-slate-400 font-semibold mt-0.5">PO #1049 Approved</p>
                         </motion.div>
                       )}
                     </motion.div>

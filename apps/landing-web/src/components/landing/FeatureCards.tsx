@@ -19,32 +19,15 @@ import { useNavigation } from '../../context/NavigationContext';
 
 const features = [
   {
-    icon: MessageSquare,
-    title: 'Real-time Chat',
-    description: 'Centralize communication in department channels, secure DMs, and task comments.',
-    bullets: ['Department #channels', 'Contextual task comments', 'Type `/task` command shortcut'],
-    color: 'text-cyan-600',
-    bg: 'bg-cyan-50 border border-cyan-100/30',
-    hoverBorder: 'hover:border-cyan-305',
-    path: '/features/team-chat',
-    activeClass: {
-      bg: 'bg-cyan-50/60',
-      bgIcon: 'bg-cyan-100',
-      border: 'border-cyan-200/60',
-      glow: 'shadow-[0_0_30px_rgba(6,182,212,0.08)]',
-      progress: 'bg-cyan-500',
-      color: 'text-cyan-600'
-    }
-  },
-  {
-    icon: CheckSquare,
-    title: 'Work Tracking',
-    description: 'Empower managers and owners to map, track, and monitor every task and its live status assigned to teammates.',
-    bullets: ['Oversight for managers & owners', 'Team-wide task mapping', 'Live status updates for assignees'],
+    icon: Shield,
+    title: 'Startup Visibility Layer',
+    badge: 'Primary Feature',
+    description: 'Get the status of your whole startup in under two minutes. Monitor capacity allocations, project goal health, and overdue tasks from a central control tower.',
+    bullets: ['Whole startup status in 2 minutes', 'Resource workload & capacity balancing', 'Live bottleneck & overdue task triage'],
     color: 'text-indigo-650',
     bg: 'bg-indigo-50 border border-indigo-100/30',
     hoverBorder: 'hover:border-indigo-305',
-    path: '/features/work-tracking',
+    path: '/features/visibility',
     activeClass: {
       bg: 'bg-indigo-50/60',
       bgIcon: 'bg-indigo-100',
@@ -55,14 +38,34 @@ const features = [
     }
   },
   {
-    icon: FileCheck,
-    title: 'Requests & Approvals Log',
-    description: 'Standardize administrative requests. Review expense quotes, authorize leaves of absence, and track procurement files in a secure sign-off inbox.',
-    bullets: ['Expense reimbursement queues', 'Leave of absence forms', 'Procurement audit logs'],
+    icon: CheckSquare,
+    title: 'Work Tracking',
+    badge: 'Engine',
+    description: 'Empower managers and owners to map, track, and monitor every task and its live status assigned to teammates.',
+    bullets: ['Oversight for managers & owners', 'Team wide task mapping', 'Live status updates for assignees'],
+    color: 'text-cyan-600',
+    bg: 'bg-cyan-50 border border-cyan-100/30',
+    hoverBorder: 'hover:border-cyan-305',
+    path: '/features/work-tracking',
+    activeClass: {
+      bg: 'bg-cyan-50/60',
+      bgIcon: 'bg-cyan-100',
+      border: 'border-cyan-200/60',
+      glow: 'shadow-[0_0_30px_rgba(6,182,212,0.08)]',
+      progress: 'bg-cyan-500',
+      color: 'text-cyan-600'
+    }
+  },
+  {
+    icon: MessageSquare,
+    title: 'Real Time Chat',
+    badge: 'Engine',
+    description: 'Centralize communication in department channels, secure DMs, and contextual task comments.',
+    bullets: ['Department #channels', 'Contextual task comments', 'Type `/task` command shortcut'],
     color: 'text-purple-600',
     bg: 'bg-purple-50 border border-purple-100/30',
     hoverBorder: 'hover:border-purple-305',
-    path: '/features/approvals',
+    path: '/features/team-chat',
     activeClass: {
       bg: 'bg-purple-50/60',
       bgIcon: 'bg-purple-100',
@@ -73,14 +76,15 @@ const features = [
     }
   },
   {
-    icon: Shield,
-    title: 'Admin Console',
-    description: 'Monitor capacity, workload allocations, project goal health, and overdue tasks.',
-    bullets: ['Resource workload allocation', 'Project health tracking', 'Overdue task triage'],
+    icon: FileCheck,
+    title: 'Requests & Approvals Log',
+    badge: 'Engine',
+    description: 'Standardize administrative requests. Review expense quotes, authorize leaves of absence, and track procurement files in a secure approval inbox.',
+    bullets: ['Expense reimbursement queues', 'Leave of absence forms', 'Procurement audit logs'],
     color: 'text-rose-600',
     bg: 'bg-rose-50 border border-rose-100/30',
     hoverBorder: 'hover:border-rose-305',
-    path: '/features/admin-console',
+    path: '/features/approvals',
     activeClass: {
       bg: 'bg-rose-50/60',
       bgIcon: 'bg-rose-100',
@@ -144,7 +148,7 @@ function ChatPreview() {
       if (!active) return;
       setMessages(prev => [
         ...prev,
-        { sender: 'Alex Rivera', avatar: 'AR', text: 'Yes, just waiting on final operations protocol sign-off.', time: '10:25 AM' }
+        { sender: 'Alex Rivera', avatar: 'AR', text: 'Yes, just waiting on final operations protocol approval.', time: '10:25 AM' }
       ]);
 
       // 4.0s: Marcus starts typing
@@ -202,7 +206,7 @@ function ChatPreview() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200/50 bg-white/40 shrink-0">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-800">#ops-dispatch</span>
+          <span className="font-bold text-slate-800">#ops_dispatch</span>
           <span className="text-[10px] text-slate-500 font-semibold hidden sm:inline">Daily logistics coordination</span>
         </div>
         <div className="flex items-center gap-1.5 text-[10px] text-slate-655 font-bold">
@@ -269,7 +273,7 @@ function ChatPreview() {
             {chatInput ? (
               <span>{chatInput}</span>
             ) : (
-              <span className="text-slate-400">Message #ops-dispatch...</span>
+              <span className="text-slate-400">Message #ops_dispatch...</span>
             )}
             <motion.span
               animate={{ opacity: [1, 0] }}
@@ -984,10 +988,10 @@ export function FeatureCards() {
         <ScrollReveal>
           <div className="text-center mb-16 flex flex-col items-center">
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
-              Engineered for <span className="text-gradient">Operational Speed</span>
+              The Centralized <span className="text-gradient">Visibility Layer</span>
             </h2>
             <p className="text-slate-500 text-xs md:text-sm font-semibold max-w-lg mx-auto leading-relaxed mt-3">
-              Consolidate your coordination. Guild Orbit unifies task lists, chat channels, expense approvals, and admin workload boards.
+              Get the status of your whole startup in two minutes. Our visibility layer sits above everyday tasks, chat channels, and approvals to give you total operational clarity.
             </p>
           </div>
         </ScrollReveal>
@@ -1024,11 +1028,22 @@ export function FeatureCards() {
                     </div>
 
                     <div className="space-y-1.5 font-sans">
-                      <h3 className={`text-base font-bold transition-colors ${
-                        isActive ? 'text-slate-900' : 'text-slate-800'
-                      }`}>
-                        {f.title}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className={`text-base font-bold transition-colors ${
+                          isActive ? 'text-slate-900' : 'text-slate-800'
+                        }`}>
+                          {f.title}
+                        </h3>
+                        {f.badge && (
+                          <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                            f.badge === 'Primary Feature' 
+                              ? 'bg-indigo-100/80 text-indigo-700 border border-indigo-200' 
+                              : 'bg-slate-100 text-slate-500 border border-slate-200/60'
+                          }`}>
+                            {f.badge}
+                          </span>
+                        )}
+                      </div>
                       
                       <p className="text-xs text-slate-505 leading-relaxed font-semibold">
                         {f.description}
@@ -1088,7 +1103,7 @@ export function FeatureCards() {
                 <div className="text-[10px] text-slate-600 font-bold font-mono px-4 py-0.5 rounded-md bg-slate-200/40 border border-slate-300/30 flex items-center gap-1 max-w-[200px] truncate">
                   <span>guild.orbit</span>
                   <span className="text-slate-400">/</span>
-                  <span className="text-slate-655 font-semibold">{features[activeTab].title.toLowerCase().replace(/\s+/g, '-')}</span>
+                  <span className="text-slate-655 font-semibold">{features[activeTab].title.toLowerCase().replace(/\s+/g, '_')}</span>
                 </div>
                 
                 {/* Play/Pause Control toggle */}
@@ -1111,10 +1126,10 @@ export function FeatureCards() {
                     transition={{ duration: 0.25 }}
                     className="w-full h-full"
                   >
-                    {activeTab === 0 && <ChatPreview />}
+                    {activeTab === 0 && <AdminPreview />}
                     {activeTab === 1 && <WorkTrackingPreview />}
-                    {activeTab === 2 && <ApprovalsPreview />}
-                    {activeTab === 3 && <AdminPreview />}
+                    {activeTab === 2 && <ChatPreview />}
+                    {activeTab === 3 && <ApprovalsPreview />}
                   </motion.div>
                 </AnimatePresence>
               </div>
@@ -1150,9 +1165,20 @@ export function FeatureCards() {
                     </button>
                   </div>
 
-                  <h3 className="text-base font-bold text-slate-900 mb-2">
-                    {f.title}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-base font-bold text-slate-900">
+                      {f.title}
+                    </h3>
+                    {f.badge && (
+                      <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                        f.badge === 'Primary Feature' 
+                          ? 'bg-indigo-100/80 text-indigo-700 border border-indigo-200' 
+                          : 'bg-slate-100 text-slate-500 border border-slate-200/60'
+                      }`}>
+                        {f.badge}
+                      </span>
+                    )}
+                  </div>
                   
                   <p className="text-xs text-slate-500 leading-relaxed font-semibold mb-4">
                     {f.description}
@@ -1180,10 +1206,10 @@ export function FeatureCards() {
                     >
                       {/* Inside mobile drawer, render light glass canvas */}
                       <div className="flex-grow min-h-0 bg-white/35 backdrop-blur-md rounded-2xl overflow-hidden">
-                        {i === 0 && <ChatPreview />}
+                        {i === 0 && <AdminPreview />}
                         {i === 1 && <WorkTrackingPreview />}
-                        {i === 2 && <ApprovalsPreview />}
-                        {i === 3 && <AdminPreview />}
+                        {i === 2 && <ChatPreview />}
+                        {i === 3 && <ApprovalsPreview />}
                       </div>
                     </motion.div>
                   )}

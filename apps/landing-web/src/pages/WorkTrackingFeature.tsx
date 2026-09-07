@@ -62,7 +62,7 @@ export function WorkTrackingFeature() {
                 <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
                   <Check className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-xs font-bold text-slate-700">Instant updates across drag-and-drop columns</span>
+                <span className="text-xs font-bold text-slate-700">Instant updates across drag and drop columns</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
@@ -111,7 +111,7 @@ export function WorkTrackingFeature() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-3">Structured Kanban Boards</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
-                  Maintain a clean high-level view of projects. Drag-and-drop operations tasks from 'To Do' to 'In Progress' and 'Done' to align team coordinators instantly.
+                  Maintain a clean high-level view of projects. Drag and drop operations tasks from 'To Do' to 'In Progress' and 'Done' to align team coordinators instantly.
                 </p>
               </div>
               <ul className="space-y-2.5 pt-4 border-t border-slate-100">
@@ -144,7 +144,7 @@ export function WorkTrackingFeature() {
                 </li>
                 <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
-                  Role-based activity locks
+                  Role based activity locks
                 </li>
               </ul>
             </div>

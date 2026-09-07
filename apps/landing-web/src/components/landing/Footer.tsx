@@ -31,7 +31,7 @@ export function Footer() {
             <span className="text-base font-bold text-slate-900 tracking-tight">Guild Orbit</span>
           </a>
           <p className="text-xs text-slate-500 font-semibold leading-relaxed max-w-sm">
-            The lightweight coordination platform for small & mid-sized teams to unify task boards, department chat, and operational requests.
+            The lightweight coordination platform for small & mid sized teams to unify task boards, department chat, and operational requests.
           </p>
           <span className="text-[11px] text-slate-400 font-bold mt-2">
             © 2026 Guild Orbit Inc. All rights reserved.

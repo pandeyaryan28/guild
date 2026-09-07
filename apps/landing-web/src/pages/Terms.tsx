@@ -145,7 +145,7 @@ export function Terms() {
             </div>
             <div className="text-sm text-slate-600 font-medium space-y-4 leading-relaxed">
               <p>
-                Guild Orbit provides a lightweight, unified coordination platform for small & mid-sized teams. The Service integrates:
+                Guild Orbit provides a lightweight, unified coordination platform for small & mid sized teams. The Service integrates:
               </p>
               <ul className="list-disc pl-5 space-y-2.5">
                 <li>Kanban task boards and workflow tracking.</li>
@@ -228,7 +228,7 @@ export function Terms() {
                 We do not claim ownership of the content, tasks, or messages you upload to the Service. All workspace data you create remains yours.
               </p>
               <p>
-                However, the Service, including its landing pages, codebases, design tokens, logos, graphics, and interactive simulators, is the exclusive property of Guild Orbit Inc. and is protected by copyright and intellectual property laws. You may not copy, modify, distribute, or reverse-engineer any portion of our intellectual property.
+                However, the Service, including its landing pages, codebases, design tokens, logos, graphics, and interactive simulators, is the exclusive property of Guild Orbit Inc. and is protected by copyright and intellectual property laws. You may not copy, modify, distribute, or reverse engineer any portion of our intellectual property.
               </p>
             </div>
           </section>
@@ -246,7 +246,7 @@ export function Terms() {
             </div>
             <div className="text-sm text-slate-600 font-medium space-y-4 leading-relaxed">
               <p>
-                THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. GUILD ORBIT EXPRESSLY DISCLAIMS ALL WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+                THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. GUILD ORBIT EXPRESSLY DISCLAIMS ALL WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON INFRINGEMENT.
               </p>
               <p>
                 IN NO EVENT SHALL GUILD ORBIT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES (INCLUDING DAMAGES FOR LOSS OF PROFITS, WORK SUSPENSION, DATA LOSS, OR GOODWILL) ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF THE SERVICE, WHETHER OR NOT WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.

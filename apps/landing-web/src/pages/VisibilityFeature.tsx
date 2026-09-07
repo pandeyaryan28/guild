@@ -16,7 +16,7 @@ import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 export function VisibilityFeature() {
   useDocumentMetadata({
     title: 'Visibility & Dashboards',
-    description: 'Get real-time updates and full overview dashboards showing what tasks are in progress, what needs review, and team activity feeds.',
+    description: 'Get real time updates and full overview dashboards showing what tasks are in progress, what needs review, and team activity feeds.',
     canonicalPath: '/features/visibility'
   });
 
@@ -43,8 +43,8 @@ export function VisibilityFeature() {
           {/* Left Text Column */}
           <div className="lg:col-span-5 space-y-6">
             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Visibility & <br/>
-              <span className="text-gradient">Dashboards</span>
+              Central Dashboards & <br/>
+              <span className="text-gradient">Activity Feeds</span>
             </h1>
             <p className="text-slate-500 text-sm md:text-base font-semibold leading-relaxed">
               Unify team operations. Access daily task feeds, view personal dashboards, and search through global chat histories in a centralized visibility layer.
@@ -61,13 +61,13 @@ export function VisibilityFeature() {
                 <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
                   <Check className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-xs font-bold text-slate-700">Real-time feeds tracking status updates and changes</span>
+                <span className="text-xs font-bold text-slate-700">Real time feeds tracking status updates and changes</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
                   <Check className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-xs font-bold text-slate-700">Database indexed full-text search for quick access</span>
+                <span className="text-xs font-bold text-slate-700">Database indexed full text search for quick access</span>
               </div>
             </div>
           </div>
@@ -154,7 +154,7 @@ export function VisibilityFeature() {
                 <div className="h-11 w-11 rounded-2xl bg-cyan-50 border border-cyan-100/75 flex items-center justify-center text-cyan-600 mb-6 shadow-sm">
                   <Search className="h-5.5 w-5.5" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">Full-Text Indexed Search</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Full Text Indexed Search</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
                   Retrieve updates in seconds. Query task names, check comment contents, or search through chat logs and task descriptions using indexed search.
                 </p>
@@ -166,7 +166,7 @@ export function VisibilityFeature() {
                 </li>
                 <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
-                  Cross-category result filtering
+                  Cross category result filtering
                 </li>
               </ul>
             </div>

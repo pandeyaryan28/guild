@@ -5,7 +5,7 @@ import { useNavigation } from '../../context/NavigationContext';
 import { APP_URL } from '../../config/landingData';
 import { GlassTorusKnot } from './GlassTorusKnot';
 
-const WORDS = ['Sync.', 'Control.'];
+const WORDS = ['Two Minutes.', 'Full Clarity.'];
 
 export function Hero() {
   const { navigate } = useNavigation();
@@ -14,7 +14,7 @@ export function Hero() {
   useEffect(() => {
     const interval = setInterval(() => {
       setWordIndex((prev) => (prev + 1) % WORDS.length);
-    }, 1500);
+    }, 1800);
     return () => clearInterval(interval);
   }, []);
 
@@ -42,12 +42,12 @@ export function Hero() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-            className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.08] mb-6"
+            className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15] mb-6"
           >
-            One Workspace. <br className="sm:hidden" />
-            <span className="block sm:inline">Stay in </span>
+            <span className="block">Whole Startup Status.</span>
+            <span className="inline-block">In Under&nbsp;</span>
             <span 
-              className="relative inline-flex items-center justify-start text-left min-w-[120px] sm:min-w-[165px] md:min-w-[210px] h-[1.25em] overflow-hidden align-middle select-none"
+              className="relative inline-flex items-center justify-start text-left min-w-[240px] sm:min-w-[320px] md:min-w-[380px] h-[1.25em] overflow-hidden align-middle select-none"
               style={{ perspective: 1000 }}
             >
               <AnimatePresence mode="wait">
@@ -57,7 +57,7 @@ export function Hero() {
                   animate={{ opacity: 1, y: 0, rotateX: 0 }}
                   exit={{ opacity: 0, y: -15, rotateX: -60 }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
-                  className="absolute left-0 h-full flex items-center text-gradient-cosmic"
+                  className="absolute left-0 h-full flex items-center text-gradient-cosmic whitespace-nowrap"
                 >
                   {WORDS[wordIndex]}
                 </motion.span>
@@ -71,7 +71,7 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
             className="text-[15px] sm:text-lg md:text-[19px] text-slate-500 max-w-2xl mx-auto leading-relaxed mb-10"
           >
-            The lightweight coordination platform for small & mid-sized teams to unify tasks, chat, and approvals. Powered by a centralized visibility layer that gives owners and managers total oversight of every department.
+            Get the status of your whole startup within two minutes. Guild Orbit is the centralized visibility layer for founders, managers, and admins, giving you total oversight of department health, workloads, and approvals, with tasks and chat working seamlessly underneath.
           </motion.p>
         </div>
 

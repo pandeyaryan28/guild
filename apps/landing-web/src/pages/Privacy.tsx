@@ -176,7 +176,7 @@ export function Privacy() {
               <p>We use the data we collect for the following core operational purposes:</p>
               <ul className="list-disc pl-5 space-y-2.5">
                 <li>Providing and maintaining your collaborative team workspaces.</li>
-                <li>Managing real-time operations, channel chats, approvals, and board states.</li>
+                <li>Managing real time operations, channel chats, approvals, and board states.</li>
                 <li>Providing administrative overview panels (e.g. member workload tracking and task progress).</li>
                 <li>Improving our UI/UX based on anonymized usage metrics.</li>
                 <li>Communicating with workspace owners regarding feature updates, security alerts, and support queries.</li>
@@ -197,7 +197,7 @@ export function Privacy() {
             </div>
             <div className="text-sm text-slate-600 font-medium space-y-4 leading-relaxed">
               <p>
-                We prioritize security to keep your workspace secure. We implement a variety of industry-standard security measures:
+                We prioritize security to keep your workspace secure. We implement a variety of industry standard security measures:
               </p>
               <ul className="list-disc pl-5 space-y-2.5">
                 <li>

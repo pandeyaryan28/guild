@@ -14,7 +14,7 @@ import { useDocumentMetadata } from '../hooks/useDocumentMetadata';
 export function ApprovalsFeature() {
   useDocumentMetadata({
     title: 'Requests & Approvals Flow',
-    description: 'Simplify sign-offs with custom vacation requests, expense approvals, and automated workflow pathways.',
+    description: 'Simplify approvals with custom vacation requests, expense approvals, and automated workflow pathways.',
     canonicalPath: '/features/approvals'
   });
 
@@ -45,7 +45,7 @@ export function ApprovalsFeature() {
               <span className="text-gradient">Approvals Log</span>
             </h1>
             <p className="text-slate-500 text-sm md:text-base font-semibold leading-relaxed">
-              Standardize administrative requests. Review expense quotes, authorize leaves of absence, and track procurement files in a secure sign-off inbox.
+              Standardize administrative requests. Review expense quotes, authorize leaves of absence, and track procurement files in a secure approval inbox.
             </p>
 
             <div className="flex flex-col gap-3.5 pt-2">
@@ -59,7 +59,7 @@ export function ApprovalsFeature() {
                 <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
                   <Check className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-xs font-bold text-slate-700">Expense quote audit pipelines with manager sign-offs</span>
+                <span className="text-xs font-bold text-slate-700">Expense quote audit pipelines with manager approvals</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="h-6 w-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
@@ -106,9 +106,9 @@ export function ApprovalsFeature() {
                 <div className="h-11 w-11 rounded-2xl bg-purple-50 border border-purple-100/75 flex items-center justify-center text-purple-600 mb-6 shadow-sm">
                   <Clock className="h-5.5 w-5.5" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">Leave & Time-Off submissions</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Leave & Time Off submissions</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
-                  Standardize leave requests. Workers key in vacation timelines, identify core team coverage backup, and monitor admin sign-off status directly on their personal dashboards.
+                  Standardize leave requests. Workers key in vacation timelines, identify core team coverage backup, and monitor admin approval status directly on their personal dashboards.
                 </p>
               </div>
               <ul className="space-y-2.5 pt-4 border-t border-slate-100">
@@ -131,7 +131,7 @@ export function ApprovalsFeature() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-3">Procurement & Expenses</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
-                  Authorize company purchases without scattered spreadsheets. Review vendor invoices, quote details, and upload logs to sign-off on budgets instantly.
+                  Authorize company purchases without scattered spreadsheets. Review vendor invoices, quote details, and upload logs to sign off on budgets instantly.
                 </p>
               </div>
               <ul className="space-y-2.5 pt-4 border-t border-slate-100">
@@ -141,7 +141,7 @@ export function ApprovalsFeature() {
                 </li>
                 <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  One-click authorization badges
+                  One click authorization badges
                 </li>
               </ul>
             </div>
@@ -152,7 +152,7 @@ export function ApprovalsFeature() {
                 <div className="h-11 w-11 rounded-2xl bg-indigo-50 border border-indigo-100/75 flex items-center justify-center text-indigo-600 mb-6 shadow-sm">
                   <ShieldCheck className="h-5.5 w-5.5" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">Role-based Permissions</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Role based Permissions</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
                   Restrict approvals to managers and founders. Control who can sign off on purchase requests or approve leave requests by setting role boundaries at the department level.
                 </p>
@@ -187,7 +187,7 @@ export function ApprovalsFeature() {
               </p>
               <div className="flex gap-2 items-center text-xs font-bold text-slate-700 pt-2">
                 <AlertCircle className="h-4 w-4 text-purple-500" />
-                <span>Eliminate administrative back-and-forth</span>
+                <span>Eliminate administrative back and forth</span>
               </div>
             </div>
 

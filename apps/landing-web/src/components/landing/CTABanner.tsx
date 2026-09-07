@@ -21,10 +21,10 @@ export function CTABanner() {
           </div>
 
           <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight relative leading-none font-sans">
-            Bring your team into orbit.
+            Total startup visibility in two minutes.
           </h2>
           <p className="mt-4 text-slate-300 text-sm md:text-base max-w-md mx-auto relative font-medium leading-relaxed">
-            Eliminate operational silos, consolidate chats and approvals, and execute tasks with absolute accountability.
+            Eliminate operational blindspots, get full oversight across every department, and execute work with absolute clarity.
           </p>
           <a
             href={APP_URL}

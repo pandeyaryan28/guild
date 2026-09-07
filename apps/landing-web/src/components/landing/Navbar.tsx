@@ -53,7 +53,7 @@ export function Navbar() {
       path: '/features/work-tracking',
       items: [
         { icon: CheckSquare, label: 'Tasks', desc: 'Assign and organize team tasks.', path: '/features/work-tracking' },
-        { icon: LayoutDashboard, label: 'Kanban Board', desc: 'Drag-and-drop workflows.', path: '/features/work-tracking' },
+        { icon: LayoutDashboard, label: 'Kanban Board', desc: 'Drag and drop workflows.', path: '/features/work-tracking' },
       ]
     },
     {
@@ -62,7 +62,7 @@ export function Navbar() {
       bg: 'bg-cyan-50 border border-cyan-100/50',
       path: '/features/team-chat',
       items: [
-        { icon: MessageSquare, label: 'Channels', desc: 'Department-focused chat rooms.', path: '/features/team-chat' },
+        { icon: MessageSquare, label: 'Channels', desc: 'Department focused chat rooms.', path: '/features/team-chat' },
         { icon: Sparkles, label: 'Mentions & DMs', desc: 'Fast, secure direct chats.', path: '/features/team-chat' },
       ]
     },
@@ -72,8 +72,8 @@ export function Navbar() {
       bg: 'bg-purple-50 border border-purple-100/50',
       path: '/features/approvals',
       items: [
-        { icon: FileCheck, label: 'Leave Requests', desc: 'Quick time-off submissions.', path: '/features/approvals' },
-        { icon: Sparkles, label: 'Expense Approvals', desc: 'Purchase orders and sign-offs.', path: '/features/approvals' },
+        { icon: FileCheck, label: 'Leave Requests', desc: 'Quick time off submissions.', path: '/features/approvals' },
+        { icon: Sparkles, label: 'Expense Approvals', desc: 'Purchase orders and approvals.', path: '/features/approvals' },
       ]
     },
     {
@@ -83,7 +83,7 @@ export function Navbar() {
       path: '/features/visibility',
       items: [
         { icon: LayoutDashboard, label: 'Central Dashboard', desc: 'Assigned tasks & activity feeds.', path: '/features/visibility' },
-        { icon: Clock, label: 'Activity Feeds', desc: 'Real-time updates on status changes.', path: '/features/visibility' },
+        { icon: Clock, label: 'Activity Feeds', desc: 'Real time updates on status changes.', path: '/features/visibility' },
       ]
     },
     {
@@ -93,7 +93,7 @@ export function Navbar() {
       path: '/features/admin-console',
       items: [
         { icon: Shield, label: 'Workload Allotment', desc: 'Balance team work allocations.', path: '/features/admin-console' },
-        { icon: Shield, label: 'Project Health', desc: 'Track on-track vs delayed.', path: '/features/admin-console' },
+        { icon: Shield, label: 'Project Health', desc: 'Track health, on track vs delayed.', path: '/features/admin-console' },
       ]
     },
     {

@@ -35,8 +35,8 @@ const appSchema = {
 
 export function Home() {
   useDocumentMetadata({
-    title: 'Guild Orbit',
-    description: 'Chat, tasks, and approvals — all in one place. Guild Orbit brings your team\'s operations together so nothing falls through the cracks.',
+    title: 'Guild Orbit, Startup Visibility Layer in Two Minutes',
+    description: 'Get the status of your whole startup within two minutes. Guild Orbit is the centralized visibility layer for founders, managers, and admins with tasks, chat, and approvals underneath.',
     canonicalPath: '/'
   });
 

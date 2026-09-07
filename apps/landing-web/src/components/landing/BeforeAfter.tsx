@@ -2,17 +2,17 @@ import { X, Check, ArrowRight, Activity, MessageSquare, FileText, CheckCircle2 }
 import { ScrollReveal } from './ScrollReveal';
 
 const chaosPoints = [
+  { text: 'Zero centralized visibility', detail: 'Founders and managers spend hours asking "what is the status of X?" and chasing updates across departments.' },
   { text: 'Scattered WhatsApp & DM chats', detail: 'Crucial decisions get lost in casual threads and are impossible to audit.' },
-  { text: 'Messy spreadsheets for task tracking', detail: 'Out-of-sync files lead to missed deadlines and poor accountability.' },
+  { text: 'Messy spreadsheets for task tracking', detail: 'Out of sync files lead to missed deadlines and poor accountability.' },
   { text: 'Formal approvals stuck in email trails', detail: 'Leave applications and purchase requests take days to get signed off.' },
-  { text: 'Zero centralized visibility', detail: 'Founders and managers spend hours asking "what is the status of X?".' },
 ];
 
 const orbitPoints = [
-  { icon: MessageSquare, text: 'Context-first communication', detail: 'Dedicated channels tied directly to department workflows.' },
-  { icon: CheckCircle2, text: 'Real-time Kanban task boards', detail: 'Clear assignees, priorities, and instant comment history.' },
-  { icon: FileText, text: 'One-click operational sign-offs', detail: 'Leave, expenses, and purchase requests approved instantly.' },
-  { icon: Activity, text: 'Unified dashboard feeds', detail: 'At-a-glance view of open approvals, tasks, and recent conversations.' },
+  { icon: Activity, text: 'Two minute visibility layer', detail: 'Founders & admins get whole startup health, bottlenecks, and project velocity at a single glance.' },
+  { icon: MessageSquare, text: 'Context first communication', detail: 'Dedicated channels tied directly to department workflows.' },
+  { icon: CheckCircle2, text: 'Real time Kanban task boards', detail: 'Clear assignees, priorities, and instant comment history.' },
+  { icon: FileText, text: 'One click operational approvals', detail: 'Leave, expenses, and purchase requests approved instantly.' },
 ];
 
 export function BeforeAfter() {
@@ -29,7 +29,7 @@ export function BeforeAfter() {
               The Operational Shift
             </h2>
             <p className="mt-4 text-slate-500 text-base md:text-lg font-medium max-w-xl mx-auto">
-              Upgrade your team coordinate systems from scattered, offline chaos to a single unified workflow.
+              Upgrade your team coordinate systems: trade zero visibility and scattered chaos for instant whole-company clarity.
             </p>
           </div>
         </ScrollReveal>

@@ -16,7 +16,7 @@ export function Demo() {
   });
 
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', teamSize: '5-20', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', teamSize: '5 to 20', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -128,8 +128,8 @@ export function Demo() {
                       onChange={(e) => setFormData({ ...formData, teamSize: e.target.value })}
                       className="bg-white/60 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
                     >
-                      <option value="5-20">5 to 20 users</option>
-                      <option value="20-100">20 to 100 users</option>
+                      <option value="5 to 20">5 to 20 users</option>
+                      <option value="20 to 100">20 to 100 users</option>
                       <option value="100+">More than 100 users</option>
                     </select>
                   </div>

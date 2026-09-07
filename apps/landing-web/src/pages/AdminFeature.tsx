@@ -98,7 +98,7 @@ export function AdminFeature() {
               Three Pillars of Administrative Command
             </h2>
             <p className="mt-3 text-slate-500 text-xs font-semibold leading-relaxed">
-              Unify team context. Access real-time intelligence feeds to balance workloads, protect project health, and unblock bottlenecks.
+              Unify team context. Access real time intelligence feeds to balance workloads, protect project health, and unblock bottlenecks.
             </p>
           </div>
 
@@ -134,7 +134,7 @@ export function AdminFeature() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-3">Project Health Tracking</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed mb-6">
-                  Track completion progress. Instantly check if active workspace projects and team goals are on-track, delayed, or completed to maintain total business momentum.
+                  Track completion progress. Instantly check if active workspace projects and team goals are on track, delayed, or completed to maintain total business momentum.
                 </p>
               </div>
               <ul className="space-y-2.5 pt-4 border-t border-slate-100">
@@ -144,7 +144,7 @@ export function AdminFeature() {
                 </li>
                 <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Delayed and At-Risk alerts
+                  Delayed and At Risk alerts
                 </li>
               </ul>
             </div>
@@ -163,7 +163,7 @@ export function AdminFeature() {
               <ul className="space-y-2.5 pt-4 border-t border-slate-100">
                 <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                  Days-late details indicators
+                  Days late details indicators
                 </li>
                 <li className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />

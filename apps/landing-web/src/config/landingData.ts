@@ -6,7 +6,7 @@ export interface FAQItem {
 export const FAQ_ITEMS: FAQItem[] = [
   {
     q: 'How long does it take to get started?',
-    a: 'Under five minutes. Create a workspace, invite your team with a link, and start coordinating — your dashboard, channels, and task boards are set up automatically.',
+    a: 'Under five minutes. Create a workspace, invite your team with a link, and start coordinating, your dashboard, channels, and task boards are set up automatically.',
   },
   {
     q: 'Are there limits on tasks or approvals?',
@@ -14,11 +14,11 @@ export const FAQ_ITEMS: FAQItem[] = [
   },
   {
     q: 'Can I set up different permissions by department?',
-    a: 'Yes. Group members into departments and configure role-based access from the admin panel.',
+    a: 'Yes. Group members into departments and configure role based access from the admin panel.',
   },
   {
     q: 'How secure is Guild Orbit?',
-    a: 'All data is encrypted and isolated at the workspace level. We use token-based authentication and strict database access rules.',
+    a: 'All data is encrypted and isolated at the workspace level. We use token based authentication and strict database access rules.',
   },
   {
     q: 'Can I cancel anytime?',
@@ -26,7 +26,7 @@ export const FAQ_ITEMS: FAQItem[] = [
   },
   {
     q: 'How can team owners track workload allotment and project health?',
-    a: 'Guild Orbit features a dedicated Admin Console. It gives administrators full visibility to check member task allotment, monitor project/goal completion health, audit overdue items, and manage secure invite links or department-based roles.',
+    a: 'Guild Orbit features a dedicated Admin Console. It gives administrators full visibility to check member task allotment, monitor project/goal completion health, audit overdue items, and manage secure invite links or department based roles.',
   },
 ];
 

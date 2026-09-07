@@ -28,7 +28,7 @@ export function Contact() {
     name: '',
     email: '',
     company: '',
-    teamSize: '5-20',
+    teamSize: '5 to 20',
     message: '',
   });
 
@@ -92,8 +92,8 @@ export function Contact() {
                 <CheckCircle2 className="h-3 w-3 text-indigo-600" />
               </div>
               <div>
-                <span className="text-slate-800 font-bold block">15-minute product walk</span>
-                <span className="text-slate-400 font-medium text-[11px]">No high-pressure sales. Just operations logic.</span>
+                <span className="text-slate-800 font-bold block">15 minute product walk</span>
+                <span className="text-slate-400 font-medium text-[11px]">No high pressure sales. Just operations logic.</span>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -255,8 +255,8 @@ export function Contact() {
                           disabled={isSubmitting}
                           className="bg-white/60 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
                         >
-                          <option value="5-20">5 to 20 users</option>
-                          <option value="20-100">20 to 100 users</option>
+                          <option value="5 to 20">5 to 20 users</option>
+                          <option value="20 to 100">20 to 100 users</option>
                           <option value="100+">More than 100 users</option>
                         </select>
                       </motion.div>
