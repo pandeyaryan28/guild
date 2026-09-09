@@ -4,27 +4,25 @@ import {
   Plus, 
   Loader2, 
   Check, 
-  Trello,
-  Calendar,
-  AlertCircle,
-  Clock,
-  Filter,
-  CheckCircle,
-  Play,
-  RotateCcw,
-  Target,
-  Lock,
-  Users,
-  FolderGit,
-  LayoutGrid,
-  List as ListIcon,
-  Search,
-  X,
-  ChevronDown,
-  ChevronRight,
-  ArrowRight,
-  SlidersHorizontal,
-  Folder
+  Calendar, 
+  Clock, 
+  CheckCircle, 
+  Play, 
+  RotateCcw, 
+  Target, 
+  Lock, 
+  Users, 
+  FolderGit, 
+  LayoutGrid, 
+  List as ListIcon, 
+  Search, 
+  X, 
+  ChevronRight, 
+  ArrowRight, 
+  SlidersHorizontal, 
+  Folder,
+  Layers,
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from '../../../hooks/useAuth';
@@ -39,6 +37,19 @@ import { createProject, type Project } from '../../../lib/projects';
 import { TaskDetailDrawer } from '../../tasks/TaskDetailDrawer';
 import { GoalDetailDrawer } from '../../tasks/GoalDetailDrawer';
 import { cn } from '@/lib/utils';
+import { avatarHue } from '../../MemberProfileDrawer';
+
+// Helper for compact dates (e.g. "Oct 14")
+function formatShortDate(date: any) {
+  if (!date) return null;
+  try {
+    const d = typeof date.toDate === 'function' ? date.toDate() : (date instanceof Date ? date : new Date(date));
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch {
+    return null;
+  }
+}
 
 export function MobileWorkspace() {
   const navigate = useNavigate();
@@ -156,10 +167,15 @@ export function MobileWorkspace() {
     return map;
   }, [members]);
 
-  const getInitials = (uid: string) => {
+  const getMemberInitials = (uid: string) => {
     const m = memberMap.get(uid);
     if (!m) return 'U';
     return m.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  };
+
+  const getMemberName = (uid: string) => {
+    const m = memberMap.get(uid);
+    return m ? m.fullName : 'Unassigned';
   };
 
   // ─── Scoped Tasks & Goals Filtering ───
@@ -191,7 +207,13 @@ export function MobileWorkspace() {
       });
     }
 
-    return tasks;
+    return tasks.filter(t => {
+      if (t.parentTaskId) return false;
+      if (searchQuery.trim() && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedProjectId !== 'all' && t.projectId !== selectedProjectId) return false;
+      if (selectedPriority !== 'all' && t.priority !== selectedPriority) return false;
+      return true;
+    });
   }, [tasks, activeScope, user?.uid, selectedTeam, searchQuery, selectedProjectId, selectedPriority, selectedAssigneeId]);
 
   const scopedGoals = React.useMemo(() => {
@@ -235,7 +257,6 @@ export function MobileWorkspace() {
   }, [projects, tasks]);
 
   // ─── Actions ───
-
   const handleQuickCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickTitle.trim() || !orgId || creatingQuick) return;
@@ -338,7 +359,7 @@ export function MobileWorkspace() {
         mentions: sendBackTask.assigneeIds || [],
         taskTitle: sendBackTask.title,
       });
-      setToastMessage("Task sent back to assignee with feedback.");
+      setToastMessage("Task returned to assignee.");
       setSendBackTask(null);
       setSendBackComment('');
     } catch (err) {
@@ -348,77 +369,52 @@ export function MobileWorkspace() {
     }
   };
 
-  const PRIORITY_BADGES: Record<string, string> = {
-    urgent: 'border-red-500/30 bg-red-500/10 text-red-500 dark:text-red-400',
-    high: 'border-orange-500/30 bg-orange-500/10 text-orange-500 dark:text-orange-400',
-    medium: 'border-blue-500/30 bg-blue-500/10 text-blue-500 dark:text-blue-400',
-    low: 'border-zinc-500/30 bg-zinc-500/10 text-zinc-500 dark:text-zinc-400',
-    none: 'border-transparent text-muted-foreground',
+  const PRIORITY_BADGES: Record<string, { label: string; class: string }> = {
+    urgent: { label: 'Urgent', class: 'border-red-500/30 bg-red-500/10 text-red-500 dark:text-red-400' },
+    high: { label: 'High', class: 'border-orange-500/30 bg-orange-500/10 text-orange-500 dark:text-orange-400' },
+    medium: { label: 'Med', class: 'border-blue-500/30 bg-blue-500/10 text-blue-500 dark:text-blue-400' },
+    low: { label: 'Low', class: 'border-zinc-500/30 bg-zinc-500/10 text-zinc-500 dark:text-zinc-400' },
+    none: { label: '', class: 'hidden' },
   };
 
   const STATUS_COLS: { id: TaskStatus; label: string; dotColor: string }[] = [
     { id: 'todo', label: 'To Do', dotColor: 'bg-zinc-400' },
     { id: 'in_progress', label: 'In Progress', dotColor: 'bg-amber-400' },
-    { id: 'review', label: 'In Review', dotColor: 'bg-indigo-400' },
+    { id: 'review', label: 'Review', dotColor: 'bg-indigo-400' },
     { id: 'done', label: 'Done', dotColor: 'bg-emerald-400' },
   ];
 
+  const hasActiveFilters = selectedProjectId !== 'all' || selectedPriority !== 'all' || (activeScope === 'my-team' && selectedAssigneeId !== 'all') || searchQuery.trim().length > 0;
+
   return (
-    <div className="flex flex-col space-y-3.5 animate-fluid-pop pb-6">
+    <div className="flex flex-col space-y-3.5 animate-fluid-pop pb-8 max-w-2xl mx-auto w-full">
       {/* Toast Notification Pill */}
       {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 aether-glass bg-surface/95 dark:bg-surface/90 border border-primary/40 px-4 py-2 rounded-full shadow-xl text-xs font-bold text-foreground flex items-center gap-2">
-          <CheckCircle className="w-3.5 h-3.5 text-primary" />
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 aether-glass bg-surface/98 dark:bg-surface/90 border border-primary/30 px-4 py-2 rounded-full shadow-2xl text-xs font-bold text-foreground flex items-center gap-2 animate-in fade-in slide-in-from-top-3">
+          <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* ─── 1. Top Level Scope Switcher (My Space vs My Team vs Projects) ─── */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="aether-glass p-1 flex-1 flex bg-secondary/50 border border-border shadow-xs rounded-2xl">
-          {[
-            { id: 'my-space', label: 'My Space', icon: Target },
-            { id: 'my-team', label: 'My Team', icon: Users },
-            { id: 'projects', label: 'Projects', icon: FolderGit },
-          ].map((scope) => {
-            const isActive = activeScope === scope.id;
-            const Icon = scope.icon;
-            return (
-              <button
-                key={scope.id}
-                onClick={() => setActiveScope(scope.id as any)}
-                className={cn(
-                  "relative flex-1 py-2 flex items-center justify-center gap-1.5 text-center text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer select-none",
-                  isActive ? "text-primary-foreground font-black" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {isActive && (
-                  <motion.div 
-                    layoutId="workspaceScopeTab"
-                    className="absolute inset-0 bg-primary rounded-xl shadow-md z-0"
-                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center gap-1.5">
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{scope.label}</span>
-                </span>
-              </button>
-            );
-          })}
+      {/* ─── 1. Header with Page Title & Aligned Action Controls ─── */}
+      <div className="flex items-center justify-between gap-3 pt-1">
+        <div>
+          <h1 className="text-xl font-black text-foreground tracking-tight">Workspace</h1>
+          <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">
+            {activeScope === 'my-space' ? 'Personal tasks & deliverables' : activeScope === 'my-team' ? (selectedTeam ? `${selectedTeam.name} coordination` : 'Team board') : 'Initiatives & project tracking'}
+          </p>
         </div>
 
-        {/* Action Controls: Search & Filter toggle + Comprehensive Create + */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setShowFilterBar(!showFilterBar)}
             className={cn(
-              "h-9 w-9 rounded-xl border border-border flex items-center justify-center transition-all cursor-pointer shadow-xs",
-              showFilterBar || selectedProjectId !== 'all' || selectedPriority !== 'all' || searchQuery
-                ? "bg-primary/15 text-primary border-primary/40"
-                : "bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground"
+              "h-9 w-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer shadow-xs",
+              showFilterBar || hasActiveFilters
+                ? "bg-primary/15 text-primary border-primary/40 shadow-xs"
+                : "bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground border-border"
             )}
-            title="Toggle Filters"
+            title="Search & Filters"
           >
             <SlidersHorizontal className="w-4 h-4" />
           </button>
@@ -432,30 +428,71 @@ export function MobileWorkspace() {
               }
               setShowCreateDrawer(true);
             }}
-            className="h-9 px-3 rounded-xl bg-primary text-white text-xs font-black flex items-center gap-1.5 shadow-md hover:bg-primary/95 active:scale-95 transition-all cursor-pointer"
-            title="Create New"
+            className="h-9 px-3.5 rounded-xl bg-primary text-primary-foreground text-xs font-black flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer border border-primary/20"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New</span>
+            <span>New</span>
           </button>
         </div>
       </div>
 
-      {/* ─── Team Picker (When in 'my-team' scope) ─── */}
+      {/* ─── 2. Scope Switcher: My Space vs My Team vs Projects ─── */}
+      <div className="p-1 flex rounded-2xl bg-secondary/60 border border-border shadow-xs">
+        {[
+          { id: 'my-space', label: 'My Space', icon: Target },
+          { id: 'my-team', label: 'My Team', icon: Users },
+          { id: 'projects', label: 'Projects', icon: FolderGit },
+        ].map((scope) => {
+          const isActive = activeScope === scope.id;
+          const Icon = scope.icon;
+          return (
+            <button
+              key={scope.id}
+              onClick={() => setActiveScope(scope.id as any)}
+              className={cn(
+                "relative flex-1 py-2 text-center text-xs font-black rounded-xl transition-all cursor-pointer select-none",
+                isActive ? "text-primary-foreground font-black" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {isActive && (
+                <motion.div 
+                  layoutId="workspaceScopeTab"
+                  className="absolute inset-0 bg-primary rounded-xl shadow-sm z-0"
+                  transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-1.5">
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{scope.label}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ─── Team Selector Pill (when in My Team scope) ─── */}
       {activeScope === 'my-team' && visibleTeams.length > 0 && (
-        <div className="flex items-center justify-between gap-2 px-1">
-          <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Active Team</span>
-          <select
-            value={selectedTeamId}
-            onChange={(e) => setSelectedTeamId(e.target.value)}
-            className="bg-surface/90 dark:bg-surface/60 border border-border rounded-xl px-3 py-1.5 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 cursor-pointer shadow-xs"
-          >
-            {visibleTeams.map((team) => (
-              <option key={team.id} value={team.id}>
-                {team.name} ({team.memberIds.length + 1} members)
-              </option>
-            ))}
-          </select>
+        <div className="flex items-center gap-2 overflow-x-auto aether-scroll pb-1">
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground shrink-0 pl-1">
+            Team:
+          </span>
+          {visibleTeams.map((team) => {
+            const isSelected = team.id === selectedTeam?.id;
+            return (
+              <button
+                key={team.id}
+                onClick={() => setSelectedTeamId(team.id)}
+                className={cn(
+                  "px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer shrink-0",
+                  isSelected
+                    ? "bg-surface text-foreground border-primary/50 shadow-xs"
+                    : "bg-secondary/40 text-muted-foreground border-border hover:text-foreground"
+                )}
+              >
+                {team.name}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -466,22 +503,22 @@ export function MobileWorkspace() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden space-y-2.5 bg-surface/80 dark:bg-surface/40 p-3 rounded-2xl border border-border"
+            className="overflow-hidden space-y-2.5 bg-surface/95 dark:bg-surface/50 p-3.5 rounded-2xl border border-border shadow-xs"
           >
             {/* Search Input */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by keyword..."
-                className="w-full pl-9 pr-8 py-2 bg-secondary/60 border border-border rounded-xl text-xs font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+                placeholder="Search tasks, goals, or initiatives..."
+                className="w-full pl-9 pr-8 py-2 bg-secondary/50 border border-border rounded-xl text-xs font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 shadow-xs"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -490,11 +527,10 @@ export function MobileWorkspace() {
 
             {/* Filter Dropdowns Grid */}
             <div className="grid grid-cols-2 gap-2 text-xs">
-              {/* Project Filter */}
               <select
                 value={selectedProjectId}
                 onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="bg-secondary/60 border border-border rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-foreground focus:outline-none"
+                className="bg-secondary/60 border border-border rounded-xl px-2.5 py-1.5 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 truncate cursor-pointer shadow-xs"
               >
                 <option value="all">All Projects</option>
                 {projects.map((p) => (
@@ -502,22 +538,21 @@ export function MobileWorkspace() {
                 ))}
               </select>
 
-              {/* Priority Filter */}
               <select
                 value={selectedPriority}
                 onChange={(e) => setSelectedPriority(e.target.value)}
-                className="bg-secondary/60 border border-border rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-foreground focus:outline-none"
+                className="bg-secondary/60 border border-border rounded-xl px-2.5 py-1.5 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 cursor-pointer shadow-xs"
               >
                 <option value="all">All Priorities</option>
-                <option value="urgent">Urgent</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
+                <option value="urgent">Urgent Priority</option>
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
               </select>
             </div>
 
-            {/* Clear Filters */}
-            {(selectedProjectId !== 'all' || selectedPriority !== 'all' || searchQuery) && (
+            {/* Reset Filters */}
+            {hasActiveFilters && (
               <div className="flex justify-end pt-1">
                 <button
                   onClick={() => {
@@ -528,7 +563,7 @@ export function MobileWorkspace() {
                   }}
                   className="text-[10px] font-black text-primary hover:underline cursor-pointer"
                 >
-                  Reset Filters
+                  Reset all filters
                 </button>
               </div>
             )}
@@ -536,7 +571,7 @@ export function MobileWorkspace() {
         )}
       </AnimatePresence>
 
-      {/* ─── 2. Scope Views: Projects Scope vs Task/Goal Scopes ─── */}
+      {/* ─── 3. Scope Content ─── */}
       {activeScope === 'projects' ? (
         /* Projects List View */
         <div className="space-y-3">
@@ -555,38 +590,38 @@ export function MobileWorkspace() {
             <div className="p-8 text-center bg-secondary/25 border border-dashed border-border rounded-2xl py-14">
               <FolderGit className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
               <span className="text-xs font-black text-foreground block uppercase tracking-wider">No Projects Established</span>
-              <span className="text-[10px] text-muted-foreground mt-1 block">Tap "New" to create your team's first project.</span>
+              <span className="text-[11px] text-muted-foreground mt-1 block font-semibold">Tap "New" to start your team's first initiative.</span>
             </div>
           ) : (
             <div className="space-y-3">
               {projects.map((project) => {
                 const prog = projectProgressMap.get(project.id) || { total: 0, done: 0, pct: 0 };
-                const due = project.dueDate ? (typeof (project.dueDate as any).toDate === 'function' ? (project.dueDate as any).toDate() : new Date(project.dueDate as any)) : null;
+                const formattedDue = formatShortDate(project.dueDate);
 
                 return (
                   <div
                     key={project.id}
                     onClick={() => navigate(`/projects/${project.id}`)}
-                    className="p-4 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border dark:border-border-strong hover:border-primary/30 active:scale-[0.99] transition-all cursor-pointer shadow-xs flex flex-col gap-3"
+                    className="p-4 rounded-2xl bg-surface/95 dark:bg-surface/50 border border-border hover:border-primary/40 active:scale-[0.99] transition-all cursor-pointer shadow-xs flex flex-col gap-3"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
-                          <Folder className="w-4 h-4" />
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+                          <Folder className="w-4.5 h-4.5" />
                         </div>
-                        <div className="min-w-0">
-                          <span className="text-xs font-black text-foreground block truncate">{project.name}</span>
-                          <span className="text-[9px] text-muted-foreground block truncate mt-0.5">{project.description || 'No description provided.'}</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-xs font-black text-foreground block truncate leading-snug">{project.name}</span>
+                          <span className="text-[10px] text-muted-foreground block truncate mt-0.5 font-medium">{project.description || 'No description provided.'}</span>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-1" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0 mt-1" />
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-muted-foreground">
-                        <span>Work Completed</span>
-                        <span>{prog.done} of {prog.total} tasks ({prog.pct}%)</span>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-muted-foreground">
+                        <span>Progress</span>
+                        <span>{prog.done}/{prog.total} tasks · {prog.pct}%</span>
                       </div>
                       <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden shadow-inner">
                         <div 
@@ -596,12 +631,12 @@ export function MobileWorkspace() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[9px] text-muted-foreground font-semibold pt-1 border-t border-border/70">
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground font-semibold pt-1 border-t border-border/70">
                       <span>{project.memberIds?.length || 1} team members</span>
-                      {due && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-primary/70" />
-                          <span>Due {due.toLocaleDateString()}</span>
+                      {formattedDue && (
+                        <span className="flex items-center gap-1 font-bold text-foreground/80">
+                          <Calendar className="w-3 h-3 text-primary" />
+                          <span>Due {formattedDue}</span>
                         </span>
                       )}
                     </div>
@@ -617,18 +652,21 @@ export function MobileWorkspace() {
           {/* Sub-header Controls: Tasks vs Goals toggle + List vs Kanban Mode Toggle */}
           <div className="flex items-center justify-between gap-2">
             {/* Tasks vs Goals Tab Switcher */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-secondary/60 border border-border">
               <button
                 onClick={() => setWorkspaceTab('tasks')}
                 className={cn(
-                  "px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 border",
+                  "px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5",
                   workspaceTab === 'tasks'
-                    ? "bg-surface dark:bg-surface-elevated text-foreground border-border shadow-xs"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                    ? "bg-surface text-foreground shadow-xs border border-border/80"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <span>Tasks</span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-secondary text-muted-foreground font-black">
+                <span className={cn(
+                  "text-[9px] px-1.5 py-0.5 rounded-md font-black",
+                  workspaceTab === 'tasks' ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                )}>
                   {scopedTasks.length}
                 </span>
               </button>
@@ -636,14 +674,17 @@ export function MobileWorkspace() {
               <button
                 onClick={() => setWorkspaceTab('goals')}
                 className={cn(
-                  "px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 border",
+                  "px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5",
                   workspaceTab === 'goals'
-                    ? "bg-surface dark:bg-surface-elevated text-foreground border-border shadow-xs"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                    ? "bg-surface text-foreground shadow-xs border border-border/80"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <span>Goals</span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-secondary text-muted-foreground font-black">
+                <span className={cn(
+                  "text-[9px] px-1.5 py-0.5 rounded-md font-black",
+                  workspaceTab === 'goals' ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                )}>
                   {scopedGoals.length}
                 </span>
               </button>
@@ -651,12 +692,12 @@ export function MobileWorkspace() {
 
             {/* List vs Kanban Board Switcher (only for tasks) */}
             {workspaceTab === 'tasks' && (
-              <div className="flex items-center p-0.5 rounded-xl bg-secondary border border-border">
+              <div className="flex items-center p-1 rounded-xl bg-secondary/60 border border-border">
                 <button
                   onClick={() => setViewMode('list')}
                   className={cn(
                     "p-1.5 rounded-lg transition-all cursor-pointer",
-                    viewMode === 'list' ? "bg-surface text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                    viewMode === 'list' ? "bg-surface text-foreground shadow-xs border border-border/80" : "text-muted-foreground hover:text-foreground"
                   )}
                   title="List View"
                 >
@@ -666,7 +707,7 @@ export function MobileWorkspace() {
                   onClick={() => setViewMode('kanban')}
                   className={cn(
                     "p-1.5 rounded-lg transition-all cursor-pointer",
-                    viewMode === 'kanban' ? "bg-surface text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                    viewMode === 'kanban' ? "bg-surface text-foreground shadow-xs border border-border/80" : "text-muted-foreground hover:text-foreground"
                   )}
                   title="Kanban Board View"
                 >
@@ -681,8 +722,8 @@ export function MobileWorkspace() {
             viewMode === 'list' ? (
               /* ─── List View ─── */
               <div className="space-y-3">
-                {/* Status Segmented Tabs */}
-                <div className="aether-glass p-1 flex bg-secondary/50 border border-border shadow-xs rounded-2xl">
+                {/* Horizontal Status Track */}
+                <div className="flex items-center gap-1.5 overflow-x-auto aether-scroll pb-1">
                   {STATUS_COLS.map((col) => {
                     const isActive = activeStatusTab === col.id;
                     const count = scopedTasks.filter(t => t.status === col.id).length;
@@ -691,25 +732,19 @@ export function MobileWorkspace() {
                         key={col.id}
                         onClick={() => setActiveStatusTab(col.id)}
                         className={cn(
-                          "relative flex-1 py-1.5 text-center text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer select-none",
-                          isActive ? "text-primary-foreground font-black" : "text-muted-foreground hover:text-foreground"
+                          "px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 border flex items-center gap-1.5 select-none",
+                          isActive
+                            ? "bg-surface text-foreground border-primary/50 shadow-xs"
+                            : "bg-secondary/40 text-muted-foreground border-border hover:text-foreground hover:bg-secondary/70"
                         )}
                       >
-                        {isActive && (
-                          <motion.div 
-                            layoutId="workspaceStatusTab"
-                            className="absolute inset-0 bg-primary rounded-xl shadow-md z-0"
-                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                          />
-                        )}
-                        <span className="relative z-10 flex items-center justify-center gap-1">
-                          <span>{col.label}</span>
-                          <span className={cn(
-                            "px-1.5 py-0.2 rounded-md text-[8px] font-black",
-                            isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-secondary text-muted-foreground"
-                          )}>
-                            {count}
-                          </span>
+                        <span className={cn("w-2 h-2 rounded-full", col.dotColor)} />
+                        <span>{col.label}</span>
+                        <span className={cn(
+                          "px-1.5 py-0.5 rounded-md text-[9px] font-black",
+                          isActive ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"
+                        )}>
+                          {count}
                         </span>
                       </button>
                     );
@@ -717,18 +752,18 @@ export function MobileWorkspace() {
                 </div>
 
                 {/* Quick Add Bar */}
-                <form onSubmit={handleQuickCreateTask} className="flex gap-2 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong p-2.5 rounded-2xl shadow-xs">
+                <form onSubmit={handleQuickCreateTask} className="flex gap-2 bg-surface/90 dark:bg-surface/50 border border-border p-2 rounded-2xl shadow-xs">
                   <input
                     type="text"
-                    placeholder={`Add task to ${activeStatusTab.replace('_', ' ')}...`}
+                    placeholder={`Quick add task to ${activeStatusTab.replace('_', ' ')}...`}
                     value={quickTitle}
                     onChange={(e) => setQuickTitle(e.target.value)}
-                    className="flex-1 bg-secondary/60 border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-bold"
+                    className="flex-1 bg-secondary/50 border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-bold"
                   />
                   <button
                     type="submit"
                     disabled={!quickTitle.trim() || creatingQuick}
-                    className="px-3.5 rounded-xl bg-primary text-white text-xs font-black hover:bg-primary/95 transition-all flex items-center justify-center disabled:opacity-50 cursor-pointer shadow-md"
+                    className="px-3.5 rounded-xl bg-primary text-primary-foreground text-xs font-black hover:bg-primary/95 active:scale-95 transition-all flex items-center justify-center disabled:opacity-50 cursor-pointer shadow-md"
                   >
                     {creatingQuick ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   </button>
@@ -741,18 +776,20 @@ export function MobileWorkspace() {
                     <span className="text-xs text-muted-foreground font-bold">Synchronizing tasks...</span>
                   </div>
                 ) : listTasks.length === 0 ? (
-                  <div className="p-8 text-center bg-secondary/25 border border-dashed border-border rounded-2xl py-14">
+                  <div className="p-8 text-center bg-secondary/25 border border-dashed border-border rounded-2xl py-14 my-2">
                     <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
                     <span className="text-xs font-black text-foreground block uppercase tracking-wider">Queue is Clear</span>
-                    <span className="text-[10px] text-muted-foreground mt-0.5 block">No tasks currently pending in this queue.</span>
+                    <span className="text-[11px] text-muted-foreground mt-0.5 block font-semibold">No tasks currently pending in this queue.</span>
                   </div>
                 ) : (
                   <div className="space-y-2.5">
                     <AnimatePresence mode="popLayout">
                       {listTasks.map((task) => {
-                        const priorityClass = PRIORITY_BADGES[task.priority] || '';
+                        const priorityInfo = PRIORITY_BADGES[task.priority] || { label: '', class: 'hidden' };
                         const project = projects.find(p => p.id === task.projectId);
-                        const due = task.dueDate ? (typeof (task.dueDate as any).toDate === 'function' ? (task.dueDate as any).toDate() : new Date(task.dueDate as any)) : null;
+                        const formattedDue = formatShortDate(task.dueDate);
+                        const assigneeUid = task.assigneeIds[0] || '';
+                        const assigneeName = getMemberName(assigneeUid);
 
                         return (
                           <motion.div
@@ -762,102 +799,117 @@ export function MobileWorkspace() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.96 }}
                             onClick={() => setSelectedTask(task)}
-                            className="p-3.5 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border dark:border-border-strong hover:border-primary/30 active:scale-[0.99] transition-all cursor-pointer shadow-xs flex flex-col gap-2.5"
+                            className="p-3.5 rounded-2xl bg-surface/95 dark:bg-surface/50 border border-border hover:border-primary/40 active:scale-[0.99] transition-all cursor-pointer shadow-xs flex flex-col gap-2.5"
                           >
+                            {/* Top row: Title + Priority Chip */}
                             <div className="flex items-start justify-between gap-2.5">
-                              <span className="text-xs font-black text-foreground leading-snug flex-1">
+                              <span className="text-[13px] font-bold text-foreground leading-snug flex-1">
                                 {task.title}
                               </span>
                               {task.priority !== 'none' && (
-                                <span className={cn("text-[7px] px-1.5 py-0.2 rounded border font-black uppercase tracking-widest shrink-0", priorityClass)}>
-                                  {task.priority}
+                                <span className={cn("text-[9px] px-2 py-0.5 rounded-md border font-black uppercase tracking-wider shrink-0 shadow-2xs", priorityInfo.class)}>
+                                  {priorityInfo.label}
                                 </span>
                               )}
                             </div>
 
-                            {/* Metadata row: Project tag & Due date & Assignee */}
-                            <div className="flex items-center justify-between text-[9px] text-muted-foreground font-semibold">
-                              <div className="flex items-center gap-2">
+                            {/* Metadata row: Project tag & Due date */}
+                            {(project || formattedDue) && (
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold flex-wrap">
                                 {project && (
-                                  <span className="inline-flex items-center gap-1 text-primary bg-primary/5 px-2 py-0.5 rounded-md border border-primary/20">
-                                    <Folder className="w-3 h-3" />
-                                    <span className="truncate max-w-[120px]">{project.name}</span>
+                                  <span className="inline-flex items-center gap-1 text-primary bg-primary/8 px-2 py-0.5 rounded-md border border-primary/15 max-w-[150px] truncate">
+                                    <Folder className="w-3 h-3 shrink-0" />
+                                    <span className="truncate">{project.name}</span>
                                   </span>
                                 )}
-                                {due && (
-                                  <span className="inline-flex items-center gap-1">
-                                    <Calendar className="w-3 h-3 text-muted-foreground" />
-                                    <span>{due.toLocaleDateString()}</span>
+                                {formattedDue && (
+                                  <span className="inline-flex items-center gap-1 font-bold text-foreground/80">
+                                    <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
+                                    <span>{formattedDue}</span>
                                   </span>
                                 )}
                               </div>
+                            )}
 
-                              {task.assigneeIds.length > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <div className="w-5 h-5 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-[8px]">
-                                    {getInitials(task.assigneeIds[0])}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Quick Action Footer */}
-                            <div className="pt-2 border-t border-border flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                              {activeStatusTab === 'todo' && (
-                                <button
-                                  onClick={() => handleMoveStatus(task, 'in_progress')}
-                                  className="py-1 px-2.5 rounded-lg bg-primary text-white text-[9px] font-black flex items-center gap-1 cursor-pointer shadow-xs"
-                                >
-                                  <Play className="w-3 h-3 fill-current" />
-                                  <span>Start</span>
-                                </button>
-                              )}
-
-                              {activeStatusTab === 'in_progress' && (
-                                <button
-                                  onClick={() => handleMoveStatus(task, 'review')}
-                                  className="py-1 px-2.5 rounded-lg bg-amber-500 text-white text-[9px] font-black flex items-center gap-1 cursor-pointer shadow-xs"
-                                >
-                                  <Clock className="w-3 h-3" />
-                                  <span>Submit Review</span>
-                                </button>
-                              )}
-
-                              {activeStatusTab === 'review' && (
-                                task.creatorId === userProfile?.uid ? (
-                                  <div className="flex items-center gap-1.5">
-                                    <button
-                                      onClick={() => {
-                                        setSendBackTask(task);
-                                        setSendBackComment('');
-                                      }}
-                                      className="py-1 px-2.5 rounded-lg bg-secondary border border-border text-foreground hover:bg-secondary/80 text-[9px] font-black flex items-center gap-1 cursor-pointer"
+                            {/* Footer row: Assignee info + Quick Action */}
+                            <div className="pt-2 border-t border-border/70 flex items-center justify-between text-[10px]" onClick={(e) => e.stopPropagation()}>
+                              {/* Assignee Avatar & Name */}
+                              <div className="flex items-center gap-2 min-w-0">
+                                {assigneeUid ? (
+                                  <>
+                                    <div 
+                                      className="w-5 h-5 rounded-full flex items-center justify-center font-black text-[9px] text-white shadow-2xs shrink-0"
+                                      style={{ background: `hsl(${avatarHue(assigneeUid)} 55% 45%)` }}
                                     >
-                                      <RotateCcw className="w-3 h-3" />
-                                      <span>Send Back</span>
-                                    </button>
-                                    <button
-                                      onClick={() => handleMoveStatus(task, 'done')}
-                                      className="py-1 px-2.5 rounded-lg bg-emerald-500 text-white text-[9px] font-black flex items-center gap-1 cursor-pointer shadow-xs"
-                                    >
-                                      <Check className="w-3 h-3" />
-                                      <span>Approve</span>
-                                    </button>
-                                  </div>
+                                      {getMemberInitials(assigneeUid)}
+                                    </div>
+                                    <span className="text-muted-foreground truncate max-w-[120px]">
+                                      {assigneeName}
+                                    </span>
+                                  </>
                                 ) : (
-                                  <span className="text-[8px] font-black uppercase tracking-wider text-muted-foreground/70 flex items-center gap-1">
-                                    <Lock className="w-3 h-3" />
-                                    <span>Creator Review Required</span>
-                                  </span>
-                                )
-                              )}
+                                  <span className="text-muted-foreground italic">Unassigned</span>
+                                )}
+                              </div>
 
-                              {activeStatusTab === 'done' && (
-                                <span className="text-[8px] font-black uppercase tracking-wider text-emerald-500 flex items-center gap-1">
-                                  <Check className="w-3 h-3" />
-                                  <span>Completed</span>
-                                </span>
-                              )}
+                              {/* Action Button */}
+                              <div className="shrink-0">
+                                {activeStatusTab === 'todo' && (
+                                  <button
+                                    onClick={() => handleMoveStatus(task, 'in_progress')}
+                                    className="py-1 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-black flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                                  >
+                                    <Play className="w-3 h-3 fill-current" />
+                                    <span>Start</span>
+                                  </button>
+                                )}
+
+                                {activeStatusTab === 'in_progress' && (
+                                  <button
+                                    onClick={() => handleMoveStatus(task, 'review')}
+                                    className="py-1 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                                  >
+                                    <Clock className="w-3 h-3" />
+                                    <span>Review</span>
+                                  </button>
+                                )}
+
+                                {activeStatusTab === 'review' && (
+                                  task.creatorId === userProfile?.uid ? (
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        onClick={() => {
+                                          setSendBackTask(task);
+                                          setSendBackComment('');
+                                        }}
+                                        className="py-1 px-2.5 rounded-xl bg-secondary border border-border text-foreground hover:bg-secondary/80 text-xs font-black flex items-center gap-1 cursor-pointer active:scale-95"
+                                      >
+                                        <RotateCcw className="w-3 h-3" />
+                                        <span>Send Back</span>
+                                      </button>
+                                      <button
+                                        onClick={() => handleMoveStatus(task, 'done')}
+                                        className="py-1 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                                      >
+                                        <Check className="w-3 h-3" />
+                                        <span>Approve</span>
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[9px] font-bold text-muted-foreground flex items-center gap-1">
+                                      <Lock className="w-3 h-3" />
+                                      <span>In Review</span>
+                                    </span>
+                                  )
+                                )}
+
+                                {activeStatusTab === 'done' && (
+                                  <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                    <Check className="w-3 h-3" />
+                                    <span>Completed</span>
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </motion.div>
                         );
@@ -870,14 +922,14 @@ export function MobileWorkspace() {
               /* ─── Mobile Kanban Board View ─── */
               <div className="space-y-3">
                 {/* Horizontal Kanban Scroll Track */}
-                <div className="flex gap-3 overflow-x-auto pb-4 aether-scroll snap-x snap-mandatory">
+                <div className="flex gap-3 overflow-x-auto pb-4 aether-scroll snap-x snap-mandatory -mx-3.5 px-3.5 sm:-mx-4 sm:px-4">
                   {STATUS_COLS.map((col) => {
                     const colTasks = scopedTasks.filter(t => t.status === col.id);
 
                     return (
                       <div
                         key={col.id}
-                        className="w-[82vw] max-w-[320px] shrink-0 snap-center flex flex-col rounded-2xl bg-surface/85 dark:bg-surface/40 border border-border dark:border-border-strong p-3.5 space-y-3"
+                        className="w-[84vw] max-w-[320px] shrink-0 snap-center flex flex-col rounded-2xl bg-surface/90 dark:bg-surface/40 border border-border p-3.5 space-y-3 shadow-xs"
                       >
                         {/* Column Header */}
                         <div className="flex items-center justify-between pb-2 border-b border-border">
@@ -887,58 +939,70 @@ export function MobileWorkspace() {
                               {col.label}
                             </span>
                           </div>
-                          <span className="px-2 py-0.5 rounded-md bg-secondary text-foreground text-[9px] font-black">
+                          <span className="px-2 py-0.5 rounded-md bg-secondary text-foreground text-[10px] font-black border border-border">
                             {colTasks.length}
                           </span>
                         </div>
 
                         {/* Column Tasks Scroll */}
-                        <div className="space-y-2.5 max-h-[58vh] overflow-y-auto pr-1 aether-scroll">
+                        <div className="space-y-2.5 max-h-[56dvh] overflow-y-auto pr-1 aether-scroll">
                           {colTasks.length === 0 ? (
-                            <div className="py-8 text-center text-muted-foreground text-[10px] italic">
+                            <div className="py-10 text-center text-muted-foreground text-[11px] font-semibold italic">
                               No items in {col.label}
                             </div>
                           ) : (
                             colTasks.map((task) => {
-                              const priorityClass = PRIORITY_BADGES[task.priority] || '';
+                              const priorityInfo = PRIORITY_BADGES[task.priority] || { label: '', class: 'hidden' };
                               const project = projects.find(p => p.id === task.projectId);
+                              const formattedDue = formatShortDate(task.dueDate);
 
                               return (
                                 <div
                                   key={task.id}
                                   onClick={() => setSelectedTask(task)}
-                                  className="p-3 rounded-xl bg-surface dark:bg-surface-elevated border border-border hover:border-primary/40 active:scale-98 transition-all cursor-pointer shadow-xs space-y-2"
+                                  className="p-3 rounded-xl bg-surface dark:bg-surface-elevated border border-border hover:border-primary/40 active:scale-[0.99] transition-all cursor-pointer shadow-xs space-y-2"
                                 >
                                   <div className="flex items-start justify-between gap-2">
-                                    <span className="text-xs font-bold text-foreground line-clamp-2">
+                                    <span className="text-xs font-bold text-foreground line-clamp-2 leading-snug">
                                       {task.title}
                                     </span>
                                     {task.priority !== 'none' && (
-                                      <span className={cn("text-[7px] px-1.5 py-0.2 rounded border font-black uppercase shrink-0", priorityClass)}>
-                                        {task.priority}
+                                      <span className={cn("text-[9px] px-1.5 py-0.5 rounded border font-black uppercase shrink-0", priorityInfo.class)}>
+                                        {priorityInfo.label}
                                       </span>
                                     )}
                                   </div>
 
-                                  {project && (
-                                    <div className="text-[8px] font-semibold text-primary truncate">
-                                      📁 {project.name}
+                                  {(project || formattedDue) && (
+                                    <div className="flex items-center gap-2 text-[9px] text-muted-foreground font-semibold flex-wrap">
+                                      {project && (
+                                        <span className="text-primary truncate max-w-[140px] flex items-center gap-1">
+                                          <Folder className="w-2.5 h-2.5 shrink-0" />
+                                          <span className="truncate">{project.name}</span>
+                                        </span>
+                                      )}
+                                      {formattedDue && (
+                                        <span className="flex items-center gap-0.5">
+                                          <Calendar className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
+                                          <span>{formattedDue}</span>
+                                        </span>
+                                      )}
                                     </div>
                                   )}
 
                                   {/* Action buttons inside card */}
-                                  <div className="pt-2 border-t border-border flex items-center justify-between text-[9px]">
-                                    <div className="flex items-center gap-1 text-muted-foreground font-bold">
-                                      {getInitials(task.assigneeIds[0] || '')}
+                                  <div className="pt-2 border-t border-border/70 flex items-center justify-between text-[10px]" onClick={(e) => e.stopPropagation()}>
+                                    <div 
+                                      className="w-5 h-5 rounded-full flex items-center justify-center font-black text-[9px] text-white shadow-2xs shrink-0"
+                                      style={{ background: `hsl(${avatarHue(task.assigneeIds[0] || 'default')} 55% 45%)` }}
+                                    >
+                                      {getMemberInitials(task.assigneeIds[0] || '')}
                                     </div>
 
                                     {col.id === 'todo' && (
                                       <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleMoveStatus(task, 'in_progress');
-                                        }}
-                                        className="text-primary font-black flex items-center gap-1 hover:underline cursor-pointer"
+                                        onClick={() => handleMoveStatus(task, 'in_progress')}
+                                        className="text-primary font-black flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                       >
                                         <span>Start</span>
                                         <ArrowRight className="w-3 h-3" />
@@ -947,11 +1011,8 @@ export function MobileWorkspace() {
 
                                     {col.id === 'in_progress' && (
                                       <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleMoveStatus(task, 'review');
-                                        }}
-                                        className="text-amber-500 font-black flex items-center gap-1 hover:underline cursor-pointer"
+                                        onClick={() => handleMoveStatus(task, 'review')}
+                                        className="text-amber-500 font-black flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                       >
                                         <span>Review</span>
                                         <ArrowRight className="w-3 h-3" />
@@ -960,15 +1021,19 @@ export function MobileWorkspace() {
 
                                     {col.id === 'review' && task.creatorId === userProfile?.uid && (
                                       <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleMoveStatus(task, 'done');
-                                        }}
-                                        className="text-emerald-500 font-black flex items-center gap-1 hover:underline cursor-pointer"
+                                        onClick={() => handleMoveStatus(task, 'done')}
+                                        className="text-emerald-500 font-black flex items-center gap-1 hover:underline cursor-pointer text-xs"
                                       >
                                         <span>Approve</span>
                                         <Check className="w-3 h-3" />
                                       </button>
+                                    )}
+
+                                    {col.id === 'done' && (
+                                      <span className="text-emerald-500 font-bold text-[10px] flex items-center gap-1">
+                                        <Check className="w-3 h-3" />
+                                        <span>Done</span>
+                                      </span>
                                     )}
                                   </div>
                                 </div>
@@ -997,40 +1062,40 @@ export function MobileWorkspace() {
                   <span className="text-xs text-muted-foreground font-bold">Synchronizing goals...</span>
                 </div>
               ) : scopedGoals.length === 0 ? (
-                <div className="p-8 text-center bg-secondary/25 border border-dashed border-border rounded-2xl py-14">
+                <div className="p-8 text-center bg-secondary/25 border border-dashed border-border rounded-2xl py-14 my-2">
                   <Target className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
                   <span className="text-xs font-black text-foreground block uppercase tracking-wider">No Goals Established</span>
-                  <span className="text-[10px] text-muted-foreground mt-1 block">Tap "New" to define strategic horizon targets.</span>
+                  <span className="text-[11px] text-muted-foreground mt-1 block font-semibold">Tap "New" to define strategic horizon targets.</span>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {scopedGoals.map((goal) => {
                     const progress = goal.progressRollup ?? 0;
-                    const targetDate = goal.targetDate ? (typeof (goal.targetDate as any).toDate === 'function' ? (goal.targetDate as any).toDate() : new Date((goal.targetDate as any).seconds * 1000)) : null;
+                    const formattedTarget = formatShortDate(goal.targetDate);
 
                     return (
                       <div
                         key={goal.id}
                         onClick={() => setSelectedGoal(goal)}
-                        className="flex flex-col p-4 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border hover:border-primary/30 active:scale-[0.99] transition-all cursor-pointer shadow-xs gap-2.5"
+                        className="flex flex-col p-4 rounded-2xl bg-surface/95 dark:bg-surface/50 border border-border hover:border-primary/40 active:scale-[0.99] transition-all cursor-pointer shadow-xs gap-3"
                       >
                         <div className="flex items-start justify-between gap-3">
-                          <span className="text-xs font-black text-foreground line-clamp-2 leading-tight flex-1">
+                          <span className="text-xs font-black text-foreground line-clamp-2 leading-snug flex-1">
                             {goal.title}
                           </span>
                           <span className={cn(
-                            "text-[7px] font-black uppercase tracking-widest px-1.5 py-0.2 rounded border shrink-0",
+                            "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border shrink-0",
                             goal.status === 'completed' 
-                              ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400" 
-                              : "border-primary/20 bg-primary/5 text-primary"
+                              ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+                              : "border-primary/25 bg-primary/10 text-primary"
                           )}>
                             {goal.status}
                           </span>
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-[8px] text-muted-foreground font-semibold uppercase tracking-wider">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-[9px] text-muted-foreground font-black uppercase tracking-wider">
                             <span>Goal progress</span>
                             <span>{progress}%</span>
                           </div>
@@ -1042,12 +1107,12 @@ export function MobileWorkspace() {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">
-                          <span className="text-primary">{goal.horizon.replace('_', ' ')}</span>
-                          {targetDate && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-primary/70 shrink-0" />
-                              <span>Target: {targetDate.toLocaleDateString()}</span>
+                        <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground pt-1 border-t border-border/70">
+                          <span className="text-primary font-black uppercase tracking-wider text-[9px]">{goal.horizon.replace('_', ' ')}</span>
+                          {formattedTarget && (
+                            <span className="flex items-center gap-1 font-bold text-foreground/80">
+                              <Clock className="w-3 h-3 text-primary shrink-0" />
+                              <span>Target: {formattedTarget}</span>
                             </span>
                           )}
                         </div>
@@ -1076,10 +1141,10 @@ export function MobileWorkspace() {
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-              className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md max-h-[88vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border px-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-3 z-[60] shadow-2xl flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl overflow-hidden"
+              transition={{ type: 'spring', damping: 28, stiffness: 240 }}
+              className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-lg max-h-[88dvh] rounded-t-[32px] border-t border-border px-5 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-3 z-[60] shadow-2xl flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl overflow-hidden"
             >
-              <div className="shrink-0 bg-muted-foreground/25 w-10 h-1.5 rounded-full mx-auto mb-3" />
+              <div className="shrink-0 bg-muted-foreground/30 w-10 h-1 rounded-full mx-auto mb-3" />
               
               <div className="flex items-center justify-between pb-3 border-b border-border">
                 <span className="text-xs font-black uppercase tracking-wider text-foreground">
@@ -1094,7 +1159,7 @@ export function MobileWorkspace() {
               </div>
 
               {/* Type Switcher */}
-              <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-secondary my-3">
+              <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-secondary/60 my-3 border border-border">
                 {[
                   { id: 'task', label: 'Task' },
                   { id: 'goal', label: 'Goal' },
@@ -1104,8 +1169,8 @@ export function MobileWorkspace() {
                     key={t.id}
                     onClick={() => setCreateType(t.id as any)}
                     className={cn(
-                      "py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
-                      createType === t.id ? "bg-surface text-foreground shadow-xs" : "text-muted-foreground"
+                      "py-2 rounded-xl text-xs font-black transition-all cursor-pointer",
+                      createType === t.id ? "bg-surface text-foreground shadow-xs border border-border/80" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {t.label}
@@ -1118,35 +1183,35 @@ export function MobileWorkspace() {
                 {createType === 'task' && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Title *</label>
+                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Title *</label>
                       <input
                         type="text"
                         required
                         value={taskForm.title}
                         onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
                         placeholder="What needs to be done?"
-                        className="w-full bg-secondary/60 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
+                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
                       <textarea
                         rows={2}
                         value={taskForm.description}
                         onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
                         placeholder="Add task context or acceptance criteria..."
-                        className="w-full bg-secondary/60 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs resize-none"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Project</label>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Project</label>
                         <select
                           value={taskForm.projectId}
                           onChange={(e) => setTaskForm({ ...taskForm, projectId: e.target.value })}
-                          className="w-full bg-secondary/60 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none"
+                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
                         >
                           <option value="">No Project</option>
                           {projects.map((p) => (
@@ -1156,11 +1221,11 @@ export function MobileWorkspace() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Priority</label>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Priority</label>
                         <select
                           value={taskForm.priority}
                           onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value as any })}
-                          className="w-full bg-secondary/60 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none"
+                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
                         >
                           <option value="none">None</option>
                           <option value="low">Low</option>
@@ -1173,11 +1238,11 @@ export function MobileWorkspace() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Assignee</label>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Assignee</label>
                         <select
                           value={taskForm.assigneeId}
                           onChange={(e) => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
-                          className="w-full bg-secondary/60 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none"
+                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
                         >
                           <option value={user?.uid || ''}>Assign to me</option>
                           {members.map((m) => (
@@ -1187,12 +1252,12 @@ export function MobileWorkspace() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Due Date</label>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Due Date</label>
                         <input
                           type="date"
                           value={taskForm.dueDate}
                           onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
-                          className="w-full bg-secondary/60 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none"
+                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
                         />
                       </div>
                     </div>
@@ -1202,35 +1267,35 @@ export function MobileWorkspace() {
                 {createType === 'goal' && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Goal Title *</label>
+                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Goal Title *</label>
                       <input
                         type="text"
                         required
                         value={goalForm.title}
                         onChange={(e) => setGoalForm({ ...goalForm, title: e.target.value })}
                         placeholder="e.g. Complete Q3 Product Sprint"
-                        className="w-full bg-secondary/60 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
+                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
                       <textarea
                         rows={2}
                         value={goalForm.description}
                         onChange={(e) => setGoalForm({ ...goalForm, description: e.target.value })}
                         placeholder="Strategic outcome and key deliverables..."
-                        className="w-full bg-secondary/60 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs resize-none"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Horizon</label>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Horizon</label>
                         <select
                           value={goalForm.horizon}
                           onChange={(e) => setGoalForm({ ...goalForm, horizon: e.target.value as any })}
-                          className="w-full bg-secondary/60 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none"
+                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
                         >
                           <option value="short_term">Short Term</option>
                           <option value="long_term">Long Term</option>
@@ -1238,12 +1303,12 @@ export function MobileWorkspace() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Target Date</label>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Target Date</label>
                         <input
                           type="date"
                           value={goalForm.targetDate}
                           onChange={(e) => setGoalForm({ ...goalForm, targetDate: e.target.value })}
-                          className="w-full bg-secondary/60 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none"
+                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
                         />
                       </div>
                     </div>
@@ -1253,46 +1318,46 @@ export function MobileWorkspace() {
                 {createType === 'project' && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Project Name *</label>
+                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Project Name *</label>
                       <input
                         type="text"
                         required
                         value={projectForm.name}
                         onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
                         placeholder="e.g. Mobile App Redesign"
-                        className="w-full bg-secondary/60 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
+                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
                       <textarea
                         rows={2}
                         value={projectForm.description}
                         onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
                         placeholder="Project overview and timeline objectives..."
-                        className="w-full bg-secondary/60 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs resize-none"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Start Date</label>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Start Date</label>
                         <input
                           type="date"
                           value={projectForm.startDate}
                           onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                          className="w-full bg-secondary/60 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none"
+                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Due Date</label>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Due Date</label>
                         <input
                           type="date"
                           value={projectForm.dueDate}
                           onChange={(e) => setProjectForm({ ...projectForm, dueDate: e.target.value })}
-                          className="w-full bg-secondary/60 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none"
+                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
                         />
                       </div>
                     </div>
@@ -1302,7 +1367,7 @@ export function MobileWorkspace() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full mt-2 py-3 rounded-xl bg-primary text-white text-xs font-black hover:bg-primary/95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                  className="w-full mt-3 py-3 rounded-xl bg-primary text-primary-foreground text-xs font-black hover:bg-primary/95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50 active:scale-98"
                 >
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   <span>CREATE {createType.toUpperCase()}</span>
@@ -1334,7 +1399,7 @@ export function MobileWorkspace() {
                 <span className="text-xs font-black text-foreground uppercase tracking-wider">Send Back Task</span>
                 <button 
                   onClick={() => setSendBackTask(null)}
-                  className="h-6 w-6 rounded-full border border-border bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer"
+                  className="h-7 w-7 rounded-full border border-border bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1350,7 +1415,7 @@ export function MobileWorkspace() {
                 value={sendBackComment}
                 onChange={(e) => setSendBackComment(e.target.value)}
                 placeholder="Detail the necessary revisions or missing deliverables..."
-                className="w-full bg-secondary/60 border border-border rounded-xl p-3 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50"
+                className="w-full bg-secondary/50 border border-border rounded-xl p-3 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs resize-none"
               />
 
               <div className="flex items-center justify-end gap-2 pt-1">
@@ -1363,7 +1428,7 @@ export function MobileWorkspace() {
                 <button
                   onClick={handleSendBackConfirm}
                   disabled={!sendBackComment.trim() || isSendingBack}
-                  className="px-4 py-2 rounded-xl bg-red-500 text-white text-xs font-black hover:bg-red-600 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-md"
+                  className="px-4 py-2 rounded-xl bg-red-500 text-white text-xs font-black hover:bg-red-600 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95"
                 >
                   {isSendingBack ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                   <span>Confirm Send Back</span>
@@ -1402,4 +1467,3 @@ export function MobileWorkspace() {
     </div>
   );
 }
-
