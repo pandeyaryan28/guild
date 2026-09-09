@@ -14,7 +14,9 @@ import {
   Share2,
   X,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -28,7 +30,7 @@ import { isValidPhoneNumber } from '../../../lib/validation';
 export function MobileSettings() {
   const navigate = useNavigate();
   const { userProfile, logout } = useAuth();
-  const { themeId, setTheme, themes } = useTheme();
+  const { themeId, setTheme, themes, mode, setMode } = useTheme();
   const { isInstallable, isStandalone, isIOS, install } = usePwaInstall();
 
   const handleLogout = async () => {
@@ -189,7 +191,39 @@ export function MobileSettings() {
       <div id="cosmic-themes" className="aether-glass p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
         <div className="flex items-center gap-2 border-b border-border pb-2.5">
           <Palette className="w-4 h-4 text-primary" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Theme Customization</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Appearance & Themes</span>
+        </div>
+
+        {/* Light vs Dark segmented buttons */}
+        <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary/60 border border-border">
+          <button
+            onClick={() => setMode('light')}
+            className={cn(
+              "flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer",
+              mode === 'light'
+                ? "bg-surface text-foreground shadow-sm border border-border/80"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Sun className="w-4 h-4 text-amber-500" />
+            <span>Light Mode</span>
+          </button>
+          <button
+            onClick={() => setMode('dark')}
+            className={cn(
+              "flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer",
+              mode === 'dark'
+                ? "bg-surface text-foreground shadow-sm border border-border/80"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Moon className="w-4 h-4 text-indigo-400" />
+            <span>Dark Mode</span>
+          </button>
+        </div>
+
+        <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground pt-1">
+          Color Themes
         </div>
 
         <div className="grid grid-cols-4 gap-3">

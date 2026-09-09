@@ -13,12 +13,17 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-  Palette
+  Palette,
+  Sun,
+  Moon,
+  Zap,
+  ZapOff
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useUnreadChatCount } from '../../hooks/useChat';
+import { updateUserProfile } from '../../lib/firestore';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 
@@ -26,10 +31,22 @@ export function MobileNavDock() {
   const navigate = useNavigate();
   const location = useLocation();
   const { userProfile, logout } = useAuth();
-  const { themeId, setTheme, themes } = useTheme();
+  const { themeId, setTheme, themes, mode, setMode, toggleMode } = useTheme();
   const { unreadCount } = useNotifications(userProfile?.organizationId);
   const unreadChatCount = useUnreadChatCount(userProfile?.organizationId);
   const [showMobileMore, setShowMobileMore] = React.useState(false);
+
+  // Availability status (Focus / Flight mode toggle)
+  const isFocusMode = userProfile?.availabilityStatus === 'focus';
+  const handleToggleFocus = async () => {
+    if (!userProfile?.uid) return;
+    const nextStatus = isFocusMode ? 'active' : 'focus';
+    try {
+      await updateUserProfile(userProfile.uid, { availabilityStatus: nextStatus });
+    } catch (err) {
+      console.error('Failed to toggle focus mode:', err);
+    }
+  };
 
   const mainNavItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -57,11 +74,10 @@ export function MobileNavDock() {
 
   return (
     <>
-      <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-40 select-none pointer-events-none flex justify-center">
+      <div className="fixed bottom-0 left-0 right-0 z-40 select-none pointer-events-none flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
         {/* Floating Bottom sheet tab bar */}
         <div 
-          className="aether-glass py-2 px-3 sm:px-4 flex items-center justify-between w-full max-w-md shadow-2xl pointer-events-auto bg-surface/90 dark:bg-surface/80 backdrop-blur-2xl border border-border/80 dark:border-border-strong"
-          style={{ borderRadius: '24px' }}
+          className="aether-glass py-2 px-3 sm:px-4 flex items-center justify-between w-full max-w-md shadow-2xl pointer-events-auto bg-surface/92 dark:bg-surface/85 backdrop-blur-2xl border border-border/80 dark:border-border-strong rounded-3xl"
         >
           {mainNavItems.map((item) => {
             const Icon = item.icon;
@@ -203,12 +219,75 @@ export function MobileNavDock() {
                   })}
                 </div>
                 
-                {/* Responsive Theme selector swatch palette */}
+                {/* Flight / Focus Mode Direct Toggle */}
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-secondary/50 border border-border shadow-xs">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn(
+                      "w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 transition-all",
+                      isFocusMode 
+                        ? "bg-red-500/10 border-red-500/30 text-red-500 dark:text-red-400" 
+                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                    )}>
+                      {isFocusMode ? <ZapOff className="w-4.5 h-4.5" /> : <Zap className="w-4.5 h-4.5" />}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-xs font-black text-foreground block">
+                        Focus Mode (Flight Mode)
+                      </span>
+                      <span className="text-[9px] font-semibold text-muted-foreground block mt-0.5">
+                        {isFocusMode ? 'Do Not Disturb · Notifications Silenced' : 'Normal Availability · Notifications Active'}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleToggleFocus}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer",
+                      isFocusMode
+                        ? "bg-red-500 text-white border-red-600 shadow-sm"
+                        : "bg-secondary text-foreground border-border hover:bg-secondary/80"
+                    )}
+                  >
+                    {isFocusMode ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+
+                {/* Appearance & Atmosphere (Light / Dark Mode) */}
                 <div className="space-y-2.5">
                   <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/70 px-2 select-none">
-                    Theme Customization
+                    Appearance & Themes
                   </div>
-                  <div className="grid grid-cols-4 gap-2.5 px-1">
+
+                  {/* Light vs Dark segmented buttons */}
+                  <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary/60 border border-border">
+                    <button
+                      onClick={() => setMode('light')}
+                      className={cn(
+                        "flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer",
+                        mode === 'light'
+                          ? "bg-surface text-foreground shadow-sm border border-border/80"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <Sun className="w-4 h-4 text-amber-500" />
+                      <span>Light Mode</span>
+                    </button>
+                    <button
+                      onClick={() => setMode('dark')}
+                      className={cn(
+                        "flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer",
+                        mode === 'dark'
+                          ? "bg-surface text-foreground shadow-sm border border-border/80"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <Moon className="w-4 h-4 text-indigo-400" />
+                      <span>Dark Mode</span>
+                    </button>
+                  </div>
+
+                  {/* Responsive Theme selector swatch palette */}
+                  <div className="grid grid-cols-4 gap-2.5 px-1 pt-1">
                     {themes.map((t) => (
                       <button
                         key={t.id}

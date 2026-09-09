@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useNavigate, useParams, NavLink } from 'react-router-dom';
+import { useNavigate, useParams, NavLink, useSearchParams } from 'react-router-dom';
 import { 
   Hash, 
   Lock, 
@@ -17,11 +17,21 @@ import { CreateChannelModal } from '../../chat/CreateChannelModal';
 import { NewDMModal } from '../../chat/NewDMModal';
 import { MessageArea } from '../../../pages/chat/MessageArea';
 import { type UserProfile } from '../../../lib/firestore';
+import { CanvasPanel } from '../../chat/CanvasPanel';
+import { TaskDetailDrawer } from '../../tasks/TaskDetailDrawer';
+import { GoalDetailDrawer } from '../../tasks/GoalDetailDrawer';
+import { RequestDetailDrawer } from '../../tasks/RequestDetailDrawer';
+import { ChannelSettingsModal } from '../../chat/ChannelSettingsModal';
+import { useSingleTask, useTasks } from '../../../hooks/useTasks';
+import { useGoal, useGoals } from '../../../hooks/useGoals';
+import { useRequest } from '../../../hooks/useRequests';
+import { useProjects } from '../../../hooks/useProjects';
 import { cn } from '@/lib/utils';
 
 export function MobileChat() {
   const { channelId, dmId } = useParams<{ channelId: string; dmId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
@@ -29,6 +39,35 @@ export function MobileChat() {
   const { channels, hasUnread, loading } = useChannels(orgId);
   const { threads: dmThreads, hasUnreadDM } = useDMs(orgId);
   const members = useOrgMembers(orgId);
+
+  // Search params for detail panels
+  const openTaskId = searchParams.get('task');
+  const openGoalId = searchParams.get('goal');
+  const openRequestId = searchParams.get('request');
+  const openSettings = searchParams.get('settings') === 'true';
+  const openCanvas = searchParams.get('canvas') === 'true';
+
+  const openTask = useSingleTask(openTaskId);
+  const { goal: openGoal } = useGoal(openGoalId || undefined);
+  const { request: openRequest } = useRequest(openRequestId);
+  const { projects } = useProjects(orgId);
+  const { goals } = useGoals(orgId);
+  const { tasks } = useTasks(orgId);
+
+  const actor = React.useMemo(() => ({
+    uid: userProfile?.uid ?? '',
+    name: userProfile?.fullName || 'Unknown',
+  }), [userProfile]);
+
+  const activeChannel = React.useMemo(() => {
+    return channels.find((c) => c.id === channelId) || null;
+  }, [channels, channelId]);
+
+  const handleClosePanel = (panelType: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.delete(panelType);
+    setSearchParams(params);
+  };
 
   const [showChannelModal, setShowChannelModal] = React.useState(false);
   const [showDMModal, setShowDMModal] = React.useState(false);
@@ -62,10 +101,10 @@ export function MobileChat() {
     navigate(`/chat/dm/${activeDmId}`);
   };
 
-  // If a specific conversation thread is open, render MessageArea fullscreen
+  // If a specific conversation thread is open, render MessageArea fullscreen with Canvas & Drawers support
   if (hasThreadActive) {
     return (
-      <div className="fixed inset-0 z-50 bg-background flex flex-col h-[100dvh] w-full overflow-hidden">
+      <div className="fixed inset-0 z-50 bg-background flex flex-col h-[100dvh] max-h-[100dvh] h-[100svh] max-h-[100svh] w-full overflow-hidden">
         <MessageArea
           channelId={channelId ?? null}
           dmId={dmId ?? null}
@@ -75,6 +114,69 @@ export function MobileChat() {
           members={members}
           isSidebarCollapsed={true}
         />
+
+        {/* 1. Collaborative Document Canvas Panel for Mobile Chat */}
+        {openCanvas && (channelId || dmId) && (
+          <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-xl flex flex-col animate-fluid-pop">
+            <CanvasPanel
+              chatId={channelId || dmId || ''}
+              onClose={() => handleClosePanel('canvas')}
+            />
+          </div>
+        )}
+
+        {/* 2. Task Details Drawer */}
+        {openTask && (
+          <TaskDetailDrawer
+            task={openTask}
+            onClose={() => handleClosePanel('task')}
+            orgId={orgId ?? ''}
+            actor={actor}
+            members={members}
+            projects={projects}
+            goals={goals}
+          />
+        )}
+
+        {/* 3. Strategic Goal Details Drawer */}
+        {openGoal && (
+          <GoalDetailDrawer
+            goal={openGoal}
+            onClose={() => handleClosePanel('goal')}
+            orgId={orgId ?? ''}
+            actor={actor}
+            members={members}
+            projects={projects}
+            tasks={tasks}
+            onSelectTask={(t) => {
+              const params = new URLSearchParams(searchParams);
+              params.set('task', t.id);
+              params.delete('goal');
+              setSearchParams(params);
+            }}
+          />
+        )}
+
+        {/* 4. Approval Request Details Drawer */}
+        {openRequest && userProfile && (
+          <RequestDetailDrawer
+            request={openRequest}
+            onClose={() => handleClosePanel('request')}
+            orgId={orgId ?? ''}
+            currentUser={userProfile}
+          />
+        )}
+
+        {/* 5. Channel Settings Modal */}
+        {openSettings && activeChannel && orgId && (
+          <ChannelSettingsModal
+            channel={activeChannel}
+            orgId={orgId}
+            currentUserProfile={userProfile}
+            onClose={() => handleClosePanel('settings')}
+            onUpdated={() => {}}
+          />
+        )}
       </div>
     );
   }

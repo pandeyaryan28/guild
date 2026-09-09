@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Bell, Menu, User, Palette } from 'lucide-react';
+import { Search, Bell, Menu, User, Palette, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -28,6 +28,7 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
   const location = useLocation();
   const navigate = useNavigate();
   const { userProfile } = useAuth();
+  const { mode, toggleMode } = useTheme();
   
   const orgId = userProfile?.organizationId;
   const [org, setOrg] = React.useState<Organization | null>(null);
@@ -95,7 +96,7 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
   };
 
   return (
-    <div className="aether-app-container flex flex-col h-[100dvh] w-full overflow-hidden bg-background relative">
+    <div className="aether-app-container flex flex-col h-[100dvh] max-h-[100dvh] h-[100svh] max-h-[100svh] w-full overflow-hidden bg-background relative">
       {/* PWA State Managers */}
       <OfflineIndicator />
       <PwaInstallPrompt />
@@ -106,7 +107,7 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
       {/* 2. Top Spatial mobile control bar */}
       <header className="flex h-[calc(3.5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] w-full items-center justify-between px-4 sm:px-5 shrink-0 z-30 border-b border-border/70 bg-surface/85 dark:bg-surface/60 backdrop-blur-xl">
         {/* Brand */}
-        <div className="flex items-center gap-2 max-w-[60%] min-w-0">
+        <div className="flex items-center gap-2 max-w-[55%] min-w-0">
           {org ? (
             <div className="flex items-center gap-2 min-w-0">
               <div 
@@ -136,7 +137,21 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
         </div>
 
         {/* Action icons */}
-        <div className="flex items-center gap-2.5 sm:gap-3.5">
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Light / Dark Mode Toggle Button */}
+          <button
+            onClick={toggleMode}
+            className="h-8 w-8 rounded-full border border-border/80 bg-secondary/80 hover:bg-secondary flex items-center justify-center text-foreground/80 hover:text-foreground active:scale-90 transition-all cursor-pointer shadow-xs"
+            title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
+            aria-label="Toggle Dark/Light Mode"
+          >
+            {mode === 'light' ? (
+              <Moon className="w-4 h-4 text-indigo-500" />
+            ) : (
+              <Sun className="w-4 h-4 text-amber-400" />
+            )}
+          </button>
+
           {/* Elegant search trigger */}
           <button
             onClick={() => setSearchOpen(true)}
@@ -202,7 +217,7 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
       {/* 3. Mobile Canvas View Area */}
       <main className={cn(
         "flex-1 overflow-y-auto aether-scroll relative px-3.5 sm:px-4 pt-3.5 sm:pt-4 z-10 scrollbar-hide",
-        hideDock ? "pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]" : "pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))]" // Ensure bottom tab dock does not block content
+        hideDock ? "pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]" : "pb-[calc(6rem+env(safe-area-inset-bottom,0px))]" // Ensure bottom tab dock does not block content
       )}>
         {children}
       </main>
