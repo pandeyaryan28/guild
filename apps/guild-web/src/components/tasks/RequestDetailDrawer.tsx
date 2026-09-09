@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 import {
   X, Check, Copy, Printer, User, Calendar, Loader2,
@@ -638,15 +639,15 @@ ${request.approverNote ? `Review Note: "${request.approverNote}"` : ''}
     );
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+  const drawerContent = (
+    <div className="fixed inset-0 z-[70] flex justify-end pointer-events-auto">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+        className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[65] pointer-events-auto"
       />
 
       {/* Drawer Panel */}
@@ -655,7 +656,7 @@ ${request.approverNote ? `Review Note: "${request.approverNote}"` : ''}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-        className="relative w-full max-w-lg h-full bg-surface/97 backdrop-blur-2xl border-l border-border-default shadow-2xl flex flex-col overflow-hidden select-text z-10 print:hidden"
+        className="relative z-[70] w-full max-w-lg h-full bg-surface/98 dark:bg-surface/95 backdrop-blur-2xl border-l border-border shadow-2xl flex flex-col overflow-hidden select-text pointer-events-auto print:hidden"
       >
         {/* Drawer Header */}
         <div className="flex items-center justify-between px-6 py-4.5 border-b border-border-subtle bg-bg-secondary/40 shrink-0">
@@ -942,4 +943,6 @@ ${request.approverNote ? `Review Note: "${request.approverNote}"` : ''}
       <RequestPrintPDF request={request} duration={duration} />
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(drawerContent, document.body) : drawerContent;
 }

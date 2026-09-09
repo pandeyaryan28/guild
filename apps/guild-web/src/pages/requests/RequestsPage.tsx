@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Plus, Search, CheckCircle2, XCircle, Clock,
@@ -156,18 +157,27 @@ function CreateRequestModal({
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  const modalContent = (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-auto">
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[65] pointer-events-auto"
+      />
+
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="w-full max-w-lg max-h-[85vh] flex flex-col bg-surface/97 backdrop-blur-2xl border border-border-default rounded-[24px] shadow-2xl overflow-hidden"
+        className="relative z-[70] w-full max-w-lg max-h-[88vh] flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-2xl border border-border rounded-[24px] shadow-2xl overflow-hidden pointer-events-auto"
       >
         {/* Fixed Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle bg-bg-secondary/40 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-secondary/40 flex-shrink-0">
           <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" style={{ color: 'var(--accent)' }} /> New Request
+            <FileText className="h-4 w-4 text-primary" /> New Request
           </h2>
           <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <X className="h-4 w-4" />
@@ -312,20 +322,17 @@ function CreateRequestModal({
             </div>
 
             {error && <p className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2 font-semibold">{error}</p>}
+            <div className="h-6 shrink-0" />
           </div>
 
           {/* Fixed Action Footer */}
-          <div className="flex gap-3 p-6 border-t border-border-subtle bg-bg-secondary/40 flex-shrink-0">
+          <div className="flex gap-3 p-5 border-t border-border bg-secondary/30 flex-shrink-0 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
             <button type="button" onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-border-default text-sm font-semibold text-muted-foreground hover:bg-bg-secondary transition-all cursor-pointer">
+              className="flex-1 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-secondary transition-all cursor-pointer">
               Cancel
             </button>
             <button type="submit" disabled={submitting}
-              className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-md"
-              style={{
-                background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.12) c h) 100%)`,
-                boxShadow: `0 4px 12px oklch(from var(--accent) l c h / 15%)`
-              }}
+              className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
               {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</> : 'Submit Request'}
             </button>
@@ -334,6 +341,8 @@ function CreateRequestModal({
       </motion.div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }
 
 // ─── Request Card ─────────────────────────────────────────────────────────────

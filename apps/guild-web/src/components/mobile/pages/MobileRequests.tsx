@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Plus, 
   Loader2, 
@@ -367,29 +368,35 @@ export function MobileRequests() {
       )}
 
       {/* 5. Mobile Create Request Bottom Sheet Modal */}
-      <AnimatePresence>
-        {modalOpen && (
-          <MobileCreateModal 
-            orgId={orgId}
-            members={members}
-            teams={teams}
-            currentUser={userProfile}
-            onClose={() => setModalOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {modalOpen && (
+            <MobileCreateModal 
+              orgId={orgId}
+              members={members}
+              teams={teams}
+              currentUser={userProfile}
+              onClose={() => setModalOpen(false)}
+            />
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* 6. Request Detail Drawer */}
-      <AnimatePresence>
-        {selectedRequest && (
-          <RequestDetailDrawer
-            request={selectedRequest}
-            currentUser={userProfile}
-            orgId={orgId}
-            onClose={() => setSelectedRequest(null)}
-          />
-        )}
-      </AnimatePresence>
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {selectedRequest && (
+            <RequestDetailDrawer
+              request={selectedRequest}
+              currentUser={userProfile}
+              orgId={orgId}
+              onClose={() => setSelectedRequest(null)}
+            />
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
     </div>
   );
@@ -687,24 +694,35 @@ function MobileCreateModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 dark:bg-black/80 backdrop-blur-xs">
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[65] pointer-events-auto"
+      />
+
+      {/* Sliding Bottom Sheet */}
       <motion.div
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-        className="w-full max-h-[92dvh] rounded-t-[32px] border-t border-border px-5 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-3 flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl shadow-2xl overflow-hidden"
+        className="fixed inset-x-0 bottom-0 z-[70] w-full max-h-[92dvh] rounded-t-[32px] border-t border-border flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl shadow-2xl overflow-hidden pointer-events-auto"
       >
         {/* Drag handle */}
-        <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto mb-3 shrink-0" />
+        <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto my-3 shrink-0" />
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
+        <div className="flex items-center justify-between border-b border-border px-5 pb-3 shrink-0">
           <span className="text-xs font-black text-foreground flex items-center gap-2 uppercase tracking-wider">
             <FileText className="w-4 h-4 text-primary" />
             <span>SUBMIT NEW REQUEST</span>
           </span>
           <button 
+            type="button"
             onClick={onClose} 
             className="h-7 w-7 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer active:scale-90 border border-border"
           >
@@ -712,189 +730,195 @@ function MobileCreateModal({
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto aether-scroll py-4 space-y-4 pr-1">
-          
-          {/* Approver Selection */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
-              APPROVER MEMBER *
-            </span>
+        {/* Form Container */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* Scrollable Form Body with generous scroll clearance above bottom elements */}
+          <div className="flex-1 overflow-y-auto aether-scroll overscroll-contain px-5 py-4 space-y-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
             
-            {selectedApprover ? (
-              <div className="p-3 rounded-xl border border-border bg-secondary/40 flex items-center justify-between shadow-xs">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white shadow-xs shrink-0"
-                    style={{ background: `hsl(${avatarHue(selectedApprover.uid)} 55% 45%)` }}
-                  >
-                    {selectedApprover.fullName[0].toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs font-bold text-foreground block truncate">{selectedApprover.fullName}</span>
-                    <span className="text-[10px] text-muted-foreground block font-semibold truncate">@{selectedApprover.username} · {selectedApprover.designation || 'Member'}</span>
-                  </div>
-                </div>
-                <button 
-                  type="button"
-                  onClick={() => setSelectedApprover(null)} 
-                  className="h-7 w-7 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer ml-2 shrink-0"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <button 
-                  type="button"
-                  onClick={() => setSearchOpen(!searchOpen)}
-                  className="w-full py-3 px-4 rounded-xl border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 text-left text-xs font-black text-primary cursor-pointer active:scale-98 transition-all flex items-center justify-between"
-                >
-                  <span>+ SELECT APPROVER MEMBER</span>
-                  <Search className="w-3.5 h-3.5 opacity-60" />
-                </button>
-
-                {searchOpen && (
-                  <div className="p-3 rounded-2xl bg-secondary/50 border border-border space-y-2 animate-in fade-in">
-                    <input 
-                      type="text" 
-                      placeholder="Search member by name..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-border bg-surface text-xs outline-none focus:border-primary text-foreground font-bold shrink-0 shadow-2xs"
-                    />
-                    <div className="max-h-40 overflow-y-auto aether-scroll space-y-1.5 pr-1">
-                      {filteredMembers.length === 0 ? (
-                        <p className="text-xs text-muted-foreground py-2 text-center">No members found</p>
-                      ) : (
-                        filteredMembers.map(m => (
-                          <button 
-                            key={m.uid}
-                            type="button"
-                            onClick={() => { setSelectedApprover(m); setSearchOpen(false); setSearchQuery(''); }}
-                            className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-surface border border-border hover:border-primary/50 text-left cursor-pointer transition-all shadow-2xs"
-                          >
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0" style={{ background: `hsl(${avatarHue(m.uid)} 55% 45%)` }}>
-                              {m.fullName[0].toUpperCase()}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <span className="text-xs font-bold text-foreground block truncate">{m.fullName}</span>
-                              <span className="text-[9px] text-muted-foreground block font-semibold truncate">@{m.username}</span>
-                            </div>
-                          </button>
-                        ))
-                      )}
+            {/* Approver Selection */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
+                APPROVER MEMBER *
+              </span>
+              
+              {selectedApprover ? (
+                <div className="p-3 rounded-xl border border-border bg-secondary/40 flex items-center justify-between shadow-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white shadow-xs shrink-0"
+                      style={{ background: `hsl(${avatarHue(selectedApprover.uid)} 55% 45%)` }}
+                    >
+                      {selectedApprover.fullName[0].toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-foreground block truncate">{selectedApprover.fullName}</span>
+                      <span className="text-[10px] text-muted-foreground block font-semibold truncate">@{selectedApprover.username} · {selectedApprover.designation || 'Member'}</span>
                     </div>
                   </div>
-                )}
+                  <button 
+                    type="button"
+                    onClick={() => setSelectedApprover(null)} 
+                    className="h-7 w-7 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer ml-2 shrink-0"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <button 
+                    type="button"
+                    onClick={() => setSearchOpen(!searchOpen)}
+                    className="w-full py-3 px-4 rounded-xl border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 text-left text-xs font-black text-primary cursor-pointer active:scale-98 transition-all flex items-center justify-between"
+                  >
+                    <span>+ SELECT APPROVER MEMBER</span>
+                    <Search className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+
+                  {searchOpen && (
+                    <div className="p-3 rounded-2xl bg-secondary/50 border border-border space-y-2 animate-in fade-in">
+                      <input 
+                        type="text" 
+                        placeholder="Search member by name..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-border bg-surface text-xs outline-none focus:border-primary text-foreground font-bold shrink-0 shadow-2xs"
+                      />
+                      <div className="max-h-40 overflow-y-auto aether-scroll space-y-1.5 pr-1">
+                        {filteredMembers.length === 0 ? (
+                          <p className="text-xs text-muted-foreground py-2 text-center">No members found</p>
+                        ) : (
+                          filteredMembers.map(m => (
+                            <button 
+                              key={m.uid}
+                              type="button"
+                              onClick={() => { setSelectedApprover(m); setSearchOpen(false); setSearchQuery(''); }}
+                              className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-surface border border-border hover:border-primary/50 text-left cursor-pointer transition-all shadow-2xs"
+                            >
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0" style={{ background: `hsl(${avatarHue(m.uid)} 55% 45%)` }}>
+                                {m.fullName[0].toUpperCase()}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <span className="text-xs font-bold text-foreground block truncate">{m.fullName}</span>
+                                <span className="text-[9px] text-muted-foreground block font-semibold truncate">@{m.username}</span>
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Category selection */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
+                REQUEST CATEGORY *
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {(Object.entries(REQUEST_TYPE_LABELS) as [RequestType, string][]).map(([k, label]) => {
+                  const isSelected = type === k;
+                  const theme = getCategoryTheme(k);
+                  return (
+                    <button
+                      key={k} 
+                      type="button"
+                      onClick={() => setType(k)}
+                      className={cn(
+                        "flex items-center gap-2 p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer select-none shadow-2xs",
+                        isSelected 
+                          ? "border-primary bg-primary/10 text-primary" 
+                          : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-6 h-6 rounded-lg flex items-center justify-center border shrink-0",
+                        theme.bg,
+                        theme.border,
+                        theme.text
+                      )}>
+                        <RequestCategoryIcon name={REQUEST_TYPE_ICONS[k]} className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-[11px] font-bold truncate">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
+                TITLE *
+              </span>
+              <input 
+                type="text" 
+                required
+                placeholder="e.g. Leave for Family Event"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold focus:border-primary/50 transition-all shadow-xs"
+              />
+            </div>
+
+            {/* Dates (for leave, time-off, WFH) */}
+            {['sick_leave', 'work_from_home', 'time_off'].includes(type) && (
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-primary" />
+                    <span>FROM</span>
+                  </span>
+                  <input 
+                    type="date" 
+                    value={startDate} 
+                    onChange={(e) => setStartDate(e.target.value)} 
+                    className="w-full p-2.5 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground outline-none focus:border-primary/50 transition-all [color-scheme:light] dark:[color-scheme:dark] font-bold shadow-xs" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-primary" />
+                    <span>TO</span>
+                  </span>
+                  <input 
+                    type="date" 
+                    value={endDate} 
+                    onChange={(e) => setEndDate(e.target.value)} 
+                    className="w-full p-2.5 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground outline-none focus:border-primary/50 transition-all [color-scheme:light] dark:[color-scheme:dark] font-bold shadow-xs" 
+                  />
+                </div>
               </div>
             )}
-          </div>
 
-          {/* Category selection */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
-              REQUEST CATEGORY *
-            </span>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {(Object.entries(REQUEST_TYPE_LABELS) as [RequestType, string][]).map(([k, label]) => {
-                const isSelected = type === k;
-                const theme = getCategoryTheme(k);
-                return (
-                  <button
-                    key={k} 
-                    type="button"
-                    onClick={() => setType(k)}
-                    className={cn(
-                      "flex items-center gap-2 p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer select-none shadow-2xs",
-                      isSelected 
-                        ? "border-primary bg-primary/10 text-primary" 
-                        : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-6 h-6 rounded-lg flex items-center justify-center border shrink-0",
-                      theme.bg,
-                      theme.border,
-                      theme.text
-                    )}>
-                      <RequestCategoryIcon name={REQUEST_TYPE_ICONS[k]} className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-[11px] font-bold truncate">{label}</span>
-                  </button>
-                );
-              })}
+            {/* Description */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
+                DETAILS & DESCRIPTION *
+              </span>
+              <textarea 
+                rows={3}
+                required
+                placeholder="Detail reasons, deliverables, or handover plans..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full min-h-[90px] px-3.5 py-2.5 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs font-bold text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-all shadow-xs resize-none leading-relaxed"
+              />
             </div>
-          </div>
 
-          {/* Title */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
-              TITLE *
-            </span>
-            <input 
-              type="text" 
-              required
-              placeholder="e.g. Leave for Family Event"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold focus:border-primary/50 transition-all shadow-xs"
-            />
-          </div>
-
-          {/* Dates (for leave, time-off, WFH) */}
-          {['sick_leave', 'work_from_home', 'time_off'].includes(type) && (
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-primary" />
-                  <span>FROM</span>
-                </span>
-                <input 
-                  type="date" 
-                  value={startDate} 
-                  onChange={(e) => setStartDate(e.target.value)} 
-                  className="w-full p-2.5 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground outline-none focus:border-primary/50 transition-all [color-scheme:light] dark:[color-scheme:dark] font-bold shadow-xs" 
-                />
+            {error && (
+              <div className="text-xs text-red-500 font-bold block bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
+                {error}
               </div>
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-primary" />
-                  <span>TO</span>
-                </span>
-                <input 
-                  type="date" 
-                  value={endDate} 
-                  onChange={(e) => setEndDate(e.target.value)} 
-                  className="w-full p-2.5 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground outline-none focus:border-primary/50 transition-all [color-scheme:light] dark:[color-scheme:dark] font-bold shadow-xs" 
-                />
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* Description */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
-              DETAILS & DESCRIPTION *
-            </span>
-            <textarea 
-              rows={3}
-              required
-              placeholder="Detail reasons, deliverables, or handover plans..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold focus:border-primary/50 transition-all shadow-xs resize-none"
-            />
+            {/* Bottom spacer so user can scroll way above bottom buttons and bottom dock */}
+            <div className="h-8 shrink-0" />
           </div>
 
-          {error && (
-            <div className="text-xs text-red-500 font-bold block bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
-              {error}
-            </div>
-          )}
-
-          {/* Submit Actions */}
-          <div className="pt-2 flex gap-2.5 shrink-0">
+          {/* Sticky Action Footer */}
+          <div className="flex items-center justify-end gap-2.5 px-5 py-3.5 border-t border-border bg-surface/95 dark:bg-surface/90 backdrop-blur-md shrink-0 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
             <button 
               type="button"
               onClick={onClose} 
@@ -914,7 +938,7 @@ function MobileCreateModal({
 
         </form>
       </motion.div>
-    </div>
+    </>
   );
 }
 
