@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Timestamp } from 'firebase/firestore';
 import {
@@ -620,76 +621,79 @@ export function MobileProjectDetail() {
       )}
 
       {/* Add Goal Dialog Bottom Sheet */}
-      <AnimatePresence>
-        {goalCreateOpen && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 dark:bg-black/80 backdrop-blur-xs">
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border px-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-3 flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl overflow-hidden shadow-2xl"
-            >
-              <div className="w-10 h-1.5 rounded-full bg-muted-foreground/25 mx-auto mb-4 shrink-0" />
-              <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
-                <span className="text-xs font-black text-foreground flex items-center gap-2">
-                  <Target className="w-4.5 h-4.5 text-primary" />
-                  <span>ADD PROJECT HORIZON GOAL</span>
-                </span>
-                <button onClick={() => setGoalCreateOpen(false)} className="h-7 w-7 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer active:scale-90">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {goalCreateOpen && (
+            <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 dark:bg-black/80 backdrop-blur-xs pointer-events-auto">
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                className="w-full max-h-[92vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border px-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-3 flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl overflow-hidden shadow-2xl pointer-events-auto"
+              >
+                <div className="w-10 h-1.5 rounded-full bg-muted-foreground/25 mx-auto mb-4 shrink-0" />
+                <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
+                  <span className="text-xs font-black text-foreground flex items-center gap-2">
+                    <Target className="w-4.5 h-4.5 text-primary" />
+                    <span>ADD PROJECT HORIZON GOAL</span>
+                  </span>
+                  <button onClick={() => setGoalCreateOpen(false)} className="h-7 w-7 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer active:scale-90">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
 
-              <form onSubmit={handleCreateGoalSubmit} className="flex-1 overflow-y-auto aether-scroll py-4 space-y-4 pr-1">
-                <div className="space-y-1.5">
-                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">GOAL TARGET TITLE</span>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Launch beta releases"
-                    value={newGoalTitle}
-                    onChange={(e) => setNewGoalTitle(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">TARGET END DATE</span>
-                  <input
-                    type="date"
-                    required
-                    value={newGoalTargetDate}
-                    onChange={(e) => setNewGoalTargetDate(e.target.value)}
-                    className="w-full p-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground outline-none"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">DESCRIPTION</span>
-                  <textarea
-                    rows={3}
-                    placeholder="Write detailed criteria..."
-                    value={newGoalDesc}
-                    onChange={(e) => setNewGoalDesc(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold resize-none"
-                  />
-                </div>
-              </form>
+                <form onSubmit={handleCreateGoalSubmit} className="flex-1 overflow-y-auto aether-scroll overscroll-contain py-4 space-y-4 pr-1 pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">GOAL TARGET TITLE</span>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Launch beta releases"
+                      value={newGoalTitle}
+                      onChange={(e) => setNewGoalTitle(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold shadow-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">TARGET END DATE</span>
+                    <input
+                      type="date"
+                      required
+                      value={newGoalTargetDate}
+                      onChange={(e) => setNewGoalTargetDate(e.target.value)}
+                      className="w-full p-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground outline-none shadow-xs [color-scheme:light] dark:[color-scheme:dark]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">DESCRIPTION</span>
+                    <textarea
+                      rows={3}
+                      placeholder="Write detailed criteria..."
+                      value={newGoalDesc}
+                      onChange={(e) => setNewGoalDesc(e.target.value)}
+                      className="w-full min-h-[84px] px-4 py-3 rounded-xl border border-border bg-secondary/50 focus:bg-surface text-xs text-foreground placeholder:text-muted-foreground outline-none font-bold resize-none shadow-xs"
+                    />
+                  </div>
 
-              <div className="pt-3 border-t border-border flex gap-3 shrink-0">
-                <button onClick={() => setGoalCreateOpen(false)} className="flex-1 py-3 text-xs font-black text-muted-foreground hover:text-foreground rounded-xl border border-border cursor-pointer bg-secondary/50">
-                  CANCEL
-                </button>
-                <button
-                  onClick={handleCreateGoalSubmit}
-                  className="flex-1 py-3 text-xs font-black text-white bg-primary rounded-xl active:scale-95 transition-all shadow-md cursor-pointer flex items-center justify-center"
-                >
-                  ADD GOAL
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+                  <div className="pt-3 border-t border-border flex gap-3 shrink-0">
+                    <button type="button" onClick={() => setGoalCreateOpen(false)} className="flex-1 py-3 text-xs font-black text-muted-foreground hover:text-foreground rounded-xl border border-border cursor-pointer bg-secondary/50">
+                      CANCEL
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 py-3 text-xs font-black text-white bg-primary rounded-xl active:scale-95 transition-all shadow-md cursor-pointer flex items-center justify-center"
+                    >
+                      ADD GOAL
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
     </div>
   );

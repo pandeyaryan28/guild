@@ -216,7 +216,7 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
 
       {/* 3. Mobile Canvas View Area */}
       <main className={cn(
-        "flex-1 overflow-y-auto aether-scroll relative px-3.5 sm:px-4 pt-3.5 sm:pt-4 z-10 scrollbar-hide",
+        "flex-1 overflow-y-auto aether-scroll relative px-3.5 sm:px-4 pt-3.5 sm:pt-4 scrollbar-hide",
         hideDock ? "pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]" : "pb-[calc(6rem+env(safe-area-inset-bottom,0px))]" // Ensure bottom tab dock does not block content
       )}>
         {children}

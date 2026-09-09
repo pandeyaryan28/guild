@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { 
   Plus, 
@@ -1127,317 +1128,342 @@ export function MobileWorkspace() {
       )}
 
       {/* ─── Slide-Up Comprehensive Creation Drawer ─── */}
-      <AnimatePresence>
-        {showCreateDrawer && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowCreateDrawer(false)}
-              className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-50 pointer-events-auto"
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 240 }}
-              className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-lg max-h-[88dvh] rounded-t-[32px] border-t border-border px-5 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-3 z-[60] shadow-2xl flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl overflow-hidden"
-            >
-              <div className="shrink-0 bg-muted-foreground/30 w-10 h-1 rounded-full mx-auto mb-3" />
-              
-              <div className="flex items-center justify-between pb-3 border-b border-border">
-                <span className="text-xs font-black uppercase tracking-wider text-foreground">
-                  Create New Item
-                </span>
-                <button
-                  onClick={() => setShowCreateDrawer(false)}
-                  className="h-7 w-7 rounded-full border border-border bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Type Switcher */}
-              <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-secondary/60 my-3 border border-border">
-                {[
-                  { id: 'task', label: 'Task' },
-                  { id: 'goal', label: 'Goal' },
-                  { id: 'project', label: 'Project' }
-                ].map((t) => (
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showCreateDrawer && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowCreateDrawer(false)}
+                className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[65] pointer-events-auto"
+              />
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 28, stiffness: 240 }}
+                className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-lg max-h-[92dvh] rounded-t-[32px] border-t border-border px-5 pt-3 z-[70] shadow-2xl flex flex-col bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl overflow-hidden pointer-events-auto"
+              >
+                <div className="shrink-0 bg-muted-foreground/30 w-10 h-1 rounded-full mx-auto mb-3" />
+                
+                <div className="flex items-center justify-between pb-3 border-b border-border shrink-0">
+                  <span className="text-xs font-black uppercase tracking-wider text-foreground">
+                    Create New Item
+                  </span>
                   <button
-                    key={t.id}
-                    onClick={() => setCreateType(t.id as any)}
-                    className={cn(
-                      "py-2 rounded-xl text-xs font-black transition-all cursor-pointer",
-                      createType === t.id ? "bg-surface text-foreground shadow-xs border border-border/80" : "text-muted-foreground hover:text-foreground"
-                    )}
+                    onClick={() => setShowCreateDrawer(false)}
+                    className="h-7 w-7 rounded-full border border-border bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer active:scale-95 transition-all"
                   >
-                    {t.label}
+                    <X className="w-3.5 h-3.5" />
                   </button>
-                ))}
-              </div>
+                </div>
 
-              {/* Dynamic Form */}
-              <form onSubmit={handleCreateSubmit} className="space-y-3.5 overflow-y-auto pr-1 flex-1 py-1 aether-scroll">
-                {createType === 'task' && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Title *</label>
-                      <input
-                        type="text"
-                        required
-                        value={taskForm.title}
-                        onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
-                        placeholder="What needs to be done?"
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs"
-                      />
-                    </div>
+                {/* Type Switcher */}
+                <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-secondary/60 my-3 border border-border shrink-0">
+                  {[
+                    { id: 'task', label: 'Task' },
+                    { id: 'goal', label: 'Goal' },
+                    { id: 'project', label: 'Project' }
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setCreateType(t.id as any)}
+                      className={cn(
+                        "py-2 rounded-xl text-xs font-black transition-all cursor-pointer",
+                        createType === t.id ? "bg-surface text-foreground shadow-xs border border-border/80" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
-                      <textarea
-                        rows={2}
-                        value={taskForm.description}
-                        onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-                        placeholder="Add task context or acceptance criteria..."
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs resize-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Project</label>
-                        <select
-                          value={taskForm.projectId}
-                          onChange={(e) => setTaskForm({ ...taskForm, projectId: e.target.value })}
-                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
-                        >
-                          <option value="">No Project</option>
-                          {projects.map((p) => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Priority</label>
-                        <select
-                          value={taskForm.priority}
-                          onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value as any })}
-                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
-                        >
-                          <option value="none">None</option>
-                          <option value="low">Low</option>
-                          <option value="medium">Medium</option>
-                          <option value="high">High</option>
-                          <option value="urgent">Urgent</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Assignee</label>
-                        <select
-                          value={taskForm.assigneeId}
-                          onChange={(e) => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
-                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
-                        >
-                          <option value={user?.uid || ''}>Assign to me</option>
-                          {members.map((m) => (
-                            <option key={m.uid} value={m.uid}>{m.fullName}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Due Date</label>
+                {/* Dynamic Form with generous bottom clearance allowing scrolling way above bottom dock */}
+                <form onSubmit={handleCreateSubmit} className="space-y-4 overflow-y-auto pr-1 flex-1 py-2 aether-scroll overscroll-contain pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
+                  {createType === 'task' && (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                          Task Title <span className="text-primary">*</span>
+                        </label>
                         <input
-                          type="date"
-                          value={taskForm.dueDate}
-                          onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
-                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {createType === 'goal' && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Goal Title *</label>
-                      <input
-                        type="text"
-                        required
-                        value={goalForm.title}
-                        onChange={(e) => setGoalForm({ ...goalForm, title: e.target.value })}
-                        placeholder="e.g. Complete Q3 Product Sprint"
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
-                      <textarea
-                        rows={2}
-                        value={goalForm.description}
-                        onChange={(e) => setGoalForm({ ...goalForm, description: e.target.value })}
-                        placeholder="Strategic outcome and key deliverables..."
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs resize-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Horizon</label>
-                        <select
-                          value={goalForm.horizon}
-                          onChange={(e) => setGoalForm({ ...goalForm, horizon: e.target.value as any })}
-                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
-                        >
-                          <option value="short_term">Short Term</option>
-                          <option value="long_term">Long Term</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Target Date</label>
-                        <input
-                          type="date"
-                          value={goalForm.targetDate}
-                          onChange={(e) => setGoalForm({ ...goalForm, targetDate: e.target.value })}
-                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {createType === 'project' && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Project Name *</label>
-                      <input
-                        type="text"
-                        required
-                        value={projectForm.name}
-                        onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-                        placeholder="e.g. Mobile App Redesign"
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
-                      <textarea
-                        rows={2}
-                        value={projectForm.description}
-                        onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                        placeholder="Project overview and timeline objectives..."
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3.5 py-2 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs resize-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Start Date</label>
-                        <input
-                          type="date"
-                          value={projectForm.startDate}
-                          onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
+                          type="text"
+                          required
+                          value={taskForm.title}
+                          onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+                          placeholder="What needs to be done?"
+                          className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border focus:border-primary/50 rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground placeholder:text-muted-foreground/60 outline-none transition-all shadow-xs"
                         />
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Due Date</label>
-                        <input
-                          type="date"
-                          value={projectForm.dueDate}
-                          onChange={(e) => setProjectForm({ ...projectForm, dueDate: e.target.value })}
-                          className="w-full bg-secondary/50 border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                            Description & Details
+                          </label>
+                          <span className="text-[9px] font-bold text-muted-foreground/60">Optional</span>
+                        </div>
+                        <textarea
+                          rows={3}
+                          value={taskForm.description}
+                          onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+                          placeholder="Add task context, checklist items, or acceptance criteria..."
+                          className="w-full min-h-[84px] bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border focus:border-primary/50 rounded-xl px-3.5 py-2.5 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 outline-none transition-all shadow-xs resize-none leading-relaxed"
                         />
                       </div>
-                    </div>
-                  </>
-                )}
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full mt-3 py-3 rounded-xl bg-primary text-primary-foreground text-xs font-black hover:bg-primary/95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50 active:scale-98"
-                >
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  <span>CREATE {createType.toUpperCase()}</span>
-                </button>
-              </form>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Project</label>
+                          <select
+                            value={taskForm.projectId}
+                            onChange={(e) => setTaskForm({ ...taskForm, projectId: e.target.value })}
+                            className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border rounded-xl px-2.5 py-2.5 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
+                          >
+                            <option value="">No Project</option>
+                            {projects.map((p) => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Priority</label>
+                          <select
+                            value={taskForm.priority}
+                            onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value as any })}
+                            className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border rounded-xl px-2.5 py-2.5 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
+                          >
+                            <option value="none">None</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Assignee</label>
+                          <select
+                            value={taskForm.assigneeId}
+                            onChange={(e) => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
+                            className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border rounded-xl px-2.5 py-2.5 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
+                          >
+                            <option value={user?.uid || ''}>Assign to me</option>
+                            {members.map((m) => (
+                              <option key={m.uid} value={m.uid}>{m.fullName}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Due Date</label>
+                          <input
+                            type="date"
+                            value={taskForm.dueDate}
+                            onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
+                            className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {createType === 'goal' && (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                          Goal Title <span className="text-primary">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={goalForm.title}
+                          onChange={(e) => setGoalForm({ ...goalForm, title: e.target.value })}
+                          placeholder="e.g. Complete Q3 Product Sprint"
+                          className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border focus:border-primary/50 rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground focus:outline-none shadow-xs"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
+                          <span className="text-[9px] font-bold text-muted-foreground/60">Optional</span>
+                        </div>
+                        <textarea
+                          rows={3}
+                          value={goalForm.description}
+                          onChange={(e) => setGoalForm({ ...goalForm, description: e.target.value })}
+                          placeholder="Strategic outcome and key deliverables..."
+                          className="w-full min-h-[84px] bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border focus:border-primary/50 rounded-xl px-3.5 py-2.5 text-xs font-medium text-foreground focus:outline-none shadow-xs resize-none leading-relaxed"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Horizon</label>
+                          <select
+                            value={goalForm.horizon}
+                            onChange={(e) => setGoalForm({ ...goalForm, horizon: e.target.value as any })}
+                            className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border rounded-xl px-2.5 py-2.5 text-xs font-bold text-foreground focus:outline-none cursor-pointer shadow-xs"
+                          >
+                            <option value="short_term">Short Term</option>
+                            <option value="long_term">Long Term</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Target Date</label>
+                          <input
+                            type="date"
+                            value={goalForm.targetDate}
+                            onChange={(e) => setGoalForm({ ...goalForm, targetDate: e.target.value })}
+                            className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {createType === 'project' && (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                          Project Name <span className="text-primary">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={projectForm.name}
+                          onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
+                          placeholder="e.g. Mobile App Redesign"
+                          className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border focus:border-primary/50 rounded-xl px-3.5 py-2.5 text-xs font-bold text-foreground focus:outline-none shadow-xs"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Description</label>
+                          <span className="text-[9px] font-bold text-muted-foreground/60">Optional</span>
+                        </div>
+                        <textarea
+                          rows={3}
+                          value={projectForm.description}
+                          onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+                          placeholder="Project overview and timeline objectives..."
+                          className="w-full min-h-[84px] bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border focus:border-primary/50 rounded-xl px-3.5 py-2.5 text-xs font-medium text-foreground focus:outline-none shadow-xs resize-none leading-relaxed"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Start Date</label>
+                          <input
+                            type="date"
+                            value={projectForm.startDate}
+                            onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
+                            className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Due Date</label>
+                          <input
+                            type="date"
+                            value={projectForm.dueDate}
+                            onChange={(e) => setProjectForm({ ...projectForm, dueDate: e.target.value })}
+                            className="w-full bg-secondary/50 hover:bg-secondary/70 focus:bg-surface border border-border rounded-xl px-2.5 py-2 text-xs font-bold text-foreground focus:outline-none [color-scheme:light] dark:[color-scheme:dark] shadow-xs"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full mt-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-xs font-black hover:bg-primary/95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50 active:scale-[0.98]"
+                  >
+                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    <span>CREATE {createType.toUpperCase()}</span>
+                  </button>
+
+                  <div className="h-6 shrink-0" />
+                </form>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* ─── Send Back Review Feedback Modal ─── */}
-      <AnimatePresence>
-        {sendBackTask && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSendBackTask(null)}
-              className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-50 pointer-events-auto"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="fixed inset-x-4 top-1/3 z-50 aether-glass bg-surface/98 dark:bg-surface/95 border border-border p-5 rounded-3xl shadow-2xl space-y-3"
-            >
-              <div className="flex items-center justify-between pb-2 border-b border-border">
-                <span className="text-xs font-black text-foreground uppercase tracking-wider">Send Back Task</span>
-                <button 
-                  onClick={() => setSendBackTask(null)}
-                  className="h-7 w-7 rounded-full border border-border bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <p className="text-[11px] text-muted-foreground font-semibold leading-relaxed">
-                Provide feedback explaining why <b>"{sendBackTask.title}"</b> needs revisions before approval.
-              </p>
-
-              <textarea
-                rows={3}
-                required
-                value={sendBackComment}
-                onChange={(e) => setSendBackComment(e.target.value)}
-                placeholder="Detail the necessary revisions or missing deliverables..."
-                className="w-full bg-secondary/50 border border-border rounded-xl p-3 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs resize-none"
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {sendBackTask && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSendBackTask(null)}
+                className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[65] pointer-events-auto"
               />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="fixed inset-x-4 top-1/3 z-[70] aether-glass bg-surface/98 dark:bg-surface/95 border border-border p-5 rounded-3xl shadow-2xl space-y-3 pointer-events-auto"
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-border">
+                  <span className="text-xs font-black text-foreground uppercase tracking-wider">Send Back Task</span>
+                  <button 
+                    onClick={() => setSendBackTask(null)}
+                    className="h-7 w-7 rounded-full border border-border bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
 
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <button
-                  onClick={() => setSendBackTask(null)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:bg-secondary cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSendBackConfirm}
-                  disabled={!sendBackComment.trim() || isSendingBack}
-                  className="px-4 py-2 rounded-xl bg-red-500 text-white text-xs font-black hover:bg-red-600 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95"
-                >
-                  {isSendingBack ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
-                  <span>Confirm Send Back</span>
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                <p className="text-[11px] text-muted-foreground font-semibold leading-relaxed">
+                  Provide feedback explaining why <b>"{sendBackTask.title}"</b> needs revisions before approval.
+                </p>
+
+                <textarea
+                  rows={3}
+                  required
+                  value={sendBackComment}
+                  onChange={(e) => setSendBackComment(e.target.value)}
+                  placeholder="Detail the necessary revisions or missing deliverables..."
+                  className="w-full bg-secondary/50 border border-border rounded-xl p-3 text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 shadow-xs resize-none"
+                />
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    onClick={() => setSendBackTask(null)}
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:bg-secondary cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSendBackConfirm}
+                    disabled={!sendBackComment.trim() || isSendingBack}
+                    className="px-4 py-2 rounded-xl bg-red-500 text-white text-xs font-black hover:bg-red-600 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95"
+                  >
+                    {isSendingBack ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                    <span>Confirm Send Back</span>
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* ─── Task Details Drawer ─── */}
       {selectedTask && orgId && (

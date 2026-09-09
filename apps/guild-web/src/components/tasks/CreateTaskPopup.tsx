@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Calendar, Clock, User, AlignLeft, ChevronRight, Sun, Sunset, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -181,14 +182,14 @@ export function CreateTaskPopup({
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none">
+  const popupContent = (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 select-none pointer-events-auto">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/70 backdrop-blur-md"
+        className="fixed inset-0 bg-black/70 backdrop-blur-md z-[65]"
         onClick={onClose}
       />
 
@@ -199,7 +200,7 @@ export function CreateTaskPopup({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-        className="relative z-10 w-full max-w-[520px] rounded-3xl border border-white/10 bg-surface/95 dark:bg-surface/90 backdrop-blur-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden"
+        className="relative z-[70] w-full max-w-[520px] max-h-[90dvh] flex flex-col rounded-3xl border border-border bg-surface/98 dark:bg-surface/90 backdrop-blur-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden pointer-events-auto"
       >
         {/* Title Bar */}
         <div className="px-6 pt-6 pb-0">
@@ -480,4 +481,6 @@ export function CreateTaskPopup({
       </motion.div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(popupContent, document.body) : popupContent;
 }
