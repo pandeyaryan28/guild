@@ -1,6 +1,5 @@
-import * as React from 'react';
 import {
-  Send, Loader2, Paperclip, X, File
+  Send, Loader2, Paperclip, X, File, CheckSquare, Target, ClipboardList, ArrowUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MentionDropdown } from './MentionDropdown';
@@ -76,6 +75,7 @@ export function MessageInput({
   quotedMessage,
   onClearQuote,
 }: MessageInputProps) {
+  const [activeCommand, setActiveCommand] = React.useState<'task' | 'goal' | 'request' | null>(null);
   const [body, setBody] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
@@ -97,6 +97,11 @@ export function MessageInput({
   }, [body]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Backspace' && body === '' && activeCommand) {
+      e.preventDefault();
+      setActiveCommand(null);
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (mentionQuery !== null || commandQuery !== null) return;
@@ -106,6 +111,19 @@ export function MessageInput({
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
+
+    // Detect command pill conversion when user types "/task ", "/goal ", or "/request "
+    const commandPillMatch = val.match(/^\/(task|goal|request)(\s+|$)(.*)/i);
+    if (commandPillMatch && (commandPillMatch[2] || commandPillMatch[3])) {
+      const cmd = commandPillMatch[1].toLowerCase() as 'task' | 'goal' | 'request';
+      const remaining = commandPillMatch[3] || '';
+      setActiveCommand(cmd);
+      setBody(remaining);
+      setCommandQuery(null);
+      setCommandStart(-1);
+      return;
+    }
+
     setBody(val);
 
     const cursor = e.target.selectionStart ?? val.length;
@@ -136,6 +154,15 @@ export function MessageInput({
   };
 
   const insertCommand = (cmdName: string) => {
+    const lower = cmdName.toLowerCase();
+    if (lower === 'task' || lower === 'goal' || lower === 'request') {
+      setActiveCommand(lower as 'task' | 'goal' | 'request');
+      setBody('');
+      setCommandQuery(null);
+      setCommandStart(-1);
+      setTimeout(() => textareaRef.current?.focus(), 0);
+      return;
+    }
     const inserted = `/${cmdName} `;
     setBody(inserted);
     setCommandQuery(null);
@@ -195,7 +222,9 @@ export function MessageInput({
       setUploading(false);
     }
 
+    const commandToExecute = activeCommand;
     setBody('');
+    setActiveCommand(null);
     setSelectedFiles([]);
     setMentionQuery(null);
     setPendingMentions(new Map());
@@ -205,15 +234,17 @@ export function MessageInput({
       if (trimmed.includes(`@${username}`)) mentionUids.push(uid);
     });
 
+    const fullBody = commandToExecute ? `/${commandToExecute} ${trimmed}` : trimmed;
+
     try {
       if (quotedMessage) {
-        await onSend(trimmed, mentionUids, uploadedAttachments, quotedMessage.id, {
+        await onSend(fullBody, mentionUids, uploadedAttachments, quotedMessage.id, {
           id: quotedMessage.id,
           senderName: quotedMessage.senderName,
           body: quotedMessage.body,
         });
       } else {
-        await onSend(trimmed, mentionUids, uploadedAttachments);
+        await onSend(fullBody, mentionUids, uploadedAttachments);
       }
     } finally {
       setSending(false);
@@ -223,8 +254,16 @@ export function MessageInput({
 
   const hasContent = body.trim().length > 0 || selectedFiles.length > 0;
 
+  const dynamicPlaceholder = activeCommand === 'task'
+    ? 'Task title... (e.g. "Fix signin bug @john")'
+    : activeCommand === 'goal'
+    ? 'Goal objective... (e.g. "Ship v2 beta")'
+    : activeCommand === 'request'
+    ? 'Request title... (e.g. "Signoff needed @manager")'
+    : placeholder;
+
   return (
-    <div className="relative px-4 pb-4 select-none">
+    <div className="relative px-3 sm:px-4 pb-3 sm:pb-4 select-none">
       {/* Quoted Message Preview Banner */}
       <AnimatePresence>
         {quotedMessage && (
@@ -232,10 +271,10 @@ export function MessageInput({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
-            className="flex items-center justify-between gap-3 rounded-2xl border border-border-default/80 dark:border-white/10 bg-surface/95 dark:bg-surface-elevated/95 backdrop-blur-xl px-4 py-2 mb-2 shadow-sm border-l-4 border-l-primary"
+            className="flex items-center justify-between gap-3 rounded-2xl border border-black/[0.08] dark:border-white/10 bg-white/90 dark:bg-[#1E1E22]/90 backdrop-blur-xl px-4 py-2 mb-2 shadow-xs border-l-4 border-l-[#007AFF]"
           >
             <div className="flex-1 min-w-0 pl-1">
-              <p className="text-[10.5px] font-bold uppercase tracking-wider text-primary">
+              <p className="text-[10.5px] font-bold uppercase tracking-wider text-[#007AFF]">
                 Replying to {quotedMessage.senderName}
               </p>
               <p className="text-xs text-muted-foreground truncate mt-0.5">{quotedMessage.body}</p>
@@ -243,10 +282,10 @@ export function MessageInput({
             <button
               type="button"
               onClick={onClearQuote}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-hover dark:hover:bg-white/10 transition-colors cursor-pointer"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
               title="Cancel reply"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </motion.div>
         )}
@@ -272,26 +311,60 @@ export function MessageInput({
 
       {/* Selected Files Staging Deck */}
       {selectedFiles.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2.5 max-h-40 overflow-y-auto px-1 py-1 scrollbar-hide">
+        <div className="flex flex-wrap gap-2 mb-2 max-h-40 overflow-y-auto px-1 py-1 scrollbar-hide">
           {selectedFiles.map((file, idx) => (
             <FilePreviewItem key={`${file.name}-${idx}`} file={file} onRemove={() => removeFile(idx)} />
           ))}
         </div>
       )}
 
-      {/* Modern Floating Island Composer Dock */}
-      <div className="flex items-end gap-3 rounded-2xl border border-border dark:border-border-strong bg-surface/95 dark:bg-surface-elevated/90 backdrop-blur-2xl px-4 py-3 shadow-xl focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+      {/* Apple-Style Dock Composer */}
+      <div className="flex items-end gap-2 sm:gap-2.5 rounded-[24px] border border-black/[0.08] dark:border-white/[0.12] bg-[#F2F2F7]/90 dark:bg-[#1E1E22]/90 backdrop-blur-2xl px-3 sm:px-4 py-1.5 sm:py-2 shadow-xs focus-within:border-[#007AFF]/60 focus-within:ring-2 focus-within:ring-[#007AFF]/20 transition-all">
         {/* Attachment Upload Button */}
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={sending || disabled || uploading}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-hover dark:hover:bg-white/10 transition-colors cursor-pointer border border-transparent"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
           title="Attach files or media"
         >
           <Paperclip className="h-4 w-4" />
         </button>
         <input type="file" ref={fileInputRef} onChange={handleFileSelect} multiple className="hidden" />
+
+        {/* Active Command Pill Box */}
+        <AnimatePresence>
+          {activeCommand && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.88, x: -6 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.88, x: -6 }}
+              transition={{ duration: 0.15 }}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold shrink-0 select-none shadow-xs border transition-all mb-0.5',
+                activeCommand === 'task' && 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
+                activeCommand === 'goal' && 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+                activeCommand === 'request' && 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+              )}
+            >
+              {activeCommand === 'task' && <CheckSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+              {activeCommand === 'goal' && <Target className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />}
+              {activeCommand === 'request' && <ClipboardList className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />}
+              <span className="capitalize">{activeCommand}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveCommand(null);
+                  textareaRef.current?.focus();
+                }}
+                className="ml-0.5 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer text-muted-foreground hover:text-foreground"
+                title="Cancel command"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Textarea */}
         <textarea
@@ -299,31 +372,32 @@ export function MessageInput({
           value={body}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={dynamicPlaceholder}
           disabled={sending || disabled || uploading}
           maxLength={2000}
           rows={1}
-          className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 leading-relaxed scrollbar-hide py-1"
+          className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 leading-relaxed scrollbar-hide py-1.5"
           style={{ minHeight: '24px', maxHeight: '160px' }}
         />
 
-        {/* Send Button */}
+        {/* Circular Apple-Style Send Button */}
         <motion.button
-          whileHover={hasContent && !sending && !uploading ? { scale: 1.05 } : {}}
-          whileTap={hasContent && !sending && !uploading ? { scale: 0.95 } : {}}
+          whileHover={hasContent && !sending && !uploading ? { scale: 1.06 } : {}}
+          whileTap={hasContent && !sending && !uploading ? { scale: 0.94 } : {}}
           onClick={handleSend}
           disabled={!hasContent || sending || disabled || uploading}
           className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all border mb-0.5',
+            'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all mb-0.5',
             hasContent && !sending && !uploading
-              ? 'bg-primary text-primary-foreground border-primary shadow-sm hover:bg-primary/90 cursor-pointer'
-              : 'bg-surface-elevated text-muted-foreground border-border-subtle dark:border-white/5 cursor-not-allowed opacity-50',
+              ? 'bg-[#007AFF] text-white shadow-xs hover:bg-[#0071E3] cursor-pointer'
+              : 'bg-black/10 dark:bg-white/10 text-muted-foreground/50 cursor-not-allowed opacity-50',
           )}
+          title={activeCommand ? `Send ${activeCommand}` : 'Send message'}
         >
           {sending || uploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin text-white" />
           ) : (
-            <Send className="h-4 w-4" />
+            <ArrowUp className="h-4 w-4 stroke-[2.75]" />
           )}
         </motion.button>
       </div>

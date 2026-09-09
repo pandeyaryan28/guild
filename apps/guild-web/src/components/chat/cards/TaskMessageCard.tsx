@@ -146,34 +146,20 @@ export function TaskMessageCard({
       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       onClick={handleOpenDetail}
       className={cn(
-        'mt-2.5 w-full max-w-md rounded-2xl border transition-all cursor-pointer select-none text-left relative overflow-hidden group',
-        'bg-surface/90 dark:bg-surface-elevated/80 backdrop-blur-xl shadow-md hover:shadow-xl',
+        'mt-2.5 w-full max-w-md rounded-[20px] border transition-all cursor-pointer select-none text-left relative overflow-hidden group',
+        'bg-white/90 dark:bg-[#1C1C1E]/95 backdrop-blur-xl shadow-sm hover:shadow-md',
         isDone 
-          ? 'border-emerald-400/40 dark:border-emerald-500/30' 
-          : 'border-border-default/80 dark:border-white/10 hover:border-primary/40'
+          ? 'border-emerald-500/30 dark:border-emerald-500/30' 
+          : 'border-black/[0.08] dark:border-white/[0.12] hover:border-[#007AFF]/40 dark:hover:border-[#0A84FF]/40'
       )}
     >
-      {/* Decorative Top Pill Accent Line */}
-      <div className={cn(
-        'h-1 w-full transition-colors',
-        isDone ? 'bg-emerald-500' : 'bg-gradient-to-r from-primary/80 via-primary/50 to-primary/20'
-      )} />
-
       <div className="p-4 space-y-3">
         {/* Top Meta Bar */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className={cn(
-              'flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border font-bold text-xs transition-colors',
-              isDone 
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
-                : 'bg-primary/10 text-primary border-primary/20'
-            )}>
-              <CheckSquare className="h-3.5 w-3.5" />
-            </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Task Card
-            </span>
+          {/* Small Box Task Badge */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/25">
+            <CheckSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <span>Task</span>
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -201,26 +187,26 @@ export function TaskMessageCard({
           </div>
         </div>
 
-        {/* Task Title & Interactive Complete Checkbox */}
+        {/* Task Title & Interactive Circular Checkbox */}
         <div className="flex items-start gap-3">
           <button
             type="button"
             onClick={handleToggleComplete}
             disabled={saving}
             className={cn(
-              'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border transition-all cursor-pointer',
+              'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all cursor-pointer',
               isDone 
-                ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs' 
-                : 'border-border-strong dark:border-white/20 hover:border-primary bg-background/50 hover:bg-primary/5'
+                ? 'bg-[#34C759] border-[#34C759] text-white shadow-xs' 
+                : 'border-zinc-400/80 dark:border-zinc-500 hover:border-[#007AFF] bg-black/[0.02] dark:bg-white/[0.04]'
             )}
             title={isDone ? "Mark as Incomplete" : "Mark as Complete"}
           >
-            {isDone && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+            {isDone && <Check className="h-3 w-3 stroke-[3]" />}
           </button>
 
           <div className="flex-1 min-w-0">
             <h4 className={cn(
-              'text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug',
+              'text-sm font-semibold text-[#1C1C1E] dark:text-[#F2F2F7] group-hover:text-[#007AFF] dark:group-hover:text-[#0A84FF] transition-colors leading-snug',
               isDone && 'line-through text-muted-foreground decoration-muted-foreground/60'
             )}>
               {displayTitle}
@@ -229,10 +215,10 @@ export function TaskMessageCard({
         </div>
 
         {/* Task Details Footer: Assignee, Due, Actions */}
-        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-subtle dark:border-white/5 text-xs text-muted-foreground">
+        <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-black/[0.06] dark:border-white/[0.08] text-xs text-muted-foreground">
           <div className="flex items-center gap-2 truncate">
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-surface-elevated/70 dark:bg-white/5 border border-border-subtle dark:border-white/5">
-              <User className="h-3 w-3 text-primary" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/[0.03] dark:bg-white/[0.06] border border-black/[0.05] dark:border-white/[0.08]">
+              <User className="h-3 w-3 text-[#007AFF] dark:text-[#0A84FF]" />
               <span className="font-medium text-[11px] text-foreground truncate max-w-[120px]">
                 {effectiveAssignee}
               </span>
@@ -252,13 +238,13 @@ export function TaskMessageCard({
                 type="button"
                 onClick={handleApprove}
                 disabled={saving}
-                className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 px-2 py-1 text-[11px] font-bold transition-all cursor-pointer shadow-xs"
+                className="inline-flex items-center gap-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer shadow-xs"
               >
                 <Check className="h-3 w-3" /> Approve
               </button>
             )}
 
-            <div className="flex items-center gap-0.5 text-primary text-[11px] font-semibold group-hover:translate-x-0.5 transition-transform">
+            <div className="flex items-center gap-0.5 text-[#007AFF] dark:text-[#0A84FF] text-[11px] font-semibold group-hover:translate-x-0.5 transition-transform">
               <span>View</span>
               <ArrowUpRight className="h-3.5 w-3.5" />
             </div>

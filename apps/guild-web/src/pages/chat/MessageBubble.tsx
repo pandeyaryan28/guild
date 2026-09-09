@@ -4,7 +4,7 @@ import {
   Pencil, Trash2, Check, X, File, FileText,
   FileAudio, Download, Play, Maximize2, Smile,
   MessageSquare, Loader2, CornerUpLeft, MoreHorizontal,
-  Copy, CheckCheck, Sparkles
+  Copy, CheckCheck, Sparkles, CheckSquare, Target, ClipboardList
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Message, editMessage, deleteMessage } from '../../lib/chat';
@@ -41,24 +41,78 @@ interface MessageBubbleProps {
 }
 
 function parseMentions(body: string, isOwn: boolean) {
-  const parts = body.split(/(@\w+)/g);
-  return parts.map((part, i) =>
-    part.startsWith('@') ? (
-      <span
-        key={i}
-        className={cn(
-          'font-semibold rounded-md px-1.5 py-0.5 mx-0.5 text-xs transition-colors inline-block',
-          isOwn
-            ? 'text-white bg-white/20 border border-white/25'
-            : 'text-primary bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/30',
-        )}
-      >
-        {part}
-      </span>
-    ) : (
-      <React.Fragment key={i}>{part}</React.Fragment>
-    ),
-  );
+  const parts = body.split(/(@\w+|\/(?:task|goal|request)\b)/gi);
+  return parts.map((part, i) => {
+    if (part.startsWith('@')) {
+      return (
+        <span
+          key={i}
+          className={cn(
+            'font-semibold rounded-md px-1.5 py-0.5 mx-0.5 text-xs transition-colors inline-block',
+            isOwn
+              ? 'text-white bg-white/20 border border-white/25'
+              : 'text-[#007AFF] dark:text-[#0A84FF] bg-[#007AFF]/10 dark:bg-[#007AFF]/20 border border-[#007AFF]/20 dark:border-[#007AFF]/30',
+          )}
+        >
+          {part}
+        </span>
+      );
+    }
+
+    const lower = part.toLowerCase();
+    if (lower === '/task') {
+      return (
+        <span
+          key={i}
+          className={cn(
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold mx-0.5 align-middle select-none border',
+            isOwn
+              ? 'bg-white/25 text-white border-white/30'
+              : 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/25',
+          )}
+        >
+          <CheckSquare className="h-3 w-3" />
+          <span>Task</span>
+        </span>
+      );
+    }
+
+    if (lower === '/goal') {
+      return (
+        <span
+          key={i}
+          className={cn(
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold mx-0.5 align-middle select-none border',
+            isOwn
+              ? 'bg-white/25 text-white border-white/30'
+              : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/25',
+          )}
+        >
+          <Target className="h-3 w-3" />
+          <span>Goal</span>
+        </span>
+      );
+    }
+
+    if (lower === '/request') {
+      return (
+        <span
+          key={i}
+          className={cn(
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold mx-0.5 align-middle select-none border',
+            isOwn
+              ? 'bg-white/25 text-white border-white/30'
+              : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/25',
+          )}
+        >
+          <ClipboardList className="h-3 w-3" />
+          <span>Request</span>
+        </span>
+      );
+    }
+
+    return <React.Fragment key={i}>{part}</React.Fragment>;
+  });
 }
 
 function formatTime(ts: { toDate: () => Date } | undefined) {
@@ -509,7 +563,7 @@ export function MessageBubble({
     if (reactionEntries.length === 0) return null;
 
     return (
-      <div className="flex flex-wrap gap-1.5 mt-2">
+      <div className={cn('flex flex-wrap gap-1 mt-1 z-10', isOwn ? 'justify-end' : 'justify-start')}>
         {reactionEntries.map(([emoji, userIds]) => {
           if (!userIds || (userIds as string[]).length === 0) return null;
           const hasReacted = currentUser && (userIds as string[]).includes(currentUser.uid);
@@ -519,8 +573,8 @@ export function MessageBubble({
 
           return (
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.94 }}
               key={emoji}
               onClick={async (e) => {
                 e.stopPropagation();
@@ -534,14 +588,16 @@ export function MessageBubble({
               }}
               title={`Reacted by: ${reactorNames}`}
               className={cn(
-                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all duration-150 cursor-pointer select-none font-medium',
+                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs border transition-all duration-150 cursor-pointer select-none font-medium shadow-xs backdrop-blur-md',
                 hasReacted
-                  ? 'bg-primary/15 border-primary/40 text-primary shadow-xs'
-                  : 'bg-surface/90 dark:bg-surface-elevated/70 hover:bg-surface-hover border-border-default/80 dark:border-white/10 text-muted-foreground hover:text-foreground',
+                  ? 'bg-[#007AFF]/15 border-[#007AFF]/40 text-[#007AFF] dark:text-[#0A84FF]'
+                  : 'bg-white/90 dark:bg-[#1E1E22]/90 hover:bg-white dark:hover:bg-[#26262B] border-black/[0.08] dark:border-white/[0.12] text-foreground',
               )}
             >
-              <span className="text-sm leading-none">{emoji}</span>
-              <span className="text-[10px] font-bold">{(userIds as string[]).length}</span>
+              <span className="text-xs leading-none">{emoji}</span>
+              {(userIds as string[]).length > 1 && (
+                <span className="text-[10px] font-bold text-muted-foreground">{(userIds as string[]).length}</span>
+              )}
             </motion.button>
           );
         })}
@@ -564,13 +620,13 @@ export function MessageBubble({
           setIsRepliesExpanded(!isRepliesExpanded);
         }}
         className={cn(
-          'mt-2 flex items-center gap-2 text-xs font-bold cursor-pointer select-none border rounded-full px-3 py-1.5 w-fit shadow-xs transition-all duration-150',
+          'mt-1.5 flex items-center gap-1.5 text-xs font-semibold cursor-pointer select-none border rounded-full px-3 py-1 w-fit shadow-xs transition-all duration-150',
           isRepliesExpanded
-            ? 'bg-primary/15 border-primary/30 text-primary'
-            : 'bg-surface/90 dark:bg-surface-elevated/70 border-border-default/80 dark:border-white/10 text-muted-foreground hover:text-foreground hover:bg-surface-hover',
+            ? 'bg-[#007AFF]/15 border-[#007AFF]/30 text-[#007AFF] dark:text-[#0A84FF]'
+            : 'bg-white/80 dark:bg-[#1E1E22]/80 border-black/[0.08] dark:border-white/[0.12] text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-[#25252A]',
         )}
       >
-        <MessageSquare className="h-3.5 w-3.5 shrink-0 text-primary" />
+        <MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#007AFF] dark:text-[#0A84FF]" />
         <span>
           {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
         </span>
@@ -673,9 +729,9 @@ export function MessageBubble({
     <div
       id={`msg-${message.id}`}
       className={cn(
-        'group relative flex w-full gap-3 px-4 py-1 transition-colors hover:bg-surface-hover/30 dark:hover:bg-white/[0.02] rounded-2xl',
+        'group relative flex w-full gap-2 sm:gap-3 px-2 sm:px-4 py-0.5 transition-colors rounded-2xl',
         isOwn ? 'justify-end' : 'justify-start',
-        isGrouped ? 'mt-0.5' : 'mt-4',
+        isGrouped ? 'mt-0.5' : 'mt-3.5',
       )}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -701,48 +757,48 @@ export function MessageBubble({
       )}
 
       {/* Message Bubble Container */}
-      <div className={cn('flex flex-col min-w-0 max-w-[80%]', isOwn ? 'items-end' : 'items-start')}>
+      <div className={cn('flex flex-col min-w-0 max-w-[85%] sm:max-w-[72%] md:max-w-[65%]', isOwn ? 'items-end' : 'items-start')}>
         {/* Author Name & Timestamp Header */}
         {!isGrouped && !isOwn && (
           <div className="flex items-baseline gap-2 mb-1 px-1">
-            <span className={cn('text-xs font-bold', getSenderColor(message.senderUsername))}>
+            <span className={cn('text-xs font-semibold', getSenderColor(message.senderUsername))}>
               {message.senderName}
             </span>
-            <span className="text-[10px] text-muted-foreground font-mono">
+            <span className="text-[10px] text-muted-foreground/80 font-mono">
               @{message.senderUsername}
             </span>
-            <span className="text-[9.5px] text-muted-foreground font-mono">{formatTime(message.createdAt as any)}</span>
+            <span className="text-[9.5px] text-muted-foreground/70 font-mono">{formatTime(message.createdAt as any)}</span>
           </div>
         )}
 
-        {/* Floating Island Bubble Surface */}
+        {/* Floating Bubble Surface */}
         <div className="relative w-fit max-w-full group/bubble">
           <div
             className={cn(
               !isCard
                 ? cn(
-                    'relative px-4 py-2.5 text-sm leading-relaxed border transition-all duration-200 text-left',
+                    'relative px-3.5 sm:px-4 py-2 sm:py-2.5 text-[14px] sm:text-[14.5px] leading-relaxed transition-all duration-150 text-left',
                     isOwn
                       ? cn(
-                          'bg-primary text-primary-foreground border-primary/40 shadow-md shadow-primary/15 dark:shadow-primary/20',
-                          isGrouped ? 'rounded-2xl' : 'rounded-2xl rounded-tr-sm',
+                          'bg-gradient-to-b from-[#0A84FF] to-[#0071E3] dark:from-[#0B84FE] dark:to-[#006EE6] text-white shadow-xs border border-[#007AFF]/25',
+                          isGrouped ? 'rounded-[20px] rounded-r-[6px]' : 'rounded-[20px] rounded-br-[4px] sm:rounded-br-[6px]',
                         )
                       : cn(
-                          'bg-surface/90 dark:bg-surface-elevated/80 hover:bg-surface dark:hover:bg-surface-elevated border-border-default/80 dark:border-white/10 text-foreground backdrop-blur-xl shadow-sm hover:border-primary/30',
-                          isGrouped ? 'rounded-2xl' : 'rounded-2xl rounded-tl-sm',
+                          'bg-[#E9E9EB] dark:bg-[#26252A] text-[#111827] dark:text-[#F9FAFB] border border-black/[0.04] dark:border-white/[0.06] shadow-xs',
+                          isGrouped ? 'rounded-[20px] rounded-l-[6px]' : 'rounded-[20px] rounded-bl-[4px] sm:rounded-bl-[6px]',
                         ),
                   )
-                : 'relative text-left',
+                : 'relative text-left w-full',
             )}
           >
             {/* Quoted Parent Message Reference */}
             {message.parentMessage && (
               <div
                 className={cn(
-                  'mb-2.5 flex flex-col border-l-3 pl-3 py-1.5 text-xs rounded-r-xl max-w-md cursor-pointer hover:opacity-90 select-none text-left transition-all',
+                  'mb-2 flex flex-col border-l-2 pl-2.5 py-1 text-xs rounded-r-xl max-w-md cursor-pointer hover:opacity-90 select-none text-left transition-all',
                   isOwn
-                    ? 'border-white bg-white/15 text-white shadow-xs'
-                    : 'border-primary bg-primary/10 text-foreground dark:text-muted-foreground shadow-xs',
+                    ? 'border-white/80 bg-white/15 text-white shadow-xs'
+                    : 'border-[#007AFF] bg-black/[0.04] dark:bg-white/[0.06] text-foreground shadow-xs',
                 )}
                 onClick={() => {
                   const el = document.getElementById(`msg-${message.parentMessage?.id}`);
@@ -753,10 +809,10 @@ export function MessageBubble({
                   }
                 }}
               >
-                <span className={cn('font-bold text-[10px] uppercase tracking-wider mb-0.5', isOwn ? 'text-white' : 'text-primary')}>
+                <span className={cn('font-bold text-[10px] uppercase tracking-wider mb-0.5', isOwn ? 'text-white' : 'text-[#007AFF] dark:text-[#0A84FF]')}>
                   {message.parentMessage.senderName}
                 </span>
-                <span className="truncate block max-w-full text-xs">{message.parentMessage.body}</span>
+                <span className="truncate block max-w-full text-xs opacity-90">{message.parentMessage.body}</span>
               </div>
             )}
 
@@ -772,8 +828,8 @@ export function MessageBubble({
               exit={{ opacity: 0, scale: 0.92, y: '-50%' }}
               transition={{ duration: 0.15 }}
               className={cn(
-                'absolute top-1/2 flex items-center gap-0.5 p-1 rounded-2xl border border-border-default/80 dark:border-white/15 bg-surface/95 dark:bg-surface-elevated/95 backdrop-blur-2xl shadow-xl z-30',
-                isOwn ? 'right-full mr-2.5' : 'left-full ml-2.5',
+                'absolute top-1/2 flex items-center gap-0.5 p-1 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white/95 dark:bg-[#1E1E22]/95 backdrop-blur-2xl shadow-lg z-30',
+                isOwn ? 'right-full mr-2' : 'left-full ml-2',
               )}
             >
               {/* Emoji Reaction Popover */}
@@ -781,7 +837,7 @@ export function MessageBubble({
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="flex h-7 w-7 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-hover dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
                   title="Add reaction"
                 >
                   <Smile className="h-3.5 w-3.5" />
@@ -790,7 +846,7 @@ export function MessageBubble({
                 {showEmojiPicker && (
                   <div
                     className={cn(
-                      'absolute bottom-full mb-2 bg-surface/95 dark:bg-surface-elevated/95 backdrop-blur-2xl border border-border-default/80 dark:border-white/15 rounded-2xl shadow-2xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100',
+                      'absolute bottom-full mb-2 bg-white/95 dark:bg-[#1E1E22]/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] rounded-full shadow-2xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100',
                       isOwn ? 'right-0' : 'left-0',
                     )}
                   >
@@ -808,7 +864,7 @@ export function MessageBubble({
                           }
                           setShowEmojiPicker(false);
                         }}
-                        className="text-base p-1.5 hover:bg-surface-hover dark:hover:bg-white/10 rounded-xl transition-transform hover:scale-125 cursor-pointer"
+                        className="text-base p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-transform hover:scale-125 cursor-pointer"
                       >
                         {emoji}
                       </button>
@@ -824,7 +880,7 @@ export function MessageBubble({
                   setIsRepliesExpanded(true);
                   setTimeout(() => replyTextareaRef.current?.focus(), 100);
                 }}
-                className="flex h-7 w-7 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-hover dark:hover:bg-white/10 transition-colors cursor-pointer"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
                 title="Reply in thread"
               >
                 <MessageSquare className="h-3.5 w-3.5" />
@@ -835,7 +891,7 @@ export function MessageBubble({
                 <button
                   type="button"
                   onClick={() => onQuoteMessage(message)}
-                  className="flex h-7 w-7 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-hover dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
                   title="Quote message"
                 >
                   <CornerUpLeft className="h-3.5 w-3.5" />
@@ -846,7 +902,7 @@ export function MessageBubble({
               <button
                 type="button"
                 onClick={handleCopyText}
-                className="flex h-7 w-7 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-hover dark:hover:bg-white/10 transition-colors cursor-pointer"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
                 title="Copy text"
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
@@ -859,7 +915,7 @@ export function MessageBubble({
                     <button
                       type="button"
                       onClick={() => setEditing(true)}
-                      className="flex h-7 w-7 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-hover dark:hover:bg-white/10 transition-colors cursor-pointer"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
                       title="Edit message"
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -868,7 +924,7 @@ export function MessageBubble({
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="flex h-7 w-7 items-center justify-center rounded-xl text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
                     title="Delete message"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

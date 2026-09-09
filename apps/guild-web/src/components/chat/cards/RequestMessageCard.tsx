@@ -146,35 +146,20 @@ export function RequestMessageCard({
       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       onClick={handleOpenDetail}
       className={cn(
-        'mt-2.5 w-full max-w-md rounded-2xl border transition-all cursor-pointer select-none text-left relative overflow-hidden group',
-        'bg-surface/90 dark:bg-surface-elevated/80 backdrop-blur-xl shadow-md hover:shadow-xl',
-        statusKey === 'approved' && 'border-emerald-400/40 dark:border-emerald-500/30',
-        statusKey === 'rejected' && 'border-red-400/40 dark:border-red-500/30',
-        statusKey === 'pending' && 'border-amber-400/40 dark:border-amber-500/30 hover:border-amber-500/60'
+        'mt-2.5 w-full max-w-md rounded-[20px] border transition-all cursor-pointer select-none text-left relative overflow-hidden group',
+        'bg-white/90 dark:bg-[#1C1C1E]/95 backdrop-blur-xl shadow-sm hover:shadow-md',
+        statusKey === 'approved' && 'border-emerald-500/30 dark:border-emerald-500/30',
+        statusKey === 'rejected' && 'border-red-500/30 dark:border-red-500/30',
+        statusKey === 'pending' && 'border-black/[0.08] dark:border-white/[0.12] hover:border-amber-500/40 dark:hover:border-amber-500/40'
       )}
     >
-      {/* Top Status Accent Bar */}
-      <div className={cn(
-        'h-1 w-full transition-colors',
-        statusKey === 'approved' ? 'bg-emerald-500' :
-        statusKey === 'rejected' ? 'bg-red-500' : 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300'
-      )} />
-
       <div className="p-4 space-y-3">
         {/* Top Header */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className={cn(
-              'flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border font-bold text-xs transition-colors',
-              statusKey === 'approved' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' :
-              statusKey === 'rejected' ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' :
-              'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-            )}>
-              <ClipboardList className="h-3.5 w-3.5" />
-            </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Approval Request
-            </span>
+          {/* Small Box Request Badge */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25">
+            <ClipboardList className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+            <span>Request</span>
           </div>
 
           <span className={cn(
@@ -190,13 +175,13 @@ export function RequestMessageCard({
 
         {/* Request Title */}
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors leading-snug">
+          <h4 className="text-sm font-semibold text-[#1C1C1E] dark:text-[#F2F2F7] group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors leading-snug">
             {displayTitle}
           </h4>
         </div>
 
         {/* Flow visualizer: Requester -> Approver */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-elevated/70 dark:bg-white/5 border border-border-subtle dark:border-white/5 text-xs">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/[0.03] dark:bg-white/5 border border-black/[0.05] dark:border-white/[0.08] text-xs">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             <span className="text-[10px] font-bold uppercase text-muted-foreground">From:</span>
             <span className="font-semibold text-foreground truncate text-[11px]">{requesterName}</span>
@@ -217,7 +202,7 @@ export function RequestMessageCard({
               type="button"
               onClick={handleApprove}
               disabled={saving}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm hover:shadow-md cursor-pointer disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#34C759] hover:bg-[#30B753] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 stroke-[3]" />}
               <span>Approve</span>
@@ -226,20 +211,20 @@ export function RequestMessageCard({
               type="button"
               onClick={handleReject}
               disabled={saving}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5 stroke-[3]" />}
               <span>Decline</span>
             </button>
           </div>
         ) : (
-          <div className="flex items-center justify-between pt-1 border-t border-border-subtle dark:border-white/5 text-[11px] text-muted-foreground">
+          <div className="flex items-center justify-between pt-2.5 border-t border-black/[0.06] dark:border-white/[0.08] text-[11px] text-muted-foreground">
             <span>
               {isPending 
                 ? `Awaiting review by ${approverName}` 
                 : `${statusConfig.label} by ${approverName}`}
             </span>
-            <div className="flex items-center gap-0.5 text-primary font-semibold group-hover:translate-x-0.5 transition-transform">
+            <div className="flex items-center gap-0.5 text-[#007AFF] dark:text-[#0A84FF] font-semibold group-hover:translate-x-0.5 transition-transform">
               <span>View</span>
               <ArrowUpRight className="h-3.5 w-3.5" />
             </div>

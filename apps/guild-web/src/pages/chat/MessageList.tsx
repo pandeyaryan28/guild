@@ -201,9 +201,9 @@ export function MessageList({
         {items.map((item, idx) => {
           if (item.type === 'divider') {
             return (
-              <div key={`divider-${item.label}-${idx}`} className="flex items-center justify-center my-4 select-none">
-                <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface/90 dark:bg-surface-elevated/80 border border-border-default/80 dark:border-white/10 backdrop-blur-xl shadow-xs">
-                  <span className="text-[11px] font-bold text-muted-foreground tracking-wide">
+              <div key={`divider-${item.label}-${idx}`} className="flex items-center justify-center my-3.5 select-none">
+                <div className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-md">
+                  <span className="text-[11px] font-medium text-muted-foreground tracking-tight">
                     {item.label}
                   </span>
                 </div>

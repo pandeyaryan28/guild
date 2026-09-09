@@ -82,29 +82,23 @@ export function GoalMessageCard({
       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       onClick={handleOpenDetail}
       className={cn(
-        'mt-2.5 w-full max-w-md rounded-2xl border transition-all cursor-pointer select-none text-left relative overflow-hidden group',
-        'bg-surface/90 dark:bg-surface-elevated/80 backdrop-blur-xl shadow-md hover:shadow-xl',
-        'border-emerald-400/40 dark:border-emerald-500/30 hover:border-emerald-500/60'
+        'mt-2.5 w-full max-w-md rounded-[20px] border transition-all cursor-pointer select-none text-left relative overflow-hidden group',
+        'bg-white/90 dark:bg-[#1C1C1E]/95 backdrop-blur-xl shadow-sm hover:shadow-md',
+        'border-black/[0.08] dark:border-white/[0.12] hover:border-emerald-500/40 dark:hover:border-emerald-500/40'
       )}
     >
-      {/* Top Accent Emerald Gradient */}
-      <div className="h-1 w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300" />
-
       <div className="p-4 space-y-3">
-        {/* Header Row: Type, Status, Horizon */}
+        {/* Header Row: Type Badge, Status, Horizon */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
-              <Target className="h-3.5 w-3.5" />
-            </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Strategic Goal
-            </span>
+          {/* Small Box Goal Badge */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
+            <Target className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Goal</span>
           </div>
 
           <div className="flex items-center gap-1.5">
             {goal?.horizon && (
-              <span className="text-[9.5px] font-bold uppercase px-2 py-0.5 rounded-full border border-border-subtle dark:border-white/10 bg-surface-elevated/80 dark:bg-white/5 text-muted-foreground">
+              <span className="text-[9.5px] font-bold uppercase px-2 py-0.5 rounded-full border border-black/[0.06] dark:border-white/10 bg-black/[0.03] dark:bg-white/5 text-muted-foreground">
                 {goal.horizon.replace('_', ' ')}
               </span>
             )}
@@ -122,7 +116,7 @@ export function GoalMessageCard({
 
         {/* Goal Title */}
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug">
+          <h4 className="text-sm font-semibold text-[#1C1C1E] dark:text-[#F2F2F7] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug">
             {displayTitle}
           </h4>
         </div>
@@ -144,7 +138,7 @@ export function GoalMessageCard({
         </div>
 
         {/* Footer info: Owner & Drawer link */}
-        <div className="flex items-center justify-between pt-1 border-t border-border-subtle dark:border-white/5 text-[11px] text-muted-foreground">
+        <div className="flex items-center justify-between pt-2.5 border-t border-black/[0.06] dark:border-white/08 text-[11px] text-muted-foreground">
           <div className="flex items-center gap-1.5 truncate">
             <span className="text-[10px] uppercase font-bold text-muted-foreground">Lead:</span>
             <span className="font-medium text-foreground truncate">{ownerName}</span>
