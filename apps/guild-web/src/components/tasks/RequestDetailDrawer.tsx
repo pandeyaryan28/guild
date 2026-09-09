@@ -391,7 +391,7 @@ ${request.approverNote ? `Review Note: "${request.approverNote}"` : ''}
           </div>
 
           {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto aether-scroll p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] space-y-6">
             {/* Status Large Block */}
             <div className={cn("p-4 rounded-2xl border flex items-center justify-between relative overflow-hidden bg-bg-secondary/35 border-border-subtle")}>
               <div className="space-y-1">
@@ -697,7 +697,7 @@ ${request.approverNote ? `Review Note: "${request.approverNote}"` : ''}
         </div>
 
         {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto aether-scroll p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto aether-scroll p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] space-y-6">
           {/* Status Large Block */}
           <div className={cn("p-4 rounded-2xl border flex items-center justify-between relative overflow-hidden bg-bg-secondary/35 border-border-subtle")}>
             <div className="space-y-1">

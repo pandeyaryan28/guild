@@ -15,15 +15,12 @@ import {
   ChevronRight,
   Palette,
   Sun,
-  Moon,
-  Zap,
-  ZapOff
+  Moon
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useUnreadChatCount } from '../../hooks/useChat';
-import { updateUserProfile } from '../../lib/firestore';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 
@@ -35,18 +32,6 @@ export function MobileNavDock() {
   const { unreadCount } = useNotifications(userProfile?.organizationId);
   const unreadChatCount = useUnreadChatCount(userProfile?.organizationId);
   const [showMobileMore, setShowMobileMore] = React.useState(false);
-
-  // Availability status (Focus / Flight mode toggle)
-  const isFocusMode = userProfile?.availabilityStatus === 'focus';
-  const handleToggleFocus = async () => {
-    if (!userProfile?.uid) return;
-    const nextStatus = isFocusMode ? 'active' : 'focus';
-    try {
-      await updateUserProfile(userProfile.uid, { availabilityStatus: nextStatus });
-    } catch (err) {
-      console.error('Failed to toggle focus mode:', err);
-    }
-  };
 
   const mainNavItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -219,39 +204,6 @@ export function MobileNavDock() {
                   })}
                 </div>
                 
-                {/* Flight / Focus Mode Direct Toggle */}
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-secondary/50 border border-border shadow-xs">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={cn(
-                      "w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 transition-all",
-                      isFocusMode 
-                        ? "bg-red-500/10 border-red-500/30 text-red-500 dark:text-red-400" 
-                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
-                    )}>
-                      {isFocusMode ? <ZapOff className="w-4.5 h-4.5" /> : <Zap className="w-4.5 h-4.5" />}
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-xs font-black text-foreground block">
-                        Focus Mode (Flight Mode)
-                      </span>
-                      <span className="text-[9px] font-semibold text-muted-foreground block mt-0.5">
-                        {isFocusMode ? 'Do Not Disturb · Notifications Silenced' : 'Normal Availability · Notifications Active'}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleToggleFocus}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer",
-                      isFocusMode
-                        ? "bg-red-500 text-white border-red-600 shadow-sm"
-                        : "bg-secondary text-foreground border-border hover:bg-secondary/80"
-                    )}
-                  >
-                    {isFocusMode ? 'ON' : 'OFF'}
-                  </button>
-                </div>
-
                 {/* Appearance & Atmosphere (Light / Dark Mode) */}
                 <div className="space-y-2.5">
                   <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/70 px-2 select-none">
