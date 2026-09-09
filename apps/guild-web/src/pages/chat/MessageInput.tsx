@@ -1,3 +1,4 @@
+import * as React from 'react';
 import {
   Send, Loader2, Paperclip, X, File, CheckSquare, Target, ClipboardList, ArrowUp
 } from 'lucide-react';
