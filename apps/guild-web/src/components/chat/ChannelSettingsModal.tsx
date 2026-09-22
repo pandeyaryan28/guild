@@ -1,6 +1,14 @@
 import * as React from 'react';
-import { X, Settings, Users, AlertTriangle, Trash2, ShieldAlert, Loader2, Save, Lock, ArrowLeft, Search, UserPlus } from 'lucide-react';
-import { updateChannelSettings, removeChannelMember, deleteChannel, addChannelMembers, type Channel } from '../../lib/chat';
+import {
+  X, Settings, Users, AlertTriangle, Trash2, ShieldAlert, Loader2, Save, Lock,
+  ArrowLeft, Search, UserPlus, Webhook, Copy, Check, Eye, EyeOff, Send,
+  Terminal, Code2, FileCode, Bot, CheckCircle2, AlertCircle, Info, CheckSquare
+} from 'lucide-react';
+import {
+  updateChannelSettings, removeChannelMember, deleteChannel, addChannelMembers,
+  generateChannelWebhook, revokeChannelWebhook, updateChannelWebhookSettings,
+  type Channel
+} from '../../lib/chat';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { type UserProfile } from '../../lib/firestore';
@@ -17,7 +25,7 @@ interface ChannelSettingsModalProps {
   inline?: boolean;
 }
 
-type TabType = 'general' | 'members' | 'danger';
+type TabType = 'general' | 'members' | 'integrations' | 'danger';
 
 export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClose, onUpdated, inline = false }: ChannelSettingsModalProps) {
   const navigate = useNavigate();
@@ -42,6 +50,247 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
   const [success, setSuccess] = React.useState('');
 
   const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+  // Integrations tab states
+  const [webhookToken, setWebhookToken] = React.useState<string | null>(channel.webhookToken || null);
+  const [webhookBotName, setWebhookBotName] = React.useState<string>(channel.webhookBotName || 'Inbound Bot');
+  const [webhookAutoCreateTask, setWebhookAutoCreateTask] = React.useState<boolean>(channel.webhookAutoCreateTask || false);
+  const [showToken, setShowToken] = React.useState(false);
+  const [copiedUrl, setCopiedUrl] = React.useState(false);
+  const [copiedSnippet, setCopiedSnippet] = React.useState(false);
+  const [snippetTab, setSnippetTab] = React.useState<'curl' | 'typescript' | 'nextjs'>('curl');
+  const [generatingWebhook, setGeneratingWebhook] = React.useState(false);
+  const [savingWebhookSettings, setSavingWebhookSettings] = React.useState(false);
+  const [sendingTestMessage, setSendingTestMessage] = React.useState(false);
+  const [testResult, setTestResult] = React.useState<{ success: boolean; message: string } | null>(null);
+  const [showRevokeConfirm, setShowRevokeConfirm] = React.useState(false);
+
+  React.useEffect(() => {
+    setWebhookToken(channel.webhookToken || null);
+    setWebhookBotName(channel.webhookBotName || 'Inbound Bot');
+    setWebhookAutoCreateTask(channel.webhookAutoCreateTask || false);
+  }, [channel.webhookToken, channel.webhookBotName, channel.webhookAutoCreateTask]);
+
+  const origin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'https://guildorbit.com';
+
+  const webhookUrl = React.useMemo(() => {
+    if (!webhookToken) return '';
+    return `${origin}/api/webhooks/channel?channelId=${channel.id}&token=${webhookToken}`;
+  }, [channel.id, webhookToken, origin]);
+
+  const displayUrl = React.useMemo(() => {
+    if (!webhookToken) return '';
+    if (showToken) return webhookUrl;
+    return `${origin}/api/webhooks/channel?channelId=${channel.id}&token=••••••••••••••••••••••••`;
+  }, [webhookUrl, showToken, channel.id, webhookToken, origin]);
+
+  const handleCopyUrl = async () => {
+    if (!webhookUrl) return;
+    try {
+      await navigator.clipboard.writeText(webhookUrl);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy webhook URL:', err);
+    }
+  };
+
+  const handleCopySnippet = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedSnippet(true);
+      setTimeout(() => setCopiedSnippet(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy snippet:', err);
+    }
+  };
+
+  const handleGenerateWebhook = async () => {
+    setGeneratingWebhook(true);
+    setError('');
+    setSuccess('');
+    try {
+      const res = await generateChannelWebhook(channel.id, webhookBotName, currentUserProfile?.uid);
+      setWebhookToken(res.token);
+      setSuccess('Webhook endpoint generated successfully');
+      onUpdated();
+      setTimeout(() => setSuccess(''), 4000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to generate webhook');
+    } finally {
+      setGeneratingWebhook(false);
+    }
+  };
+
+  const handleRevokeWebhook = async () => {
+    setGeneratingWebhook(true);
+    setError('');
+    setSuccess('');
+    try {
+      await revokeChannelWebhook(channel.id);
+      setWebhookToken(null);
+      setShowRevokeConfirm(false);
+      setTestResult(null);
+      setSuccess('Webhook revoked successfully');
+      onUpdated();
+      setTimeout(() => setSuccess(''), 4000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to revoke webhook');
+    } finally {
+      setGeneratingWebhook(false);
+    }
+  };
+
+  const handleSaveWebhookSettings = async (updates?: { botName?: string; autoCreateTask?: boolean }) => {
+    setSavingWebhookSettings(true);
+    setError('');
+    try {
+      const newBotName = updates?.botName !== undefined ? updates.botName : webhookBotName;
+      const newAutoTask = updates?.autoCreateTask !== undefined ? updates.autoCreateTask : webhookAutoCreateTask;
+      await updateChannelWebhookSettings(channel.id, {
+        webhookBotName: newBotName,
+        webhookAutoCreateTask: newAutoTask,
+      });
+      setSuccess('Integration settings saved');
+      onUpdated();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save integration settings');
+    } finally {
+      setSavingWebhookSettings(false);
+    }
+  };
+
+  const handleSendTestMessage = async () => {
+    if (!webhookUrl) return;
+    setSendingTestMessage(true);
+    setTestResult(null);
+    try {
+      const testPayload = {
+        name: currentUserProfile?.fullName || 'Guild Orbit Tester',
+        email: currentUserProfile?.email || 'tester@guildorbit.com',
+        phone: '+1 (555) 234-5678',
+        subject: 'Webhook Integration Test Inquiry',
+        message: 'This is an automated test message sent from the Channel Settings Integrations panel to verify connectivity.',
+        metadata: {
+          testOrigin: 'ChannelSettingsModal',
+          channelName: channel.name,
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      };
+
+      const res = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testPayload),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTestResult({
+          success: true,
+          message: 'Test message delivered! Open this channel feed to view the new inquiry card.',
+        });
+        onUpdated();
+      } else {
+        setTestResult({
+          success: false,
+          message: data.error || 'Failed to deliver test message to webhook endpoint.',
+        });
+      }
+    } catch (err: any) {
+      setTestResult({
+        success: false,
+        message: err.message || 'Network error delivering test message.',
+      });
+    } finally {
+      setSendingTestMessage(false);
+    }
+  };
+
+  const curlCode = `curl -X POST "${webhookUrl || `${origin}/api/webhooks/channel?channelId=${channel.id}&token=YOUR_TOKEN`}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "phone": "+1 555-0199",
+    "subject": "Inquiry from UniCare / Nullwave",
+    "message": "Interested in deployment timeline and platform pricing.",
+    "metadata": {
+      "source": "Landing Page Contact Form",
+      "plan": "Enterprise",
+      "ticketId": "UC-8842"
+    },
+    "createTask": true
+  }'`;
+
+  const tsCode = `// Example: Client-side Form or React submit handler
+export async function sendChannelInquiry(formData: {
+  name: string;
+  email?: string;
+  phone?: string;
+  subject?: string;
+  message?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const WEBHOOK_URL = "${webhookUrl || `${origin}/api/webhooks/channel?channelId=${channel.id}&token=YOUR_TOKEN`}";
+
+  const response = await fetch(WEBHOOK_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      ...formData,
+      createTask: true, // Automatically generates an operational task
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || \`HTTP \${response.status}\`);
+  }
+
+  return await response.json(); // { success: true, messageId: "..." }
+}`;
+
+  const nextjsCode = `// app/actions/contact.ts
+'use server';
+
+export async function submitLead(formData: FormData) {
+  const webhookUrl = process.env.GUILD_ORBIT_WEBHOOK_URL || "${webhookUrl || `${origin}/api/webhooks/channel?channelId=${channel.id}&token=YOUR_TOKEN`}";
+
+  const payload = {
+    name: formData.get('name') as string,
+    email: (formData.get('email') as string) || undefined,
+    phone: (formData.get('phone') as string) || undefined,
+    subject: (formData.get('subject') as string) || 'Website Inquiry',
+    message: (formData.get('message') as string) || '',
+    metadata: {
+      source: 'UniCare / Nullwave Landing Page',
+      submittedAt: new Date().toISOString(),
+    },
+    createTask: true,
+  };
+
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    return { success: false, error: data.error || 'Failed to submit' };
+  }
+
+  return { success: true, messageId: data.messageId };
+}`;
+
+  const currentSnippetCode = snippetTab === 'curl' ? curlCode : snippetTab === 'typescript' ? tsCode : nextjsCode;
 
   // Fetch channel members when entering members tab
   React.useEffect(() => {
@@ -112,10 +361,366 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
     }
   };
 
+  const renderIntegrationsTab = () => (
+    <div className="space-y-6">
+      {/* Overview card */}
+      <div className="rounded-xl border border-border-default bg-bg-tertiary p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
+            <Webhook className="h-4 w-4" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-xs font-bold text-foreground">Inbound Channel Webhook & API</h3>
+            <p className="text-[11px] text-text-muted leading-relaxed">
+              Connect external contact forms, landing pages, and external apps (e.g. UniCare, Nullwave, or custom landing pages) directly to this channel. Inquiries post structured message cards into the chat feed and can automatically create operational tasks.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* When no webhook is active */}
+      {!webhookToken ? (
+        <div className="rounded-xl border border-dashed border-border-default bg-bg-tertiary/40 p-6 text-center space-y-4">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-surface border border-border-default text-text-muted">
+            <Webhook className="h-5 w-5" />
+          </div>
+          <div className="space-y-1 max-w-sm mx-auto">
+            <h4 className="text-xs font-bold text-foreground">No webhook generated yet</h4>
+            <p className="text-[11px] text-text-muted">
+              Generate a secure 32-byte webhook endpoint to start receiving inquiries and leads in #{channel.name}.
+            </p>
+          </div>
+
+          <div className="max-w-xs mx-auto space-y-2 text-left">
+            <label className="text-[10px] font-semibold text-foreground/70 uppercase tracking-wider block">
+              Sender / Bot Name
+            </label>
+            <div className="flex items-center rounded-xl border border-border-default bg-surface px-3 py-1.5 focus-within:border-primary/40 transition-colors">
+              <Bot className="h-3.5 w-3.5 text-text-muted mr-2 shrink-0" />
+              <input
+                type="text"
+                value={webhookBotName}
+                onChange={(e) => setWebhookBotName(e.target.value)}
+                placeholder="Inbound Bot"
+                className="w-full bg-transparent text-xs text-foreground placeholder:text-text-muted focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={handleGenerateWebhook}
+              disabled={generatingWebhook}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {generatingWebhook ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Webhook className="h-3.5 w-3.5" />}
+              Generate Webhook URL
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {/* Webhook URL Box */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-foreground/70 uppercase tracking-wider flex items-center gap-2">
+                <span>Endpoint URL</span>
+                <span className="rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] px-1.5 py-0.5 border border-emerald-500/20 font-bold">
+                  POST
+                </span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowToken(!showToken)}
+                className="flex items-center gap-1 text-[11px] text-text-muted hover:text-foreground transition-colors"
+              >
+                {showToken ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                <span>{showToken ? 'Hide token' : 'Show token'}</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center rounded-xl border border-border-default bg-bg-tertiary px-3.5 py-2.5 overflow-hidden focus-within:border-primary/40 transition-colors">
+                <input
+                  type="text"
+                  readOnly
+                  value={displayUrl}
+                  className="w-full bg-transparent font-mono text-xs text-foreground select-all focus:outline-none truncate"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleCopyUrl}
+                className={cn(
+                  "flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 border",
+                  copiedUrl
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                    : "bg-bg-tertiary hover:bg-surface border-border-default text-foreground"
+                )}
+              >
+                {copiedUrl ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{copiedUrl ? 'Copied' : 'Copy URL'}</span>
+              </button>
+            </div>
+            <p className="text-[10px] text-text-muted">
+              Keep this URL secret. Any HTTP POST sent to this endpoint with valid JSON will appear in this channel.
+            </p>
+          </div>
+
+          {/* Bot Display Name */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground/70 uppercase tracking-wider flex items-center gap-1.5">
+              <Bot className="h-3.5 w-3.5 text-text-muted" />
+              <span>Bot Display Name</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center rounded-xl border border-border-default bg-bg-tertiary px-3 py-2 focus-within:border-primary/40 transition-colors">
+                <input
+                  type="text"
+                  value={webhookBotName}
+                  onChange={(e) => setWebhookBotName(e.target.value)}
+                  placeholder="e.g. UniCare Enquiries, Nullwave Leads"
+                  maxLength={50}
+                  className="w-full bg-transparent text-sm text-foreground placeholder:text-text-muted focus:outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => handleSaveWebhookSettings({ botName: webhookBotName })}
+                disabled={savingWebhookSettings || webhookBotName === (channel.webhookBotName || 'Inbound Bot')}
+                className="px-3 py-2 rounded-xl text-xs font-semibold bg-bg-tertiary hover:bg-surface border border-border-default text-foreground disabled:opacity-40 transition-all"
+              >
+                {savingWebhookSettings ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save'}
+              </button>
+            </div>
+            <p className="text-[10px] text-text-muted">
+              Name displayed as the message sender when incoming inquiries arrive.
+            </p>
+          </div>
+
+          {/* Task Auto-creation toggle */}
+          <div className="flex items-start justify-between rounded-xl border border-border-default bg-bg-tertiary p-3.5 gap-3">
+            <div className="flex items-start gap-2.5">
+              <CheckSquare className="h-4 w-4 text-text-muted shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-bold text-foreground">Also create an operational task for new inquiries</p>
+                <p className="text-[10px] text-text-muted mt-0.5">
+                  Automatically inserts a high-priority task in your workspace task board assigned to the channel admin.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const nextVal = !webhookAutoCreateTask;
+                setWebhookAutoCreateTask(nextVal);
+                handleSaveWebhookSettings({ autoCreateTask: nextVal });
+              }}
+              className={cn(
+                "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                webhookAutoCreateTask ? "bg-primary border-primary" : "bg-black/25 dark:bg-muted border-border-default"
+              )}
+            >
+              <span
+                className={cn(
+                  "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                  webhookAutoCreateTask ? "translate-x-4" : "translate-x-0"
+                )}
+              />
+            </button>
+          </div>
+
+          {/* Send Test Message */}
+          <div className="rounded-xl border border-border-default bg-bg-tertiary p-3.5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-foreground">Send Test Message</p>
+                <p className="text-[10px] text-text-muted">Trigger a sample payload to verify this channel integration.</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleSendTestMessage}
+                disabled={sendingTestMessage}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {sendingTestMessage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                <span>Send Test</span>
+              </button>
+            </div>
+
+            {testResult && (
+              <div
+                className={cn(
+                  "rounded-lg p-3 text-xs flex items-start gap-2 border",
+                  testResult.success
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                    : "bg-destructive/10 border-destructive/20 text-destructive"
+                )}
+              >
+                {testResult.success ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                )}
+                <span>{testResult.message}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Interactive Code Snippets & Documentation */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-foreground">Code Snippets & Documentation</h4>
+              <span className="text-[10px] text-text-muted">Choose your stack</span>
+            </div>
+
+            {/* Snippet Tabs */}
+            <div className="flex rounded-xl border border-border-default bg-bg-tertiary p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setSnippetTab('curl')}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  snippetTab === 'curl'
+                    ? "bg-surface text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Terminal className="h-3.5 w-3.5" />
+                <span>cURL</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSnippetTab('typescript')}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  snippetTab === 'typescript'
+                    ? "bg-surface text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Code2 className="h-3.5 w-3.5" />
+                <span>TypeScript / React</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSnippetTab('nextjs')}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  snippetTab === 'nextjs'
+                    ? "bg-surface text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <FileCode className="h-3.5 w-3.5" />
+                <span>Next.js Action</span>
+              </button>
+            </div>
+
+            {/* Code Box */}
+            <div className="relative rounded-xl border border-border-default dark:border-zinc-800 bg-zinc-950 text-zinc-100 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800 bg-zinc-900/60">
+                <span className="text-[11px] font-mono text-zinc-400">
+                  {snippetTab === 'curl' ? 'terminal-bash' : snippetTab === 'typescript' ? 'client-submit.ts' : 'contact-action.ts'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopySnippet(currentSnippetCode)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+                >
+                  {copiedSnippet ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                  <span>{copiedSnippet ? 'Copied' : 'Copy Code'}</span>
+                </button>
+              </div>
+              <pre className="p-3 text-[11px] font-mono leading-relaxed overflow-x-auto aether-scroll max-h-56">
+                <code>{currentSnippetCode}</code>
+              </pre>
+            </div>
+
+            {/* Payload Schema Reference */}
+            <div className="rounded-xl border border-border-default bg-bg-tertiary p-3 space-y-2">
+              <p className="text-[11px] font-bold text-foreground">Payload Parameters (JSON)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
+                <div className="space-y-0.5">
+                  <p><span className="font-mono text-primary font-semibold">name</span> <span className="text-destructive font-semibold">*required</span></p>
+                  <p className="text-text-muted">Full sender or customer name.</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p><span className="font-mono text-primary font-semibold">email</span> <span className="text-text-muted">optional</span></p>
+                  <p className="text-text-muted">Contact email address.</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p><span className="font-mono text-primary font-semibold">phone</span> <span className="text-text-muted">optional</span></p>
+                  <p className="text-text-muted">Contact phone number.</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p><span className="font-mono text-primary font-semibold">subject</span> <span className="text-text-muted">optional</span></p>
+                  <p className="text-text-muted">Inquiry topic or lead title.</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p><span className="font-mono text-primary font-semibold">message</span> <span className="text-text-muted">optional</span></p>
+                  <p className="text-text-muted">Body text or inquiry message.</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p><span className="font-mono text-primary font-semibold">metadata</span> <span className="text-text-muted">optional</span></p>
+                  <p className="text-text-muted">Custom object (e.g. Clinic Name, Ticket ID).</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Revoke Webhook Section */}
+          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-3">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-bold text-foreground">Revoke Webhook</p>
+                <p className="text-[10px] text-text-muted mt-0.5">
+                  Revoking invalidates this webhook URL immediately. Any external websites or services posting to it will receive 401 Unauthorized errors.
+                </p>
+              </div>
+            </div>
+
+            {!showRevokeConfirm ? (
+              <button
+                type="button"
+                onClick={() => setShowRevokeConfirm(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/30 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Revoke Webhook URL</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleRevokeWebhook}
+                  disabled={generatingWebhook}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all"
+                >
+                  {generatingWebhook ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  <span>Yes, Revoke Now</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowRevokeConfirm(false)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-bg-tertiary hover:bg-surface border border-border-default text-foreground transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   if (inline) {
     return (
-      <div className="h-full border-l border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/60 backdrop-blur-xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[420px] lg:relative shadow-2xl lg:shadow-none shrink-0 animate-in slide-in-from-right duration-200">
-        <div className="w-full sm:w-[420px] h-full flex flex-col min-h-0">
+      <div className="h-full border-l border-border-default bg-surface/95 dark:bg-zinc-950/60 backdrop-blur-xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[480px] lg:relative shadow-2xl lg:shadow-none shrink-0 animate-in slide-in-from-right duration-200">
+        <div className="w-full sm:w-[480px] h-full flex flex-col min-h-0">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border-default px-6 py-4 shrink-0">
             <div>
@@ -128,11 +733,11 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex border-b border-border-default px-4 shrink-0 bg-surface/50">
+          <div className="flex border-b border-border-default px-4 shrink-0 bg-surface/50 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveTab('general')}
               className={cn(
-                'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none',
+                'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none shrink-0',
                 activeTab === 'general'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -144,7 +749,7 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
             <button
               onClick={() => setActiveTab('members')}
               className={cn(
-                'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none',
+                'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none shrink-0',
                 activeTab === 'members'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -154,9 +759,21 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
               Members
             </button>
             <button
+              onClick={() => setActiveTab('integrations')}
+              className={cn(
+                'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none shrink-0',
+                activeTab === 'integrations'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Webhook className="h-3.5 w-3.5" />
+              Integrations & API
+            </button>
+            <button
               onClick={() => setActiveTab('danger')}
               className={cn(
-                'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none',
+                'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none shrink-0',
                 activeTab === 'danger'
                   ? 'border-destructive text-destructive'
                   : 'border-transparent text-muted-foreground hover:text-destructive/80'
@@ -437,6 +1054,9 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
               );
             })()}
 
+            {/* TAB: INTEGRATIONS & API */}
+            {activeTab === 'integrations' && renderIntegrationsTab()}
+
             {/* TAB 3: DANGER ZONE */}
             {activeTab === 'danger' && (
               <div className="space-y-4">
@@ -489,7 +1109,7 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-2xl border border-border-default bg-surface backdrop-blur-xl shadow-2xl shadow-black/60 overflow-hidden flex flex-col max-h-[85vh]">
+      <div className="relative w-full max-w-xl sm:max-w-2xl rounded-2xl border border-border-default bg-surface backdrop-blur-xl shadow-2xl shadow-black/60 overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-default px-6 py-4 shrink-0">
           <div>
@@ -502,11 +1122,11 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-border-default px-4 shrink-0 bg-surface/50">
+        <div className="flex border-b border-border-default px-4 shrink-0 bg-surface/50 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('general')}
             className={cn(
-              'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none',
+              'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none shrink-0',
               activeTab === 'general'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -518,7 +1138,7 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
           <button
             onClick={() => setActiveTab('members')}
             className={cn(
-              'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none',
+              'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none shrink-0',
               activeTab === 'members'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -528,9 +1148,21 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
             Members
           </button>
           <button
+            onClick={() => setActiveTab('integrations')}
+            className={cn(
+              'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none shrink-0',
+              activeTab === 'integrations'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Webhook className="h-3.5 w-3.5" />
+            Integrations & API
+          </button>
+          <button
             onClick={() => setActiveTab('danger')}
             className={cn(
-              'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none',
+              'flex items-center gap-2 border-b-2 px-3 py-3 text-xs font-semibold transition-all outline-none shrink-0',
               activeTab === 'danger'
                 ? 'border-destructive text-destructive'
                 : 'border-transparent text-muted-foreground hover:text-destructive/80'
@@ -809,7 +1441,10 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
                 )}
               </div>
             );
-          })()}
+            })()}
+
+          {/* TAB: INTEGRATIONS & API */}
+          {activeTab === 'integrations' && renderIntegrationsTab()}
 
           {/* TAB 3: DANGER ZONE */}
           {activeTab === 'danger' && (

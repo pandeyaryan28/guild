@@ -313,6 +313,21 @@ export interface Channel {
   lastMessagePreview?: string;
   isPrivate?: boolean;
   isRestricted?: boolean;
+  webhookToken?: string | null;
+  webhookBotName?: string;
+  webhookCreatedAt?: Timestamp;
+  webhookCreatedBy?: string;
+  webhookAutoCreateTask?: boolean;
+}
+
+export interface ChannelWebhookPayload {
+  name: string;
+  email?: string;
+  phone?: string;
+  subject?: string;
+  message?: string;
+  metadata?: Record<string, any>;
+  createTask?: boolean;
 }
 
 export interface ChannelMember {

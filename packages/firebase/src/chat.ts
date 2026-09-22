@@ -8,7 +8,7 @@ import { db } from './firebase';
 import { createNotification } from './notifications';
 import { deleteCollectionByQuery } from './firestore-helpers';
 import type {
-  Channel, ChannelMember, Message, DirectMessageThread, MessageAttachment,
+  Channel, ChannelMember, Message, DirectMessageThread, MessageAttachment, ChannelWebhookPayload,
 } from '@guild/types';
 
 // ─── Default Channels ─────────────────────────────────────────────────────────
@@ -752,4 +752,78 @@ export async function deleteChannel(channelId: string): Promise<void> {
   await deleteDoc(doc(db, 'channels', channelId));
 }
 
-export type { Channel, ChannelMember, Message, DirectMessageThread };
+// ─── Channel Inbound Webhooks ──────────────────────────────────────────────────
+
+function generateSecureToken(): string {
+  const cryptoObj = typeof crypto !== 'undefined'
+    ? crypto
+    : (typeof globalThis !== 'undefined' ? (globalThis as any).crypto : undefined);
+  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+    const bytes = new Uint8Array(32);
+    cryptoObj.getRandomValues(bytes);
+    return `gh_live_${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
+  }
+  const chars = '0123456789abcdef';
+  let rand = '';
+  for (let i = 0; i < 64; i++) {
+    rand += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return `gh_live_${rand}`;
+}
+
+export async function generateChannelWebhook(
+  channelId: string,
+  botName: string = 'Inbound Bot',
+  createdBy?: string,
+): Promise<{ token: string; webhookUrl: string }> {
+  const token = generateSecureToken();
+  const channelRef = doc(db, 'channels', channelId);
+  const updatePayload: Record<string, any> = {
+    webhookToken: token,
+    webhookBotName: botName.trim() || 'Inbound Bot',
+    webhookCreatedAt: serverTimestamp(),
+  };
+  if (createdBy) {
+    updatePayload.webhookCreatedBy = createdBy;
+  }
+  await updateDoc(channelRef, updatePayload);
+
+  const origin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'https://guildorbit.com';
+  const webhookUrl = `${origin}/api/webhooks/channel?channelId=${channelId}&token=${token}`;
+
+  return { token, webhookUrl };
+}
+
+export async function revokeChannelWebhook(channelId: string): Promise<void> {
+  const channelRef = doc(db, 'channels', channelId);
+  await updateDoc(channelRef, {
+    webhookToken: null,
+    webhookBotName: null,
+    webhookCreatedAt: null,
+    webhookCreatedBy: null,
+    webhookAutoCreateTask: null,
+  });
+}
+
+export async function updateChannelWebhookSettings(
+  channelId: string,
+  settings: {
+    webhookBotName?: string;
+    webhookAutoCreateTask?: boolean;
+  },
+): Promise<void> {
+  const channelRef = doc(db, 'channels', channelId);
+  const updates: Record<string, any> = {};
+  if (settings.webhookBotName !== undefined) {
+    updates.webhookBotName = settings.webhookBotName.trim() || 'Inbound Bot';
+  }
+  if (settings.webhookAutoCreateTask !== undefined) {
+    updates.webhookAutoCreateTask = settings.webhookAutoCreateTask;
+  }
+  await updateDoc(channelRef, updates);
+}
+
+export type { Channel, ChannelMember, Message, DirectMessageThread, ChannelWebhookPayload };
+
