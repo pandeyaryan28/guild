@@ -22,7 +22,10 @@
     "./reports": "./src/reports.ts",
     "./replies": "./src/replies.ts",
     "./requests": "./src/requests.ts",
-    "./canvases": "./src/canvases.ts"
+    "./canvases": "./src/canvases.ts",
+    "./workspaceDocuments": "./src/workspaceDocuments.ts",
+    "./workspaceIssues": "./src/workspaceIssues.ts",
+    "./workspaceCycles": "./src/workspaceCycles.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

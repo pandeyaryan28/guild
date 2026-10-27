@@ -18,6 +18,9 @@ export * from './reports';
 export * from './replies';
 export * from './requests';
 export * from './canvases';
+export * from './workspaceDocuments';
+export * from './workspaceIssues';
+export * from './workspaceCycles';
 
 
 

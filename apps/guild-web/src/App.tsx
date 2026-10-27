@@ -27,6 +27,7 @@ const DashboardControl = React.lazy(() => import('./components/redesign/Dashboar
 const ChatLayout = React.lazy(() => import('./pages/chat/ChatLayout').then(m => ({ default: m.ChatLayout })));
 
 // Tasks & Work
+const StudioPage = React.lazy(() => import('./pages/studio/StudioPage').then(m => ({ default: m.StudioPage })));
 const TaskCanvas = React.lazy(() => import('./components/redesign/TaskCanvas').then(m => ({ default: m.TaskCanvas })));
 const RequestsPage = React.lazy(() => import('./pages/requests/RequestsPage').then(m => ({ default: m.RequestsPage })));
 const PeoplePage = React.lazy(() => import('./pages/people/PeoplePage').then(m => ({ default: m.PeoplePage })));
@@ -150,6 +151,18 @@ function AppContent() {
         element={
           <ProtectedRoute>
             <ChatLayout />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Studio & Docs — standalone full-page layout (like /chat and /workspace) */}
+      <Route
+        path="/studio"
+        element={
+          <ProtectedRoute>
+            <RedesignLayout>
+              <StudioPage />
+            </RedesignLayout>
           </ProtectedRoute>
         }
       />

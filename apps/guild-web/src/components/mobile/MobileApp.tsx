@@ -12,6 +12,7 @@ import { MobilePeople } from './pages/MobilePeople';
 import { MobileCalendar } from './pages/MobileCalendar';
 import { MobileReports } from './pages/MobileReports';
 import { MobileProjectDetail } from './pages/MobileProjectDetail';
+const StudioPage = React.lazy(() => import('../../pages/studio/StudioPage').then(m => ({ default: m.StudioPage })));
 
 export function MobileApp() {
   return (
@@ -53,6 +54,17 @@ export function MobileApp() {
         element={
           <ProtectedRoute>
             <MobileChat />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/studio"
+        element={
+          <ProtectedRoute>
+            <MobileLayout>
+              <StudioPage />
+            </MobileLayout>
           </ProtectedRoute>
         }
       />

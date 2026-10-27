@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Palette,
   Sun,
-  Moon
+  Moon,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
@@ -41,6 +42,7 @@ export function MobileNavDock() {
   ];
 
   const secondaryNavLinks = [
+    { path: '/studio', label: 'Studio & Docs', icon: BookOpen },
     { path: '/people', label: 'People', icon: Users },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
     { path: '/reports', label: 'Reports', icon: BarChart3 },

@@ -11,7 +11,8 @@ import {
   Palette, 
   LogOut,
   Trello,
-  Shield
+  Shield,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
@@ -45,6 +46,7 @@ export function NavDock() {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/chat', label: 'Chat', icon: MessageSquare, badge: unreadChatCount > 0 ? unreadChatCount : undefined },
+    { path: '/studio', label: 'Studio', icon: BookOpen },
     { path: '/workspace', label: 'Workspace', icon: Trello },
     { path: '/requests', label: 'Requests', icon: FileCheck },
     { path: '/people', label: 'People', icon: Users },

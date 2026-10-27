@@ -24,6 +24,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Shield,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -355,6 +356,11 @@ export function Sidebar() {
                 Productivity
               </p>
             )}
+            <NavLink to="/studio">
+              {({ isActive }) => (
+                <NavItem icon={BookOpen} label="Studio & Docs" active={isActive} collapsed={collapsed} />
+              )}
+            </NavLink>
             <NavLink to="/workspace">
               {({ isActive }) => (
                 <NavItem icon={LayoutGrid} label="Workspace" active={isActive} collapsed={collapsed} />

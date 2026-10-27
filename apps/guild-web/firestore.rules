@@ -246,6 +246,54 @@ service cloud.firestore {
       allow write: if isNewDocInMyOrg() || isDocInMyOrg();
     }
 
+    // ─── WORKSPACE (DOCUMENTS, ISSUES, CYCLES & DATABASES) ───────────────────
+
+    match /workspaceDocuments/{documentId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow create: if isNewDocInMyOrg();
+      allow update: if isDocInMyOrg();
+      allow delete: if isDocInMyOrg() && (
+        ('createdBy' in resource.data && request.auth.uid == resource.data.createdBy) ||
+        ('creatorId' in resource.data && request.auth.uid == resource.data.creatorId) ||
+        isOrgAdminOrOwner(resource.data.orgId)
+      );
+    }
+
+    match /workspaceIssues/{issueId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow create: if isNewDocInMyOrg();
+      allow update: if isDocInMyOrg();
+      allow delete: if isDocInMyOrg() && (
+        ('creatorId' in resource.data && request.auth.uid == resource.data.creatorId) ||
+        ('createdBy' in resource.data && request.auth.uid == resource.data.createdBy) ||
+        isOrgAdminOrOwner(resource.data.orgId)
+      );
+    }
+
+    match /workspaceCycles/{cycleId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow create: if isNewDocInMyOrg() && (
+        getUserData().role == 'owner' ||
+        getUserData().role == 'admin' ||
+        getUserData().role == 'member' ||
+        getUserData().role == 'manager'
+      );
+      allow update: if isDocInMyOrg();
+      allow delete: if isDocInMyOrg() && isOrgAdminOrOwner(resource.data.orgId);
+    }
+
+    match /workspaceDatabases/{databaseId} {
+      allow read: if isMemberOfOrg(resource.data.orgId);
+      allow create: if isNewDocInMyOrg();
+      allow update: if isDocInMyOrg();
+      allow delete: if isDocInMyOrg() && (
+        ('createdBy' in resource.data && request.auth.uid == resource.data.createdBy) ||
+        ('creatorId' in resource.data && request.auth.uid == resource.data.creatorId) ||
+        ('ownerId' in resource.data && request.auth.uid == resource.data.ownerId) ||
+        isOrgAdminOrOwner(resource.data.orgId)
+      );
+    }
+
     // ─── CHAT MESSAGES & THREADS ────────────────────────────────────────────
 
     match /messages/{messageId} {

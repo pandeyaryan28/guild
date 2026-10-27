@@ -620,3 +620,108 @@ export interface DemoRequest {
   createdAt: string;
   updatedAt?: string;
 }
+
+// ─── Workspace OS (Notion & Linear Unified Engine) ───────────────────────────
+
+export type DocumentStatus = 'draft' | 'in_review' | 'published' | 'archived';
+
+export interface WorkspaceDocument {
+  id: string;
+  orgId: string;
+  parentId: string | null;          // null = Root level page; string = nested subpage
+  title: string;
+  icon?: string;                    // Emoji character or Lucide icon token
+  coverUrl?: string | null;         // Banner image header
+  contentJson: string;              // TipTap JSON content state (fast, lossless)
+  contentHtml?: string;             // Rendered HTML preview
+  createdBy: string;
+  creatorName: string;
+  lastEditedBy: string;
+  lastEditedByName: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  isArchived: boolean;
+  isFavorite: boolean;
+  orderIndex: number;               // Lexicographical or floating order index for drag-and-drop
+  
+  // Notion-style properties
+  tags?: string[];
+  status?: DocumentStatus;
+  linkedIssueIds?: string[];        // Relational links to Linear-style issues
+  linkedCycleId?: string | null;
+}
+
+export type IssuePriority = 'none' | 'low' | 'medium' | 'high' | 'urgent';
+export type IssueStatus = 'triage' | 'backlog' | 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
+
+export interface WorkspaceIssue {
+  id: string;
+  orgId: string;
+  identifier: string;               // e.g. "ORB-142" or "ENG-58" (Auto-incremented per team prefix)
+  teamId?: string | null;
+  teamPrefix: string;               // e.g. "ORB"
+  number: number;                   // e.g. 142
+  title: string;
+  descriptionHtml?: string;
+  descriptionJson?: string;
+  status: IssueStatus;
+  priority: IssuePriority;
+  estimatePoints?: number | null;   // Fibonacci: 1, 2, 3, 5, 8
+  cycleId?: string | null;          // Active sprint/cycle
+  projectId?: string | null;
+  parentIssueId?: string | null;    // Sub-issue hierarchy
+  assigneeId?: string | null;
+  assigneeName?: string | null;
+  assigneeAvatar?: string | null;
+  creatorId: string;
+  creatorName: string;
+  labelIds: string[];
+  dueDate?: Timestamp | null;
+  completedAt?: Timestamp | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  orderIndex: number;
+}
+
+export type CycleStatus = 'upcoming' | 'active' | 'completed';
+
+export interface WorkspaceCycle {
+  id: string;
+  orgId: string;
+  number: number;                   // e.g. Cycle 24
+  title: string;                    // e.g. "Sprint 24: Realtime Engine"
+  startDate: Timestamp;
+  endDate: Timestamp;
+  status: CycleStatus;
+  totalPoints: number;
+  completedPoints: number;
+  totalIssues: number;
+  completedIssues: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type DatabaseViewType = 'table' | 'board' | 'list' | 'gallery';
+export type PropertyType = 'text' | 'number' | 'select' | 'multi_select' | 'status' | 'date' | 'person' | 'checkbox' | 'url';
+
+export interface DatabasePropertyDefinition {
+  id: string;
+  name: string;
+  type: PropertyType;
+  options?: { id: string; label: string; color: string }[];
+}
+
+export interface WorkspaceDatabase {
+  id: string;
+  orgId: string;
+  documentId?: string | null;       // If embedded within a document
+  title: string;
+  properties: Record<string, DatabasePropertyDefinition>;
+  activeView: DatabaseViewType;
+  filters: Array<{ propertyId: string; operator: 'equals' | 'contains' | 'is_empty'; value: any }>;
+  sorts: Array<{ propertyId: string; direction: 'asc' | 'desc' }>;
+  groupBy?: string | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
