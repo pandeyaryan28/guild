@@ -10,6 +10,6 @@
   - Accents: `bg-primary`, `text-primary-foreground`, `bg-accent`
 - Avoid hardcoded single-mode opacity hacks (`bg-white/5`, `border-white/10`, `text-white` on transparent glass). Always provide dual-mode pairing (e.g. `bg-surface/85 dark:bg-surface/55 border border-border dark:border-border-strong`).
 
-## 🚫 UI Quality Directives
-- **No Pill Badges / AI Slop**: Never place pill badges or sparkling metadata tags above headers/heroes.
-- **No Floating Micro-Widgets**: Never place floating mock cards over or around screenshot graphics.
+## 🍏 UI Quality Directives
+- **Apple & Jony Ive Minimalism**: Eliminate unnecessary decorative tags, fake telemetry, or visual noise. Let clean typography and generous whitespace lead.
+- **No Floating Micro-Widgets**: Never place floating mock cards over or around screenshot graphics. Keep interfaces authentic and intentional.

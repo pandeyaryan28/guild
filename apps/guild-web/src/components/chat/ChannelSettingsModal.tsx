@@ -2,7 +2,7 @@ import * as React from 'react';
 import {
   X, Settings, Users, AlertTriangle, Trash2, ShieldAlert, Loader2, Save, Lock,
   ArrowLeft, Search, UserPlus, Webhook, Copy, Check, Eye, EyeOff, Send,
-  Terminal, Code2, FileCode, Bot, CheckCircle2, AlertCircle, Info, CheckSquare
+  FileDown, Download, Bot, CheckCircle2, AlertCircle, Info, CheckSquare
 } from 'lucide-react';
 import {
   updateChannelSettings, removeChannelMember, deleteChannel, addChannelMembers,
@@ -13,6 +13,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { type UserProfile } from '../../lib/firestore';
 import { useOrgMembers } from '../../hooks/useChat';
+import { generateWebhookDocsPdf } from '../../utils/generateWebhookPdf';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -57,8 +58,7 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
   const [webhookAutoCreateTask, setWebhookAutoCreateTask] = React.useState<boolean>(channel.webhookAutoCreateTask || false);
   const [showToken, setShowToken] = React.useState(false);
   const [copiedUrl, setCopiedUrl] = React.useState(false);
-  const [copiedSnippet, setCopiedSnippet] = React.useState(false);
-  const [snippetTab, setSnippetTab] = React.useState<'curl' | 'typescript' | 'nextjs'>('curl');
+  const [downloadingPdf, setDownloadingPdf] = React.useState(false);
   const [generatingWebhook, setGeneratingWebhook] = React.useState(false);
   const [savingWebhookSettings, setSavingWebhookSettings] = React.useState(false);
   const [sendingTestMessage, setSendingTestMessage] = React.useState(false);
@@ -97,13 +97,22 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
     }
   };
 
-  const handleCopySnippet = async (text: string) => {
+  const handleDownloadPdf = () => {
+    setDownloadingPdf(true);
     try {
-      await navigator.clipboard.writeText(text);
-      setCopiedSnippet(true);
-      setTimeout(() => setCopiedSnippet(false), 2000);
+      generateWebhookDocsPdf({
+        channelName: channel.name,
+        channelId: channel.id,
+        webhookUrl: webhookUrl || `${origin}/api/webhooks/channel?channelId=${channel.id}&token=${webhookToken || 'YOUR_TOKEN'}`,
+        webhookToken: webhookToken || '',
+        botName: webhookBotName,
+        autoCreateTask: webhookAutoCreateTask,
+        origin,
+      });
     } catch (err) {
-      console.error('Failed to copy snippet:', err);
+      console.error('Failed to generate webhook documentation PDF:', err);
+    } finally {
+      setTimeout(() => setDownloadingPdf(false), 600);
     }
   };
 
@@ -210,87 +219,7 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
     }
   };
 
-  const curlCode = `curl -X POST "${webhookUrl || `${origin}/api/webhooks/channel?channelId=${channel.id}&token=YOUR_TOKEN`}" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "phone": "+1 555-0199",
-    "subject": "Inquiry from UniCare / Nullwave",
-    "message": "Interested in deployment timeline and platform pricing.",
-    "metadata": {
-      "source": "Landing Page Contact Form",
-      "plan": "Enterprise",
-      "ticketId": "UC-8842"
-    },
-    "createTask": true
-  }'`;
 
-  const tsCode = `// Example: Client-side Form or React submit handler
-export async function sendChannelInquiry(formData: {
-  name: string;
-  email?: string;
-  phone?: string;
-  subject?: string;
-  message?: string;
-  metadata?: Record<string, unknown>;
-}) {
-  const WEBHOOK_URL = "${webhookUrl || `${origin}/api/webhooks/channel?channelId=${channel.id}&token=YOUR_TOKEN`}";
-
-  const response = await fetch(WEBHOOK_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      ...formData,
-      createTask: true, // Automatically generates an operational task
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || \`HTTP \${response.status}\`);
-  }
-
-  return await response.json(); // { success: true, messageId: "..." }
-}`;
-
-  const nextjsCode = `// app/actions/contact.ts
-'use server';
-
-export async function submitLead(formData: FormData) {
-  const webhookUrl = process.env.GUILD_ORBIT_WEBHOOK_URL || "${webhookUrl || `${origin}/api/webhooks/channel?channelId=${channel.id}&token=YOUR_TOKEN`}";
-
-  const payload = {
-    name: formData.get('name') as string,
-    email: (formData.get('email') as string) || undefined,
-    phone: (formData.get('phone') as string) || undefined,
-    subject: (formData.get('subject') as string) || 'Website Inquiry',
-    message: (formData.get('message') as string) || '',
-    metadata: {
-      source: 'UniCare / Nullwave Landing Page',
-      submittedAt: new Date().toISOString(),
-    },
-    createTask: true,
-  };
-
-  const response = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-    cache: 'no-store',
-  });
-
-  const data = await response.json();
-  if (!response.ok) {
-    return { success: false, error: data.error || 'Failed to submit' };
-  }
-
-  return { success: true, messageId: data.messageId };
-}`;
-
-  const currentSnippetCode = snippetTab === 'curl' ? curlCode : snippetTab === 'typescript' ? tsCode : nextjsCode;
 
   // Fetch channel members when entering members tab
   React.useEffect(() => {
@@ -364,15 +293,15 @@ export async function submitLead(formData: FormData) {
   const renderIntegrationsTab = () => (
     <div className="space-y-6">
       {/* Overview card */}
-      <div className="rounded-xl border border-border-default bg-bg-tertiary p-4">
+      <div className="rounded-2xl border border-border-default bg-bg-tertiary/60 p-4">
         <div className="flex items-start gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
             <Webhook className="h-4 w-4" />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-xs font-bold text-foreground">Inbound Channel Webhook & API</h3>
+          <div className="space-y-0.5">
+            <h3 className="text-xs font-bold text-foreground">Inbound Channel Webhook</h3>
             <p className="text-[11px] text-text-muted leading-relaxed">
-              Connect external contact forms, landing pages, and external apps (e.g. UniCare, Nullwave, or custom landing pages) directly to this channel. Inquiries post structured message cards into the chat feed and can automatically create operational tasks.
+              Connect external contact forms, landing pages, and systems directly to #{channel.name}. Incoming requests post structured cards in the chat feed.
             </p>
           </div>
         </div>
@@ -380,7 +309,7 @@ export async function submitLead(formData: FormData) {
 
       {/* When no webhook is active */}
       {!webhookToken ? (
-        <div className="rounded-xl border border-dashed border-border-default bg-bg-tertiary/40 p-6 text-center space-y-4">
+        <div className="rounded-2xl border border-dashed border-border-default bg-bg-tertiary/40 p-6 text-center space-y-4">
           <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-surface border border-border-default text-text-muted">
             <Webhook className="h-5 w-5" />
           </div>
@@ -395,7 +324,7 @@ export async function submitLead(formData: FormData) {
             <label className="text-[10px] font-semibold text-foreground/70 uppercase tracking-wider block">
               Sender / Bot Name
             </label>
-            <div className="flex items-center rounded-xl border border-border-default bg-surface px-3 py-1.5 focus-within:border-primary/40 transition-colors">
+            <div className="flex items-center rounded-2xl border border-border-default bg-surface px-3 py-2 focus-within:border-primary/40 transition-colors">
               <Bot className="h-3.5 w-3.5 text-text-muted mr-2 shrink-0" />
               <input
                 type="text"
@@ -412,7 +341,7 @@ export async function submitLead(formData: FormData) {
               type="button"
               onClick={handleGenerateWebhook}
               disabled={generatingWebhook}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer shadow-sm"
             >
               {generatingWebhook ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Webhook className="h-3.5 w-3.5" />}
               Generate Webhook URL
@@ -420,7 +349,7 @@ export async function submitLead(formData: FormData) {
           </div>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Webhook URL Box */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -433,7 +362,7 @@ export async function submitLead(formData: FormData) {
               <button
                 type="button"
                 onClick={() => setShowToken(!showToken)}
-                className="flex items-center gap-1 text-[11px] text-text-muted hover:text-foreground transition-colors"
+                className="flex items-center gap-1 text-[11px] text-text-muted hover:text-foreground transition-colors cursor-pointer"
               >
                 {showToken ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 <span>{showToken ? 'Hide token' : 'Show token'}</span>
@@ -441,7 +370,7 @@ export async function submitLead(formData: FormData) {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex-1 flex items-center rounded-xl border border-border-default bg-bg-tertiary px-3.5 py-2.5 overflow-hidden focus-within:border-primary/40 transition-colors">
+              <div className="flex-1 flex items-center rounded-2xl border border-border-default bg-bg-tertiary px-3.5 py-2.5 overflow-hidden focus-within:border-primary/40 transition-colors">
                 <input
                   type="text"
                   readOnly
@@ -453,7 +382,7 @@ export async function submitLead(formData: FormData) {
                 type="button"
                 onClick={handleCopyUrl}
                 className={cn(
-                  "flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 border",
+                  "flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all shrink-0 border cursor-pointer active:scale-[0.98]",
                   copiedUrl
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
                     : "bg-bg-tertiary hover:bg-surface border-border-default text-foreground"
@@ -475,7 +404,7 @@ export async function submitLead(formData: FormData) {
               <span>Bot Display Name</span>
             </label>
             <div className="flex items-center gap-2">
-              <div className="flex-1 flex items-center rounded-xl border border-border-default bg-bg-tertiary px-3 py-2 focus-within:border-primary/40 transition-colors">
+              <div className="flex-1 flex items-center rounded-2xl border border-border-default bg-bg-tertiary px-3.5 py-2 focus-within:border-primary/40 transition-colors">
                 <input
                   type="text"
                   value={webhookBotName}
@@ -489,7 +418,7 @@ export async function submitLead(formData: FormData) {
                 type="button"
                 onClick={() => handleSaveWebhookSettings({ botName: webhookBotName })}
                 disabled={savingWebhookSettings || webhookBotName === (channel.webhookBotName || 'Inbound Bot')}
-                className="px-3 py-2 rounded-xl text-xs font-semibold bg-bg-tertiary hover:bg-surface border border-border-default text-foreground disabled:opacity-40 transition-all"
+                className="px-3.5 py-2 rounded-2xl text-xs font-semibold bg-bg-tertiary hover:bg-surface border border-border-default text-foreground disabled:opacity-40 active:scale-[0.98] transition-all cursor-pointer"
               >
                 {savingWebhookSettings ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save'}
               </button>
@@ -500,7 +429,7 @@ export async function submitLead(formData: FormData) {
           </div>
 
           {/* Task Auto-creation toggle */}
-          <div className="flex items-start justify-between rounded-xl border border-border-default bg-bg-tertiary p-3.5 gap-3">
+          <div className="flex items-start justify-between rounded-2xl border border-border-default bg-bg-tertiary p-3.5 gap-3">
             <div className="flex items-start gap-2.5">
               <CheckSquare className="h-4 w-4 text-text-muted shrink-0 mt-0.5" />
               <div>
@@ -532,7 +461,7 @@ export async function submitLead(formData: FormData) {
           </div>
 
           {/* Send Test Message */}
-          <div className="rounded-xl border border-border-default bg-bg-tertiary p-3.5 space-y-3">
+          <div className="rounded-2xl border border-border-default bg-bg-tertiary p-3.5 space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-foreground">Send Test Message</p>
@@ -542,7 +471,7 @@ export async function submitLead(formData: FormData) {
                 type="button"
                 onClick={handleSendTestMessage}
                 disabled={sendingTestMessage}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer shadow-sm"
               >
                 {sendingTestMessage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                 <span>Send Test</span>
@@ -568,110 +497,43 @@ export async function submitLead(formData: FormData) {
             )}
           </div>
 
-          {/* Interactive Code Snippets & Documentation */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-foreground">Code Snippets & Documentation</h4>
-              <span className="text-[10px] text-text-muted">Choose your stack</span>
-            </div>
-
-            {/* Snippet Tabs */}
-            <div className="flex rounded-xl border border-border-default bg-bg-tertiary p-1 gap-1">
-              <button
-                type="button"
-                onClick={() => setSnippetTab('curl')}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
-                  snippetTab === 'curl'
-                    ? "bg-surface text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Terminal className="h-3.5 w-3.5" />
-                <span>cURL</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSnippetTab('typescript')}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
-                  snippetTab === 'typescript'
-                    ? "bg-surface text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Code2 className="h-3.5 w-3.5" />
-                <span>TypeScript / React</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSnippetTab('nextjs')}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
-                  snippetTab === 'nextjs'
-                    ? "bg-surface text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <FileCode className="h-3.5 w-3.5" />
-                <span>Next.js Action</span>
-              </button>
-            </div>
-
-            {/* Code Box */}
-            <div className="relative rounded-xl border border-border-default dark:border-zinc-800 bg-zinc-950 text-zinc-100 overflow-hidden">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800 bg-zinc-900/60">
-                <span className="text-[11px] font-mono text-zinc-400">
-                  {snippetTab === 'curl' ? 'terminal-bash' : snippetTab === 'typescript' ? 'client-submit.ts' : 'contact-action.ts'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleCopySnippet(currentSnippetCode)}
-                  className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
-                >
-                  {copiedSnippet ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                  <span>{copiedSnippet ? 'Copied' : 'Copy Code'}</span>
-                </button>
-              </div>
-              <pre className="p-3 text-[11px] font-mono leading-relaxed overflow-x-auto aether-scroll max-h-56">
-                <code>{currentSnippetCode}</code>
-              </pre>
-            </div>
-
-            {/* Payload Schema Reference */}
-            <div className="rounded-xl border border-border-default bg-bg-tertiary p-3 space-y-2">
-              <p className="text-[11px] font-bold text-foreground">Payload Parameters (JSON)</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
-                <div className="space-y-0.5">
-                  <p><span className="font-mono text-primary font-semibold">name</span> <span className="text-destructive font-semibold">*required</span></p>
-                  <p className="text-text-muted">Full sender or customer name.</p>
+          {/* Developer Documentation & PDF Download */}
+          <div className="rounded-2xl border border-border dark:border-border-strong bg-surface/80 dark:bg-surface/50 backdrop-blur-xl p-4 shadow-sm transition-all">
+            <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+                  <FileDown className="h-4.5 w-4.5" />
                 </div>
                 <div className="space-y-0.5">
-                  <p><span className="font-mono text-primary font-semibold">email</span> <span className="text-text-muted">optional</span></p>
-                  <p className="text-text-muted">Contact email address.</p>
-                </div>
-                <div className="space-y-0.5">
-                  <p><span className="font-mono text-primary font-semibold">phone</span> <span className="text-text-muted">optional</span></p>
-                  <p className="text-text-muted">Contact phone number.</p>
-                </div>
-                <div className="space-y-0.5">
-                  <p><span className="font-mono text-primary font-semibold">subject</span> <span className="text-text-muted">optional</span></p>
-                  <p className="text-text-muted">Inquiry topic or lead title.</p>
-                </div>
-                <div className="space-y-0.5">
-                  <p><span className="font-mono text-primary font-semibold">message</span> <span className="text-text-muted">optional</span></p>
-                  <p className="text-text-muted">Body text or inquiry message.</p>
-                </div>
-                <div className="space-y-0.5">
-                  <p><span className="font-mono text-primary font-semibold">metadata</span> <span className="text-text-muted">optional</span></p>
-                  <p className="text-text-muted">Custom object (e.g. Clinic Name, Ticket ID).</p>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs font-bold text-foreground">Integration Guide & Documentation</h4>
+                    <span className="rounded-md bg-primary/10 text-primary font-mono text-[9px] px-1.5 py-0.5 border border-primary/20 font-bold uppercase tracking-wider">
+                      PDF
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-text-muted leading-relaxed">
+                    Download complete API specs, payload schemas, serverless setup notes, and copy-paste code snippets (cURL, TypeScript, Next.js, Python).
+                  </p>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={downloadingPdf}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all shadow-sm shrink-0 disabled:opacity-50 cursor-pointer"
+              >
+                {downloadingPdf ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Download className="h-3.5 w-3.5" />
+                )}
+                <span>{downloadingPdf ? 'Generating...' : 'Download Guide'}</span>
+              </button>
             </div>
           </div>
 
           {/* Revoke Webhook Section */}
-          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-3">
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 space-y-3">
             <div className="flex items-start gap-2.5">
               <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
               <div>
@@ -686,7 +548,7 @@ export async function submitLead(formData: FormData) {
               <button
                 type="button"
                 onClick={() => setShowRevokeConfirm(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/30 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/30 active:scale-[0.98] transition-all"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 <span>Revoke Webhook URL</span>
@@ -697,7 +559,7 @@ export async function submitLead(formData: FormData) {
                   type="button"
                   onClick={handleRevokeWebhook}
                   disabled={generatingWebhook}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90 active:scale-[0.98] transition-all"
                 >
                   {generatingWebhook ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                   <span>Yes, Revoke Now</span>
@@ -705,7 +567,7 @@ export async function submitLead(formData: FormData) {
                 <button
                   type="button"
                   onClick={() => setShowRevokeConfirm(false)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-bg-tertiary hover:bg-surface border border-border-default text-foreground transition-colors"
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-bg-tertiary hover:bg-surface border border-border-default text-foreground active:scale-[0.98] transition-all"
                 >
                   Cancel
                 </button>

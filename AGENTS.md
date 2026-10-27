@@ -43,11 +43,11 @@ This document defines critical requirements and architectural standards for any 
 
 ---
 
-## 🚫 Forbidden UI Anti-Patterns
+## 🍏 Apple & Jony Ive Minimalist UI Directives
 
-1. **No Decorative Pill Badges / AI Slop**:
-   - Never add decorative pill tags with Sparkles/icons at the top of hero sections or landing page features (e.g., `inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs ...`).
+1. **Radical Minimalism & Intentionality**:
+   - Every UI element must have clear purpose. Strip away gratuitous clutter, fake status indicators, or extraneous decorative elements.
 2. **No Floating Hero Micro-Widgets**:
-   - Never position random floating mock cards (`absolute -bottom-6 -left-6`) next to main feature screenshots. Keep illustrations clean and intentional.
-3. **No Decorative Dashboard Overuse**:
-   - Keep layout structures intentional and focused on user productivity.
+   - Never position random floating mock cards (`absolute -bottom-6 -left-6`) next to main feature screenshots. Keep illustrations clean, authentic, and intentional.
+3. **Cognitive Load Reduction**:
+   - Maintain clear visual hierarchy and decluttered layouts focused on user productivity and fluid workflow.
