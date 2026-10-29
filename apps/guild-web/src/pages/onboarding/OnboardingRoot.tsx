@@ -23,12 +23,25 @@ const PUBLIC_DOMAINS = [
 ];
 
 export function OnboardingRoot() {
-  const { user, loading } = useAuth();
+  const { user, userProfile, onboarding, loading } = useAuth();
   const navigate = useNavigate();
   const { mode, toggleMode } = useTheme();
 
   const [data, setData] = React.useState<OnboardingData>({ path: null });
   const [checkingInvite, setCheckingInvite] = React.useState(true);
+
+  const isAlreadyOnboarded = Boolean(onboarding?.completed || userProfile?.organizationId);
+
+  // If already connected to an organization, redirect to the dashboard unless actively processing an invite link
+  React.useEffect(() => {
+    if (!loading && user && isAlreadyOnboarded) {
+      const url = new URL(window.location.href);
+      const token = url.searchParams.get('token') || localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
+      if (!token) {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [loading, user, isAlreadyOnboarded, navigate]);
 
   const updateData = (patch: Partial<OnboardingData>) => {
     setData((prev) => ({ ...prev, ...patch }));

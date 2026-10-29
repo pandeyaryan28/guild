@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { onAuthStateChanged, signOut } from '../lib/auth';
-import { getOnboardingState, type UserProfile, type OnboardingState } from '../lib/firestore';
+import { getOnboardingState, setOnboardingState, type UserProfile, type OnboardingState } from '../lib/firestore';
 import { type User } from 'firebase/auth';
-import { onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { onSnapshot, doc, getDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 interface AuthContextValue {
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           // Subscribe to real-time changes to the user's onboarding state
-          const onboardingRef = doc(db, 'onboarding', firebaseUser.uid);
+          const onboardingRef = doc(db, 'onboardingState', firebaseUser.uid);
           unsubscribeOnboarding = onSnapshot(
             onboardingRef,
             (snap) => {
@@ -83,7 +83,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             userRef,
             (snap) => {
               if (snap.exists()) {
-                setUserProfile(snap.data() as UserProfile);
+                const profile = snap.data() as UserProfile;
+                setUserProfile(profile);
+
+                // Self-healing: If user is already assigned to a workspace, ensure onboarding is marked completed
+                if (profile.organizationId) {
+                  setOnboarding((prev) => (prev ? { ...prev, completed: true } : {
+                    uid: firebaseUser.uid,
+                    completed: true,
+                    step: 4,
+                    path: 'join',
+                    updatedAt: Timestamp.now(),
+                  }));
+                  setOnboardingState(firebaseUser.uid, { completed: true }).catch(() => {});
+                }
               } else {
                 setUserProfile(null);
               }

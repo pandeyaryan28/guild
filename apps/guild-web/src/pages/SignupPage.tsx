@@ -12,7 +12,7 @@ import { isValidEmail, isValidPassword } from '../lib/validation';
 export function SignupPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const { user, userProfile, onboarding, loading } = useAuth();
   const { mode, toggleMode } = useTheme();
 
   const [email, setEmail] = React.useState('');
@@ -40,13 +40,16 @@ export function SignupPage() {
         return;
       }
       const savedToken = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
+      const isSetupComplete = Boolean(onboarding?.completed || userProfile?.organizationId);
       if (savedToken) {
         navigate(`/join/${savedToken}`, { replace: true });
+      } else if (isSetupComplete) {
+        navigate('/', { replace: true });
       } else {
         navigate('/onboarding', { replace: true });
       }
     }
-  }, [user, loading, navigate, location.state]);
+  }, [user, userProfile, onboarding, loading, navigate, location.state]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};

@@ -8,7 +8,7 @@ import { sendVerificationEmail, reloadUser } from '../lib/auth';
 
 export function VerifyEmailPage() {
   const navigate = useNavigate();
-  const { user, onboarding, logout, loading: authLoading } = useAuth();
+  const { user, userProfile, onboarding, logout, loading: authLoading } = useAuth();
   const { mode, toggleMode } = useTheme();
 
   const [isResending, setIsResending] = React.useState(false);
@@ -29,15 +29,16 @@ export function VerifyEmailPage() {
     if (isVerifiedSuccess) {
       const timer = setTimeout(() => {
         const savedToken = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
+        const isSetupComplete = Boolean(onboarding?.completed || userProfile?.organizationId);
         if (savedToken) {
           navigate(`/join/${savedToken}`, { replace: true });
         } else {
-          navigate(onboarding?.completed ? '/' : '/onboarding', { replace: true });
+          navigate(isSetupComplete ? '/' : '/onboarding', { replace: true });
         }
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isVerifiedSuccess, onboarding, navigate]);
+  }, [isVerifiedSuccess, onboarding, userProfile, navigate]);
 
   // Redirect if not logged in
   React.useEffect(() => {

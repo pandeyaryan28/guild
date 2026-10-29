@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, onboarding, loading, isBanned, logout } = useAuth();
+  const { user, userProfile, onboarding, loading, isBanned, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -60,7 +60,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/verify-email" replace />;
   }
 
-  if (!onboarding?.completed) {
+  const isSetupComplete = Boolean(onboarding?.completed || userProfile?.organizationId);
+  if (!isSetupComplete) {
     return <Navigate to="/onboarding" replace />;
   }
 

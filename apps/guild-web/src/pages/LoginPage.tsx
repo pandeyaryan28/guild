@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, onboarding, loading } = useAuth();
+  const { user, userProfile, onboarding, loading } = useAuth();
   const { mode, toggleMode } = useTheme();
 
   const [email, setEmail] = React.useState('');
@@ -53,15 +53,16 @@ export function LoginPage() {
 
       // 2. Fall back to any token saved in storage (e.g. from a prior session)
       const savedToken = localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token');
+      const isSetupComplete = Boolean(onboarding?.completed || userProfile?.organizationId);
       if (savedToken) {
         navigate(`/join/${savedToken}`, { replace: true });
-      } else if (onboarding?.completed) {
+      } else if (isSetupComplete) {
         navigate('/', { replace: true });
       } else {
         navigate('/onboarding', { replace: true });
       }
     }
-  }, [user, onboarding, loading, navigate, location.state]);
+  }, [user, userProfile, onboarding, loading, navigate, location.state]);
 
   const handleForgotPassword = async () => {
     setError('');
