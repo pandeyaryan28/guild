@@ -69,10 +69,10 @@ export function StepJoinOrg({ data, updateData }: Props) {
     } catch {}
 
     try {
-      const result = await validateInviteToken(token);
+      const result = await validateInviteToken(token, user?.email ?? undefined);
       if (result.valid && result.org) {
         setOrg(result.org);
-        updateData({ inviteToken: token });
+        updateData({ inviteToken: token, inviteRole: result.invite?.role ?? 'member' });
       } else {
         setError(result.error || 'Invalid invite link.');
       }

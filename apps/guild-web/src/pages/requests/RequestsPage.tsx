@@ -38,9 +38,9 @@ function RequestIcon({ name, className = "h-4 w-4" }: { name: string; className?
 }
 
 function statusColor(s: RequestStatus) {
-  if (s === 'approved') return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
-  if (s === 'rejected') return 'text-red-400 bg-red-400/10 border-red-400/20';
-  return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
+  if (s === 'approved') return 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+  if (s === 'rejected') return 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20';
+  return 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20';
 }
 
 function StatusBadge({ status }: { status: RequestStatus }) {
@@ -428,10 +428,10 @@ function RequestCard({
                 background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.1) c h) 100%)`
               }}
             >
-              {(isSent ? req.approverName : req.creatorName)[0]?.toUpperCase()}
+              {((isSent ? req.approverName : req.creatorName) || '?')[0]?.toUpperCase()}
             </div>
             <span className="font-semibold text-foreground/80 truncate max-w-[100px]">
-              {isSent ? req.approverName : req.creatorName}
+              {(isSent ? req.approverName : req.creatorName) || 'Team Member'}
             </span>
             <span className="opacity-40">·</span>
             <span className="font-mono text-[9px] font-bold">{timeAgo(req.createdAt)}</span>
@@ -513,10 +513,10 @@ export function RequestsPage() {
     if (statusFilter !== 'all' && req.status !== statusFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchTitle = req.title.toLowerCase().includes(q);
-      const matchDesc = req.description.toLowerCase().includes(q);
-      const matchCreator = req.creatorName.toLowerCase().includes(q);
-      const matchApprover = req.approverName.toLowerCase().includes(q);
+      const matchTitle = (req.title || '').toLowerCase().includes(q);
+      const matchDesc = (req.description || '').toLowerCase().includes(q);
+      const matchCreator = (req.creatorName || '').toLowerCase().includes(q);
+      const matchApprover = (req.approverName || '').toLowerCase().includes(q);
       const matchCat = REQUEST_TYPE_LABELS[req.type]?.toLowerCase().includes(q);
       return matchTitle || matchDesc || matchCreator || matchApprover || matchCat;
     }

@@ -20,8 +20,16 @@
  * }
  */
 
+import { timingSafeEqual } from 'crypto';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+
+function safeCompareTokens(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, 'utf8');
+  const bufB = Buffer.from(b, 'utf8');
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
 
 function getAdminDb() {
   if (!getApps().length) {
@@ -108,7 +116,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const channelData = channelDoc.data() || {};
-    if (!channelData.webhookToken || channelData.webhookToken !== token) {
+    if (!channelData.webhookToken || !safeCompareTokens(String(channelData.webhookToken), token)) {
       return res.status(401).json({ error: 'Unauthorized: Invalid or revoked webhook token' });
     }
 
@@ -296,6 +304,16 @@ export default async function handler(req: any, res: any) {
         parentTaskId: null,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      const actRef = db.collection('taskActivities').doc();
+      await actRef.set({
+        id: actRef.id,
+        taskId: taskRef.id,
+        orgId: targetOrgId,
+        userId: assigneeId,
+        type: 'created',
+        createdAt: FieldValue.serverTimestamp(),
       });
     }
 

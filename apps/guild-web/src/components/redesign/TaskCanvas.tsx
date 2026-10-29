@@ -286,15 +286,17 @@ export function TaskCanvas() {
     setCompletedGoalsExpanded(prev => ({ ...prev, [goalId]: !prev[goalId] }));
   };
 
+  const [draggedTaskId, setDraggedTaskId] = React.useState<string | null>(null);
+
   // Pre-fill action triggers for scrollable slide-over drawer
   const triggerAddGoal = (projectId: string) => {
-    setGoalForm({ title: '', description: '', projectId, ownerId: '', horizon: 'short_term', targetDate: '' });
+    setGoalForm({ title: '', description: '', projectId, ownerId: activeSection === 'my-space' ? actor.uid : '', horizon: 'short_term', targetDate: '' });
     setCreateType('goal');
     setShowCreateDrawer(true);
   };
 
   const triggerAddTask = (goalId: string, projectId?: string | null) => {
-    setTaskForm({ title: '', description: '', priority: 'none', projectId: projectId || '', goalId, assigneeId: '', dueDate: '' });
+    setTaskForm({ title: '', description: '', priority: 'none', projectId: projectId || '', goalId, assigneeId: activeSection === 'my-space' ? actor.uid : '', dueDate: '' });
     setCreateType('task');
     setShowCreateDrawer(true);
   };
@@ -360,7 +362,7 @@ export function TaskCanvas() {
         priority: taskForm.priority,
         projectId: taskForm.projectId || null,
         goalId: taskForm.goalId || null,
-        assigneeIds: taskForm.assigneeId ? [taskForm.assigneeId] : [],
+        assigneeIds: taskForm.assigneeId ? [taskForm.assigneeId] : (activeSection === 'my-space' ? [actor.uid] : []),
         dueDate: taskForm.dueDate ? new Date(taskForm.dueDate) : null,
         actor
       });
@@ -685,10 +687,18 @@ export function TaskCanvas() {
     return (
       <div
         key={task.id}
+        draggable
+        onDragStart={(e) => {
+          setDraggedTaskId(task.id);
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', task.id);
+        }}
+        onDragEnd={() => setDraggedTaskId(null)}
         onClick={() => setSearchParams({ task: task.id })}
         className={cn(
           "aether-glass aether-glass-interactive p-4 space-y-3 relative group/card cursor-pointer flex flex-col justify-between select-none shadow-sm",
-          isCompleted && "opacity-60 hover:opacity-90"
+          isCompleted && "opacity-60 hover:opacity-90",
+          draggedTaskId === task.id && "opacity-40 scale-95"
         )}
       >
         <div className="space-y-2">
@@ -924,7 +934,7 @@ export function TaskCanvas() {
 
           <button
             onClick={() => {
-              setTaskForm({ title: '', description: '', priority: 'none', projectId: '', goalId: '', assigneeId: '', dueDate: '' });
+              setTaskForm({ title: '', description: '', priority: 'none', projectId: '', goalId: '', assigneeId: activeSection === 'my-space' ? actor.uid : '', dueDate: '' });
               setCreateType('task');
               setShowCreateDrawer(true);
             }}
@@ -961,13 +971,13 @@ export function TaskCanvas() {
       <div className="flex-grow flex flex-col min-h-0 aether-glass overflow-hidden shadow-2xl z-10 relative">
         
         {/* Mobile Navigation Segmented Control */}
-        <div className="xl:hidden flex items-center justify-between p-3 border-b border-border-default/45 bg-white/[0.02] dark:bg-white/[0.003] backdrop-blur-md shrink-0 gap-2 select-none">
-          <div className="flex items-center gap-1 bg-white/[0.03] dark:bg-white/[0.01] border border-white/10 p-1 rounded-xl shadow-inner flex-1 max-w-md">
+        <div className="xl:hidden flex items-center justify-between p-3 border-b border-border bg-surface/80 backdrop-blur-md shrink-0 gap-2 select-none">
+          <div className="flex items-center gap-1 bg-secondary/70 border border-border p-1 rounded-xl flex-1 max-w-md">
             <button
               onClick={() => setActiveSection('my-space')}
               className={cn(
-                "flex-1 py-2 rounded-lg text-[10px] font-black flex items-center justify-center gap-1.5 transition-all duration-300 cursor-pointer relative",
-                activeSection === 'my-space' ? "bg-white/5 border border-white/10 text-foreground" : "text-muted-foreground"
+                "flex-1 py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer relative",
+                activeSection === 'my-space' ? "bg-surface border border-border shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Sparkles className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
@@ -976,8 +986,8 @@ export function TaskCanvas() {
             <button
               onClick={() => setActiveSection('my-team')}
               className={cn(
-                "flex-1 py-2 rounded-lg text-[10px] font-black flex items-center justify-center gap-1.5 transition-all duration-300 cursor-pointer relative",
-                activeSection === 'my-team' ? "bg-white/5 border border-white/10 text-foreground" : "text-muted-foreground"
+                "flex-1 py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer relative",
+                activeSection === 'my-team' ? "bg-surface border border-border shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Users className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
@@ -986,8 +996,8 @@ export function TaskCanvas() {
             <button
               onClick={() => setActiveSection('projects')}
               className={cn(
-                "flex-1 py-2 rounded-lg text-[10px] font-black flex items-center justify-center gap-1.5 transition-all duration-300 cursor-pointer relative",
-                activeSection === 'projects' ? "bg-white/5 border border-white/10 text-foreground" : "text-muted-foreground"
+                "flex-1 py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer relative",
+                activeSection === 'projects' ? "bg-surface border border-border shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <FolderGit className="w-3.5 h-3.5 text-sky-500 shrink-0" />
@@ -1124,33 +1134,83 @@ export function TaskCanvas() {
                       </div>
                     </div>
 
-                    {/* List vs Kanban Toggle (only for Tasks) */}
-                    {activeTab === 'tasks' && (
-                      <div className="flex bg-bg-secondary/80 dark:bg-bg-secondary/40 border border-border-default/60 p-0.5 rounded-xl shrink-0 self-end md:self-auto">
-                        <button
-                          onClick={() => setViewMode('list')}
-                          className={cn(
-                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border",
-                            viewMode === 'list'
-                              ? "bg-accent border-accent text-white shadow-md font-extrabold"
-                              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/65"
-                          )}
-                        >
-                          List
-                        </button>
-                        <button
-                          onClick={() => setViewMode('kanban')}
-                          className={cn(
-                            "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border",
-                            viewMode === 'kanban'
-                              ? "bg-accent border-accent text-white shadow-md font-extrabold"
-                              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/65"
-                          )}
-                        >
-                          Kanban
-                        </button>
+                    {/* Search, Filters & View Toggle */}
+                    <div className="flex flex-wrap items-center gap-2.5 self-end md:self-auto">
+                      <div className="relative">
+                        <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder={activeTab === 'tasks' ? "Filter tasks..." : "Filter goals..."}
+                          className="pl-8 pr-7 py-1.5 rounded-xl border border-border-default bg-surface/60 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 w-36 sm:w-44 transition-all"
+                        />
+                        {searchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
                       </div>
-                    )}
+
+                      {projects.length > 0 && (
+                        <select
+                          value={selectedProjectId}
+                          onChange={(e) => setSelectedProjectId(e.target.value)}
+                          className="bg-surface/60 border border-border-default rounded-xl px-2.5 py-1.5 text-xs text-foreground font-medium outline-none cursor-pointer hover:bg-surface transition-all max-w-[140px] truncate"
+                        >
+                          <option value="all">All Projects</option>
+                          {projects.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                      )}
+
+                      {activeTab === 'tasks' && (
+                        <select
+                          value={selectedPriority}
+                          onChange={(e) => setSelectedPriority(e.target.value as any)}
+                          className="bg-surface/60 border border-border-default rounded-xl px-2.5 py-1.5 text-xs text-foreground font-medium outline-none cursor-pointer hover:bg-surface transition-all"
+                        >
+                          <option value="all">All Priorities</option>
+                          <option value="urgent">Urgent</option>
+                          <option value="high">High</option>
+                          <option value="medium">Medium</option>
+                          <option value="low">Low</option>
+                          <option value="none">None</option>
+                        </select>
+                      )}
+
+                      {activeTab === 'tasks' && (
+                        <div className="flex bg-bg-secondary/80 dark:bg-bg-secondary/40 border border-border-default/60 p-0.5 rounded-xl shrink-0">
+                          <button
+                            onClick={() => setViewMode('list')}
+                            className={cn(
+                              "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border",
+                              viewMode === 'list'
+                                ? "bg-accent border-accent text-white shadow-md font-extrabold"
+                                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/65"
+                            )}
+                          >
+                            List
+                          </button>
+                          <button
+                            onClick={() => setViewMode('kanban')}
+                            className={cn(
+                              "px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border",
+                              viewMode === 'kanban'
+                                ? "bg-accent border-accent text-white shadow-md font-extrabold"
+                                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-bg-secondary/65"
+                            )}
+                          >
+                            Kanban
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* ─── B. Main Content Areas ─── */}
@@ -1228,6 +1288,15 @@ export function TaskCanvas() {
                                       <span className="text-[8px] text-muted-foreground font-mono bg-bg-secondary border border-border-default rounded px-2 py-0.5">
                                         {new Date((goal.targetDate as any).seconds * 1000).toLocaleDateString()}
                                       </span>
+                                    )}
+                                    {(goal.ownerId === actor.uid || userProfile?.role === 'owner' || userProfile?.role === 'admin') && (
+                                      <button
+                                        onClick={(e) => handleDeleteGoalItem(e, goal.id)}
+                                        className="p-1 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                        title="Delete Goal"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
                                     )}
                                   </div>
                                 </div>
@@ -1474,7 +1543,19 @@ export function TaskCanvas() {
                         <div className="flex h-[calc(100vh-220px)] w-full overflow-x-auto aether-scroll select-none pb-4 gap-4 items-start">
                           
                           {/* Kanban Column: Todo */}
-                          <div className="flex flex-col w-72 shrink-0 max-h-full bg-bg-secondary/20 border border-border-default/40 rounded-2xl p-3">
+                          <div
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                              const droppedTask = tasks.find(t => t.id === taskId);
+                              if (droppedTask && droppedTask.status !== 'todo') {
+                                handleUpdateTaskStatus(droppedTask, 'todo');
+                              }
+                              setDraggedTaskId(null);
+                            }}
+                            className="flex flex-col w-72 shrink-0 max-h-full bg-bg-secondary/20 border border-border-default/40 rounded-2xl p-3"
+                          >
                             <div className="flex items-center justify-between mb-3.5 px-1 shrink-0">
                               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                                 <span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />
@@ -1493,7 +1574,19 @@ export function TaskCanvas() {
                           </div>
 
                           {/* Kanban Column: In Progress */}
-                          <div className="flex flex-col w-72 shrink-0 max-h-full bg-bg-secondary/20 border border-border-default/40 rounded-2xl p-3">
+                          <div
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                              const droppedTask = tasks.find(t => t.id === taskId);
+                              if (droppedTask && droppedTask.status !== 'in_progress') {
+                                handleUpdateTaskStatus(droppedTask, 'in_progress');
+                              }
+                              setDraggedTaskId(null);
+                            }}
+                            className="flex flex-col w-72 shrink-0 max-h-full bg-bg-secondary/20 border border-border-default/40 rounded-2xl p-3"
+                          >
                             <div className="flex items-center justify-between mb-3.5 px-1 shrink-0">
                               <span className="text-[10px] font-black uppercase tracking-widest text-blue-550 flex items-center gap-2" style={{ color: 'var(--accent)' }}>
                                 <span className="h-1.5 w-1.5 rounded-full bg-blue-550" style={{ backgroundColor: 'var(--accent)' }} />
@@ -1512,7 +1605,19 @@ export function TaskCanvas() {
                           </div>
 
                           {/* Kanban Column: Review */}
-                          <div className="flex flex-col w-72 shrink-0 max-h-full bg-bg-secondary/20 border border-border-default/40 rounded-2xl p-3">
+                          <div
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                              const droppedTask = tasks.find(t => t.id === taskId);
+                              if (droppedTask && droppedTask.status !== 'review') {
+                                handleUpdateTaskStatus(droppedTask, 'review');
+                              }
+                              setDraggedTaskId(null);
+                            }}
+                            className="flex flex-col w-72 shrink-0 max-h-full bg-bg-secondary/20 border border-border-default/40 rounded-2xl p-3"
+                          >
                             <div className="flex items-center justify-between mb-3.5 px-1 shrink-0">
                               <span className="text-[10px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-2">
                                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
@@ -1541,6 +1646,16 @@ export function TaskCanvas() {
                                 exit={{ opacity: 0, width: 0 }}
                                 type="button"
                                 onClick={() => setShowDoneTasks(true)}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                                  const droppedTask = tasks.find(t => t.id === taskId);
+                                  if (droppedTask && droppedTask.status !== 'done') {
+                                    handleUpdateTaskStatus(droppedTask, 'done');
+                                  }
+                                  setDraggedTaskId(null);
+                                }}
                                 className="flex flex-col items-center justify-between py-5 bg-emerald-500/[0.02] border border-dashed border-emerald-500/25 rounded-2xl shrink-0 h-[calc(100vh-220px)] cursor-pointer hover:bg-emerald-500/[0.04] hover:border-emerald-500/40 transition-all select-none gap-4"
                                 title="Expand Completed Column"
                               >
@@ -1558,6 +1673,16 @@ export function TaskCanvas() {
                                 animate={{ opacity: 1, width: 288 }}
                                 exit={{ opacity: 0, width: 0 }}
                                 transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                                  const droppedTask = tasks.find(t => t.id === taskId);
+                                  if (droppedTask && droppedTask.status !== 'done') {
+                                    handleUpdateTaskStatus(droppedTask, 'done');
+                                  }
+                                  setDraggedTaskId(null);
+                                }}
                                 className="flex flex-col w-72 shrink-0 max-h-full bg-emerald-500/[0.01] border border-emerald-500/20 rounded-2xl p-3"
                               >
                                 <div className="flex items-center justify-between mb-3.5 px-1 shrink-0">
@@ -1656,16 +1781,27 @@ export function TaskCanvas() {
                                   </p>
                                 )}
                               </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/projects/${project.id}`);
-                                }}
-                                className="text-muted-foreground hover:text-accent p-1 transition-colors shrink-0"
-                                title="Project Settings"
-                              >
-                                <Settings className="w-3.5 h-3.5" />
-                              </button>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {(project.ownerId === actor.uid || userProfile?.role === 'owner' || userProfile?.role === 'admin') && (
+                                  <button
+                                    onClick={(e) => handleDeleteProjectItem(e, project.id)}
+                                    className="text-muted-foreground hover:text-red-500 p-1 transition-colors shrink-0 cursor-pointer"
+                                    title="Delete Project"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/projects/${project.id}`);
+                                  }}
+                                  className="text-muted-foreground hover:text-accent p-1 transition-colors shrink-0 cursor-pointer"
+                                  title="Project Settings"
+                                >
+                                  <Settings className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
 
                             {/* Timeline Dates */}
@@ -2184,9 +2320,9 @@ export function TaskCanvas() {
                         <SearchableSelect
                           value={taskForm.assigneeId}
                           onChange={(val) => setTaskForm({ ...taskForm, assigneeId: val })}
-                          options={members.filter(m => m.uid !== actor.uid).map(m => ({
+                          options={members.map(m => ({
                             value: m.uid,
-                            label: m.fullName || m.username,
+                            label: m.uid === actor.uid ? `${m.fullName || m.username} (Me)` : (m.fullName || m.username),
                             detail: m.designation || 'Member',
                             photoURL: m.photoURL
                           }))}

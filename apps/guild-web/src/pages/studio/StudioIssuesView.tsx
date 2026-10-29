@@ -44,6 +44,16 @@ export function StudioIssuesView({
   const [filterPriority, setFilterPriority] = React.useState<IssuePriority | 'all'>('all');
   const [newIssueStatus, setNewIssueStatus] = React.useState<IssueStatus | null>(null);
   const [quickTitle, setQuickTitle] = React.useState('');
+  const [selectedIssue, setSelectedIssue] = React.useState<WorkspaceIssue | null>(null);
+  const [editTitle, setEditTitle] = React.useState('');
+  const [editDescription, setEditDescription] = React.useState('');
+
+  React.useEffect(() => {
+    if (selectedIssue) {
+      setEditTitle(selectedIssue.title);
+      setEditDescription(selectedIssue.descriptionHtml || '');
+    }
+  }, [selectedIssue?.id]);
 
   const filteredIssues = React.useMemo(() => {
     return issues.filter((issue) => {
@@ -87,11 +97,8 @@ export function StudioIssuesView({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-extrabold text-foreground tracking-tight">
-                {activeCycle?.title || 'Cycle 1 (Active)'}
+                {activeCycle?.title || 'Cycle 1'}
               </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                Active
-              </span>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
               <span>{doneIssues} of {totalIssues} issues completed</span>
@@ -175,6 +182,7 @@ export function StudioIssuesView({
                     <motion.div
                       layout
                       key={issue.id}
+                      onClick={() => setSelectedIssue(issue)}
                       className="group relative p-3 rounded-xl bg-surface/90 dark:bg-surface/70 border border-border hover:border-primary/40 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
                     >
                       {/* Card Header: Identifier + Priority */}
@@ -248,6 +256,133 @@ export function StudioIssuesView({
           );
         })}
       </div>
+
+      {/* Issue Detail & Edit Modal */}
+      <AnimatePresence>
+        {selectedIssue && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              className="w-full max-w-lg bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-secondary/40">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold text-muted-foreground px-2 py-0.5 rounded bg-secondary">
+                    {selectedIssue.identifier}
+                  </span>
+                  <span className="text-xs font-semibold text-muted-foreground">Issue Details</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDeleteIssue(selectedIssue.id);
+                      setSelectedIssue(null);
+                    }}
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                    title="Delete Issue"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedIssue(null)}
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-5 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Title</label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-border bg-secondary/40 text-sm font-semibold text-foreground outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</label>
+                    <select
+                      value={selectedIssue.status}
+                      onChange={(e) => {
+                        const status = e.target.value as IssueStatus;
+                        onUpdateIssue(selectedIssue.id, { status });
+                        setSelectedIssue({ ...selectedIssue, status });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl border border-border bg-secondary/40 text-xs font-semibold text-foreground outline-none focus:border-primary cursor-pointer"
+                    >
+                      <option value="todo">Todo</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="in_review">In Review</option>
+                      <option value="done">Done</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Priority</label>
+                    <select
+                      value={selectedIssue.priority || 'none'}
+                      onChange={(e) => {
+                        const priority = e.target.value as IssuePriority;
+                        onUpdateIssue(selectedIssue.id, { priority });
+                        setSelectedIssue({ ...selectedIssue, priority });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl border border-border bg-secondary/40 text-xs font-semibold text-foreground outline-none focus:border-primary cursor-pointer"
+                    >
+                      <option value="none">No Priority</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Description</label>
+                  <textarea
+                    rows={4}
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Add issue context, reproduction steps, or acceptance criteria..."
+                    className="w-full px-3 py-2 rounded-xl border border-border bg-secondary/40 text-xs text-foreground outline-none focus:border-primary resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="px-5 py-3.5 border-t border-border bg-secondary/30 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedIssue(null)}
+                  className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onUpdateIssue(selectedIssue.id, {
+                      title: editTitle.trim() || selectedIssue.title,
+                      descriptionHtml: editDescription.trim(),
+                    });
+                    setSelectedIssue(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

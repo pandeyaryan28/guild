@@ -1,7 +1,7 @@
 import {
   collection, doc, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot, serverTimestamp,
-  Timestamp,
+  Timestamp, getDoc, getDocs, writeBatch,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Goal, GoalStatus, GoalHorizon, GoalRecurrence, ActorInfo, MessageAttachment, GoalComment } from '@guild/types';
@@ -85,7 +85,26 @@ export function listenToGoal(
   );
 }
 
-export async function deleteGoal(goalId: string): Promise<void> {
+export async function deleteGoal(goalId: string, orgId?: string): Promise<void> {
+  const goalSnap = await getDoc(doc(db, 'goals', goalId));
+  const resolvedOrgId = orgId || (goalSnap.exists() ? goalSnap.data()?.orgId : undefined);
+
+  if (resolvedOrgId) {
+    try {
+      const [tasksSnap, commentsSnap] = await Promise.all([
+        getDocs(query(collection(db, 'tasks'), where('orgId', '==', resolvedOrgId), where('goalId', '==', goalId))),
+        getDocs(query(collection(db, 'goalComments'), where('orgId', '==', resolvedOrgId), where('goalId', '==', goalId))),
+      ]);
+      const batch = writeBatch(db);
+      tasksSnap.docs.forEach((d) => batch.update(doc(db, 'tasks', d.id), { goalId: null, updatedAt: serverTimestamp() }));
+      commentsSnap.docs.forEach((d) => batch.delete(doc(db, 'goalComments', d.id)));
+      batch.delete(doc(db, 'goals', goalId));
+      await batch.commit();
+      return;
+    } catch (e) {
+      console.error('Failed to cascade-clean goal links, falling back to direct delete:', e);
+    }
+  }
   await deleteDoc(doc(db, 'goals', goalId));
 }
 

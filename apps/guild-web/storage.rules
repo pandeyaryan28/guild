@@ -1,27 +1,60 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    
-    // User profile images: Only the authenticated user themselves can write; any authenticated user can read profiles.
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function userOrgId() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.organizationId;
+    }
+
+    function isMemberOfOrg(orgId) {
+      return isAuth() && (
+        userOrgId() == orgId ||
+        firestore.exists(/databases/(default)/documents/organizationMembers/$(orgId + '_' + request.auth.uid))
+      );
+    }
+
+    function isValidImageUpload(maxSizeMB) {
+      return request.resource == null || (
+        request.resource.size <= maxSizeMB * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*')
+      );
+    }
+
+    function isValidAttachmentUpload(maxSizeMB) {
+      return request.resource == null || (
+        request.resource.size <= maxSizeMB * 1024 * 1024 &&
+        request.resource.contentType != null &&
+        !request.resource.contentType.matches('application/x-msdownload') &&
+        !request.resource.contentType.matches('application/x-executable')
+      );
+    }
+
+    // User profile images: Only the authenticated user themselves can write (max 5MB image); authenticated users can read.
     match /profileImages/{userId}/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAuth();
+      allow write: if isAuth() && request.auth.uid == userId && isValidImageUpload(5);
     }
-    
-    // Organization photos: Any authenticated user can read and write.
+
+    // Organization photos: Scoped to members of the organization (or onboarding creator), max 5MB image.
     match /organizationPhotos/{orgId}/{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read: if isAuth();
+      allow write: if isAuth() && isMemberOfOrg(orgId) && isValidImageUpload(5);
     }
-    
-    // Message attachments: Any authenticated user can read and write.
+
+    // Message attachments: Authenticated users within size & MIME bounds (max 15MB).
     match /messageAttachments/{chatId}/{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read: if isAuth();
+      allow write: if isAuth() && isValidAttachmentUpload(15);
     }
-    
-    // Entity attachments: Any authenticated user can read and write.
+
+    // Entity attachments (tasks, goals, projects, comments): Authenticated users within size & MIME bounds (max 15MB).
     match /attachments/{entityType}/{entityId}/{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read: if isAuth() && entityType in ['tasks', 'goals', 'projects', 'comments'];
+      allow write: if isAuth() && entityType in ['tasks', 'goals', 'projects', 'comments'] && isValidAttachmentUpload(15);
     }
-    
   }
 }

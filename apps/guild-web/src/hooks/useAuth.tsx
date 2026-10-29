@@ -32,12 +32,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     let unsubscribeProfile: (() => void) | null = null;
+    let unsubscribeOnboarding: (() => void) | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(async (firebaseUser) => {
-      // Clean up previous profile listener if exists
+      // Clean up previous listeners if they exist
       if (unsubscribeProfile) {
         unsubscribeProfile();
         unsubscribeProfile = null;
+      }
+      if (unsubscribeOnboarding) {
+        unsubscribeOnboarding();
+        unsubscribeOnboarding = null;
       }
 
       setUser(firebaseUser);
@@ -47,21 +52,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(true);
         try {
           // Check if this user has been banned (removed by an org admin).
-          // Do this FIRST so we can sign them out immediately if banned.
           const bannedSnap = await getDoc(doc(db, 'bannedUsers', firebaseUser.uid));
           if (bannedSnap.exists()) {
-            // User was deleted from their org — force sign-out
             setIsBanned(true);
             setUserProfile(null);
             setOnboarding(null);
             setLoading(false);
-            await signOut();
             return;
           }
 
-          // Fetch onboarding state once
-          const onboardingState = await getOnboardingState(firebaseUser.uid);
-          setOnboarding(onboardingState);
+          // Subscribe to real-time changes to the user's onboarding state
+          const onboardingRef = doc(db, 'onboarding', firebaseUser.uid);
+          unsubscribeOnboarding = onSnapshot(
+            onboardingRef,
+            (snap) => {
+              if (snap.exists()) {
+                setOnboarding(snap.data() as OnboardingState);
+              } else {
+                setOnboarding(null);
+              }
+            },
+            (error) => {
+              console.error('Error listening to onboarding state in AuthProvider:', error);
+            }
+          );
 
           // Subscribe to real-time changes to the user's profile document
           const userRef = doc(db, 'users', firebaseUser.uid);
@@ -98,6 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unsubscribeAuth();
       if (unsubscribeProfile) {
         unsubscribeProfile();
+      }
+      if (unsubscribeOnboarding) {
+        unsubscribeOnboarding();
       }
     };
   }, []);

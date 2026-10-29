@@ -10,30 +10,40 @@ import {
   type DirectMessageThread,
 } from '../lib/chat';
 import { type UserProfile } from '../lib/firestore';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Timestamp } from 'firebase/firestore';
+import { useWorkspaceData } from '../context/WorkspaceDataContext';
 
 // ─── useChannels ──────────────────────────────────────────────────────────────
 
 export function useChannels(orgId: string | undefined) {
   const { user } = useAuth();
-  const [channels, setChannels] = React.useState<Channel[]>([]);
-  const [memberships, setMemberships] = React.useState<Set<string>>(new Set());
-  const [lastReads, setLastReads] = React.useState<Map<string, Timestamp>>(new Map());
-  const [loading, setLoading] = React.useState(true);
+  const workspace = useWorkspaceData();
+  const canUseContext = Boolean(workspace && orgId && workspace.orgId === orgId);
+
+  const [fallbackChannels, setFallbackChannels] = React.useState<Channel[]>([]);
+  const [fallbackMemberships, setFallbackMemberships] = React.useState<Set<string>>(new Set());
+  const [fallbackLastReads, setFallbackLastReads] = React.useState<Map<string, Timestamp>>(new Map());
+  const [fallbackLoading, setFallbackLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!orgId || !user) return;
-    setLoading(true);
-    const unsub = listenToChannels(orgId, user.uid, (chs, mems, reads) => {
-      setChannels(chs);
-      setMemberships(mems);
-      setLastReads(reads);
-      setLoading(false);
+    if (canUseContext || !orgId || !user) {
+      if (!orgId || !user) setFallbackLoading(false);
+      return;
+    }
+    setFallbackLoading(true);
+    return listenToChannels(orgId, user.uid, (chs, mems, reads) => {
+      setFallbackChannels(chs);
+      setFallbackMemberships(mems);
+      setFallbackLastReads(reads);
+      setFallbackLoading(false);
     });
-    return unsub;
-  }, [orgId, user?.uid]);
+  }, [canUseContext, orgId, user?.uid]);
+
+  const channels = canUseContext && workspace ? workspace.channels : fallbackChannels;
+  const memberships = canUseContext && workspace ? workspace.memberships : fallbackMemberships;
+  const lastReads = canUseContext && workspace ? workspace.lastReads : fallbackLastReads;
+  const loading = canUseContext && workspace ? workspace.channelsLoading : fallbackLoading;
 
   const hasUnread = React.useCallback(
     (channel: Channel) => {
@@ -49,29 +59,20 @@ export function useChannels(orgId: string | undefined) {
 }
 
 // ─── useMessages ──────────────────────────────────────────────────────────────
-//
-// Strategy: use the original orderBy('createdAt','asc') queries (existing indexes,
-// no new Firestore indexes needed). All messages stream in as before. We then apply
-// a client-side display window: start by showing only the last WINDOW_SIZE messages,
-// and expand the window by WINDOW_SIZE each time the user scrolls to the top.
-// This gives instant "jump to latest" UX with zero infrastructure changes.
 
 const WINDOW_SIZE = 50;
 
 export interface UseMessagesResult {
-  messages: Message[] | null;   // the windowed slice to render
+  messages: Message[] | null;
   loadingOlder: boolean;
   hasMore: boolean;
   loadOlderMessages: () => void;
 }
 
 export function useMessages(channelId: string | null, dmId: string | null): UseMessagesResult {
-  // allMessages holds the full real-time stream
   const [allMessages, setAllMessages] = React.useState<Message[] | null>(null);
-  // displayLimit controls how many of the latest messages we actually render
   const [displayLimit, setDisplayLimit] = React.useState(WINDOW_SIZE);
 
-  // Reset window when switching channels/DMs
   React.useEffect(() => {
     setAllMessages(null);
     setDisplayLimit(WINDOW_SIZE);
@@ -86,7 +87,6 @@ export function useMessages(channelId: string | null, dmId: string | null): UseM
     }
   }, [channelId, dmId]);
 
-  // The slice we hand to the UI: last `displayLimit` messages
   const messages = React.useMemo(() => {
     if (allMessages === null) return null;
     if (allMessages.length <= displayLimit) return allMessages;
@@ -106,16 +106,22 @@ export function useMessages(channelId: string | null, dmId: string | null): UseM
 
 export function useDMs(orgId: string | undefined) {
   const { user } = useAuth();
-  const [threads, setThreads] = React.useState<DirectMessageThread[]>([]);
-  const [dmReads, setDmReads] = React.useState<Map<string, Timestamp>>(new Map());
+  const workspace = useWorkspaceData();
+  const canUseContext = Boolean(workspace && orgId && workspace.orgId === orgId);
+
+  const [fallbackThreads, setFallbackThreads] = React.useState<DirectMessageThread[]>([]);
+  const [fallbackDmReads, setFallbackDmReads] = React.useState<Map<string, Timestamp>>(new Map());
 
   React.useEffect(() => {
-    if (!orgId || !user) return;
+    if (canUseContext || !orgId || !user) return;
     return listenToUserDMs(user.uid, orgId, (newThreads, newReads) => {
-      setThreads(newThreads);
-      setDmReads(newReads);
+      setFallbackThreads(newThreads);
+      setFallbackDmReads(newReads);
     });
-  }, [orgId, user?.uid]);
+  }, [canUseContext, orgId, user?.uid]);
+
+  const threads = canUseContext && workspace ? workspace.threads : fallbackThreads;
+  const dmReads = canUseContext && workspace ? workspace.dmReads : fallbackDmReads;
 
   const hasUnreadDM = React.useCallback(
     (thread: DirectMessageThread) => {
@@ -133,29 +139,28 @@ export function useDMs(orgId: string | undefined) {
 // ─── useOrgMembers ────────────────────────────────────────────────────────────
 
 export function useOrgMembers(orgId: string | undefined) {
-  const [members, setMembers] = React.useState<UserProfile[]>([]);
+  const workspace = useWorkspaceData();
+  const canUseContext = Boolean(workspace && orgId && workspace.orgId === orgId);
+  const [fallbackMembers, setFallbackMembers] = React.useState<UserProfile[]>([]);
 
   React.useEffect(() => {
-    if (!orgId) return;
+    if (canUseContext || !orgId) return;
     const q = query(collection(db, 'users'), where('organizationId', '==', orgId));
-    const unsub = onSnapshot(q, async (snap) => {
-      setMembers(snap.docs.map((d) => d.data() as UserProfile));
+    return onSnapshot(q, (snap) => {
+      setFallbackMembers(snap.docs.map((d) => d.data() as UserProfile));
     });
-    return unsub;
-  }, [orgId]);
+  }, [canUseContext, orgId]);
 
-  return members;
+  return canUseContext && workspace ? workspace.members : fallbackMembers;
 }
 
 export function useUnreadChatCount(orgId: string | undefined): number {
   const { channels, hasUnread } = useChannels(orgId);
   const { threads, hasUnreadDM } = useDMs(orgId);
 
-  const unreadCount = React.useMemo(() => {
-    const unreadChCount = channels.filter(c => hasUnread(c)).length;
-    const unreadDmCount = threads.filter(t => hasUnreadDM(t)).length;
+  return React.useMemo(() => {
+    const unreadChCount = channels.filter((c) => hasUnread(c)).length;
+    const unreadDmCount = threads.filter((t) => hasUnreadDM(t)).length;
     return unreadChCount + unreadDmCount;
   }, [channels, hasUnread, threads, hasUnreadDM]);
-
-  return unreadCount;
 }

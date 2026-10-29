@@ -199,7 +199,7 @@ export function SettingsPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] min-h-0 md:min-h-[600px] overflow-hidden bg-transparent w-full">
       {/* Header Overhaul */}
-      <div className="px-4 md:px-8 pt-4 pb-3 border-b border-white/5 bg-transparent shrink-0">
+      <div className="px-4 md:px-8 pt-4 pb-3 border-b border-border/60 bg-transparent shrink-0">
         <h1 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
           Settings
         </h1>
@@ -209,7 +209,7 @@ export function SettingsPage() {
       <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-5 overflow-hidden px-4 md:px-8 py-2 min-h-0">
         
         {/* Navigation Sidebar (Frosted glass) */}
-        <div className="w-full md:w-64 shrink-0 aether-glass bg-white/[0.01] border-white/5 p-3 md:p-4 overflow-x-auto md:overflow-y-auto scrollbar-hide aether-scroll flex flex-row md:flex-col gap-4 md:gap-5 h-auto md:h-full shrink-0">
+        <div className="w-full md:w-64 shrink-0 aether-glass bg-white/[0.01] border-border/60 p-3 md:p-4 overflow-x-auto md:overflow-y-auto scrollbar-hide aether-scroll flex flex-row md:flex-col gap-4 md:gap-5 h-auto md:h-full shrink-0">
           
           {/* Personal Group */}
           {tabs.filter(t => t.group === 'personal').length > 0 && (
@@ -305,7 +305,7 @@ export function SettingsPage() {
         </div>
 
         {/* Dynamic Tab Content Area (Frosted Canvas) */}
-        <div className="flex-1 overflow-hidden aether-glass bg-white/[0.005] border-white/5 p-4 md:p-6 flex flex-col h-full">
+        <div className="flex-1 overflow-hidden aether-glass bg-white/[0.005] border-border/60 p-4 md:p-6 flex flex-col h-full">
           <div className="flex-grow overflow-y-auto aether-scroll pr-1">
             <div className="max-w-2xl mx-auto w-full">
               <AnimatePresence mode="wait">
@@ -623,7 +623,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
       </div>
 
       {/* Premium Profile Photo Upload Block */}
-      <div className="flex flex-col sm:flex-row items-center gap-5 p-5 rounded-3xl border border-white/5 bg-white/[0.015] dark:bg-white/[0.005] shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row items-center gap-5 p-5 rounded-3xl border border-border/60 bg-surface/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] backdrop-blur-md">
         <div className="relative group shrink-0">
           <div
             onClick={() => !uploadingPhoto && fileInputRef.current?.click()}
@@ -668,7 +668,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingPhoto}
-              className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-wider text-foreground hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer disabled:opacity-50"
+              className="px-3 py-1.5 bg-secondary border border-border rounded-lg text-[10px] font-black uppercase tracking-wider text-foreground hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer disabled:opacity-50"
             >
               Choose Photo
             </button>
@@ -704,8 +704,8 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className={cn(
-                "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
-                errors.fullName ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
+                "w-full px-3.5 py-2.5 rounded-xl border bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                errors.fullName ? "border-red-500/40 focus:border-red-500/40" : "border-border"
               )}
               placeholder="Aryan Pandey"
             />
@@ -720,8 +720,8 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className={cn(
-                "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
-                errors.username ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
+                "w-full px-3.5 py-2.5 rounded-xl border bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                errors.username ? "border-red-500/40 focus:border-red-500/40" : "border-border"
               )}
               placeholder="aryan_p"
             />
@@ -735,7 +735,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               type="text"
               value={designation}
               onChange={(e) => setDesignation(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
               placeholder="Lead Engineer"
             />
           </div>
@@ -747,7 +747,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               type="text"
               value={employeeId}
               onChange={(e) => setEmployeeId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
               placeholder="G-1025"
             />
           </div>
@@ -760,8 +760,8 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               value={age}
               onChange={(e) => setAge(e.target.value)}
               className={cn(
-                "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
-                errors.age ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
+                "w-full px-3.5 py-2.5 rounded-xl border bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                errors.age ? "border-red-500/40 focus:border-red-500/40" : "border-border"
               )}
               placeholder="26"
             />
@@ -776,8 +776,8 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               className={cn(
-                "w-full px-3.5 py-2.5 rounded-xl border bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
-                errors.phoneNumber ? "border-red-500/40 focus:border-red-500/40" : "border-white/10"
+                "w-full px-3.5 py-2.5 rounded-xl border bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]",
+                errors.phoneNumber ? "border-red-500/40 focus:border-red-500/40" : "border-border"
               )}
               placeholder="+1 (555) 000-0000"
             />
@@ -793,7 +793,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               type="email"
               disabled
               value={profile.email}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-white/5 bg-white/[0.005] text-xs text-muted-foreground cursor-not-allowed outline-none font-semibold"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border/60 bg-white/[0.005] text-xs text-muted-foreground cursor-not-allowed outline-none font-semibold"
             />
           </div>
 
@@ -808,7 +808,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
                   type="button"
                   onClick={handleSendPasswordReset}
                   disabled={resetLoading || resetCooldown > 0}
-                  className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-foreground text-[11px] font-bold hover:bg-white/10 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 h-10"
+                  className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground text-[11px] font-bold hover:bg-white/10 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 h-10"
                 >
                   {resetLoading ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
@@ -882,7 +882,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
                 type="text"
                 value={confirmUsername}
                 onChange={(e) => setConfirmUsername(e.target.value)}
-                className="flex-1 px-3.5 py-2.5 rounded-xl border border-red-500/20 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold"
+                className="flex-1 px-3.5 py-2.5 rounded-xl border border-red-500/20 bg-secondary/40 text-xs text-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold"
                 placeholder="Type your username"
               />
               <button
@@ -960,7 +960,7 @@ function NotificationSettingsView({ profile }: { profile: UserProfile }) {
             <motion.div 
               key={opt.key} 
               whileHover={{ x: 2 }}
-              className="p-4 flex items-center justify-between gap-6 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-white/5 hover:border-white/10 rounded-2xl transition-all shadow-sm"
+              className="p-4 flex items-center justify-between gap-6 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-border/60 hover:border-border rounded-2xl transition-all shadow-sm"
             >
               <div className="flex items-start gap-3.5 overflow-hidden">
                 {/* Icon sphere */}
@@ -982,7 +982,7 @@ function NotificationSettingsView({ profile }: { profile: UserProfile }) {
                   "relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border border-transparent transition-all duration-300 ease-in-out outline-none shadow-md",
                   isChecked 
                     ? "bg-accent shadow-[0_0_12px_oklch(from_var(--accent)_l_c_h_/_30%)]" 
-                    : "bg-white/5 hover:bg-white/10 border-white/10",
+                    : "bg-secondary hover:bg-white/10 border-border",
                   isToggling && "opacity-50 cursor-not-allowed"
                 )}
                 style={isChecked ? { backgroundColor: 'var(--accent)' } : undefined}
@@ -1039,7 +1039,7 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
                 "flex flex-col text-left p-4 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 shadow-sm",
                 isActive
                   ? "border-accent/40 bg-accent/[0.04] shadow-[0_4px_24px_oklch(from_var(--accent)_l_c_h_/_12%),inset_0_1px_1px_rgba(255,255,255,0.05)]"
-                  : "border-white/10 bg-white/[0.015] dark:bg-white/[0.005] hover:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]"
+                  : "border-border bg-surface/60 hover:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]"
               )}
               style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
             >
@@ -1047,13 +1047,13 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
               <div className="flex items-center justify-between gap-3 w-full mb-3 z-10">
                 <div className="flex items-center gap-1.5 relative">
                   <div
-                    className="h-6 w-6 rounded-full border border-white/10 shrink-0 shadow-md relative z-10 overflow-hidden"
+                    className="h-6 w-6 rounded-full border border-border shrink-0 shadow-md relative z-10 overflow-hidden"
                     style={{ backgroundColor: theme.swatch }}
                   >
                     <span className="absolute top-0 left-0 right-0 h-[40%] bg-white/10 rounded-t-full pointer-events-none" />
                   </div>
                   <div
-                    className="h-6 w-6 rounded-full border border-white/10 shrink-0 shadow-md -ml-2.5 relative z-0 overflow-hidden"
+                    className="h-6 w-6 rounded-full border border-border shrink-0 shadow-md -ml-2.5 relative z-0 overflow-hidden"
                     style={{ backgroundColor: theme.bgSwatch }}
                   >
                     <span className="absolute top-0 left-0 right-0 h-[40%] bg-white/10 rounded-t-full pointer-events-none" />
@@ -1084,7 +1084,7 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
 
       <div className="h-[1px] bg-white/10 my-6" />
 
-      <div className="aether-glass border border-white/10 dark:border-white/5 bg-white/[0.015] dark:bg-white/[0.005] rounded-3xl p-6 text-left relative overflow-hidden">
+      <div className="aether-glass border border-border dark:border-border/60 bg-surface/60 rounded-3xl p-6 text-left relative overflow-hidden">
         {/* Glow ambient light */}
         <div className="absolute -right-16 -top-16 w-32 h-32 rounded-full bg-accent/5 blur-xl pointer-events-none" />
         
@@ -1134,9 +1134,9 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
 
   // Sorting
   const sorted = React.useMemo(() => {
-    const order = { owner: 0, admin: 1, member: 2 };
+    const order: Record<string, number> = { owner: 0, admin: 1, manager: 2, member: 3 };
     return [...members].sort((a, b) => {
-      const ro = (order[a.role] ?? 2) - (order[b.role] ?? 2);
+      const ro = (order[a.role] ?? 3) - (order[b.role] ?? 3);
       if (ro !== 0) return ro;
       return (a.fullName || '').localeCompare(b.fullName || '');
     });
@@ -1191,7 +1191,7 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
             <motion.div
               key={member.uid}
               whileHover={{ x: 3 }}
-              className="p-4 flex flex-wrap items-center justify-between gap-4 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-white/5 hover:border-white/10 rounded-2xl transition-all shadow-sm"
+              className="p-4 flex flex-wrap items-center justify-between gap-4 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-border/60 hover:border-border rounded-2xl transition-all shadow-sm"
             >
               {/* Left Column: Teammate profile */}
               <div className="flex items-center gap-3.5 overflow-hidden min-w-[240px] flex-1">
@@ -1226,15 +1226,19 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
               {/* Middle Column: Role badging */}
               <div className="flex items-center shrink-0">
                 {isOwner ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-amber-500/20 bg-amber-500/10 text-[9px] font-extrabold uppercase tracking-wider text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.15)]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-amber-500/20 bg-amber-500/10 text-[9px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                     <Crown className="h-3 w-3 shrink-0" /> Owner
                   </span>
                 ) : isAdmin ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-violet-500/20 bg-violet-500/10 text-[9px] font-extrabold uppercase tracking-wider text-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.15)]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-violet-500/20 bg-violet-500/10 text-[9px] font-extrabold uppercase tracking-wider text-violet-600 dark:text-violet-400">
                     <ShieldCheck className="h-3 w-3 shrink-0" /> Admin
                   </span>
+                ) : member.role === 'manager' ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-[9px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                    <Users className="h-3 w-3 shrink-0" /> Manager
+                  </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-sky-500/20 bg-sky-500/10 text-[9px] font-extrabold uppercase tracking-wider text-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.15)]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-sky-500/20 bg-sky-500/10 text-[9px] font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-400">
                     <User className="h-3 w-3 shrink-0" /> Member
                   </span>
                 )}
@@ -1326,7 +1330,7 @@ function InviteLinksSettingsView({ profile, inviteLinks, loading, members, onOpe
           <span className="text-xs font-bold">Synchronizing links…</span>
         </div>
       ) : inviteLinks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
+        <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-border rounded-2xl bg-white/[0.01]">
           <Link2 className="h-7 w-7 text-muted-foreground opacity-50 mb-2" />
           <p className="text-xs font-bold text-foreground">No active invite tokens</p>
           <p className="text-[10px] text-muted-foreground mt-1 max-w-[240px] leading-relaxed font-semibold mb-4">
@@ -1353,15 +1357,15 @@ function InviteLinksSettingsView({ profile, inviteLinks, loading, members, onOpe
               <motion.div
                 key={link.token}
                 whileHover={{ y: -2 }}
-                className="p-4 flex flex-col justify-between gap-4 aether-glass bg-gradient-to-br from-white/[0.015] to-transparent border-white/5 hover:border-white/10 rounded-2xl transition-all shadow-sm relative overflow-hidden"
+                className="p-4 flex flex-col justify-between gap-4 aether-glass bg-gradient-to-br from-white/[0.015] to-transparent border-border/60 hover:border-border rounded-2xl transition-all shadow-sm relative overflow-hidden"
               >
                 <div className="space-y-3.5 z-10">
                   <div className="flex items-center justify-between gap-2 w-full">
                     {/* Status Badge */}
                     {!link.isActive ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-white/5 bg-white/5 text-[8px] font-black uppercase tracking-wider text-muted-foreground">Revoked</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-border/60 bg-secondary text-[8px] font-black uppercase tracking-wider text-muted-foreground">Revoked</span>
                     ) : isFullyUsed ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-white/5 bg-white/5 text-[8px] font-black uppercase tracking-wider text-muted-foreground">Fully Used</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-border/60 bg-secondary text-[8px] font-black uppercase tracking-wider text-muted-foreground">Fully Used</span>
                     ) : isExpired ? (
                       <span className="inline-flex items-center px-2 py-0.5 rounded border border-red-500/10 bg-red-500/10 text-[8px] font-black uppercase tracking-wider text-red-400">Expired</span>
                     ) : (
@@ -1402,7 +1406,7 @@ function InviteLinksSettingsView({ profile, inviteLinks, loading, members, onOpe
                   </div>
 
                   {/* Token link box */}
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-xl border border-white/5 bg-white/[0.01] shadow-inner w-full overflow-hidden">
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-xl border border-border/60 bg-white/[0.01] shadow-inner w-full overflow-hidden">
                     <span className="text-[11px] font-mono text-foreground font-semibold truncate flex-1">/join/{link.token}</span>
                     {isActive && (
                       <button
@@ -1416,7 +1420,7 @@ function InviteLinksSettingsView({ profile, inviteLinks, loading, members, onOpe
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center text-[9px] font-semibold text-muted-foreground border-t border-white/5 pt-3 z-10">
+                <div className="flex justify-between items-center text-[9px] font-semibold text-muted-foreground border-t border-border/60 pt-3 z-10">
                   <span>Created By</span>
                   <span className="text-foreground font-bold">{getCreatorName(link.createdBy)}</span>
                 </div>
@@ -1629,7 +1633,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
         </div>
 
         {/* Premium Workspace Logo Upload Block */}
-        <div className="flex flex-col sm:flex-row items-center gap-5 p-5 rounded-3xl border border-white/5 bg-white/[0.015] dark:bg-white/[0.005] shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] backdrop-blur-md">
+        <div className="flex flex-col sm:flex-row items-center gap-5 p-5 rounded-3xl border border-border/60 bg-surface/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] backdrop-blur-md">
           <div className="relative group shrink-0">
             <div
               onClick={() => !uploadingLogo && logoInputRef.current?.click()}
@@ -1674,7 +1678,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
                 type="button"
                 onClick={() => logoInputRef.current?.click()}
                 disabled={uploadingLogo}
-                className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-wider text-foreground hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer disabled:opacity-50"
+                className="px-3 py-1.5 bg-secondary border border-border rounded-lg text-[10px] font-black uppercase tracking-wider text-foreground hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer disabled:opacity-50"
               >
                 Choose Logo
               </button>
@@ -1708,13 +1712,13 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
                 placeholder="Google Deepmind"
               />
             </div>
 
             {/* Domain Auto-Join Toggle */}
-            <div className="space-y-2 pt-2 border-t border-white/5">
+            <div className="space-y-2 pt-2 border-t border-border/60">
               <label className="flex items-start gap-3 cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -1732,7 +1736,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
                     }
                     setDomainAutoJoin(checked);
                   }}
-                  className="mt-0.5 h-4 w-4 rounded border-white/10 bg-white/[0.02] text-accent focus:ring-accent/20 focus:ring-2 focus:bg-white/[0.04] accent-indigo-600 cursor-pointer"
+                  className="mt-0.5 h-4 w-4 rounded border-border bg-white/[0.02] text-accent focus:ring-accent/20 focus:ring-2 focus:bg-white/[0.04] accent-indigo-600 cursor-pointer"
                 />
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-bold text-foreground">Domain-based Auto-Join</span>
@@ -1788,42 +1792,42 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
             <div className="space-y-2.5">
               <h3 className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest px-1">Items to be permanently erased:</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
                   <Folder className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.projects}</span>
                     <span className="text-[10px] text-muted-foreground font-semibold">Projects</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
                   <CheckSquare className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.tasks}</span>
                     <span className="text-[10px] text-muted-foreground font-semibold">Tasks</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
                   <Target className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.goals}</span>
                     <span className="text-[10px] text-muted-foreground font-semibold">Goals</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
                   <Workflow className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.teams}</span>
                     <span className="text-[10px] text-muted-foreground font-semibold">Teams</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
                   <MessageSquare className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.channels}</span>
                     <span className="text-[10px] text-muted-foreground font-semibold">Channels</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-white/5 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
+                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
                   <Users className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                   <div>
                     <span className="block text-xs font-bold text-foreground leading-none">{stats.members}</span>
@@ -1853,7 +1857,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
                     disabled={deleting}
-                    className="w-full px-3.5 py-2 rounded-xl border border-border bg-white/50 dark:border-white/10 dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-sm"
+                    className="w-full px-3.5 py-2 rounded-xl border border-border bg-secondary0 dark:border-border dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-sm"
                     placeholder="Enter account password"
                   />
                 </div>
@@ -1870,7 +1874,7 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
                   value={confirmName}
                   onChange={(e) => setConfirmName(e.target.value)}
                   disabled={deleting}
-                  className="w-full px-3.5 py-2 rounded-xl border border-border bg-white/50 dark:border-white/10 dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-sm"
+                  className="w-full px-3.5 py-2 rounded-xl border border-border bg-secondary0 dark:border-border dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-sm"
                   placeholder="Type workspace name exactly"
                 />
               </div>
@@ -2050,7 +2054,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
       </div>
 
       {/* Internal Sub-Tabs */}
-      <div className="flex gap-1.5 p-1 bg-white/[0.02] dark:bg-white/[0.01] rounded-xl border border-white/10 self-start w-fit shadow-[inset_0_1px_2px_rgba(255,255,255,0.02)]">
+      <div className="flex gap-1.5 p-1 bg-secondary/40 rounded-xl border border-border self-start w-fit shadow-[inset_0_1px_2px_rgba(255,255,255,0.02)]">
         <button
           onClick={() => setSubTab('teams')}
           className={cn(
@@ -2103,7 +2107,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
                     placeholder="e.g. Growth Squad"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/40 text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -2117,7 +2121,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                       photoURL: m.photoURL,
                     }))}
                     placeholder="-- Assign Lead --"
-                    triggerClassName="border-white/10 bg-white/[0.02] dark:bg-white/[0.01] hover:border-accent/40 font-bold"
+                    triggerClassName="border-border bg-secondary/40 hover:border-accent/40 font-bold"
                   />
                 </div>
               </div>
@@ -2129,16 +2133,16 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                   value={teamDesc}
                   onChange={(e) => setTeamDesc(e.target.value)}
                   placeholder="e.g. Responsible for user acquisition..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/40 text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
                 />
               </div>
 
               {/* Members Selection List */}
               <div className="space-y-2">
                 <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Assign Members</label>
-                <div className="border border-white/10 rounded-xl p-3 max-h-40 overflow-y-auto bg-white/[0.01] dark:bg-white/[0.005] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner custom-scrollbar">
+                <div className="border border-border rounded-xl p-3 max-h-40 overflow-y-auto bg-white/[0.01] dark:bg-white/[0.005] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner custom-scrollbar">
                   {members.map((m) => (
-                    <label key={m.uid} className="flex items-center gap-2 px-2 py-1.5 hover:bg-white/5 rounded-lg cursor-pointer text-xs font-semibold">
+                    <label key={m.uid} className="flex items-center gap-2 px-2 py-1.5 hover:bg-secondary rounded-lg cursor-pointer text-xs font-semibold">
                       <input
                         type="checkbox"
                         checked={teamMembers.includes(m.uid)}
@@ -2156,7 +2160,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                 <button
                   type="button"
                   onClick={() => setIsCreating(false)}
-                  className="px-4 py-2 border border-white/10 bg-white/5 rounded-xl text-xs font-bold text-foreground cursor-pointer"
+                  className="px-4 py-2 border border-border bg-secondary rounded-xl text-xs font-bold text-foreground cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -2186,7 +2190,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
               <Loader2 className="h-6 w-6 animate-spin text-accent" />
             </div>
           ) : teams.length === 0 ? (
-            <div className="text-center py-10 border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
+            <div className="text-center py-10 border border-dashed border-border rounded-2xl bg-white/[0.01]">
               <Users className="h-7 w-7 mx-auto text-muted-foreground opacity-50 mb-2" />
               <h4 className="text-xs font-bold text-foreground">No Teams Defined</h4>
               <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Create your first functional squad above</p>
@@ -2223,7 +2227,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             placeholder="e.g. Growth Squad"
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/40 text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -2237,7 +2241,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                               photoURL: m.photoURL,
                             }))}
                             placeholder="-- Select Lead --"
-                            triggerClassName="border-white/10 bg-white/[0.02] dark:bg-white/[0.01] hover:border-accent/40 font-bold"
+                            triggerClassName="border-border bg-secondary/40 hover:border-accent/40 font-bold"
                           />
                         </div>
                       </div>
@@ -2249,16 +2253,16 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                           value={editDesc}
                           onChange={(e) => setEditDesc(e.target.value)}
                           placeholder="Team description..."
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/40 text-xs text-foreground outline-none focus:border-accent/40 font-semibold"
                         />
                       </div>
 
                       {/* Members Selection List */}
                       <div className="space-y-2">
                         <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Assign Members</label>
-                        <div className="border border-white/10 rounded-xl p-3 max-h-40 overflow-y-auto bg-white/[0.01] dark:bg-white/[0.005] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner custom-scrollbar">
+                        <div className="border border-border rounded-xl p-3 max-h-40 overflow-y-auto bg-white/[0.01] dark:bg-white/[0.005] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner custom-scrollbar">
                           {members.map((m) => (
-                            <label key={m.uid} className="flex items-center gap-2 px-2 py-1.5 hover:bg-white/5 rounded-lg cursor-pointer text-xs font-semibold">
+                            <label key={m.uid} className="flex items-center gap-2 px-2 py-1.5 hover:bg-secondary rounded-lg cursor-pointer text-xs font-semibold">
                               <input
                                 type="checkbox"
                                 checked={editMembers.includes(m.uid)}
@@ -2276,7 +2280,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                         <button
                           type="button"
                           onClick={() => setEditingTeamId(null)}
-                          className="px-4 py-2 border border-white/10 bg-white/5 rounded-xl text-xs font-bold text-foreground cursor-pointer"
+                          className="px-4 py-2 border border-border bg-secondary rounded-xl text-xs font-bold text-foreground cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -2298,7 +2302,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                   <motion.div
                     key={t.id}
                     whileHover={{ y: -3, scale: 1.01 }}
-                    className="p-5 border border-white/10 bg-gradient-to-br from-white/[0.02] to-transparent rounded-2xl shadow-sm hover:shadow-[0_4px_20px_oklch(from_var(--accent)_l_c_h_/_8%)] hover:border-accent/30 transition-all duration-300 flex flex-col justify-between"
+                    className="p-5 border border-border bg-gradient-to-br from-white/[0.02] to-transparent rounded-2xl shadow-sm hover:shadow-[0_4px_20px_oklch(from_var(--accent)_l_c_h_/_8%)] hover:border-accent/30 transition-all duration-300 flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex justify-between items-start gap-4 mb-2">
@@ -2313,7 +2317,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                               setEditMembers(t.memberIds || []);
                               setEditError(null);
                             }}
-                            className="px-2.5 py-1.5 text-[9px] font-extrabold border border-white/10 rounded-xl hover:bg-white/10 text-foreground transition-all cursor-pointer shadow-sm"
+                            className="px-2.5 py-1.5 text-[9px] font-extrabold border border-border rounded-xl hover:bg-white/10 text-foreground transition-all cursor-pointer shadow-sm"
                           >
                             Edit
                           </button>
@@ -2330,7 +2334,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                         <p className="text-[11px] text-muted-foreground mb-4 line-clamp-2 leading-relaxed font-semibold">{t.description}</p>
                       )}
 
-                      <div className="space-y-2 border-t border-white/5 pt-3.5 mt-3">
+                      <div className="space-y-2 border-t border-border/60 pt-3.5 mt-3">
                         <div className="flex justify-between items-center text-[10px] font-semibold">
                           <span className="text-muted-foreground font-medium">Team Lead:</span>
                           <span className="text-foreground font-bold">{lead?.fullName ?? 'Unassigned'}</span>
@@ -2369,7 +2373,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                 <motion.div
                   key={m.uid}
                   whileHover={{ x: 2 }}
-                  className="p-4 flex flex-wrap items-center justify-between gap-4 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-white/5 hover:border-white/10 rounded-2xl transition-all shadow-sm"
+                  className="p-4 flex flex-wrap items-center justify-between gap-4 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-border/60 hover:border-border rounded-2xl transition-all shadow-sm"
                 >
                   {/* Member Details */}
                   <div className="flex items-center gap-3.5 min-w-[200px] flex-1 overflow-hidden">
@@ -2407,7 +2411,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                           "px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-wider border cursor-pointer transition-all shadow-sm",
                           m.isManager
                             ? "bg-accent/15 text-accent border-accent/25"
-                            : "bg-white/5 text-muted-foreground border-white/10 hover:bg-white/10"
+                            : "bg-secondary text-muted-foreground border-border hover:bg-white/10"
                         )}
                         style={m.isManager ? { color: 'var(--accent)', borderColor: 'oklch(from var(--accent) l c h / 25%)' } : undefined}
                       >
@@ -2433,7 +2437,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                           })),
                         ]}
                         placeholder="No Manager"
-                        triggerClassName="bg-white/[0.02] dark:bg-white/[0.01] border border-white/10 text-[11px] font-bold text-foreground rounded-lg px-2.5 py-1.5 hover:border-accent/40 max-w-[170px] truncate cursor-pointer shadow-inner"
+                        triggerClassName="bg-secondary/40 border border-border text-[11px] font-bold text-foreground rounded-lg px-2.5 py-1.5 hover:border-accent/40 max-w-[170px] truncate cursor-pointer shadow-inner"
                       />
                     )}
                   </div>

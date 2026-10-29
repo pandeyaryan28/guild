@@ -1,8 +1,9 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 
-const JWT_SECRET = process.env.SUPERADMIN_JWT_SECRET || 'guild-superadmin-secret-key-2809-alpha';
+const JWT_SECRET = process.env.SUPERADMIN_JWT_SECRET || '';
 
 function verifySessionToken(token: string): { valid: boolean; email?: string } {
+  if (!JWT_SECRET) return { valid: false };
   try {
     const parts = token.split('.');
     if (parts.length !== 2) return { valid: false };

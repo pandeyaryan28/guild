@@ -71,8 +71,8 @@ export function TaskDetailDrawer({
 
   // Firestore Subscriptions
   const comments = useTaskComments(task?.id || null);
-  const activities = useTaskActivities(task?.id || null);
-  const subtasks = useSubtasks(task?.id || null);
+  const activities = useTaskActivities(task?.id || null, orgId);
+  const subtasks = useSubtasks(task?.id || null, orgId);
   const parentTask = useSingleTask(task?.parentTaskId || null);
 
   React.useEffect(() => {
@@ -489,8 +489,8 @@ export function TaskDetailDrawer({
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/60 px-2 py-0.5 rounded-md">
-                    Task Workspace
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    Task Details
                   </span>
                 </div>
               )}
@@ -498,6 +498,15 @@ export function TaskDetailDrawer({
 
             {/* Quick Actions & Close Buttons */}
             <div className="flex items-center gap-2 shrink-0">
+              {canDelete && (
+                <button
+                  onClick={handleDeleteTask}
+                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-red-500/10 hover:border-red-500/20 text-neutral-500 hover:text-red-500 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                  title="Delete Task"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={handleCopyLink}
                 className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
@@ -1011,7 +1020,7 @@ export function TaskDetailDrawer({
                   Team Assignees
                 </label>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin pr-1">
-                  {members.filter(m => m.uid !== actor.uid).map((m) => {
+                  {members.map((m) => {
                     const isAssigned = task.assigneeIds.includes(m.uid);
                     return (
                       <button
@@ -1128,8 +1137,8 @@ export function TaskDetailDrawer({
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/60 px-2 py-0.5 rounded-md">
-                    Task Workspace
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    Task Details
                   </span>
                 </div>
               )}
@@ -1137,6 +1146,15 @@ export function TaskDetailDrawer({
 
             {/* Quick Actions & Close Buttons */}
             <div className="flex items-center gap-2 shrink-0">
+              {canDelete && (
+                <button
+                  onClick={handleDeleteTask}
+                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-red-500/10 hover:border-red-500/20 text-neutral-500 hover:text-red-500 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                  title="Delete Task"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={handleCopyLink}
                 className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
@@ -1654,7 +1672,7 @@ export function TaskDetailDrawer({
                   Team Assignees
                 </label>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin pr-1">
-                  {members.filter(m => m.uid !== actor.uid).map((m) => {
+                  {members.map((m) => {
                     const isAssigned = task.assigneeIds.includes(m.uid);
                     return (
                       <button

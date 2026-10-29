@@ -3,30 +3,45 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ─── HELPER FUNCTIONS ───────────────────────────────────────────────────
-    
+
     // Check if user is authenticated
     function isAuth() {
       return request.auth != null;
     }
 
-    // Get the user's profile document data
+    // Check if the authenticated user matches the target userId
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    // Check if the caller's user profile document exists
+    function userExists() {
+      return isAuth() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Get the caller's user profile document data
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
     // Check if the user belongs to the specified organization
     function isMemberOfOrg(orgId) {
-      return isAuth() && getUserData().organizationId == orgId;
+      return isAuth() && userExists() && getUserData().organizationId == orgId;
     }
 
-    // Check if the document belongs to the user's organization
+    // Check if the existing document belongs to the user's organization
     function isDocInMyOrg() {
-      return isAuth() && getUserData().organizationId == resource.data.orgId;
+      return isAuth() && resource != null && userExists() && getUserData().organizationId == resource.data.orgId;
     }
 
     // Check if the incoming document to be created/written belongs to the user's organization
+    // Also supports atomic onboarding batches where the user document is created in the same batch
     function isNewDocInMyOrg() {
-      return isAuth() && getUserData().organizationId == request.resource.data.orgId;
+      return isAuth() && request.resource != null && (
+        (userExists() && getUserData().organizationId == request.resource.data.orgId) ||
+        (existsAfter(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == request.resource.data.orgId)
+      );
     }
 
     // Get the orgId of a DM thread by its ID
@@ -36,16 +51,24 @@ service cloud.firestore {
 
     // Check if the user is the owner of the specified organization
     function isOrgOwner(orgId) {
-      return isAuth() && 
-        getUserData().organizationId == orgId && 
+      return isAuth() && userExists() &&
+        getUserData().organizationId == orgId &&
         getUserData().role == 'owner';
     }
 
     // Check if the user is an admin or owner of the specified organization
     function isOrgAdminOrOwner(orgId) {
-      return isAuth() && 
-        getUserData().organizationId == orgId && 
+      return isAuth() && userExists() &&
+        getUserData().organizationId == orgId &&
         (getUserData().role == 'owner' || getUserData().role == 'admin');
+    }
+
+    // Check if the user is a manager, admin, or owner of the specified organization
+    function isOrgManagerOrAbove(orgId) {
+      return isAuth() && userExists() &&
+        getUserData().organizationId == orgId &&
+        (getUserData().role in ['owner', 'admin', 'manager'] ||
+         ('isManager' in getUserData() && getUserData().isManager == true));
     }
 
     // ─── USER PROFILES & ACCOUNTS ───────────────────────────────────────────
@@ -53,32 +76,38 @@ service cloud.firestore {
     match /users/{userId} {
       // Users can read their own profile or profiles in the same organization
       allow read: if isAuth() && (
-        request.auth.uid == userId || 
-        getUserData().organizationId == resource.data.organizationId
-      );
-      
-      // Creating a user profile
-      allow create: if isAuth() && request.auth.uid == userId && (
-        // A user can create their own profile with role 'member'
-        (request.resource.data.role == 'member') ||
-        // Or with role 'owner' only if they are the verified owner of the organization they are setting
-        (request.resource.data.role == 'owner' && 
-         get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == userId)
+        isOwner(userId) ||
+        (userExists() && getUserData().organizationId == resource.data.organizationId)
       );
 
-      // Updating a user profile
+      // Allow user to create their own profile during onboarding/invite acceptance,
+      // or allow an org admin/owner to create a member profile in their organization
+      allow create: if isAuth() && (
+        (isOwner(userId) && request.resource.data.role in ['owner', 'admin', 'manager', 'member']) ||
+        isOrgAdminOrOwner(request.resource.data.organizationId)
+      );
+
+      // Allow user to update their own profile fields (or set organizationId/role when joining an org),
+      // while preventing an already-assigned member from escalating their own role within the same org.
+      // Org admins/owners can update members in their org, and managers can set isManager on team leads.
       allow update: if isAuth() && (
-        // A user can update their own details, but NOT their role or organizationId
-        (request.auth.uid == userId && 
-         request.resource.data.role == resource.data.role && 
-         request.resource.data.organizationId == resource.data.organizationId) ||
-        // Or an organization admin or owner can modify them
-        isOrgAdminOrOwner(resource.data.organizationId)
+        (isOwner(userId) && (
+          (request.resource.data.role == resource.data.role &&
+           request.resource.data.organizationId == resource.data.organizationId) ||
+          ((!('organizationId' in resource.data) ||
+            resource.data.organizationId == null ||
+            resource.data.organizationId == '' ||
+            request.resource.data.organizationId != resource.data.organizationId) &&
+           request.resource.data.role in ['owner', 'admin', 'manager', 'member'])
+        )) ||
+        isOrgAdminOrOwner(resource.data.organizationId) ||
+        (isOrgManagerOrAbove(resource.data.organizationId) &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isManager', 'updatedAt']))
       );
 
-      // Deleting a user profile
+      // Users can delete their own profile or org admins/owners can remove members
       allow delete: if isAuth() && (
-        request.auth.uid == userId ||
+        isOwner(userId) ||
         (resource != null && isOrgAdminOrOwner(resource.data.organizationId))
       );
     }
@@ -88,108 +117,174 @@ service cloud.firestore {
       allow read: if true;
       // Allow creation only if claiming for oneself
       allow create: if isAuth() && request.resource.data.uid == request.auth.uid;
-      // Allow update or delete only by the owner of the username
-      allow update, delete: if isAuth() && resource.data.uid == request.auth.uid;
+      // Allow update or delete by the owner of the username or an org admin/owner cleaning up a removed user
+      allow update, delete: if isAuth() && (
+        resource.data.uid == request.auth.uid ||
+        (userExists() && (getUserData().role == 'owner' || getUserData().role == 'admin'))
+      );
     }
 
     match /onboardingState/{userId} {
-      // Users can manage their own onboarding state
+      // Users can manage their own onboarding state; org owners/admins can clean it up on member deletion
       allow read, write: if isAuth() && (
-        request.auth.uid == userId ||
-        (exists(/databases/$(database)/documents/users/$(userId)) && 
-         isOrgOwner(get(/databases/$(database)/documents/users/$(userId)).data.organizationId))
+        isOwner(userId) ||
+        (exists(/databases/$(database)/documents/users/$(userId)) &&
+         isOrgAdminOrOwner(get(/databases/$(database)/documents/users/$(userId)).data.organizationId))
       );
     }
 
     // ─── ORGANIZATIONS & MEMBERSHIP ──────────────────────────────────────────
 
     match /organizations/{orgId} {
+      // Any authenticated user can read org metadata (required for validateInviteToken,
+      // findOrgByAutoJoinDomain, and onboarding checks before joining the org)
+      allow read: if isAuth();
+
       // Any authenticated user can create an organization with themselves as owner
       allow create: if isAuth() && request.resource.data.ownerId == request.auth.uid;
-      // Members of the organization can read/update it
-      allow read: if isMemberOfOrg(orgId);
-      // Only owners/admins can update organization details or delete it
-      allow update: if isMemberOfOrg(orgId) && (getUserData().role == 'owner' || getUserData().role == 'admin');
-      allow delete: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
+
+      // Org admins/owners can update org settings, OR an authenticated user can add themselves
+      // to the members array when joining via invite link or auto-join domain
+      allow update: if isOrgAdminOrOwner(orgId) || (
+        isAuth() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'memberCount', 'updatedAt'])
+      );
+
+      // Only the organization owner can delete the organization
+      allow delete: if isOrgOwner(orgId);
 
       // ── Billing sub-document: owner only ──────────────────────────────────
       match /billing/{docId} {
-        allow read: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
-        allow write: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
+        allow read, write: if isOrgOwner(orgId);
       }
 
-      // ── Billing transactions: owner can read/write ─────────────────────────
+      // ── Billing transactions: owner can read/create, immutable thereafter ─
       match /billingTransactions/{txId} {
-        allow read: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
-        allow create: if isMemberOfOrg(orgId) && getUserData().role == 'owner';
-        // Transactions are immutable after creation
+        allow read, create: if isOrgOwner(orgId);
         allow update, delete: if false;
       }
     }
 
     match /organizationMembers/{memberId} {
       // memberId is in format orgId_userId
-      // Members of the organization can read members list
-      allow read: if isAuth() && isMemberOfOrg(resource.data.orgId);
-      // Creating or updating a membership record
-      allow create, update, delete: if isAuth() && (
-        // A user onboarding can add themselves as a member
-        (request.auth.uid == request.resource.data.userId && request.resource.data.role == 'member') ||
-        // A workspace owner can add themselves as the owner
-        (request.auth.uid == request.resource.data.userId && 
-         request.resource.data.role == 'owner' && 
-         get(/databases/$(database)/documents/organizations/$(request.resource.data.orgId)).data.ownerId == request.auth.uid) ||
-        // Or the owner/admin can manage it
-        (isMemberOfOrg(resource.data.orgId) && (getUserData().role == 'owner' || getUserData().role == 'admin')) ||
-        (isMemberOfOrg(request.resource.data.orgId) && (getUserData().role == 'owner' || getUserData().role == 'admin'))
+      allow read: if isAuth() && (
+        isMemberOfOrg(resource.data.orgId) ||
+        resource.data.userId == request.auth.uid
+      );
+
+      allow create: if isAuth() && (
+        request.resource.data.userId == request.auth.uid ||
+        isOrgAdminOrOwner(request.resource.data.orgId)
+      );
+
+      allow update: if isAuth() && (
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        (resource.data.userId == request.auth.uid &&
+         request.resource.data.userId == request.auth.uid &&
+         request.resource.data.role == resource.data.role)
+      );
+
+      allow delete: if isAuth() && (
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        resource.data.userId == request.auth.uid
       );
     }
 
     match /inviteLinks/{token} {
-      // Allow anyone to GET a specific invite link by token.
-      // The token itself is randomly generated and serves as the shared secret —
-      // if you have the URL you're already authorised to see its content.
+      // Allow single-token lookup and authenticated listing/validation during onboarding & invite acceptance
       allow get: if true;
-      // Listing all invite links for an org is restricted to admins/owners
-      allow list: if isAuth() && isOrgAdminOrOwner(resource.data.orgId);
-      // Allow creation only by org owners and admins
-      allow create: if isAuth() && isOrgAdminOrOwner(request.resource.data.orgId);
-      // Allow update by org owners/admins OR when only useCount is updated (by onboarding user)
+      allow list: if isAuth();
+
+      // Allow creation by org admins/owners or during the initial org creation batch
+      allow create: if isAuth() && (
+        isOrgAdminOrOwner(request.resource.data.orgId) ||
+        isNewDocInMyOrg() ||
+        request.resource.data.createdBy == request.auth.uid
+      );
+
+      // Allow update by org admins/owners OR when an onboarding user increments useCount
       allow update: if isAuth() && (
         isOrgAdminOrOwner(resource.data.orgId) ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['useCount'])
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['useCount', 'usedCount', 'usedBy', 'updatedAt'])
       );
-      // Allow deletion only by org owners and admins
-      allow delete: if isAuth() && isOrgAdminOrOwner(resource.data.orgId);
+
+      // Allow deletion by org admins/owners
+      allow delete: if isAuth() && (
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        isDocInMyOrg()
+      );
+    }
+
+    match /pendingInvites/{inviteId} {
+      allow read: if isAuth() && (
+        isDocInMyOrg() ||
+        isOrgAdminOrOwner(resource.data.orgId)
+      );
+      allow create: if isAuth() && (
+        isNewDocInMyOrg() ||
+        isOrgAdminOrOwner(request.resource.data.orgId)
+      );
+      allow update: if isAuth() && (
+        isDocInMyOrg() ||
+        isNewDocInMyOrg() ||
+        isOrgAdminOrOwner(resource.data.orgId)
+      );
+      allow delete: if isAuth() && (
+        isDocInMyOrg() ||
+        isOrgAdminOrOwner(resource.data.orgId)
+      );
     }
 
     // ─── CHANNELS, TEAMS, PROJECTS, GOALS, TASKS & OPERATIONS ────────────────
 
-    // All these collections are partitioned by 'orgId'
-    
     match /channels/{channelId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg();
+      allow update: if isDocInMyOrg();
+      allow delete: if isDocInMyOrg() && (
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        resource.data.createdBy == request.auth.uid
+      );
     }
 
     match /channelMembers/{memberId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg();
+      allow update, delete: if isDocInMyOrg();
+    }
+
+    match /canvases/{canvasId} {
+      allow get: if isAuth() && (resource == null || isMemberOfOrg(resource.data.orgId));
+      allow list: if isMemberOfOrg(resource.data.orgId);
+      allow create: if isNewDocInMyOrg();
+      allow update, delete: if isDocInMyOrg();
     }
 
     match /teams/{teamId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg() && (
+        isOrgAdminOrOwner(request.resource.data.orgId) ||
+        getUserData().role == 'manager' ||
+        ('isManager' in getUserData() && getUserData().isManager == true)
+      );
+      allow update, delete: if isDocInMyOrg() && (
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        resource.data.managerId == request.auth.uid ||
+        getUserData().role == 'manager' ||
+        ('isManager' in getUserData() && getUserData().isManager == true)
+      );
     }
 
     match /projects/{projectId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
-      
+      allow create: if isNewDocInMyOrg();
+      allow update, delete: if isDocInMyOrg();
+
       // Subcollection for project milestones
       match /milestones/{milestoneId} {
         allow read: if isMemberOfOrg(resource.data.orgId);
-        allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+        allow create: if isNewDocInMyOrg();
+        allow update, delete: if isDocInMyOrg();
       }
     }
 
@@ -199,8 +294,9 @@ service cloud.firestore {
       allow update: if isDocInMyOrg();
       allow delete: if isDocInMyOrg() && (
         request.auth.uid == resource.data.ownerId ||
-        getUserData().role == 'owner' ||
-        getUserData().role == 'admin'
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        getUserData().role == 'manager' ||
+        ('isManager' in getUserData() && getUserData().isManager == true)
       );
     }
 
@@ -209,41 +305,65 @@ service cloud.firestore {
       allow create: if isNewDocInMyOrg();
       allow update: if isDocInMyOrg();
       allow delete: if isDocInMyOrg() && (
-        request.auth.uid == resource.data.creatorId ||
-        getUserData().role == 'owner' ||
-        getUserData().role == 'admin'
+        resource.data.creatorId == request.auth.uid ||
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        getUserData().role == 'manager' ||
+        ('isManager' in getUserData() && getUserData().isManager == true)
       );
     }
 
     match /requests/{requestId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg() && request.resource.data.creatorId == request.auth.uid;
+      allow update: if isDocInMyOrg() && (
+        !(request.resource.data.status in ['approved', 'rejected'] && resource.data.status == 'pending') ||
+        (
+          (request.auth.uid != resource.data.creatorId || isOrgOwner(resource.data.orgId)) &&
+          (resource.data.approverId == request.auth.uid ||
+           isOrgAdminOrOwner(resource.data.orgId) ||
+           getUserData().role == 'manager' ||
+           ('isManager' in getUserData() && getUserData().isManager == true))
+        )
+      );
+      allow delete: if isDocInMyOrg() && (
+        resource.data.creatorId == request.auth.uid ||
+        isOrgAdminOrOwner(resource.data.orgId) ||
+        getUserData().role == 'manager' ||
+        ('isManager' in getUserData() && getUserData().isManager == true)
+      );
     }
-
 
     match /taskActivities/{activityId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg();
+      allow update, delete: if isDocInMyOrg();
     }
 
     match /taskComments/{commentId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isDocInMyOrg() && resource.data.authorId == request.auth.uid;
+      allow delete: if isDocInMyOrg();
     }
 
     match /taskLabels/{labelId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg();
+      allow update, delete: if isDocInMyOrg();
     }
 
     match /projectComments/{commentId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isDocInMyOrg() && resource.data.authorId == request.auth.uid;
+      allow delete: if isDocInMyOrg();
     }
 
     match /goalComments/{commentId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow create: if isNewDocInMyOrg() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isDocInMyOrg() && resource.data.authorId == request.auth.uid;
+      allow delete: if isDocInMyOrg();
     }
 
     // ─── WORKSPACE (DOCUMENTS, ISSUES, CYCLES & DATABASES) ───────────────────
@@ -299,13 +419,9 @@ service cloud.firestore {
     match /messages/{messageId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
       allow create: if isNewDocInMyOrg() && request.resource.data.senderId == request.auth.uid;
-      allow update: if isDocInMyOrg() && (
-        request.auth.uid == resource.data.senderId ||
-        isOrgAdminOrOwner(resource.data.orgId) ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'taskReactions', 'replyCount', 'lastReplyAt'])
-      );
+      allow update: if isDocInMyOrg();
       allow delete: if isDocInMyOrg() && (
-        request.auth.uid == resource.data.senderId ||
+        resource.data.senderId == request.auth.uid ||
         isOrgAdminOrOwner(resource.data.orgId)
       );
     }
@@ -313,65 +429,74 @@ service cloud.firestore {
     match /messageReplies/{replyId} {
       allow read: if isMemberOfOrg(resource.data.orgId);
       allow create: if isNewDocInMyOrg() && request.resource.data.senderId == request.auth.uid;
-      allow update: if isDocInMyOrg() && (
-        request.auth.uid == resource.data.senderId ||
-        isOrgAdminOrOwner(resource.data.orgId) ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'taskReactions'])
-      );
+      allow update: if isDocInMyOrg();
       allow delete: if isDocInMyOrg() && (
-        request.auth.uid == resource.data.senderId ||
+        resource.data.senderId == request.auth.uid ||
         isOrgAdminOrOwner(resource.data.orgId)
       );
     }
 
     match /directMessages/{threadId} {
-      allow read: if isMemberOfOrg(resource.data.orgId);
-      allow write: if isNewDocInMyOrg() || isDocInMyOrg();
+      allow get: if isAuth() && (
+        resource == null ||
+        (isMemberOfOrg(resource.data.orgId) &&
+         (request.auth.uid in resource.data.participants || isOrgOwner(resource.data.orgId)))
+      );
+      allow list: if isMemberOfOrg(resource.data.orgId) && (
+        request.auth.uid in resource.data.participants ||
+        isOrgOwner(resource.data.orgId)
+      );
+      allow create: if isNewDocInMyOrg() && request.auth.uid in request.resource.data.participants;
+      allow update: if isDocInMyOrg() && request.auth.uid in resource.data.participants;
+      allow delete: if isDocInMyOrg() && (
+        request.auth.uid in resource.data.participants ||
+        isOrgAdminOrOwner(resource.data.orgId)
+      );
     }
 
-    match /dmReadState/{stateId} {
-      allow read: if isAuth() && isMemberOfOrg("orgId" in resource.data ? resource.data.orgId : getDmOrgId(resource.data.dmId));
-      allow write: if isAuth() && (
-        // Allow if the user is writing/deleting their own read state
-        (request.auth.uid == (resource == null ? request.resource.data.userId : resource.data.userId)) ||
-        // Or if the read state falls under the user's organization
-        isMemberOfOrg(
-          resource != null 
-            ? ("orgId" in resource.data ? resource.data.orgId : getDmOrgId(resource.data.dmId))
-            : ("orgId" in request.resource.data ? request.resource.data.orgId : getDmOrgId(request.resource.data.dmId))
-        )
+    match /dmReadState/{docId} {
+      allow read: if isAuth() && (
+        resource == null ||
+        resource.data.userId == request.auth.uid ||
+        (isMemberOfOrg("orgId" in resource.data && resource.data.orgId != "" ? resource.data.orgId : getDmOrgId(resource.data.dmId)) &&
+         (resource.data.userId == request.auth.uid ||
+          isOrgAdminOrOwner("orgId" in resource.data && resource.data.orgId != "" ? resource.data.orgId : getDmOrgId(resource.data.dmId))))
+      );
+      allow create, update: if isAuth() &&
+        request.resource.data.userId == request.auth.uid &&
+        (isNewDocInMyOrg() || isMemberOfOrg(getDmOrgId(request.resource.data.dmId)));
+      allow delete: if isAuth() && (
+        resource.data.userId == request.auth.uid ||
+        (isMemberOfOrg("orgId" in resource.data && resource.data.orgId != "" ? resource.data.orgId : getDmOrgId(resource.data.dmId)) &&
+         isOrgAdminOrOwner("orgId" in resource.data && resource.data.orgId != "" ? resource.data.orgId : getDmOrgId(resource.data.dmId)))
       );
     }
 
     // ─── NOTIFICATIONS ──────────────────────────────────────────────────────
 
     match /notifications/{notificationId} {
-      // Users can read/write notifications addressed to them
-      allow read, write: if isAuth() && request.auth.uid == resource.data.recipientId;
-      // Allow creation of notifications for others in the same organization
-      allow create: if isAuth() && isNewDocInMyOrg();
+      // Users can read, update, and delete notifications addressed to them (or org owner on workspace cleanup)
+      allow read, update, delete: if isAuth() && (
+        request.auth.uid == resource.data.recipientId ||
+        isOrgOwner(resource.data.orgId)
+      );
+      // Allow creation of notifications for others in the same organization when actor matches caller
+      allow create: if isAuth() &&
+        isNewDocInMyOrg() &&
+        request.resource.data.actor.id == request.auth.uid;
     }
+
     // ─── BANNED USERS ────────────────────────────────────────────────────────
     // Written when an org owner/admin deletes a member to block re-login.
 
     match /bannedUsers/{uid} {
-      // The banned user themselves can read their own ban record (to show a message)
       allow read: if isAuth() && (
         request.auth.uid == uid ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         isOrgAdminOrOwner(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId))
+        (userExists() && isOrgAdminOrOwner(getUserData().organizationId))
       );
-      // Only org owners/admins can ban a user
-      allow create: if isAuth() && (
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        isOrgAdminOrOwner(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId)
-      );
-      // Only org owners can remove a ban
-      allow delete: if isAuth() && (
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        isOrgOwner(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId)
-      );
-      allow update: if false;
+      allow create, update, delete: if isAuth() &&
+        userExists() &&
+        isOrgAdminOrOwner(getUserData().organizationId);
     }
 
     // ─── DEMO REQUESTS (INBOUND LEADS FROM MARKETING WEBSITE) ──────────────────
@@ -381,6 +506,11 @@ service cloud.firestore {
                        request.resource.data.email is string;
       // Reading, updating, and deleting is reserved for backend APIs and SuperAdmins
       allow read, update, delete: if false;
+    }
+
+    // ─── DEFAULT DENY FALLBACK ────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

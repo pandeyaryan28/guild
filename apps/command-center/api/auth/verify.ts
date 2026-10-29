@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 
-const MASTER_CODE = process.env.SUPERADMIN_MASTER_CODE || process.env.ADMIN_CODE || '2809';
-const JWT_SECRET = process.env.SUPERADMIN_JWT_SECRET || 'guild-superadmin-secret-key-2809-alpha';
+const MASTER_CODE = process.env.SUPERADMIN_MASTER_CODE || process.env.ADMIN_CODE || '';
+const JWT_SECRET = process.env.SUPERADMIN_JWT_SECRET || '';
 
 function generateSessionToken(email: string): { token: string; expiresAt: number } {
   const expiresAt = Date.now() + 1000 * 60 * 60 * 24 * 7; // 7 days valid
@@ -33,6 +33,13 @@ export default async function handler(req: any, res: any) {
 
   const cleanInput = code.trim();
   const cleanTarget = MASTER_CODE.trim();
+
+  if (!cleanTarget || !JWT_SECRET) {
+    return res.status(503).json({
+      success: false,
+      error: 'SuperAdmin authentication is not configured (missing SUPERADMIN_MASTER_CODE or SUPERADMIN_JWT_SECRET).',
+    });
+  }
 
   let isValid = false;
   try {

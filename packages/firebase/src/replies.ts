@@ -52,58 +52,41 @@ export async function toggleReaction(
     reactions: updatedReactions,
   };
 
-  // Special logic for 📋 (task reaction) in direct message threads (DMs)
-  if (emoji === '📋' && isAdded && data.dmId) {
-    // 1. Expiration check (1 hour window)
-    const createdAt = data.createdAt;
-    if (createdAt) {
-      const createdTime = (createdAt as Timestamp).toDate().getTime();
-      const now = Date.now();
-      const oneHour = 60 * 60 * 1000;
-      if (now - createdTime > oneHour) {
-        throw new Error('This message is too old to be converted into a task (1-hour limit).');
-      }
-    }
-
-    // 2. Duplicate prevention (per user reaction)
+  // Special logic for 📋 (Convert message to task) in channels and DMs
+  if (emoji === '📋' && isAdded) {
     const taskReactions = data.taskReactions || {};
     if (!taskReactions[userId]) {
-      // 3. Find the assignee (the OTHER person in the DM thread)
-      const dmId = data.dmId as string;
-      const dmSnap = await getDoc(doc(db, 'directMessages', dmId));
-      const participants: string[] = dmSnap.data()?.participants ?? [];
-      const otherId = participants.find((p) => p !== userId);
-
-      if (!otherId) {
-        throw new Error('Cannot assign task: DM participant could not be resolved.');
+      let assigneeId = (data.senderId as string) || userId;
+      if (data.dmId) {
+        const dmId = data.dmId as string;
+        const dmSnap = await getDoc(doc(db, 'directMessages', dmId));
+        const participants: string[] = dmSnap.data()?.participants ?? [];
+        assigneeId = participants.find((p) => p !== userId) || userId;
       }
 
-      // 4. Fetch the reactor's info
       const userSnap = await getDoc(doc(db, 'users', userId));
       const userData = userSnap.exists() ? userSnap.data() : null;
       const reactorName = userData?.fullName || userData?.name || 'Someone';
 
-      // 5. Build task details
-      const title = data.body
-        ? data.body.substring(0, 80) + (data.body.length > 80 ? '...' : '')
-        : 'Task from DM message';
-      const description = `Assigned via DM reaction by ${reactorName}.\n\nOriginal Message:\n> ${data.body || '[File / Attachment]'}`;
+      const cleanBody = (data.body || '').replace(/\s+/g, ' ').trim();
+      const title = cleanBody
+        ? cleanBody.substring(0, 80) + (cleanBody.length > 80 ? '...' : '')
+        : 'Task from chat discussion';
+      const description = `Converted from chat message by ${reactorName}.\n\nOriginal Message:\n> ${data.body || '[File / Attachment]'}`;
 
-      // 6. Create the task
       const taskId = await createTask({
         orgId: data.orgId,
         title,
         description,
         status: 'todo',
         priority: 'none',
-        assigneeIds: [otherId],
+        assigneeIds: [assigneeId],
         actor: {
           uid: userId,
           name: reactorName,
         },
       });
 
-      // 7. Track task link on the message
       updateFields.taskReactions = {
         ...taskReactions,
         [userId]: taskId,
@@ -155,13 +138,15 @@ export async function addMessageReply(params: {
 export function listenToReplies(
   messageId: string,
   cb: (replies: MessageReply[]) => void,
+  orgId?: string,
 ): () => void {
+  const constraints = [
+    ...(orgId ? [where('orgId', '==', orgId)] : []),
+    where('messageId', '==', messageId),
+    orderBy('createdAt', 'asc'),
+  ];
   return onSnapshot(
-    query(
-      collection(db, 'messageReplies'),
-      where('messageId', '==', messageId),
-      orderBy('createdAt', 'asc'),
-    ),
+    query(collection(db, 'messageReplies'), ...constraints),
     (snap) => {
       cb(snap.docs.map((d) => d.data() as MessageReply));
     },

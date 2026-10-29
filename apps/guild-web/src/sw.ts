@@ -19,11 +19,13 @@ cleanupOutdatedCaches();
 // immediately load the cached index.html instead of hitting the network.
 // We exclude all Firebase Auth and internal hosting paths (which start with /__/)
 // using a denylist, so they can bypass the Service Worker and load correctly.
-registerRoute(
-  new NavigationRoute(createHandlerBoundToURL('/index.html'), {
-    denylist: [/^\/__/],
-  })
-);
+if (import.meta.env.PROD) {
+  registerRoute(
+    new NavigationRoute(createHandlerBoundToURL('/index.html'), {
+      denylist: [/^\/__/],
+    })
+  );
+}
 
 // 4. Runtime Caching for Google Fonts Stylesheets
 registerRoute(

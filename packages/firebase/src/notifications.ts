@@ -1,8 +1,8 @@
 import {
   collection, doc, setDoc, updateDoc, writeBatch,
-  query, where, orderBy, onSnapshot, serverTimestamp, getDocs, getDoc,
+  query, where, orderBy, limit, onSnapshot, serverTimestamp, getDocs, getDoc,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import type { Notification, NotificationCategory } from '@guild/types';
 
 // Helper to get actor initials
@@ -69,9 +69,13 @@ export async function createNotification(params: {
 
         if (pushSubscriptions.length === 0) return;
 
+        const idToken = await auth.currentUser?.getIdToken();
         await fetch('/api/send-push', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+          },
           body: JSON.stringify({
             subscriptions: pushSubscriptions,
             title: params.title,
@@ -87,6 +91,8 @@ export async function createNotification(params: {
 }
 
 // ─── Update Statuses ─────────────────────────────────────────────────────────
+
+const BATCH_CHUNK_SIZE = 400;
 
 export async function markNotificationRead(notificationId: string, read = true): Promise<void> {
   await updateDoc(doc(db, 'notifications', notificationId), { read });
@@ -107,9 +113,12 @@ export async function markAllRead(orgId: string, recipientId: string): Promise<v
     ),
   );
   if (snap.empty) return;
-  const batch = writeBatch(db);
-  snap.docs.forEach((d) => batch.update(d.ref, { read: true }));
-  await batch.commit();
+  for (let i = 0; i < snap.docs.length; i += BATCH_CHUNK_SIZE) {
+    const chunk = snap.docs.slice(i, i + BATCH_CHUNK_SIZE);
+    const batch = writeBatch(db);
+    chunk.forEach((d) => batch.update(d.ref, { read: true }));
+    await batch.commit();
+  }
 }
 
 export async function archiveAllRead(orgId: string, recipientId: string): Promise<void> {
@@ -123,9 +132,12 @@ export async function archiveAllRead(orgId: string, recipientId: string): Promis
     ),
   );
   if (snap.empty) return;
-  const batch = writeBatch(db);
-  snap.docs.forEach((d) => batch.update(d.ref, { archived: true }));
-  await batch.commit();
+  for (let i = 0; i < snap.docs.length; i += BATCH_CHUNK_SIZE) {
+    const chunk = snap.docs.slice(i, i + BATCH_CHUNK_SIZE);
+    const batch = writeBatch(db);
+    chunk.forEach((d) => batch.update(d.ref, { archived: true }));
+    await batch.commit();
+  }
 }
 
 export async function archiveAll(orgId: string, recipientId: string): Promise<void> {
@@ -138,9 +150,12 @@ export async function archiveAll(orgId: string, recipientId: string): Promise<vo
     ),
   );
   if (snap.empty) return;
-  const batch = writeBatch(db);
-  snap.docs.forEach((d) => batch.update(d.ref, { archived: true }));
-  await batch.commit();
+  for (let i = 0; i < snap.docs.length; i += BATCH_CHUNK_SIZE) {
+    const chunk = snap.docs.slice(i, i + BATCH_CHUNK_SIZE);
+    const batch = writeBatch(db);
+    chunk.forEach((d) => batch.update(d.ref, { archived: true }));
+    await batch.commit();
+  }
 }
 
 // ─── Listeners ─────────────────────────────────────────────────────────────────
@@ -157,6 +172,7 @@ export function listenToNotifications(
       where('recipientId', '==', recipientId),
       where('archived', '==', false),
       orderBy('createdAt', 'desc'),
+      limit(100),
     ),
     (snap) => cb(snap.docs.map((d) => d.data() as Notification)),
   );
@@ -174,6 +190,7 @@ export function listenToArchivedNotifications(
       where('recipientId', '==', recipientId),
       where('archived', '==', true),
       orderBy('createdAt', 'desc'),
+      limit(100),
     ),
     (snap) => cb(snap.docs.map((d) => d.data() as Notification)),
   );

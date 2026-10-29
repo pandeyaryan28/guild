@@ -1,5 +1,5 @@
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import type {
   Task, Channel, UserProfile,
   SearchResultType, SearchResultItem, SearchResults,
@@ -25,7 +25,7 @@ export function searchTasks(tasks: Task[], q: string): SearchResultItem[] {
       title: t.title,
       subtitle: t.description?.slice(0, 90) || undefined,
       meta: t.status,
-      href: `/tasks?task=${t.id}`,
+      href: `/workspace?task=${t.id}`,
       matchedField: t.title.toLowerCase().includes(lower) ? 'title' as const : 'subtitle' as const,
     }));
 }
@@ -67,9 +67,30 @@ export function searchPeople(members: UserProfile[], q: string): SearchResultIte
 
 // ─── Firestore message search ─────────────────────────────────────────────────
 
-export async function searchMessages(orgId: string, queryStr: string): Promise<SearchResultItem[]> {
+export async function searchMessages(
+  orgId: string,
+  queryStr: string,
+  options?: {
+    userId?: string;
+    allowedChannelIds?: Set<string> | string[];
+    allowedDmIds?: Set<string> | string[];
+  },
+): Promise<SearchResultItem[]> {
   if (!queryStr.trim() || queryStr.length < 2) return [];
   const lower = queryStr.toLowerCase();
+  const currentUid = options?.userId ?? auth.currentUser?.uid;
+
+  const allowedChannels = options?.allowedChannelIds
+    ? (options.allowedChannelIds instanceof Set
+        ? options.allowedChannelIds
+        : new Set(options.allowedChannelIds))
+    : null;
+
+  const allowedDms = options?.allowedDmIds
+    ? (options.allowedDmIds instanceof Set
+        ? options.allowedDmIds
+        : new Set(options.allowedDmIds))
+    : null;
 
   const snap = await getDocs(
     query(
@@ -85,7 +106,28 @@ export async function searchMessages(orgId: string, queryStr: string): Promise<S
       id: string; body: string; senderName: string;
       channelId?: string; dmId?: string; deleted?: boolean;
     })
-    .filter((m) => !m.deleted && (m.body || '').toLowerCase().includes(lower))
+    .filter((m) => {
+      if (m.deleted) return false;
+      if (!(m.body || '').toLowerCase().includes(lower)) return false;
+
+      // Privacy filter for DMs: only return DMs where the current user is a participant
+      if (m.dmId) {
+        if (allowedDms) {
+          return allowedDms.has(m.dmId);
+        }
+        if (currentUid) {
+          return m.dmId.split('_').includes(currentUid);
+        }
+        return false;
+      }
+
+      // Privacy filter for channels: if allowedChannels set is provided, enforce membership/visibility
+      if (m.channelId && allowedChannels) {
+        return allowedChannels.has(m.channelId);
+      }
+
+      return true;
+    })
     .slice(0, 5)
     .map((m) => ({
       id: m.id,

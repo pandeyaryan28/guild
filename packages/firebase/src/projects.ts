@@ -1,7 +1,7 @@
 import {
   collection, doc, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot, serverTimestamp,
-  Timestamp, collectionGroup,
+  Timestamp, collectionGroup, getDoc, getDocs, writeBatch,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Project, ProjectStatus, Milestone, ActorInfo, MessageAttachment, ProjectComment } from '@guild/types';
@@ -51,7 +51,30 @@ export async function archiveProject(projectId: string): Promise<void> {
   });
 }
 
-export async function deleteProject(projectId: string): Promise<void> {
+export async function deleteProject(projectId: string, orgId?: string): Promise<void> {
+  const projSnap = await getDoc(doc(db, 'projects', projectId));
+  const resolvedOrgId = orgId || (projSnap.exists() ? projSnap.data()?.orgId : undefined);
+
+  if (resolvedOrgId) {
+    try {
+      const [goalsSnap, tasksSnap, commentsSnap, milestonesSnap] = await Promise.all([
+        getDocs(query(collection(db, 'goals'), where('orgId', '==', resolvedOrgId), where('projectId', '==', projectId))),
+        getDocs(query(collection(db, 'tasks'), where('orgId', '==', resolvedOrgId), where('projectId', '==', projectId))),
+        getDocs(query(collection(db, 'projectComments'), where('orgId', '==', resolvedOrgId), where('projectId', '==', projectId))),
+        getDocs(query(collection(db, 'projects', projectId, 'milestones'), where('orgId', '==', resolvedOrgId))),
+      ]);
+      const batch = writeBatch(db);
+      goalsSnap.docs.forEach((d) => batch.update(doc(db, 'goals', d.id), { projectId: null, updatedAt: serverTimestamp() }));
+      tasksSnap.docs.forEach((d) => batch.update(doc(db, 'tasks', d.id), { projectId: null, updatedAt: serverTimestamp() }));
+      commentsSnap.docs.forEach((d) => batch.delete(doc(db, 'projectComments', d.id)));
+      milestonesSnap.docs.forEach((d) => batch.delete(doc(db, 'projects', projectId, 'milestones', d.id)));
+      batch.delete(doc(db, 'projects', projectId));
+      await batch.commit();
+      return;
+    } catch (e) {
+      console.error('Failed to cascade-clean project links, falling back to direct delete:', e);
+    }
+  }
   await deleteDoc(doc(db, 'projects', projectId));
 }
 
@@ -122,14 +145,37 @@ export async function deleteMilestone(
 export function listenToMilestones(
   projectId: string,
   cb: (milestones: Milestone[]) => void,
+  orgId?: string,
 ): () => void {
-  return onSnapshot(
-    query(
-      collection(db, 'projects', projectId, 'milestones'),
-      orderBy('createdAt', 'asc'),
-    ),
-    (snap) => cb(snap.docs.map((d) => d.data() as Milestone)),
-  );
+  if (orgId) {
+    return onSnapshot(
+      query(
+        collection(db, 'projects', projectId, 'milestones'),
+        where('orgId', '==', orgId),
+        orderBy('createdAt', 'asc'),
+      ),
+      (snap) => cb(snap.docs.map((d) => d.data() as Milestone)),
+    );
+  }
+  let unsubInner: (() => void) | null = null;
+  let cancelled = false;
+  getDoc(doc(db, 'projects', projectId)).then((projSnap) => {
+    if (cancelled || !projSnap.exists()) return;
+    const resolvedOrgId = projSnap.data()?.orgId;
+    if (!resolvedOrgId) return;
+    unsubInner = onSnapshot(
+      query(
+        collection(db, 'projects', projectId, 'milestones'),
+        where('orgId', '==', resolvedOrgId),
+        orderBy('createdAt', 'asc'),
+      ),
+      (snap) => cb(snap.docs.map((d) => d.data() as Milestone)),
+    );
+  }).catch(() => {});
+  return () => {
+    cancelled = true;
+    unsubInner?.();
+  };
 }
 
 export async function updateProjectAttachments(

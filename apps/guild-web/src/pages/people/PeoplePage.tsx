@@ -24,26 +24,26 @@ const ROLE_META: Record<UserRole, { label: string; icon: React.ElementType; colo
   owner: {
     label: 'Owner',
     icon: Crown,
-    color: 'text-amber-400',
-    bg: 'bg-amber-400/10 border-amber-400/25',
+    color: 'text-amber-600 dark:text-amber-400',
+    bg: 'bg-amber-500/10 border-amber-500/25',
   },
   admin: {
     label: 'Admin',
     icon: ShieldCheck,
-    color: 'text-violet-400',
-    bg: 'bg-violet-400/10 border-violet-400/25',
+    color: 'text-violet-600 dark:text-violet-400',
+    bg: 'bg-violet-500/10 border-violet-500/25',
   },
   manager: {
     label: 'Manager',
     icon: Briefcase,
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-400/10 border-emerald-400/25',
+    color: 'text-emerald-600 dark:text-emerald-400',
+    bg: 'bg-emerald-500/10 border-emerald-500/25',
   },
   member: {
     label: 'Member',
     icon: User,
-    color: 'text-sky-400',
-    bg: 'bg-sky-400/10 border-sky-400/25',
+    color: 'text-sky-600 dark:text-sky-400',
+    bg: 'bg-sky-500/10 border-sky-500/25',
   },
 };
 
@@ -63,9 +63,17 @@ function avatarHue(uid: string) {
   return Math.abs(hash) % 360;
 }
 
-function timeAgo(ts: any) {
-  if (!ts?.toMillis) return 'Unknown';
-  const diff = Date.now() - ts.toMillis();
+function timeAgo(ts: any): string | null {
+  const ms =
+    typeof ts?.toMillis === 'function'
+      ? ts.toMillis()
+      : typeof ts === 'number'
+      ? ts
+      : ts instanceof Date
+      ? ts.getTime()
+      : null;
+  if (!ms) return null;
+  const diff = Date.now() - ms;
   const d = Math.floor(diff / 86400000);
   if (d < 1) return 'Today';
   if (d === 1) return 'Yesterday';
@@ -131,7 +139,7 @@ function MemberCard({ member, isSelf, onClick, hasAccess = false }: MemberCardPr
             {member.fullName}
           </p>
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-            @{member.username}
+            @{member.username || member.email?.split('@')[0] || 'member'}
           </p>
         </div>
       </div>
@@ -162,10 +170,12 @@ function MemberCard({ member, isSelf, onClick, hasAccess = false }: MemberCardPr
             <span>ID: {member.employeeId}</span>
           </div>
         )}
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <Calendar className="h-3 w-3 shrink-0 text-text-muted" />
-          <span>Joined {timeAgo(member.createdAt)}</span>
-        </div>
+        {timeAgo(member.createdAt) && (
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <Calendar className="h-3 w-3 shrink-0 text-text-muted" />
+            <span>Joined {timeAgo(member.createdAt)}</span>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -486,6 +496,7 @@ export function PeoplePage() {
     all: members.length,
     owner: members.filter((m) => m.role === 'owner').length,
     admin: members.filter((m) => m.role === 'admin').length,
+    manager: members.filter((m) => m.role === 'manager').length,
     member: members.filter((m) => m.role === 'member').length,
   }), [members]);
 
@@ -621,6 +632,7 @@ export function PeoplePage() {
                 { id: 'all', label: 'All' },
                 { id: 'owner', label: 'Owners' },
                 { id: 'admin', label: 'Admins' },
+                { id: 'manager', label: 'Managers' },
                 { id: 'member', label: 'Members' },
               ] as { id: FilterRole; label: string }[]).map(({ id, label }) => (
                 <button

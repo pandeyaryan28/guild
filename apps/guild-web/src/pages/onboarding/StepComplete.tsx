@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import { setOnboardingState } from '../../lib/firestore';
@@ -6,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 
 export function StepComplete() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleEnter = async () => {
@@ -13,7 +15,7 @@ export function StepComplete() {
     setIsLoading(true);
     try {
       await setOnboardingState(user.uid, { completed: true });
-      window.location.href = '/';
+      navigate('/', { replace: true });
     } catch {
       setIsLoading(false);
     }

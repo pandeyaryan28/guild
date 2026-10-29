@@ -1,61 +1,55 @@
 /**
- * Aether Grid Design System Tokens & Global Styles (Trigger Vercel Deploy)
- * Pure custom Vanilla CSS implementation for the Aether Grid theme.
+ * Guild Orbit Surface & Layout System (AetherGrid compatibility layer)
+ * Clean, high-contrast dual-theme surfaces following Apple & Linear design standards.
  */
 
 :root {
-  /* Visual Tokens (Dynamically mapped to active theme colors) */
-  --aether-radius: 24px;
-  
+  --aether-radius: 16px;
   --aether-bg: var(--bg-primary);
-  --aether-bg-gradient: radial-gradient(circle at top left, oklch(from var(--bg-primary) calc(l - 0.01) calc(c + 0.005) h) 0%, var(--bg-primary) 40%, oklch(from var(--bg-secondary) calc(l - 0.02) calc(c + 0.01) h) 100%);
-  
-  /* Satin Milk Glass (Light Theme default) */
-  --aether-glass-bg: oklch(from var(--bg-primary) calc(l - 0.015) c h / 45%);
-  --aether-glass-border: oklch(from var(--accent) 0.88 0.02 h / 15%);
-  --aether-glass-border-inner: oklch(1 0 0 / 22%);
-  --aether-glass-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02), 
-                         0 12px 36px -4px oklch(from var(--accent) 0.15 0.02 h / 8%),
-                         inset 0 1px 0 0 var(--aether-glass-border-inner);
-  
+  --aether-bg-gradient: var(--bg-primary);
+
+  /* Crisp Light Mode Surface */
+  --aether-glass-bg: color-mix(in srgb, var(--surface) 94%, transparent);
+  --aether-glass-border: var(--border-default);
+  --aether-glass-border-inner: rgba(255, 255, 255, 0.6);
+  --aether-glass-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03),
+                         0 4px 16px -2px rgba(0, 0, 0, 0.04);
+
   --aether-text-primary: var(--text-primary);
   --aether-text-secondary: var(--text-secondary);
   --aether-text-muted: var(--text-muted);
-  
-  --aether-primary: var(--accent); 
-  --aether-primary-glow: oklch(from var(--accent) l c h / 18%);
-  --aether-secondary: oklch(from var(--accent) calc(l + 0.08) calc(c - 0.04) calc(h + 35)); 
-  
-  /* Status Halos - Fine Glowing Halos for Active/Busy */
-  --aether-halo-active: oklch(0.74 0.16 142); 
-  --aether-halo-away: oklch(0.78 0.14 68); 
-  --aether-halo-busy: oklch(0.64 0.18 28); 
-  --aether-halo-offline: oklch(0.62 0.02 260); 
-  
-  --aether-success: oklch(0.70 0.15 142);
-  --aether-warning: oklch(0.80 0.13 68);
-  --aether-danger: oklch(0.64 0.18 28);
+
+  --aether-primary: var(--accent);
+  --aether-primary-glow: color-mix(in srgb, var(--accent) 16%, transparent);
+  --aether-secondary: var(--bg-secondary);
+
+  --aether-halo-active: oklch(0.65 0.16 145);
+  --aether-halo-away: oklch(0.75 0.14 70);
+  --aether-halo-busy: oklch(0.62 0.18 28);
+  --aether-halo-offline: oklch(0.60 0.02 260);
+
+  --aether-success: var(--success);
+  --aether-warning: var(--warning);
+  --aether-danger: var(--danger);
 }
 
 .dark {
-  /* Frosted Tinted Satin Glass (Dark Theme - clean, vibrant, high-contrast) */
-  --aether-glass-bg: oklch(from var(--accent) 0.98 0.02 h / 11%);
-  --aether-glass-border: oklch(from var(--accent) 0.96 0.04 h / 16%);
-  --aether-glass-border-inner: oklch(1 0 0 / 18%);
-  --aether-glass-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.18), 
-                         0 20px 48px -8px oklch(0 0 0 / 35%),
-                         inset 0 1px 0 0 var(--aether-glass-border-inner);
+  /* Crisp Dark Mode Surface */
+  --aether-glass-bg: color-mix(in srgb, var(--surface) 92%, transparent);
+  --aether-glass-border: var(--border-default);
+  --aether-glass-border-inner: rgba(255, 255, 255, 0.06);
+  --aether-glass-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.28),
+                         0 8px 24px -4px rgba(0, 0, 0, 0.36);
 }
 
-/* Base Body Application */
+/* Base Application Container */
 .aether-app-container {
   min-height: 100vh;
-  background: var(--aether-bg-gradient);
-  color: var(--aether-text-primary);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Geist Variable', 'Inter', sans-serif;
   overflow-x: hidden;
   position: relative;
-  transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (max-width: 768px) {
@@ -69,467 +63,172 @@
     height: 100% !important;
     height: 100dvh !important;
     max-height: 100dvh !important;
-    height: 100svh !important;
-    max-height: 100svh !important;
     overflow: hidden !important;
   }
 }
 
-/* Ambient Moving Aurora Mesh Background - Multi-orb dynamic nebula */
-.aether-aurora {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-  filter: blur(150px);
-  opacity: 0.88;
-  background: 
-    radial-gradient(circle at 75% 20%, oklch(0.62 0.22 280 / 18%), transparent 60%),
-    radial-gradient(circle at 20% 80%, oklch(0.55 0.18 160 / 15%), transparent 60%),
-    radial-gradient(circle at 50% 50%, oklch(from var(--aether-primary) l c h / 6%), transparent 65%);
+/* Decorative background nebula disabled per minimalist design standard */
+.aether-aurora,
+.aether-ambient-glow {
+  display: none !important;
 }
 
-.aether-aurora::before,
-.aether-aurora::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  mix-blend-mode: screen;
-}
-
-.dark .aether-aurora::before,
-.dark .aether-aurora::after {
-  mix-blend-mode: plus-lighter;
-}
-
-.aether-aurora::before {
-  width: 75vw;
-  height: 75vw;
-  background: radial-gradient(circle, oklch(from var(--aether-primary) 0.58 0.24 h / 28%) 0%, transparent 70%);
-  top: -25%;
-  left: -20%;
-  animation: aurora-float-1 32s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
-}
-
-.aether-aurora::after {
-  width: 70vw;
-  height: 70vw;
-  background: radial-gradient(circle, oklch(from var(--aether-secondary) 0.55 0.18 h / 24%) 0%, transparent 70%);
-  bottom: -25%;
-  right: -20%;
-  animation: aurora-float-2 26s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
-}
-
-@keyframes aurora-float-1 {
-  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  50% { transform: translate(6vw, 5vh) scale(1.08) rotate(45deg); }
-  100% { transform: translate(-3vw, -3vh) scale(0.96) rotate(90deg); }
-}
-
-@keyframes aurora-float-2 {
-  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  50% { transform: translate(-5vw, -6vh) scale(0.97) rotate(-45deg); }
-  100% { transform: translate(3vw, 3vh) scale(1.06) rotate(-90deg); }
-}
-
-/* Custom Glassmorphic Panels - Premium frosted glass */
+/* Clean Surface Panels */
 .aether-glass {
   background: var(--aether-glass-bg);
-  backdrop-filter: blur(32px) saturate(1.8) contrast(1.01);
-  -webkit-backdrop-filter: blur(32px) saturate(1.8) contrast(1.01);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--aether-glass-border);
   border-radius: var(--aether-radius);
   box-shadow: var(--aether-glass-shadow);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  will-change: backdrop-filter, transform;
-}
-.dark .aether-glass {
-  backdrop-filter: blur(36px) saturate(2.0) contrast(1.03);
-  -webkit-backdrop-filter: blur(36px) saturate(2.0) contrast(1.03);
 }
 
-/* Obsidian Glass Variant (Highly premium smoky panels) */
 .aether-glass-obsidian {
-  background: oklch(0.10 0.015 260 / 30%);
-  backdrop-filter: blur(40px) saturate(1.7) contrast(1.05);
-  -webkit-backdrop-filter: blur(40px) saturate(1.7) contrast(1.05);
-  border: 1px solid oklch(1 0 0 / 8%);
+  background: var(--surface-elevated);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-default);
   border-radius: var(--aether-radius);
-  box-shadow: 0 24px 64px -8px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 oklch(1 0 0 / 12%);
-  will-change: backdrop-filter, transform;
+  box-shadow: var(--aether-glass-shadow);
 }
 
-/* Elevated Glass (Popovers, Dialogs, Dropdowns - ensuring 100% legibility) */
+/* Elevated Surface (Popovers, Dialogs, Dropdowns, Drawers) */
 .aether-glass-elevated {
-  background: oklch(from var(--bg-primary) calc(l - 0.01) c h / 86%);
-  backdrop-filter: blur(44px) saturate(1.9) contrast(1.01);
-  -webkit-backdrop-filter: blur(44px) saturate(1.9) contrast(1.01);
-  border: 1px solid oklch(from var(--accent) 0.95 0.03 h / 20%);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04),
-              0 24px 72px -10px rgba(0, 0, 0, 0.08),
-              inset 0 1px 0 0 oklch(1 0 0 / 28%);
-  border-radius: calc(var(--aether-radius) * 0.85);
-  will-change: backdrop-filter, transform;
+  background: var(--surface-elevated);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08),
+              0 16px 40px -6px rgba(0, 0, 0, 0.12);
+  border-radius: var(--aether-radius);
 }
 .dark .aether-glass-elevated {
-  background: oklch(from var(--bg-primary) calc(l + 0.06) c h / 80%);
-  backdrop-filter: blur(44px) saturate(2.1) contrast(1.03);
-  -webkit-backdrop-filter: blur(44px) saturate(2.1) contrast(1.03);
-  border: 1px solid oklch(from var(--accent) 0.96 0.03 h / 14%);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.22),
-              0 32px 80px -12px rgba(0, 0, 0, 0.40),
-              inset 0 1px 0 0 oklch(1 0 0 / 15%);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.35),
+              0 20px 48px -8px rgba(0, 0, 0, 0.55);
 }
 
-/* Hover-Elevated Interactive Glass Cards - Premium spring feeling */
+/* Interactive Surface Cards */
 .aether-glass-interactive {
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, box-shadow;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .aether-glass-interactive:hover {
-  transform: translateY(-4px) scale(1.01);
-  background: oklch(from var(--bg-primary) calc(l - 0.015) c h / 55%);
-  box-shadow: 0 20px 48px -6px oklch(from var(--accent) 0.15 0.02 h / 12%),
-              0 1px 2px 0 rgba(0, 0, 0, 0.02),
-              inset 0 1px 0 0 oklch(1 0 0 / 26%);
-  border-color: oklch(from var(--accent) 0.88 0.03 h / 26%);
-}
-.dark .aether-glass-interactive:hover {
-  background: oklch(from var(--bg-primary) calc(l + 0.05) c h / 30%);
-  box-shadow: 0 24px 56px -8px oklch(0 0 0 / 48%),
-              0 1px 2px 0 rgba(0, 0, 0, 0.20),
-              inset 0 1px 0 0 oklch(1 0 0 / 18%);
-  border-color: oklch(from var(--accent) 0.96 0.03 h / 20%);
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
 }
 .aether-glass-interactive:active {
-  transform: translateY(-0.5px) scale(0.99);
-  transition-duration: 80ms;
+  transform: scale(0.99);
 }
 
-/* Translucent Glass Inputs */
+/* Clean Inputs */
 .aether-glass-input {
-  background: oklch(from var(--bg-primary) calc(l - 0.015) c h / 40%);
-  border: 1px solid oklch(from var(--text-primary) l c h / 10%);
-  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
   color: var(--text-primary);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: inset 0 1px 1px 0 oklch(0 0 0 / 2%);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: border-color, box-shadow, background-color;
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .dark .aether-glass-input {
-  background: oklch(from var(--bg-primary) calc(l + 0.04) c h / 16%);
-  border-color: oklch(from var(--text-primary) l c h / 8%);
-  box-shadow: inset 0 1px 1px 0 oklch(0 0 0 / 8%);
+  background: var(--bg-secondary);
+  border-color: var(--border-default);
 }
 .aether-glass-input:focus {
-  background: oklch(from var(--bg-primary) calc(l - 0.01) c h / 65%);
-  border-color: oklch(from var(--accent) l c h / 65%);
-  box-shadow: 0 0 0 3px oklch(from var(--accent) l c h / 15%),
-              inset 0 1px 1px 0 oklch(0 0 0 / 2%);
+  background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
   outline: none;
 }
 .dark .aether-glass-input:focus {
-  background: oklch(from var(--bg-primary) calc(l + 0.07) c h / 35%);
+  background: var(--surface);
 }
 
-/* macOS-Style Floating Dock */
-.aether-dock-wrapper {
-  position: fixed;
-  left: 24px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  pointer-events: none;
-}
-
-.aether-dock {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 28px;
-  pointer-events: auto;
-}
-
-.aether-dock-item-wrapper {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.aether-dock-popover {
-  position: absolute;
-  left: 64px;
-  bottom: 0;
-  z-index: 50;
-  min-width: 220px;
-}
-
-.aether-dock-item {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16px;
-  color: var(--aether-text-secondary);
-  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  cursor: pointer;
-}
-
-.aether-dock-item:hover {
-  transform: scale(1.15) translateY(-2px);
-  color: var(--aether-text-primary);
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
-}
-
-.aether-dock-item.active {
-  background: var(--aether-primary);
-  color: var(--accent-foreground, white);
-  box-shadow: 0 0 20px var(--aether-primary-glow);
-}
-
-.aether-dock-item-tooltip {
-  position: absolute;
-  left: 70px;
-  background: var(--aether-glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--aether-glass-border);
-  color: var(--aether-text-primary);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-10px);
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.aether-dock-item:hover .aether-dock-item-tooltip {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* Graceful scaling for smaller screen heights */
-@media (min-width: 769px) and (max-height: 800px) {
-  .aether-dock {
-    gap: 8px;
-    padding: 12px;
-    border-radius: 24px;
-  }
-  .aether-dock-item {
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
-  }
-  .aether-dock-item svg {
-    width: 18px;
-    height: 18px;
-  }
-  .aether-dock-item-tooltip {
-    left: 62px;
-  }
-  .aether-dock-item-wrapper {
-    width: 42px;
-    height: 42px;
-  }
-  .aether-dock-popover {
-    left: 56px;
-  }
-}
-
-@media (min-width: 769px) and (max-height: 680px) {
-  .aether-dock {
-    gap: 6px;
-    padding: 8px;
-    border-radius: 20px;
-  }
-  .aether-dock-item {
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
-  }
-  .aether-dock-item svg {
-    width: 16px;
-    height: 16px;
-  }
-  .aether-dock-item-tooltip {
-    left: 54px;
-  }
-  .aether-dock-item-wrapper {
-    width: 36px;
-    height: 36px;
-  }
-  .aether-dock-popover {
-    left: 48px;
-  }
-}
-
-/* Premium Breathing Halo Orbit */
+/* Teammate Avatar Wrapper */
 .teammate-halo {
   position: relative;
   border-radius: 50%;
-  padding: 3px;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.teammate-halo::after {
-  content: '';
-  position: absolute;
-  top: -1px; left: -1px; right: -1px; bottom: -1px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  pointer-events: none;
-  transition: border-color 0.3s ease;
-}
-
-.teammate-halo.active::after {
-  border-color: var(--aether-halo-active);
-  animation: breathe-halo 3s infinite alternate;
-}
-
-.teammate-halo.away::after {
-  border-color: var(--aether-halo-away);
-  animation: breathe-halo 4s infinite alternate;
-}
-
-.teammate-halo.busy::after {
-  border-color: var(--aether-halo-busy);
-  animation: breathe-halo 2.5s infinite alternate;
-}
-
-@keyframes breathe-halo {
-  0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0 0px currentColor; }
-  100% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 8px 2px currentColor; }
-}
-
-/* Strategic Milestone Progression Arc */
+/* Progression Arc */
 .progression-arc-svg {
   transform: rotate(-90deg);
 }
-
 .progression-arc-bg {
   fill: none;
-  stroke: var(--aether-glass-border);
-  stroke-width: 12;
+  stroke: var(--border-default);
+  stroke-width: 10;
 }
-
 .progression-arc-value {
   fill: none;
-  stroke: url(#arc-grad);
-  stroke-width: 12;
+  stroke: var(--accent);
+  stroke-width: 10;
   stroke-linecap: round;
-  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Glassmorphic Task Card Stack */
+/* Task Card Priority Accent */
 .task-glass-card {
   position: relative;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
-
 .task-glass-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; bottom: 0;
-  width: 4px;
-  background: var(--aether-primary);
-  opacity: 0.6;
+  width: 3px;
+  background: var(--accent);
+  opacity: 0.7;
 }
+.task-glass-card.priority-urgent::before { background: var(--danger); }
+.task-glass-card.priority-high::before { background: var(--warning); }
+.task-glass-card.priority-medium::before { background: var(--accent); }
+.task-glass-card.priority-low::before { background: var(--text-muted); }
 
-.task-glass-card.priority-urgent::before { background: var(--aether-danger); }
-.task-glass-card.priority-high::before { background: var(--aether-warning); }
-.task-glass-card.priority-medium::before { background: var(--aether-primary); }
-.task-glass-card.priority-low::before { background: var(--aether-secondary); }
-
-/* Unified Fluid Scrollbars */
+/* Unified Scrollbars */
 .aether-scroll {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-  will-change: scroll-position;
 }
 .aether-scroll::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 .aether-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 .aether-scroll::-webkit-scrollbar-thumb {
-  background: oklch(from var(--text-primary) l c h / 12%);
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: color-mix(in srgb, var(--text-muted) 25%, transparent);
   border-radius: 999px;
-  transition: background-color 0.2s ease;
 }
 .aether-scroll::-webkit-scrollbar-thumb:hover {
-  background: oklch(from var(--text-primary) l c h / 24%);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-.aether-scroll::-webkit-scrollbar-thumb:active {
-  background: oklch(from var(--text-primary) l c h / 36%);
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: color-mix(in srgb, var(--text-muted) 45%, transparent);
 }
 
-/* Animations */
+/* Subtle Pop Animation */
 @keyframes fluid-pop {
-  0% { transform: scale(0.95); opacity: 0; }
+  0% { transform: scale(0.98); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
-
 .animate-fluid-pop {
-  animation: fluid-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: fluid-pop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Dynamic Ambient Accent Glows */
-.aether-ambient-glow {
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--aether-primary-glow) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   MOBILE CUSTOM STYLING UTILITIES
-   ───────────────────────────────────────────────────────────────────────────── */
 /* Mobile bottom drawer drag handle */
 .aether-mobile-handle {
-  width: 38px;
-  height: 5px;
-  background: oklch(from var(--border-default) l c h / 60%);
+  width: 36px;
+  height: 4px;
+  background: var(--border-strong);
   border-radius: 99px;
-  margin: 8px auto 16px auto;
+  margin: 8px auto 12px auto;
 }
-
-

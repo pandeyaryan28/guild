@@ -146,6 +146,17 @@ function createMockDb(options: {
           },
         };
       }
+      if (colName === 'taskActivities') {
+        return {
+          doc() {
+            const id = `act_${Math.random().toString(36).slice(2, 9)}`;
+            return {
+              id,
+              async set() {},
+            };
+          },
+        };
+      }
       throw new Error(`Unhandled collection: ${colName}`);
     },
     batch() {

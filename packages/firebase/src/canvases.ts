@@ -1,12 +1,13 @@
 import {
-  collection, doc, setDoc, updateDoc, query, where, onSnapshot, serverTimestamp, getDocs
+  collection, doc, setDoc, getDoc, updateDoc, query, where, onSnapshot, serverTimestamp, getDocs
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Canvas } from '@guild/types';
 
 /**
  * Gets the canvas for a specific chat (channel or DM).
- * If no canvas exists for that chatId, creates a new one.
+ * Uses a deterministic ID (`${orgId}_${chatId}`) to prevent duplicate creation races,
+ * with fallback query support for legacy documents.
  */
 export async function getOrCreateCanvas(
   orgId: string,
@@ -14,6 +15,13 @@ export async function getOrCreateCanvas(
   userId: string,
   userName: string
 ): Promise<string> {
+  const deterministicId = `${orgId}_${chatId}`;
+  const deterministicRef = doc(db, 'canvases', deterministicId);
+  const deterministicSnap = await getDoc(deterministicRef);
+  if (deterministicSnap.exists()) {
+    return deterministicId;
+  }
+
   const q = query(
     collection(db, 'canvases'),
     where('orgId', '==', orgId),
@@ -25,11 +33,9 @@ export async function getOrCreateCanvas(
     return snap.docs[0].id;
   }
   
-  // Create a new canvas
-  const canvasRef = doc(collection(db, 'canvases'));
-  const canvasId = canvasRef.id;
-  await setDoc(canvasRef, {
-    id: canvasId,
+  // Create a new canvas with deterministic ID to prevent concurrent duplicates
+  await setDoc(deterministicRef, {
+    id: deterministicId,
     orgId,
     chatId,
     title: 'Untitled Canvas',
@@ -40,7 +46,7 @@ export async function getOrCreateCanvas(
     updatedBy: userId,
     updatedByName: userName
   });
-  return canvasId;
+  return deterministicId;
 }
 
 /**

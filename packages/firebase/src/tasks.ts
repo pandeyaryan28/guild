@@ -1,6 +1,6 @@
 import {
   collection, doc, setDoc, updateDoc, deleteDoc,
-  query, where, orderBy, onSnapshot, serverTimestamp,
+  query, where, orderBy, limit, onSnapshot, serverTimestamp,
   Timestamp, writeBatch, getDocs, getDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -57,16 +57,26 @@ async function getNextOrderIndex(orgId: string, status: TaskStatus): Promise<num
       where('orgId', '==', orgId),
       where('status', '==', status),
       orderBy('orderIndex', 'desc'),
+      limit(1),
     ),
   );
   if (snap.empty) return 1000;
   return ((snap.docs[0].data() as Task).orderIndex ?? 1000) + 1000;
 }
 
-export async function syncGoalProgress(goalId: string): Promise<void> {
+export async function syncGoalProgress(goalId: string, orgId?: string): Promise<void> {
+  let resolvedOrgId = orgId;
+  if (!resolvedOrgId) {
+    const goalSnap = await getDoc(doc(db, 'goals', goalId));
+    if (!goalSnap.exists()) return;
+    resolvedOrgId = goalSnap.data()?.orgId;
+  }
+  if (!resolvedOrgId) return;
+
   const tasksSnap = await getDocs(
     query(
       collection(db, 'tasks'),
+      where('orgId', '==', resolvedOrgId),
       where('goalId', '==', goalId)
     )
   );
@@ -113,100 +123,117 @@ export async function createTask(params: {
   const orderIndex = await getNextOrderIndex(params.orgId, status);
 
   let approved = params.approved;
-  if (approved === undefined) {
-    approved = true;
-    if (!params.parentTaskId) {
-      const creatorDoc = await getDoc(doc(db, 'users', params.actor.uid));
-      const creatorProfile = creatorDoc.exists() ? creatorDoc.data() : null;
-      const managerId = creatorProfile?.managerId || null;
+  let creatorProfile: Record<string, any> | null = null;
+  let approverId: string | null = null;
 
-      if (managerId) {
+  if (approved === undefined || approved === false) {
+    const creatorDoc = await getDoc(doc(db, 'users', params.actor.uid));
+    creatorProfile = creatorDoc.exists() ? creatorDoc.data() : null;
+    const managerId = (creatorProfile?.managerId as string) || null;
+
+    if (managerId) {
+      approverId = managerId;
+      if (approved === undefined && !params.parentTaskId) {
         approved = false;
-      } else {
-        const orgDoc = await getDoc(doc(db, 'organizations', params.orgId));
-        const orgData = orgDoc.exists() ? orgDoc.data() : null;
-        const ownerId = orgData?.ownerId || null;
-        if (params.actor.uid !== ownerId) {
-          approved = false;
-        }
       }
+    } else {
+      const orgDoc = await getDoc(doc(db, 'organizations', params.orgId));
+      const orgData = orgDoc.exists() ? orgDoc.data() : null;
+      const ownerId = (orgData?.ownerId as string) || null;
+      approverId = ownerId;
+      if (approved === undefined && !params.parentTaskId && params.actor.uid !== ownerId) {
+        approved = false;
+      }
+    }
+    if (approved === undefined) {
+      approved = true;
     }
   }
 
-  await setDoc(ref, {
-    id: ref.id, orgId: params.orgId, title: params.title,
-    description: params.description ?? '', status,
+  const batch = writeBatch(db);
+  const now = serverTimestamp();
+
+  batch.set(ref, {
+    id: ref.id,
+    orgId: params.orgId,
+    title: params.title,
+    description: params.description ?? '',
+    status,
     priority: params.priority ?? 'none',
     assigneeIds: params.assigneeIds ?? [],
     creatorId: params.actor.uid,
     labelIds: params.labelIds ?? [],
     dueDate: params.dueDate ? Timestamp.fromDate(params.dueDate) : null,
-    orderIndex, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    orderIndex,
+    createdAt: now,
+    updatedAt: now,
     approved,
     // Scope fields — null means unscoped (backward compatible)
     projectId: params.projectId ?? null,
     goalId: params.goalId ?? null,
     parentTaskId: params.parentTaskId ?? null,
   });
-  await logActivity(ref.id, params.orgId, params.actor, 'created', { title: params.title });
-  if (params.goalId) {
-    await syncGoalProgress(params.goalId);
+
+  const actRef = doc(collection(db, 'taskActivities'));
+  batch.set(actRef, {
+    id: actRef.id,
+    taskId: ref.id,
+    orgId: params.orgId,
+    actorId: params.actor.uid,
+    actorName: params.actor.name,
+    type: 'created',
+    payload: { title: params.title },
+    createdAt: now,
+  });
+
+  if (approved === false && approverId) {
+    try {
+      const approverSnap = await getDoc(doc(db, 'users', approverId));
+      const approverData = approverSnap.exists() ? approverSnap.data() : null;
+      const approverName = approverData?.fullName || approverData?.name || 'Manager';
+      const approverUsername = approverData?.username || 'manager';
+
+      const requestRef = doc(collection(db, 'requests'));
+      batch.set(requestRef, {
+        id: requestRef.id,
+        orgId: params.orgId,
+        creatorId: params.actor.uid,
+        creatorName: params.actor.name,
+        creatorUsername: creatorProfile?.username || 'member',
+        approverId,
+        approverName,
+        approverUsername,
+        type: 'other',
+        title: `Approve Task: "${params.title}"`,
+        description: params.description || `Approval request to create task: "${params.title}"`,
+        status: 'pending',
+        taskId: ref.id,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } catch (e) {
+      console.error('Failed to prepare associated approval request:', e);
+    }
   }
 
-  // Create associated approval request if task requires approval
-  if (approved === false) {
-    try {
-      const creatorDoc = await getDoc(doc(db, 'users', params.actor.uid));
-      const creatorProfile = creatorDoc.exists() ? creatorDoc.data() : null;
-      const managerId = creatorProfile?.managerId || null;
-      let approverId = managerId;
+  await batch.commit();
 
-      if (!approverId) {
-        const orgDoc = await getDoc(doc(db, 'organizations', params.orgId));
-        const orgData = orgDoc.exists() ? orgDoc.data() : null;
-        approverId = orgData?.ownerId || null;
-      }
+  if (params.goalId) {
+    await syncGoalProgress(params.goalId, params.orgId);
+  }
 
-      if (approverId) {
-        const approverSnap = await getDoc(doc(db, 'users', approverId));
-        const approverData = approverSnap.exists() ? approverSnap.data() : null;
-        const approverName = approverData?.fullName || approverData?.name || 'Manager';
-        const approverUsername = approverData?.username || 'manager';
-
-        const requestRef = doc(collection(db, 'requests'));
-        await setDoc(requestRef, {
-          id: requestRef.id,
-          orgId: params.orgId,
-          creatorId: params.actor.uid,
-          creatorName: params.actor.name,
-          creatorUsername: creatorProfile?.username || 'member',
-          approverId,
-          approverName,
-          approverUsername,
-          type: 'other',
-          title: `Approve Task: "${params.title}"`,
-          description: params.description || `Approval request to create task: "${params.title}"`,
-          status: 'pending',
-          taskId: ref.id,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-
-        await createNotification({
-          orgId: params.orgId,
-          recipientId: approverId,
-          category: 'requests',
-          type: 'request_pending',
-          urgency: 'medium',
-          actor: { id: params.actor.uid, name: params.actor.name },
-          title: 'New Approval Request',
-          body: `${params.actor.name} submitted: "Approve Task: ${params.title}"`,
-          link: '/requests',
-        });
-      }
-    } catch (e) {
-      console.error('Failed to create associated approval request:', e);
-    }
+  if (approved === false && approverId) {
+    createNotification({
+      orgId: params.orgId,
+      recipientId: approverId,
+      category: 'requests',
+      type: 'request_pending',
+      urgency: 'medium',
+      actor: { id: params.actor.uid, name: params.actor.name },
+      title: 'New Approval Request',
+      body: `${params.actor.name} submitted: "Approve Task: ${params.title}"`,
+      link: '/requests',
+    }).catch((e) => console.error('Failed to send approval request notification:', e));
   }
 
   return ref.id;
@@ -227,7 +254,11 @@ export async function updateTask(
   // Synchronize approval status to associated requests collection
   if (patch.approved === true) {
     try {
-      const q = query(collection(db, 'requests'), where('taskId', '==', taskId));
+      const q = query(
+        collection(db, 'requests'),
+        where('orgId', '==', orgId),
+        where('taskId', '==', taskId),
+      );
       const snap = await getDocs(q);
       for (const d of snap.docs) {
         await updateDoc(doc(db, 'requests', d.id), {
@@ -245,10 +276,10 @@ export async function updateTask(
   // Sync goal progress if goalId, status, or approved status was changed, or if task is linked to a goal
   const newGoalId = patch.goalId !== undefined ? patch.goalId : oldGoalId;
   if (oldGoalId) {
-    await syncGoalProgress(oldGoalId);
+    await syncGoalProgress(oldGoalId, orgId);
   }
   if (newGoalId && newGoalId !== oldGoalId) {
-    await syncGoalProgress(newGoalId);
+    await syncGoalProgress(newGoalId, orgId);
   }
 }
 
@@ -262,16 +293,18 @@ export async function moveTask(
     throw new Error(`Task with id "${taskId}" not found or has already been deleted.`);
   }
   const taskData = taskDoc.data() as Task;
+  const authoritativeOldStatus = taskData.status ?? oldStatus;
 
   const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, review: 2, done: 3 };
-  const oldStatusVal = STATUS_ORDER[oldStatus] ?? STATUS_ORDER[taskData.status] ?? 0;
+  const oldStatusVal = STATUS_ORDER[authoritativeOldStatus] ?? 0;
   const newStatusVal = STATUS_ORDER[newStatus] ?? 0;
 
   if (newStatusVal < oldStatusVal) {
-    // Backward status transition
-    const isRejection = oldStatus === 'review' && newStatus === 'in_progress';
-    const isReopen = oldStatus === 'done' && (newStatus === 'in_progress' || newStatus === 'todo');
-    if (!isRejection && !isReopen) {
+    // Allow rejecting review back to in_progress/todo or reopening a completed task
+    const isRejection = authoritativeOldStatus === 'review' && (newStatus === 'in_progress' || newStatus === 'todo');
+    const isReopen = authoritativeOldStatus === 'done' && (newStatus === 'in_progress' || newStatus === 'todo' || newStatus === 'review');
+    const isBackToTodo = authoritativeOldStatus === 'in_progress' && newStatus === 'todo';
+    if (!isRejection && !isReopen && !isBackToTodo) {
       throw new Error("Backward status transitions are not allowed except when rejecting a review or reopening a task.");
     }
   }
@@ -279,19 +312,19 @@ export async function moveTask(
   const completedAtPatch =
     newStatus === 'done'
       ? { completedAt: serverTimestamp() }
-      : oldStatus === 'done'
+      : authoritativeOldStatus === 'done'
       ? { completedAt: null }
       : {};
   await updateDoc(doc(db, 'tasks', taskId), {
     status: newStatus, orderIndex: newOrderIndex, updatedAt: serverTimestamp(),
     ...completedAtPatch,
   });
-  if (newStatus !== oldStatus) {
-    await logActivity(taskId, orgId, actor, 'status_changed', { from: oldStatus, to: newStatus });
+  if (newStatus !== authoritativeOldStatus) {
+    await logActivity(taskId, orgId, actor, 'status_changed', { from: authoritativeOldStatus, to: newStatus });
   }
 
   if (taskData?.goalId) {
-    await syncGoalProgress(taskData.goalId);
+    await syncGoalProgress(taskData.goalId, orgId);
   }
 }
 
@@ -326,7 +359,7 @@ export async function updateAssignees(
       actor: { id: actor.uid, name: actor.name },
       title: `Assigned to Task`,
       body: `${actor.name} assigned you to: "${taskTitle ?? 'a task'}"`,
-      link: `/tasks?task=${taskId}`,
+      link: `/workspace?task=${taskId}`,
     }).catch(() => console.error('Failed to send task_assigned notification'));
   }
 }
@@ -353,28 +386,43 @@ export async function updateLabels(
   await Promise.all(ps);
 }
 
-export async function deleteTask(taskId: string): Promise<void> {
+export async function deleteTask(taskId: string, orgId?: string): Promise<void> {
   const taskDoc = await getDoc(doc(db, 'tasks', taskId));
   const taskData = taskDoc.exists() ? (taskDoc.data() as Task) : null;
+  const resolvedOrgId = orgId || taskData?.orgId;
 
-  await deleteDoc(doc(db, 'tasks', taskId));
+  // Cascade delete subtasks, comments, activities, and update/clean linked requests
+  if (resolvedOrgId) {
+    try {
+      const [subtasksSnap, commentsSnap, activitiesSnap, requestsSnap] = await Promise.all([
+        getDocs(query(collection(db, 'tasks'), where('orgId', '==', resolvedOrgId), where('parentTaskId', '==', taskId))),
+        getDocs(query(collection(db, 'taskComments'), where('orgId', '==', resolvedOrgId), where('taskId', '==', taskId))),
+        getDocs(query(collection(db, 'taskActivities'), where('orgId', '==', resolvedOrgId), where('taskId', '==', taskId))),
+        getDocs(query(collection(db, 'requests'), where('orgId', '==', resolvedOrgId), where('taskId', '==', taskId))),
+      ]);
 
-  if (taskData?.goalId) {
-    await syncGoalProgress(taskData.goalId);
+      const batch = writeBatch(db);
+      subtasksSnap.docs.forEach((d) => batch.delete(doc(db, 'tasks', d.id)));
+      commentsSnap.docs.forEach((d) => batch.delete(doc(db, 'taskComments', d.id)));
+      activitiesSnap.docs.forEach((d) => batch.delete(doc(db, 'taskActivities', d.id)));
+      requestsSnap.docs.forEach((d) => {
+        batch.update(doc(db, 'requests', d.id), {
+          status: 'rejected',
+          updatedAt: serverTimestamp(),
+        });
+      });
+      batch.delete(doc(db, 'tasks', taskId));
+      await batch.commit();
+    } catch (e) {
+      console.error('Failed to cascade-clean task dependencies, falling back to direct delete:', e);
+      await deleteDoc(doc(db, 'tasks', taskId));
+    }
+  } else {
+    await deleteDoc(doc(db, 'tasks', taskId));
   }
 
-  // Synchronize deletion (rejection) to associated requests collection
-  try {
-    const q = query(collection(db, 'requests'), where('taskId', '==', taskId));
-    const snap = await getDocs(q);
-    for (const d of snap.docs) {
-      await updateDoc(doc(db, 'requests', d.id), {
-        status: 'rejected',
-        updatedAt: serverTimestamp(),
-      });
-    }
-  } catch (e) {
-    console.error('Failed to sync task deletion to requests:', e);
+  if (taskData?.goalId) {
+    await syncGoalProgress(taskData.goalId, resolvedOrgId);
   }
 }
 
@@ -409,7 +457,7 @@ export async function addComment(params: {
         ? `${params.authorName} mentioned you in a comment`
         : `${params.authorName} commented on task "${params.taskTitle ?? 'a task'}"`,
       body: params.body.slice(0, 100),
-      link: `/tasks?task=${params.taskId}`,
+      link: `/workspace?task=${params.taskId}`,
     }).catch(() => console.error('Failed to send task comment notification'));
   }
   return ref.id;
@@ -445,6 +493,16 @@ export type TaskScopeFilter =
   | { goalId: string; projectId?: never }
   | Record<string, never>;
 
+function normalizeTask(d: any): Task {
+  const data = (typeof d.data === 'function' ? d.data() : d) as Task;
+  return {
+    ...data,
+    id: data.id || d.id,
+    assigneeIds: Array.isArray(data.assigneeIds) ? data.assigneeIds : [],
+    labelIds: Array.isArray(data.labelIds) ? data.labelIds : [],
+  };
+}
+
 export function listenToTasks(
   orgId: string,
   cb: (tasks: Task[]) => void,
@@ -472,7 +530,7 @@ export function listenToTasks(
       orderBy('createdAt', 'asc'),
     );
   }
-  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => d.data() as Task)));
+  return onSnapshot(q, (snap) => cb(snap.docs.map(normalizeTask)));
 }
 
 export function listenToComments(orgId: string, taskId: string, cb: (comments: TaskComment[]) => void): () => void {
@@ -494,11 +552,42 @@ export function listenToComments(orgId: string, taskId: string, cb: (comments: T
   );
 }
 
-export function listenToActivities(taskId: string, cb: (activities: TaskActivity[]) => void): () => void {
-  return onSnapshot(
-    query(collection(db, 'taskActivities'), where('taskId', '==', taskId), orderBy('createdAt', 'asc')),
-    (snap) => cb(snap.docs.map((d) => d.data() as TaskActivity)),
-  );
+export function listenToActivities(
+  taskId: string,
+  cb: (activities: TaskActivity[]) => void,
+  orgId?: string,
+): () => void {
+  if (orgId) {
+    return onSnapshot(
+      query(
+        collection(db, 'taskActivities'),
+        where('orgId', '==', orgId),
+        where('taskId', '==', taskId),
+        orderBy('createdAt', 'asc'),
+      ),
+      (snap) => cb(snap.docs.map((d) => d.data() as TaskActivity)),
+    );
+  }
+  let unsubInner: (() => void) | null = null;
+  let cancelled = false;
+  getDoc(doc(db, 'tasks', taskId)).then((taskSnap) => {
+    if (cancelled || !taskSnap.exists()) return;
+    const resolvedOrgId = taskSnap.data()?.orgId;
+    if (!resolvedOrgId) return;
+    unsubInner = onSnapshot(
+      query(
+        collection(db, 'taskActivities'),
+        where('orgId', '==', resolvedOrgId),
+        where('taskId', '==', taskId),
+        orderBy('createdAt', 'asc'),
+      ),
+      (snap) => cb(snap.docs.map((d) => d.data() as TaskActivity)),
+    );
+  }).catch(() => {});
+  return () => {
+    cancelled = true;
+    unsubInner?.();
+  };
 }
 
 export function listenToLabels(orgId: string, cb: (labels: TaskLabel[]) => void): () => void {
@@ -510,27 +599,53 @@ export function listenToLabels(orgId: string, cb: (labels: TaskLabel[]) => void)
 
 export function listenToTask(taskId: string, cb: (task: Task | null) => void): () => void {
   return onSnapshot(doc(db, 'tasks', taskId), (snap) => {
-    cb(snap.exists() ? (snap.data() as Task) : null);
+    cb(snap.exists() ? normalizeTask(snap) : null);
   });
 }
 
 export function listenToSubtasks(
   parentTaskId: string,
   cb: (tasks: Task[]) => void,
+  orgId?: string,
 ): () => void {
-  const q = query(
-    collection(db, 'tasks'),
-    where('parentTaskId', '==', parentTaskId)
-  );
-  return onSnapshot(q, (snap) => {
-    const list = snap.docs.map((d) => d.data() as Task);
-    list.sort((a, b) => {
+  const handleSnap = (snap: any) => {
+    const list = snap.docs.map(normalizeTask);
+    list.sort((a: Task, b: Task) => {
       const aTime = a.createdAt?.seconds || 0;
       const bTime = b.createdAt?.seconds || 0;
       return aTime - bTime;
     });
     cb(list);
-  });
+  };
+  if (orgId) {
+    return onSnapshot(
+      query(
+        collection(db, 'tasks'),
+        where('orgId', '==', orgId),
+        where('parentTaskId', '==', parentTaskId),
+      ),
+      handleSnap,
+    );
+  }
+  let unsubInner: (() => void) | null = null;
+  let cancelled = false;
+  getDoc(doc(db, 'tasks', parentTaskId)).then((taskSnap) => {
+    if (cancelled || !taskSnap.exists()) return;
+    const resolvedOrgId = taskSnap.data()?.orgId;
+    if (!resolvedOrgId) return;
+    unsubInner = onSnapshot(
+      query(
+        collection(db, 'tasks'),
+        where('orgId', '==', resolvedOrgId),
+        where('parentTaskId', '==', parentTaskId),
+      ),
+      handleSnap,
+    );
+  }).catch(() => {});
+  return () => {
+    cancelled = true;
+    unsubInner?.();
+  };
 }
 
 export type {

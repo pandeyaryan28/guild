@@ -1,17 +1,21 @@
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 /**
  * Razorpay credentials — loaded from environment variables only.
  * Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in your Vercel project settings.
- * Never hardcode these values here.
  */
-// ─── POST /api/razorpay ────────────────────────────────────────────────────────
-// Handles two actions:
-//   action: 'create_order'   → creates a Razorpay order, returns { orderId, amount, currency }
-//   action: 'verify_payment' → verifies the payment signature, returns { success: boolean }
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const authHeader = req.headers?.authorization || '';
+  const token = authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7).trim()
+    : req.body?.idToken;
+
+  if (!token || typeof token !== 'string') {
+    return res.status(401).json({ error: 'Unauthorized: Missing authentication token' });
   }
 
   const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
@@ -29,24 +33,24 @@ export default async function handler(req: any, res: any) {
   if (action === 'create_order') {
     const { amount, currency, receipt, notes } = reqBody;
 
-    if (!amount || !currency) {
-      return res.status(400).json({ error: 'amount and currency are required' });
+    if (!amount || typeof amount !== 'number' || amount <= 0 || !currency) {
+      return res.status(400).json({ error: 'Valid positive amount and currency are required' });
     }
 
     const payload = {
-      amount: Math.round(amount), // Amount in smallest unit (paise / cents)
-      currency: currency,         // 'INR' or 'USD'
+      amount: Math.round(amount),
+      currency: currency === 'USD' ? 'USD' : 'INR',
       receipt: receipt || `guild_${Date.now()}`,
       notes: notes || {},
     };
 
-    const authHeader = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
+    const basicAuth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
 
     try {
       const response = await fetch('https://api.razorpay.com/v1/orders', {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${authHeader}`,
+          'Authorization': `Basic ${basicAuth}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -83,14 +87,18 @@ export default async function handler(req: any, res: any) {
       .update(body)
       .digest('hex');
 
-    const isValid = expectedSignature === razorpay_signature;
+    const expectedBuf = Buffer.from(expectedSignature, 'utf8');
+    const providedBuf = Buffer.from(String(razorpay_signature), 'utf8');
+    const isValid =
+      expectedBuf.length === providedBuf.length &&
+      timingSafeEqual(expectedBuf, providedBuf);
 
     if (!isValid) {
       console.warn('[razorpay] Signature verification failed for order:', razorpay_order_id);
       return res.status(400).json({ success: false, error: 'Invalid payment signature' });
     }
 
-    return res.status(200).json({ success: true, paymentId: razorpay_payment_id });
+    return res.status(200).json({ success: true, paymentId: razorpay_payment_id, orderId: razorpay_order_id });
   }
 
   return res.status(400).json({ error: 'Unknown action' });

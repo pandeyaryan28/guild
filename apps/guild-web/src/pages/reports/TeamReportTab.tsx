@@ -3,7 +3,7 @@ import { Users, CheckSquare, Clock, AlertTriangle, Target, Loader2, ChevronDown 
 import { getManagerTeamReport } from '../../lib/reports';
 import type { MemberContribution } from '../../lib/reports';
 import { getUserById } from '../../lib/firestore';
-import { listenToManagedTeams } from '../../lib/teams';
+import { listenToManagedTeams, listenToOrgTeams } from '../../lib/teams';
 import { KpiCards } from './KpiCards';
 import type { KpiCardData } from './KpiCards';
 import { StatusDistribution } from './StatusDistribution';
@@ -20,6 +20,7 @@ import type { Goal } from '../../lib/goals';
 interface Props {
   orgId: string;
   managerId: string;
+  isAdminOrOwner?: boolean;
   filters: ReportFiltersState;
   onSelectTask: (task: Task) => void;
   projects: Project[];
@@ -32,6 +33,7 @@ type KpiType = 'assigned' | 'completed' | 'in_progress' | 'overdue';
 export function TeamReportTab({
   orgId,
   managerId,
+  isAdminOrOwner = false,
   filters,
   onSelectTask,
   projects,
@@ -51,10 +53,13 @@ export function TeamReportTab({
   // Load real-time tasks to display list matching KPI selection
   const { tasks: allOrgTasks } = useTasks(orgId);
 
-  // Listen to managed teams
+  // Listen to managed teams (or all org teams for Owners/Admins)
   React.useEffect(() => {
+    if (isAdminOrOwner) {
+      return listenToOrgTeams(orgId, setTeams);
+    }
     return listenToManagedTeams(orgId, managerId, setTeams);
-  }, [orgId, managerId]);
+  }, [orgId, managerId, isAdminOrOwner]);
 
   // Fetch member profiles when teams change
   React.useEffect(() => {

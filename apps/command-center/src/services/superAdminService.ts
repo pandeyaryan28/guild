@@ -196,11 +196,29 @@ export class SuperAdminDataService {
     return this.isSyncing;
   }
 
+  private getAuthHeaders(includeJsonContentType = false): Record<string, string> {
+    const token =
+      typeof window !== 'undefined'
+        ? sessionStorage.getItem('guild_cc_master_session_token') ||
+          localStorage.getItem('guild_cc_master_session_token') ||
+          ''
+        : '';
+    return {
+      ...(includeJsonContentType ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }
+
   private async fetchLiveFirestoreData() {
+    const headers = this.getAuthHeaders(false);
+    if (!headers.Authorization) {
+      this.isInitialLoading = false;
+      return;
+    }
     this.isSyncing = true;
     this.notifySyncListeners();
     try {
-      const res = await fetch('/api/command-center/data');
+      const res = await fetch('/api/command-center/data', { headers });
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
@@ -387,7 +405,7 @@ export class SuperAdminDataService {
     try {
       await fetch('/api/command-center/demo-request', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(true),
         body: JSON.stringify({
           id,
           status,
@@ -411,7 +429,7 @@ export class SuperAdminDataService {
     try {
       await fetch('/api/command-center/demo-request', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(true),
         body: JSON.stringify({ id, adminEmail: actorEmail }),
       });
       await this.refresh();
@@ -432,7 +450,7 @@ export class SuperAdminDataService {
     try {
       await fetch('/api/command-center/demo-request', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(true),
         body: JSON.stringify(data),
       });
       await this.refresh();
@@ -543,7 +561,7 @@ export class SuperAdminDataService {
     try {
       await fetch('/api/command-center/subscription', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(true),
         body: JSON.stringify({
           organizationId: orgId,
           organizationName: prevOrg?.name,
@@ -624,7 +642,7 @@ export class SuperAdminDataService {
     try {
       await fetch('/api/command-center/subscription', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(true),
         body: JSON.stringify({
           organizationId: orgId,
           organizationName: prevOrg?.name,
@@ -682,7 +700,7 @@ export class SuperAdminDataService {
     try {
       await fetch('/api/command-center/user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(true),
         body: JSON.stringify({
           uid,
           action: isBanned ? 'ban' : 'unban',

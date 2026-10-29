@@ -1,42 +1,59 @@
 import * as React from 'react';
 import { listenToOrgTeams, listenToManagedTeams } from '../lib/teams';
 import type { Team } from '@guild/types';
+import { useWorkspaceData } from '../context/WorkspaceDataContext';
 
 export function useTeams(orgId: string | undefined) {
-  const [teams, setTeams] = React.useState<Team[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const workspace = useWorkspaceData();
+  const canUseContext = Boolean(workspace && orgId && workspace.orgId === orgId);
+
+  const [fallbackTeams, setFallbackTeams] = React.useState<Team[]>([]);
+  const [fallbackLoading, setFallbackLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!orgId) {
-      setLoading(false);
+    if (canUseContext || !orgId) {
+      if (!orgId) setFallbackLoading(false);
       return;
     }
-    setLoading(true);
+    setFallbackLoading(true);
     return listenToOrgTeams(orgId, (t) => {
-      setTeams(t);
-      setLoading(false);
+      setFallbackTeams(t);
+      setFallbackLoading(false);
     });
-  }, [orgId]);
+  }, [canUseContext, orgId]);
 
-  return { teams, loading };
+  if (canUseContext && workspace) {
+    return { teams: workspace.teams, loading: workspace.teamsLoading };
+  }
+  return { teams: fallbackTeams, loading: fallbackLoading };
 }
 
 export function useManagedTeams(orgId: string | undefined, managerId: string | undefined) {
-  const [managedTeams, setManagedTeams] = React.useState<Team[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const workspace = useWorkspaceData();
+  const canUseContext = Boolean(workspace && orgId && workspace.orgId === orgId);
+
+  const [fallbackManagedTeams, setFallbackManagedTeams] = React.useState<Team[]>([]);
+  const [fallbackLoading, setFallbackLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!orgId || !managerId) {
-      setLoading(false);
+    if (canUseContext || !orgId || !managerId) {
+      if (!orgId || !managerId) setFallbackLoading(false);
       return;
     }
-    setLoading(true);
+    setFallbackLoading(true);
     return listenToManagedTeams(orgId, managerId, (t) => {
-      setManagedTeams(t);
-      setLoading(false);
+      setFallbackManagedTeams(t);
+      setFallbackLoading(false);
     });
-  }, [orgId, managerId]);
+  }, [canUseContext, orgId, managerId]);
 
+  const managedTeams = React.useMemo(() => {
+    if (!canUseContext || !workspace) return fallbackManagedTeams;
+    if (!managerId) return [];
+    return workspace.teams.filter((t) => t.managerId === managerId);
+  }, [canUseContext, workspace, fallbackManagedTeams, managerId]);
+
+  const loading = canUseContext && workspace ? workspace.teamsLoading : fallbackLoading;
   return { managedTeams, loading };
 }
 

@@ -8,7 +8,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: 'Inter', var(--font-sans);
+    --font-heading: 'Geist Variable', 'Inter', sans-serif;
     --font-sans: 'Geist Variable', 'Inter', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 
@@ -29,7 +29,7 @@
     --color-border-strong: var(--border-strong);
     --color-border-subtle: var(--border-subtle);
 
-    /* Shadcn Maps (preserving for compat) */
+    /* Standard Semantic Maps */
     --color-background: var(--bg-primary);
     --color-foreground: var(--text-primary);
     --color-card: var(--surface);
@@ -54,7 +54,7 @@
     --color-warning: var(--warning);
     --color-danger: var(--danger);
     --color-info: var(--info);
-    
+
     /* Sidebar */
     --color-sidebar: var(--bg-secondary);
     --color-sidebar-foreground: var(--text-primary);
@@ -69,76 +69,89 @@
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+    --radius-xl: calc(var(--radius) * 1.33);
+    --radius-2xl: calc(var(--radius) * 1.66);
+    --radius-3xl: calc(var(--radius) * 2);
+    --radius-4xl: calc(var(--radius) * 2.5);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
    ROOT DEFAULTS  (shared across all themes)
 ───────────────────────────────────────────────────────────────────────────── */
 :root {
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
-    /* Light Theme (Clean, calm productivity) */
-    --bg-primary: oklch(0.99 0.002 264); /* Pure white or very clean off-white */
-    --bg-secondary: oklch(0.97 0.005 264); /* Very light gray/blue */
-    --bg-tertiary: oklch(0.94 0.008 264);
+    /* Light Theme (Crisp, high-contrast operational workspace) */
+    --bg-primary: #fcfcfd;
+    --bg-secondary: #f4f4f6;
+    --bg-tertiary: #ebebf0;
 
-    --surface: oklch(1 0 0); /* Pure white cards */
-    --surface-elevated: oklch(1 0 0);
-    --surface-hover: oklch(0.98 0.005 264);
+    --surface: #ffffff;
+    --surface-elevated: #ffffff;
+    --surface-hover: #f6f6f9;
 
-    --text-primary: oklch(0.20 0.02 264);
-    --text-secondary: oklch(0.38 0.02 264);
-    --text-muted: oklch(0.55 0.02 264);
-    --text-disabled: oklch(0.70 0.01 264);
+    --text-primary: #09090b;
+    --text-secondary: #27272a;
+    --text-muted: #71717a;
+    --text-disabled: #a1a1aa;
 
-    --border-default: oklch(0.88 0.01 264);
-    --border-strong: oklch(0.75 0.02 264);
-    --border-subtle: oklch(0.93 0.005 264);
+    --border-default: #e4e4e7;
+    --border-strong: #cbd5e1;
+    --border-subtle: #f1f1f4;
 
-    --accent: oklch(0.55 0.16 260); /* Deep indigo-slate */
-    --accent-foreground: oklch(0.99 0 0);
+    --accent: #4f46e5;
+    --accent-foreground: #ffffff;
 
-    --success: oklch(0.60 0.15 150);
-    --warning: oklch(0.70 0.15 70);
-    --danger: oklch(0.60 0.20 25);
-    --info: oklch(0.60 0.15 240);
+    /* Aliases for components referencing --primary / --background / --foreground directly */
+    --primary: var(--accent);
+    --primary-foreground: var(--accent-foreground);
+    --background: var(--bg-primary);
+    --foreground: var(--text-primary);
+    --card: var(--surface);
+    --border: var(--border-default);
+
+    --success: oklch(0.58 0.16 150);
+    --warning: oklch(0.68 0.16 70);
+    --danger: oklch(0.58 0.20 25);
+    --info: oklch(0.58 0.16 245);
 }
 
 .dark {
-    /* Dark Theme (Layered, deep slate/indigo, clear borders) */
-    --bg-primary: oklch(0.18 0.02 260); /* Deep slate-indigo */
-    --bg-secondary: oklch(0.22 0.02 260); /* Slightly elevated sidebar */
-    --bg-tertiary: oklch(0.25 0.02 260);
+    /* Dark Theme (Layered deep obsidian/slate, high-contrast borders) */
+    --bg-primary: #0d0b1a;
+    --bg-secondary: #121024;
+    --bg-tertiary: #181530;
 
-    --surface: oklch(0.21 0.02 260); /* Base card surface */
-    --surface-elevated: oklch(0.26 0.02 260); /* Dropdowns, popovers */
-    --surface-hover: oklch(0.28 0.02 260); /* Hovering surface */
+    --surface: #141128;
+    --surface-elevated: #1e1a3c;
+    --surface-hover: #26214c;
 
-    --text-primary: oklch(0.95 0.01 260);
-    --text-secondary: oklch(0.75 0.02 260);
-    --text-muted: oklch(0.60 0.02 260);
-    --text-disabled: oklch(0.40 0.02 260);
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-disabled: #475569;
 
-    /* Solid borders, avoid invisible/washed */
-    --border-default: oklch(0.32 0.02 260);
-    --border-strong: oklch(0.42 0.03 260);
-    --border-subtle: oklch(0.25 0.02 260);
+    --border-default: #241f44;
+    --border-strong: #38306b;
+    --border-subtle: #1a1633;
 
-    --accent: oklch(0.62 0.14 260); /* Slate-indigo accent for dark mode */
-    --accent-foreground: oklch(0.98 0 0);
+    --accent: #8b5cf6;
+    --accent-foreground: #ffffff;
 
-    --success: oklch(0.65 0.15 150);
-    --warning: oklch(0.75 0.15 70);
+    --primary: var(--accent);
+    --primary-foreground: var(--accent-foreground);
+    --background: var(--bg-primary);
+    --foreground: var(--text-primary);
+    --card: var(--surface);
+    --border: var(--border-default);
+
+    --success: oklch(0.68 0.15 150);
+    --warning: oklch(0.76 0.15 70);
     --danger: oklch(0.65 0.20 25);
-    --info: oklch(0.65 0.15 240);
+    --info: oklch(0.66 0.15 245);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-
    BASE STYLES
 ───────────────────────────────────────────────────────────────────────────── */
 @layer base {
@@ -149,45 +162,20 @@
   }
   html {
     @apply font-sans;
-    /*
-     * Root font size optimized to 17px for balanced width proportions.
-     */
-    font-size: 17px;
+    font-size: 16px;
   }
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    letter-spacing: -0.01em;
-    font-size: 1rem; /* 18px at 18px root */
+    letter-spacing: -0.011em;
+    font-size: 0.9375rem;
+    line-height: 1.5;
   }
-  /* Selection color follows theme primary */
   ::selection {
-    background: oklch(from var(--primary) l c h / 30%);
-    color: var(--foreground);
+    background: color-mix(in srgb, var(--accent) 25%, transparent);
+    color: var(--text-primary);
   }
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   FONT-SIZE BUMP OVERRIDES
-   Hard-coded px values in Tailwind arbitrary classes (text-[10px] etc.) don't
-   scale with the root font-size. We override the most common ones here so
-   they read comfortably across the whole app.
-───────────────────────────────────────────────────────────────────────────── */
-/* Named Tailwind text sizes — adjusted for readability */
-.text-xs   { font-size: 0.875rem; }    /* 15.75px */
-.text-sm   { font-size: 1rem; }        /* 18px */
-.text-base { font-size: 1.125rem; }    /* 20.25px */
-.text-lg   { font-size: 1.25rem; }     /* 22.5px */
-
-/* Arbitrary hard-coded sizes used throughout the app */
-.text-\[10px\]  { font-size: 13px; }
-.text-\[11px\]  { font-size: 14px; }
-.text-\[12px\]  { font-size: 15px; }
-.text-\[13px\]  { font-size: 16px; }
-.text-\[7px\]   { font-size: 10px; }
-.text-\[8px\]   { font-size: 11px; }
-.text-\[9px\]   { font-size: 12px; }
-
 
 /* ─────────────────────────────────────────────────────────────────────────────
    UTILITIES
@@ -195,234 +183,105 @@
 @layer utilities {
   /* Scrollbar hiding */
   .scrollbar-hide::-webkit-scrollbar { display: none; }
-  .scrollbar-hide { 
-    -ms-overflow-style: none; 
-    scrollbar-width: none; 
-    -webkit-overflow-scrolling: touch; 
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* Thin styled scrollbar for chat message list */
-  .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+  /* Thin styled scrollbar */
+  .scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: oklch(from var(--primary) l c h / 25%);
+    background: color-mix(in srgb, var(--text-muted) 30%, transparent);
     border-radius: 999px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: oklch(from var(--primary) l c h / 40%);
+    background: color-mix(in srgb, var(--text-muted) 50%, transparent);
   }
 
-  /* Dashboard dot-grid background */
+  /* Subtle dot-grid background */
   .bg-dashboard-grid {
-    background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0);
-    background-size: 32px 32px;
+    background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--text-primary) 5%, transparent) 1px, transparent 0);
+    background-size: 24px 24px;
   }
 
-  /* Glass card */
+  /* Clean glass surface */
   .glass {
-    background: oklch(from var(--card) l c h / 60%);
-    backdrop-filter: blur(16px) saturate(1.4);
-    border: 1px solid oklch(1 0 0 / 8%);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-default);
   }
 
-  /* Glow effects using current primary */
+  /* Restrained accent elevation */
   .glow-primary {
-    box-shadow: 0 0 20px oklch(from var(--primary) l c h / 30%),
-                0 0 40px oklch(from var(--primary) l c h / 15%);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 22%, transparent);
   }
 
-  /* Text gradient using primary */
+  /* Text accent */
   .text-gradient {
-    background: linear-gradient(135deg, var(--primary), oklch(from var(--primary) calc(l + 0.1) calc(c - 0.05) calc(h + 15)));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--accent);
   }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   ANIMATIONS
+   SUBTLE ANIMATIONS & REDUCED MOTION
 ───────────────────────────────────────────────────────────────────────────── */
-@keyframes bounce-subtle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-.animate-bounce-subtle {
-  animation: bounce-subtle 3s ease-in-out infinite;
-}
-
 @keyframes shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent 0%, oklch(from var(--primary) l c h / 20%) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--accent) 15%, transparent) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  33% { transform: translateY(-6px) rotate(1deg); }
-  66% { transform: translateY(-3px) rotate(-1deg); }
-}
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+/* Keep legacy class names inert so avatars/surfaces maintain crisp geometry */
+.animate-bounce-subtle,
+.animate-float,
+.animate-aurora-mesh,
+.animate-morph-user,
+.animate-morph-org {
+  animation: none !important;
 }
 
-/* Smooth theme transitions with hardware acceleration triggers */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Smooth theme transitions */
 :root, .dark, [class*="theme-"] {
   transition:
-    background-color 450ms cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 450ms cubic-bezier(0.16, 1, 0.3, 1),
-    color 250ms cubic-bezier(0.16, 1, 0.3, 1);
-  backface-visibility: hidden;
-  perspective: 1000px;
+    background-color 250ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 250ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Disable transitions entirely during drag to enable raw, latency-free mouse tracking */
+/* Disable transitions entirely during drag to enable latency-free mouse tracking */
 .theme-dragging,
 .theme-dragging * {
   transition: none !important;
 }
 
-/* GPU Hardware-Acceleration for Glass Backdrop filters */
-.aether-glass, .aether-glass-elevated, .aether-glass-interactive, .aether-glass-input {
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* Scrollbar hide utility */
-.scrollbar-hide {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
-}
-
-/* Premium Responsive Scale-Down for Mobile Screens */
-@media (max-width: 768px) {
-  html {
-    font-size: 14.5px !important;
-  }
-  /* Scale down custom hard-coded text sizes for mobile proportion balance */
-  .text-\[10px\]  { font-size: 11px !important; }
-  .text-\[11px\]  { font-size: 11.5px !important; }
-  .text-\[12px\]  { font-size: 12.5px !important; }
-  .text-\[13px\]  { font-size: 13.5px !important; }
-  .text-\[7px\]   { font-size: 8px !important; }
-  .text-\[8px\]   { font-size: 9px !important; }
-  .text-\[9px\]   { font-size: 10px !important; }
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   PREMIUM DYNAMIC CONTRAST OVERRIDES
-   Guarantees that text, elements, and icons are perfectly visible when placed
-   inside primary/accent background containers for light-accent themes like Slate.
-───────────────────────────────────────────────────────────────────────────── */
-.bg-primary, 
-.bg-accent, 
-[class*="bg-primary"]:not([class*=":bg-primary"]):not([class*="bg-primary/"]):not([class*="bg-bg-primary"]), 
-[class*="bg-accent"]:not([class*=":bg-accent"]):not([class*="bg-accent/"]) {
-  /* Dynamic text-color container inheritance */
-  --text-primary: var(--accent-foreground) !important;
-  --text-secondary: color-mix(in srgb, var(--accent-foreground) 85%, transparent) !important;
-  --text-muted: color-mix(in srgb, var(--accent-foreground) 65%, transparent) !important;
-  --text-disabled: color-mix(in srgb, var(--accent-foreground) 45%, transparent) !important;
-  --color-foreground: var(--accent-foreground) !important;
-  --foreground: var(--accent-foreground) !important;
-}
-
-/* Override elements explicitly hardcoded with static white/black text classes */
-.bg-primary.text-white,
-.bg-accent.text-white,
-[class*="bg-primary"].text-white,
-[class*="bg-accent"].text-white,
-.bg-primary .text-white,
-.bg-accent .text-white,
-[class*="bg-primary"] .text-white,
-[class*="bg-accent"] .text-white {
-  color: var(--accent-foreground) !important;
-}
-
-.bg-primary.text-black,
-.bg-accent.text-black,
-[class*="bg-primary"].text-black,
-[class*="bg-accent"].text-black,
-.bg-primary .text-black,
-.bg-accent .text-black,
-[class*="bg-primary"] .text-black,
-[class*="bg-accent"] .text-black {
-  color: var(--accent-foreground) !important;
-}
-
-/* Ensure active/focus indicators inherit correctly */
-[class*="bg-primary"] svg,
-[class*="bg-accent"] svg {
-  color: currentColor !important;
-}
-
-/* Aurora Mesh shifting background animation */
-@keyframes aurora-mesh-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.animate-aurora-mesh {
-  background-size: 200% 200%;
-  animation: aurora-mesh-shift 12s ease infinite;
-}
-
-/* Organic Morphing Liquid Shape animations */
-@keyframes morph-liquid-user {
-  0% {
-    border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
-  }
-  50% {
-    border-radius: 60% 40% 40% 60% / 60% 60% 40% 40%;
-  }
-  100% {
-    border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
-  }
-}
-
-@keyframes morph-liquid-org {
-  0% {
-    border-radius: 60% 40% 40% 60% / 60% 60% 40% 40%;
-  }
-  50% {
-    border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
-  }
-  100% {
-    border-radius: 60% 40% 40% 60% / 60% 60% 40% 40%;
-  }
-}
-
-.animate-morph-user {
-  animation: morph-liquid-user 8s ease-in-out infinite;
-}
-
-.animate-morph-org {
-  animation: morph-liquid-org 8s ease-in-out infinite;
+/* Ensure solid primary/accent buttons always have legible foreground contrast */
+.bg-primary,
+.bg-accent {
+  color: var(--accent-foreground);
 }
 
 /* Custom Print Styles for Request PDFs */
 @media print {
-  /* Hide all screen components */
   body * {
     visibility: hidden;
   }
 
-  /* Reset layout constraints on root elements to allow full page height and multi-page flows */
   body, html, #root, .aether-app-container, main, .flex-1 {
     overflow: visible !important;
     height: auto !important;
@@ -432,7 +291,6 @@
     color: black !important;
   }
 
-  /* Make only the custom printable request container visible and position it at page origin */
   .printable-request-pdf,
   .printable-request-pdf * {
     visibility: visible;

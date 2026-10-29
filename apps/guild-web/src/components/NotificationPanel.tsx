@@ -330,9 +330,8 @@ function NotifRow({
               {meta.label}
             </span>
             {n.urgency === 'high' && (
-              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400 bg-rose-500/10 px-1 py-px rounded-full">
-                <Sparkles className="h-2 w-2 fill-current" />
-                Urgent
+              <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                · Urgent
               </span>
             )}
             <span className="text-[10px] text-text-muted ml-auto">{relativeTime(n.createdAt)}</span>

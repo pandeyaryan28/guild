@@ -2,25 +2,16 @@
  * POST /api/disable-user
  *
  * Disables a Firebase Auth user account via the Admin SDK so they cannot log
- * in again after being removed from a Guild workspace.
+ * in again after being removed from a Guild workspace or deleting their account.
  *
- * Body: { uid: string }
- *
- * This endpoint is called internally by deleteUserProfile() in @guild/firebase.
- * It is NOT exposed as a public API — the caller must be authenticated via the
- * guild-web client (same origin), and the uid must belong to a user that an
- * org owner/admin has already removed from Firestore.
- *
- * Required environment variables (set in Vercel project settings):
- *   FIREBASE_SERVICE_ACCOUNT_KEY — the full JSON of your Firebase service
- *                                   account key, stringified.
+ * Body: { uid: string, orgId?: string }
  */
 
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
-// Lazily initialise the Admin SDK (Vercel functions can share a warm instance)
-function getAdminAuth() {
+function ensureAdminApp() {
   if (!getApps().length) {
     const serviceAccountRaw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     if (!serviceAccountRaw) {
@@ -29,7 +20,6 @@ function getAdminAuth() {
     const serviceAccount = JSON.parse(serviceAccountRaw);
     initializeApp({ credential: cert(serviceAccount) });
   }
-  return getAuth();
 }
 
 export default async function handler(req: any, res: any) {
@@ -39,7 +29,7 @@ export default async function handler(req: any, res: any) {
 
   const authHeader = req.headers?.authorization || '';
   const token = authHeader.startsWith('Bearer ')
-    ? authHeader.slice(7)
+    ? authHeader.slice(7).trim()
     : req.body?.idToken;
 
   if (!token) {
@@ -47,30 +37,67 @@ export default async function handler(req: any, res: any) {
   }
 
   const body = req.body || {};
-  const { uid } = body as { uid?: string };
+  const { uid, orgId } = body as { uid?: string; orgId?: string };
 
   if (!uid || typeof uid !== 'string' || uid.trim() === '') {
     return res.status(400).json({ error: 'uid is required' });
   }
 
+  const targetUid = uid.trim();
+
   try {
-    const adminAuth = getAdminAuth();
+    ensureAdminApp();
+    const adminAuth = getAuth();
+    const adminDb = getFirestore();
     const decodedToken = await adminAuth.verifyIdToken(token);
 
     if (!decodedToken?.uid) {
       return res.status(401).json({ error: 'Invalid authentication token' });
     }
 
-    // Disable the account — the user can no longer sign in but their data is
-    // preserved (already wiped from Firestore by deleteUserProfile).
-    await adminAuth.updateUser(uid.trim(), { disabled: true });
-    console.log(`[disable-user] Disabled Firebase Auth for uid: ${uid}`);
+    const callerUid = decodedToken.uid;
+
+    // Authorization check: caller must either be disabling their own account
+    // OR be an owner/admin of the same organization as the target user.
+    if (callerUid !== targetUid) {
+      const callerSnap = await adminDb.collection('users').doc(callerUid).get();
+      const callerData = callerSnap.data();
+      const callerRole = callerData?.role;
+      const callerOrgId = callerData?.organizationId;
+
+      if (!callerSnap.exists || !callerOrgId || (callerRole !== 'owner' && callerRole !== 'admin')) {
+        return res.status(403).json({ error: 'Forbidden: Only workspace owners and admins can disable other accounts.' });
+      }
+
+      if (orgId && orgId !== callerOrgId) {
+        return res.status(403).json({ error: 'Forbidden: Cross-organization operation denied.' });
+      }
+
+      // Verify target belonged to caller's organization (check users, organizationMembers, or bannedUsers)
+      const [targetUserSnap, memberSnap, bannedSnap] = await Promise.all([
+        adminDb.collection('users').doc(targetUid).get(),
+        adminDb.collection('organizationMembers').doc(`${callerOrgId}_${targetUid}`).get(),
+        adminDb.collection('bannedUsers').doc(targetUid).get(),
+      ]);
+
+      const targetInCallerOrg =
+        (targetUserSnap.exists && targetUserSnap.data()?.organizationId === callerOrgId) ||
+        memberSnap.exists ||
+        (bannedSnap.exists && (!bannedSnap.data()?.orgId || bannedSnap.data()?.orgId === callerOrgId));
+
+      if (!targetInCallerOrg) {
+        return res.status(403).json({ error: 'Forbidden: Target user does not belong to your organization.' });
+      }
+    }
+
+    await adminAuth.updateUser(targetUid, { disabled: true });
+    await adminAuth.revokeRefreshTokens(targetUid).catch(() => {});
+    console.log(`[disable-user] Disabled Firebase Auth for uid: ${targetUid} (by ${callerUid})`);
     return res.status(200).json({ success: true });
   } catch (err: any) {
     if (err?.code === 'auth/id-token-expired' || err?.code === 'auth/argument-error') {
       return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
     }
-    // auth/user-not-found is fine — user may have already been deleted
     if (err?.code === 'auth/user-not-found') {
       return res.status(200).json({ success: true, note: 'User not found in Auth — already removed.' });
     }

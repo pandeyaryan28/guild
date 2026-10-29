@@ -7,6 +7,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
+import { WorkspaceDataProvider } from './context/WorkspaceDataContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { usePushNotifications } from './hooks/usePushNotifications';
 
@@ -19,7 +20,7 @@ const VerifyEmailPage = React.lazy(() => import('./pages/VerifyEmailPage').then(
 const OnboardingRoot = React.lazy(() => import('./pages/onboarding/OnboardingRoot').then(m => ({ default: m.OnboardingRoot })));
 const JoinInvitePage = React.lazy(() => import('./pages/onboarding/JoinInvitePage').then(m => ({ default: m.JoinInvitePage })));
 
-// Dashboard (existing)
+// Dashboard
 import { RedesignLayout } from './components/redesign/Layout';
 const DashboardControl = React.lazy(() => import('./components/redesign/DashboardControl').then(m => ({ default: m.DashboardControl })));
 
@@ -44,20 +45,22 @@ const ReportsPage = React.lazy(() => import('./pages/reports/ReportsPage').then(
 import { useDeviceType } from './hooks/useDeviceType';
 const MobileApp = React.lazy(() => import('./components/mobile/MobileApp').then(m => ({ default: m.MobileApp })));
 
-// Premium Glassmorphism Global Loader
+// Dual-theme Global Loader
 const GlobalLoader = () => (
-  <div className="fixed inset-0 bg-[#020617] flex flex-col items-center justify-center z-50">
+  <div className="fixed inset-0 bg-background text-foreground flex flex-col items-center justify-center z-50">
     <div className="relative flex items-center justify-center">
-      {/* Outer pulsing ring */}
-      <div className="absolute w-20 h-20 border-2 border-indigo-500/10 rounded-full animate-ping duration-1000"></div>
-      {/* Spinning glow ring */}
-      <div className="w-16 h-16 border-4 border-indigo-500/10 border-t-indigo-500 rounded-full animate-spin"></div>
+      <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
     </div>
-    <p className="mt-6 text-xs font-semibold text-indigo-400 tracking-widest uppercase animate-pulse">
-      Loading Guild...
+    <p className="mt-4 text-xs font-medium text-muted-foreground tracking-wider uppercase">
+      Loading Guild…
     </p>
   </div>
 );
+
+function TasksRedirect() {
+  const location = useLocation();
+  return <Navigate to={`/workspace${location.search}`} replace />;
+}
 
 function DashboardApp({ children }: { children?: React.ReactNode }) {
   return (
@@ -76,20 +79,14 @@ function AppContent() {
     if (!user) return;
 
     if (permission === 'default') {
-      // Delay the permission prompt to give the SW time to fully install, activate,
-      // and claim this client. Attempting pushManager.subscribe() too early (while
-      // navigator.serviceWorker.controller === null) causes AbortError.
       const timer = setTimeout(() => {
         requestPermission(user.uid);
       }, 6000);
       return () => clearTimeout(timer);
     } else if (permission === 'granted') {
-      // Re-sync subscription in background — wait for the SW controller to be set
-      // first so we don't hit the AbortError on hard refreshes / first loads.
       const sync = async () => {
         if ('serviceWorker' in navigator) {
           await navigator.serviceWorker.ready;
-          // Give the SW controller a moment to be set after ready resolves
           await new Promise((r) => setTimeout(r, 1000));
         }
         syncPushSubscription(user.uid);
@@ -100,8 +97,8 @@ function AppContent() {
 
   const location = useLocation();
   const publicRoutes = ['/login', '/signup', '/verify-email'];
-  const isAuthOrOnboarding = 
-    publicRoutes.includes(location.pathname) || 
+  const isAuthOrOnboarding =
+    publicRoutes.includes(location.pathname) ||
     location.pathname.startsWith('/onboarding') ||
     location.pathname.startsWith('/join');
 
@@ -129,7 +126,7 @@ function AppContent() {
         }
       />
 
-      {/* Chat routes — fully independent layout */}
+      {/* Chat routes */}
       <Route
         path="/chat"
         element={
@@ -155,19 +152,19 @@ function AppContent() {
         }
       />
 
-      {/* Studio & Docs — standalone full-page layout (like /chat and /workspace) */}
+      {/* Studio & Docs */}
       <Route
         path="/studio"
         element={
           <ProtectedRoute>
-            <RedesignLayout>
+            <RedesignLayout fullBleed={true}>
               <StudioPage />
             </RedesignLayout>
           </ProtectedRoute>
         }
       />
 
-      {/* Workspace — standalone full-page layout (like /chat) */}
+      {/* Workspace */}
       <Route
         path="/workspace"
         element={
@@ -179,6 +176,8 @@ function AppContent() {
         }
       />
 
+      {/* Legacy /tasks redirect preserving query string */}
+      <Route path="/tasks" element={<TasksRedirect />} />
 
       {/* Project detail */}
       <Route
@@ -266,11 +265,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-      <AuthProvider>
-        <React.Suspense fallback={<GlobalLoader />}>
-          <AppContent />
-        </React.Suspense>
-      </AuthProvider>
+        <AuthProvider>
+          <WorkspaceDataProvider>
+            <React.Suspense fallback={<GlobalLoader />}>
+              <AppContent />
+            </React.Suspense>
+          </WorkspaceDataProvider>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

@@ -83,6 +83,7 @@ export function StepOwnerProfile({ data, updateData }: Props) {
     setIsSubmitting(true);
     try {
       // 1. Create org and owner profile transactionally
+      const storedToken = data.inviteToken || localStorage.getItem('guild_invite_token') || sessionStorage.getItem('guild_invite_token') || undefined;
       const { orgId } = await executeOwnerOnboardingCreate({
         uid: user.uid,
         email: user.email!,
@@ -98,7 +99,11 @@ export function StepOwnerProfile({ data, updateData }: Props) {
         domainAutoJoin: !!data.domainAutoJoin,
         emailDomain: data.emailDomain || '',
         inviteEmails: inviteEmails,
+        inviteToken: storedToken,
       });
+
+      localStorage.removeItem('guild_invite_token');
+      sessionStorage.removeItem('guild_invite_token');
 
       // Update local onboarding data with orgId
       updateData({ orgId });

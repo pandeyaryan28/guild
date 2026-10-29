@@ -126,25 +126,20 @@ export function OnboardingRoot() {
 
   return (
     <div className="min-h-screen w-full bg-background relative overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute top-[-15%] left-[-5%] w-[55%] h-[55%] bg-primary/6 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[-15%] right-[-5%] w-[45%] h-[45%] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute inset-0 bg-dashboard-grid pointer-events-none opacity-40" />
-
       {/* Top brand bar */}
       <div className="relative z-10 flex items-center justify-between px-8 py-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground shadow-lg shadow-primary/30">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground shadow-sm">
             G
           </div>
           <span className="text-base font-bold text-foreground tracking-tight">Guild</span>
           <span className="ml-2 text-xs font-medium text-muted-foreground">— Setup</span>
         </div>
 
-        {/* Floating Theme Toggle */}
+        {/* Theme Toggle */}
         <button
           onClick={toggleMode}
-          className="aether-glass flex h-9 w-9 items-center justify-center rounded-lg hover:scale-105 active:scale-95 transition-all shadow-sm border border-border-default/80 bg-surface/50 text-foreground cursor-pointer"
+          className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-secondary active:scale-[0.98] transition-all shadow-sm border border-border bg-surface text-foreground cursor-pointer"
           title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
         >
           {mode === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-400" />}

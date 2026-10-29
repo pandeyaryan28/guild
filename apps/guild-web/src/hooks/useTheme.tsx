@@ -197,6 +197,29 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       html.style.setProperty(property, color);
     });
 
+    // Keep standard semantic aliases synchronized with active theme variables
+    if (interpolatedVariables['--bg-primary']) {
+      html.style.setProperty('--background', interpolatedVariables['--bg-primary']);
+    }
+    if (interpolatedVariables['--text-primary']) {
+      html.style.setProperty('--foreground', interpolatedVariables['--text-primary']);
+    }
+    if (interpolatedVariables['--surface']) {
+      html.style.setProperty('--card', interpolatedVariables['--surface']);
+      html.style.setProperty('--popover', interpolatedVariables['--surface']);
+    }
+    if (interpolatedVariables['--border-default']) {
+      html.style.setProperty('--border', interpolatedVariables['--border-default']);
+      html.style.setProperty('--input', interpolatedVariables['--border-default']);
+    }
+    if (interpolatedVariables['--accent']) {
+      html.style.setProperty('--primary', interpolatedVariables['--accent']);
+      html.style.setProperty('--ring', interpolatedVariables['--accent']);
+    }
+    if (interpolatedVariables['--accent-foreground']) {
+      html.style.setProperty('--primary-foreground', interpolatedVariables['--accent-foreground']);
+    }
+
     // 4. Keep theme className sync
     html.className = html.className
       .replace(/\btheme-\S+\b/g, '')

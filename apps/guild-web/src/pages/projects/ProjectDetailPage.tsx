@@ -37,7 +37,7 @@ import { GoalDetailDrawer } from '../../components/tasks/GoalDetailDrawer';
 import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
 import { useOrgMembers } from '../../hooks/useChat';
 import { moveTask, deleteTask, type Task, type TaskStatus } from '../../lib/tasks';
-import { updateProject, addProjectComment, updateProjectAttachments } from '../../lib/projects';
+import { updateProject, deleteProject, addProjectComment, updateProjectAttachments } from '../../lib/projects';
 import { AttachmentSection } from '../../components/tasks/AttachmentSection';
 import { AttachmentInput } from '../../components/tasks/AttachmentInput';
 import { uploadEntityAttachment } from '../../lib/storage';
@@ -398,9 +398,6 @@ export function ProjectDetailPage() {
                   </button>
                   <h1 className={cn("text-base font-black tracking-tight truncate flex items-center gap-1.5", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-neutral-850 dark:text-neutral-100")}>
                     <span>{project.name}</span>
-                    <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-indigo-555/20 text-indigo-650 dark:text-indigo-400 bg-indigo-500/5 leading-none ml-2">
-                      Project
-                    </span>
                   </h1>
                 </div>
                 {project.description && (
@@ -536,13 +533,8 @@ export function ProjectDetailPage() {
                     </span>
                     <span className="text-[9px] text-neutral-450 dark:text-neutral-400 mt-1.5 font-bold">Active tasks</span>
                   </div>
-                  <span className={cn(
-                    "text-[10px] font-bold px-2 py-0.5 rounded-full border leading-none",
-                    activeTasks.length > 5 
-                      ? "border-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-400" 
-                      : "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
-                  )}>
-                    {activeTasks.length > 5 ? 'Busy' : 'On Track'}
+                  <span className="text-[10px] text-neutral-450 dark:text-neutral-550 font-bold">
+                    Total: {allTasks.length}
                   </span>
                 </div>
               </div>
@@ -1098,19 +1090,39 @@ export function ProjectDetailPage() {
               </div>
 
               {/* Actions Footer */}
-              <div className="flex items-center justify-end gap-2.5 border-t border-neutral-200/40 dark:border-neutral-800/60 pt-4 mt-2">
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-550 hover:text-neutral-850 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveProject}
-                  className="px-4 py-2 bg-indigo-650 dark:bg-indigo-500 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md shadow-indigo-600/10"
-                >
-                  Save Changes
-                </button>
+              <div className="flex items-center justify-between gap-2.5 border-t border-neutral-200/40 dark:border-neutral-800/60 pt-4 mt-2">
+                {(project.ownerId === user?.uid || userProfile?.role === 'owner' || userProfile?.role === 'admin') ? (
+                  <button
+                    onClick={async () => {
+                      if (confirm('Delete this project? Associated goals and tasks will be unlinked.')) {
+                        try {
+                          await deleteProject(project.id);
+                          navigate('/workspace');
+                        } catch (err) {
+                          console.error('Failed to delete project:', err);
+                        }
+                      }
+                    }}
+                    className="px-3.5 py-2 border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Project</span>
+                  </button>
+                ) : <div />}
+                <div className="flex items-center gap-2.5">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-550 hover:text-neutral-850 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveProject}
+                    className="px-4 py-2 bg-indigo-650 dark:bg-indigo-500 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md shadow-indigo-600/10"
+                  >
+                    Save Changes
+                  </button>
+                </div>
               </div>
             </motion.div>
           </>

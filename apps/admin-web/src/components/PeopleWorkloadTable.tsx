@@ -216,7 +216,8 @@ export function PeopleWorkloadTable({
           role: 'member'
         }
       );
-      const url = `${window.location.origin}/join/${token}`;
+      const guildWebOrigin = ((import.meta as any).env?.VITE_GUILD_WEB_URL || window.location.origin).replace(/\/$/, '');
+      const url = `${guildWebOrigin}/join/${token}`;
       setInviteSuccess(`Invitation successfully created! Share this link with them: ${url}`);
       setInviteEmail('');
     } catch (err: any) {
@@ -240,7 +241,8 @@ export function PeopleWorkloadTable({
           role: 'member'
         }
       );
-      const url = `${window.location.origin}/join/${token}`;
+      const guildWebOrigin = ((import.meta as any).env?.VITE_GUILD_WEB_URL || window.location.origin).replace(/\/$/, '');
+      const url = `${guildWebOrigin}/join/${token}`;
       setGlobalInviteLink(url);
     } catch (err: any) {
       setInviteError(err.message || 'Failed to generate invite link');
@@ -281,10 +283,10 @@ export function PeopleWorkloadTable({
       </div>
 
       {/* Directory Table */}
-      <div className="overflow-x-auto rounded-2xl border border-white/10 dark:border-white/5 bg-white/[0.02] dark:bg-white/[0.02]">
+      <div className="overflow-x-auto rounded-2xl border border-[--border] bg-[--card]">
         <table className="w-full text-xs border-collapse">
           <thead>
-            <tr className="border-b border-white/5 text-[10px] font-extrabold uppercase tracking-wider text-[--muted-foreground]" style={{ background: 'oklch(from var(--muted) l c h / 30%)' }}>
+            <tr className="border-b border-[--border] text-[10px] font-extrabold uppercase tracking-wider text-[--muted-foreground]" style={{ background: 'oklch(from var(--muted) l c h / 30%)' }}>
               <th className="text-left px-5 py-4 first:rounded-tl-2xl">Name</th>
               <th className="text-left px-4 py-4">Role</th>
               <th className="text-left px-4 py-4">Organization</th>

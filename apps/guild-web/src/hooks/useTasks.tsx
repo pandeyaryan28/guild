@@ -7,24 +7,46 @@ import {
   STATUSES,
 } from '../lib/tasks';
 import { useAuth } from './useAuth';
+import { useWorkspaceData } from '../context/WorkspaceDataContext';
 
 export function useTasks(orgId: string | undefined, scope?: TaskScopeFilter, includeUnapproved = false) {
-  const [tasks, setTasks] = React.useState<Task[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const workspace = useWorkspaceData();
+  const canUseContext = Boolean(workspace && orgId && workspace.orgId === orgId);
 
-  // Stable scope key so effect doesn't re-run on every render
+  const [fallbackTasks, setFallbackTasks] = React.useState<Task[]>([]);
+  const [fallbackLoading, setFallbackLoading] = React.useState(true);
+
   const scopeKey = scope ? JSON.stringify(scope) : '';
 
   React.useEffect(() => {
-    if (!orgId) return;
-    setLoading(true);
+    if (canUseContext || !orgId) {
+      if (!orgId) setFallbackLoading(false);
+      return;
+    }
+    setFallbackLoading(true);
     return listenToTasks(orgId, (t) => {
       const filtered = includeUnapproved ? t : t.filter(x => x.approved !== false);
-      setTasks(filtered);
-      setLoading(false);
+      setFallbackTasks(filtered);
+      setFallbackLoading(false);
     }, scope);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId, scopeKey, includeUnapproved]);
+  }, [canUseContext, orgId, scopeKey, includeUnapproved]);
+
+  const tasks = React.useMemo(() => {
+    if (!canUseContext || !workspace) return fallbackTasks;
+    let list = workspace.allTasks;
+    if (!includeUnapproved) {
+      list = list.filter((x) => x.approved !== false);
+    }
+    if (scope && 'projectId' in scope && scope.projectId) {
+      list = list.filter((x) => x.projectId === scope.projectId);
+    } else if (scope && 'goalId' in scope && scope.goalId) {
+      list = list.filter((x) => x.goalId === scope.goalId);
+    }
+    return list;
+  }, [canUseContext, workspace, fallbackTasks, includeUnapproved, scope]);
+
+  const loading = canUseContext && workspace ? workspace.tasksLoading : fallbackLoading;
 
   const columns = React.useMemo(() => {
     const map = new Map<TaskStatus, Task[]>();
@@ -42,7 +64,6 @@ export function useTasks(orgId: string | undefined, scope?: TaskScopeFilter, inc
   return { tasks, columns, loading };
 }
 
-
 export function useTaskComments(taskId: string | null) {
   const { userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
@@ -54,38 +75,70 @@ export function useTaskComments(taskId: string | null) {
   return comments;
 }
 
-export function useTaskActivities(taskId: string | null) {
+export function useTaskActivities(taskId: string | null, orgIdParam?: string) {
+  const { userProfile } = useAuth();
+  const orgId = orgIdParam || userProfile?.organizationId;
   const [activities, setActivities] = React.useState<TaskActivity[]>([]);
   React.useEffect(() => {
     if (!taskId) { setActivities([]); return; }
-    return listenToActivities(taskId, setActivities);
-  }, [taskId]);
+    return listenToActivities(taskId, setActivities, orgId);
+  }, [taskId, orgId]);
   return activities;
 }
 
 export function useTaskLabels(orgId: string | undefined) {
-  const [labels, setLabels] = React.useState<TaskLabel[]>([]);
+  const workspace = useWorkspaceData();
+  const canUseContext = Boolean(workspace && orgId && workspace.orgId === orgId);
+  const [fallbackLabels, setFallbackLabels] = React.useState<TaskLabel[]>([]);
+
   React.useEffect(() => {
-    if (!orgId) return;
-    return listenToLabels(orgId, setLabels);
-  }, [orgId]);
-  return labels;
+    if (canUseContext || !orgId) return;
+    return listenToLabels(orgId, setFallbackLabels);
+  }, [canUseContext, orgId]);
+
+  return canUseContext && workspace ? workspace.labels : fallbackLabels;
 }
 
 export function useSingleTask(taskId: string | null) {
+  const workspace = useWorkspaceData();
+  const cachedTask = React.useMemo(
+    () => (taskId && workspace ? workspace.allTasks.find((t) => t.id === taskId) ?? null : null),
+    [taskId, workspace],
+  );
   const [task, setTask] = React.useState<Task | null>(null);
   React.useEffect(() => {
     if (!taskId) { setTask(null); return; }
+    if (cachedTask) {
+      setTask(cachedTask);
+      return;
+    }
     return listenToTask(taskId, setTask);
-  }, [taskId]);
-  return task;
+  }, [taskId, cachedTask]);
+  return cachedTask ?? task;
 }
 
-export function useSubtasks(parentTaskId: string | null) {
-  const [subtasks, setSubtasks] = React.useState<Task[]>([]);
+export function useSubtasks(parentTaskId: string | null, orgIdParam?: string) {
+  const { userProfile } = useAuth();
+  const orgId = orgIdParam || userProfile?.organizationId;
+  const workspace = useWorkspaceData();
+  const canUseContext = Boolean(workspace && orgId && workspace.orgId === orgId);
+  const [fallbackSubtasks, setFallbackSubtasks] = React.useState<Task[]>([]);
+
   React.useEffect(() => {
-    if (!parentTaskId) { setSubtasks([]); return; }
-    return listenToSubtasks(parentTaskId, setSubtasks);
-  }, [parentTaskId]);
-  return subtasks;
+    if (canUseContext || !parentTaskId) {
+      setFallbackSubtasks([]);
+      return;
+    }
+    return listenToSubtasks(parentTaskId, setFallbackSubtasks, orgId);
+  }, [canUseContext, parentTaskId, orgId]);
+
+  return React.useMemo(() => {
+    if (!parentTaskId) return [];
+    if (canUseContext && workspace) {
+      return workspace.allTasks
+        .filter((t) => t.parentTaskId === parentTaskId)
+        .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+    }
+    return fallbackSubtasks;
+  }, [canUseContext, workspace, parentTaskId, fallbackSubtasks]);
 }

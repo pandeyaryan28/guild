@@ -28,9 +28,9 @@ import { useTeams } from '../../hooks/useTeams';
 import { useProjects } from '../../hooks/useProjects';
 import { updateRequestStatus } from '../../lib/requests';
 import { type Task, moveTask, createTask } from '../../lib/tasks';
-import { updateUserProfile, type UserProfile, type Organization } from '../../lib/firestore';
-import { Timestamp, doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { updateUserProfile, type UserProfile } from '../../lib/firestore';
+import { Timestamp } from 'firebase/firestore';
+import { useWorkspaceData } from '../../context/WorkspaceDataContext';
 import { avatarInitials, avatarHue } from '../MemberProfileDrawer';
 import { cn } from '@/lib/utils';
 
@@ -59,41 +59,24 @@ export function DashboardControl() {
   const orgId = userProfile?.organizationId;
   const { isInstallable, isStandalone, isDismissed, isIOS, install, dismiss } = usePwaInstall();
 
-  const [org, setOrg] = React.useState<Organization | null>(null);
-  const [loadingOrg, setLoadingOrg] = React.useState(true);
-
-  React.useEffect(() => {
-    if (!orgId) {
-      setOrg(null);
-      setLoadingOrg(false);
-      return;
-    }
-    setLoadingOrg(true);
-    const unsub = onSnapshot(
-      doc(db, 'organizations', orgId),
-      (snap) => {
-        if (snap.exists()) {
-          setOrg({ ...snap.data(), id: snap.id } as Organization);
-        } else {
-          setOrg(null);
-        }
-        setLoadingOrg(false);
-      },
-      (err) => {
-        console.error('Failed to load organization in DashboardControl:', err);
-        setOrg(null);
-        setLoadingOrg(false);
-      }
-    );
-    return unsub;
-  }, [orgId]);
+  const workspaceData = useWorkspaceData();
+  const org = workspaceData?.org ?? null;
+  const loadingOrg = workspaceData ? workspaceData.orgLoading : false;
 
   const { tasks, loading: tasksLoading } = useTasks(orgId);
   const { teams } = useTeams(orgId);
   const { projects } = useProjects(orgId);
   const members = useOrgMembers(orgId);
   const { received: receivedRequests } = useRequests(orgId);
-  const pendingRequests = receivedRequests.filter((r) => r.status === 'pending');
+  const pendingRequests = React.useMemo(
+    () =>
+      receivedRequests.filter(
+        (r) =>
+          r.status === 'pending' &&
+          (userProfile?.role === 'owner' || org?.ownerId === userProfile?.uid || r.creatorId !== userProfile?.uid)
+      ),
+    [receivedRequests, userProfile?.role, userProfile?.uid, org?.ownerId]
+  );
 
   // Chat notification hooks & states
   const { channels, hasUnread: channelHasUnread } = useChannels(orgId);
@@ -243,13 +226,14 @@ export function DashboardControl() {
 
   const handleCreateQuickTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!quickTaskTitle.trim() || !orgId || creatingQuickTask) return;
+    if (!quickTaskTitle.trim() || !orgId || !actor.uid || creatingQuickTask) return;
     setCreatingQuickTask(true);
     try {
       await createTask({
         orgId,
         title: quickTaskTitle.trim(),
         status: 'todo',
+        assigneeIds: [actor.uid],
         actor,
       });
       setQuickTaskTitle('');
@@ -281,49 +265,46 @@ export function DashboardControl() {
   const displayName = userProfile?.fullName?.split(' ')[0] ?? 'Teammate';
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 py-4 animate-fluid-pop">
+    <div className="max-w-6xl mx-auto space-y-6 py-2 animate-fluid-pop">
       
       {/* Dynamic PWA Install Prompter CTA */}
       <AnimatePresence>
         {isInstallable && !isStandalone && !isDismissed && (
           <motion.div
-            initial={{ opacity: 0, y: -15 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            className="aether-glass p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-white/5 dark:border-white/5 bg-white/[0.03] dark:bg-black/[0.15] shadow-lg relative overflow-hidden"
-            style={{ borderRadius: '16px' }}
+            exit={{ opacity: 0, y: -12 }}
+            className="bg-surface p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-border rounded-2xl shadow-sm"
           >
-            <div className="absolute -right-10 -top-10 w-32 h-32 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
-            
-            <div className="flex items-center gap-3.5 z-10 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-                <Download className="w-4 h-4 text-white animate-pulse" />
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
+                <Download className="w-4 h-4 text-primary-foreground" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">Install Guild</h3>
-                <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">Run in a borderless window for instant access, real-time operations, and flawless offline work.</p>
+                <h3 className="text-xs font-semibold text-foreground leading-none">Install Guild</h3>
+                <p className="text-xs text-muted-foreground mt-1 leading-snug">Run in a dedicated window for instant access and real-time operations.</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 z-10 shrink-0 self-end sm:self-auto">
+            <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
               {isIOS ? (
-                <div className="text-[9px] font-bold text-muted-foreground flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
-                  <Share2 className="w-3 h-3 text-primary shrink-0" />
-                  <span>Tap Safari Share &rarr; <b>"Add to Home Screen"</b></span>
+                <div className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-secondary border border-border px-3 py-1.5 rounded-xl">
+                  <Share2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <span>Tap Share &rarr; <b>Add to Home Screen</b></span>
                 </div>
               ) : (
                 <button
                   onClick={install}
-                  className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-[10px] font-black tracking-wider transition-all shadow-md active:scale-98 cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer"
                 >
-                  INSTALL APP
+                  Install App
                 </button>
               )}
 
               <button
                 onClick={dismiss}
                 title="Dismiss"
-                className="h-7 w-7 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all cursor-pointer"
+                className="h-7 w-7 rounded-lg border border-border bg-secondary/60 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-[0.98] transition-all cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -332,28 +313,19 @@ export function DashboardControl() {
         )}
       </AnimatePresence>
 
-      <header className="relative z-20 rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-cyan-500/15 p-6 md:p-8 backdrop-blur-xl shadow-2xl animate-aurora-mesh animate-fluid-pop">
-        {/* Absolute glowing blur spots behind content for rich visuals, wrapped in an overflow-hidden wrapper so dropdown doesn't clip */}
-        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
-          <div className="absolute -left-16 -top-16 w-40 h-40 rounded-full bg-indigo-500/10 blur-3xl" />
-          <div className="absolute -right-16 -bottom-16 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl" />
-        </div>
-        
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 relative z-10">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-6 md:gap-8 flex-1 min-w-0">
+      <header className="relative z-20 rounded-2xl border border-border bg-surface p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5 md:gap-6 flex-1 min-w-0">
             {/* 1. Organization Block */}
             {loadingOrg ? (
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-14 h-14 rounded-2xl bg-white/[0.02] border border-white/10 animate-pulse shadow-xl shrink-0" />
-                <div className="h-6 w-24 bg-white/[0.02] border border-white/5 rounded-md animate-pulse shrink-0" />
+                <div className="w-11 h-11 rounded-xl bg-secondary border border-border animate-pulse shrink-0" />
+                <div className="h-5 w-28 bg-secondary rounded-md animate-pulse shrink-0" />
               </div>
             ) : org && (
               <div className="flex items-center gap-3.5 min-w-0">
                 <div 
-                  className="w-14 h-14 flex items-center justify-center font-black text-white text-sm border-2 border-white/20 relative overflow-hidden shrink-0 shadow-xl animate-morph-org bg-accent/25"
-                  style={!org.photoURL ? {
-                    background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
-                  } : undefined}
+                  className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-primary-foreground text-sm border border-border relative overflow-hidden shrink-0 bg-primary"
                   title={`Workspace: ${org.name}`}
                 >
                   {org.photoURL ? (
@@ -363,7 +335,8 @@ export function DashboardControl() {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <span className="text-xl md:text-2xl font-black text-foreground block truncate select-none leading-tight">
+                  <span className="text-xs font-medium text-muted-foreground block">Workspace</span>
+                  <span className="text-lg font-bold text-foreground block truncate select-none leading-tight">
                     {org.name}
                   </span>
                 </div>
@@ -372,7 +345,7 @@ export function DashboardControl() {
 
             {/* Separator Line (desktop only) */}
             {org && (
-              <div className="hidden sm:block h-10 w-px bg-white/10 shrink-0" />
+              <div className="hidden sm:block h-9 w-px bg-border shrink-0" />
             )}
 
             {/* 2. User Block */}
@@ -381,27 +354,26 @@ export function DashboardControl() {
                 <button 
                   type="button"
                   onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                  className="w-14 h-14 flex items-center justify-center relative cursor-pointer shadow-xl ring-4 ring-primary/20 bg-background animate-morph-user overflow-hidden border-2 border-white/20 z-10"
+                  className="w-11 h-11 rounded-full flex items-center justify-center relative cursor-pointer overflow-hidden border border-border z-10 active:scale-[0.98] transition-transform"
                   style={{ background: `hsl(${avatarHue(userProfile?.uid || '')} 55% 45%)` }}
                   title="Click to change your availability status"
                 >
                   {userProfile?.photoURL ? (
                     <img src={userProfile.photoURL} alt={userProfile.fullName || 'User'} className="h-full w-full object-cover" />
                   ) : (
-                    <span className="text-sm font-black text-white">{myInitials}</span>
+                    <span className="text-xs font-bold text-white">{myInitials}</span>
                   )}
                 </button>
-                {/* Availability status dot indicator - Moved OUTSIDE the button to prevent clipping from overflow-hidden */}
-                <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background flex items-center justify-center shadow-lg border border-white/10 z-20 pointer-events-none">
+                <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-surface flex items-center justify-center border border-border z-20 pointer-events-none">
                   <span className={cn(
-                    "h-3 w-3 rounded-full",
-                    currentStatus === 'focus' ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" :
-                    currentStatus === 'away' ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" :
-                    "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+                    "h-2.5 w-2.5 rounded-full",
+                    currentStatus === 'focus' ? "bg-red-500" :
+                    currentStatus === 'away' ? "bg-amber-500" :
+                    "bg-emerald-500"
                   )} />
                 </span>
 
-                {/* Custom Premium Availability dropdown */}
+                {/* Availability dropdown */}
                 <AnimatePresence>
                   {statusDropdownOpen && (
                     <>
@@ -410,23 +382,23 @@ export function DashboardControl() {
                         onClick={() => setStatusDropdownOpen(false)}
                       />
                       <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                        initial={{ opacity: 0, y: 6, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                        className="absolute left-0 mt-3.5 w-48 aether-glass-elevated p-1.5 shadow-2xl z-50 border border-white/10 bg-background/95 rounded-2xl backdrop-blur-xl"
+                        exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                        className="absolute left-0 mt-2 w-48 p-1.5 shadow-xl z-50 border border-border bg-surface rounded-2xl"
                       >
-                        <div className="px-3 py-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest border-b border-white/5 mb-1.5">
-                          Set availability
+                        <div className="px-3 py-1.5 text-[11px] font-semibold text-muted-foreground border-b border-border mb-1">
+                          Availability
                         </div>
                         <button
                           type="button"
                           onClick={() => handleUpdateStatus('active')}
                           className={cn(
-                            "w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-2.5 cursor-pointer hover:bg-white/5 transition-all",
-                            currentStatus === 'active' ? "text-foreground bg-white/5" : "text-muted-foreground"
+                            "w-full text-left px-3 py-2 text-xs font-medium rounded-xl flex items-center gap-2.5 cursor-pointer hover:bg-secondary transition-colors",
+                            currentStatus === 'active' ? "text-foreground bg-secondary" : "text-muted-foreground"
                           )}
                         >
-                          <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
                           <span>Active / Online</span>
                           {currentStatus === 'active' && <Check className="w-3.5 h-3.5 ml-auto text-primary" />}
                         </button>
@@ -434,11 +406,11 @@ export function DashboardControl() {
                           type="button"
                           onClick={() => handleUpdateStatus('focus')}
                           className={cn(
-                            "w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-2.5 cursor-pointer hover:bg-white/5 transition-all",
-                            currentStatus === 'focus' ? "text-foreground bg-white/5" : "text-muted-foreground"
+                            "w-full text-left px-3 py-2 text-xs font-medium rounded-xl flex items-center gap-2.5 cursor-pointer hover:bg-secondary transition-colors",
+                            currentStatus === 'focus' ? "text-foreground bg-secondary" : "text-muted-foreground"
                           )}
                         >
-                          <span className="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
+                          <span className="h-2 w-2 rounded-full bg-red-500" />
                           <span>Focus / Muted</span>
                           {currentStatus === 'focus' && <Check className="w-3.5 h-3.5 ml-auto text-primary" />}
                         </button>
@@ -446,11 +418,11 @@ export function DashboardControl() {
                           type="button"
                           onClick={() => handleUpdateStatus('away')}
                           className={cn(
-                            "w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-2.5 cursor-pointer hover:bg-white/5 transition-all",
-                            currentStatus === 'away' ? "text-foreground bg-white/5" : "text-muted-foreground"
+                            "w-full text-left px-3 py-2 text-xs font-medium rounded-xl flex items-center gap-2.5 cursor-pointer hover:bg-secondary transition-colors",
+                            currentStatus === 'away' ? "text-foreground bg-secondary" : "text-muted-foreground"
                           )}
                         >
-                          <span className="h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]" />
+                          <span className="h-2 w-2 rounded-full bg-amber-500" />
                           <span>Away / Idle</span>
                           {currentStatus === 'away' && <Check className="w-3.5 h-3.5 ml-auto text-primary" />}
                         </button>
@@ -460,7 +432,8 @@ export function DashboardControl() {
                 </AnimatePresence>
               </div>
               <div className="min-w-0">
-                <h1 className="text-xl md:text-2xl font-black text-foreground block truncate leading-tight select-none">
+                <span className="text-xs font-medium text-muted-foreground block">{greeting}</span>
+                <h1 className="text-lg font-bold text-foreground block truncate leading-tight select-none">
                   {userProfile?.fullName || displayName}
                 </h1>
               </div>
@@ -473,76 +446,73 @@ export function DashboardControl() {
               href="https://admin.guildorbit.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-[0_4px_20px_rgba(99,102,241,0.35)] hover:shadow-[0_6px_24px_rgba(99,102,241,0.5)] transition-all hover:scale-[1.04] active:scale-[0.98] shrink-0 border border-white/20 cursor-pointer tracking-wider uppercase"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-semibold text-xs transition-all active:scale-[0.98] shrink-0 border border-border cursor-pointer"
             >
-              <Shield className="w-4 h-4 text-white animate-pulse" />
-              <span>Admin Panel</span>
+              <Shield className="w-3.5 h-3.5 text-primary" />
+              <span>Admin Console</span>
             </a>
           )}
         </div>
       </header>
 
-      {/* Daily Focus Goal Widget Redesigned */}
-      <section className="aether-glass p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-white/5 bg-white/[0.02] dark:bg-black/[0.15] shadow-lg rounded-2xl relative overflow-hidden">
-        {/* Subtle blur background spot */}
-        <div className="absolute -left-10 -top-10 w-24 h-24 rounded-full bg-primary/10 blur-xl pointer-events-none" />
-        
-        <div className="flex items-center gap-3.5 flex-1 min-w-0 z-10">
-          <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0">
-            <Target className="w-4 h-4 animate-pulse" />
+      {/* Daily Focus Goal Widget */}
+      <section className="bg-surface p-4 sm:px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-border shadow-sm rounded-2xl">
+        <div className="flex items-center gap-3.5 flex-1 min-w-0">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
+            <Target className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <label className="text-[9px] font-black text-primary uppercase tracking-widest block leading-none">
-              Status
+            <label className="text-[11px] font-medium text-muted-foreground block leading-none">
+              Current Focus
             </label>
             <input 
               type="text" 
-              placeholder="What are you doing right now?"
+              placeholder="What are you working on right now?"
               value={focusInput}
               onChange={(e) => setFocusInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSaveFocus();
               }}
-              className="bg-transparent border-none w-full p-0 text-sm font-semibold placeholder:text-muted-foreground/50 text-foreground focus:ring-0 focus:outline-none mt-1.5"
+              className="bg-transparent border-none w-full p-0 text-sm font-medium placeholder:text-muted-foreground/60 text-foreground focus:ring-0 focus:outline-none mt-1"
             />
           </div>
         </div>
         
-        <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto z-10">
+        <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
           <AnimatePresence>
             {focusInput.trim() !== (userProfile?.focusStatus?.text || '') && (
               <motion.button
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                exit={{ opacity: 0, scale: 0.96 }}
                 onClick={handleSaveFocus}
                 disabled={savingFocus}
-                className="px-4.5 py-2 rounded-xl bg-foreground text-background text-xs font-black tracking-wider hover:bg-foreground/90 transition-all cursor-pointer shadow-md active:scale-98"
+                className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all cursor-pointer active:scale-[0.98]"
               >
-                {savingFocus ? 'SAVING...' : 'SYNC STATUS'}
+                {savingFocus ? 'Saving...' : 'Update Focus'}
               </motion.button>
             )}
           </AnimatePresence>
           
           {focusSavedNotif && (
-            <span className="text-xs text-emerald-500 font-extrabold px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 animate-fluid-pop">
-              Status Updated!
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+              Saved
             </span>
           )}
         </div>
       </section>
 
       {/* Main Content Grid: 2 Clean Balanced Columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Left Column: Personal Actions & Operations */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           
           {/* Tasks Container */}
-          <section className="aether-glass aether-glass-interactive p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 dark:border-white/5 pb-3">
-              <h2 className="text-sm font-bold text-foreground">My Tasks</h2>
-              <span className="px-2 py-0.5 rounded-md border border-white/10 dark:border-white/5 bg-white/5 text-[10px] font-bold text-muted-foreground">
+          <section className="bg-surface border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h2 className="text-sm font-semibold text-foreground">My Tasks</h2>
+              <span className="text-xs font-medium text-muted-foreground">
                 {myTasks.length} active
               </span>
             </div>
@@ -554,10 +524,10 @@ export function DashboardControl() {
                 <span className="text-xs text-muted-foreground font-medium">Loading tasks...</span>
               </div>
             ) : myTasks.length === 0 ? (
-              <div className="py-8 text-center border border-dashed border-white/10 dark:border-white/5 rounded-2xl bg-white/[0.01] dark:bg-black/[0.1] backdrop-blur-sm">
+              <div className="py-8 text-center border border-dashed border-border rounded-xl bg-secondary/30">
                 <Check className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
-                <span className="text-xs font-bold text-foreground block">All tasks completed</span>
-                <span className="text-[10px] text-muted-foreground/80 mt-0.5 block">You are fully cleared for today.</span>
+                <span className="text-xs font-semibold text-foreground block">All tasks completed</span>
+                <span className="text-xs text-muted-foreground mt-0.5 block">You are cleared for today.</span>
               </div>
             ) : (
               <div className="space-y-1">
@@ -568,26 +538,34 @@ export function DashboardControl() {
                   return (
                     <div 
                       key={task.id}
-                      className="group flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 transition-all border border-transparent hover:border-white/10"
+                      onClick={() => navigate(`/workspace?task=${task.id}`)}
+                      className="group flex items-center justify-between py-2 px-3 rounded-xl hover:bg-secondary/70 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <button
-                          onClick={() => handleToggleComplete(task)}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleComplete(task);
+                          }}
                           disabled={isCompleting}
-                          className="w-4 h-4 rounded-md border border-white/20 dark:border-white/15 flex items-center justify-center hover:border-foreground hover:bg-white/10 dark:hover:bg-white/10 transition-all shrink-0 cursor-pointer"
+                          title="Mark complete"
+                          className="w-4 h-4 rounded-md border border-border-strong flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
                         >
                           {isCompleting ? (
                             <Loader2 className="w-2.5 h-2.5 animate-spin text-muted-foreground" />
                           ) : (
-                            <Check className="w-2.5 h-2.5 text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Check className="w-2.5 h-2.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                           )}
                         </button>
-                        <span className="text-xs font-medium text-foreground truncate">{task.title}</span>
+                        <span className="text-xs font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                          {task.title}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        {task.priority !== 'none' && (
-                          <span className={cn("text-[9px] px-1.5 py-0.2 rounded border font-semibold uppercase tracking-wider", badgeClass)}>
+                        {task.priority && task.priority !== 'none' && (
+                          <span className={cn("text-[10px] px-1.5 py-0.5 rounded-md border font-medium capitalize", badgeClass)}>
                             {task.priority}
                           </span>
                         )}
@@ -602,15 +580,16 @@ export function DashboardControl() {
             <form onSubmit={handleCreateQuickTask} className="flex gap-2 pt-2">
               <input
                 type="text"
-                placeholder="Add a task due today..."
+                placeholder="Add a task for yourself..."
                 value={quickTaskTitle}
                 onChange={(e) => setQuickTaskTitle(e.target.value)}
-                className="flex-1 aether-glass-input px-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none font-medium"
+                className="flex-1 h-9 rounded-xl border border-border bg-secondary/40 px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium"
               />
               <button
                 type="submit"
                 disabled={!quickTaskTitle.trim() || creatingQuickTask}
-                className="px-3 rounded-lg bg-foreground text-background text-xs font-bold hover:bg-foreground/90 transition-all flex items-center justify-center disabled:opacity-50 cursor-pointer shadow-sm"
+                aria-label="Add quick task"
+                className="h-9 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all flex items-center justify-center disabled:opacity-50 cursor-pointer active:scale-[0.98]"
               >
                 {creatingQuickTask ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-4 h-4" />}
               </button>
@@ -618,38 +597,43 @@ export function DashboardControl() {
           </section>
 
           {/* Approvals & Reviews Section */}
-          <section className="aether-glass aether-glass-interactive p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 dark:border-white/5 pb-3">
-              <h2 className="text-sm font-bold text-foreground">Approvals</h2>
-              {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0) > 0 && (
-                <span className="px-2 py-0.5 rounded-md border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
-                  {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0)} pending
-                </span>
-              )}
+          <section className="bg-surface border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h2 className="text-sm font-semibold text-foreground">Approvals</h2>
+              <span className="text-xs font-medium text-muted-foreground">
+                {pendingRequests.length + (isManager ? reviewTasksForTeam.length : 0)} pending
+              </span>
             </div>
 
             {(pendingRequests.length === 0 && (!isManager || reviewTasksForTeam.length === 0)) ? (
-              <div className="py-8 text-center bg-white/[0.01] dark:bg-black/[0.1] border border-dashed border-white/10 dark:border-white/5 rounded-2xl backdrop-blur-sm">
+              <div className="py-8 text-center bg-secondary/30 border border-dashed border-border rounded-xl">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
-                <span className="text-xs font-bold text-foreground block">Approvals Cleared</span>
-                <span className="text-[10px] text-muted-foreground/80 mt-0.5 block">No pending requests require your sign-off.</span>
+                <span className="text-xs font-semibold text-foreground block">Approvals Cleared</span>
+                <span className="text-xs text-muted-foreground mt-0.5 block">No pending requests require your sign-off.</span>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 
                 {/* Approval Requests */}
                 {pendingRequests.map((req) => (
-                  <div key={req.id} className="p-4 rounded-2xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-sm space-y-3">
-                    <div>
-                      <span className="text-xs font-bold text-foreground block truncate">{req.title}</span>
-                      <span className="text-[10px] text-muted-foreground block mt-0.5">Submitted by {req.creatorName}</span>
+                  <div key={req.id} className="p-3.5 rounded-xl border border-border bg-secondary/30 space-y-3">
+                    <div
+                      onClick={() => navigate('/requests')}
+                      className="cursor-pointer group"
+                    >
+                      <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors block truncate">
+                        {req.title}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block mt-0.5">
+                        Submitted by {req.creatorName}
+                      </span>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={async () => {
                           await updateRequestStatus(req.id, orgId!, 'approved', userProfile!.uid, userProfile!.fullName, userProfile!.username, req.creatorId, req.title);
                         }}
-                        className="flex-1 py-1.5 rounded-xl bg-gradient-to-b from-indigo-500/90 to-indigo-600/90 hover:brightness-105 text-white text-[10px] font-bold border-t border-white/20 shadow-md active:scale-98 transition-all cursor-pointer"
+                        className="flex-1 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer"
                       >
                         Approve
                       </button>
@@ -657,7 +641,7 @@ export function DashboardControl() {
                         onClick={async () => {
                           await updateRequestStatus(req.id, orgId!, 'rejected', userProfile!.uid, userProfile!.fullName, userProfile!.username, req.creatorId, req.title);
                         }}
-                        className="flex-1 py-1.5 rounded-xl border border-white/10 hover:bg-white/10 bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
+                        className="flex-1 py-1.5 rounded-lg border border-border hover:bg-secondary bg-surface text-xs font-semibold text-foreground transition-all cursor-pointer active:scale-[0.98]"
                       >
                         Reject
                       </button>
@@ -669,21 +653,28 @@ export function DashboardControl() {
                 {isManager && reviewTasksForTeam.map((task) => {
                   const assigneeName = task.assigneeIds.map(id => memberMap.get(id)?.fullName).filter(Boolean).join(', ');
                   return (
-                    <div key={task.id} className="p-4 rounded-2xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-sm space-y-3">
-                      <div>
-                        <span className="text-xs font-bold text-foreground block truncate">{task.title}</span>
-                        <span className="text-[10px] text-muted-foreground block mt-0.5">Task review for {assigneeName}</span>
+                    <div key={task.id} className="p-3.5 rounded-xl border border-border bg-secondary/30 space-y-3">
+                      <div
+                        onClick={() => navigate(`/workspace?task=${task.id}`)}
+                        className="cursor-pointer group"
+                      >
+                        <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors block truncate">
+                          {task.title}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground block mt-0.5">
+                          Task review for {assigneeName || 'teammate'}
+                        </span>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleReviewAction(task, 'approve')}
-                          className="flex-1 py-1.5 rounded-xl bg-gradient-to-b from-indigo-500/90 to-indigo-600/90 hover:brightness-105 text-white text-[10px] font-bold border-t border-white/20 shadow-md active:scale-98 transition-all cursor-pointer"
+                          className="flex-1 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer"
                         >
                           Approve
                         </button>
                         <button
                           onClick={() => handleReviewAction(task, 'reject')}
-                          className="flex-1 py-1.5 rounded-xl border border-white/10 hover:bg-white/10 bg-white/5 text-[10px] font-bold text-muted-foreground transition-all cursor-pointer"
+                          className="flex-1 py-1.5 rounded-lg border border-border hover:bg-secondary bg-surface text-xs font-semibold text-foreground transition-all cursor-pointer active:scale-[0.98]"
                         >
                           Needs Changes
                         </button>
@@ -699,64 +690,63 @@ export function DashboardControl() {
         </div>
 
         {/* Right Column: Teammate Focus & Direct Conversations */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           
           {/* Team Focus Section */}
-          <section className="aether-glass aether-glass-interactive p-6 space-y-4 self-start">
-            <div className="flex items-center justify-between border-b border-white/10 dark:border-white/5 pb-3">
-              <h2 className="text-sm font-bold text-foreground">Team Focus</h2>
-              <span className="px-2 py-0.5 rounded-md border border-white/10 dark:border-white/5 bg-white/5 text-[10px] font-bold text-muted-foreground">
+          <section className="bg-surface border border-border rounded-2xl p-5 space-y-4 self-start shadow-sm">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h2 className="text-sm font-semibold text-foreground">Team Focus</h2>
+              <span className="text-xs font-medium text-muted-foreground">
                 {teammates.length} members
               </span>
             </div>
 
             {teammates.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6 italic">You are not part of any team.</p>
+              <p className="text-xs text-muted-foreground text-center py-6">No team members assigned yet.</p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {teammates.map((member) => {
                   const hasFocus = !!member.focusStatus?.text;
                   const initials = avatarInitials(member.fullName || member.username || '?');
                   
                   return (
-                    <div key={member.uid} className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
+                    <div key={member.uid} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-secondary/60 transition-colors">
                       
                       {/* Teammate Icon */}
                       <div 
-                        className="w-9 h-9 flex items-center justify-center rounded-full shrink-0 border border-white/10 relative"
+                        className="w-8 h-8 flex items-center justify-center rounded-full shrink-0 border border-border relative"
                         style={{ background: `hsl(${avatarHue(member.uid)} 55% 45%)` }}
                       >
                         {member.photoURL ? (
                           <img src={member.photoURL} alt={member.fullName} className="h-full w-full object-cover rounded-full" />
                         ) : (
-                          <span className="text-xs font-bold text-white">{initials}</span>
+                          <span className="text-[11px] font-bold text-white">{initials}</span>
                         )}
-                        {/* Active Indicator dot */}
-                        <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface flex items-center justify-center shadow-sm">
+                        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-surface flex items-center justify-center">
                           <span className={cn(
                             "h-1.5 w-1.5 rounded-full",
                             member.availabilityStatus === 'focus' ? "bg-red-500" :
                             member.availabilityStatus === 'away' ? "bg-amber-500" :
                             member.availabilityStatus === 'active' ? "bg-emerald-500" :
-                            hasFocus ? "bg-emerald-500" : "bg-zinc-300"
+                            hasFocus ? "bg-emerald-500" : "bg-muted-foreground/40"
                           )} />
                         </span>
                       </div>
 
                       {/* Teammate Info */}
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2">
                           <span className="text-xs font-semibold text-foreground block truncate">{member.fullName}</span>
-                          <span className="text-[9px] text-muted-foreground shrink-0">{member.role || 'Member'}</span>
+                          <span className="text-[11px] text-muted-foreground shrink-0 capitalize">{member.role || 'member'}</span>
                         </div>
                         
                         {hasFocus ? (
-                          <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 italic line-clamp-2">
-                            "{member.focusStatus!.text}"
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                            {member.focusStatus!.text}
                           </p>
                         ) : (
-                          <p className="text-[10px] text-muted-foreground/60 mt-0.5 italic">
-                            No status declared
+                          <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+                            No focus status set
                           </p>
                         )}
                       </div>
@@ -769,22 +759,20 @@ export function DashboardControl() {
           </section>
 
           {/* New Messages Section */}
-          <section className="aether-glass aether-glass-interactive p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 dark:border-white/5 pb-3">
-              <h2 className="text-sm font-bold text-foreground">New Messages</h2>
-              {unreadChannels.length + unreadDMs.length > 0 && (
-                <span className="px-2 py-0.5 rounded-md border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
-                  {unreadChannels.length + unreadDMs.length} unread
-                </span>
-              )}
+          <section className="bg-surface border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h2 className="text-sm font-semibold text-foreground">New Messages</h2>
+              <span className="text-xs font-medium text-muted-foreground">
+                {unreadChannels.length + unreadDMs.length} unread
+              </span>
             </div>
 
             {unreadChannels.length === 0 && unreadDMs.length === 0 ? (
               <div className="py-6 text-center">
-                <p className="text-xs text-muted-foreground italic">All caught up! No unread messages.</p>
+                <p className="text-xs text-muted-foreground">All caught up. No unread messages.</p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto aether-scroll pr-1">
+              <div className="space-y-1.5 max-h-60 overflow-y-auto aether-scroll pr-1">
                 {/* Unread DMs */}
                 {unreadDMs.map((thread) => {
                   const otherUid = thread.participants.find(id => id !== userProfile?.uid);
@@ -796,29 +784,29 @@ export function DashboardControl() {
                     <div 
                       key={thread.id}
                       onClick={() => navigate(`/chat/dm/${thread.id}`)}
-                      className="flex items-center justify-between p-2.5 rounded-lg border border-transparent hover:border-white/5 hover:bg-white/5 transition-all cursor-pointer"
+                      className="flex items-center justify-between p-2.5 rounded-xl hover:bg-secondary/70 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         {/* DM Initial Avatar */}
                         <div 
-                          className="w-7 h-7 flex items-center justify-center rounded-full shrink-0 border border-white/5"
+                          className="w-7 h-7 flex items-center justify-center rounded-full shrink-0 border border-border"
                           style={{ background: `hsl(${avatarHue(otherUid || '')} 55% 45%)` }}
                         >
                           {otherMember?.photoURL ? (
                             <img src={otherMember.photoURL} alt={name} className="h-full w-full object-cover rounded-full" />
                           ) : (
-                            <span className="text-[10px] font-black text-white">{initials}</span>
+                            <span className="text-[10px] font-bold text-white">{initials}</span>
                           )}
                         </div>
                         <div className="min-w-0">
                           <span className="text-xs font-semibold text-foreground block truncate">{name}</span>
-                          <span className="text-[10px] text-muted-foreground block truncate italic mt-0.5">
-                            "{thread.lastMessage || 'Sent a message'}"
+                          <span className="text-[11px] text-muted-foreground block truncate mt-0.5">
+                            {thread.lastMessage || 'Sent a message'}
                           </span>
                         </div>
                       </div>
 
-                      <span className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.6)] shrink-0 ml-2" />
+                      <span className="h-2 w-2 rounded-full bg-primary shrink-0 ml-2" />
                     </div>
                   );
                 })}
@@ -829,21 +817,21 @@ export function DashboardControl() {
                     <div 
                       key={channel.id}
                       onClick={() => navigate(`/chat/c/${channel.id}`)}
-                      className="flex items-center justify-between p-2.5 rounded-lg border border-transparent hover:border-white/5 hover:bg-white/5 transition-all cursor-pointer"
+                      className="flex items-center justify-between p-2.5 rounded-xl hover:bg-secondary/70 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 border border-white/5 text-muted-foreground shrink-0">
+                        <div className="w-7 h-7 flex items-center justify-center rounded-lg bg-secondary border border-border text-muted-foreground shrink-0">
                           <Hash className="w-3.5 h-3.5" />
                         </div>
                         <div className="min-w-0">
                           <span className="text-xs font-semibold text-foreground block truncate">#{channel.name}</span>
-                          <span className="text-[10px] text-muted-foreground block truncate italic mt-0.5">
-                            {channel.lastMessagePreview ? `"${channel.lastMessagePreview}"` : 'New activity'}
+                          <span className="text-[11px] text-muted-foreground block truncate mt-0.5">
+                            {channel.lastMessagePreview || 'New activity'}
                           </span>
                         </div>
                       </div>
 
-                      <span className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.6)] shrink-0 ml-2" />
+                      <span className="h-2 w-2 rounded-full bg-primary shrink-0 ml-2" />
                     </div>
                   );
                 })}

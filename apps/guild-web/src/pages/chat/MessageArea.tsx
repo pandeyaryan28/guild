@@ -199,12 +199,12 @@ export function MessageArea({
         const otherId = resolveDmOtherUserId(dmId, currentUser.uid, members) || currentUser.uid;
         ownerId = combinedMentions[0] || otherId;
       } else if (channelId) {
-        ownerId = combinedMentions[0] || '';
+        ownerId = combinedMentions[0] || currentUser.uid;
       }
 
-      if (!goalTitle || (channelId && !ownerId)) {
+      if (!goalTitle) {
         const usageText = channelId
-          ? `**Usage**: \`/goal <goal title> @username\``
+          ? `**Usage**: \`/goal <goal title> [@username]\``
           : `**Usage**: \`/goal <goal title>\``;
         if (channelId) {
           await sendChannelMessage({ ...base, body: usageText, channelId });
@@ -338,13 +338,10 @@ export function MessageArea({
           assigneeIds = combinedMentions;
         } else {
           if (dmId) {
-            const otherId = resolveDmOtherUserId(dmId, currentUser.uid, members);
+            const otherId = resolveDmOtherUserId(dmId, currentUser.uid, members) || currentUser.uid;
             assigneeIds = [otherId];
           } else if (channelId) {
-            const snap = await getDocs(
-              query(collection(db, 'channelMembers'), where('channelId', '==', channelId))
-            );
-            assigneeIds = snap.docs.map((d) => d.data().userId as string);
+            assigneeIds = [currentUser.uid];
           }
         }
 
@@ -407,12 +404,12 @@ export function MessageArea({
 
   return (
     <div className="flex flex-1 min-w-0 flex-col bg-background relative h-full overflow-hidden">
-      {/* Precision Floating Glassmorphic Conversation Header */}
-      <div className="flex items-center gap-3 border-b border-border-default/80 dark:border-white/10 bg-surface/90 dark:bg-surface-elevated/70 backdrop-blur-2xl px-4 py-2.5 shrink-0 z-10 select-none shadow-xs">
+      {/* Conversation Header */}
+      <div className="flex items-center gap-3 border-b border-border bg-surface/90 backdrop-blur-2xl px-4 py-2.5 shrink-0 z-10 select-none shadow-xs">
         <button
           type="button"
           onClick={() => navigate('/chat')}
-          className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-surface-hover dark:hover:bg-white/10 hover:text-foreground shrink-0 transition-colors cursor-pointer"
+          className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground shrink-0 transition-colors cursor-pointer"
           title="Back to Directory"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -423,7 +420,7 @@ export function MessageArea({
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-surface-hover dark:hover:bg-white/10 hover:text-foreground shrink-0 transition-colors cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground shrink-0 transition-colors cursor-pointer"
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
             {isSidebarCollapsed ? (
@@ -440,7 +437,7 @@ export function MessageArea({
             const otherId = resolveDmOtherUserId(dmId, currentUser?.uid || '', members);
             return (
               <div 
-                className="w-9 h-9 flex items-center justify-center rounded-full shrink-0 border border-white/20 relative shadow-xs"
+                className="w-9 h-9 flex items-center justify-center rounded-full shrink-0 border border-border relative shadow-xs"
                 style={{ background: `hsl(${avatarHue(otherId)} 55% 45%)` }}
               >
                 {dmPartner?.photoURL ? (
@@ -500,7 +497,7 @@ export function MessageArea({
                 "flex h-8.5 w-8.5 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer border",
                 searchParams.get('canvas') === 'true'
                   ? "bg-primary text-primary-foreground border-primary shadow-xs"
-                  : "border-border-default/80 dark:border-white/10 bg-surface/80 dark:bg-white/5 text-muted-foreground hover:text-foreground hover:bg-surface-hover"
+                  : "border-border bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
               )}
             >
               <FileText className="h-4 w-4" />
@@ -509,7 +506,7 @@ export function MessageArea({
 
           {channelId && channel && (
             <>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-surface-elevated/80 dark:bg-white/5 border border-border-default/80 dark:border-white/10 text-muted-foreground text-xs font-mono">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-secondary/50 border border-border text-muted-foreground text-xs font-mono">
                 <Users className="h-3.5 w-3.5" />
                 <span className="font-semibold">{channel.memberCount}</span>
               </div>
@@ -519,7 +516,7 @@ export function MessageArea({
                 type="button"
                 onClick={() => setShowInviteModal(true)}
                 title="Add members"
-                className="flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-border-default/80 dark:border-white/10 bg-surface/80 dark:bg-white/5 text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
+                className="flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-border bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 cursor-pointer"
               >
                 <UserPlus className="h-4 w-4" />
               </button>
@@ -534,7 +531,7 @@ export function MessageArea({
                     setSearchParams(newParams);
                   }}
                   title="Channel settings"
-                  className="flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-border-default/80 dark:border-white/10 bg-surface/80 dark:bg-white/5 text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
+                  className="flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-border bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 cursor-pointer"
                 >
                   <Settings className="h-4 w-4" />
                 </button>

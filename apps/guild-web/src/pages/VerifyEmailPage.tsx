@@ -131,14 +131,12 @@ export function VerifyEmailPage() {
   }
 
   return (
-    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4">
-      <div className="aether-aurora opacity-50" />
-
+    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 bg-background">
       {/* Floating Theme Mode Toggle */}
       <div className="absolute top-6 right-8 z-50">
         <button
           onClick={toggleMode}
-          className="aether-glass flex h-10 w-10 items-center justify-center rounded-xl hover:scale-105 active:scale-95 transition-all shadow-sm border border-border-default bg-surface/50 text-foreground cursor-pointer"
+          className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-secondary active:scale-[0.98] transition-all shadow-sm border border-border bg-surface text-foreground cursor-pointer"
           title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
         >
           {mode === 'light' ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5 text-amber-400" />}

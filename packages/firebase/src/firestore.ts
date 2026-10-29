@@ -406,10 +406,30 @@ export async function updateUserProfile(
 
 export async function updateUserRole(
   uid: string,
-  role: UserRole
+  role: UserRole,
+  orgId?: string
 ): Promise<void> {
   const userRef = doc(db, 'users', uid);
-  await updateDoc(userRef, { role });
+  let resolvedOrgId = orgId;
+  if (!resolvedOrgId) {
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      resolvedOrgId = userSnap.data()?.organizationId;
+    }
+  }
+
+  const batch = writeBatch(db);
+  batch.update(userRef, { role });
+
+  if (resolvedOrgId) {
+    const memberRef = doc(db, 'organizationMembers', `${resolvedOrgId}_${uid}`);
+    const memberSnap = await getDoc(memberRef);
+    if (memberSnap.exists()) {
+      batch.update(memberRef, { role });
+    }
+  }
+
+  await batch.commit();
 }
 
 export async function removeUserFromOrg(
@@ -446,7 +466,13 @@ export async function deleteOrganization(
   // B. DMs & DM Read States
   const dmSnap = await getDocs(query(collection(db, 'directMessages'), where('orgId', '==', orgId)));
   for (const dmDoc of dmSnap.docs) {
-    await deleteCollectionByQuery(query(collection(db, 'dmReadState'), where('dmId', '==', dmDoc.id)));
+    await deleteCollectionByQuery(
+      query(
+        collection(db, 'dmReadState'),
+        where('orgId', '==', orgId),
+        where('dmId', '==', dmDoc.id)
+      )
+    );
   }
   await deleteCollectionByQuery(query(collection(db, 'directMessages'), where('orgId', '==', orgId)));
   
@@ -459,7 +485,12 @@ export async function deleteOrganization(
   // D. Projects & Milestones, Project Comments
   const projectsSnap = await getDocs(query(collection(db, 'projects'), where('orgId', '==', orgId)));
   for (const projectDoc of projectsSnap.docs) {
-    await deleteCollectionByQuery(collection(db, 'projects', projectDoc.id, 'milestones'));
+    await deleteCollectionByQuery(
+      query(
+        collection(db, 'projects', projectDoc.id, 'milestones'),
+        where('orgId', '==', orgId)
+      )
+    );
   }
   await deleteCollectionByQuery(query(collection(db, 'projects'), where('orgId', '==', orgId)));
   await deleteCollectionByQuery(query(collection(db, 'projectComments'), where('orgId', '==', orgId)));
@@ -468,11 +499,15 @@ export async function deleteOrganization(
   await deleteCollectionByQuery(query(collection(db, 'goals'), where('orgId', '==', orgId)));
   await deleteCollectionByQuery(query(collection(db, 'goalComments'), where('orgId', '==', orgId)));
   
-  // F. Teams, Requests, Invites, Notifications
+  // F. Teams, Requests, Invites, Canvases, Studio Documents
   await deleteCollectionByQuery(query(collection(db, 'teams'), where('orgId', '==', orgId)));
   await deleteCollectionByQuery(query(collection(db, 'requests'), where('orgId', '==', orgId)));
   await deleteCollectionByQuery(query(collection(db, 'inviteLinks'), where('orgId', '==', orgId)));
   await deleteCollectionByQuery(query(collection(db, 'pendingInvites'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'canvases'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'workspaceDocuments'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'workspaceCycles'), where('orgId', '==', orgId)));
+  await deleteCollectionByQuery(query(collection(db, 'workspaceIssues'), where('orgId', '==', orgId)));
   
   // G. Owner's own notifications in the org (security rules restrict other users' notifications)
   await deleteCollectionByQuery(
@@ -518,9 +553,21 @@ export async function transferOrgOwnership(
   currentOwnerId: string,
   newOwnerId: string
 ): Promise<void> {
-  await updateDoc(doc(db, 'users', newOwnerId), { role: 'owner' });
-  await updateDoc(doc(db, 'users', currentOwnerId), { role: 'admin' });
-  await updateDoc(doc(db, 'organizations', orgId), { ownerId: newOwnerId });
+  const batch = writeBatch(db);
+  batch.update(doc(db, 'users', newOwnerId), { role: 'owner' });
+  batch.update(doc(db, 'users', currentOwnerId), { role: 'admin' });
+  batch.set(
+    doc(db, 'organizationMembers', `${orgId}_${newOwnerId}`),
+    { orgId, userId: newOwnerId, role: 'owner' },
+    { merge: true }
+  );
+  batch.set(
+    doc(db, 'organizationMembers', `${orgId}_${currentOwnerId}`),
+    { orgId, userId: currentOwnerId, role: 'admin' },
+    { merge: true }
+  );
+  batch.update(doc(db, 'organizations', orgId), { ownerId: newOwnerId });
+  await batch.commit();
 }
 
 export async function deleteUserProfile(
@@ -559,31 +606,22 @@ export async function deleteUserProfile(
     console.warn(`Could not disable Firebase Auth for ${uid}:`, err);
   }
 
-  // 1. Clear the onboarding state history (must be done while users profile still exists for security rules checks)
-  await deleteDoc(doc(db, 'onboardingState', uid));
-
-  // 2. Release the globally unique username handle
-  if (username) {
-    await deleteDoc(doc(db, 'usernames', username.toLowerCase()));
-  }
-
-  // 3. Delete user profile document
-  await deleteDoc(doc(db, 'users', uid));
-
-  // 4. Clean up workspace members association if user was part of an organization
+  // 1. Clean up workspace associations FIRST while user profile & org membership still exist for security rules
   if (organizationId) {
-    await deleteDoc(doc(db, 'organizationMembers', `${organizationId}_${uid}`));
-
-    // 5. Clean up channel memberships
+    // 1a. Clean up channel memberships scoped by orgId
     try {
       await deleteCollectionByQuery(
-        query(collection(db, 'channelMembers'), where('userId', '==', uid))
+        query(
+          collection(db, 'channelMembers'),
+          where('orgId', '==', organizationId),
+          where('userId', '==', uid)
+        )
       );
     } catch (err) {
       console.error(`Failed to clean up channelMembers for user ${uid}:`, err);
     }
 
-    // 6. Clean up teams in the organization (remove from memberIds, clear managerId if matches)
+    // 1b. Clean up teams in the organization (remove from memberIds, clear managerId if matches)
     try {
       const teamsSnap = await getDocs(
         query(collection(db, 'teams'), where('orgId', '==', organizationId))
@@ -593,7 +631,7 @@ export async function deleteUserProfile(
         const memberIds = teamData.memberIds || [];
         if (memberIds.includes(uid) || teamData.managerId === uid) {
           const newMemberIds = memberIds.filter((id: string) => id !== uid);
-          const patch: any = { memberIds: newMemberIds };
+          const patch: Record<string, any> = { memberIds: newMemberIds };
           if (teamData.managerId === uid) {
             patch.managerId = '';
           }
@@ -604,8 +642,12 @@ export async function deleteUserProfile(
       console.error(`Failed to clean up teams for user ${uid}:`, err);
     }
 
-    // 7. Clean up projects in the organization (remove from memberIds, reassign ownerId if matches)
+    // 1c. Clean up projects in the organization (remove from memberIds, reassign ownerId if matches)
     try {
+      const orgRef = doc(db, 'organizations', organizationId);
+      const orgSnap = await getDoc(orgRef);
+      const orgOwnerId = orgSnap.exists() ? (orgSnap.data()?.ownerId || '') : '';
+
       const projectsSnap = await getDocs(
         query(collection(db, 'projects'), where('orgId', '==', organizationId))
       );
@@ -614,12 +656,8 @@ export async function deleteUserProfile(
         const memberIds = projData.memberIds || [];
         if (memberIds.includes(uid) || projData.ownerId === uid) {
           const newMemberIds = memberIds.filter((id: string) => id !== uid);
-          const patch: any = { memberIds: newMemberIds };
+          const patch: Record<string, any> = { memberIds: newMemberIds };
           if (projData.ownerId === uid) {
-            // Reassign project owner to the organization owner
-            const orgRef = doc(db, 'organizations', organizationId);
-            const orgSnap = await getDoc(orgRef);
-            const orgOwnerId = orgSnap.exists() ? (orgSnap.data()?.ownerId || '') : '';
             patch.ownerId = orgOwnerId;
           }
           await updateDoc(doc(db, 'projects', projDoc.id), patch);
@@ -628,7 +666,51 @@ export async function deleteUserProfile(
     } catch (err) {
       console.error(`Failed to clean up projects for user ${uid}:`, err);
     }
+
+    // 1d. Unassign user from active tasks in the organization
+    try {
+      const tasksSnap = await getDocs(
+        query(
+          collection(db, 'tasks'),
+          where('orgId', '==', organizationId),
+          where('assigneeIds', 'array-contains', uid)
+        )
+      );
+      for (const taskDoc of tasksSnap.docs) {
+        const taskData = taskDoc.data();
+        const assigneeIds: string[] = (taskData.assigneeIds || []).filter((id: string) => id !== uid);
+        await updateDoc(taskDoc.ref, { assigneeIds });
+      }
+    } catch (err) {
+      console.error(`Failed to unassign tasks for user ${uid}:`, err);
+    }
+
+    // 1e. Delete organizationMembers record
+    try {
+      await deleteDoc(doc(db, 'organizationMembers', `${organizationId}_${uid}`));
+    } catch (err) {
+      console.error(`Failed to delete organizationMember for user ${uid}:`, err);
+    }
   }
+
+  // 2. Clear the onboarding state history (while users profile still exists for security rules checks)
+  try {
+    await deleteDoc(doc(db, 'onboardingState', uid));
+  } catch (err) {
+    console.warn(`Could not delete onboardingState for ${uid}:`, err);
+  }
+
+  // 3. Release the globally unique username handle
+  if (username) {
+    try {
+      await deleteDoc(doc(db, 'usernames', username.toLowerCase()));
+    } catch (err) {
+      console.warn(`Could not release username ${username}:`, err);
+    }
+  }
+
+  // 4. Delete user profile document LAST
+  await deleteDoc(doc(db, 'users', uid));
 }
 
 
@@ -647,6 +729,7 @@ export interface OwnerOnboardingPayload {
   domainAutoJoin?: boolean;
   emailDomain?: string;
   inviteEmails?: string;
+  inviteToken?: string;
 }
 
 export async function executeOwnerOnboardingCreate(payload: OwnerOnboardingPayload): Promise<{ orgId: string; inviteToken: string }> {
@@ -665,11 +748,12 @@ export async function executeOwnerOnboardingCreate(payload: OwnerOnboardingPaylo
     domainAutoJoin,
     emailDomain,
     inviteEmails,
+    inviteToken: providedInviteToken,
   } = payload;
 
   const orgRef = doc(collection(db, 'organizations'));
   const orgId = orgRef.id;
-  const inviteToken = generateInviteToken();
+  const inviteToken = providedInviteToken?.trim() || generateInviteToken();
 
   const batch = writeBatch(db);
 
@@ -712,14 +796,15 @@ export async function executeOwnerOnboardingCreate(payload: OwnerOnboardingPaylo
     joinedAt: serverTimestamp(),
   });
 
-  // 5. Create Invite Link (single-use / general link for the org)
-  const expiresAt = Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  // 5. Create Invite Link (general link for the org)
+  const expiresAt = Timestamp.fromMillis(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
   batch.set(doc(db, 'inviteLinks', inviteToken), {
     token: inviteToken,
     orgId,
     createdBy: uid,
+    createdAt: Timestamp.now(),
     expiresAt,
-    maxUses: 5,
+    maxUses: 25,
     useCount: 0,
     isActive: true,
     role: 'member',

@@ -1,6 +1,6 @@
 import {
   collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
-  query, where, orderBy, onSnapshot, getDocs,
+  query, where, orderBy, onSnapshot, getDocs, writeBatch,
   serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -73,55 +73,96 @@ export async function updateRequestStatus(
 ): Promise<void> {
   const reqRef = doc(db, 'requests', requestId);
   const reqSnap = await getDoc(reqRef);
-  const reqData = reqSnap.exists() ? reqSnap.data() : null;
+  if (!reqSnap.exists()) {
+    throw new Error('Request not found or already deleted.');
+  }
+  const reqData = reqSnap.data() as OrgRequest & { taskId?: string };
 
-  // Update the request document in Firestore
-  await updateDoc(reqRef, {
+  // Prevent duplicate decisions and duplicate notifications
+  if (reqData.status !== 'pending') {
+    return;
+  }
+
+  // Prevent self-approval unless the user is the organization owner
+  if (reqData.creatorId === approverId) {
+    const orgSnap = await getDoc(doc(db, 'organizations', orgId));
+    const ownerId = orgSnap.exists() ? orgSnap.data()?.ownerId : null;
+    if (ownerId !== approverId) {
+      throw new Error('You cannot approve or reject your own request.');
+    }
+  }
+
+  const batch = writeBatch(db);
+  const now = serverTimestamp();
+
+  batch.update(reqRef, {
     status,
     approverId,
     approverName,
     approverUsername,
     approverNote: approverNote ?? null,
-    updatedAt: serverTimestamp(),
+    updatedAt: now,
   });
 
-  // If there is an associated taskId, approve or delete the task
-  if (reqData && reqData.taskId) {
+  let linkedGoalId: string | null = null;
+  if (reqData.taskId) {
     const taskRef = doc(db, 'tasks', reqData.taskId);
     const taskSnap = await getDoc(taskRef);
     const taskData = taskSnap.exists() ? taskSnap.data() : null;
+    linkedGoalId = (taskData?.goalId as string) || null;
 
     if (taskSnap.exists()) {
       if (status === 'approved') {
-        await updateDoc(taskRef, {
+        batch.update(taskRef, {
           approved: true,
-          updatedAt: serverTimestamp(),
+          updatedAt: now,
         });
       } else {
-        await deleteDoc(taskRef);
-      }
-      if (taskData?.goalId) {
-        await syncGoalProgress(taskData.goalId);
+        batch.delete(taskRef);
       }
     }
   }
 
+  await batch.commit();
+
+  if (linkedGoalId) {
+    await syncGoalProgress(linkedGoalId, orgId);
+  }
+
   // Dispatch the status update notification to the creator
-  await createNotification({
-    orgId,
-    recipientId: creatorId,
-    category: 'requests',
-    type: status === 'approved' ? 'request_approved' : 'request_rejected',
-    urgency: 'medium',
-    actor: { id: approverId, name: approverName },
-    title: `Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-    body: `Your request "${requestTitle}" was ${status} by ${approverName}`,
-    link: '/requests',
-  });
+  if (creatorId !== approverId) {
+    await createNotification({
+      orgId,
+      recipientId: creatorId,
+      category: 'requests',
+      type: status === 'approved' ? 'request_approved' : 'request_rejected',
+      urgency: 'medium',
+      actor: { id: approverId, name: approverName },
+      title: `Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+      body: `Your request "${requestTitle}" was ${status} by ${approverName}`,
+      link: '/requests',
+    });
+  }
 }
 
 export async function deleteRequest(requestId: string): Promise<void> {
-  await deleteDoc(doc(db, 'requests', requestId));
+  const reqRef = doc(db, 'requests', requestId);
+  const reqSnap = await getDoc(reqRef);
+  if (reqSnap.exists()) {
+    const reqData = reqSnap.data() as OrgRequest & { taskId?: string };
+    if (reqData.taskId && reqData.status === 'pending') {
+      try {
+        const taskRef = doc(db, 'tasks', reqData.taskId);
+        const taskSnap = await getDoc(taskRef);
+        if (taskSnap.exists() && taskSnap.data()?.approved === false) {
+          await deleteDoc(taskRef);
+        }
+      } catch (e) {
+        console.warn('Could not clean up linked pending task on request deletion:', e);
+      }
+    }
+  }
+  await deleteDoc(reqRef);
 }
 
 export async function sendRequestReminder(params: {

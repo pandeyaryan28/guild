@@ -198,9 +198,9 @@ export function MessageBubble({
     }
     const unsub = listenToReplies(message.id, (data) => {
       setReplies(data);
-    });
+    }, orgId);
     return () => unsub();
-  }, [isRepliesExpanded, message.id]);
+  }, [isRepliesExpanded, message.id, orgId]);
 
   const handleSendReply = async () => {
     const trimmed = replyBody.trim();
@@ -235,8 +235,7 @@ export function MessageBubble({
       await editMessage(message.id, editBody.trim());
       setEditing(false);
     } catch (err: any) {
-      console.error(err);
-      alert(err.message || 'Failed to edit message.');
+      console.error('Failed to edit message:', err);
     } finally {
       setSaving(false);
     }
@@ -582,7 +581,7 @@ export function MessageBubble({
                   try {
                     await toggleReaction(message.id, emoji, currentUser.uid);
                   } catch (err: any) {
-                    alert(err.message || 'Failed to toggle reaction.');
+                    console.error('Failed to toggle reaction:', err);
                   }
                 }
               }}
@@ -859,7 +858,7 @@ export function MessageBubble({
                             try {
                               await toggleReaction(message.id, emoji, currentUser.uid);
                             } catch (err: any) {
-                              alert(err.message || 'Failed to toggle reaction.');
+                              console.error('Failed to toggle reaction:', err);
                             }
                           }
                           setShowEmojiPicker(false);
@@ -885,6 +884,25 @@ export function MessageBubble({
               >
                 <MessageSquare className="h-3.5 w-3.5" />
               </button>
+
+              {/* Convert to Task */}
+              {!isCard && currentUser && (
+                <button
+                  type="button"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    try {
+                      await toggleReaction(message.id, '📋', currentUser.uid);
+                    } catch (err) {
+                      console.error('Failed to convert message to task:', err);
+                    }
+                  }}
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                  title="Convert message to task"
+                >
+                  <CheckSquare className="h-3.5 w-3.5" />
+                </button>
+              )}
 
               {/* Quote Reply */}
               {onQuoteMessage && (

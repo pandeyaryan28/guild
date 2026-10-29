@@ -156,14 +156,19 @@ export async function reorderWorkspaceDocuments(
   orgId: string,
   items: { id: string; orderIndex: number; parentId: string | null }[]
 ): Promise<void> {
-  const batch = writeBatch(db);
-  for (const item of items) {
-    const ref = doc(db, COLLECTION, item.id);
-    batch.update(ref, {
-      orderIndex: item.orderIndex,
-      parentId: item.parentId,
-      updatedAt: serverTimestamp()
-    });
+  if (items.length === 0) return;
+  const CHUNK_SIZE = 400;
+  for (let i = 0; i < items.length; i += CHUNK_SIZE) {
+    const chunk = items.slice(i, i + CHUNK_SIZE);
+    const batch = writeBatch(db);
+    for (const item of chunk) {
+      const ref = doc(db, COLLECTION, item.id);
+      batch.update(ref, {
+        orderIndex: item.orderIndex,
+        parentId: item.parentId,
+        updatedAt: serverTimestamp()
+      });
+    }
+    await batch.commit();
   }
-  await batch.commit();
 }

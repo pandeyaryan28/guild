@@ -332,9 +332,9 @@ export function MobileDashboard() {
               href="https://admin.guildorbit.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-650 hover:from-indigo-500 hover:to-violet-550 text-white font-extrabold text-[10px] shadow-[0_3px_12px_rgba(99,102,241,0.3)] transition-all hover:scale-[1.03] active:scale-[0.97] shrink-0 cursor-pointer border border-border-default/30 tracking-wide uppercase animate-fluid-pop"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs shadow-sm transition-all active:scale-[0.98] shrink-0 cursor-pointer border border-border"
             >
-              <Shield className="w-3.5 h-3.5 text-white animate-pulse" />
+              <Shield className="w-3.5 h-3.5 text-primary-foreground" />
               <span>Admin</span>
             </a>
           )}

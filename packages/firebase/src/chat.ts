@@ -2,7 +2,7 @@ import {
   collection, doc, setDoc, addDoc, updateDoc,
   getDoc, query, where, orderBy, onSnapshot,
   serverTimestamp, Timestamp, writeBatch, deleteDoc,
-  limit, getDocs, startAfter, QueryDocumentSnapshot, DocumentData,
+  limit, getDocs, startAfter, increment, QueryDocumentSnapshot, DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notifications';
@@ -135,14 +135,21 @@ export async function createChannel(
   const channelId = channelRef.id;
   const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
-  await setDoc(channelRef, {
+  const batch = writeBatch(db);
+  batch.set(channelRef, {
     id: channelId, orgId, name: slug, description,
     createdBy: creatorUid, createdAt: serverTimestamp(), memberCount: 1,
     isPrivate: options?.isPrivate ?? false,
     isRestricted: options?.isRestricted ?? false,
   });
 
-  await joinChannel(channelId, creatorUid, orgId);
+  batch.set(
+    doc(db, 'channelMembers', `${channelId}_${creatorUid}`),
+    { channelId, userId: creatorUid, orgId, joinedAt: serverTimestamp(), lastRead: serverTimestamp() },
+    { merge: true },
+  );
+
+  await batch.commit();
   return channelId;
 }
 
@@ -151,25 +158,29 @@ export async function joinChannel(channelId: string, userId: string, orgId: stri
   const memberSnap = await getDoc(memberRef);
   const isAlreadyMember = memberSnap.exists();
 
-  await setDoc(
+  const batch = writeBatch(db);
+  batch.set(
     memberRef,
     { channelId, userId, orgId, joinedAt: serverTimestamp(), lastRead: serverTimestamp() },
     { merge: true },
   );
 
   if (!isAlreadyMember) {
-    const snap = await getDoc(doc(db, 'channels', channelId));
-    if (snap.exists()) {
-      await updateDoc(doc(db, 'channels', channelId), {
-        memberCount: (snap.data().memberCount || 0) + 1,
-      });
-    }
+    batch.update(doc(db, 'channels', channelId), {
+      memberCount: increment(1),
+    });
   }
+
+  await batch.commit();
 }
 
 export async function leaveChannel(channelId: string, userId: string): Promise<void> {
+  const memberRef = doc(db, 'channelMembers', `${channelId}_${userId}`);
+  const memberSnap = await getDoc(memberRef);
+  if (!memberSnap.exists()) return;
+
   const batch = writeBatch(db);
-  batch.delete(doc(db, 'channelMembers', `${channelId}_${userId}`));
+  batch.delete(memberRef);
   const snap = await getDoc(doc(db, 'channels', channelId));
   if (snap.exists()) {
     batch.update(doc(db, 'channels', channelId), {
@@ -531,13 +542,15 @@ export function listenToChannels(
 export function listenToMessages(
   channelId: string,
   cb: (msgs: Message[]) => void,
+  orgId?: string,
 ): () => void {
+  const constraints = [
+    ...(orgId ? [where('orgId', '==', orgId)] : []),
+    where('channelId', '==', channelId),
+    orderBy('createdAt', 'asc'),
+  ];
   return onSnapshot(
-    query(
-      collection(db, 'messages'),
-      where('channelId', '==', channelId),
-      orderBy('createdAt', 'asc'),
-    ),
+    query(collection(db, 'messages'), ...constraints),
     (snap) => cb(snap.docs.map((d) => d.data() as Message)),
   );
 }
@@ -545,13 +558,15 @@ export function listenToMessages(
 export function listenToDMMessages(
   dmId: string,
   cb: (msgs: Message[]) => void,
+  orgId?: string,
 ): () => void {
+  const constraints = [
+    ...(orgId ? [where('orgId', '==', orgId)] : []),
+    where('dmId', '==', dmId),
+    orderBy('createdAt', 'asc'),
+  ];
   return onSnapshot(
-    query(
-      collection(db, 'messages'),
-      where('dmId', '==', dmId),
-      orderBy('createdAt', 'asc'),
-    ),
+    query(collection(db, 'messages'), ...constraints),
     (snap) => cb(snap.docs.map((d) => d.data() as Message)),
   );
 }
@@ -569,15 +584,17 @@ export function listenToLatestMessages(
   id: string,
   type: 'channel' | 'dm',
   cb: (msgs: Message[], oldestDoc: QueryDocumentSnapshot<DocumentData> | null) => void,
+  orgId?: string,
 ): () => void {
   const field = type === 'channel' ? 'channelId' : 'dmId';
+  const constraints = [
+    ...(orgId ? [where('orgId', '==', orgId)] : []),
+    where(field, '==', id),
+    orderBy('createdAt', 'desc'),
+    limit(PAGE_SIZE),
+  ];
   return onSnapshot(
-    query(
-      collection(db, 'messages'),
-      where(field, '==', id),
-      orderBy('createdAt', 'desc'),
-      limit(PAGE_SIZE),
-    ),
+    query(collection(db, 'messages'), ...constraints),
     (snap) => {
       // docs arrive newest-first; reverse to get chronological order for display
       const reversed = [...snap.docs].reverse();
@@ -598,16 +615,18 @@ export async function fetchOlderMessages(
   id: string,
   type: 'channel' | 'dm',
   cursorDoc: QueryDocumentSnapshot<DocumentData>,
+  orgId?: string,
 ): Promise<[Message[], QueryDocumentSnapshot<DocumentData> | null, boolean]> {
   const field = type === 'channel' ? 'channelId' : 'dmId';
+  const constraints = [
+    ...(orgId ? [where('orgId', '==', orgId)] : []),
+    where(field, '==', id),
+    orderBy('createdAt', 'desc'),
+    startAfter(cursorDoc),
+    limit(PAGE_SIZE),
+  ];
   const snap = await getDocs(
-    query(
-      collection(db, 'messages'),
-      where(field, '==', id),
-      orderBy('createdAt', 'desc'),
-      startAfter(cursorDoc),
-      limit(PAGE_SIZE),
-    ),
+    query(collection(db, 'messages'), ...constraints),
   );
   // snap.docs is newest-first within this older batch; reverse for display
   const reversed = [...snap.docs].reverse();
@@ -641,6 +660,7 @@ export function listenToUserDMs(
   const unsubReads = onSnapshot(
     query(
       collection(db, 'dmReadState'),
+      where('orgId', '==', orgId),
       where('userId', '==', userId),
     ),
     (snap) => {
@@ -729,8 +749,12 @@ export async function addChannelMembers(
 }
 
 export async function removeChannelMember(channelId: string, userId: string): Promise<void> {
+  const memberRef = doc(db, 'channelMembers', `${channelId}_${userId}`);
+  const memberSnap = await getDoc(memberRef);
+  if (!memberSnap.exists()) return;
+
   const batch = writeBatch(db);
-  batch.delete(doc(db, 'channelMembers', `${channelId}_${userId}`));
+  batch.delete(memberRef);
   const snap = await getDoc(doc(db, 'channels', channelId));
   if (snap.exists()) {
     batch.update(doc(db, 'channels', channelId), {
@@ -740,15 +764,33 @@ export async function removeChannelMember(channelId: string, userId: string): Pr
   await batch.commit();
 }
 
-export async function deleteChannel(channelId: string): Promise<void> {
-  // Fetch messages in the channel to delete their replies
-  const msgsSnap = await getDocs(query(collection(db, 'messages'), where('channelId', '==', channelId)));
-  for (const msgDoc of msgsSnap.docs) {
-    await deleteCollectionByQuery(query(collection(db, 'messageReplies'), where('messageId', '==', msgDoc.id)));
+export async function deleteChannel(channelId: string, orgId?: string): Promise<void> {
+  let resolvedOrgId = orgId;
+  if (!resolvedOrgId) {
+    const chSnap = await getDoc(doc(db, 'channels', channelId));
+    if (chSnap.exists()) {
+      resolvedOrgId = chSnap.data()?.orgId;
+    }
   }
 
-  await deleteCollectionByQuery(query(collection(db, 'messages'), where('channelId', '==', channelId)));
-  await deleteCollectionByQuery(query(collection(db, 'channelMembers'), where('channelId', '==', channelId)));
+  const orgConstraints = resolvedOrgId ? [where('orgId', '==', resolvedOrgId)] : [];
+
+  // Fetch messages in the channel to delete their replies
+  const msgsSnap = await getDocs(
+    query(collection(db, 'messages'), ...orgConstraints, where('channelId', '==', channelId))
+  );
+  for (const msgDoc of msgsSnap.docs) {
+    await deleteCollectionByQuery(
+      query(collection(db, 'messageReplies'), ...orgConstraints, where('messageId', '==', msgDoc.id))
+    );
+  }
+
+  await deleteCollectionByQuery(
+    query(collection(db, 'messages'), ...orgConstraints, where('channelId', '==', channelId))
+  );
+  await deleteCollectionByQuery(
+    query(collection(db, 'channelMembers'), ...orgConstraints, where('channelId', '==', channelId))
+  );
   await deleteDoc(doc(db, 'channels', channelId));
 }
 

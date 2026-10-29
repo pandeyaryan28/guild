@@ -50,9 +50,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTasks } from '../../hooks/useTasks';
 import { useProjects } from '../../hooks/useProjects';
+import { useGoals } from '../../hooks/useGoals';
 import { useOrgMembers } from '../../hooks/useChat';
 import { useTaskLabels } from '../../hooks/useTasks';
 import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
+import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
 
 import { moveTask, STATUS_CONFIG, PRIORITY_CONFIG } from '../../lib/tasks';
 import type { Task, TaskPriority, TaskStatus } from '../../lib/tasks';
@@ -111,6 +113,7 @@ export function CalendarPage() {
   // Data fetching
   const { tasks, loading: tasksLoading } = useTasks(orgId);
   const { projects } = useProjects(orgId);
+  const { goals } = useGoals(orgId);
   const members = useOrgMembers(orgId);
   const labels = useTaskLabels(orgId);
 
@@ -348,10 +351,10 @@ export function CalendarPage() {
       <div className="flex flex-1 flex-col overflow-hidden px-4 py-4 md:px-8 md:py-6">
         
         {/* ── Premium Glassmorphic Top Controls Banner ─────────────────────────────── */}
-        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-3.5 backdrop-blur-xl md:flex-row md:items-center md:justify-between shadow-xl">
+        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-border bg-secondary/40 p-3.5 backdrop-blur-xl md:flex-row md:items-center md:justify-between shadow-xl">
           <div className="flex items-center gap-3">
             {/* View Icon Container */}
-            <div className="hidden rounded-xl p-2.5 text-accent shadow-inner border border-white/5" style={{ background: 'oklch(from var(--accent) l c h / 8%)' }}>
+            <div className="hidden rounded-xl p-2.5 text-accent shadow-inner border border-border/60" style={{ background: 'oklch(from var(--accent) l c h / 8%)' }}>
               <Calendar className="h-5 w-5 animate-pulse" />
             </div>
             <div>
@@ -368,7 +371,7 @@ export function CalendarPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             {/* Navigation button deck */}
-            <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] p-1 shadow-inner backdrop-blur-md">
+            <div className="flex items-center rounded-xl border border-border bg-secondary/40 dark:bg-surface/60 p-1 shadow-inner backdrop-blur-md">
               <button 
                 onClick={handlePrev} 
                 className="rounded-lg p-1.5 text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all cursor-pointer"
@@ -392,7 +395,7 @@ export function CalendarPage() {
             </div>
 
             {/* Premium Sliding View Switcher Deck */}
-            <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] p-1 shadow-inner relative backdrop-blur-md">
+            <div className="flex items-center rounded-xl border border-border bg-secondary/40 dark:bg-surface/60 p-1 shadow-inner relative backdrop-blur-md">
               {(['month', 'week', 'day'] as const).map((view) => (
                 <button
                   key={view}
@@ -424,7 +427,7 @@ export function CalendarPage() {
                 "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-inner",
                 showFilters 
                   ? "border-accent/40 text-accent bg-accent/[0.08]" 
-                  : "border-white/10 bg-white/[0.02] dark:bg-white/[0.01] text-muted-foreground hover:text-foreground"
+                  : "border-border bg-secondary/40 dark:bg-surface/60 text-muted-foreground hover:text-foreground"
               )}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -455,7 +458,7 @@ export function CalendarPage() {
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="overflow-hidden mb-4 animate-fluid-pop"
             >
-              <div className="grid grid-cols-1 gap-3 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.02] to-white/[0.005] p-4 backdrop-blur-2xl sm:grid-cols-2 md:grid-cols-5 shadow-inner">
+              <div className="grid grid-cols-1 gap-3 rounded-2xl border border-border bg-gradient-to-b from-white/[0.02] to-white/[0.005] p-4 backdrop-blur-2xl sm:grid-cols-2 md:grid-cols-5 shadow-inner">
                 
                 {/* Search query */}
                 <div className="relative">
@@ -467,7 +470,7 @@ export function CalendarPage() {
                     placeholder="Search tasks..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] py-2 pl-9 pr-3 text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 transition-all font-semibold"
+                    className="w-full rounded-xl border border-border bg-secondary/40 dark:bg-surface/60 py-2 pl-9 pr-3 text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 transition-all font-semibold"
                   />
                   {searchQuery && (
                     <button 
@@ -480,7 +483,7 @@ export function CalendarPage() {
                 </div>
 
                 {/* Project Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border bg-secondary/40 dark:bg-surface/60 px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
                   <Folder className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <select
                     value={selectedProjectId}
@@ -494,7 +497,7 @@ export function CalendarPage() {
                   </select>
                 </div>
 
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-2 py-0.5 hover:border-white/20 focus-within:border-accent/40 transition-all w-full md:w-auto min-w-[150px]">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border bg-secondary/40 dark:bg-surface/60 px-2 py-0.5 hover:border-white/20 focus-within:border-accent/40 transition-all w-full md:w-auto min-w-[150px]">
                   <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 ml-1" />
                   <SearchableSelect
                     value={selectedAssigneeId}
@@ -514,7 +517,7 @@ export function CalendarPage() {
                 </div>
 
                 {/* Priority Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border bg-secondary/40 dark:bg-surface/60 px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
                   <AlertCircle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <select
                     value={selectedPriority}
@@ -529,7 +532,7 @@ export function CalendarPage() {
                 </div>
 
                 {/* Status Filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] dark:bg-white/[0.01] px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border bg-secondary/40 dark:bg-surface/60 px-3 py-1 hover:border-white/20 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
                   <ListTodo className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <select
                     value={selectedStatus}
@@ -567,7 +570,7 @@ export function CalendarPage() {
                 {activeView === 'month' && (
                   <div className="h-full w-full flex flex-col overflow-hidden">
                     {/* Grid Weekday Headers Overhaul */}
-                    <div className="grid grid-cols-7 border-b border-white/5 bg-white/[0.01] text-center py-4 px-1.5 backdrop-blur-md">
+                    <div className="grid grid-cols-7 border-b border-border/60 bg-surface/60 text-center py-4 px-1.5 backdrop-blur-md">
                       {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                         <span key={day} className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 font-heading">
                           {day}
@@ -613,7 +616,7 @@ export function CalendarPage() {
                               className={cn(
                                 "relative group p-2.5 md:p-3 flex flex-col rounded-2xl border transition-all duration-300 select-none overflow-hidden h-full",
                                 isCurrentMonth 
-                                  ? "border-white/5 bg-white/[0.01] hover:border-accent/30 dark:bg-white/[0.003] dark:hover:bg-white/[0.015] shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]" 
+                                  ? "border-border/60 bg-surface/60 hover:border-accent/30 dark:bg-white/[0.003] dark:hover:bg-white/[0.015] shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]" 
                                   : "opacity-15 border-white/[0.02] bg-white/[0.005] hover:opacity-25",
                                 isMobileSelected && isCurrentMonth && "bg-white/[0.03] border-accent/40 shadow-[inset_0_0_0_1px_oklch(from_var(--accent)_l_c_h_/_20%)] backdrop-blur-sm",
                                 isDayToday && "border-accent/40 ring-1 ring-accent/20 bg-gradient-to-br from-accent/[0.06] to-indigo-500/[0.01]"
@@ -638,7 +641,7 @@ export function CalendarPage() {
                                     e.stopPropagation();
                                     handleQuickAddClick(day);
                                   }}
-                                  className="opacity-0 group-hover:opacity-100 flex items-center justify-center h-5 w-5 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 text-foreground hover:scale-105 active:scale-95 transition-all duration-200 shadow-sm"
+                                  className="opacity-0 group-hover:opacity-100 flex items-center justify-center h-5 w-5 rounded-lg border border-border/60 bg-white/5 hover:bg-white/10 hover:border-white/20 text-foreground hover:scale-105 active:scale-95 transition-all duration-200 shadow-sm"
                                   title="Schedule task"
                                 >
                                   <Plus className="h-3 w-3" />
@@ -679,8 +682,8 @@ export function CalendarPage() {
                                         className={cn(
                                           "group/task-strip flex items-center justify-between rounded-xl border p-2 text-[9px] transition-all duration-300 select-none cursor-pointer",
                                           isDone 
-                                            ? "border-white/5 bg-white/[0.01] opacity-35 line-through hover:opacity-50" 
-                                            : "hover:translate-x-0.5 bg-white/[0.02] border-white/5 hover:border-accent/20 hover:bg-white/[0.05] hover:shadow-md"
+                                            ? "border-border/60 bg-surface/60 opacity-35 line-through hover:opacity-50" 
+                                            : "hover:translate-x-0.5 bg-secondary/40 border-border/60 hover:border-accent/20 hover:bg-white/[0.05] hover:shadow-md"
                                         )}
                                         style={!isDone ? {
                                           borderLeft: `3px solid ${priorityColor}`,
@@ -701,7 +704,7 @@ export function CalendarPage() {
                                               "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300 cursor-pointer",
                                               isDone 
                                                 ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 animate-fluid-pop" 
-                                                : "border-white/20 bg-white/[0.02] hover:border-accent/50 hover:bg-accent/5"
+                                                : "border-white/20 bg-secondary/40 hover:border-accent/50 hover:bg-accent/5"
                                             )}
                                           >
                                             {isDone ? (
@@ -722,7 +725,7 @@ export function CalendarPage() {
                                         <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
                                           {projInitials && (
                                             <span 
-                                              className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-white/5 bg-white/5"
+                                              className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-border/60 bg-white/5"
                                               style={{ 
                                                 color: 'oklch(from var(--accent) calc(l + 0.12) c h)',
                                                 lineHeight: '1'
@@ -758,7 +761,7 @@ export function CalendarPage() {
                                         setMobileSelectedDate(day);
                                         setActiveDayFlyout(day);
                                       }}
-                                      className="w-full flex items-center justify-center gap-1 py-1 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 text-[8px] font-bold text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-sm select-none backdrop-blur-md"
+                                      className="w-full flex items-center justify-center gap-1 py-1 rounded-xl border border-border/60 bg-white/5 hover:bg-white/10 text-[8px] font-bold text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-sm select-none backdrop-blur-md"
                                     >
                                       <span className="h-1.5 w-1.5 rounded-full bg-accent shrink-0 animate-pulse" />
                                       <span>+{dayTasks.length - 3} more tasks</span>
@@ -786,7 +789,7 @@ export function CalendarPage() {
                     </div>
 
                     {/* Responsive Mobile Agenda list below the grid */}
-                    <div className="block md:hidden border-t border-white/5 bg-white/[0.01] p-4 h-[180px] overflow-y-auto backdrop-blur-xl">
+                    <div className="block md:hidden border-t border-border/60 bg-surface/60 p-4 h-[180px] overflow-y-auto backdrop-blur-xl">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
                           Agenda for {format(mobileSelectedDate, 'MMM d, yyyy')}
@@ -820,7 +823,7 @@ export function CalendarPage() {
                               <div
                                 key={task.id}
                                 onClick={() => setSelectedTask(task)}
-                                className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all shadow-sm"
+                                className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-secondary/40 hover:bg-white/[0.05] transition-all shadow-sm"
                               >
                                 <div className="flex items-center gap-2">
                                   <button
@@ -896,7 +899,7 @@ export function CalendarPage() {
 
                             {/* Column Header */}
                             <div className={cn(
-                              "p-3.5 border-b border-white/5 flex items-center justify-between flex-shrink-0 bg-white/[0.01]",
+                              "p-3.5 border-b border-border/60 flex items-center justify-between flex-shrink-0 bg-surface/60",
                               isDayToday && "bg-white/[0.03]"
                             )}>
                               <div className="flex items-center gap-2">
@@ -913,7 +916,7 @@ export function CalendarPage() {
                                   <span className="text-[9px] text-muted-foreground font-bold leading-none mt-0.5">{format(day, 'MMM d')}</span>
                                 </div>
                               </div>
-                              <span className="text-[9px] font-extrabold rounded-md px-1.5 py-0.5 border border-white/5 bg-white/5 text-muted-foreground">
+                              <span className="text-[9px] font-extrabold rounded-md px-1.5 py-0.5 border border-border/60 bg-white/5 text-muted-foreground">
                                 {dayTasks.length}
                               </span>
                             </div>
@@ -936,7 +939,7 @@ export function CalendarPage() {
                                       key={task.id}
                                       onClick={() => setSelectedTask(task)}
                                       className={cn(
-                                        "group flex flex-col gap-2 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 hover:shadow-lg hover:scale-[1.01] p-3 text-left transition-all duration-300 cursor-pointer",
+                                        "group flex flex-col gap-2 rounded-xl border border-border/60 bg-secondary/40 hover:bg-white/[0.05] hover:border-border hover:shadow-lg hover:scale-[1.01] p-3 text-left transition-all duration-300 cursor-pointer",
                                         isDone && "opacity-50"
                                       )}
                                       style={{ borderLeft: `3px solid ${priorityColor}` }}
@@ -963,7 +966,7 @@ export function CalendarPage() {
                                       </div>
 
                                       {/* Card details */}
-                                      <div className="flex items-center justify-between mt-1 text-[9px] text-muted-foreground border-t border-white/5 pt-2">
+                                      <div className="flex items-center justify-between mt-1 text-[9px] text-muted-foreground border-t border-border/60 pt-2">
                                         <div className="flex items-center gap-1.5 truncate max-w-[130px]">
                                           {projName && (
                                             <span 
@@ -1008,10 +1011,10 @@ export function CalendarPage() {
                             </div>
 
                             {/* Column action trigger */}
-                            <div className="p-3 border-t border-white/5 flex-shrink-0 bg-white/[0.005]">
+                            <div className="p-3 border-t border-border/60 flex-shrink-0 bg-white/[0.005]">
                               <button
                                 onClick={() => handleQuickAddClick(day)}
-                                className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 rounded-xl text-[10px] font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                                className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-border hover:border-white/20 hover:bg-white/5 rounded-xl text-[10px] font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
                               >
                                 <Plus className="h-3.5 w-3.5" />
                                 <span>Add Task</span>
@@ -1029,8 +1032,8 @@ export function CalendarPage() {
                   <div className="h-full w-full flex flex-col md:flex-row overflow-y-auto md:overflow-hidden custom-scrollbar bg-transparent">
                     
                     {/* Left Column: Detailed Agenda List */}
-                    <div className="w-full md:w-1/2 flex flex-col h-[280px] md:h-full border-b md:border-b-0 md:border-r border-white/5 overflow-hidden bg-white/[0.005]">
-                      <div className="p-4 border-b border-white/5 bg-white/[0.01] flex-shrink-0 flex items-center justify-between">
+                    <div className="w-full md:w-1/2 flex flex-col h-[280px] md:h-full border-b md:border-b-0 md:border-r border-border/60 overflow-hidden bg-white/[0.005]">
+                      <div className="p-4 border-b border-border/60 bg-surface/60 flex-shrink-0 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <ListTodo className="h-4 w-4 text-accent" />
                           <h3 className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">Tasks Due Today</h3>
@@ -1082,7 +1085,7 @@ export function CalendarPage() {
                                 key={task.id}
                                 onClick={() => setSelectedTask(task)}
                                 className={cn(
-                                  "flex flex-col gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 hover:shadow-lg hover:scale-[1.01] transition-all duration-300 cursor-pointer",
+                                  "flex flex-col gap-3 p-4 rounded-xl border border-border/60 bg-secondary/40 hover:bg-white/[0.05] hover:border-border hover:shadow-lg hover:scale-[1.01] transition-all duration-300 cursor-pointer",
                                   isDone && "opacity-55"
                                 )}
                                 style={{ borderLeft: `3px solid ${priorityColor}` }}
@@ -1116,7 +1119,7 @@ export function CalendarPage() {
                                 </div>
 
                                 {/* Footer details */}
-                                <div className="flex items-center justify-between border-t border-white/5 pt-2.5 mt-1 text-[9px] text-muted-foreground">
+                                <div className="flex items-center justify-between border-t border-border/60 pt-2.5 mt-1 text-[9px] text-muted-foreground">
                                   <div className="flex items-center gap-2">
                                     {projName && (
                                       <span 
@@ -1165,7 +1168,7 @@ export function CalendarPage() {
 
                     {/* Right Column: Time-Blocking Hourly Planner with Live Tracker Line */}
                     <div className="w-full md:w-1/2 flex flex-col h-[400px] md:h-full overflow-hidden bg-white/[0.005]">
-                      <div className="p-4 border-b border-white/5 bg-white/[0.01] flex-shrink-0 flex items-center justify-between">
+                      <div className="p-4 border-b border-border/60 bg-surface/60 flex-shrink-0 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <Clock className="h-4 w-4 text-accent" />
                           <h3 className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">Hourly Day Schedule</h3>
@@ -1200,7 +1203,7 @@ export function CalendarPage() {
                           return (
                             <div 
                               key={slot.value} 
-                              className="flex items-start gap-4 p-1 rounded-xl hover:bg-white/[0.01] transition-all duration-300 relative"
+                              className="flex items-start gap-4 p-1 rounded-xl hover:bg-surface/60 transition-all duration-300 relative"
                             >
 
                               {/* Time Label column */}
@@ -1241,7 +1244,7 @@ export function CalendarPage() {
                                   </div>
                                 ) : isEditing ? (
                                   // Time-block create Form with Category Selection
-                                  <div className="p-3 border border-white/10 bg-white/5 rounded-xl flex flex-col gap-2 shadow-inner">
+                                  <div className="p-3 border border-border bg-white/5 rounded-xl flex flex-col gap-2 shadow-inner">
                                     <input
                                       autoFocus
                                       type="text"
@@ -1266,7 +1269,7 @@ export function CalendarPage() {
                                             "px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border cursor-pointer transition-all",
                                             newBlockCategory === cat
                                               ? "border-accent/40 bg-accent/20 text-accent font-black"
-                                              : "border-white/5 bg-white/5 text-muted-foreground hover:text-foreground"
+                                              : "border-border/60 bg-white/5 text-muted-foreground hover:text-foreground"
                                           )}
                                         >
                                           {cat}
@@ -1300,7 +1303,7 @@ export function CalendarPage() {
                                       setNewBlockCategory('focus');
                                       setEditingBlockHour(slot.value);
                                     }}
-                                    className="w-full text-left py-2.5 px-3.5 border border-dashed border-white/5 hover:border-white/10 rounded-xl text-[10px] font-bold text-muted-foreground/40 hover:text-foreground hover:bg-white/5 transition-all flex items-center gap-2 group cursor-pointer"
+                                    className="w-full text-left py-2.5 px-3.5 border border-dashed border-border/60 hover:border-border rounded-xl text-[10px] font-bold text-muted-foreground/40 hover:text-foreground hover:bg-white/5 transition-all flex items-center gap-2 group cursor-pointer"
                                   >
                                     <Plus className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all duration-300 text-muted-foreground" />
                                     <span>Allocate Hour {slot.label}</span>
@@ -1349,7 +1352,7 @@ export function CalendarPage() {
               className="relative w-full max-w-md aether-glass overflow-hidden z-10 flex flex-col max-h-[80vh] shadow-2xl"
             >
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-white/5 bg-white/2 px-5 py-4">
+              <div className="flex items-center justify-between border-b border-border/60 bg-white/2 px-5 py-4">
                 <div className="flex items-center gap-2.5">
                   <CalendarDays className="h-5 w-5 text-accent" />
                   <div>
@@ -1402,7 +1405,7 @@ export function CalendarPage() {
                           setActiveDayFlyout(null);
                         }}
                         className={cn(
-                          "group/flyout flex flex-col gap-2 p-3.5 rounded-xl border border-white/5 bg-white/2 hover:bg-white/5 hover:border-white/10 hover:shadow-lg transition-all duration-300 cursor-pointer",
+                          "group/flyout flex flex-col gap-2 p-3.5 rounded-xl border border-border/60 bg-white/2 hover:bg-white/5 hover:border-border hover:shadow-lg transition-all duration-300 cursor-pointer",
                           isDone && "opacity-55"
                         )}
                         style={{ borderLeft: `3px solid ${priorityColor}` }}
@@ -1439,7 +1442,7 @@ export function CalendarPage() {
                         </div>
 
                         {/* Badges and Assignees */}
-                        <div className="flex items-center justify-between border-t border-white/5 pt-2 mt-1 text-[9px] text-muted-foreground">
+                        <div className="flex items-center justify-between border-t border-border/60 pt-2 mt-1 text-[9px] text-muted-foreground">
                           <div className="flex items-center gap-1.5">
                             {projName && (
                               <span
@@ -1486,7 +1489,7 @@ export function CalendarPage() {
               </div>
 
               {/* Footer */}
-              <div className="border-t border-white/5 bg-white/2 px-5 py-4 flex items-center justify-end">
+              <div className="border-t border-border/60 bg-white/2 px-5 py-4 flex items-center justify-end">
                 <button
                   onClick={() => {
                     handleQuickAddClick(activeDayFlyout);
@@ -1514,6 +1517,17 @@ export function CalendarPage() {
         actor={actor}
         labels={labels}
         defaultDueDate={createModalDate}
+      />
+
+      {/* ── Task Detail Drawer ─────────────────────────────────────────────── */}
+      <TaskDetailDrawer
+        task={selectedTask ? (tasks.find((t) => t.id === selectedTask.id) || selectedTask) : null}
+        onClose={() => setSelectedTask(null)}
+        orgId={orgId || ''}
+        actor={actor}
+        members={members}
+        projects={projects}
+        goals={goals}
       />
 
     </div>

@@ -10,26 +10,26 @@ export const ROLE_META: Record<UserRole, { label: string; icon: React.ElementTyp
   owner: {
     label: 'Owner',
     icon: Crown,
-    color: 'text-amber-400',
-    bg: 'bg-amber-400/10 border-amber-400/25',
+    color: 'text-amber-600 dark:text-amber-400',
+    bg: 'bg-amber-500/10 border-amber-500/25',
   },
   admin: {
     label: 'Admin',
     icon: ShieldCheck,
-    color: 'text-violet-400',
-    bg: 'bg-violet-400/10 border-violet-400/25',
+    color: 'text-violet-600 dark:text-violet-400',
+    bg: 'bg-violet-500/10 border-violet-500/25',
   },
   manager: {
     label: 'Manager',
     icon: Briefcase,
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-400/10 border-emerald-400/25',
+    color: 'text-emerald-600 dark:text-emerald-400',
+    bg: 'bg-emerald-500/10 border-emerald-500/25',
   },
   member: {
     label: 'Member',
     icon: User,
-    color: 'text-sky-400',
-    bg: 'bg-sky-400/10 border-sky-400/25',
+    color: 'text-sky-600 dark:text-sky-400',
+    bg: 'bg-sky-500/10 border-sky-500/25',
   },
 };
 
@@ -143,8 +143,8 @@ export function MemberProfileDrawer({ isOpen, member, onClose, tasks, teams }: M
           {/* Current Status Block */}
           <div className="space-y-2">
             <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Current Status</h5>
-            <div className="p-4 rounded-2xl border border-border-default bg-surface/50 text-xs text-foreground/80 flex items-center gap-3">
-              <span className="h-2.5 w-2.5 rounded-full flex items-center justify-center bg-white/5 border border-white/10 shadow-sm shrink-0">
+            <div className="p-4 rounded-2xl border border-border bg-secondary/40 text-xs text-foreground/80 flex items-center gap-3">
+              <span className="h-2.5 w-2.5 rounded-full flex items-center justify-center bg-surface border border-border shadow-xs shrink-0">
                 <span className={`h-1.5 w-1.5 rounded-full ${
                   member.availabilityStatus === 'focus' ? "bg-red-500 animate-pulse" :
                   member.availabilityStatus === 'away' ? "bg-amber-500" :

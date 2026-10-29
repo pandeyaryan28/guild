@@ -228,7 +228,11 @@ export function ChannelSettingsModal({ channel, orgId, currentUserProfile, onClo
       setLoadingMembers(true);
       try {
         const snap = await getDocs(
-          query(collection(db, 'channelMembers'), where('channelId', '==', channel.id))
+          query(
+            collection(db, 'channelMembers'),
+            where('orgId', '==', orgId),
+            where('channelId', '==', channel.id),
+          )
         );
         const memberIds = new Set(snap.docs.map((d) => d.data().userId as string));
         const matched = orgMembers.filter((m) => memberIds.has(m.uid));

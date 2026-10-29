@@ -1,17 +1,39 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 
+const JWT_SECRET = process.env.SUPERADMIN_JWT_SECRET || '';
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'guild-app-f6c28';
-const FIREBASE_REFRESH_TOKEN =
-  process.env.FIREBASE_REFRESH_TOKEN ||
-  '1//0gGK2a0tXktXECgYIARAAGBASNwF-L9IrXnAQrodw3eQ7yl4WvCCXqNoTJGmY0AQfdi6nIAZGa6FrwbEInGQbcrpRYk7RoYaVBw8';
-const CLIENT_ID =
-  process.env.FIREBASE_CLIENT_ID || '563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com';
-const CLIENT_SECRET = process.env.FIREBASE_CLIENT_SECRET || 'j9iVZfS8kkCEFUPaAeJV0sAi';
+const FIREBASE_REFRESH_TOKEN = process.env.FIREBASE_REFRESH_TOKEN || '';
+const CLIENT_ID = process.env.FIREBASE_CLIENT_ID || '';
+const CLIENT_SECRET = process.env.FIREBASE_CLIENT_SECRET || '';
+
+function verifySessionToken(req: any): { valid: boolean; email?: string } {
+  if (!JWT_SECRET) return { valid: false };
+  try {
+    const authHeader = req.headers?.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : (req.body?.token || '');
+    if (!token) return { valid: false };
+    const parts = token.split('.');
+    if (parts.length !== 2) return { valid: false };
+    const [base64Payload, signature] = parts;
+    const expectedSig = createHmac('sha256', JWT_SECRET).update(base64Payload).digest('base64url');
+    if (signature.length !== expectedSig.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) {
+      return { valid: false };
+    }
+    const payload = JSON.parse(Buffer.from(base64Payload, 'base64url').toString('utf8'));
+    if (!payload.exp || Date.now() > payload.exp) return { valid: false };
+    return { valid: true, email: payload.email };
+  } catch {
+    return { valid: false };
+  }
+}
 
 let cachedAccessToken: string | null = null;
 let tokenExpiresAt = 0;
 
 async function getAccessToken(): Promise<string> {
+  if (!FIREBASE_REFRESH_TOKEN || !CLIENT_ID || !CLIENT_SECRET) {
+    return '';
+  }
   if (cachedAccessToken && Date.now() < tokenExpiresAt - 60000) {
     return cachedAccessToken;
   }
@@ -67,6 +89,11 @@ export default async function handler(req: any, res: any) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method Not Allowed' });
+  }
+
+  const session = verifySessionToken(req);
+  if (!session.valid) {
+    return res.status(401).json({ success: false, error: 'Unauthorized: Valid SuperAdmin session token required' });
   }
 
   const { uid, action, isBanned, reason, role, orgId, adminEmail, userName } = req.body || {};

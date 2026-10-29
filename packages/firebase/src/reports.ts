@@ -266,6 +266,7 @@ export async function getRecentActivity(
         const snap = await getDocs(
           query(
             collection(db, 'taskActivities'),
+            where('orgId', '==', orgId),
             where('taskId', 'in', chunk),
             orderBy('createdAt', 'desc'),
           ),

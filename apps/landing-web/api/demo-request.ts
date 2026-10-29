@@ -5,17 +5,17 @@ if (typeof (dns as any).setDefaultResultOrder === 'function') {
 }
 
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'guild-app-f6c28';
-const FIREBASE_REFRESH_TOKEN =
-  process.env.FIREBASE_REFRESH_TOKEN ||
-  '1//0gGK2a0tXktXECgYIARAAGBASNwF-L9IrXnAQrodw3eQ7yl4WvCCXqNoTJGmY0AQfdi6nIAZGa6FrwbEInGQbcrpRYk7RoYaVBw8';
-const CLIENT_ID =
-  process.env.FIREBASE_CLIENT_ID || '563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com';
-const CLIENT_SECRET = process.env.FIREBASE_CLIENT_SECRET || 'j9iVZfS8kkCEFUPaAeJV0sAi';
+const FIREBASE_REFRESH_TOKEN = process.env.FIREBASE_REFRESH_TOKEN || '';
+const CLIENT_ID = process.env.FIREBASE_CLIENT_ID || '';
+const CLIENT_SECRET = process.env.FIREBASE_CLIENT_SECRET || '';
 
 let cachedAccessToken: string | null = null;
 let tokenExpiresAt = 0;
 
 async function getAccessToken(): Promise<string> {
+  if (!FIREBASE_REFRESH_TOKEN || !CLIENT_ID || !CLIENT_SECRET) {
+    return '';
+  }
   if (cachedAccessToken && Date.now() < tokenExpiresAt - 60000) {
     return cachedAccessToken;
   }
@@ -94,10 +94,19 @@ export default async function handler(req: any, res: any) {
 
   try {
     const body = req.body || {};
-    const { name, email, company, teamSize, message, source, formType } = body;
+    const rawName = typeof body.name === 'string' ? body.name.trim() : '';
+    const rawEmail = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const company = typeof body.company === 'string' ? body.company.trim().slice(0, 150) : '';
+    const teamSize = typeof body.teamSize === 'string' ? body.teamSize.trim().slice(0, 50) : '';
+    const message = typeof body.message === 'string' ? body.message.trim().slice(0, 2000) : '';
+    const source = typeof body.source === 'string' ? body.source.trim().slice(0, 50) : '';
+    const formType = typeof body.formType === 'string' ? body.formType.trim().slice(0, 50) : '';
 
-    if (!name || !email) {
-      return res.status(400).json({ success: false, error: 'Full name and email are required.' });
+    const name = rawName.slice(0, 120);
+    const email = rawEmail.slice(0, 180);
+
+    if (!name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, error: 'A valid full name and email address are required.' });
     }
 
     const token = await getAccessToken();

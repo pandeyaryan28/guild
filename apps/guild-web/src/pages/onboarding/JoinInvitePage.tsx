@@ -92,8 +92,7 @@ export function JoinInvitePage() {
       setSuccess(true);
       setTimeout(() => {
         navigate('/', { replace: true });
-        window.location.reload(); // Re-fetch global org state
-      }, 2000);
+      }, 1200);
     } catch (err: any) {
       setError(err.message || 'Failed to accept invite.');
       setIsAccepting(false);
@@ -104,16 +103,13 @@ export function JoinInvitePage() {
   if (authLoading || isValidating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-        <div className="aether-aurora opacity-50" />
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4">
-      <div className="aether-aurora opacity-50" />
-
+    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 bg-background">
       {/* Floating Theme Mode Toggle */}
       <div className="absolute top-6 right-8 z-50">
         <button

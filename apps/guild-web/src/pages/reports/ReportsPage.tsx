@@ -22,7 +22,12 @@ export function ReportsPage() {
   const { userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
   const userId = userProfile?.uid;
-  const isManager = userProfile?.isManager === true;
+  const isManager =
+    userProfile?.isManager === true ||
+    userProfile?.role === 'owner' ||
+    userProfile?.role === 'admin' ||
+    userProfile?.role === 'manager';
+  const isAdminOrOwner = userProfile?.role === 'owner' || userProfile?.role === 'admin';
 
   const [activeScope, setActiveScope] = React.useState<ReportScope>('my');
   const [filters, setFilters] = React.useState<ReportFiltersState>(DEFAULT_FILTERS);
@@ -96,6 +101,7 @@ export function ReportsPage() {
             <TeamReportTab
               orgId={orgId}
               managerId={userId}
+              isAdminOrOwner={isAdminOrOwner}
               filters={filters}
               onSelectTask={setSelectedTask}
               projects={projects}

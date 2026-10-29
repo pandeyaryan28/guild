@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { MobileLayout } from './MobileLayout';
 import { MobileDashboard } from './pages/MobileDashboard';
 import { MobileChat } from './pages/MobileChat';
@@ -13,6 +13,11 @@ import { MobileCalendar } from './pages/MobileCalendar';
 import { MobileReports } from './pages/MobileReports';
 import { MobileProjectDetail } from './pages/MobileProjectDetail';
 const StudioPage = React.lazy(() => import('../../pages/studio/StudioPage').then(m => ({ default: m.StudioPage })));
+
+function MobileTasksRedirect() {
+  const location = useLocation();
+  return <Navigate to={`/workspace${location.search}`} replace />;
+}
 
 export function MobileApp() {
   return (
@@ -78,6 +83,11 @@ export function MobileApp() {
             </MobileLayout>
           </ProtectedRoute>
         }
+      />
+
+      <Route
+        path="/tasks"
+        element={<MobileTasksRedirect />}
       />
 
 

@@ -30,9 +30,9 @@ function RequestIcon({ name, className = "h-4 w-4" }: { name: string; className?
 }
 
 function statusColor(s: RequestStatus) {
-  if (s === 'approved') return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
-  if (s === 'rejected') return 'text-red-400 bg-red-400/10 border-red-400/20';
-  return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
+  if (s === 'approved') return 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+  if (s === 'rejected') return 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20';
+  return 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20';
 }
 
 function StatusBadge({ status }: { status: RequestStatus }) {
@@ -349,7 +349,7 @@ ${request.approverNote ? `Review Note: "${request.approverNote}"` : ''}
 
   if (inline) {
     return (
-      <div className="h-full border-l border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/60 backdrop-blur-xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[420px] lg:relative shadow-2xl lg:shadow-none shrink-0 animate-in slide-in-from-right duration-200">
+      <div className="h-full border-l border-border bg-surface/95 backdrop-blur-xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[420px] lg:relative shadow-2xl lg:shadow-none shrink-0 animate-in slide-in-from-right duration-200">
         <div className="w-full sm:w-[420px] h-full flex flex-col min-h-0 print:hidden">
           
           {/* Drawer Header */}

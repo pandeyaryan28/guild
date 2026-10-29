@@ -6,35 +6,55 @@ import {
   listenToRequest,
   type OrgRequest,
 } from '../lib/requests';
+import { useWorkspaceData } from '../context/WorkspaceDataContext';
 
 export function useRequests(orgId: string | undefined) {
   const { user } = useAuth();
-  const [sent, setSent] = React.useState<OrgRequest[]>([]);
-  const [received, setReceived] = React.useState<OrgRequest[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const workspace = useWorkspaceData();
+  const canUseContext = Boolean(workspace && orgId && workspace.orgId === orgId);
+
+  const [fallbackSent, setFallbackSent] = React.useState<OrgRequest[]>([]);
+  const [fallbackReceived, setFallbackReceived] = React.useState<OrgRequest[]>([]);
+  const [fallbackLoading, setFallbackLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!orgId || !user) { setLoading(false); return; }
-    setLoading(true);
+    if (canUseContext || !orgId || !user) {
+      if (!orgId || !user) setFallbackLoading(false);
+      return;
+    }
+    setFallbackLoading(true);
     let loaded = 0;
-    const done = () => { loaded++; if (loaded >= 2) setLoading(false); };
+    const done = () => { loaded++; if (loaded >= 2) setFallbackLoading(false); };
 
     const unsubSent = listenToSentRequests(orgId, user.uid, (reqs) => {
-      setSent(reqs); done();
+      setFallbackSent(reqs); done();
     });
     const unsubReceived = listenToReceivedRequests(orgId, user.uid, (reqs) => {
-      setReceived(reqs); done();
+      setFallbackReceived(reqs); done();
     });
 
     return () => { unsubSent(); unsubReceived(); };
-  }, [orgId, user?.uid]);
+  }, [canUseContext, orgId, user?.uid]);
 
+  const sent = canUseContext && workspace ? workspace.sentRequests : fallbackSent;
+  const received = canUseContext && workspace ? workspace.receivedRequests : fallbackReceived;
+  const loading = canUseContext && workspace ? workspace.requestsLoading : fallbackLoading;
   const pendingCount = received.filter((r) => r.status === 'pending').length;
 
   return { sent, received, pendingCount, loading };
 }
 
 export function useRequest(requestId: string | null | undefined) {
+  const workspace = useWorkspaceData();
+  const cachedRequest = React.useMemo(() => {
+    if (!requestId || !workspace) return null;
+    return (
+      workspace.receivedRequests.find((r) => r.id === requestId) ??
+      workspace.sentRequests.find((r) => r.id === requestId) ??
+      null
+    );
+  }, [requestId, workspace]);
+
   const [request, setRequest] = React.useState<OrgRequest | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -44,13 +64,17 @@ export function useRequest(requestId: string | null | undefined) {
       setLoading(false);
       return;
     }
+    if (cachedRequest) {
+      setRequest(cachedRequest);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     return listenToRequest(requestId, (r) => {
       setRequest(r);
       setLoading(false);
     });
-  }, [requestId]);
+  }, [requestId, cachedRequest]);
 
-  return { request, loading };
+  return { request: cachedRequest ?? request, loading: cachedRequest ? false : loading };
 }
-

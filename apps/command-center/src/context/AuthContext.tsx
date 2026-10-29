@@ -68,7 +68,6 @@ export function SuperAdminAuthProvider({ children }: { children: React.ReactNode
   const restoreSession = useCallback(async () => {
     try {
       const storedToken = sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
-      const storedProfileRaw = sessionStorage.getItem(PROFILE_KEY) || localStorage.getItem(PROFILE_KEY);
 
       if (!storedToken) {
         setState({
@@ -117,27 +116,11 @@ export function SuperAdminAuthProvider({ children }: { children: React.ReactNode
           isSuperAdmin: true,
         });
       } else {
-        // Fallback: If offline or API unavailable, check if locally stored valid profile exists
-        if (storedProfileRaw) {
-          const profile = JSON.parse(storedProfileRaw);
-          const authUser = {
-            uid: profile.uid,
-            email: profile.email,
-            displayName: profile.name || 'Aryan Pandey',
-          };
-          setState({
-            status: 'authorized',
-            user: authUser,
-            adminProfile: profile,
-            permissions: profile.permissions || getDefaultPermissionsForRole('superadmin'),
-            isSuperAdmin: true,
-          });
-          return;
-        }
-
-        // Invalid session
+        // Invalid or expired session: never trust client storage when backend rejects the token
         sessionStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(PROFILE_KEY);
+        localStorage.removeItem(PROFILE_KEY);
         setState({
           status: 'unauthenticated',
           user: null,
@@ -147,25 +130,10 @@ export function SuperAdminAuthProvider({ children }: { children: React.ReactNode
         });
       }
     } catch {
-      // In case network check is unreachable, check stored session
-      const storedToken = sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
-      const storedProfileRaw = sessionStorage.getItem(PROFILE_KEY) || localStorage.getItem(PROFILE_KEY);
-      if (storedToken && storedProfileRaw) {
-        try {
-          const profile = JSON.parse(storedProfileRaw);
-          setState({
-            status: 'authorized',
-            user: { uid: profile.uid, email: profile.email, displayName: profile.name },
-            adminProfile: profile,
-            permissions: profile.permissions || getDefaultPermissionsForRole('superadmin'),
-            isSuperAdmin: true,
-          });
-          return;
-        } catch {
-          // ignore
-        }
-      }
-
+      sessionStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(PROFILE_KEY);
+      localStorage.removeItem(PROFILE_KEY);
       setState({
         status: 'unauthenticated',
         user: null,

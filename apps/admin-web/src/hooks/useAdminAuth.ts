@@ -28,8 +28,11 @@ export function useAdminAuth(): AdminAuthState {
       }
 
       try {
-        const profileSnap = await getDoc(doc(db, 'users', user.uid));
-        if (!profileSnap.exists()) {
+        const [profileSnap, bannedSnap] = await Promise.all([
+          getDoc(doc(db, 'users', user.uid)),
+          getDoc(doc(db, 'bannedUsers', user.uid)),
+        ]);
+        if (bannedSnap.exists() || !profileSnap.exists()) {
           setState({ status: 'unauthorized', email: user.email ?? '' });
           return;
         }

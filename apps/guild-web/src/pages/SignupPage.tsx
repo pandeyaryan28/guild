@@ -157,14 +157,12 @@ export function SignupPage() {
   if (loading) return null;
 
   return (
-    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4">
-      <div className="aether-aurora opacity-50" />
-
+    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 bg-background">
       {/* Floating Theme Mode Toggle */}
       <div className="absolute top-6 right-8 z-50">
         <button
           onClick={toggleMode}
-          className="aether-glass flex h-10 w-10 items-center justify-center rounded-xl hover:scale-105 active:scale-95 transition-all shadow-sm border border-border-default bg-surface/50 text-foreground cursor-pointer"
+          className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-secondary active:scale-[0.98] transition-all shadow-sm border border-border bg-surface text-foreground cursor-pointer"
           title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
         >
           {mode === 'light' ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5 text-amber-400" />}
@@ -368,7 +366,7 @@ export function SignupPage() {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={isSubmitting}
-                className="w-full h-10 aether-glass border border-white/10 hover:bg-white/5 text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50"
+                className="w-full h-10 rounded-xl bg-surface border border-border hover:bg-secondary text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:opacity-50"
               >
                 <svg className="h-3.5 w-3.5" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                   <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>

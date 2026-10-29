@@ -483,13 +483,22 @@ export function GoalDetailDrawer({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4.5 border-b border-neutral-100 dark:border-neutral-850/60 flex-shrink-0 bg-neutral-50/30 dark:bg-neutral-900/30 backdrop-blur-sm">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/60 px-2 py-0.5 rounded-md">
-                Goal Focus Details
+              <span className="text-xs font-semibold text-muted-foreground">
+                Goal Details
               </span>
             </div>
             
             {/* Quick action buttons */}
             <div className="flex items-center gap-2 shrink-0">
+              {canDelete && (
+                <button
+                  onClick={handleDeleteGoal}
+                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-red-500/10 hover:border-red-500/20 text-neutral-500 hover:text-red-500 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                  title="Delete Goal"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={handleCopyLink}
                 className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
@@ -1015,13 +1024,22 @@ export function GoalDetailDrawer({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4.5 border-b border-neutral-100 dark:border-neutral-850/60 flex-shrink-0 bg-neutral-50/30 dark:bg-neutral-900/30 backdrop-blur-sm">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-widest font-black text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/60 px-2 py-0.5 rounded-md">
-                Goal Focus Details
+              <span className="text-xs font-semibold text-muted-foreground">
+                Goal Details
               </span>
             </div>
             
             {/* Quick action buttons */}
             <div className="flex items-center gap-2 shrink-0">
+              {canDelete && (
+                <button
+                  onClick={handleDeleteGoal}
+                  className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-red-500/10 hover:border-red-500/20 text-neutral-500 hover:text-red-500 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
+                  title="Delete Goal"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={handleCopyLink}
                 className="p-2 rounded-xl border border-neutral-200/65 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center shadow-xs"
