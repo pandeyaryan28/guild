@@ -5,7 +5,7 @@ import {
   Check, Loader2, ShieldAlert, Trash2, Crown, ShieldCheck,
   UserMinus, Copy, AlertCircle, Info, Mail,
   Plus, Workflow, MessageSquare, AtSign, CheckSquare, MessagesSquare, UserPlus, Camera,
-  Download, Share2, CreditCard, Folder, Target
+  Download, Share2, CreditCard, Folder, Target, ArrowLeft, ArrowRight, X
 } from 'lucide-react';
 import { BillingSettingsView } from './BillingSettingsView';
 import { createTeam, updateTeam, deleteTeam } from '../../lib/teams';
@@ -162,43 +162,43 @@ export function SettingsPage() {
   const members = useOrgMembers(orgId);
   const { links: inviteLinks, loading: invitesLoading } = useInviteLinks(orgId);
 
-  // Tab state
-  const [activeTab, setActiveTab] = React.useState<string>('profile');
+  // Tab state - 4 Clean Apple Tabs
+  const [activeTab, setActiveTab] = React.useState<string>('general');
   const [isInviteModalOpen, setIsInviteModalOpen] = React.useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
 
   // Dynamic Tabs definition
-  const tabs = React.useMemo(() => {
-    const list = [
-      { id: 'profile', label: 'My Profile', icon: User, allowed: ['member', 'admin', 'owner'], group: 'personal' },
-      { id: 'notifications', label: 'Notifications', icon: Bell, allowed: ['member', 'admin', 'owner'], group: 'personal' },
-      { id: 'appearance', label: 'Appearance', icon: Paintbrush, allowed: ['member', 'admin', 'owner'], group: 'personal' },
-      { id: 'members', label: 'Workspace Members', icon: Users, allowed: ['admin', 'owner'], group: 'workspace' },
-      { id: 'teams', label: 'Teams & Org', icon: Workflow, allowed: ['admin', 'owner'], group: 'workspace' },
-      { id: 'invites', label: 'Invite Links', icon: Link2, allowed: ['admin', 'owner'], group: 'workspace' },
-      { id: 'billing', label: 'Billing & Plans', icon: CreditCard, allowed: ['owner'], group: 'workspace' },
-      { id: 'workspace', label: 'Workspace Info', icon: Building2, allowed: ['admin', 'owner'], group: 'workspace' },
-    ];
-    return list.filter((t) => t.allowed.includes(role));
-  }, [role]);
+  const tabs = React.useMemo(() => [
+    { id: 'general', label: 'General', icon: Building2 },
+    { id: 'members', label: 'Members & Roles', icon: Users },
+    { id: 'billing', label: 'Subscriptions & Billing', icon: CreditCard },
+    { id: 'danger', label: 'Danger Zone', icon: ShieldAlert },
+  ], []);
 
-  // Auto-switch to workspace settings if deletion confirmation link is clicked
+  // Auto-switch tab if url params specify
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('confirmDelete') === 'true') {
-      setActiveTab('workspace');
+      setActiveTab('danger');
+      setIsDeleteModalOpen(true);
+    } else {
+      const tabParam = params.get('tab');
+      if (tabParam && ['general', 'members', 'billing', 'danger'].includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
     }
   }, []);
 
-  // Ensure active tab is allowed if role changes
+  // Ensure active tab is valid
   React.useEffect(() => {
     if (!tabs.find((t) => t.id === activeTab)) {
-      setActiveTab('profile');
+      setActiveTab('general');
     }
   }, [tabs, activeTab]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] min-h-0 md:min-h-[600px] overflow-hidden bg-transparent w-full">
-      {/* Header Overhaul */}
+      {/* Header */}
       <div className="px-4 md:px-8 pt-4 pb-3 border-b border-border/60 bg-transparent shrink-0">
         <h1 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
           Settings
@@ -206,108 +206,74 @@ export function SettingsPage() {
       </div>
 
       {/* Main Split Grid Workspace */}
-      <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-5 overflow-hidden px-4 md:px-8 py-2 min-h-0">
+      <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-5 overflow-hidden px-4 md:px-8 py-3 min-h-0">
         
-        {/* Navigation Sidebar (Frosted glass) */}
-        <div className="w-full md:w-64 shrink-0 aether-glass bg-white/[0.01] border-border/60 p-3 md:p-4 overflow-x-auto md:overflow-y-auto scrollbar-hide aether-scroll flex flex-row md:flex-col gap-4 md:gap-5 h-auto md:h-full shrink-0">
-          
-          {/* Personal Group */}
-          {tabs.filter(t => t.group === 'personal').length > 0 && (
-            <div className="flex flex-row md:flex-col gap-2 md:gap-2 items-center md:items-stretch shrink-0">
-              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 px-3 pb-1 select-none font-heading hidden md:block">
-                Personal
-              </p>
-              <div className="flex flex-row md:flex-col gap-1 md:space-y-1 shrink-0">
-                {tabs.filter(t => t.group === 'personal').map((tab) => {
-                  const TabIcon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
+        {/* Navigation Sidebar (Apple SwiftUI Frosted Glass) */}
+        <div className="w-full md:w-64 shrink-0 rounded-3xl p-3 md:p-4 bg-surface/80 dark:bg-card/60 backdrop-blur-2xl border border-border dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] overflow-x-auto md:overflow-y-auto scrollbar-hide aether-scroll flex flex-row md:flex-col gap-1.5 md:gap-2 h-auto md:h-full">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-3 pb-1 select-none hidden md:block">
+            Workspace Settings
+          </p>
+          <div className="flex flex-row md:flex-col gap-1 shrink-0 w-full">
+            {tabs.map((tab) => {
+              const TabIcon = tab.icon;
+              const isActive = activeTab === tab.id;
+              const isDanger = tab.id === 'danger';
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex w-auto md:w-full items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all relative select-none cursor-pointer shrink-0 active:scale-[0.98]",
+                    isActive
+                      ? isDanger
+                        ? "text-destructive font-bold"
+                        : "text-primary dark:text-primary font-bold"
+                      : isDanger
+                        ? "text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                  )}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeSettingsTabBG"
                       className={cn(
-                        "flex w-auto md:w-full items-center gap-3 px-3 py-2 md:py-2.5 rounded-xl text-[11px] font-bold transition-all relative group select-none cursor-pointer shrink-0",
-                        isActive ? "" : "text-muted-foreground hover:text-foreground"
+                        "absolute inset-0 border rounded-2xl z-0",
+                        isDanger
+                          ? "bg-destructive/10 border-destructive/20"
+                          : "bg-primary/10 border-primary/20"
                       )}
-                      style={isActive ? { color: 'var(--accent)' } : undefined}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeSettingsTabBG"
-                          className="absolute inset-0 bg-accent/20 border border-accent/30 rounded-xl z-0"
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                          style={{ backgroundColor: 'oklch(from var(--accent) l c h / 12%)', borderColor: 'oklch(from var(--accent) l c h / 20%)' }}
-                        />
-                      )}
-                      <TabIcon className={cn("h-4 w-4 shrink-0 z-10 transition-colors", isActive ? "text-accent" : "text-muted-foreground group-hover:text-foreground")} style={isActive ? { color: 'var(--accent)' } : undefined} />
-                      <span className="truncate z-10 tracking-wide">{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Workspace Group */}
-          {tabs.filter(t => t.group === 'workspace').length > 0 && (
-            <div className="flex flex-row md:flex-col gap-2 md:gap-2 items-center md:items-stretch shrink-0">
-              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 px-3 pb-1 select-none font-heading hidden md:block">
-                Workspace
-              </p>
-              <div className="flex flex-row md:flex-col gap-1 md:space-y-1 shrink-0">
-                {tabs.filter(t => t.group === 'workspace').map((tab) => {
-                  const TabIcon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={cn(
-                        "flex w-auto md:w-full items-center gap-3 px-3 py-2 md:py-2.5 rounded-xl text-[11px] font-bold transition-all relative group select-none cursor-pointer shrink-0",
-                        isActive ? "" : "text-muted-foreground hover:text-foreground"
-                      )}
-                      style={isActive ? { color: 'var(--accent)' } : undefined}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeSettingsTabBG"
-                          className="absolute inset-0 bg-accent/20 border border-accent/30 rounded-xl z-0"
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                          style={{ backgroundColor: 'oklch(from var(--accent) l c h / 12%)', borderColor: 'oklch(from var(--accent) l c h / 20%)' }}
-                        />
-                      )}
-                      <TabIcon className={cn("h-4 w-4 shrink-0 z-10 transition-colors", isActive ? "text-accent" : "text-muted-foreground group-hover:text-foreground")} style={isActive ? { color: 'var(--accent)' } : undefined} />
-                      <span className="truncate z-10 tracking-wide">{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                      transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                    />
+                  )}
+                  <TabIcon className={cn("h-4 w-4 shrink-0 z-10 transition-colors", isActive ? (isDanger ? "text-destructive" : "text-primary") : "text-muted-foreground")} />
+                  <span className="truncate z-10">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
           {/* Dynamic PWA Install CTA (Desktop only) */}
           {isInstallable && !isStandalone && (
-            <div className="hidden md:flex flex-col gap-2.5 p-3.5 mt-auto rounded-2xl bg-primary/5 border border-primary/10 relative overflow-hidden shrink-0">
-              <div className="absolute -right-6 -top-6 w-16 h-16 rounded-full bg-primary/10 blur-xl pointer-events-none" />
+            <div className="hidden md:flex flex-col gap-2.5 p-3.5 mt-auto rounded-2xl bg-secondary/40 border border-border relative overflow-hidden shrink-0">
               <div className="flex items-center gap-2 z-10">
                 <Download className="w-3.5 h-3.5 text-primary shrink-0" />
-                <span className="text-[9px] font-black uppercase tracking-widest text-foreground leading-none">Desktop App</span>
+                <span className="text-[10px] font-bold text-foreground">Desktop App</span>
               </div>
-              <p className="text-[9.5px] text-muted-foreground leading-normal mt-0.5 z-10 font-semibold">Run in a dedicated borderless workspace.</p>
+              <p className="text-[11px] text-muted-foreground leading-normal mt-0.5 z-10 font-medium">Run in a dedicated borderless workspace.</p>
               <button
                 onClick={install}
-                className="w-full py-2 rounded-xl bg-primary hover:bg-primary/95 text-white text-[9px] font-black tracking-widest transition-all active:scale-98 cursor-pointer shadow-md z-10"
+                className="w-full py-2 rounded-xl bg-primary hover:opacity-95 text-primary-foreground text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shadow-xs z-10"
               >
-                INSTALL APP
+                Install App
               </button>
             </div>
           )}
         </div>
 
         {/* Dynamic Tab Content Area (Frosted Canvas) */}
-        <div className="flex-1 overflow-hidden aether-glass bg-white/[0.005] border-border/60 p-4 md:p-6 flex flex-col h-full">
+        <div className="flex-1 overflow-hidden rounded-3xl bg-surface/90 dark:bg-card/75 backdrop-blur-2xl border border-border dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-4 md:p-6 flex flex-col h-full">
           <div className="flex-grow overflow-y-auto aether-scroll pr-1">
-            <div className="max-w-2xl mx-auto w-full">
+            <div className="max-w-3xl mx-auto w-full">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -317,87 +283,38 @@ export function SettingsPage() {
                   transition={{ duration: 0.15 }}
                   className="space-y-6"
                 >
-                  {activeTab === 'profile' && localProfile && (
-                    <ProfileSettingsView profile={localProfile} logout={logout} />
+                  {activeTab === 'general' && localProfile && (
+                    <GeneralSettingsView
+                      org={localOrg}
+                      profile={localProfile}
+                      logout={logout}
+                      themeId={themeId}
+                      setTheme={setTheme}
+                      loadingOrg={loadingOrg}
+                    />
                   )}
-                  {activeTab === 'notifications' && localProfile && (
-                    <NotificationSettingsView profile={localProfile} />
-                  )}
-                  {activeTab === 'appearance' && localProfile && (
-                    <AppearanceSettingsView profile={localProfile} themeId={themeId} setTheme={setTheme} />
-                  )}
+
                   {activeTab === 'members' && localProfile && (
-                    <MembersSettingsView
+                    <MembersRolesSettingsView
                       profile={localProfile}
                       members={members}
-                      onOpenInvite={() => setIsInviteModalOpen(true)}
-                    />
-                  )}
-                  {activeTab === 'invites' && localProfile && (
-                    <InviteLinksSettingsView
-                      profile={localProfile}
                       inviteLinks={inviteLinks}
-                      loading={invitesLoading}
-                      members={members}
+                      invitesLoading={invitesLoading}
                       onOpenInvite={() => setIsInviteModalOpen(true)}
                     />
                   )}
-                  {activeTab === 'teams' && localProfile && (
-                    <TeamsSettingsView
-                      profile={localProfile}
-                      members={members}
-                    />
-                  )}
+
                   {activeTab === 'billing' && localProfile && (
                     <BillingSettingsView profile={localProfile} />
                   )}
-                  {activeTab === 'workspace' && localProfile && (
-                    loadingOrg ? (
-                      <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
-                        <Loader2 className="h-5 w-5 animate-spin text-accent" />
-                        <span className="text-xs font-bold">Synchronizing workspace details…</span>
-                      </div>
-                    ) : localOrg ? (
-                      <WorkspaceSettingsView
-                        org={localOrg}
-                        profile={localProfile}
-                        logout={logout}
-                      />
-                    ) : (
-                      <div className="aether-glass bg-red-500/[0.01] border border-red-500/20 shadow-[0_4px_24px_rgba(239,68,68,0.06),inset_0_1px_1px_rgba(255,255,255,0.02)] rounded-3xl p-6 space-y-4 relative overflow-hidden mt-6 text-left">
-                        <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.08] filter blur-xl bg-red-500" />
-                        
-                        <div className="flex items-start gap-3">
-                          <ShieldAlert className="h-5 w-5 text-red-500 shrink-0 mt-0.5 animate-pulse" />
-                          <div>
-                            <h2 className="text-xs font-black text-red-500 uppercase tracking-wider">Workspace Missing</h2>
-                            <p className="text-[10px] text-red-500/80 mt-0.5 leading-relaxed font-semibold">
-                              The workspace associated with your account (ID: <span className="font-mono text-foreground font-bold">{localProfile.organizationId}</span>) could not be located in our records. It may have been deleted or orphaned.
-                            </p>
-                          </div>
-                        </div>
 
-                        <div className="pt-2 flex flex-wrap gap-3">
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              if (window.confirm('Do you want to reset your workspace association? You will be navigated back to onboarding/workspace setup.')) {
-                                try {
-                                  await removeUserFromOrg(localProfile.uid);
-                                  window.location.reload();
-                                } catch (err) {
-                                  alert('Failed to reset workspace');
-                                }
-                              }
-                            }}
-                            className="px-4 py-2 bg-accent text-accent-foreground rounded-xl text-xs font-bold hover:bg-accent/90 transition-all cursor-pointer shadow-md text-xs"
-                            style={{ background: 'var(--accent)' }}
-                          >
-                            Reset Workspace Setup
-                          </button>
-                        </div>
-                      </div>
-                    )
+                  {activeTab === 'danger' && localProfile && (
+                    <DangerZoneSettingsView
+                      org={localOrg}
+                      profile={localProfile}
+                      logout={logout}
+                      onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
+                    />
                   )}
                 </motion.div>
               </AnimatePresence>
@@ -413,6 +330,17 @@ export function SettingsPage() {
           onClose={() => setIsInviteModalOpen(false)}
           orgId={orgId}
           userId={user.uid}
+        />
+      )}
+
+      {/* Workspace Deletion Safe Two-Step Confirmation Modal */}
+      {localOrg && localProfile && (
+        <WorkspaceDeleteModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          org={localOrg}
+          profile={localProfile}
+          logout={logout}
         />
       )}
     </div>
@@ -1443,9 +1371,6 @@ interface WorkspaceViewProps {
 function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
   const [name, setName] = React.useState(org.name || '');
   const [domainAutoJoin, setDomainAutoJoin] = React.useState(!!org.domainAutoJoin);
-  const [deleting, setDeleting] = React.useState(false);
-  const [confirmName, setConfirmName] = React.useState('');
-
   const [saving, setSaving] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -1459,51 +1384,6 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
     const domain = org.emailDomain || profile.email.substring(profile.email.lastIndexOf('@') + 1).toLowerCase();
     return PUBLIC_DOMAINS.includes(domain);
   }, [org.emailDomain, profile.email]);
-
-  // Deletion States
-  const [passwordInput, setPasswordInput] = React.useState('');
-  const [reauthError, setReauthError] = React.useState<string | null>(null);
-  const [reauthenticating, setReauthenticating] = React.useState(false);
-
-  // Live Stats for Delete confirmation summary
-  const [stats, setStats] = React.useState<{
-    members: number;
-    channels: number;
-    tasks: number;
-    goals: number;
-    projects: number;
-    teams: number;
-  } | null>(null);
-
-  // Check user provider
-  const currentUser = getCurrentUser();
-  const isGoogleUser = currentUser?.providerData.some(p => p.providerId === 'google.com') ?? false;
-
-  React.useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [membersSnap, channelsSnap, tasksSnap, goalsSnap, projectsSnap, teamsSnap] = await Promise.all([
-          getDocs(query(collection(db, 'organizationMembers'), where('orgId', '==', org.id))),
-          getDocs(query(collection(db, 'channels'), where('orgId', '==', org.id))),
-          getDocs(query(collection(db, 'tasks'), where('orgId', '==', org.id))),
-          getDocs(query(collection(db, 'goals'), where('orgId', '==', org.id))),
-          getDocs(query(collection(db, 'projects'), where('orgId', '==', org.id))),
-          getDocs(query(collection(db, 'teams'), where('orgId', '==', org.id))),
-        ]);
-        setStats({
-          members: membersSnap.size,
-          channels: channelsSnap.size,
-          tasks: tasksSnap.size,
-          goals: goalsSnap.size,
-          projects: projectsSnap.size,
-          teams: teamsSnap.size,
-        });
-      } catch (err) {
-        console.error('Failed to fetch workspace statistics:', err);
-      }
-    };
-    fetchStats();
-  }, [org.id]);
 
   // Org logo states
   const [uploadingLogo, setUploadingLogo] = React.useState(false);
@@ -1590,24 +1470,454 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
     }
   };
 
-  const handleDeleteWorkspace = async (e: React.FormEvent) => {
+  return (
+    <div className="space-y-6 text-left animate-fluid-pop">
+      <div>
+        <h2 className="text-sm font-bold text-foreground">Workspace General Info</h2>
+        <p className="text-xs text-muted-foreground mt-0.5 font-medium">Manage your workspace branding and sign-up domains</p>
+      </div>
+
+      {/* Workspace Logo Upload Block */}
+      <div className="flex flex-col sm:flex-row items-center gap-5 p-6 rounded-3xl border border-border bg-secondary/30 dark:bg-card/50 backdrop-blur-md">
+        <div className="relative group shrink-0">
+          <div
+            onClick={() => !uploadingLogo && logoInputRef.current?.click()}
+            className="h-20 w-20 rounded-2xl flex items-center justify-center font-bold text-white text-xl relative overflow-hidden shadow-sm border border-border cursor-pointer select-none transition-all hover:opacity-90 active:scale-[0.98] bg-primary"
+          >
+            {org.photoURL ? (
+              <img src={org.photoURL} alt={org.name} className="h-full w-full object-cover" />
+            ) : (
+              org.name ? org.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?'
+            )}
+
+            {/* Hover Camera Overlay */}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-1 text-white">
+              <Camera className="h-4 w-4" />
+              <span className="text-[9px] font-bold uppercase tracking-wider">Change</span>
+            </div>
+
+            {/* Uploading Spinner */}
+            {uploadingLogo && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-white" />
+              </div>
+            )}
+          </div>
+          <input
+            type="file"
+            ref={logoInputRef}
+            onChange={handleLogoSelect}
+            accept="image/*"
+            className="hidden"
+          />
+        </div>
+
+        <div className="space-y-1.5 text-center sm:text-left">
+          <h3 className="text-xs font-bold text-foreground">Workspace Logo</h3>
+          <p className="text-xs text-muted-foreground font-medium">Recommended size: 250x250px (PNG, JPG, SVG)</p>
+          <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1.5">
+            <button
+              type="button"
+              onClick={() => logoInputRef.current?.click()}
+              disabled={uploadingLogo}
+              className="px-3.5 py-1.5 bg-secondary hover:bg-secondary/80 border border-border rounded-xl text-xs font-semibold text-foreground transition-all cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+            >
+              Choose Logo
+            </button>
+            {org.photoURL && (
+              <button
+                type="button"
+                onClick={handleRemoveLogo}
+                disabled={uploadingLogo}
+                className="px-3.5 py-1.5 bg-destructive/10 border border-destructive/20 rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+              >
+                Remove Logo
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="p-3.5 bg-destructive/10 border border-destructive/20 text-destructive text-xs rounded-2xl flex items-start gap-2.5 animate-fluid-pop font-semibold">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleUpdateWorkspace} className="space-y-5">
+        <div className="grid grid-cols-1 gap-4">
+          {/* Name */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground/80 pl-1">Workspace Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full h-11 px-4 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] text-xs font-medium text-foreground placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all"
+              placeholder="e.g. Acme Corp"
+            />
+          </div>
+
+          {/* Domain Auto-Join Toggle */}
+          <div className="p-4 rounded-2xl border border-border bg-secondary/30 dark:bg-white/[0.02]">
+            <label className="flex items-start gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={domainAutoJoin}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  if (checked && isPublicDomain) {
+                    const domain = org.emailDomain || profile.email.substring(profile.email.lastIndexOf('@') + 1).toLowerCase();
+                    const confirm = window.confirm(
+                      `WARNING: You are enabling domain-based auto-join for a public email domain (${domain}). ` +
+                      `This means ANYONE with a verified email ending in @${domain} can join your organization. ` +
+                      `Are you sure you want to proceed?`
+                    );
+                    if (!confirm) return;
+                  }
+                  setDomainAutoJoin(checked);
+                }}
+                className="mt-0.5 h-4 w-4 rounded-md border-border text-primary focus:ring-primary/20 accent-primary cursor-pointer"
+              />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-semibold text-foreground">Domain-based Auto-Join</span>
+                <span className="text-xs text-muted-foreground font-medium leading-relaxed">
+                  Allow users signing up with verified emails ending in <strong className="text-foreground">@{org.emailDomain || profile.email.substring(profile.email.lastIndexOf('@') + 1).toLowerCase()}</strong> to join this workspace automatically.
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div className="pt-2 flex justify-end">
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex items-center gap-2 px-6 h-11 rounded-2xl bg-primary text-primary-foreground font-semibold text-xs hover:opacity-95 active:scale-[0.98] disabled:opacity-50 transition-all shadow-sm cursor-pointer"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary-foreground" /> Saving…
+              </>
+            ) : success ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-primary-foreground" /> Updated Workspace!
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// ─── TAB VIEW: DANGER ZONE ───────────────────────────────────────────────────
+interface DangerZoneProps {
+  org: Organization | null;
+  profile: UserProfile;
+  logout: () => Promise<void>;
+  onOpenDeleteModal: () => void;
+}
+
+function DangerZoneSettingsView({ org, profile, logout, onOpenDeleteModal }: DangerZoneProps) {
+  const isOwner = profile.role === 'owner';
+  const [stats, setStats] = React.useState<{
+    members: number;
+    channels: number;
+    tasks: number;
+    goals: number;
+    projects: number;
+    teams: number;
+  } | null>(null);
+
+  // Profile deletion states
+  const [confirmUsername, setConfirmUsername] = React.useState('');
+  const [deletingProfile, setDeletingProfile] = React.useState(false);
+  const [profileDeleteError, setProfileDeleteError] = React.useState<string | null>(null);
+
+  // Leaving workspace state
+  const [leavingOrg, setLeavingOrg] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!org?.id) return;
+    const fetchStats = async () => {
+      try {
+        const [membersSnap, channelsSnap, tasksSnap, goalsSnap, projectsSnap, teamsSnap] = await Promise.all([
+          getDocs(query(collection(db, 'organizationMembers'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'channels'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'tasks'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'goals'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'projects'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'teams'), where('orgId', '==', org.id))),
+        ]);
+        setStats({
+          members: membersSnap.size,
+          channels: channelsSnap.size,
+          tasks: tasksSnap.size,
+          goals: goalsSnap.size,
+          projects: projectsSnap.size,
+          teams: teamsSnap.size,
+        });
+      } catch (err) {
+        console.error('Failed to fetch workspace statistics:', err);
+      }
+    };
+    fetchStats();
+  }, [org?.id]);
+
+  const handleDeleteProfile = async () => {
+    if (confirmUsername !== profile.username) return;
+    setDeletingProfile(true);
+    setProfileDeleteError(null);
+    try {
+      await deleteUserProfile(profile.uid, profile.username, profile.organizationId);
+      try {
+        await deleteCurrentUser();
+      } catch (authErr) {
+        console.warn('Failed to delete Auth user:', authErr);
+      }
+      await logout();
+      window.location.href = '/signup';
+    } catch (err: any) {
+      console.error('Failed to delete profile', err);
+      setProfileDeleteError(err.message || 'Failed to delete profile.');
+    } finally {
+      setDeletingProfile(false);
+    }
+  };
+
+  const handleLeaveWorkspace = async () => {
+    if (!window.confirm('Are you sure you want to leave this workspace? You will need an invite link to rejoin.')) return;
+    setLeavingOrg(true);
+    try {
+      await removeUserFromOrg(profile.uid);
+      window.location.href = '/onboarding';
+    } catch (err: any) {
+      alert('Failed to leave workspace. Please try again.');
+    } finally {
+      setLeavingOrg(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 text-left animate-fluid-pop">
+      <div>
+        <h2 className="text-sm font-bold text-foreground">Danger Zone</h2>
+        <p className="text-xs text-muted-foreground mt-0.5 font-medium">
+          Destructive operations and permanent workspace management
+        </p>
+      </div>
+
+      {/* Owner Workspace Deletion Card */}
+      {isOwner && org && (
+        <div className="rounded-3xl border border-destructive/30 bg-destructive/[0.03] dark:bg-destructive/[0.08] p-6 sm:p-7 relative overflow-hidden shadow-xs">
+          <div className="flex items-start gap-4">
+            <div className="h-11 w-11 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive flex items-center justify-center shrink-0">
+              <ShieldAlert className="h-6 w-6" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-foreground">Delete Workspace</h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed font-medium">
+                Permanently delete <strong className="text-foreground">{org.name}</strong>, including all channels, projects, tasks, goals, teams, and member records. This cannot be undone.
+              </p>
+
+              {/* Items preview */}
+              {stats && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-4">
+                  <div className="p-2.5 rounded-xl border border-border bg-surface/70 dark:bg-card/70 flex items-center gap-2">
+                    <Folder className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="text-xs font-semibold text-foreground">{stats.projects} Projects</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl border border-border bg-surface/70 dark:bg-card/70 flex items-center gap-2">
+                    <CheckSquare className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="text-xs font-semibold text-foreground">{stats.tasks} Tasks</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl border border-border bg-surface/70 dark:bg-card/70 flex items-center gap-2">
+                    <Target className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="text-xs font-semibold text-foreground">{stats.goals} Goals</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl border border-border bg-surface/70 dark:bg-card/70 flex items-center gap-2">
+                    <Workflow className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="text-xs font-semibold text-foreground">{stats.teams} Teams</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl border border-border bg-surface/70 dark:bg-card/70 flex items-center gap-2">
+                    <MessageSquare className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="text-xs font-semibold text-foreground">{stats.channels} Channels</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl border border-border bg-surface/70 dark:bg-card/70 flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="text-xs font-semibold text-foreground">{stats.members} Members</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onOpenDeleteModal}
+                  className="px-5 py-2.5 rounded-2xl bg-destructive text-destructive-foreground hover:opacity-95 text-xs font-semibold transition-all shadow-xs flex items-center gap-2 active:scale-[0.98] cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Workspace…
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Non-Owner: Leave Workspace Card */}
+      {!isOwner && (
+        <div className="rounded-3xl border border-border bg-secondary/30 p-6 relative overflow-hidden">
+          <div className="flex items-start gap-4">
+            <div className="h-11 w-11 rounded-2xl bg-secondary border border-border text-foreground flex items-center justify-center shrink-0">
+              <UserMinus className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-foreground">Leave Workspace</h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed font-medium">
+                Remove your account from this organization. You will lose access to team channels, tasks, and documents until invited again.
+              </p>
+              <div className="pt-3">
+                <button
+                  type="button"
+                  onClick={handleLeaveWorkspace}
+                  disabled={leavingOrg}
+                  className="px-5 py-2.5 rounded-2xl border border-border bg-surface hover:bg-secondary text-foreground text-xs font-semibold transition-all shadow-xs flex items-center gap-2 active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                >
+                  {leavingOrg ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserMinus className="h-4 w-4" />}
+                  Leave Workspace
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Personal Profile Deletion Card */}
+      <div className="rounded-3xl border border-destructive/20 bg-surface/80 dark:bg-card/60 p-6 relative overflow-hidden">
+        <div className="flex items-start gap-4">
+          <div className="h-11 w-11 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive flex items-center justify-center shrink-0">
+            <Trash2 className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-bold text-foreground">Delete Personal Profile</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed font-medium">
+              Permanently remove your account details, identity, and personal records from Guild. Your username will become available for others.
+            </p>
+
+            <div className="space-y-3 max-w-md mt-4">
+              <p className="text-xs text-muted-foreground font-medium">
+                To confirm, type your username <code className="font-mono text-foreground font-bold bg-secondary px-1.5 py-0.5 rounded-md">"{profile.username}"</code>:
+              </p>
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  value={confirmUsername}
+                  onChange={(e) => setConfirmUsername(e.target.value)}
+                  className="flex-1 h-11 px-4 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] text-xs font-medium text-foreground outline-none focus:border-destructive/50 focus:ring-2 focus:ring-destructive/20 transition-all"
+                  placeholder="Type your username"
+                />
+                <button
+                  type="button"
+                  onClick={handleDeleteProfile}
+                  disabled={deletingProfile || confirmUsername !== profile.username}
+                  className="h-11 px-5 bg-destructive hover:opacity-95 disabled:opacity-40 text-destructive-foreground rounded-2xl text-xs font-semibold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-[0.98]"
+                >
+                  {deletingProfile ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  Delete Profile
+                </button>
+              </div>
+              {profileDeleteError && (
+                <p className="text-xs text-destructive font-semibold mt-1.5">{profileDeleteError}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── WORKSPACE DELETION MODAL (SAFE TWO-STEP CONFIRMATION) ───────────────────
+interface WorkspaceDeleteModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  org: Organization;
+  profile: UserProfile;
+  logout: () => Promise<void>;
+  stats?: {
+    members: number;
+    channels: number;
+    tasks: number;
+    goals: number;
+    projects: number;
+    teams: number;
+  } | null;
+}
+
+function WorkspaceDeleteModal({ isOpen, onClose, org, profile, logout, stats: initialStats }: WorkspaceDeleteModalProps) {
+  const [step, setStep] = React.useState<1 | 2>(1);
+  const [confirmName, setConfirmName] = React.useState('');
+  const [passwordInput, setPasswordInput] = React.useState('');
+  const [reauthError, setReauthError] = React.useState<string | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
+  const [stats, setStats] = React.useState(initialStats || null);
+
+  const currentUser = getCurrentUser();
+  const isGoogleUser = currentUser?.providerData.some(p => p.providerId === 'google.com') ?? false;
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setStep(1);
+      setConfirmName('');
+      setPasswordInput('');
+      setReauthError(null);
+      setDeleting(false);
+
+      if (!initialStats && org?.id) {
+        Promise.all([
+          getDocs(query(collection(db, 'organizationMembers'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'channels'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'tasks'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'goals'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'projects'), where('orgId', '==', org.id))),
+          getDocs(query(collection(db, 'teams'), where('orgId', '==', org.id))),
+        ]).then(([membersSnap, channelsSnap, tasksSnap, goalsSnap, projectsSnap, teamsSnap]) => {
+          setStats({
+            members: membersSnap.size,
+            channels: channelsSnap.size,
+            tasks: tasksSnap.size,
+            goals: goalsSnap.size,
+            projects: projectsSnap.size,
+            teams: teamsSnap.size,
+          });
+        }).catch(err => console.error('Failed to load stats for deletion modal:', err));
+      }
+    }
+  }, [isOpen, org?.id, initialStats]);
+
+  if (!isOpen) return null;
+
+  const handleDelete = async (e: React.FormEvent) => {
     e.preventDefault();
     if (confirmName !== org.name) {
-      setReauthError('Confirmation failed. Please type the workspace name exactly.');
+      setReauthError('Please type the workspace name exactly as shown.');
       return;
     }
-    
-    setReauthenticating(true);
-    setReauthError(null);
+
     setDeleting(true);
+    setReauthError(null);
 
     try {
       if (isGoogleUser) {
         await reauthenticateGoogle();
       } else {
         if (!passwordInput.trim()) {
-          setReauthError('Owner password is required.');
-          setReauthenticating(false);
+          setReauthError('Owner account password is required.');
           setDeleting(false);
           return;
         }
@@ -1620,284 +1930,360 @@ function WorkspaceSettingsView({ org, profile, logout }: WorkspaceViewProps) {
     } catch (err: any) {
       console.error('Failed to delete organization:', err);
       setReauthError(err.message || 'Re-authentication failed. Please check your credentials.');
-      setReauthenticating(false);
       setDeleting(false);
     }
   };
 
   return (
-    <div className="space-y-6 text-left animate-fluid-pop">
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-sm font-bold text-foreground">Workspace General Info</h2>
-        </div>
-
-        {/* Premium Workspace Logo Upload Block */}
-        <div className="flex flex-col sm:flex-row items-center gap-5 p-5 rounded-3xl border border-border/60 bg-surface/60 shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] backdrop-blur-md">
-          <div className="relative group shrink-0">
-            <div
-              onClick={() => !uploadingLogo && logoInputRef.current?.click()}
-              className="h-20 w-20 rounded-full flex items-center justify-center font-black text-white text-xl relative overflow-hidden shadow-lg border-2 border-white/15 cursor-pointer select-none transition-all hover:border-accent group-hover:scale-102"
-              style={{
-                background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.2) c h) 100%)`
-              }}
-            >
-              <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
-              {org.photoURL ? (
-                <img src={org.photoURL} alt={org.name} className="h-full w-full object-cover" />
-              ) : (
-                org.name ? org.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?'
-              )}
-
-              {/* Hover Camera Overlay */}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-1 text-white">
-                <Camera className="h-4 w-4" />
-                <span className="text-[8px] font-black uppercase tracking-wider">Upload</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 12 }}
+        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+        className="w-full max-w-lg rounded-3xl bg-surface dark:bg-card border border-destructive/30 shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6 sm:p-8 relative overflow-hidden"
+      >
+        {/* Step 1: Impact review */}
+        {step === 1 && (
+          <div className="space-y-6 text-center">
+            <div className="flex flex-col items-center">
+              <div className="h-14 w-14 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive flex items-center justify-center mb-4">
+                <ShieldAlert className="h-7 w-7" />
               </div>
-
-              {/* Uploading Spinner */}
-              {uploadingLogo && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin text-accent" />
-                </div>
-              )}
+              <h2 className="text-lg font-bold text-foreground">
+                Delete "{org.name}"?
+              </h2>
+              <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-semibold">
+                Step 1 of 2: Impact Review
+              </div>
+              <p className="text-xs text-muted-foreground mt-3 font-medium leading-relaxed max-w-sm">
+                This action is immediate and completely permanent. All workspace resources will be wiped and cannot be recovered.
+              </p>
             </div>
-            <input
-              type="file"
-              ref={logoInputRef}
-              onChange={handleLogoSelect}
-              accept="image/*"
-              className="hidden"
-            />
-          </div>
 
-          <div className="space-y-1.5 text-center sm:text-left">
-            <h3 className="text-xs font-bold text-foreground">Workspace Logo</h3>
-            <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
+            {/* Impact Grid */}
+            {stats && (
+              <div className="p-4 rounded-2xl border border-destructive/20 bg-destructive/[0.03] space-y-2.5 text-left">
+                <span className="text-[11px] font-semibold text-foreground/80 block uppercase tracking-wider">
+                  Items to be permanently erased:
+                </span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-surface/80 dark:bg-card/80 border border-border">
+                    <Folder className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="font-semibold text-foreground">{stats.projects} Projects</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-surface/80 dark:bg-card/80 border border-border">
+                    <CheckSquare className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="font-semibold text-foreground">{stats.tasks} Tasks</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-surface/80 dark:bg-card/80 border border-border">
+                    <Target className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="font-semibold text-foreground">{stats.goals} Goals</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-surface/80 dark:bg-card/80 border border-border">
+                    <Workflow className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="font-semibold text-foreground">{stats.teams} Teams</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-surface/80 dark:bg-card/80 border border-border">
+                    <MessageSquare className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="font-semibold text-foreground">{stats.channels} Channels</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-surface/80 dark:bg-card/80 border border-border">
+                    <Users className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="font-semibold text-foreground">{stats.members} Members</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => logoInputRef.current?.click()}
-                disabled={uploadingLogo}
-                className="px-3 py-1.5 bg-secondary border border-border rounded-lg text-[10px] font-black uppercase tracking-wider text-foreground hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer disabled:opacity-50"
+                onClick={onClose}
+                className="flex-1 h-11 rounded-2xl border border-border bg-transparent hover:bg-secondary text-foreground text-xs font-semibold transition-all cursor-pointer active:scale-[0.98]"
               >
-                Choose Logo
+                Cancel
               </button>
-              {org.photoURL && (
-                <button
-                  type="button"
-                  onClick={handleRemoveLogo}
-                  disabled={uploadingLogo}
-                  className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg text-[10px] font-black uppercase tracking-wider text-red-400 hover:bg-red-500/20 hover:border-red-500/30 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  Remove Logo
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="flex-1 h-11 rounded-2xl bg-destructive text-destructive-foreground hover:opacity-95 text-xs font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
+              >
+                I Understand, Continue
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </div>
-          </div>
-        </div>
-
-        {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] rounded-xl flex items-start gap-2 animate-fluid-pop">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-            <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleUpdateWorkspace} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4">
-            {/* Name */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Workspace Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:bg-white/[0.04] transition-all font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]"
-                placeholder="Google Deepmind"
-              />
-            </div>
-
-            {/* Domain Auto-Join Toggle */}
-            <div className="space-y-2 pt-2 border-t border-border/60">
-              <label className="flex items-start gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={domainAutoJoin}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    if (checked && isPublicDomain) {
-                      const domain = org.emailDomain || profile.email.substring(profile.email.lastIndexOf('@') + 1).toLowerCase();
-                      const confirm = window.confirm(
-                        `WARNING: You are enabling domain-based auto-join for a public email domain (${domain}). ` +
-                        `This means ANYONE with a verified email ending in @${domain} can join your organization. ` +
-                        `Are you sure you want to proceed?`
-                      );
-                      if (!confirm) return;
-                    }
-                    setDomainAutoJoin(checked);
-                  }}
-                  className="mt-0.5 h-4 w-4 rounded border-border bg-white/[0.02] text-accent focus:ring-accent/20 focus:ring-2 focus:bg-white/[0.04] accent-indigo-600 cursor-pointer"
-                />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-xs font-bold text-foreground">Domain-based Auto-Join</span>
-                  <span className="text-[10px] font-semibold text-muted-foreground leading-relaxed">
-                    Allow users signing up with verified emails ending in <strong>@{org.emailDomain || profile.email.substring(profile.email.lastIndexOf('@') + 1).toLowerCase()}</strong> to join this workspace automatically.
-                  </span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <div className="pt-2 flex justify-end">
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-accent/90 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 transition-all shadow-lg hover:shadow-accent/15 cursor-pointer text-xs"
-              style={{ background: 'var(--accent)' }}
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
-                </>
-              ) : success ? (
-                <>
-                  <Check className="h-3.5 w-3.5 text-emerald-400" /> Updated Workspace!
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Danger Zone Overhaul - STRICTLY Owner Only */}
-      {profile.role === 'owner' && (
-        <div className="aether-glass bg-red-50/35 dark:bg-red-950/10 border-red-200/60 dark:border-red-500/20 shadow-xs dark:shadow-[0_4px_24px_rgba(239,68,68,0.06)] rounded-3xl p-6 space-y-5 relative overflow-hidden mt-6 animate-fluid-pop">
-          {/* Crimson pulse accent glow */}
-          <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full pointer-events-none opacity-[0.04] dark:opacity-[0.08] filter blur-xl bg-red-500" />
-          
-          <div className="flex items-start gap-3">
-            <ShieldAlert className="h-5 w-5 text-red-600 dark:text-red-500 shrink-0 mt-0.5 animate-pulse" />
-            <div>
-              <h2 className="text-xs font-black text-red-600 dark:text-red-500 uppercase tracking-wider">Danger Zone</h2>
-              <p className="text-[10px] text-red-700/80 dark:text-red-400/80 mt-0.5 leading-relaxed font-semibold">
-                Deleting your workspace is a permanent action. All associated data will be deleted forever.
+        {/* Step 2: Verification and typing name */}
+        {step === 2 && (
+          <form onSubmit={handleDelete} className="space-y-5">
+            <div className="flex flex-col items-center text-center">
+              <div className="h-12 w-12 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive flex items-center justify-center mb-3">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <h2 className="text-lg font-bold text-foreground">
+                Authorize Deletion
+              </h2>
+              <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-semibold">
+                Step 2 of 2: Final Authorization
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 font-medium leading-relaxed">
+                Confirm your identity and type the organization name exactly to authorize deletion.
               </p>
             </div>
-          </div>
 
-          {/* Dynamic statistics section */}
-          {stats && (
-            <div className="space-y-2.5">
-              <h3 className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest px-1">Items to be permanently erased:</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
-                  <Folder className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
-                  <div>
-                    <span className="block text-xs font-bold text-foreground leading-none">{stats.projects}</span>
-                    <span className="text-[10px] text-muted-foreground font-semibold">Projects</span>
-                  </div>
-                </div>
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
-                  <CheckSquare className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
-                  <div>
-                    <span className="block text-xs font-bold text-foreground leading-none">{stats.tasks}</span>
-                    <span className="text-[10px] text-muted-foreground font-semibold">Tasks</span>
-                  </div>
-                </div>
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
-                  <Target className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
-                  <div>
-                    <span className="block text-xs font-bold text-foreground leading-none">{stats.goals}</span>
-                    <span className="text-[10px] text-muted-foreground font-semibold">Goals</span>
-                  </div>
-                </div>
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
-                  <Workflow className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
-                  <div>
-                    <span className="block text-xs font-bold text-foreground leading-none">{stats.teams}</span>
-                    <span className="text-[10px] text-muted-foreground font-semibold">Teams</span>
-                  </div>
-                </div>
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
-                  <MessageSquare className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
-                  <div>
-                    <span className="block text-xs font-bold text-foreground leading-none">{stats.channels}</span>
-                    <span className="text-[10px] text-muted-foreground font-semibold">Channels</span>
-                  </div>
-                </div>
-                <div className="p-3 rounded-2xl border border-red-100/60 bg-white/70 dark:border-border/60 dark:bg-white/[0.02] flex items-center gap-2.5 shadow-sm">
-                  <Users className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
-                  <div>
-                    <span className="block text-xs font-bold text-foreground leading-none">{stats.members}</span>
-                    <span className="text-[10px] text-muted-foreground font-semibold">Members</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={handleDeleteWorkspace} className="border-t border-red-200 dark:border-red-500/10 pt-4 mt-2 space-y-4 max-w-md">
             {reauthError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl font-semibold flex items-start gap-2 animate-fluid-pop">
+              <div className="p-3.5 rounded-2xl border border-destructive/20 bg-destructive/10 text-destructive text-xs font-semibold flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span className="leading-normal">{reauthError}</span>
+                <span>{reauthError}</span>
               </div>
             )}
 
             <div className="space-y-4">
-              {!isGoogleUser && (
-                <div className="space-y-1.5">
-                  <label htmlFor="owner-password" className="text-xs font-semibold text-muted-foreground pl-0.5">Confirm Owner Password</label>
+              {/* Reauthentication field */}
+              {!isGoogleUser ? (
+                <div className="space-y-1.5 text-left">
+                  <label htmlFor="owner-auth-password" className="text-xs font-semibold text-foreground/80 pl-1">
+                    Owner Password
+                  </label>
                   <input
-                    id="owner-password"
+                    id="owner-auth-password"
                     type="password"
                     required
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
                     disabled={deleting}
-                    className="w-full px-3.5 py-2 rounded-xl border border-border bg-secondary0 dark:border-border dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-sm"
-                    placeholder="Enter account password"
+                    placeholder="Enter your account password"
+                    className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-destructive/30 focus:border-destructive transition-all"
                   />
+                </div>
+              ) : (
+                <div className="p-3 rounded-2xl border border-border bg-secondary/40 text-xs text-muted-foreground font-medium text-left">
+                  You will be prompted to re-authenticate with your connected Google account.
                 </div>
               )}
 
-              <div className="space-y-1.5">
-                <label htmlFor="confirm-workspace-name" className="text-xs font-semibold text-muted-foreground pl-0.5">
-                  Type Workspace Name Exactly <code className="bg-red-100/50 dark:bg-red-950/40 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded font-mono font-bold select-all border border-red-200/40 dark:border-red-500/10">"{org.name}"</code>
+              {/* Type org name confirmation */}
+              <div className="space-y-1.5 text-left">
+                <label htmlFor="confirm-org-name" className="text-xs font-semibold text-foreground/80 pl-1">
+                  Type <span className="font-mono font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-md select-all">{org.name}</span> to confirm:
                 </label>
                 <input
-                  id="confirm-workspace-name"
+                  id="confirm-org-name"
                   type="text"
                   required
                   value={confirmName}
                   onChange={(e) => setConfirmName(e.target.value)}
                   disabled={deleting}
-                  className="w-full px-3.5 py-2 rounded-xl border border-border bg-secondary0 dark:border-border dark:bg-white/[0.01] text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 transition-all font-semibold shadow-sm"
                   placeholder="Type workspace name exactly"
+                  className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-destructive/30 focus:border-destructive transition-all"
                 />
               </div>
+            </div>
 
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                disabled={deleting}
+                className="h-11 px-4 rounded-2xl border border-border bg-transparent hover:bg-secondary text-foreground text-xs font-semibold transition-all cursor-pointer active:scale-[0.98]"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
               <button
                 type="submit"
                 disabled={deleting || confirmName !== org.name || (!isGoogleUser && !passwordInput.trim())}
-                className="w-full h-10 bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                className="flex-1 h-11 rounded-2xl bg-destructive text-destructive-foreground hover:opacity-95 text-xs font-semibold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {deleting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Deleting Workspace…
+                    <Loader2 className="h-4 w-4 animate-spin text-destructive-foreground" />
+                    Deleting Workspace…
                   </>
                 ) : (
                   <>
-                    <Trash2 className="h-4 w-4" /> 
-                    {isGoogleUser ? 'Verify & Delete with Google' : 'Permanently Delete Workspace'}
+                    <Trash2 className="h-4 w-4" />
+                    Permanently Delete Workspace
                   </>
                 )}
               </button>
             </div>
           </form>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── TAB VIEW: GENERAL (UNIFIED SUITE) ────────────────────────────────────────
+interface GeneralSettingsProps {
+  org: Organization | null;
+  profile: UserProfile;
+  logout: () => Promise<void>;
+  themeId: string;
+  setTheme: (id: any) => void;
+  loadingOrg: boolean;
+}
+
+function GeneralSettingsView({ org, profile, logout, themeId, setTheme, loadingOrg }: GeneralSettingsProps) {
+  const isAdminOrOwner = profile.role === 'admin' || profile.role === 'owner';
+  const [subTab, setSubTab] = React.useState<'workspace' | 'profile' | 'preferences'>(
+    isAdminOrOwner ? 'workspace' : 'profile'
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Sub-navigation segmented control */}
+      <div className="flex items-center gap-1.5 p-1 bg-secondary/60 dark:bg-white/[0.04] rounded-2xl border border-border w-fit max-w-full overflow-x-auto scrollbar-hide">
+        {isAdminOrOwner && (
+          <button
+            type="button"
+            onClick={() => setSubTab('workspace')}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 active:scale-[0.98]",
+              subTab === 'workspace'
+                ? "bg-surface dark:bg-card text-foreground shadow-xs font-bold"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Workspace Info
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setSubTab('profile')}
+          className={cn(
+            "px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 active:scale-[0.98]",
+            subTab === 'profile'
+              ? "bg-surface dark:bg-card text-foreground shadow-xs font-bold"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          My Profile
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubTab('preferences')}
+          className={cn(
+            "px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 active:scale-[0.98]",
+            subTab === 'preferences'
+              ? "bg-surface dark:bg-card text-foreground shadow-xs font-bold"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Appearance & Notifications
+        </button>
+      </div>
+
+      {subTab === 'workspace' && isAdminOrOwner && (
+        loadingOrg ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <span className="text-xs font-bold">Synchronizing workspace details…</span>
+          </div>
+        ) : org ? (
+          <WorkspaceSettingsView org={org} profile={profile} logout={logout} />
+        ) : (
+          <div className="rounded-3xl p-6 border border-destructive/20 bg-destructive/5 text-destructive text-xs">
+            Workspace details not found.
+          </div>
+        )
+      )}
+
+      {subTab === 'profile' && (
+        <ProfileSettingsView profile={profile} logout={logout} />
+      )}
+
+      {subTab === 'preferences' && (
+        <div className="space-y-6">
+          <AppearanceSettingsView profile={profile} themeId={themeId} setTheme={setTheme} />
+          <NotificationSettingsView profile={profile} />
         </div>
+      )}
+    </div>
+  );
+}
+
+// ─── TAB VIEW: MEMBERS & ROLES ───────────────────────────────────────────────
+interface MembersRolesProps {
+  profile: UserProfile;
+  members: UserProfile[];
+  inviteLinks: InviteLink[];
+  invitesLoading: boolean;
+  onOpenInvite: () => void;
+}
+
+function MembersRolesSettingsView({ profile, members, inviteLinks, invitesLoading, onOpenInvite }: MembersRolesProps) {
+  const [subTab, setSubTab] = React.useState<'members' | 'invites' | 'teams'>('members');
+
+  return (
+    <div className="space-y-6">
+      {/* Sub-navigation segmented control */}
+      <div className="flex items-center gap-1.5 p-1 bg-secondary/60 dark:bg-white/[0.04] rounded-2xl border border-border w-fit max-w-full overflow-x-auto scrollbar-hide">
+        <button
+          type="button"
+          onClick={() => setSubTab('members')}
+          className={cn(
+            "px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 active:scale-[0.98]",
+            subTab === 'members'
+              ? "bg-surface dark:bg-card text-foreground shadow-xs font-bold"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Directory & Roles
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubTab('invites')}
+          className={cn(
+            "px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 active:scale-[0.98]",
+            subTab === 'invites'
+              ? "bg-surface dark:bg-card text-foreground shadow-xs font-bold"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Invite Links
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubTab('teams')}
+          className={cn(
+            "px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 active:scale-[0.98]",
+            subTab === 'teams'
+              ? "bg-surface dark:bg-card text-foreground shadow-xs font-bold"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Teams & Structure
+        </button>
+      </div>
+
+      {subTab === 'members' && (
+        <MembersSettingsView
+          profile={profile}
+          members={members}
+          onOpenInvite={onOpenInvite}
+        />
+      )}
+
+      {subTab === 'invites' && (
+        <InviteLinksSettingsView
+          profile={profile}
+          inviteLinks={inviteLinks}
+          loading={invitesLoading}
+          members={members}
+          onOpenInvite={onOpenInvite}
+        />
+      )}
+
+      {subTab === 'teams' && (
+        <TeamsSettingsView
+          profile={profile}
+          members={members}
+        />
       )}
     </div>
   );

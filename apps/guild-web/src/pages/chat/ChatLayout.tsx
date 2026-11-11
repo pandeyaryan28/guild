@@ -4,7 +4,7 @@ import {
   Loader2, Users, Lock, Megaphone, HelpCircle,
   PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
-import { useNavigate, useParams, NavLink, useLocation } from 'react-router-dom';
+import { useNavigate, useParams, NavLink, useLocation, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/useAuth';
 import { useChannels, useDMs, useOrgMembers } from '../../hooks/useChat';
@@ -15,13 +15,11 @@ import { NewDMModal } from '../../components/chat/NewDMModal';
 import { ChannelSettingsModal } from '../../components/chat/ChannelSettingsModal';
 import { MessageArea } from './MessageArea';
 import { type UserProfile, getOrgById, type Organization } from '../../lib/firestore';
-import { type Message } from '../../lib/chat';
 import { RedesignLayout } from '../../components/redesign/Layout';
-import { useSearchParams } from 'react-router-dom';
 import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
 import { GoalDetailDrawer } from '../../components/tasks/GoalDetailDrawer';
 import { RequestDetailDrawer } from '../../components/tasks/RequestDetailDrawer';
-import { CanvasPanel } from '../../components/chat/CanvasPanel';
+import { BidirectionalCanvasDrawer } from '../../components/chat/BidirectionalCanvasDrawer';
 import { useSingleTask, useTasks } from '../../hooks/useTasks';
 import { useGoal, useGoals } from '../../hooks/useGoals';
 import { useRequest } from '../../hooks/useRequests';
@@ -34,14 +32,18 @@ interface RedesignChatSidebarProps {
   onOpenDMModal: () => void;
 }
 
-// Beautiful Glassmorphic Left Chat Directory Pane
-function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpenDMModal }: RedesignChatSidebarProps) {
-  const navigate = useNavigate();
+// ─── Apple macOS / SwiftUI Minimalist Chat Directory Sidebar ──────────────────
+function RedesignChatSidebar({
+  isCollapsed,
+  onToggle,
+  onOpenChannelModal,
+  onOpenDMModal,
+}: RedesignChatSidebarProps) {
   const location = useLocation();
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
 
-  const { channels, memberships, hasUnread, loading } = useChannels(orgId);
+  const { channels, hasUnread, loading } = useChannels(orgId);
   const { threads: dmThreads, hasUnreadDM } = useDMs(orgId);
   const members = useOrgMembers(orgId);
 
@@ -52,7 +54,9 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
   // Fetch organization
   React.useEffect(() => {
     if (!orgId) return;
-    getOrgById(orgId).then((org) => { if (org) setLocalOrg(org); });
+    getOrgById(orgId).then((org) => {
+      if (org) setLocalOrg(org);
+    });
   }, [orgId]);
 
   const currentPath = location.pathname;
@@ -63,30 +67,32 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
   };
 
   return (
-    <aside className={cn(
-      "flex h-full flex-col bg-surface/95 dark:bg-surface/90 backdrop-blur-xl border-r border-border-default/80 dark:border-white/10 overflow-hidden transition-all duration-300 ease-in-out shrink-0 z-30",
-      "fixed inset-y-0 left-0 lg:relative lg:inset-auto",
-      isCollapsed ? "-translate-x-full opacity-0 pointer-events-none w-0 lg:w-0" : "translate-x-0 opacity-100 w-[230px]"
-    )}>
+    <aside
+      className={cn(
+        "flex h-full flex-col bg-surface/90 dark:bg-surface/75 backdrop-blur-2xl border-r border-border overflow-hidden transition-all duration-300 ease-in-out shrink-0 z-30 select-none",
+        "fixed inset-y-0 left-0 lg:relative lg:inset-auto",
+        isCollapsed ? "-translate-x-full opacity-0 pointer-events-none w-0 lg:w-0" : "translate-x-0 opacity-100 w-[240px]"
+      )}
+    >
       {/* Workspace Branding Header */}
-      <div className="flex items-center gap-2.5 border-b border-border-default/80 dark:border-white/10 px-4 py-3 select-none">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/30 relative overflow-hidden border border-white/10 shrink-0">
+      <div className="flex items-center gap-2.5 border-b border-border px-4 py-3 select-none">
+        <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold shadow-xs relative overflow-hidden shrink-0">
           {localOrg?.photoURL ? (
             <img src={localOrg.photoURL} alt={localOrg.name} className="h-full w-full object-cover" />
           ) : (
-            <span className="text-[10px] font-black text-white">
+            <span className="text-[10px] font-black">
               {localOrg?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'G'}
             </span>
           )}
         </div>
         <div className="min-w-0 flex-1">
           <span className="text-xs font-bold text-foreground block truncate">{localOrg?.name || 'Guild'}</span>
-          <span className="text-[9px] text-muted-foreground font-semibold block mt-0.5">Workspace</span>
+          <span className="text-[10px] text-muted-foreground font-medium block">Workspace</span>
         </div>
         <button
           onClick={onToggle}
-          className="hidden md:flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all cursor-pointer shrink-0"
-          title="Collapse Sidebar"
+          className="hidden md:flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-all cursor-pointer shrink-0"
+          title="Collapse Directory (Cmd+\)"
         >
           <PanelLeftClose className="w-3.5 h-3.5" />
         </button>
@@ -94,7 +100,6 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
 
       {/* Directory Scroll area */}
       <div className="flex-1 overflow-y-auto aether-scroll p-2.5 space-y-4">
-        
         {/* Channels Lane */}
         <div className="space-y-1">
           <div
@@ -106,57 +111,67 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
             ) : (
               <ChevronRight className="w-3 h-3 text-muted-foreground" />
             )}
-            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground flex-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex-1">
               Channels
             </span>
             <button
-              onClick={(e) => { e.stopPropagation(); onOpenChannelModal(); }}
-              className="flex h-5 w-5 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenChannelModal();
+              }}
+              className="flex h-5 w-5 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-all cursor-pointer"
+              title="Create Channel"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3 h-3" />
             </button>
           </div>
 
           <div className="space-y-0.5">
-            {!loading && channels.map((ch) => {
-              const isActive = currentPath === `/chat/c/${ch.id}`;
-              const unread = hasUnread(ch);
-              
-              if (!channelsOpen && !isActive && !unread) return null;
-              const IconComponent = ch.isPrivate ? Lock : Hash;
+            {!loading &&
+              channels.map((ch) => {
+                const isActive = currentPath === `/chat/c/${ch.id}`;
+                const unread = hasUnread(ch);
 
-              return (
-                <NavLink
-                  key={ch.id}
-                  to={`/chat/c/${ch.id}`}
-                  onClick={() => markChannelRead(ch.id, user!.uid, orgId)}
-                  className={cn(
-                    'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-all',
-                    isActive
-                      ? 'bg-primary text-white font-bold shadow-md shadow-primary/10'
-                      : unread
-                      ? 'text-foreground font-semibold hover:bg-white/5'
-                      : 'text-muted-foreground hover:bg-white/5 hover:text-foreground',
-                  )}
-                >
-                  <IconComponent className={cn('w-3.5 h-3.5 shrink-0', isActive ? 'text-white' : 'text-muted-foreground/60')} />
-                  <span className="flex-1 truncate">{ch.name}</span>
-                  {ch.isRestricted && (
-                    <span title="Announcements Only" className="shrink-0 flex items-center">
-                      <Megaphone className="w-3 h-3 text-muted-foreground opacity-60" />
-                    </span>
-                  )}
-                  {unread && !isActive && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                  )}
-                </NavLink>
-              );
-            })}
+                if (!channelsOpen && !isActive && !unread) return null;
+                const IconComponent = ch.isPrivate ? Lock : Hash;
+
+                return (
+                  <NavLink
+                    key={ch.id}
+                    to={`/chat/c/${ch.id}`}
+                    onClick={() => markChannelRead(ch.id, user!.uid, orgId)}
+                    className={cn(
+                      'flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs transition-all',
+                      isActive
+                        ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
+                        : unread
+                        ? 'text-foreground font-semibold bg-secondary/60'
+                        : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
+                    )}
+                  >
+                    <IconComponent
+                      className={cn(
+                        'w-3.5 h-3.5 shrink-0',
+                        isActive ? 'text-primary-foreground' : 'text-muted-foreground/70'
+                      )}
+                    />
+                    <span className="flex-1 truncate">{ch.name}</span>
+                    {ch.isRestricted && (
+                      <span title="Announcements Only" className="shrink-0 flex items-center">
+                        <Megaphone className="w-3 h-3 text-muted-foreground opacity-60" />
+                      </span>
+                    )}
+                    {unread && !isActive && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                    )}
+                  </NavLink>
+                );
+              })}
 
             {loading && (
               <div className="flex items-center gap-2 px-3 py-2 justify-center">
                 <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
-                <span className="text-[9px] text-muted-foreground">Loading...</span>
+                <span className="text-[10px] text-muted-foreground">Loading…</span>
               </div>
             )}
           </div>
@@ -173,14 +188,18 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
             ) : (
               <ChevronRight className="w-3 h-3 text-muted-foreground" />
             )}
-            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground flex-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex-1">
               Direct Messages
             </span>
             <button
-              onClick={(e) => { e.stopPropagation(); onOpenDMModal(); }}
-              className="flex h-5 w-5 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenDMModal();
+              }}
+              className="flex h-5 w-5 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-all cursor-pointer"
+              title="New Direct Message"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3 h-3" />
             </button>
           </div>
 
@@ -192,7 +211,7 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
               const dmName = otherMember?.fullName ?? 'Unknown';
               const dmPhotoURL = otherMember?.photoURL;
               const dmInitials = dmName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
-              
+
               if (!dmsOpen && !isActive && !unread) return null;
 
               return (
@@ -201,30 +220,41 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
                   to={`/chat/dm/${thread.id}`}
                   onClick={() => markDMRead(thread.id, user!.uid)}
                   className={cn(
-                    'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-all',
-                    isActive 
-                      ? 'bg-primary text-white font-bold shadow-md shadow-primary/10' 
+                    'flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs transition-all',
+                    isActive
+                      ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
                       : unread
-                      ? 'text-foreground font-semibold hover:bg-white/5'
-                      : 'text-muted-foreground hover:bg-white/5 hover:text-foreground',
+                      ? 'text-foreground font-semibold bg-secondary/60'
+                      : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
                   )}
                 >
                   <div className="relative h-5 w-5 shrink-0">
                     {dmPhotoURL ? (
                       <img src={dmPhotoURL} alt={dmName} className="h-5 w-5 rounded-full object-cover" />
                     ) : (
-                      <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-black border", isActive ? "bg-white/20 border-white/20 text-white" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400")}>
+                      <div
+                        className={cn(
+                          'flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-bold border',
+                          isActive ? 'bg-white/20 border-white/20 text-white' : 'bg-secondary border-border text-foreground'
+                        )}
+                      >
                         {dmInitials}
                       </div>
                     )}
                     {/* Status dot in Sidebar */}
-                    <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-surface flex items-center justify-center shadow-sm z-10">
-                      <span className={cn(
-                        "h-1.2 w-1.2 rounded-full",
-                        otherMember?.availabilityStatus === 'focus' ? "bg-red-500" :
-                        otherMember?.availabilityStatus === 'away' ? "bg-amber-500" :
-                        otherMember?.availabilityStatus === 'active' ? "bg-emerald-500" : "bg-zinc-400"
-                      )} />
+                    <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-surface flex items-center justify-center shadow-xs">
+                      <span
+                        className={cn(
+                          'h-1.5 w-1.5 rounded-full',
+                          otherMember?.availabilityStatus === 'focus'
+                            ? 'bg-red-500'
+                            : otherMember?.availabilityStatus === 'away'
+                            ? 'bg-amber-500'
+                            : otherMember?.availabilityStatus === 'active'
+                            ? 'bg-emerald-500'
+                            : 'bg-zinc-400'
+                        )}
+                      />
                     </span>
                   </div>
                   <span className="flex-1 truncate">{dmName}</span>
@@ -236,17 +266,16 @@ function RedesignChatSidebar({ isCollapsed, onToggle, onOpenChannelModal, onOpen
             })}
 
             {dmThreads.length === 0 && (
-              <span className="px-3 py-2 text-[10px] text-muted-foreground/45 italic block">No active threads</span>
+              <span className="px-3 py-2 text-[10px] text-muted-foreground/60 italic block">No active threads</span>
             )}
           </div>
         </div>
-
       </div>
     </aside>
   );
 }
 
-// Re-wired ChatLayout component inside spatial workspace RedesignLayout
+// ─── ChatLayout Component ─────────────────────────────────────────────────────
 export function ChatLayout() {
   const { channelId, dmId } = useParams<{ channelId: string; dmId: string }>();
   const { user, userProfile } = useAuth();
@@ -256,7 +285,6 @@ export function ChatLayout() {
   const { teams } = useTeams(orgId);
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => window.innerWidth < 1024);
-  const [isMemberPanelCollapsed, setIsMemberPanelCollapsed] = React.useState(false);
   const [showChannelModal, setShowChannelModal] = React.useState(false);
   const [showDMModal, setShowDMModal] = React.useState(false);
 
@@ -301,12 +329,6 @@ export function ChatLayout() {
     navigate(`/chat/dm/${dId}`);
   };
 
-  const handleStartDM = async (member: UserProfile) => {
-    if (!user || !orgId) return;
-    const dmId = await getOrCreateDM(user.uid, member.uid, orgId);
-    navigate(`/chat/dm/${dmId}`);
-  };
-
   const hasContent = !!channelId || !!dmId;
 
   // Automatically manage sidebar expansion on mobile screens:
@@ -324,18 +346,26 @@ export function ChatLayout() {
     }
   }, [openCanvas]);
 
+  // Global Keyboard shortcut: Cmd+\ (or Ctrl+\) toggles channel directory drawer
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+        e.preventDefault();
+        setIsSidebarCollapsed((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
-    <RedesignLayout hideHeader={true} fullBleed={true}>
-      <div className={cn(
-        "flex h-full w-full overflow-hidden transition-all duration-300 ease-in-out relative rounded-2xl border border-border-default/80 dark:border-white/10 shadow-2xl bg-background",
-        isSidebarCollapsed ? "gap-0" : "gap-0"
-      )}>
+    <RedesignLayout hideHeader={false} fullBleed={true}>
+      <div className="flex h-full w-full overflow-hidden transition-all duration-300 ease-in-out relative bg-background">
         {/* Mobile sidebar backdrop overlay */}
         {!isSidebarCollapsed && (
-          <div 
+          <div
             onClick={() => setIsSidebarCollapsed(true)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-25 lg:hidden transition-opacity duration-300"
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs z-25 lg:hidden transition-opacity duration-300"
           />
         )}
 
@@ -416,8 +446,11 @@ export function ChatLayout() {
               )}
 
               {openCanvas && (channelId || dmId) && (
-                <CanvasPanel
+                <BidirectionalCanvasDrawer
                   chatId={channelId || dmId || ''}
+                  chatName={activeChannel?.name || (dmId ? 'Direct Message' : 'Notes')}
+                  isDM={!!dmId}
+                  members={members}
                   onClose={() => handleClosePanel('canvas')}
                 />
               )}
@@ -427,19 +460,19 @@ export function ChatLayout() {
               {isSidebarCollapsed && (
                 <button
                   onClick={() => setIsSidebarCollapsed(false)}
-                  className="absolute left-6 top-6 flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
-                  title="Expand Sidebar"
+                  className="absolute left-6 top-6 flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/80 border border-border text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-xs cursor-pointer"
+                  title="Expand Sidebar (Cmd+\)"
                 >
                   <PanelLeftOpen className="h-4.5 w-4.5 text-primary" />
                 </button>
               )}
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/25 shadow-inner text-primary">
-                <MessageSquare className="w-6 h-6" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-secondary/80 border border-border text-primary shadow-lg">
+                <MessageSquare className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <span className="text-sm font-bold text-foreground block">Select conversation</span>
-                <span className="text-[10px] text-muted-foreground block max-w-xs px-6">
-                  Choose a channel or private thread from the directory sidebar to start chatting.
+                <span className="text-base font-bold text-foreground block">Select conversation</span>
+                <span className="text-xs text-muted-foreground block max-w-xs px-6">
+                  Choose a channel or private direct message from the directory sidebar to start chatting.
                 </span>
               </div>
             </div>
@@ -453,8 +486,8 @@ export function ChatLayout() {
       {showDMModal && orgId && (
         <NewDMModal orgId={orgId} members={members} onClose={() => setShowDMModal(false)} onDMCreated={handleDMCreated} />
       )}
-
     </RedesignLayout>
   );
 }
+
 export default ChatLayout;

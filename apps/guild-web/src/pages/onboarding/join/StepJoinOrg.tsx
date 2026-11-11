@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Loader2, CheckCircle2, AlertCircle, ArrowLeft, ArrowRight, Search, Building2 } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
 import { validateInviteToken, getOrgById, type Organization } from '../../../lib/firestore';
 import { setOnboardingState } from '../../../lib/firestore';
@@ -98,24 +99,29 @@ export function StepJoinOrg({ data, updateData }: Props) {
   };
 
   return (
-    <div className="w-full max-w-[480px] px-4 flex flex-col items-center">
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+      className="w-full max-w-[500px] px-4 flex flex-col items-center"
+    >
       <StepHeader
         step={2}
         totalSteps={4}
-        title={isAutoJoin ? 'Join Workspace' : 'Find Organization'}
+        title={isAutoJoin ? 'Join Workspace' : 'Find Your Workspace'}
         subtitle={
           isAutoJoin
-            ? "We found an active workspace matching your company's email domain."
-            : 'Enter your invitation link to find and join your organization.'
+            ? "We found a matching workspace for your verified email domain."
+            : 'Enter an invite link or token to locate your organization.'
         }
       />
 
-      <div className="aether-glass w-full p-8 mt-8 shadow-xl border border-border-default/30">
-        <div className="space-y-4">
+      <div className="w-full p-8 mt-8 rounded-3xl bg-surface/90 dark:bg-card/75 backdrop-blur-2xl border border-border dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.45)]">
+        <div className="space-y-5">
           {/* Method: By Invite Link (Only show if not auto-joining) */}
           {!isAutoJoin && (
             <div className="space-y-1.5">
-              <label htmlFor="invite-link" className="text-xs font-semibold text-muted-foreground pl-0.5">
+              <label htmlFor="invite-link" className="text-xs font-semibold text-foreground/80 pl-1">
                 Invite Link or Token
               </label>
               <div className="flex gap-2">
@@ -129,15 +135,16 @@ export function StepJoinOrg({ data, updateData }: Props) {
                   }}
                   onKeyDown={(e) => e.key === 'Enter' && searchByInvite()}
                   placeholder="e.g. guild.app/join/token"
-                  className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 flex-1"
+                  className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200 flex-1"
                 />
                 <button
                   type="button"
                   onClick={searchByInvite}
                   disabled={isSearching || !inviteInput}
-                  className="h-10 px-3.5 rounded-xl bg-surface border border-border-default hover:bg-surface-hover text-xs font-bold text-foreground transition-all disabled:opacity-40 flex items-center justify-center cursor-pointer active:scale-95 flex-shrink-0 shadow-sm"
+                  className="h-11 px-4 rounded-2xl bg-secondary hover:bg-secondary/80 border border-border text-xs font-semibold text-foreground transition-all disabled:opacity-40 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] shrink-0"
                 >
-                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
+                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  Search
                 </button>
               </div>
             </div>
@@ -145,61 +152,73 @@ export function StepJoinOrg({ data, updateData }: Props) {
 
           {/* Validation Alert */}
           {error && (
-            <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2.5 flex gap-2 items-center text-xs">
-              <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+            <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-2.5 flex gap-2.5 items-center text-xs">
+              <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
               <p className="font-semibold text-destructive">{error}</p>
             </div>
           )}
 
           {/* Loading spinner for auto-join lookup */}
           {isSearching && isAutoJoin && (
-            <div className="flex items-center justify-center py-6">
+            <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           )}
 
           {/* Org Preview Card */}
           {org && !isSearching && (
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex items-center gap-4">
-              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-sm font-black shadow-inner">
-                {org.name[0].toUpperCase()}
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-center gap-4">
+              <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 text-base font-bold shadow-xs">
+                {org.photoURL ? (
+                  <img src={org.photoURL} alt={org.name} className="h-full w-full object-cover rounded-2xl" />
+                ) : (
+                  org.name[0].toUpperCase()
+                )}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-bold text-foreground truncate">{org.name}</h4>
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">
+                <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                   {org.industry} · {org.companySize} employees
                 </p>
               </div>
             </div>
           )}
 
-          {/* Submit/Continue Join */}
-          <button
-            type="button"
-            onClick={handleContinue}
-            disabled={!org || isSubmitting || isSearching}
-            className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
-          >
-            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : 'Join Workspace'}
-          </button>
-
-          {/* Alternate Path Options */}
-          <button
-            type="button"
-            onClick={() => {
-              updateData({ path: null, joinOrgId: undefined, joinOrgName: undefined });
-              navigate('/onboarding', { replace: true });
-            }}
-            className="w-full text-center text-xs font-bold text-muted-foreground hover:text-foreground transition-colors mt-4 bg-transparent border-none outline-none cursor-pointer"
-          >
-            {isAutoJoin ? 'Create a new workspace instead' : 'Cancel'}
-          </button>
+          {/* Action buttons */}
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                updateData({ path: null, joinOrgId: undefined, joinOrgName: undefined });
+                navigate('/onboarding', { replace: true });
+              }}
+              className="h-11 px-4 rounded-2xl border border-border bg-transparent hover:bg-secondary/60 text-muted-foreground hover:text-foreground text-xs font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleContinue}
+              disabled={!org || isSubmitting || isSearching}
+              className="flex-1 h-11 rounded-2xl bg-primary text-primary-foreground text-xs font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
+              ) : (
+                <>
+                  Join Workspace
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

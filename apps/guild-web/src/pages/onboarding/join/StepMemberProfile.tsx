@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Loader2, CheckCircle2, XCircle, ArrowLeft, ArrowRight, Building2 } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
 import { executeMemberOnboardingJoin, checkUsernameUnique } from '../../../lib/firestore';
 import { isValidUsername, isValidEmployeeId, isValidAge, isValidPhoneNumber } from '../../../lib/validation';
@@ -95,76 +96,82 @@ export function StepMemberProfile({ data, updateData }: Props) {
   const usernameStatus = checkingUsername ? null : usernameAvailable === true ? true : usernameAvailable === false ? false : undefined;
 
   return (
-    <div className="w-full max-w-[500px] px-4 flex flex-col items-center">
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+      className="w-full max-w-[520px] px-4 flex flex-col items-center"
+    >
       <StepHeader
         step={3}
         totalSteps={4}
-        title="Set Up Your Profile"
-        subtitle={`Enter your details to join ${data.joinOrgName || 'the organization'}.`}
+        title="Member Profile"
+        subtitle={`Set up your profile to join ${data.joinOrgName || 'the workspace'}`}
       />
 
-      <div className="aether-glass w-full p-8 mt-8 shadow-xl border border-border-default/30">
+      <div className="w-full p-8 mt-8 rounded-3xl bg-surface/90 dark:bg-card/75 backdrop-blur-2xl border border-border dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.45)]">
         {data.joinOrgName && (
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-bold text-primary mb-6">
-            Joining: {data.joinOrgName}
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+            <Building2 className="h-3.5 w-3.5" />
+            Joining: <span className="font-bold">{data.joinOrgName}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Full Name */}
             <div className="space-y-1.5">
-              <label htmlFor="full-name" className="text-xs font-semibold text-muted-foreground pl-0.5">
+              <label htmlFor="full-name" className="text-xs font-semibold text-foreground/80 pl-1">
                 Full Name
               </label>
               <input
                 id="full-name"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g. Arjun Mehta"
+                onChange={(e) => { setFullName(e.target.value); setErrors(p => ({ ...p, fullName: '' })); }}
+                placeholder="e.g. Maya Lin"
                 required
-                className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
               />
-              {errors.fullName && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.fullName}</p>}
+              {errors.fullName && <p className="text-xs text-destructive font-medium pl-1">{errors.fullName}</p>}
             </div>
 
             {/* Job Title / Role */}
             <div className="space-y-1.5">
-              <label htmlFor="designation" className="text-xs font-semibold text-muted-foreground pl-0.5">
+              <label htmlFor="designation" className="text-xs font-semibold text-foreground/80 pl-1">
                 Job Title
               </label>
               <input
                 id="designation"
                 value={designation}
-                onChange={(e) => setDesignation(e.target.value)}
+                onChange={(e) => { setDesignation(e.target.value); setErrors(p => ({ ...p, designation: '' })); }}
                 placeholder="e.g. Software Engineer"
                 required
-                className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
               />
-              {errors.designation && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.designation}</p>}
+              {errors.designation && <p className="text-xs text-destructive font-medium pl-1">{errors.designation}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Employee ID */}
             <div className="space-y-1.5">
-              <label htmlFor="employee-id" className="text-xs font-semibold text-muted-foreground pl-0.5">
+              <label htmlFor="employee-id" className="text-xs font-semibold text-foreground/80 pl-1">
                 Employee ID
               </label>
               <input
                 id="employee-id"
                 value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                placeholder="e.g. EMP-001"
+                onChange={(e) => { setEmployeeId(e.target.value); setErrors(p => ({ ...p, employeeId: '' })); }}
+                placeholder="e.g. EMP-042"
                 required
-                className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
               />
-              {errors.employeeId && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.employeeId}</p>}
+              {errors.employeeId && <p className="text-xs text-destructive font-medium pl-1">{errors.employeeId}</p>}
             </div>
 
             {/* Age */}
             <div className="space-y-1.5">
-              <label htmlFor="age" className="text-xs font-semibold text-muted-foreground pl-0.5">
+              <label htmlFor="age" className="text-xs font-semibold text-foreground/80 pl-1">
                 Age
               </label>
               <input
@@ -173,60 +180,62 @@ export function StepMemberProfile({ data, updateData }: Props) {
                 min={16}
                 max={100}
                 value={age}
-                onChange={(e) => setAge(e.target.value)}
-                placeholder="e.g. 24"
+                onChange={(e) => { setAge(e.target.value); setErrors(p => ({ ...p, age: '' })); }}
+                placeholder="e.g. 26"
                 required
-                className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
               />
-              {errors.age && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.age}</p>}
+              {errors.age && <p className="text-xs text-destructive font-medium pl-1">{errors.age}</p>}
             </div>
           </div>
 
-          {/* Phone Number */}
-          <div className="space-y-1.5">
-            <label htmlFor="phone-number" className="text-xs font-semibold text-muted-foreground pl-0.5">
-              Phone Number (Optional)
-            </label>
-            <input
-              id="phone-number"
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="e.g. +1 (555) 012-3456"
-              className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
-            />
-            {errors.phoneNumber && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.phoneNumber}</p>}
-          </div>
-
-          {/* Username */}
-          <div className="space-y-1.5">
-            <label htmlFor="username" className="text-xs font-semibold text-muted-foreground pl-0.5">
-              Username
-            </label>
-            <div className="relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Phone Number */}
+            <div className="space-y-1.5">
+              <label htmlFor="phone-number" className="text-xs font-semibold text-foreground/80 pl-1">
+                Phone Number (Optional)
+              </label>
               <input
-                id="username"
-                value={username}
-                onChange={(e) => { setUsername(e.target.value.toLowerCase()); setUsernameAvailable(null); }}
-                placeholder="e.g. arjun"
-                required
-                className={`w-full h-10 rounded-xl border bg-surface/50 dark:bg-white/5 pl-3.5 pr-10 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 ${
-                  usernameStatus === true ? 'border-emerald-500/50' : usernameStatus === false ? 'border-destructive/50' : 'border-border-default'
-                }`}
+                id="phone-number"
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => { setPhoneNumber(e.target.value); setErrors(p => ({ ...p, phoneNumber: '' })); }}
+                placeholder="e.g. +1 (555) 012-3456"
+                className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
               />
-              <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                {checkingUsername && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-                {!checkingUsername && usernameStatus === true && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
-                {!checkingUsername && usernameStatus === false && <XCircle className="h-3.5 w-3.5 text-destructive" />}
-              </div>
+              {errors.phoneNumber && <p className="text-xs text-destructive font-medium pl-1">{errors.phoneNumber}</p>}
             </div>
-            {errors.username && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.username}</p>}
+
+            {/* Username */}
+            <div className="space-y-1.5">
+              <label htmlFor="username" className="text-xs font-semibold text-foreground/80 pl-1">
+                Username
+              </label>
+              <div className="relative">
+                <input
+                  id="username"
+                  value={username}
+                  onChange={(e) => { setUsername(e.target.value.toLowerCase()); setUsernameAvailable(null); }}
+                  placeholder="e.g. maya"
+                  required
+                  className={`w-full h-11 rounded-2xl border bg-secondary/50 dark:bg-white/[0.04] pl-4 pr-11 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200 ${
+                    usernameStatus === true ? 'border-emerald-500/50' : usernameStatus === false ? 'border-destructive/50' : 'border-border'
+                  }`}
+                />
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                  {checkingUsername && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  {!checkingUsername && usernameStatus === true && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                  {!checkingUsername && usernameStatus === false && <XCircle className="h-4 w-4 text-destructive" />}
+                </div>
+              </div>
+              {errors.username && <p className="text-xs text-destructive font-medium pl-1">{errors.username}</p>}
+            </div>
           </div>
 
           {/* Theme Picker */}
-          <div className="space-y-2.5 pt-1">
-            <label className="text-xs font-semibold text-muted-foreground pl-0.5">
-              Workspace Color Theme
+          <div className="space-y-2 pt-1">
+            <label className="text-xs font-semibold text-foreground/80 pl-1">
+              Workspace Accent Theme
             </label>
             <div className="flex flex-wrap gap-2">
               {themes.map((t) => (
@@ -235,15 +244,17 @@ export function StepMemberProfile({ data, updateData }: Props) {
                   type="button"
                   onClick={() => setTheme(t.id)}
                   title={t.name}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all duration-200 active:scale-95 cursor-pointer hover:bg-surface-hover ${
-                    themeId === t.id ? 'border-primary bg-primary/10 shadow-sm' : 'border-border-default bg-surface/30'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 active:scale-[0.98] cursor-pointer ${
+                    themeId === t.id
+                      ? 'border-primary bg-primary/10 shadow-xs'
+                      : 'border-border bg-secondary/40 hover:bg-secondary'
                   }`}
                 >
                   <div
-                    className="h-3.5 w-3.5 rounded-full border border-border-default/80"
+                    className="h-3.5 w-3.5 rounded-full border border-black/10 dark:border-white/20"
                     style={{ background: t.swatch }}
                   />
-                  <span className="text-[10px] font-bold text-foreground">
+                  <span className="text-xs font-medium text-foreground">
                     {t.name}
                   </span>
                 </button>
@@ -251,21 +262,34 @@ export function StepMemberProfile({ data, updateData }: Props) {
             </div>
           </div>
 
-          {errors.submit && <p className="text-xs text-destructive font-semibold text-center mt-2">{errors.submit}</p>}
+          {errors.submit && <p className="text-xs text-destructive font-medium text-center mt-2">{errors.submit}</p>}
 
-          <button
-            type="submit"
-            disabled={isSubmitting || checkingUsername || usernameAvailable === false}
-            className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-3"
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin text-white" />
-            ) : (
-              'Complete Setup'
-            )}
-          </button>
+          <div className="flex items-center gap-3 pt-3">
+            <button
+              type="button"
+              onClick={() => navigate('/onboarding/join/find')}
+              className="h-11 px-4 rounded-2xl border border-border bg-transparent hover:bg-secondary/60 text-muted-foreground hover:text-foreground text-xs font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || checkingUsername || usernameAvailable === false}
+              className="flex-1 h-11 rounded-2xl bg-primary text-primary-foreground text-xs font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
+              ) : (
+                <>
+                  Complete Setup
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </div>
-    </div>
+    </motion.div>
   );
 }

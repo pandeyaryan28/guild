@@ -162,49 +162,59 @@ export function SignupPage() {
   return (
     <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 bg-background">
       {/* Floating Theme Mode Toggle */}
-      <div className="absolute top-6 right-8 z-50">
+      <div className="absolute top-6 right-6 z-50">
         <button
           onClick={toggleMode}
-          className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-secondary active:scale-[0.98] transition-all shadow-sm border border-border bg-surface text-foreground cursor-pointer"
+          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-secondary active:scale-[0.95] transition-all shadow-sm border border-border bg-surface/80 backdrop-blur-md text-foreground cursor-pointer"
           title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
         >
-          {mode === 'light' ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5 text-amber-400" />}
+          {mode === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-400" />}
         </button>
       </div>
 
+      {/* Ambient background glows */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/5 dark:bg-primary/10 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl pointer-events-none" />
+
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative z-10 w-full max-w-[400px] px-4 flex flex-col items-center"
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+        className="relative z-10 w-full max-w-[420px] px-4 flex flex-col items-center"
       >
         {/* Brand header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden shadow bg-white/10">
-            <img src="/logo.png" alt="Guild Logo" className="w-full h-full object-cover" />
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl p-2.5 mb-3 shadow-[0_4px_16px_rgba(0,0,0,0.06)] border border-border dark:border-white/10 bg-surface/80 dark:bg-white/10 backdrop-blur-md">
+            <img src="/logo.png" alt="Guild Logo" className="w-full h-full object-contain" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-foreground">
+          <span className="text-2xl font-bold tracking-tight text-foreground">
             Guild
           </span>
+          <p className="text-xs text-muted-foreground font-medium mt-1">
+            Create your account to get started
+          </p>
         </div>
 
         {/* Card */}
-        <div className="aether-glass w-full p-8 shadow-xl border border-border-default/30">
+        <div className="w-full p-8 rounded-3xl bg-surface/90 dark:bg-card/75 backdrop-blur-2xl border border-border dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.45)]">
           <div className="mb-6">
-            <h1 className="text-lg font-bold text-foreground">
-              {pendingCred ? 'Link Google Account' : 'Create Account'}
+            <h1 className="text-base font-bold text-foreground">
+              {pendingCred ? 'Link Google Account' : 'Get started'}
             </h1>
+            <p className="text-xs text-muted-foreground font-medium mt-1">
+              {pendingCred ? 'Confirm your password to link your accounts' : 'Fill in your details below'}
+            </p>
           </div>
 
           {pendingCred ? (
             <form onSubmit={handleLinkAccount} className="space-y-4">
-              <div className="p-3.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[11px] rounded-xl font-bold leading-relaxed">
-                An account already exists with the email <span className="underline">{linkingEmail}</span>. Enter your password to link Google sign-in to this existing account.
+              <div className="p-3.5 bg-primary/10 border border-primary/20 text-primary text-xs rounded-2xl font-medium leading-relaxed">
+                An account already exists with the email <span className="font-semibold underline">{linkingEmail}</span>. Enter your password to link Google sign-in to this existing account.
               </div>
 
               {/* Password */}
               <div className="space-y-1.5">
-                <label htmlFor="link-password" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                <label htmlFor="link-password" className="text-xs font-semibold text-foreground/80 pl-1">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -215,12 +225,12 @@ export function SignupPage() {
                     onChange={(e) => setLinkPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full h-10 aether-glass-input pl-3.5 pr-10 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
+                    className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] pl-4 pr-11 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -230,8 +240,8 @@ export function SignupPage() {
 
               {/* Error */}
               {globalError && (
-                <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2.5">
-                  <p className="text-[11px] font-semibold text-destructive">{globalError}</p>
+                <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-2.5">
+                  <p className="text-xs font-semibold text-destructive">{globalError}</p>
                 </div>
               )}
 
@@ -239,10 +249,10 @@ export function SignupPage() {
               <button
                 type="submit"
                 disabled={linking}
-                className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                className="w-full h-11 rounded-2xl bg-primary text-primary-foreground text-xs font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
               >
                 {linking ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
                 ) : (
                   'Link & Sign In'
                 )}
@@ -256,7 +266,7 @@ export function SignupPage() {
                   setLinkPassword('');
                   setGlobalError('');
                 }}
-                className="w-full h-10 rounded-xl border border-border-default/60 hover:bg-surface/50 text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-1"
+                className="w-full h-11 rounded-2xl border border-border bg-transparent hover:bg-secondary/60 text-foreground text-xs font-semibold transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer mt-1"
               >
                 Cancel
               </button>
@@ -265,7 +275,7 @@ export function SignupPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email */}
               <div className="space-y-1.5">
-                <label htmlFor="email" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                <label htmlFor="email" className="text-xs font-semibold text-foreground/80 pl-1">
                   Email
                 </label>
                 <div className="relative">
@@ -278,15 +288,15 @@ export function SignupPage() {
                     placeholder="you@company.com"
                     required
                     autoComplete="username"
-                    className="w-full h-10 aether-glass-input px-3.5 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
+                    className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
                   />
                 </div>
-                {errors.email && <p className="text-[10px] text-destructive font-semibold pl-1 mt-1">{errors.email}</p>}
+                {errors.email && <p className="text-xs text-destructive font-medium pl-1 mt-1">{errors.email}</p>}
               </div>
 
               {/* Password */}
               <div className="space-y-1.5">
-                <label htmlFor="new-password" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                <label htmlFor="new-password" className="text-xs font-semibold text-foreground/80 pl-1">
                   Password
                 </label>
                 <div className="relative">
@@ -296,21 +306,21 @@ export function SignupPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: '' })); }}
-                    placeholder="Min 8 characters, letters + numbers"
+                    placeholder="Min 8 chars, letters and numbers"
                     required
                     autoComplete="new-password"
-                    className="w-full h-10 aether-glass-input pl-3.5 pr-10 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
+                    className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] pl-4 pr-11 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" tabIndex={-1}>
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" tabIndex={-1}>
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {errors.password && <p className="text-[10px] text-destructive font-semibold pl-1 mt-1">{errors.password}</p>}
+                {errors.password && <p className="text-xs text-destructive font-medium pl-1 mt-1">{errors.password}</p>}
               </div>
 
               {/* Confirm Password */}
               <div className="space-y-1.5">
-                <label htmlFor="confirm-password" className="text-xs font-semibold text-muted-foreground pl-0.5">
+                <label htmlFor="confirm-password" className="text-xs font-semibold text-foreground/80 pl-1">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -323,19 +333,19 @@ export function SignupPage() {
                     placeholder="Repeat your password"
                     required
                     autoComplete="new-password"
-                    className="w-full h-10 aether-glass-input pl-3.5 pr-10 text-xs font-semibold placeholder:text-muted-foreground/60 transition-all duration-200"
+                    className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] pl-4 pr-11 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
                   />
-                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" tabIndex={-1}>
+                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" tabIndex={-1}>
                     {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {errors.confirmPassword && <p className="text-[10px] text-destructive font-semibold pl-1 mt-1">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && <p className="text-xs text-destructive font-medium pl-1 mt-1">{errors.confirmPassword}</p>}
               </div>
 
               {/* Global error */}
               {globalError && (
-                <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2.5">
-                  <p className="text-[11px] font-semibold text-destructive">{globalError}</p>
+                <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-2.5">
+                  <p className="text-xs font-semibold text-destructive">{globalError}</p>
                 </div>
               )}
 
@@ -343,23 +353,23 @@ export function SignupPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                className="w-full h-11 rounded-2xl bg-primary text-primary-foreground text-xs font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
               >
                 {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
                 ) : (
-                  'Sign Up'
+                  'Create Account'
                 )}
               </button>
               
               {/* Separator */}
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border-default/60 dark:border-white/10"></div>
+                  <div className="w-full border-t border-border"></div>
                 </div>
-                <div className="relative flex justify-center text-[10px]">
-                  <span className="bg-transparent px-3 font-semibold text-muted-foreground uppercase tracking-wider backdrop-blur-sm">
-                    Or
+                <div className="relative flex justify-center text-[11px]">
+                  <span className="bg-surface dark:bg-card px-3 font-medium text-muted-foreground tracking-wide">
+                    or
                   </span>
                 </div>
               </div>
@@ -369,9 +379,9 @@ export function SignupPage() {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={isSubmitting}
-                className="w-full h-10 rounded-xl bg-surface border border-border hover:bg-secondary text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                className="w-full h-11 rounded-2xl bg-secondary/60 hover:bg-secondary dark:bg-white/[0.05] dark:hover:bg-white/[0.08] border border-border text-foreground text-xs font-semibold transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] cursor-pointer disabled:opacity-50 shadow-xs"
               >
-                <svg className="h-3.5 w-3.5" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                <svg className="h-4 w-4" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                   <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
                 </svg>
                 Continue with Google
@@ -381,9 +391,9 @@ export function SignupPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-[11px] text-muted-foreground mt-5 font-semibold tracking-wide">
+        <p className="text-center text-xs text-muted-foreground mt-6 font-medium">
           Already have an account?{' '}
-          <Link to="/login" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold transition-colors ml-1">
+          <Link to="/login" className="text-primary font-semibold hover:underline transition-all ml-1">
             Sign in
           </Link>
         </p>

@@ -19,6 +19,7 @@ import { createRequest } from '../../lib/requests';
 import { InviteChannelMembersModal } from '../../components/chat/InviteChannelMembersModal';
 import { avatarInitials, avatarHue } from '../../components/MemberProfileDrawer';
 import { type MessageAttachment } from '@guild/types';
+import { getOrCreateCanvas, updateCanvasContent } from '../../lib/canvases';
 
 function resolveDmOtherUserId(dmId: string, currentUid: string, membersList?: Array<{ uid: string }>): string {
   if (!dmId || !currentUid) return '';
@@ -385,6 +386,28 @@ export function MessageArea({
     setQuotedMessage(null);
   };
 
+  const handleCanvasNote = React.useCallback(async (msg: Message) => {
+    // Open canvas drawer
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('canvas', 'true');
+    setSearchParams(newParams);
+
+    // Save note to Firestore canvas if chatId & orgId exist
+    const chatId = channelId || dmId;
+    if (chatId && orgId && currentUser) {
+      try {
+        const canvasId = await getOrCreateCanvas(orgId, chatId, currentUser.uid, profile?.fullName || currentUser.displayName || 'User');
+        const snap = await getDoc(doc(db, 'canvases', canvasId));
+        const existingContent = snap.exists() ? (snap.data().content || '') : '';
+        const noteHtml = `<p><strong>${msg.senderName}:</strong> ${msg.body}</p>`;
+        const updatedContent = existingContent ? `${existingContent}${noteHtml}` : `<h2>Notes</h2>${noteHtml}`;
+        await updateCanvasContent(canvasId, updatedContent, snap.exists() ? (snap.data().title || 'Channel Notes') : 'Channel Notes', currentUser.uid, profile?.fullName || currentUser.displayName || 'User');
+      } catch (err) {
+        console.error('Failed to append message to canvas note:', err);
+      }
+    }
+  }, [channelId, dmId, orgId, currentUser, profile, searchParams, setSearchParams]);
+
   const headerTitle = channelId ? `${channel?.isPrivate ? '' : '#'}\u200B${channel?.name ?? '…'}` : dmPartnerName || '…';
   const headerSub = channelId
     ? channel?.description ?? ''
@@ -553,6 +576,7 @@ export function MessageArea({
         loadingOlder={loadingOlder}
         hasMore={hasMore}
         onQuoteMessage={(msg) => setQuotedMessage(msg)}
+        onCanvasNote={handleCanvasNote}
       />
 
       {/* Floating Island Composer */}

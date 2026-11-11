@@ -9,43 +9,40 @@ interface StepHeaderProps {
 }
 
 export function StepHeader({ step, totalSteps, title, subtitle }: StepHeaderProps) {
-  const progress = (step / totalSteps) * 100;
+  const percent = Math.round((step / totalSteps) * 100);
 
   return (
-    <div className="w-full">
-      {/* Step indicator */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+    <div className="w-full text-left">
+      {/* Step indicator and smooth progress track */}
+      <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground mb-2.5">
+        <span className="tracking-wide">
           Step {step} of {totalSteps}
         </span>
-        <div className="flex gap-1.5">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 rounded-full transition-all duration-500 ${
-                i < step ? 'bg-primary w-6' : 'bg-border/60 w-4'
-              }`}
-            />
-          ))}
-        </div>
+        <span className="text-[11px] font-mono text-muted-foreground/80 font-medium">{percent}%</span>
       </div>
 
-      {/* Title */}
-      <motion.h1
-        initial={{ opacity: 0, x: -16 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="text-2xl font-bold text-foreground tracking-tight"
+      <div className="w-full h-1.5 rounded-full bg-secondary/80 dark:bg-white/10 overflow-hidden mb-6">
+        <motion.div
+          className="h-full rounded-full bg-primary"
+          initial={{ width: 0 }}
+          animate={{ width: `${percent}%` }}
+          transition={{ type: 'spring', stiffness: 240, damping: 24 }}
+        />
+      </div>
+
+      {/* Title & Subtitle */}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
       >
-        {title}
-      </motion.h1>
-      <motion.p
-        initial={{ opacity: 0, x: -16 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.05 }}
-        className="text-sm text-muted-foreground mt-1.5 font-medium"
-      >
-        {subtitle}
-      </motion.p>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
+          {title}
+        </h1>
+        <p className="text-xs text-muted-foreground mt-1 font-medium leading-relaxed">
+          {subtitle}
+        </p>
+      </motion.div>
     </div>
   );
 }

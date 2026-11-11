@@ -20,25 +20,26 @@ const VerifyEmailPage = React.lazy(() => import('./pages/VerifyEmailPage').then(
 const OnboardingRoot = React.lazy(() => import('./pages/onboarding/OnboardingRoot').then(m => ({ default: m.OnboardingRoot })));
 const JoinInvitePage = React.lazy(() => import('./pages/onboarding/JoinInvitePage').then(m => ({ default: m.JoinInvitePage })));
 
-// Dashboard
+// Layout
 import { RedesignLayout } from './components/redesign/Layout';
-const DashboardControl = React.lazy(() => import('./components/redesign/DashboardControl').then(m => ({ default: m.DashboardControl })));
 
-// Chat
-const ChatLayout = React.lazy(() => import('./pages/chat/ChatLayout').then(m => ({ default: m.ChatLayout })));
+// Primary App Views
+const TasksFeedPage = React.lazy(() =>
+  import('./pages/tasks/TasksFeedPage').then(m => ({ default: m.TasksFeedPage || m.default }))
+);
+const WorkspaceCanvasPage = React.lazy(() =>
+  import('./pages/workspace/WorkspaceCanvasPage').then(m => ({ default: m.WorkspaceCanvasPage || m.default }))
+);
+const ChatLayout = React.lazy(() =>
+  import('./pages/chat/ChatLayout').then(m => ({ default: m.ChatLayout }))
+);
 
-// Tasks & Work
-const StudioPage = React.lazy(() => import('./pages/studio/StudioPage').then(m => ({ default: m.StudioPage })));
-const TaskCanvas = React.lazy(() => import('./components/redesign/TaskCanvas').then(m => ({ default: m.TaskCanvas })));
+// Secondary Views
 const RequestsPage = React.lazy(() => import('./pages/requests/RequestsPage').then(m => ({ default: m.RequestsPage })));
 const PeoplePage = React.lazy(() => import('./pages/people/PeoplePage').then(m => ({ default: m.PeoplePage })));
 const SettingsPage = React.lazy(() => import('./pages/workspace/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const CalendarPage = React.lazy(() => import('./pages/calendar/CalendarPage').then(m => ({ default: m.CalendarPage })));
-
-// Execution OS
 const ProjectDetailPage = React.lazy(() => import('./pages/projects/ProjectDetailPage').then(m => ({ default: m.ProjectDetailPage })));
-
-// Reports
 const ReportsPage = React.lazy(() => import('./pages/reports/ReportsPage').then(m => ({ default: m.ReportsPage })));
 
 // Responsive Controllers
@@ -59,15 +60,12 @@ const GlobalLoader = () => (
 
 function TasksRedirect() {
   const location = useLocation();
-  return <Navigate to={`/workspace${location.search}`} replace />;
+  return <Navigate to={`/${location.search}`} replace />;
 }
 
-function DashboardApp({ children }: { children?: React.ReactNode }) {
-  return (
-    <RedesignLayout>
-      {children ?? <DashboardControl />}
-    </RedesignLayout>
-  );
+function StudioRedirect() {
+  const location = useLocation();
+  return <Navigate to={`/workspace${location.search}`} replace />;
 }
 
 function AppContent() {
@@ -116,17 +114,31 @@ function AppContent() {
       {/* Onboarding — requires auth, but not completed onboarding */}
       <Route path="/onboarding/*" element={<OnboardingRoot />} />
 
-      {/* Protected dashboard routes */}
+      {/* ─── 1. Root: Unified Tasks & Request Execution View ───────────────── */}
       <Route
         path="/"
         element={
           <ProtectedRoute>
-            <DashboardApp />
+            <RedesignLayout>
+              <TasksFeedPage />
+            </RedesignLayout>
           </ProtectedRoute>
         }
       />
 
-      {/* Chat routes */}
+      {/* ─── 2. Workspace Canvas (Linear + Notion Unified Canvas) ──────────── */}
+      <Route
+        path="/workspace"
+        element={
+          <ProtectedRoute>
+            <RedesignLayout fullBleed={true}>
+              <WorkspaceCanvasPage />
+            </RedesignLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ─── 3. Team Chat ─────────────────────────────────────────────────── */}
       <Route
         path="/chat"
         element={
@@ -152,101 +164,76 @@ function AppContent() {
         }
       />
 
-      {/* Studio & Docs */}
-      <Route
-        path="/studio"
-        element={
-          <ProtectedRoute>
-            <RedesignLayout fullBleed={true}>
-              <StudioPage />
-            </RedesignLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Workspace */}
-      <Route
-        path="/workspace"
-        element={
-          <ProtectedRoute>
-            <RedesignLayout>
-              <TaskCanvas />
-            </RedesignLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Legacy /tasks redirect preserving query string */}
+      {/* ─── Legacy Redirects ──────────────────────────────────────────────── */}
       <Route path="/tasks" element={<TasksRedirect />} />
+      <Route path="/feed" element={<Navigate to="/" replace />} />
+      <Route path="/dashboard" element={<Navigate to="/" replace />} />
+      <Route path="/studio" element={<StudioRedirect />} />
+      <Route path="/canvas" element={<Navigate to="/workspace" replace />} />
 
-      {/* Project detail */}
+      {/* ─── Operational & Secondary Views ─────────────────────────────────── */}
       <Route
         path="/projects/:projectId"
         element={
           <ProtectedRoute>
-            <DashboardApp>
+            <RedesignLayout>
               <ProjectDetailPage />
-            </DashboardApp>
+            </RedesignLayout>
           </ProtectedRoute>
         }
       />
 
-      {/* Requests */}
       <Route
         path="/requests"
         element={
           <ProtectedRoute>
-            <DashboardApp>
+            <RedesignLayout>
               <RequestsPage />
-            </DashboardApp>
+            </RedesignLayout>
           </ProtectedRoute>
         }
       />
 
-      {/* People */}
       <Route
         path="/people"
         element={
           <ProtectedRoute>
-            <DashboardApp>
+            <RedesignLayout>
               <PeoplePage />
-            </DashboardApp>
+            </RedesignLayout>
           </ProtectedRoute>
         }
       />
 
-      {/* Settings */}
       <Route
         path="/settings"
         element={
           <ProtectedRoute>
-            <DashboardApp>
+            <RedesignLayout>
               <SettingsPage />
-            </DashboardApp>
+            </RedesignLayout>
           </ProtectedRoute>
         }
       />
 
-      {/* Reports */}
       <Route
         path="/reports"
         element={
           <ProtectedRoute>
-            <DashboardApp>
+            <RedesignLayout>
               <ReportsPage />
-            </DashboardApp>
+            </RedesignLayout>
           </ProtectedRoute>
         }
       />
 
-      {/* Calendar */}
       <Route
         path="/calendar"
         element={
           <ProtectedRoute>
-            <DashboardApp>
+            <RedesignLayout>
               <CalendarPage />
-            </DashboardApp>
+            </RedesignLayout>
           </ProtectedRoute>
         }
       />

@@ -132,55 +132,66 @@ export function VerifyEmailPage() {
   }
 
   return (
-    <div className="aether-app-container min-h-screen w-full flex flex-col items-center justify-center p-4 bg-background">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden select-none">
       {/* Floating Theme Mode Toggle */}
-      <div className="absolute top-6 right-8 z-50">
+      <div className="absolute top-6 right-6 z-50">
         <button
           onClick={toggleMode}
-          className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-secondary active:scale-[0.98] transition-all shadow-sm border border-border bg-surface text-foreground cursor-pointer"
+          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-secondary active:scale-[0.95] transition-all shadow-sm border border-border bg-surface/80 backdrop-blur-md text-foreground cursor-pointer"
           title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
         >
-          {mode === 'light' ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5 text-amber-400" />}
+          {mode === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-400" />}
         </button>
       </div>
 
+      {/* Ambient background glows */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/5 dark:bg-primary/10 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl pointer-events-none" />
+
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative z-10 w-full max-w-[400px] px-4 flex flex-col items-center"
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+        className="relative z-10 w-full max-w-[420px] px-4 flex flex-col items-center"
       >
         {/* Brand header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden shadow bg-white/10">
-            <img src="/logo.png" alt="Guild Logo" className="w-full h-full object-cover" />
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl p-2.5 mb-3 shadow-[0_4px_16px_rgba(0,0,0,0.06)] border border-border dark:border-white/10 bg-surface/80 dark:bg-white/10 backdrop-blur-md">
+            <img src="/logo.png" alt="Guild Logo" className="w-full h-full object-contain" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-foreground">
+          <span className="text-2xl font-bold tracking-tight text-foreground">
             Guild
           </span>
+          <p className="text-xs text-muted-foreground font-medium mt-1">
+            Account security verification
+          </p>
         </div>
 
         {/* Card */}
-        <div className="aether-glass w-full p-8 shadow-xl border border-border-default/30">
+        <div className="w-full p-8 rounded-3xl bg-surface/90 dark:bg-card/75 backdrop-blur-2xl border border-border dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.45)]">
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="h-12 w-12 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 flex items-center justify-center mb-4 border border-indigo-500/20">
+            <div className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-4 border transition-all ${
+              isVerifiedSuccess
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                : 'bg-primary/10 border-primary/20 text-primary'
+            }`}>
               {isVerifiedSuccess ? (
-                <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                <CheckCircle2 className="h-7 w-7 text-emerald-500" />
               ) : (
-                <Mail className="h-6 w-6 text-indigo-500 dark:text-indigo-400" />
+                <Mail className="h-7 w-7 text-primary" />
               )}
             </div>
-            <h1 className="text-lg font-bold text-foreground">
-              {isVerifiedSuccess ? 'Email Verified' : 'Verify Email'}
+            <h1 className="text-base font-bold text-foreground">
+              {isVerifiedSuccess ? 'Email Verified' : 'Check your inbox'}
             </h1>
-            <p className="text-xs text-muted-foreground mt-2 font-medium leading-relaxed">
+            <p className="text-xs text-muted-foreground mt-1.5 font-medium leading-relaxed">
               {isVerifiedSuccess
-                ? 'Your email is verified. Redirecting you now...'
+                ? 'Your email is verified. Redirecting you to workspace...'
                 : 'Click the verification link sent to your inbox to finish signing up.'}
             </p>
 
             {user?.email && !isVerifiedSuccess && (
-              <div className="mt-3 px-3 py-1.5 rounded-lg border border-border-default/40 bg-surface/30 dark:bg-white/5 font-semibold text-[11px] text-foreground font-mono select-text">
+              <div className="mt-4 px-3.5 py-1.5 rounded-full border border-border bg-secondary/50 dark:bg-white/[0.04] font-medium text-xs text-foreground font-mono select-text">
                 {user.email}
               </div>
             )}
@@ -194,9 +205,9 @@ export function VerifyEmailPage() {
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
-                  className={`rounded-xl border px-4 py-2.5 flex gap-2 items-start text-xs ${
+                  className={`rounded-2xl border px-4 py-2.5 flex gap-2.5 items-start text-xs ${
                     statusMessage.type === 'success'
-                      ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
+                      ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                       : 'border-destructive/20 bg-destructive/10 text-destructive'
                   }`}
                 >
@@ -216,14 +227,14 @@ export function VerifyEmailPage() {
                 <button
                   onClick={handleCheckStatus}
                   disabled={checkingStatus || isResending}
-                  className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-11 rounded-2xl bg-primary text-primary-foreground text-xs font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {checkingStatus ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
                   ) : (
                     <>
-                      <RefreshCw className="h-4 w-4 text-white" />
-                      Check Status
+                      <RefreshCw className="h-4 w-4" />
+                      Check Verification Status
                     </>
                   )}
                 </button>
@@ -232,14 +243,14 @@ export function VerifyEmailPage() {
                 <button
                   onClick={handleResendEmail}
                   disabled={isResending || checkingStatus || resendCooldown > 0}
-                  className="w-full h-10 rounded-xl bg-surface/60 border border-border-default hover:bg-surface/80 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10 text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-11 rounded-2xl bg-secondary/60 hover:bg-secondary dark:bg-white/[0.05] dark:hover:bg-white/[0.08] border border-border text-foreground text-xs font-semibold transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
                 >
                   {isResending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : resendCooldown > 0 ? (
                     <span>Resend Email ({resendCooldown}s)</span>
                   ) : (
-                    'Resend Link'
+                    'Resend Verification Link'
                   )}
                 </button>
               </>
@@ -248,11 +259,11 @@ export function VerifyEmailPage() {
             {/* Separator */}
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border-default/60 dark:border-white/10"></div>
+                <div className="w-full border-t border-border"></div>
               </div>
-              <div className="relative flex justify-center text-[10px]">
-                <span className="bg-transparent px-3 font-semibold text-muted-foreground uppercase tracking-wider backdrop-blur-sm">
-                  Or
+              <div className="relative flex justify-center text-[11px]">
+                <span className="bg-surface dark:bg-card px-3 font-medium text-muted-foreground tracking-wide">
+                  or
                 </span>
               </div>
             </div>
@@ -260,7 +271,7 @@ export function VerifyEmailPage() {
             {/* Logout */}
             <button
               onClick={handleSignOut}
-              className="w-full h-10 rounded-xl bg-surface/30 border border-border-default/40 hover:bg-surface/50 dark:bg-white/3 dark:border-white/5 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
+              className="w-full h-11 rounded-2xl border border-border bg-transparent hover:bg-secondary/60 text-muted-foreground hover:text-foreground text-xs font-semibold transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" />
               Sign Out
@@ -270,9 +281,13 @@ export function VerifyEmailPage() {
 
         {/* Polling cue */}
         {!isVerifiedSuccess && (
-          <p className="text-[10px] text-muted-foreground font-semibold mt-4">
-            Checking status automatically in background...
-          </p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium mt-6">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+            Checking status automatically in background…
+          </div>
         )}
       </motion.div>
     </div>

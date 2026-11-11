@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, CheckCircle2, XCircle, Copy, Check } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Loader2, CheckCircle2, XCircle, Copy, Check, ArrowLeft, ArrowRight } from 'lucide-react';
 import { StepHeader } from '../../../components/onboarding/StepHeader';
 import { executeOwnerOnboardingCreate, checkUsernameUnique } from '../../../lib/firestore';
-import { isValidUsername, isValidEmployeeId, isValidAge, isValidEmail, isValidPhoneNumber } from '../../../lib/validation';
+import { isValidUsername, isValidEmployeeId, isValidAge, isValidPhoneNumber } from '../../../lib/validation';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
 import type { OnboardingData } from '../../../types/onboarding';
@@ -120,29 +121,34 @@ export function StepOwnerProfile({ data, updateData }: Props) {
   const usernameStatus = checkingUsername ? null : usernameAvailable === true ? true : usernameAvailable === false ? false : undefined;
 
   return (
-    <div className="w-full max-w-[500px] px-4 flex flex-col items-center">
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+      className="w-full max-w-[520px] px-4 flex flex-col items-center"
+    >
       <StepHeader
         step={3}
         totalSteps={4}
-        title="Set Up Your Profile"
-        subtitle="Create your profile to start using the workspace."
+        title="Owner Profile"
+        subtitle="Set up your identity and preferences as the workspace owner"
       />
 
-      <div className="aether-glass w-full p-8 mt-8 shadow-xl border border-border-default/30">
+      <div className="w-full p-8 mt-8 rounded-3xl bg-surface/90 dark:bg-card/75 backdrop-blur-2xl border border-border dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.45)]">
         {inviteUrl && (
-          <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <span className="text-xs font-bold text-primary block mb-1">Invite Link</span>
-            <p className="text-[11px] text-muted-foreground mb-3 font-semibold">Share this link to let others join your workspace.</p>
+          <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+            <span className="text-xs font-semibold text-primary block mb-0.5">Workspace Invite Link</span>
+            <p className="text-xs text-muted-foreground mb-3 font-medium">Share this link with your team once setup is complete.</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 text-[10px] font-mono text-foreground bg-surface/80 dark:bg-black/40 rounded-lg px-3 py-2 truncate border border-border-default">
+              <code className="flex-1 text-xs font-mono text-foreground bg-secondary/80 rounded-xl px-3 py-2 truncate border border-border">
                 {inviteUrl}
               </code>
               <button
                 type="button"
                 onClick={copyInviteLink}
-                className="flex-shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border-default hover:bg-surface-hover bg-surface text-xs font-bold text-foreground transition-all cursor-pointer active:scale-95 shadow-sm"
+                className="shrink-0 flex items-center gap-1.5 h-9 px-3 rounded-xl border border-border bg-surface hover:bg-secondary text-xs font-semibold text-foreground transition-all cursor-pointer active:scale-[0.98] shadow-xs"
               >
-                {copiedInvite ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : null}
+                {copiedInvite ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                 {copiedInvite ? 'Copied' : 'Copy'}
               </button>
             </div>
@@ -150,60 +156,60 @@ export function StepOwnerProfile({ data, updateData }: Props) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Full Name */}
             <div className="space-y-1.5">
-              <label htmlFor="full-name" className="text-xs font-semibold text-muted-foreground pl-0.5">
+              <label htmlFor="full-name" className="text-xs font-semibold text-foreground/80 pl-1">
                 Full Name
               </label>
               <input
                 id="full-name"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g. Arjun Mehta"
+                onChange={(e) => { setFullName(e.target.value); setErrors(p => ({ ...p, fullName: '' })); }}
+                placeholder="e.g. Alex Miller"
                 required
-                className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
               />
-              {errors.fullName && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.fullName}</p>}
+              {errors.fullName && <p className="text-xs text-destructive font-medium pl-1">{errors.fullName}</p>}
             </div>
 
             {/* Job Title / Role */}
             <div className="space-y-1.5">
-              <label htmlFor="designation" className="text-xs font-semibold text-muted-foreground pl-0.5">
+              <label htmlFor="designation" className="text-xs font-semibold text-foreground/80 pl-1">
                 Job Title
               </label>
               <input
                 id="designation"
                 value={designation}
-                onChange={(e) => setDesignation(e.target.value)}
-                placeholder="e.g. Director"
+                onChange={(e) => { setDesignation(e.target.value); setErrors(p => ({ ...p, designation: '' })); }}
+                placeholder="e.g. Founder & CEO"
                 required
-                className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
               />
-              {errors.designation && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.designation}</p>}
+              {errors.designation && <p className="text-xs text-destructive font-medium pl-1">{errors.designation}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Employee ID */}
             <div className="space-y-1.5">
-              <label htmlFor="employee-id" className="text-xs font-semibold text-muted-foreground pl-0.5">
+              <label htmlFor="employee-id" className="text-xs font-semibold text-foreground/80 pl-1">
                 Employee ID
               </label>
               <input
                 id="employee-id"
                 value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
+                onChange={(e) => { setEmployeeId(e.target.value); setErrors(p => ({ ...p, employeeId: '' })); }}
                 placeholder="e.g. EMP-001"
                 required
-                className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
               />
-              {errors.employeeId && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.employeeId}</p>}
+              {errors.employeeId && <p className="text-xs text-destructive font-medium pl-1">{errors.employeeId}</p>}
             </div>
 
             {/* Age */}
             <div className="space-y-1.5">
-              <label htmlFor="age" className="text-xs font-semibold text-muted-foreground pl-0.5">
+              <label htmlFor="age" className="text-xs font-semibold text-foreground/80 pl-1">
                 Age
               </label>
               <input
@@ -212,74 +218,76 @@ export function StepOwnerProfile({ data, updateData }: Props) {
                 min={16}
                 max={100}
                 value={age}
-                onChange={(e) => setAge(e.target.value)}
-                placeholder="e.g. 28"
+                onChange={(e) => { setAge(e.target.value); setErrors(p => ({ ...p, age: '' })); }}
+                placeholder="e.g. 29"
                 required
-                className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
+                className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
               />
-              {errors.age && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.age}</p>}
+              {errors.age && <p className="text-xs text-destructive font-medium pl-1">{errors.age}</p>}
             </div>
           </div>
 
-          {/* Phone Number */}
-          <div className="space-y-1.5">
-            <label htmlFor="phone-number" className="text-xs font-semibold text-muted-foreground pl-0.5">
-              Phone Number (Optional)
-            </label>
-            <input
-              id="phone-number"
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="e.g. +1 (555) 012-3456"
-              className="w-full h-10 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 px-3.5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200"
-            />
-            {errors.phoneNumber && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.phoneNumber}</p>}
-          </div>
-
-          {/* Username */}
-          <div className="space-y-1.5">
-            <label htmlFor="username" className="text-xs font-semibold text-muted-foreground pl-0.5">
-              Username
-            </label>
-            <div className="relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Phone Number */}
+            <div className="space-y-1.5">
+              <label htmlFor="phone-number" className="text-xs font-semibold text-foreground/80 pl-1">
+                Phone Number (Optional)
+              </label>
               <input
-                id="username"
-                value={username}
-                onChange={(e) => { setUsername(e.target.value.toLowerCase()); setUsernameAvailable(null); }}
-                placeholder="e.g. arjun"
-                required
-                className={`w-full h-10 rounded-xl border bg-surface/50 dark:bg-white/5 pl-3.5 pr-10 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 ${
-                  usernameStatus === true ? 'border-emerald-500/50' : usernameStatus === false ? 'border-destructive/50' : 'border-border-default'
-                }`}
+                id="phone-number"
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => { setPhoneNumber(e.target.value); setErrors(p => ({ ...p, phoneNumber: '' })); }}
+                placeholder="e.g. +1 (555) 012-3456"
+                className="w-full h-11 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] px-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200"
               />
-              <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                {checkingUsername && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-                {!checkingUsername && usernameStatus === true && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
-                {!checkingUsername && usernameStatus === false && <XCircle className="h-3.5 w-3.5 text-destructive" />}
-              </div>
+              {errors.phoneNumber && <p className="text-xs text-destructive font-medium pl-1">{errors.phoneNumber}</p>}
             </div>
-            {errors.username && <p className="text-[10px] text-destructive font-semibold pl-1">{errors.username}</p>}
+
+            {/* Username */}
+            <div className="space-y-1.5">
+              <label htmlFor="username" className="text-xs font-semibold text-foreground/80 pl-1">
+                Username
+              </label>
+              <div className="relative">
+                <input
+                  id="username"
+                  value={username}
+                  onChange={(e) => { setUsername(e.target.value.toLowerCase()); setUsernameAvailable(null); }}
+                  placeholder="e.g. alex"
+                  required
+                  className={`w-full h-11 rounded-2xl border bg-secondary/50 dark:bg-white/[0.04] pl-4 pr-11 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200 ${
+                    usernameStatus === true ? 'border-emerald-500/50' : usernameStatus === false ? 'border-destructive/50' : 'border-border'
+                  }`}
+                />
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                  {checkingUsername && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  {!checkingUsername && usernameStatus === true && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                  {!checkingUsername && usernameStatus === false && <XCircle className="h-4 w-4 text-destructive" />}
+                </div>
+              </div>
+              {errors.username && <p className="text-xs text-destructive font-medium pl-1">{errors.username}</p>}
+            </div>
           </div>
 
           {/* Direct Email Invitations */}
           <div className="space-y-1.5">
-            <label htmlFor="invite-emails" className="text-xs font-semibold text-muted-foreground pl-0.5">
-              Invite Teammates (Optional, separate with commas)
+            <label htmlFor="invite-emails" className="text-xs font-semibold text-foreground/80 pl-1">
+              Invite Teammates (Optional)
             </label>
             <textarea
               id="invite-emails"
               value={inviteEmails}
               onChange={(e) => setInviteEmails(e.target.value)}
-              placeholder="colleague1@company.com, colleague2@company.com"
-              className="w-full h-16 py-2 px-3.5 rounded-xl border border-border-default bg-surface/50 dark:bg-white/5 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface/80 dark:focus:bg-white/10 transition-all duration-200 resize-none"
+              placeholder="sarah@company.com, david@company.com"
+              className="w-full h-18 py-2.5 px-4 rounded-2xl border border-border bg-secondary/50 dark:bg-white/[0.04] text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all duration-200 resize-none"
             />
           </div>
 
           {/* Theme Picker */}
-          <div className="space-y-2.5 pt-1">
-            <label className="text-xs font-semibold text-muted-foreground pl-0.5">
-              Workspace Color Theme
+          <div className="space-y-2 pt-1">
+            <label className="text-xs font-semibold text-foreground/80 pl-1">
+              Workspace Accent Theme
             </label>
             <div className="flex flex-wrap gap-2">
               {themes.map((t) => (
@@ -288,15 +296,17 @@ export function StepOwnerProfile({ data, updateData }: Props) {
                   type="button"
                   onClick={() => setTheme(t.id)}
                   title={t.name}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all duration-200 active:scale-95 cursor-pointer hover:bg-surface-hover ${
-                    themeId === t.id ? 'border-primary bg-primary/10 shadow-sm' : 'border-border-default bg-surface/30'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 active:scale-[0.98] cursor-pointer ${
+                    themeId === t.id
+                      ? 'border-primary bg-primary/10 shadow-xs'
+                      : 'border-border bg-secondary/40 hover:bg-secondary'
                   }`}
                 >
                   <div
-                    className="h-3.5 w-3.5 rounded-full border border-border-default/80"
+                    className="h-3.5 w-3.5 rounded-full border border-black/10 dark:border-white/20"
                     style={{ background: t.swatch }}
                   />
-                  <span className="text-[10px] font-bold text-foreground">
+                  <span className="text-xs font-medium text-foreground">
                     {t.name}
                   </span>
                 </button>
@@ -304,21 +314,34 @@ export function StepOwnerProfile({ data, updateData }: Props) {
             </div>
           </div>
 
-          {errors.submit && <p className="text-xs text-destructive font-semibold text-center mt-2">{errors.submit}</p>}
+          {errors.submit && <p className="text-xs text-destructive font-medium text-center mt-2">{errors.submit}</p>}
 
-          <button
-            type="submit"
-            disabled={isSubmitting || checkingUsername || usernameAvailable === false}
-            className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-3"
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin text-white" />
-            ) : (
-              'Complete Setup'
-            )}
-          </button>
+          <div className="flex items-center gap-3 pt-3">
+            <button
+              type="button"
+              onClick={() => navigate('/onboarding/create/org')}
+              className="h-11 px-4 rounded-2xl border border-border bg-transparent hover:bg-secondary/60 text-muted-foreground hover:text-foreground text-xs font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || checkingUsername || usernameAvailable === false}
+              className="flex-1 h-11 rounded-2xl bg-primary text-primary-foreground text-xs font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
+              ) : (
+                <>
+                  Complete Setup
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </div>
-    </div>
+    </motion.div>
   );
 }

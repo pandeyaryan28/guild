@@ -138,29 +138,35 @@ export function OnboardingRoot() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-background relative overflow-hidden">
+    <div className="min-h-screen w-full bg-background relative overflow-hidden flex flex-col select-none">
+      {/* Ambient background glows */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/5 dark:bg-primary/10 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl pointer-events-none" />
+
       {/* Top brand bar */}
-      <div className="relative z-10 flex items-center justify-between px-8 py-6">
+      <header className="relative z-20 flex items-center justify-between px-6 md:px-10 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground shadow-sm">
-            G
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl p-1.5 shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-border dark:border-white/10 bg-surface/80 dark:bg-white/10 backdrop-blur-md">
+            <img src="/logo.png" alt="Guild Logo" className="w-full h-full object-contain" />
           </div>
           <span className="text-base font-bold text-foreground tracking-tight">Guild</span>
-          <span className="ml-2 text-xs font-medium text-muted-foreground">— Setup</span>
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border border-border bg-secondary/60 text-muted-foreground">
+            Setup
+          </span>
         </div>
 
         {/* Theme Toggle */}
         <button
           onClick={toggleMode}
-          className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-secondary active:scale-[0.98] transition-all shadow-sm border border-border bg-surface text-foreground cursor-pointer"
+          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-secondary active:scale-[0.95] transition-all shadow-sm border border-border bg-surface/80 backdrop-blur-md text-foreground cursor-pointer"
           title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}
         >
           {mode === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-400" />}
         </button>
-      </div>
+      </header>
 
       {/* Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] px-6 pb-10">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
         <Routes>
           <Route path="/" element={<StepChoose data={data} updateData={updateData} />} />
           <Route path="/create/org" element={<StepOrgDetails data={data} updateData={updateData} />} />
@@ -170,7 +176,7 @@ export function OnboardingRoot() {
           <Route path="/complete" element={<StepComplete />} />
           <Route path="*" element={<Navigate to="/onboarding" replace />} />
         </Routes>
-      </div>
+      </main>
     </div>
   );
 }

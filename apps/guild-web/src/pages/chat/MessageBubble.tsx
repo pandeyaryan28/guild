@@ -12,6 +12,8 @@ import { MediaLightbox } from './MediaLightbox';
 import { toggleReaction, addMessageReply, listenToReplies, type MessageReply } from '../../lib/replies';
 import { TaskMessageCard, GoalMessageCard, RequestMessageCard } from '../../components/chat/cards';
 import { avatarInitials, avatarHue } from '../../components/MemberProfileDrawer';
+import { createWorkspaceIssue } from '../../lib/workspaceIssues';
+import type { IssuePriority } from '@guild/types';
 
 function resolveDmOtherUserId(dmId: string, currentUid: string, membersList?: Array<{ uid: string }>): string {
   if (!dmId || !currentUid) return '';
@@ -29,7 +31,7 @@ function resolveDmOtherUserId(dmId: string, currentUid: string, membersList?: Ar
   return parts.find((p) => p !== currentUid) ?? '';
 }
 
-interface MessageBubbleProps {
+export interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
   isGrouped: boolean;
@@ -38,6 +40,8 @@ interface MessageBubbleProps {
   currentUser?: { uid: string; displayName: string } | null;
   onOpenDiscussion?: (msg: Message) => void;
   onQuoteMessage?: (msg: Message) => void;
+  onCanvasNote?: (msg: Message) => void;
+  onConvertToIssue?: (msg: Message) => void;
 }
 
 function parseMentions(body: string, isOwn: boolean) {
@@ -48,10 +52,10 @@ function parseMentions(body: string, isOwn: boolean) {
         <span
           key={i}
           className={cn(
-            'font-semibold rounded-md px-1.5 py-0.5 mx-0.5 text-xs transition-colors inline-block',
+            'font-medium rounded-md px-1.5 py-0.5 mx-0.5 text-xs inline-block transition-colors select-none',
             isOwn
               ? 'text-white bg-white/20 border border-white/25'
-              : 'text-[#007AFF] dark:text-[#0A84FF] bg-[#007AFF]/10 dark:bg-[#007AFF]/20 border border-[#007AFF]/20 dark:border-[#007AFF]/30',
+              : 'text-primary bg-primary/10 border border-primary/20',
           )}
         >
           {part}
@@ -151,6 +155,8 @@ export function MessageBubble({
   currentUser,
   onOpenDiscussion,
   onQuoteMessage,
+  onCanvasNote,
+  onConvertToIssue,
 }: MessageBubbleProps) {
   const sender = members.find((m) => m.uid === message.senderId);
   const photoURL = sender?.photoURL;
@@ -162,6 +168,13 @@ export function MessageBubble({
   const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+
+  // Quick Issue Conversion Modal State (fallback if onConvertToIssue not provided)
+  const [showIssueModal, setShowIssueModal] = React.useState(false);
+  const [issueTitle, setIssueTitle] = React.useState('');
+  const [issueAssigneeId, setIssueAssigneeId] = React.useState('');
+  const [issuePriority, setIssuePriority] = React.useState<IssuePriority>('medium');
+  const [isCreatingIssue, setIsCreatingIssue] = React.useState(false);
 
   const isEditable = React.useMemo(() => {
     if (!message.createdAt) return false;
@@ -252,6 +265,45 @@ export function MessageBubble({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Convert Message directly to Workspace Issue
+  const handleTriggerConvertIssue = () => {
+    if (onConvertToIssue) {
+      onConvertToIssue(message);
+    } else {
+      setIssueTitle(message.body.slice(0, 100).replace(/\n/g, ' '));
+      if (members.length > 0 && !issueAssigneeId) {
+        setIssueAssigneeId(members[0].uid);
+      }
+      setShowIssueModal(true);
+    }
+  };
+
+  const handleCreateIssueSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!issueTitle.trim() || !orgId || !currentUser || isCreatingIssue) return;
+    setIsCreatingIssue(true);
+    try {
+      const assignee = members.find((m) => m.uid === issueAssigneeId);
+      await createWorkspaceIssue({
+        orgId,
+        title: issueTitle.trim(),
+        descriptionHtml: `<p>Created from chat message by ${message.senderName}:</p><blockquote><p>${message.body}</p></blockquote>`,
+        priority: issuePriority,
+        assigneeId: assignee?.uid || null,
+        assigneeName: assignee?.fullName || null,
+        assigneeAvatar: assignee?.photoURL || null,
+        teamPrefix: 'ENG',
+        userId: currentUser.uid,
+        userName: currentUser.displayName || 'Teammate',
+      });
+      setShowIssueModal(false);
+    } catch (err) {
+      console.error('Failed to convert message to issue:', err);
+    } finally {
+      setIsCreatingIssue(false);
+    }
+  };
+
   const initials = avatarInitials(message.senderName || '?');
 
   const isTaskCommand = /^\/task(\s|$)/.test(message.body.trim()) && !message.deleted;
@@ -294,7 +346,7 @@ export function MessageBubble({
                 setEditing(false);
                 setEditBody(message.body);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-elevated hover:bg-surface-hover border border-border-default text-xs text-muted-foreground font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 border border-border text-xs text-muted-foreground font-semibold transition-colors cursor-pointer"
             >
               <X className="h-3 w-3" />
               <span>Cancel</span>
@@ -381,7 +433,7 @@ export function MessageBubble({
     return (
       <div className="flex flex-col gap-1.5">
         <p className={cn(
-          'text-sm leading-relaxed select-text break-words whitespace-pre-wrap',
+          'text-[14px] leading-relaxed select-text break-words whitespace-pre-wrap',
           message.deleted && 'italic text-muted-foreground'
         )}>
           {parseMentions(message.body, isOwn)}
@@ -442,7 +494,7 @@ export function MessageBubble({
                     e.stopPropagation();
                     setLightboxIndex(idx);
                   }}
-                  className="group/img relative rounded-2xl overflow-hidden border border-border-default/80 dark:border-white/10 bg-surface shadow-sm aspect-video max-h-56 transition-all hover:shadow-md hover:border-primary/40 cursor-pointer"
+                  className="group/img relative rounded-2xl overflow-hidden border border-border bg-surface shadow-xs aspect-video max-h-56 transition-all hover:shadow-md hover:border-primary/40 cursor-pointer"
                 >
                   {isImage ? (
                     <img
@@ -512,7 +564,7 @@ export function MessageBubble({
                     'group/file flex items-center gap-3 rounded-2xl border px-3.5 py-2.5 shadow-xs transition-all',
                     isOwn
                       ? 'border-white/20 bg-white/10 hover:bg-white/15 text-white'
-                      : 'border-border-default/80 dark:border-white/10 bg-surface hover:bg-surface-hover text-foreground'
+                      : 'border-border bg-surface hover:bg-secondary text-foreground'
                   )}
                 >
                   <div className={cn(
@@ -589,8 +641,8 @@ export function MessageBubble({
               className={cn(
                 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs border transition-all duration-150 cursor-pointer select-none font-medium shadow-xs backdrop-blur-md',
                 hasReacted
-                  ? 'bg-[#007AFF]/15 border-[#007AFF]/40 text-[#007AFF] dark:text-[#0A84FF]'
-                  : 'bg-white/90 dark:bg-[#1E1E22]/90 hover:bg-white dark:hover:bg-[#26262B] border-black/[0.08] dark:border-white/[0.12] text-foreground',
+                  ? 'bg-primary/15 border-primary/30 text-primary'
+                  : 'bg-surface/90 border-border text-foreground hover:bg-secondary',
               )}
             >
               <span className="text-xs leading-none">{emoji}</span>
@@ -621,11 +673,11 @@ export function MessageBubble({
         className={cn(
           'mt-1.5 flex items-center gap-1.5 text-xs font-semibold cursor-pointer select-none border rounded-full px-3 py-1 w-fit shadow-xs transition-all duration-150',
           isRepliesExpanded
-            ? 'bg-[#007AFF]/15 border-[#007AFF]/30 text-[#007AFF] dark:text-[#0A84FF]'
-            : 'bg-white/80 dark:bg-[#1E1E22]/80 border-black/[0.08] dark:border-white/[0.12] text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-[#25252A]',
+            ? 'bg-primary/15 border-primary/30 text-primary'
+            : 'bg-surface/80 border-border text-muted-foreground hover:text-foreground hover:bg-secondary',
         )}
       >
-        <MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#007AFF] dark:text-[#0A84FF]" />
+        <MessageSquare className="h-3.5 w-3.5 shrink-0 text-primary" />
         <span>
           {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
         </span>
@@ -674,7 +726,7 @@ export function MessageBubble({
                       <span className="text-[10px] text-muted-foreground font-mono">@{reply.senderUsername}</span>
                       <span className="text-[9px] text-muted-foreground font-mono">{formatTime(reply.createdAt as any)}</span>
                     </div>
-                    <div className="mt-1 rounded-2xl rounded-tl-none px-3 py-1.5 text-xs bg-surface/90 dark:bg-surface-elevated/70 border border-border-default/80 dark:border-white/10 leading-relaxed text-foreground select-text break-words w-fit max-w-full shadow-xs">
+                    <div className="mt-1 rounded-2xl rounded-tl-none px-3 py-1.5 text-xs bg-surface/90 border border-border leading-relaxed text-foreground select-text break-words w-fit max-w-full shadow-xs">
                       {reply.body}
                     </div>
                   </div>
@@ -688,7 +740,7 @@ export function MessageBubble({
 
         {currentUser && orgId && (
           <div className="w-full max-w-xl mt-1 flex gap-2 items-center">
-            <div className="flex-1 flex items-center gap-2 rounded-xl border border-border-default/80 dark:border-white/15 bg-surface/95 dark:bg-surface-elevated/80 px-3 py-1.5 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-xs">
+            <div className="flex-1 flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-xs">
               <textarea
                 ref={replyTextareaRef}
                 value={replyBody}
@@ -712,7 +764,7 @@ export function MessageBubble({
                   'h-6 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer',
                   replyBody.trim() && !replySending
                     ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'bg-surface-elevated text-muted-foreground cursor-not-allowed opacity-50',
+                    : 'bg-secondary text-muted-foreground cursor-not-allowed opacity-50',
                 )}
               >
                 {replySending ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Reply'}
@@ -776,15 +828,15 @@ export function MessageBubble({
             className={cn(
               !isCard
                 ? cn(
-                    'relative px-3.5 sm:px-4 py-2 sm:py-2.5 text-[14px] sm:text-[14.5px] leading-relaxed transition-all duration-150 text-left',
+                    'relative px-3.5 sm:px-4 py-2 sm:py-2.5 text-[14px] leading-relaxed transition-all duration-150 text-left',
                     isOwn
                       ? cn(
-                          'bg-gradient-to-b from-[#0A84FF] to-[#0071E3] dark:from-[#0B84FE] dark:to-[#006EE6] text-white shadow-xs border border-[#007AFF]/25',
-                          isGrouped ? 'rounded-[20px] rounded-r-[6px]' : 'rounded-[20px] rounded-br-[4px] sm:rounded-br-[6px]',
+                          'bg-primary text-primary-foreground shadow-xs border border-primary/20',
+                          isGrouped ? 'rounded-2xl rounded-r-md' : 'rounded-2xl rounded-tr-sm',
                         )
                       : cn(
-                          'bg-[#E9E9EB] dark:bg-[#26252A] text-[#111827] dark:text-[#F9FAFB] border border-black/[0.04] dark:border-white/[0.06] shadow-xs',
-                          isGrouped ? 'rounded-[20px] rounded-l-[6px]' : 'rounded-[20px] rounded-bl-[4px] sm:rounded-bl-[6px]',
+                          'bg-secondary text-foreground shadow-xs border border-border/40 dark:border-border/60',
+                          isGrouped ? 'rounded-2xl rounded-l-md' : 'rounded-2xl rounded-tl-sm',
                         ),
                   )
                 : 'relative text-left w-full',
@@ -797,7 +849,7 @@ export function MessageBubble({
                   'mb-2 flex flex-col border-l-2 pl-2.5 py-1 text-xs rounded-r-xl max-w-md cursor-pointer hover:opacity-90 select-none text-left transition-all',
                   isOwn
                     ? 'border-white/80 bg-white/15 text-white shadow-xs'
-                    : 'border-[#007AFF] bg-black/[0.04] dark:bg-white/[0.06] text-foreground shadow-xs',
+                    : 'border-primary bg-secondary/80 text-foreground shadow-xs',
                 )}
                 onClick={() => {
                   const el = document.getElementById(`msg-${message.parentMessage?.id}`);
@@ -808,7 +860,7 @@ export function MessageBubble({
                   }
                 }}
               >
-                <span className={cn('font-bold text-[10px] uppercase tracking-wider mb-0.5', isOwn ? 'text-white' : 'text-[#007AFF] dark:text-[#0A84FF]')}>
+                <span className={cn('font-bold text-[10px] uppercase tracking-wider mb-0.5', isOwn ? 'text-white' : 'text-primary')}>
                   {message.parentMessage.senderName}
                 </span>
                 <span className="truncate block max-w-full text-xs opacity-90">{message.parentMessage.body}</span>
@@ -819,7 +871,7 @@ export function MessageBubble({
             {renderAttachments()}
           </div>
 
-          {/* Floating Linear Action Ribbon (Appears on Hover) */}
+          {/* Clean Floating Apple Micro-Interaction Ribbon (react, thread reply, canvas note, convert to issue) */}
           {!message.deleted && !editing && hovered && (
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: '-50%' }}
@@ -827,16 +879,16 @@ export function MessageBubble({
               exit={{ opacity: 0, scale: 0.92, y: '-50%' }}
               transition={{ duration: 0.15 }}
               className={cn(
-                'absolute top-1/2 flex items-center gap-0.5 p-1 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white/95 dark:bg-[#1E1E22]/95 backdrop-blur-2xl shadow-lg z-30',
+                'absolute top-1/2 flex items-center gap-0.5 p-1 rounded-full border border-border bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl shadow-xl z-30',
                 isOwn ? 'right-full mr-2' : 'left-full ml-2',
               )}
             >
-              {/* Emoji Reaction Popover */}
+              {/* 1. Emoji Reaction Popover */}
               <div className="relative flex">
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                   title="Add reaction"
                 >
                   <Smile className="h-3.5 w-3.5" />
@@ -845,7 +897,7 @@ export function MessageBubble({
                 {showEmojiPicker && (
                   <div
                     className={cn(
-                      'absolute bottom-full mb-2 bg-white/95 dark:bg-[#1E1E22]/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] rounded-full shadow-2xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100',
+                      'absolute bottom-full mb-2 bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-border rounded-full shadow-2xl p-1.5 flex gap-1 z-50 animate-in zoom-in-95 duration-100',
                       isOwn ? 'right-0' : 'left-0',
                     )}
                   >
@@ -863,7 +915,7 @@ export function MessageBubble({
                           }
                           setShowEmojiPicker(false);
                         }}
-                        className="text-base p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-transform hover:scale-125 cursor-pointer"
+                        className="text-base p-1.5 hover:bg-secondary rounded-full transition-transform hover:scale-125 cursor-pointer"
                       >
                         {emoji}
                       </button>
@@ -872,44 +924,55 @@ export function MessageBubble({
                 )}
               </div>
 
-              {/* Reply in thread */}
+              {/* 2. Thread Reply */}
               <button
                 type="button"
                 onClick={() => {
                   setIsRepliesExpanded(true);
                   setTimeout(() => replyTextareaRef.current?.focus(), 100);
                 }}
-                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                 title="Reply in thread"
               >
                 <MessageSquare className="h-3.5 w-3.5" />
               </button>
 
-              {/* Convert to Task */}
-              {!isCard && currentUser && (
-                <button
-                  type="button"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    try {
-                      await toggleReaction(message.id, '📋', currentUser.uid);
-                    } catch (err) {
-                      console.error('Failed to convert message to task:', err);
-                    }
-                  }}
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                  title="Convert message to task"
-                >
-                  <CheckSquare className="h-3.5 w-3.5" />
-                </button>
-              )}
+              {/* 3. Canvas Note */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (onCanvasNote) {
+                    onCanvasNote(message);
+                  } else {
+                    // Open canvas panel with note
+                    const searchParams = new URLSearchParams(window.location.search);
+                    searchParams.set('canvas', 'true');
+                    window.history.pushState({}, '', `${window.location.pathname}?${searchParams.toString()}`);
+                    window.dispatchEvent(new Event('popstate'));
+                  }
+                }}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                title="Save to Canvas Notes"
+              >
+                <FileText className="h-3.5 w-3.5" />
+              </button>
+
+              {/* 4. Convert to Issue */}
+              <button
+                type="button"
+                onClick={handleTriggerConvertIssue}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                title="Convert message to Issue"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+              </button>
 
               {/* Quote Reply */}
               {onQuoteMessage && (
                 <button
                   type="button"
                   onClick={() => onQuoteMessage(message)}
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                   title="Quote message"
                 >
                   <CornerUpLeft className="h-3.5 w-3.5" />
@@ -920,7 +983,7 @@ export function MessageBubble({
               <button
                 type="button"
                 onClick={handleCopyText}
-                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                 title="Copy text"
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
@@ -933,7 +996,7 @@ export function MessageBubble({
                     <button
                       type="button"
                       onClick={() => setEditing(true)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                       title="Edit message"
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -976,6 +1039,109 @@ export function MessageBubble({
         >
           {formatTime(message.createdAt as any)}
         </span>
+      )}
+
+      {/* Quick Convert to Issue Modal */}
+      {showIssueModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="w-full max-w-md rounded-2xl border border-border bg-surface p-5 shadow-2xl space-y-4"
+          >
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                  ⚡
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Convert to Issue</h3>
+                  <p className="text-[11px] text-muted-foreground">Creates a tracked Linear-style issue</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowIssueModal(false)}
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateIssueSubmit} className="space-y-3.5">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Issue Title
+                </label>
+                <input
+                  type="text"
+                  value={issueTitle}
+                  onChange={(e) => setIssueTitle(e.target.value)}
+                  placeholder="Issue title"
+                  autoFocus
+                  required
+                  className="w-full rounded-xl border border-border bg-secondary/50 px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Assignee
+                  </label>
+                  <select
+                    value={issueAssigneeId}
+                    onChange={(e) => setIssueAssigneeId(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-secondary/50 px-2.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  >
+                    <option value="">Unassigned</option>
+                    {members.map((m) => (
+                      <option key={m.uid} value={m.uid}>
+                        {m.fullName} (@{m.username})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Priority
+                  </label>
+                  <select
+                    value={issuePriority}
+                    onChange={(e) => setIssuePriority(e.target.value as IssuePriority)}
+                    className="w-full rounded-xl border border-border bg-secondary/50 px-2.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  >
+                    <option value="none">None</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setShowIssueModal(false)}
+                  className="px-3.5 py-1.5 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:bg-secondary cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!issueTitle.trim() || isCreatingIssue}
+                  className="px-4 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 active:scale-95 disabled:opacity-50 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  {isCreatingIssue ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckSquare className="h-3 w-3" />}
+                  <span>Create Issue</span>
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
       )}
 
       {lightboxIndex !== null && message.files && (
