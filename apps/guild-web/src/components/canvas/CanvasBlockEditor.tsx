@@ -16,7 +16,6 @@ import {
   CheckSquare,
   Table as TableIcon,
   FileCheck2,
-  Sparkles,
   ArrowRight,
   User,
   Check

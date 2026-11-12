@@ -4,7 +4,7 @@ import {
   Pencil, Trash2, Check, X, File, FileText,
   FileAudio, Download, Play, Maximize2, Smile,
   MessageSquare, Loader2, CornerUpLeft, MoreHorizontal,
-  Copy, CheckCheck, Sparkles, CheckSquare, Target, ClipboardList
+  Copy, CheckCheck, Layers, CheckSquare, Target, ClipboardList
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Message, editMessage, deleteMessage } from '../../lib/chat';
@@ -964,7 +964,7 @@ export function MessageBubble({
                 className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors cursor-pointer"
                 title="Convert message to Issue"
               >
-                <Sparkles className="h-3.5 w-3.5" />
+                <Layers className="h-3.5 w-3.5" />
               </button>
 
               {/* Quote Reply */}

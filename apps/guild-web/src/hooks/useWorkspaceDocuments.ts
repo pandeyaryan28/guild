@@ -6,9 +6,12 @@ import {
   updateWorkspaceDocumentContent,
   updateWorkspaceDocumentMeta,
   deleteWorkspaceDocument,
-  reorderWorkspaceDocuments
+  reorderWorkspaceDocuments,
+  updateWorkspaceDocumentPresence,
+  removeWorkspaceDocumentPresence,
+  listenToWorkspaceDocumentPresence
 } from '../lib/workspaceDocuments';
-import type { WorkspaceDocument } from '@guild/types';
+import type { WorkspaceDocument, WorkspaceDocumentPresence } from '@guild/types';
 import { useAuth } from './useAuth';
 
 export interface DocumentTreeNode extends WorkspaceDocument {
@@ -79,7 +82,7 @@ export function useWorkspaceDocuments(orgId: string | undefined) {
         orgId,
         parentId: params?.parentId ?? null,
         title: params?.title || 'Untitled Document',
-        icon: params?.icon || '📄',
+        icon: params?.icon || 'FileText',
         userId: userProfile.uid,
         userName: userProfile.fullName || 'Teammate'
       });
@@ -167,7 +170,7 @@ export function useWorkspaceDocument(docId: string | undefined) {
           console.error('[useWorkspaceDocument] Failed to auto-save:', err);
           setSaveStatus('unsaved');
         }
-      }, 500);
+      }, 3000);
     },
     [docId, userProfile]
   );
@@ -178,4 +181,52 @@ export function useWorkspaceDocument(docId: string | undefined) {
     saveStatus,
     saveContent
   };
+}
+
+export function useWorkspaceDocumentPresence(docId: string | undefined) {
+  const { userProfile } = useAuth();
+  const [presenceList, setPresenceList] = React.useState<WorkspaceDocumentPresence[]>([]);
+
+  // 15-second heartbeat
+  React.useEffect(() => {
+    if (!docId || !userProfile) return;
+
+    const sendHeartbeat = () => {
+      updateWorkspaceDocumentPresence({
+        docId,
+        userId: userProfile.uid,
+        userName: userProfile.fullName || 'Teammate',
+        avatarUrl: userProfile.photoURL || null
+      }).catch((err) => {
+        console.warn('[useWorkspaceDocumentPresence] heartbeat failed:', err);
+      });
+    };
+
+    // Send immediate heartbeat on mount or doc change
+    sendHeartbeat();
+
+    // Heartbeat every 15 seconds
+    const interval = setInterval(sendHeartbeat, 15000);
+
+    return () => {
+      clearInterval(interval);
+      removeWorkspaceDocumentPresence(docId, userProfile.uid).catch(() => {});
+    };
+  }, [docId, userProfile]);
+
+  // Real-time listener for active document viewers
+  React.useEffect(() => {
+    if (!docId) {
+      setPresenceList([]);
+      return;
+    }
+
+    const unsubscribe = listenToWorkspaceDocumentPresence(docId, (list) => {
+      setPresenceList(list);
+    });
+
+    return () => unsubscribe();
+  }, [docId]);
+
+  return { presenceList };
 }

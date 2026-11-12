@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {
   Plus,
-  Sparkles,
   Zap,
   CheckCircle2,
   Clock,

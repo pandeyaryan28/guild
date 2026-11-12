@@ -22,8 +22,7 @@ import {
   ArrowRight, 
   SlidersHorizontal, 
   Folder,
-  Layers,
-  Sparkles
+  Layers
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from '../../../hooks/useAuth';

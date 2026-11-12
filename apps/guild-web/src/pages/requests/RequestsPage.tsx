@@ -6,7 +6,7 @@ import {
   ChevronDown, X, Loader2, FileText, Calendar,
   Stethoscope, Home, Laptop, Receipt, ClipboardList,
   Inbox, Send, Trash2, Bell, Copy, Printer, Check,
-  ArrowRight, User, Briefcase, Sparkles, Info,
+  ArrowRight, User, Briefcase, Info,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useRequests } from '../../hooks/useRequests';

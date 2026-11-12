@@ -5,11 +5,12 @@ import {
   PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { useNavigate, useParams, NavLink, useLocation, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/useAuth';
 import { useChannels, useDMs, useOrgMembers } from '../../hooks/useChat';
 import { useTeams } from '../../hooks/useTeams';
-import { getOrCreateDM, markChannelRead, markDMRead } from '../../lib/chat';
+import { getOrCreateDM, markChannelRead, markDMRead, createChannel } from '../../lib/chat';
 import { CreateChannelModal } from '../../components/chat/CreateChannelModal';
 import { NewDMModal } from '../../components/chat/NewDMModal';
 import { ChannelSettingsModal } from '../../components/chat/ChannelSettingsModal';
@@ -174,6 +175,20 @@ function RedesignChatSidebar({
                 <span className="text-[10px] text-muted-foreground">Loading…</span>
               </div>
             )}
+
+            {!loading && channels.length === 0 && (
+              <div className="px-3 py-3 text-center space-y-2 select-none">
+                <span className="text-[10px] text-muted-foreground/60 italic block">No channels yet</span>
+                <button
+                  type="button"
+                  onClick={onOpenChannelModal}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-semibold transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Create Channel</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -280,13 +295,20 @@ export function ChatLayout() {
   const { channelId, dmId } = useParams<{ channelId: string; dmId: string }>();
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
-  const { channels } = useChannels(orgId);
+  const { channels, loading: channelsLoading } = useChannels(orgId);
   const members = useOrgMembers(orgId);
   const { teams } = useTeams(orgId);
   const navigate = useNavigate();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => window.innerWidth < 1024);
+  // Sidebar open by default on desktop (isSidebarCollapsed: false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 1024;
+    }
+    return false;
+  });
   const [showChannelModal, setShowChannelModal] = React.useState(false);
   const [showDMModal, setShowDMModal] = React.useState(false);
+  const [isCreatingGeneral, setIsCreatingGeneral] = React.useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const openTaskId = searchParams.get('task');
@@ -331,6 +353,31 @@ export function ChatLayout() {
 
   const hasContent = !!channelId || !!dmId;
 
+  // ─── Automatic Channel Redirection ──────────────────────────────────────────
+  // When user navigates to /chat with no channelId or dmId:
+  // As soon as channels load, if channels.length > 0, redirect to #general (or first channel)
+  React.useEffect(() => {
+    if (!channelId && !dmId && !channelsLoading && channels.length > 0) {
+      const generalChannel = channels.find((c) => c.name.toLowerCase() === 'general');
+      const targetChannel = generalChannel || channels[0];
+      navigate(`/chat/c/${targetChannel.id}`, { replace: true });
+    }
+  }, [channelId, dmId, channelsLoading, channels, navigate]);
+
+  // ─── 1-Click First Channel Creation ────────────────────────────────────────
+  const handleCreateFirstChannel = async () => {
+    if (!orgId || !user || isCreatingGeneral) return;
+    setIsCreatingGeneral(true);
+    try {
+      const id = await createChannel(orgId, 'general', 'General team discussions', user.uid);
+      navigate(`/chat/c/${id}`, { replace: true });
+    } catch (err) {
+      console.error('Failed to create general channel:', err);
+    } finally {
+      setIsCreatingGeneral(false);
+    }
+  };
+
   // Automatically manage sidebar expansion on mobile screens:
   // Open directory when on the home lane (/chat), collapse when reading messages
   React.useEffect(() => {
@@ -339,9 +386,10 @@ export function ChatLayout() {
     }
   }, [channelId, dmId, hasContent]);
 
-  // Automatically collapse left directory sidebar when Canvas is opened
+  // On narrower screens (< 1280px), collapse left sidebar when Canvas opens to preserve chat view;
+  // On desktop (>= 1280px), keep left sidebar open alongside Canvas for effortless multitasking
   React.useEffect(() => {
-    if (openCanvas) {
+    if (openCanvas && window.innerWidth < 1280) {
       setIsSidebarCollapsed(true);
     }
   }, [openCanvas]);
@@ -445,20 +493,35 @@ export function ChatLayout() {
                 />
               )}
 
-              {openCanvas && (channelId || dmId) && (
-                <BidirectionalCanvasDrawer
-                  chatId={channelId || dmId || ''}
-                  chatName={activeChannel?.name || (dmId ? 'Direct Message' : 'Notes')}
-                  isDM={!!dmId}
-                  members={members}
-                  onClose={() => handleClosePanel('canvas')}
-                />
-              )}
+              <AnimatePresence>
+                {openCanvas && (channelId || dmId) && (
+                  <React.Fragment key={`canvas-drawer-wrap-${channelId || dmId}`}>
+                    {/* Tablet/mobile backdrop overlay */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      onClick={() => handleClosePanel('canvas')}
+                      className="fixed inset-0 bg-black/40 backdrop-blur-xs z-25 lg:hidden"
+                    />
+                    <BidirectionalCanvasDrawer
+                      key={`canvas-drawer-${channelId || dmId}`}
+                      chatId={channelId || dmId || ''}
+                      chatName={activeChannel?.name || (dmId ? 'Direct Message' : 'Notes')}
+                      isDM={!!dmId}
+                      members={members}
+                      onClose={() => handleClosePanel('canvas')}
+                    />
+                  </React.Fragment>
+                )}
+              </AnimatePresence>
             </>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20 relative">
+          ) : channelsLoading ? (
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center py-20 relative select-none">
               {isSidebarCollapsed && (
                 <button
+                  type="button"
                   onClick={() => setIsSidebarCollapsed(false)}
                   className="absolute left-6 top-6 flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/80 border border-border text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-xs cursor-pointer"
                   title="Expand Sidebar (Cmd+\)"
@@ -466,13 +529,74 @@ export function ChatLayout() {
                   <PanelLeftOpen className="h-4.5 w-4.5 text-primary" />
                 </button>
               )}
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-secondary/80 border border-border text-primary shadow-lg">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/80 border border-border text-primary shadow-xs">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+              <p className="text-xs font-medium text-muted-foreground">Loading channels…</p>
+            </div>
+          ) : channels.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center gap-5 text-center py-20 px-6 max-w-md mx-auto relative select-none">
+              {isSidebarCollapsed && (
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarCollapsed(false)}
+                  className="absolute left-6 top-6 flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/80 border border-border text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-xs cursor-pointer"
+                  title="Expand Sidebar (Cmd+\)"
+                >
+                  <PanelLeftOpen className="h-4.5 w-4.5 text-primary" />
+                </button>
+              )}
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 border border-primary/20 text-primary shadow-sm">
+                <Hash className="w-8 h-8" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-base font-bold text-foreground">Welcome to Team Chat</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  No channels exist in your workspace yet. Create your first channel to start communicating with your team.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={handleCreateFirstChannel}
+                  disabled={isCreatingGeneral}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-xs hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isCreatingGeneral ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  <span>+ Create First Channel (#general)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowChannelModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-border bg-surface hover:bg-secondary text-foreground text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <span>Custom channel</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-20 relative select-none">
+              {isSidebarCollapsed && (
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarCollapsed(false)}
+                  className="absolute left-6 top-6 flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/80 border border-border text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-xs cursor-pointer"
+                  title="Expand Sidebar (Cmd+\)"
+                >
+                  <PanelLeftOpen className="h-4.5 w-4.5 text-primary" />
+                </button>
+              )}
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-secondary/80 border border-border text-primary shadow-sm">
                 <MessageSquare className="w-8 h-8" />
               </div>
               <div className="space-y-1">
                 <span className="text-base font-bold text-foreground block">Select conversation</span>
                 <span className="text-xs text-muted-foreground block max-w-xs px-6">
-                  Choose a channel or private direct message from the directory sidebar to start chatting.
+                  Choose a channel or direct message from the directory sidebar to start chatting.
                 </span>
               </div>
             </div>

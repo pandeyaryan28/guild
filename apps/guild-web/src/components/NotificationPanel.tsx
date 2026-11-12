@@ -5,7 +5,7 @@ import {
   Bell, CheckCheck, AtSign, CheckSquare, MessageSquare,
   Hash, User, X, BellOff, Check, Undo2,
   CornerDownRight, Play, CheckCircle2, Volume2, VolumeX,
-  Layers, Loader2, Send, Trash2, Sparkles
+  Layers, Loader2, Send, Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Notification } from '@guild/types';

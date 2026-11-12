@@ -5,7 +5,7 @@ import {
   X, 
   ChevronRight, 
   ChevronLeft, 
-  Sparkles, 
+  Compass, 
   Target, 
   MessageSquare, 
   Trello, 
@@ -264,7 +264,7 @@ export function TourGuide() {
             /* Welcome Screen */
             <div className="space-y-4 text-center">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/15 border border-indigo-500/20 dark:border-indigo-500/30 flex items-center justify-center mx-auto shadow-inner animate-pulse">
-                <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                <Compass className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div className="space-y-2">
                 <h2 id="tour-step-title" className="text-base font-black uppercase tracking-widest leading-snug">

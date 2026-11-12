@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { X, Bell, AtSign, CheckSquare, MessageSquare, Hash, Layers, User, Sparkles } from 'lucide-react';
+import { X, Bell, AtSign, CheckSquare, MessageSquare, Hash, Layers, User, Zap } from 'lucide-react';
 import type { Notification } from '@guild/types';
 import { cn } from '@/lib/utils';
 import { avatarHue } from './MemberProfileDrawer';
@@ -191,7 +191,7 @@ export function AetherToasts({ activeToasts, onDismiss, onMarkRead }: AetherToas
                   </span>
                   {toast.urgency === 'high' && (
                     <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[8px] font-black uppercase px-1 rounded flex items-center gap-0.5 leading-none">
-                      <Sparkles className="h-2 w-2 text-rose-400 fill-current animate-pulse" /> Urgent
+                      <Zap className="h-2 w-2 text-rose-400 fill-current animate-pulse" /> Urgent
                     </span>
                   )}
                 </div>

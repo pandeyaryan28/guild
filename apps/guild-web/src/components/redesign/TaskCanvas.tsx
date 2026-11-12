@@ -17,7 +17,7 @@ import {
   Circle,
   Settings,
   // Premium Icons
-  Sparkles,
+  User,
   Workflow,
   Target,
   Zap,
@@ -878,7 +878,7 @@ export function TaskCanvas() {
               )}
               title="My Space"
             >
-              <Sparkles className="w-4 h-4 text-cyan-500 shrink-0" />
+              <User className="w-4 h-4 text-primary shrink-0" />
               {!isSidebarCollapsed && <span>My Space</span>}
             </button>
             
@@ -980,7 +980,7 @@ export function TaskCanvas() {
                 activeSection === 'my-space' ? "bg-surface border border-border shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+              <User className="w-3.5 h-3.5 text-primary shrink-0" />
               <span>My Space</span>
             </button>
             <button
@@ -1076,7 +1076,7 @@ export function TaskCanvas() {
                     <div className="flex flex-wrap items-center gap-3.5 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         {activeSection === 'my-space' ? (
-                          <Sparkles className="w-5 h-5 text-cyan-500 drop-shadow-[0_0_4px_rgba(6,182,212,0.3)] shrink-0" />
+                          <User className="w-5 h-5 text-primary drop-shadow-[0_0_4px_rgba(99,102,241,0.3)] shrink-0" />
                         ) : (
                           <Users className="w-5 h-5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.3)] shrink-0" />
                         )}

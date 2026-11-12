@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, XCircle, Loader2, X } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, X, Calendar } from 'lucide-react';
 import type { OrgRequest } from '@guild/types';
 import { REQUEST_TYPE_LABELS } from '../../lib/requests';
 
@@ -92,8 +92,9 @@ export function ApprovalActionModal({
               <p className="text-muted-foreground line-clamp-2">{request.description}</p>
             )}
             {(request.startDate || request.endDate) && (
-              <div className="mt-2 text-[11px] text-muted-foreground font-mono">
-                📅 {request.startDate} {request.endDate ? `→ ${request.endDate}` : ''}
+              <div className="mt-2 text-[11px] text-muted-foreground font-mono flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-muted-foreground" />
+                <span>{request.startDate} {request.endDate ? `→ ${request.endDate}` : ''}</span>
               </div>
             )}
           </div>

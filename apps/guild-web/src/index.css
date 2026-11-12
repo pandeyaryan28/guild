@@ -84,11 +84,11 @@
     /* Light Theme (Crisp, high-contrast operational workspace) */
     --bg-primary: #fcfcfd;
     --bg-secondary: #f4f4f6;
-    --bg-tertiary: #ebebf0;
+    --bg-tertiary: #eaeaf0;
 
     --surface: #ffffff;
     --surface-elevated: #ffffff;
-    --surface-hover: #f6f6f9;
+    --surface-hover: #f8f8fa;
 
     --text-primary: #09090b;
     --text-secondary: #27272a;
@@ -97,9 +97,9 @@
 
     --border-default: #e4e4e7;
     --border-strong: #cbd5e1;
-    --border-subtle: #f1f1f4;
+    --border-subtle: #f4f4f5;
 
-    --accent: #4f46e5;
+    --accent: #6366f1;
     --accent-foreground: #ffffff;
 
     /* Aliases for components referencing --primary / --background / --foreground directly */
@@ -117,25 +117,25 @@
 }
 
 .dark {
-    /* Dark Theme (Layered deep obsidian/slate, high-contrast borders) */
-    --bg-primary: #0d0b1a;
-    --bg-secondary: #121024;
-    --bg-tertiary: #181530;
+    /* Dark Theme (Pure obsidian slate, neutral elite palette - no purple/neon tints) */
+    --bg-primary: #09090b;
+    --bg-secondary: #121214;
+    --bg-tertiary: #18181b;
 
-    --surface: #141128;
-    --surface-elevated: #1e1a3c;
-    --surface-hover: #26214c;
+    --surface: #141416;
+    --surface-elevated: #1a1a1e;
+    --surface-hover: #222226;
 
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
-    --text-disabled: #475569;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --text-disabled: #52525b;
 
-    --border-default: #241f44;
-    --border-strong: #38306b;
-    --border-subtle: #1a1633;
+    --border-default: #27272a;
+    --border-strong: #3f3f46;
+    --border-subtle: #18181b;
 
-    --accent: #8b5cf6;
+    --accent: #6366f1;
     --accent-foreground: #ffffff;
 
     --primary: var(--accent);

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { 
-  X, Check, Loader2, FileText, Sparkles, 
+  X, Check, Loader2, FileText, Layers, MessageSquare, 
   Bold, Italic, Strikethrough, Highlighter, 
   Heading1, Heading2, Heading3, 
   List, ListOrdered, ListTodo, 
@@ -26,6 +26,21 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { type UserProfile } from '../../lib/firestore';
 import type { WorkspaceDocument, IssuePriority } from '@guild/types';
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  FileText,
+  Layers,
+  CheckSquare,
+  MessageSquare,
+};
+
+function DocIcon({ icon, className = 'w-4 h-4' }: { icon?: string; className?: string }) {
+  if (icon && ICON_MAP[icon]) {
+    const Comp = ICON_MAP[icon];
+    return <Comp className={className} />;
+  }
+  return <FileText className={className} />;
+}
 
 export interface BidirectionalCanvasDrawerProps {
   chatId: string;
@@ -285,7 +300,7 @@ export function BidirectionalCanvasDrawer({
 
       const newDocId = await createDocument({
         title: docTitle,
-        icon: isDM ? '💬' : '📋',
+        icon: isDM ? 'MessageSquare' : 'FileText',
       });
 
       await updateWorkspaceDocumentContent({
@@ -356,7 +371,7 @@ export function BidirectionalCanvasDrawer({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: '100%', opacity: 0 }}
       transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-      className="absolute inset-y-0 right-0 z-30 w-full sm:w-[480px] lg:w-[540px] flex flex-col bg-surface/95 dark:bg-surface/85 backdrop-blur-2xl border-l border-border shadow-2xl overflow-hidden select-none"
+      className="absolute inset-y-0 right-0 z-30 w-full sm:w-[480px] lg:w-[540px] flex flex-col bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border-l border-border dark:border-border-strong shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.5)] overflow-hidden select-none"
     >
       {/* ─── Top Segmented Control & Navigation Header ─────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface/80 dark:bg-surface/60 shrink-0 gap-3">
@@ -402,7 +417,7 @@ export function BidirectionalCanvasDrawer({
             className="flex h-8 px-2.5 items-center gap-1.5 rounded-xl border border-border bg-secondary/60 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
             title="Extract selected text to Issue"
           >
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            <Layers className="h-3.5 w-3.5 text-primary" />
             <span className="hidden sm:inline">Issue</span>
           </button>
 
@@ -471,7 +486,7 @@ export function BidirectionalCanvasDrawer({
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-secondary/30 shrink-0 gap-2">
           {/* Linked Doc Title & Switcher */}
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="text-base shrink-0">{linkedDocument?.icon || '📄'}</span>
+            <DocIcon icon={linkedDocument?.icon} className="w-4 h-4 text-primary shrink-0" />
             <span className="text-sm font-bold text-foreground truncate">
               {linkedDocument?.title || (linkedDocLoading ? 'Loading document…' : 'No document linked')}
             </span>
@@ -645,7 +660,7 @@ export function BidirectionalCanvasDrawer({
               onClick={() => setIsTemplatesModalOpen(true)}
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-all cursor-pointer"
             >
-              <Sparkles className="h-3 w-3 text-primary" />
+              <FileText className="h-3 w-3 text-primary" />
               <span>Templates</span>
             </button>
             <button
@@ -696,7 +711,7 @@ export function BidirectionalCanvasDrawer({
                   type="button"
                   onClick={async () => {
                     if (!orgId || !userProfile) return;
-                    const newId = await createDocument({ title: `${chatName} Spec`, icon: '📄' });
+                    const newId = await createDocument({ title: `${chatName} Spec`, icon: 'FileText' });
                     handleSetLinkedDocId(newId);
                     showToast('Created new Workspace Document');
                   }}
@@ -733,7 +748,7 @@ export function BidirectionalCanvasDrawer({
               onClick={() => handleOpenConvertModal(selectedText)}
               className="flex items-center gap-1.5 text-xs font-bold text-foreground hover:text-primary transition-colors cursor-pointer"
             >
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <Layers className="h-3.5 w-3.5 text-primary" />
               <span>Convert to Issue</span>
             </button>
           </motion.div>
@@ -900,7 +915,7 @@ export function BidirectionalCanvasDrawer({
                         : 'text-foreground hover:bg-secondary'
                     )}
                   >
-                    <span className="text-base shrink-0">{doc.icon || '📄'}</span>
+                    <DocIcon icon={doc.icon} className="w-4 h-4 text-primary shrink-0" />
                     <span className="truncate flex-1 font-medium">{doc.title}</span>
                     {isSelected && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
                   </button>
@@ -934,7 +949,7 @@ export function BidirectionalCanvasDrawer({
             className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
           >
             <div className="px-4 py-2 rounded-full border border-border bg-surface-elevated/95 dark:bg-surface/95 text-foreground shadow-2xl backdrop-blur-xl text-xs font-semibold flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+              <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
               <span>{toastMessage}</span>
             </div>
           </motion.div>

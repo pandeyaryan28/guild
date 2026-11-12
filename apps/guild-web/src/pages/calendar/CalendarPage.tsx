@@ -25,7 +25,6 @@ import {
   TrendingUp,
   BarChart2,
   Activity,
-  Sparkles,
   Users,
   Target
 } from 'lucide-react';

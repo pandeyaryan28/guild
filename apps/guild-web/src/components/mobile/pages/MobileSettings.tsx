@@ -9,7 +9,6 @@ import {
   Lock, 
   ShieldAlert,
   ChevronRight,
-  Sparkles,
   Download,
   Share2,
   X,
@@ -188,7 +187,7 @@ export function MobileSettings() {
       )}
  
       {/* Theme selector Panel */}
-      <div id="cosmic-themes" className="aether-glass p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
+      <div id="appearance-themes" className="aether-glass p-5 space-y-4 bg-surface/85 dark:bg-surface/50 border border-border dark:border-border-strong shadow-sm">
         <div className="flex items-center gap-2 border-b border-border pb-2.5">
           <Palette className="w-4 h-4 text-primary" />
           <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Appearance & Themes</span>
@@ -217,36 +216,10 @@ export function MobileSettings() {
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Moon className="w-4 h-4 text-indigo-400" />
+            <Moon className="w-4 h-4 text-primary" />
             <span>Dark Mode</span>
           </button>
         </div>
-
-        <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground pt-1">
-          Color Themes
-        </div>
-
-        <div className="grid grid-cols-4 gap-3">
-          {themes.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTheme(t.id)}
-              className={cn(
-                "h-10 rounded-xl border-2 flex items-center justify-center hover:scale-[1.02] active:scale-95 transition-all relative cursor-pointer",
-                themeId === t.id ? 'border-primary shadow-lg shadow-primary/25' : 'border-border hover:border-primary/40'
-              )}
-              style={{ background: t.swatch }}
-              title={t.name}
-            >
-              {themeId === t.id && (
-                <div className="h-2 w-2 rounded-full bg-white shadow-md animate-fluid-pop" />
-              )}
-            </button>
-          ))}
-        </div>
-        <p className="text-[9px] text-muted-foreground font-semibold italic text-center pt-1 leading-normal">
-          Select any theme swatch to adjust colors and contrast across all mobile views in real-time.
-        </p>
       </div>
 
       {/* Account Settings Menu stack */}
@@ -254,7 +227,7 @@ export function MobileSettings() {
         {[
           { icon: User, label: 'Edit Profile Details', detail: 'Update name, title and contact info', onClick: () => setEditProfileOpen(true) },
           { icon: Lock, label: 'Account Security', detail: 'Manage sign-in settings and sessions', onClick: () => setAccountSecurityOpen(true) },
-          { icon: Sparkles, label: 'Visual Interface Preference', detail: 'Control themes, canvas mode and styling', onClick: () => document.getElementById('cosmic-themes')?.scrollIntoView({ behavior: 'smooth' }) }
+          { icon: Palette, label: 'Visual Interface Preference', detail: 'Control themes, canvas mode and styling', onClick: () => document.getElementById('appearance-themes')?.scrollIntoView({ behavior: 'smooth' }) }
         ].map((item, idx) => (
           <div 
             key={idx} 

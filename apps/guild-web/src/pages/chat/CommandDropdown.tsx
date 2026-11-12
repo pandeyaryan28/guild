@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckSquare, Target, ClipboardList, Sparkles, HelpCircle } from 'lucide-react';
+import { CheckSquare, Target, ClipboardList, MessageSquare, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface CommandItem {
@@ -90,7 +90,7 @@ export function CommandDropdown({ query, onSelect, onClose }: CommandDropdownPro
       >
         <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-border-subtle dark:border-white/5 bg-surface-elevated/50 dark:bg-white/[0.02]">
           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <MessageSquare className="h-3.5 w-3.5 text-primary" />
             <span>Slash Commands</span>
           </span>
           <span className="text-[9px] font-mono text-muted-foreground">

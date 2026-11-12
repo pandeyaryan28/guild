@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Search, Filter, Plus, Check, CheckCircle2, XCircle, Clock,
   Zap, ClipboardList, ListTodo, User, Calendar, AlertCircle,
-  ChevronDown, ArrowRight, Sparkles, X, ShieldCheck, UserPlus,
+  ChevronDown, ArrowRight, X, ShieldCheck, UserPlus,
   Receipt, Laptop, Home, Stethoscope, RefreshCw, Layers
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -645,9 +645,9 @@ export function TasksFeedPage() {
             {(
               [
                 { id: 'all', label: 'All' },
-                { id: 'issue', label: '⚡ Issues' },
-                { id: 'request', label: '📋 Requests' },
-                { id: 'task', label: '☑ Tasks' },
+                { id: 'issue', label: 'Issues' },
+                { id: 'request', label: 'Requests' },
+                { id: 'task', label: 'Tasks' },
               ] as const
             ).map((t) => (
               <button
@@ -674,10 +674,10 @@ export function TasksFeedPage() {
             {(
               [
                 { id: 'all', label: 'All' },
-                { id: 'urgent', label: '🚨 Urgent' },
-                { id: 'high', label: '🔺 High' },
-                { id: 'medium', label: '🔸 Med' },
-                { id: 'low', label: '🔹 Low' },
+                { id: 'urgent', label: 'Urgent' },
+                { id: 'high', label: 'High' },
+                { id: 'medium', label: 'Med' },
+                { id: 'low', label: 'Low' },
               ] as const
             ).map((p) => (
               <button
@@ -726,7 +726,7 @@ export function TasksFeedPage() {
         {!isLoading && filteredItems.length === 0 && (
           <div className="py-20 flex flex-col items-center justify-center text-center p-8 rounded-3xl bg-surface/60 border border-border/80 dark:border-border/40 shadow-xs">
             <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-muted-foreground mb-3">
-              <Sparkles className="w-6 h-6 text-primary" />
+              <CheckCircle2 className="w-6 h-6 text-primary" />
             </div>
             <h3 className="text-base font-bold text-foreground">All clear in this view</h3>
             <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-5">
@@ -842,7 +842,7 @@ export function TasksFeedPage() {
 
                             {issuePriorityCfg && (
                               <span className={cn('px-2 py-0.5 rounded-md text-[10px] font-semibold', issuePriorityCfg.color)}>
-                                {issuePriorityCfg.icon} {issuePriorityCfg.label}
+                                {issuePriorityCfg.label}
                               </span>
                             )}
 
@@ -853,8 +853,9 @@ export function TasksFeedPage() {
                             )}
 
                             {item.cycleName && (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-secondary/80 text-foreground border border-border/40">
-                                🔄 {item.cycleName}
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-secondary/80 text-foreground border border-border/40">
+                                <RefreshCw className="w-2.5 h-2.5 text-muted-foreground" />
+                                <span>{item.cycleName}</span>
                               </span>
                             )}
 
@@ -866,7 +867,7 @@ export function TasksFeedPage() {
                           </div>
                         )}
 
-                        {/* 📋 Request Type Badge */}
+                        {/* Request Type Badge */}
                         {isRequest && (
                           <div className="flex items-center gap-1.5">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
@@ -886,8 +887,9 @@ export function TasksFeedPage() {
                             </span>
 
                             {(item.startDate || item.endDate) && (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono text-muted-foreground bg-secondary/60">
-                                📅 {item.startDate} {item.endDate ? `→ ${item.endDate}` : ''}
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono text-muted-foreground bg-secondary/60">
+                                <Calendar className="w-2.5 h-2.5 text-muted-foreground" />
+                                <span>{item.startDate} {item.endDate ? `→ ${item.endDate}` : ''}</span>
                               </span>
                             )}
                           </div>

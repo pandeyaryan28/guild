@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { 
-  X, FileText, Play, ClipboardList, ListTodo, Bug, Sparkles, 
+  X, FileText, Play, ClipboardList, ListTodo, Bug, Users, 
   Check, AlertCircle, ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -130,7 +130,7 @@ export const CANVAS_TEMPLATES: CanvasTemplate[] = [
     title: 'Out of Office (OOO) Handover',
     category: 'General',
     description: 'Coverage dates, primary contacts, ongoing responsibilities, and emergency escalations.',
-    icon: Sparkles,
+    icon: Users,
     content: `<h1>🏖️ Out of Office Handover: @name</h1>
 <blockquote><p>📅 <strong>Away Dates:</strong> [Start Date] to [End Date] | Primary Coverage: @coverage</p></blockquote>
 <h2>👥 Key Contacts & Coverage</h2>

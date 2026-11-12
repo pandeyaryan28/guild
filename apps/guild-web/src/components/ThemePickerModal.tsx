@@ -11,7 +11,7 @@ interface ThemePickerModalProps {
 
 // Tiny preview pane — shows a miniature representation of the theme
 function ThemePreview({ themeId, isLight }: { themeId: ThemeId; isLight: boolean }) {
-  const theme = THEMES.find((t) => t.id === themeId)!;
+  const theme = THEMES.find((t) => t.id === themeId) || THEMES[0];
   const bg = isLight ? '#fcfcfd' : theme.bgSwatch;
   const border = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
   
@@ -138,10 +138,10 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
           <div className="flex gap-0 divide-x divide-border/30">
             {/* Left — Theme Swatches */}
             <div className="flex-1 p-6">
-              <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">Themes</p>
-              <div className="grid grid-cols-2 gap-3">
-                {THEMES.filter(t => t.id !== 'light').map((theme) => {
-                  const isActive = themeId === theme.id;
+              <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">Themes & Modes</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {THEMES.map((theme) => {
+                  const isActive = themeId === theme.id || (theme.id === 'dark' && mode === 'dark') || (theme.id === 'light' && mode === 'light');
                   const isHovered = hoveredId === theme.id;
                   return (
                     <motion.button
@@ -152,7 +152,7 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                       onMouseEnter={() => setHoveredId(theme.id)}
                       onMouseLeave={() => setHoveredId(null)}
                       className={cn(
-                        'relative flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all',
+                        'relative flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all cursor-pointer',
                         isActive
                           ? 'border-primary/60 bg-primary/8 shadow-lg shadow-primary/10'
                           : 'bg-transparent border-transparent aether-glass-interactive',
@@ -161,9 +161,9 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                       {/* Color swatch */}
                       <div className="relative shrink-0">
                         <div
-                          className="h-8 w-8 rounded-lg shadow-lg"
+                          className="h-8 w-8 rounded-lg shadow-lg border border-border/40"
                           style={{
-                            background: `radial-gradient(circle at 30% 30%, ${theme.swatch}dd, ${theme.swatch}77)`,
+                            background: `radial-gradient(circle at 30% 30%, ${theme.swatch}dd, ${theme.bgSwatch})`,
                             boxShadow: isActive || isHovered ? `0 0 16px ${theme.swatch}55` : 'none',
                           }}
                         />
@@ -171,10 +171,9 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card"
-                            style={{ background: theme.swatch }}
+                            className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-primary"
                           >
-                            <Check className="h-2 w-2 text-white" strokeWidth={3} />
+                            <Check className="h-2 w-2 text-primary-foreground" strokeWidth={3} />
                           </motion.div>
                         )}
                       </div>
@@ -205,11 +204,11 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                 className="flex-1 rounded-xl aether-glass overflow-hidden"
                 style={{ minHeight: '220px' }}
               >
-                <ThemePreview themeId={previewId} isLight={isLight} />
+                <ThemePreview themeId={previewId} isLight={previewId === 'light'} />
               </motion.div>
               <div className="space-y-1">
                 {(() => {
-                  const t = THEMES.find((x) => x.id === previewId)!;
+                  const t = THEMES.find((x) => x.id === previewId) || THEMES[0];
                   return (
                     <>
                       <p className="text-xs font-semibold text-foreground">{t.name}</p>
@@ -219,14 +218,12 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
                 })()}
               </div>
               {(() => {
-                const activeT = THEMES.find((t) => t.id === previewId)!;
-                const activeSwatch = isLight 
-                  ? (previewId === 'rose-gold' ? '#db2777' : activeT.swatch)
-                  : activeT.swatch;
+                const activeT = THEMES.find((t) => t.id === previewId) || THEMES[0];
+                const activeSwatch = activeT.swatch || '#6366f1';
                 return (
                   <button
                     onClick={() => { setTheme(previewId); onClose(); }}
-                    className="w-full rounded-xl py-2 text-xs font-semibold transition-all"
+                    className="w-full rounded-xl py-2 text-xs font-semibold transition-all cursor-pointer"
                     style={{
                       background: activeSwatch,
                       color: '#fff',

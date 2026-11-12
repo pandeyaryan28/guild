@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { X, Sparkles, Check, AlertCircle } from 'lucide-react';
+import { X, Check, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { IssueStatus, IssuePriority } from '@guild/types';
 import { ISSUE_STATUS_CONFIG, ISSUE_PRIORITY_CONFIG } from '../../hooks/useWorkspaceIssues';
@@ -169,10 +169,10 @@ export function StudioCreateIssueModal({
                   className="w-full text-xs font-medium bg-secondary/50 border border-border rounded-xl px-2.5 py-1.5 text-foreground outline-none cursor-pointer"
                 >
                   <option value="none">None</option>
-                  <option value="urgent">🚨 Urgent</option>
-                  <option value="high">🔺 High</option>
-                  <option value="medium">🔸 Medium</option>
-                  <option value="low">🔹 Low</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
                 </select>
               </div>
 

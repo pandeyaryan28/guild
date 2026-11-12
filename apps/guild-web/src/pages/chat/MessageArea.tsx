@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen, FileText, Sparkles } from 'lucide-react';
+import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen, FileText } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useChannels, useMessages } from '../../hooks/useChat';

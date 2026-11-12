@@ -16,7 +16,6 @@ import {
   MessageSquare,
   Paperclip,
   Send,
-  Sparkles,
   HelpCircle,
   Target,
   Users

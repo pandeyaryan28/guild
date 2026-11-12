@@ -2,7 +2,7 @@ import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X, Trash2, Zap, Check, AlertCircle, Calendar, User, Clock,
-  ChevronDown, CheckCircle2, Flag, ArrowRight, Sparkles, Loader2
+  ChevronDown, CheckCircle2, Flag, ArrowRight, Loader2
 } from 'lucide-react';
 import type { WorkspaceIssue, IssueStatus, IssuePriority, WorkspaceCycle, UserProfile } from '@guild/types';
 import { ISSUE_STATUS_CONFIG, ISSUE_PRIORITY_CONFIG } from '../../hooks/useWorkspaceIssues';

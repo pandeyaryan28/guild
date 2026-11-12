@@ -11,94 +11,98 @@ import {
   BarChart3,
   Check,
   X,
-  Sparkles,
-  ArrowUpRight
+  Target,
+  Layers,
+  ArrowUpRight,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@guild/utils';
 import { useAuth } from '../../../hooks/useAuth';
 import { useWorkspaceCycles } from '../../../hooks/useWorkspaceCycles';
 import { useWorkspaceIssues } from '../../../hooks/useWorkspaceIssues';
-
-interface SprintTask {
-  id: string;
-  identifier: string;
-  title: string;
-  completed: boolean;
-  points: number;
-  assignee: string;
-}
-
-const DEFAULT_SPRINT_TASKS: SprintTask[] = [
-  { id: 'st-1', identifier: 'ORB-101', title: 'Implement Liquid Glass Navigation Header', completed: true, points: 5, assignee: 'Alex' },
-  { id: 'st-2', identifier: 'ORB-102', title: 'Design Dual-Theme Token Architecture', completed: true, points: 3, assignee: 'Elena' },
-  { id: 'st-3', identifier: 'ORB-103', title: 'Build TipTap Block Canvas Integration', completed: false, points: 8, assignee: 'Aryan' },
-  { id: 'st-4', identifier: 'ORB-104', title: 'Real-time WebSocket Operational Sync', completed: false, points: 5, assignee: 'Marcus' },
-];
+import type { IssueStatus } from '@guild/types';
 
 export function SprintCycleBlock({ node, updateAttributes, deleteNode }: NodeViewProps) {
   const { userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
   const { cycles, activeCycle } = useWorkspaceCycles(orgId);
+  const {
+    issues,
+    loading: issuesLoading,
+    createIssue,
+    updateIssue,
+    deleteIssue
+  } = useWorkspaceIssues(orgId, activeCycle?.id || null);
 
   // Attributes with sensible defaults
-  const title = node.attrs.title || (activeCycle ? activeCycle.title : 'Sprint Cycle 24: Core Platform & Speed');
-  const cycleNumber = node.attrs.cycleNumber || (activeCycle ? activeCycle.number : 24);
-  const rawTasks: SprintTask[] = node.attrs.tasks && node.attrs.tasks.length > 0 ? node.attrs.tasks : DEFAULT_SPRINT_TASKS;
+  const title = node.attrs.title || (activeCycle ? activeCycle.title : 'Sprint Cycle: Active Deliverables');
+  const cycleNumber = node.attrs.cycleNumber || (activeCycle ? activeCycle.number : 1);
 
-  const [tasks, setTasks] = React.useState<SprintTask[]>(rawTasks);
   const [newTitle, setNewTitle] = React.useState('');
   const [newPoints, setNewPoints] = React.useState<number>(3);
   const [showAddForm, setShowAddForm] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  // Sync tasks to TipTap node attributes
-  const persistTasks = (updated: SprintTask[]) => {
-    setTasks(updated);
-    const completedPts = updated.filter((t) => t.completed).reduce((acc, t) => acc + t.points, 0);
-    const totalPts = updated.reduce((acc, t) => acc + t.points, 0);
-    updateAttributes({
-      tasks: updated,
-      totalPoints: totalPts,
-      completedPoints: completedPts,
-    });
-  };
+  // Velocity metrics calculation based on live Firestore workspaceIssues
+  const totalPoints = React.useMemo(() => {
+    return issues.reduce((sum, i) => sum + (i.estimatePoints || 0), 0);
+  }, [issues]);
 
-  const totalPoints = tasks.reduce((sum, t) => sum + (t.points || 0), 0);
-  const completedPoints = tasks.filter((t) => t.completed).reduce((sum, t) => sum + (t.points || 0), 0);
+  const completedPoints = React.useMemo(() => {
+    return issues
+      .filter((i) => i.status === 'done')
+      .reduce((sum, i) => sum + (i.estimatePoints || 0), 0);
+  }, [issues]);
+
   const percent = totalPoints > 0 ? Math.round((completedPoints / totalPoints) * 100) : 0;
+  const doneCount = issues.filter((i) => i.status === 'done').length;
+  const remainingCount = issues.filter((i) => i.status !== 'done' && i.status !== 'canceled').length;
 
-  const toggleTask = (taskId: string) => {
-    const updated = tasks.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t));
-    persistTasks(updated);
+  const toggleIssueCompletion = async (issueId: string, currentStatus: IssueStatus) => {
+    const nextStatus: IssueStatus = currentStatus === 'done' ? 'todo' : 'done';
+    try {
+      await updateIssue(issueId, { status: nextStatus });
+    } catch (err) {
+      console.error('Failed to update issue status:', err);
+    }
   };
 
-  const handleAddTask = (e: React.FormEvent) => {
+  const handleAddIssue = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
+    if (!newTitle.trim() || isSubmitting) return;
 
-    const newTask: SprintTask = {
-      id: `st-${Date.now()}`,
-      identifier: `ORB-${100 + tasks.length + 1}`,
-      title: newTitle.trim(),
-      completed: false,
-      points: Number(newPoints) || 1,
-      assignee: userProfile?.fullName?.split(' ')[0] || 'Me'
-    };
-
-    const updated = [...tasks, newTask];
-    persistTasks(updated);
-    setNewTitle('');
-    setShowAddForm(false);
+    setIsSubmitting(true);
+    try {
+      await createIssue({
+        title: newTitle.trim(),
+        estimatePoints: Number(newPoints) || 1,
+        cycleId: activeCycle?.id || null,
+        status: 'todo',
+        priority: 'medium',
+        assigneeId: userProfile?.uid,
+        assigneeName: userProfile?.fullName || 'Me'
+      });
+      setNewTitle('');
+      setShowAddForm(false);
+    } catch (err) {
+      console.error('Failed to create sprint issue:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const removeTask = (taskId: string) => {
-    const updated = tasks.filter((t) => t.id !== taskId);
-    persistTasks(updated);
+  const handleRemoveIssue = async (issueId: string) => {
+    try {
+      await deleteIssue(issueId);
+    } catch (err) {
+      console.error('Failed to delete issue:', err);
+    }
   };
 
   return (
     <NodeViewWrapper className="my-6 not-prose">
       <div className="relative group/block rounded-2xl border border-border dark:border-border-strong bg-surface/90 dark:bg-surface/55 backdrop-blur-2xl shadow-xl transition-all duration-300 hover:shadow-2xl overflow-hidden">
-        {/* Subtle top specular accent gradient line */}
+        {/* Top specular accent gradient line */}
         <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-primary to-emerald-400" />
 
         <div className="p-5 sm:p-6 space-y-5">
@@ -106,7 +110,7 @@ export function SprintCycleBlock({ node, updateAttributes, deleteNode }: NodeVie
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shadow-inner">
-                <Zap className="w-5 h-5 fill-current" />
+                <Target className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -115,7 +119,7 @@ export function SprintCycleBlock({ node, updateAttributes, deleteNode }: NodeVie
                   </span>
                   <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
                     <Calendar className="w-3 h-3" />
-                    4 days remaining
+                    In Progress
                   </span>
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight mt-0.5">
@@ -166,28 +170,28 @@ export function SprintCycleBlock({ node, updateAttributes, deleteNode }: NodeVie
               <div className="p-2 rounded-lg bg-surface/70 dark:bg-surface/30 border border-border/40">
                 <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Done</div>
                 <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                  {tasks.filter((t) => t.completed).length} issues
+                  {doneCount} {doneCount === 1 ? 'issue' : 'issues'}
                 </div>
               </div>
               <div className="p-2 rounded-lg bg-surface/70 dark:bg-surface/30 border border-border/40">
                 <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Remaining</div>
                 <div className="text-sm font-bold text-foreground">
-                  {tasks.filter((t) => !t.completed).length} issues
+                  {remainingCount} {remainingCount === 1 ? 'issue' : 'issues'}
                 </div>
               </div>
               <div className="p-2 rounded-lg bg-surface/70 dark:bg-surface/30 border border-border/40">
                 <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Burn Rate</div>
                 <div className="text-sm font-bold text-primary">
-                  {(totalPoints > 0 ? (completedPoints / 10).toFixed(1) : 0)} pts/day
+                  {(totalPoints > 0 ? (completedPoints / 10).toFixed(1) : '0.0')} pts/day
                 </div>
               </div>
             </div>
           </div>
 
           {/* Interactive Sprint Issue / Task List */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground px-1 pb-1">
-              <span>Sprint Backlog ({tasks.length})</span>
+              <span>Sprint Issues ({issues.length})</span>
               <button
                 type="button"
                 onClick={() => setShowAddForm(!showAddForm)}
@@ -200,7 +204,7 @@ export function SprintCycleBlock({ node, updateAttributes, deleteNode }: NodeVie
 
             {/* Quick Add Form */}
             {showAddForm && (
-              <form onSubmit={handleAddTask} className="flex items-center gap-2 p-2 rounded-xl bg-surface dark:bg-surface/80 border border-primary/40 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
+              <form onSubmit={handleAddIssue} className="flex items-center gap-2 p-2 rounded-xl bg-surface dark:bg-surface/80 border border-primary/40 shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
                 <input
                   type="text"
                   autoFocus
@@ -212,7 +216,7 @@ export function SprintCycleBlock({ node, updateAttributes, deleteNode }: NodeVie
                 <select
                   value={newPoints}
                   onChange={(e) => setNewPoints(Number(e.target.value))}
-                  className="bg-secondary/60 text-foreground border border-border text-xs rounded-lg px-2 py-1 outline-none"
+                  className="bg-secondary/60 text-foreground border border-border text-xs rounded-lg px-2 py-1 outline-none cursor-pointer"
                 >
                   <option value={1}>1 pt</option>
                   <option value={2}>2 pts</option>
@@ -222,70 +226,99 @@ export function SprintCycleBlock({ node, updateAttributes, deleteNode }: NodeVie
                 </select>
                 <button
                   type="submit"
-                  disabled={!newTitle.trim()}
-                  className="px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-all active:scale-[0.98]"
+                  disabled={!newTitle.trim() || isSubmitting}
+                  className="px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-all active:scale-[0.98] inline-flex items-center gap-1"
                 >
+                  {isSubmitting && <Loader2 className="w-3 h-3 animate-spin" />}
                   Add
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="p-1 rounded-lg text-muted-foreground hover:bg-secondary"
+                  className="p-1 rounded-lg text-muted-foreground hover:bg-secondary transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </form>
             )}
 
-            <div className="space-y-1">
-              {tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={cn(
-                    'group/item flex items-center justify-between gap-3 px-3 py-2 rounded-xl border transition-all duration-200 select-none',
-                    task.completed
-                      ? 'bg-secondary/30 border-border/40 text-muted-foreground'
-                      : 'bg-surface/80 dark:bg-surface/30 border-border hover:border-primary/40 shadow-xs'
-                  )}
+            {issuesLoading ? (
+              <div className="p-4 flex items-center justify-center text-xs text-muted-foreground gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                Loading issues...
+              </div>
+            ) : issues.length === 0 ? (
+              <div className="p-6 text-center rounded-xl bg-secondary/30 dark:bg-secondary/15 border border-dashed border-border text-xs text-muted-foreground space-y-2">
+                <Target className="w-5 h-5 mx-auto text-muted-foreground/50" />
+                <p className="font-medium text-foreground/80">No active sprint issues yet</p>
+                <p className="text-[11px] text-muted-foreground">Add issues to track sprint velocity, scope, and burndown.</p>
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-xs"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => toggleTask(task.id)}
-                      className="cursor-pointer text-muted-foreground hover:text-emerald-500 transition-colors"
-                    >
-                      {task.completed ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
-                      ) : (
-                        <Circle className="w-4 h-4" />
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Sprint Issue
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {issues.map((issue) => {
+                  const isDone = issue.status === 'done';
+                  return (
+                    <div
+                      key={issue.id}
+                      className={cn(
+                        'group/item flex items-center justify-between gap-3 px-3 py-2 rounded-xl border transition-all duration-200 select-none',
+                        isDone
+                          ? 'bg-secondary/30 border-border/40 text-muted-foreground'
+                          : 'bg-surface/80 dark:bg-surface/30 border-border hover:border-primary/40 shadow-xs'
                       )}
-                    </button>
-                    <span className="text-[11px] font-mono font-semibold text-muted-foreground px-1.5 py-0.5 rounded bg-secondary/80 border border-border/50">
-                      {task.identifier}
-                    </span>
-                    <span className={cn('text-xs font-medium truncate', task.completed && 'line-through text-muted-foreground/70')}>
-                      {task.title}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-foreground border border-border">
-                      {task.points} pts
-                    </span>
-                    <span className="w-5 h-5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold flex items-center justify-center">
-                      {task.assignee.charAt(0)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeTask(task.id)}
-                      className="opacity-0 group-hover/item:opacity-100 p-1 text-muted-foreground hover:text-rose-500 rounded transition-opacity"
                     >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => toggleIssueCompletion(issue.id, issue.status)}
+                          className="cursor-pointer text-muted-foreground hover:text-emerald-500 transition-colors"
+                          title={isDone ? 'Mark Incomplete' : 'Mark Done'}
+                        >
+                          {isDone ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
+                          ) : (
+                            <Circle className="w-4 h-4" />
+                          )}
+                        </button>
+                        <span className="text-[11px] font-mono font-semibold text-muted-foreground px-1.5 py-0.5 rounded bg-secondary/80 border border-border/50">
+                          {issue.identifier}
+                        </span>
+                        <span className={cn('text-xs font-medium truncate', isDone && 'line-through text-muted-foreground/70')}>
+                          {issue.title}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {issue.estimatePoints !== undefined && issue.estimatePoints !== null && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-foreground border border-border">
+                            {issue.estimatePoints} pts
+                          </span>
+                        )}
+                        <span className="w-5 h-5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold flex items-center justify-center">
+                          {(issue.assigneeName || 'U').charAt(0).toUpperCase()}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveIssue(issue.id)}
+                          className="opacity-0 group-hover/item:opacity-100 p-1 text-muted-foreground hover:text-rose-500 rounded transition-opacity"
+                          title="Delete issue"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

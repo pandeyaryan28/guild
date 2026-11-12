@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {
   Send, Loader2, Paperclip, X, File, CheckSquare, Target, ClipboardList,
-  ArrowUp, Mic, Square, Volume2, Sparkles, AudioWaveform as WaveformIcon
+  ArrowUp, Mic, Square, Volume2, AudioWaveform as WaveformIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MentionDropdown } from './MentionDropdown';

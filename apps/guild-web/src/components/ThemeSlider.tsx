@@ -5,187 +5,49 @@
 
 import * as React from 'react';
 import { useTheme } from '../hooks/useTheme';
+import { Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function ThemeSlider() {
-  const { themeProgress, setThemeProgress } = useTheme();
-  
-  const trackRef = React.useRef<HTMLDivElement>(null);
-  const knobRef = React.useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = React.useState(false);
-  const dragStartRef = React.useRef<{ mouseX: number; startProgress: number }>({ mouseX: 0, startProgress: 0 });
-
-  // --- Dimension Tokens ---
-  const trackWidth = 96;  // px
-  const knobSize = 24;    // px
-  const padding = 3;      // px (Balanced padding around track content)
-  const border = 1;       // px (Track border)
-  
-  // Maximum horizontal sliding distance for the knob inside the content box
-  // Track Width (96) - 2 * Border (2) - 2 * Padding (6) - Knob Size (24) = 64px
-  const maxSlide = trackWidth - 2 * border - 2 * padding - knobSize; // 64px
-
-  // Calculate the left offset of the knob (starts at padding, slides up to padding + maxSlide)
-  const knobLeft = padding + themeProgress * maxSlide;
-
-  // --- Helper: Simple Color Interpolation for Premium Smoothness ---
-  const interpolateHex = (color1: string, color2: string, factor: number) => {
-    // Clean inputs
-    const c1 = color1.startsWith('#') ? color1.slice(1) : color1;
-    const c2 = color2.startsWith('#') ? color2.slice(1) : color2;
-    
-    const r1 = parseInt(c1.substring(0, 2), 16);
-    const g1 = parseInt(c1.substring(2, 4), 16);
-    const b1 = parseInt(c1.substring(4, 6), 16);
-
-    const r2 = parseInt(c2.substring(0, 2), 16);
-    const g2 = parseInt(c2.substring(2, 4), 16);
-    const b2 = parseInt(c2.substring(4, 6), 16);
-
-    const r = Math.round(r1 + factor * (r2 - r1));
-    const g = Math.round(g1 + factor * (g2 - g1));
-    const b = Math.round(b1 + factor * (b2 - b1));
-
-    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-  };
-
-  // --- Dynamic Color Styles ---
-  // Interpolated Track Background (from soft warm zinc glass to deep celestial space glass)
-  const trackBg = themeProgress >= 0.5
-    ? `rgba(15, 15, 26, ${0.45 + themeProgress * 0.25})`
-    : `rgba(234, 234, 240, ${0.75 - themeProgress * 0.3})`;
-  
-  // Interpolated Track Border (smooth blending)
-  const trackBorderColor = interpolateHex('#e4e4e7', '#27272a', themeProgress);
-
-  // Dynamic Ambient Shadow for the Celestial Orb (glowing light removed)
-  const baseShadow = themeProgress >= 0.5 
-    ? '0 4px 10px rgba(0, 0, 0, 0.45)' 
-    : '0 2px 6px rgba(0, 0, 0, 0.12)';
-  const knobShadow = baseShadow;
-
-
-  // --- Drag & Click Interaction Handlers ---
-  const handleStart = (clientX: number) => {
-    setIsDragging(true);
-    dragStartRef.current = {
-      mouseX: clientX,
-      startProgress: themeProgress,
-    };
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    handleStart(e.clientX);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    handleStart(e.touches[0].clientX);
-  };
-
-  React.useEffect(() => {
-    if (!isDragging) return;
-
-    const handleMove = (clientX: number) => {
-      const deltaX = clientX - dragStartRef.current.mouseX;
-      const progressDelta = deltaX / maxSlide;
-      const newProgress = Math.max(0, Math.min(1, dragStartRef.current.startProgress + progressDelta));
-      setThemeProgress(newProgress);
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      handleMove(e.clientX);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      handleMove(e.touches[0].clientX);
-    };
-
-    const handleEnd = () => {
-      setIsDragging(false);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleEnd);
-    window.addEventListener('touchmove', handleTouchMove);
-    window.addEventListener('touchend', handleEnd);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleEnd);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleEnd);
-    };
-  }, [isDragging, maxSlide, setThemeProgress]);
-
-  React.useEffect(() => {
-    const html = document.documentElement;
-    if (isDragging) {
-      html.classList.add('theme-dragging');
-    } else {
-      html.classList.remove('theme-dragging');
-    }
-    return () => {
-      html.classList.remove('theme-dragging');
-    };
-  }, [isDragging]);
-
-  const handleTrackClick = (e: React.MouseEvent) => {
-    if (isDragging) return;
-    
-    // Prevent double triggers if clicking the knob itself
-    if (knobRef.current && knobRef.current.contains(e.target as Node)) {
-      return;
-    }
-
-    if (trackRef.current) {
-      const rect = trackRef.current.getBoundingClientRect();
-      const clickX = e.clientX - rect.left - border - padding - knobSize / 2;
-      const newProgress = Math.max(0, Math.min(1, clickX / maxSlide));
-      setThemeProgress(newProgress);
-    }
-  };
+  const { mode, toggleMode } = useTheme();
+  const isDark = mode === 'dark';
 
   return (
-    /* 1. Track Container: Luxurious glassmorphic channel with dynamic color blends */
-    <div
-      ref={trackRef}
-      onClick={handleTrackClick}
+    <button
+      type="button"
+      onClick={toggleMode}
       className={cn(
-        "relative h-8 rounded-full border cursor-pointer select-none transition-all duration-300 shadow-inner flex items-center",
-        isDragging && "scale-[1.02] duration-150"
+        "relative flex h-8 w-16 items-center rounded-full p-1 cursor-pointer select-none",
+        "bg-secondary/80 dark:bg-secondary/60 border border-border/80 dark:border-border",
+        "backdrop-blur-md shadow-inner transition-colors duration-200",
+        "hover:border-primary/40 focus:outline-hidden active:scale-95"
       )}
-      style={{
-        width: `${trackWidth}px`,
-        backgroundColor: trackBg,
-        borderColor: trackBorderColor,
-        backdropFilter: 'blur(12px)',
-      }}
-      title={`Ambiance Dimmer: ${Math.round(themeProgress * 100)}% Dark Mode`}
+      title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+      aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
     >
-      {/* 2. Celestial Frosted Glass Bead: Perfect alignment without translation conflicts */}
+      {/* Background Icons */}
+      <div className="flex w-full items-center justify-between px-1 text-muted-foreground pointer-events-none">
+        <Sun className={cn("h-3 w-3 transition-opacity duration-200", !isDark ? "opacity-0" : "opacity-70")} />
+        <Moon className={cn("h-3 w-3 transition-opacity duration-200", isDark ? "opacity-0" : "opacity-70")} />
+      </div>
+
+      {/* Sliding Apple Thumb */}
       <div
-        ref={knobRef}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
         className={cn(
-          "absolute flex items-center justify-center rounded-full cursor-grab active:cursor-grabbing",
-          "bg-gradient-to-br from-white to-slate-50",
-          "border border-white/80 dark:border-white/50",
-          "transition-all duration-300 ease-out",
-          isDragging ? "scale-95 duration-75" : "hover:scale-105 active:scale-95"
+          "absolute flex h-6 w-6 items-center justify-center rounded-full shadow-md transition-all duration-300",
+          "bg-surface text-foreground border border-border/50",
+          isDark ? "translate-x-7" : "translate-x-0"
         )}
         style={{
-          width: `${knobSize}px`,
-          height: `${knobSize}px`,
-          top: `${padding}px`,
-          left: `${knobLeft}px`,
-          boxShadow: knobShadow,
-          // Disable transitions only when actively dragging for seamless real-time responses
-          transition: isDragging ? 'none' : 'left 320ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 320ms ease, transform 150ms ease',
-          touchAction: 'none',
+          transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
         }}
-      />
-    </div>
+      >
+        {isDark ? (
+          <Moon className="h-3.5 w-3.5 text-primary" />
+        ) : (
+          <Sun className="h-3.5 w-3.5 text-amber-500" />
+        )}
+      </div>
+    </button>
   );
 }

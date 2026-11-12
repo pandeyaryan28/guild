@@ -414,13 +414,14 @@ export interface SearchResults {
 // ─── Themes ───────────────────────────────────────────────────────────────────
 
 export type ThemeId =
+  | 'dark'
+  | 'light'
   | 'midnight'
   | 'purple-haze'
   | 'cobalt'
   | 'slate'
   | 'rose-gold'
-  | 'forest'
-  | 'light';
+  | 'forest';
 
 
 export interface AppTheme {
@@ -649,6 +650,15 @@ export interface WorkspaceDocument {
   status?: DocumentStatus;
   linkedIssueIds?: string[];        // Relational links to Linear-style issues
   linkedCycleId?: string | null;
+}
+
+export interface WorkspaceDocumentPresence {
+  id: string;
+  docId: string;
+  userId: string;
+  userName: string;
+  avatarUrl?: string | null;
+  updatedAt: Timestamp;
 }
 
 export type IssuePriority = 'none' | 'low' | 'medium' | 'high' | 'urgent';

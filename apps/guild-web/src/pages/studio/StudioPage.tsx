@@ -9,7 +9,7 @@ import { StudioIssuesView } from './StudioIssuesView';
 import { StudioCommandPalette } from './StudioCommandPalette';
 import { StudioCreateIssueModal } from './StudioCreateIssueModal';
 import type { WorkspaceDocument, IssueStatus } from '@guild/types';
-import { Loader2, Plus, Sparkles, BookOpen } from 'lucide-react';
+import { Loader2, Plus, BookOpen } from 'lucide-react';
 
 export function StudioPage() {
   const { userProfile } = useAuth();

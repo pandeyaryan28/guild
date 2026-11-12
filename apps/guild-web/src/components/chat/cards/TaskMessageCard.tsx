@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CheckSquare, User, Calendar, ArrowUpRight, Check, AlertCircle, Clock, Sparkles } from 'lucide-react';
+import { CheckSquare, User, Calendar, ArrowUpRight, Check, AlertCircle, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { doc, onSnapshot } from 'firebase/firestore';

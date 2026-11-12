@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Search, FileText, CheckCircle2, Plus, Sparkles, X, Compass, Layers } from 'lucide-react';
+import { Search, FileText, CheckCircle2, Plus, X, Compass, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { WorkspaceDocument, WorkspaceIssue } from '@guild/types';
 import { cn } from '@/lib/utils';
@@ -73,7 +73,7 @@ export function StudioCommandPalette({
       {
         type: 'action',
         label: 'Create New Linear Issue',
-        icon: Sparkles,
+        icon: Layers,
         action: () => {
           onCreateIssue();
           onClose();
@@ -205,7 +205,7 @@ export function StudioCommandPalette({
                     )}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="text-base">{item.doc.icon || '📄'}</span>
+                      <FileText className="w-4 h-4 text-primary shrink-0" />
                       <span className="truncate">{item.doc.title || 'Untitled Document'}</span>
                     </div>
                     <span className="text-[10px] opacity-75 font-mono shrink-0">Doc</span>

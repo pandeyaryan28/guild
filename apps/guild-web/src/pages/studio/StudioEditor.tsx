@@ -15,7 +15,6 @@ import {
   Code,
   Minus,
   AlertCircle,
-  Sparkles,
   Smile,
   ImageIcon,
   Check,

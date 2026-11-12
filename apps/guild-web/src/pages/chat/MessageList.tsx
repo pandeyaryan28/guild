@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { type Message } from '../../lib/chat';
 import { MessageBubble } from './MessageBubble';
-import { Loader2, MessageSquare, ArrowDown, Sparkles, CheckSquare, Target, ClipboardList } from 'lucide-react';
+import { Loader2, MessageSquare, ArrowDown, CheckSquare, Target, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 

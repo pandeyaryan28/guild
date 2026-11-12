@@ -7,9 +7,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   CreditCard, CheckCircle2, AlertCircle, Loader2, ArrowRight,
   Gift, Clock, TrendingUp, Wallet, History, Star, Users, Zap,
-  Tag, Sparkles, X,
+  Tag, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 import { useBilling } from '../../hooks/useBilling';
 import {
   detectCurrency, getPricing, formatMoney, toSmallestUnit,
@@ -18,9 +20,12 @@ import {
   ANNUAL_OFFER_END, ENTERPRISE_CONTACT_URL, FREE_SEAT_LIMIT,
   type GracePeriodInfo,
 } from '../../lib/billing';
-import type { UserProfile, BillingCurrency } from '@guild/types';
+import type { UserProfile, BillingCurrency, Organization } from '@guild/types';
 
-interface BillingSettingsViewProps { profile: UserProfile }
+interface BillingSettingsViewProps {
+  profile: UserProfile;
+  org?: Organization | null;
+}
 
 // ─── Countdown ────────────────────────────────────────────────────────────────
 function useCountdown(target: Date) {
@@ -376,13 +381,27 @@ function CreditPackCard({ title, price, credited, bonusPct, includesBonus,
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
-export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
+export function BillingSettingsView({ profile, org }: BillingSettingsViewProps) {
   const orgId = profile.organizationId;
   const currency = detectCurrency();
   const pricing = getPricing(currency);
   const countdown = useCountdown(ANNUAL_OFFER_END);
   const { billing, loading, memberCount, graceInfo, transactions, transactionsLoading,
     creditBalanceDisplay, creditMonthsRemaining } = useBilling(orgId, currency);
+
+  const [orgData, setOrgData] = React.useState<Organization | null>(org || null);
+
+  React.useEffect(() => {
+    if (!orgId) return;
+    const unsub = onSnapshot(doc(db, 'organizations', orgId), (snap) => {
+      if (snap.exists()) {
+        setOrgData({ id: snap.id, ...snap.data() } as Organization);
+      }
+    });
+    return () => unsub();
+  }, [orgId]);
+
+  const activeOrg = orgData || org;
 
   const [tab, setTab] = React.useState<'plans' | 'credits'>('plans');
   const [cycle, setCycle] = React.useState<'monthly' | 'annual'>('annual');
@@ -405,8 +424,21 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
     : null;
   const isTrialExpired = billing?.status === 'trialing' && nextBillingDateVal && nextBillingDateVal.getTime() < Date.now();
 
-  const plan = isTrialExpired ? 'free' : (billing?.plan ?? 'free');
+  const plan = isTrialExpired ? 'free' : (billing?.plan || activeOrg?.billingPlan || 'free');
   const seats = Math.max(memberCount, 1);
+
+  const effectiveBilling = billing || (activeOrg?.billingPlan ? {
+    plan: activeOrg.billingPlan,
+    status: 'active' as const,
+    seats: memberCount,
+    currency,
+    nextBillingDate: null,
+    razorpaySubscriptionId: null,
+    annualBonusActivated: activeOrg.billingPlan === 'pro_annual',
+    gracePeriodUntil: null,
+    overageCount: 0,
+    updatedAt: null,
+  } as any : null);
 
   const countdownStr = countdown.expired ? '' : 'Limited time offer';
 
@@ -481,6 +513,31 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
       const couponResult = applyPromoCoupon(appliedCoupon, baseTotal);
       const finalPayable = couponResult.valid ? couponResult.finalAmount : baseTotal;
 
+      if (finalPayable <= 0) {
+        // 100% coupon discount - activate immediately without Razorpay gateway
+        await activateSubscription({
+          orgId,
+          plan: c === 'annual' ? 'pro_annual' : 'pro_monthly',
+          seats: seatsToBuy,
+          currency,
+          razorpayPaymentId: `promo_${appliedCoupon || '100'}`,
+          razorpayOrderId: `order_promo_${Date.now()}`,
+          razorpaySignature: 'promo_free',
+          appliedCoupon: couponResult.valid ? couponResult.coupon?.code : null,
+          discountPercent: 100,
+          paidAmount: 0,
+        });
+
+        // Ensure organizations/{orgId}.billingPlan is synchronized
+        await setDoc(doc(db, 'organizations', orgId), {
+          billingPlan: c === 'annual' ? 'pro_annual' : 'pro_monthly',
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+
+        setSuccess(`🎉 You're now on Pro ${c === 'annual' ? 'Annual' : 'Monthly'} with 100% promotional discount!`);
+        return;
+      }
+
       const desc = couponResult.valid
         ? `Guild Pro ${c === 'annual' ? 'Annual' : 'Monthly'} (${seatsToBuy} seats) — ${couponResult.coupon?.name} (${couponResult.discountPercent}% OFF)`
         : `Guild Pro ${c === 'annual' ? 'Annual' : 'Monthly'} (${seatsToBuy} seats)`;
@@ -506,6 +563,12 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
         discountPercent: couponResult.valid ? couponResult.discountPercent : null,
         paidAmount: finalPayable,
       });
+
+      // Synchronously verify organizations/{orgId}.billingPlan update
+      await setDoc(doc(db, 'organizations', orgId), {
+        billingPlan: c === 'annual' ? 'pro_annual' : 'pro_monthly',
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
 
       const couponNotice = couponResult.valid ? ` with ${couponResult.discountPercent}% promo discount!` : '!';
       setSuccess(`You're now on Pro ${c === 'annual' ? 'Annual' : 'Monthly'}${couponNotice}`);
@@ -533,6 +596,13 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
         razorpayPaymentId: res.razorpay_payment_id,
         razorpayOrderId: res.razorpay_order_id,
       });
+
+      // Synchronously ensure organizations/{orgId}.billingPlan is set to credit
+      await setDoc(doc(db, 'organizations', orgId), {
+        billingPlan: 'credit',
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+
       setSuccess(`${formatMoney(credited, currency)} added to your wallet`);
     } catch (e: any) {
       if (e?.message !== 'Payment cancelled') setError(e?.message ?? 'Payment failed. Try again.');
@@ -566,8 +636,8 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
       </AnimatePresence>
 
       {/* Current plan (if active) */}
-      {billing && (
-        <CurrentPlanStrip billing={billing} memberCount={memberCount}
+      {effectiveBilling && (
+        <CurrentPlanStrip billing={effectiveBilling} memberCount={memberCount}
           creditBalanceDisplay={creditBalanceDisplay}
           currency={currency}
           graceInfo={graceInfo} />
@@ -927,7 +997,7 @@ export function BillingSettingsView({ profile }: BillingSettingsViewProps) {
                   {isCouponActive ? (
                     <div className="flex items-center justify-between p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
                       <div className="flex items-center gap-2">
-                        <Sparkles className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                        <Tag className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                         <div>
                           <p className="text-[11px] font-bold">
                             Coupon Applied!

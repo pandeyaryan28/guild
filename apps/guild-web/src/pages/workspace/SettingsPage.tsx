@@ -305,7 +305,7 @@ export function SettingsPage() {
                   )}
 
                   {activeTab === 'billing' && localProfile && (
-                    <BillingSettingsView profile={localProfile} />
+                    <BillingSettingsView profile={localProfile} org={localOrg} />
                   )}
 
                   {activeTab === 'danger' && localProfile && (

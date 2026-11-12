@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { 
   X, Check, Calendar, User, Tag, 
   Trash2, Plus, Target, ChevronRight,
-  ListTodo, Loader2, Link2, Sparkles, MessageSquare, Send, Paperclip,
+  ListTodo, Loader2, Link2, MessageSquare, Send, Paperclip,
   HelpCircle, RefreshCw, Folder, Share2, AlertCircle
 } from 'lucide-react';
 import { 

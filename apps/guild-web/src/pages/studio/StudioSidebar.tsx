@@ -5,7 +5,6 @@ import {
   ChevronRight,
   ChevronDown,
   FileText,
-  Sparkles,
   Zap,
   Target,
   Inbox,
@@ -104,7 +103,7 @@ export function StudioSidebar({
               <span className="w-4 shrink-0" />
             )}
 
-            <span className="text-sm shrink-0">{node.icon || '📄'}</span>
+            <FileText className="w-4 h-4 shrink-0 text-primary" />
             <span className="truncate">{node.title || 'Untitled Document'}</span>
           </div>
 
@@ -199,8 +198,8 @@ export function StudioSidebar({
       {/* Header */}
       <div className="flex items-center justify-between px-3.5 py-3 border-b border-border/80">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-primary flex items-center justify-center text-white shadow-sm">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
+            <Layers className="w-3.5 h-3.5" />
           </div>
           <span className="font-extrabold text-sm tracking-tight text-foreground">Studio</span>
         </div>
@@ -311,7 +310,7 @@ export function StudioSidebar({
                         : 'text-foreground/80 hover:bg-secondary/70 hover:text-foreground'
                     )}
                   >
-                    <span className="text-sm">{fav.icon || '📄'}</span>
+                    <FileText className="w-3.5 h-3.5 shrink-0 text-primary" />
                     <span className="truncate">{fav.title || 'Untitled Document'}</span>
                   </div>
                 );

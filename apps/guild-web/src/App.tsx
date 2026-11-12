@@ -24,8 +24,8 @@ const JoinInvitePage = React.lazy(() => import('./pages/onboarding/JoinInvitePag
 import { RedesignLayout } from './components/redesign/Layout';
 
 // Primary App Views
-const TasksFeedPage = React.lazy(() =>
-  import('./pages/tasks/TasksFeedPage').then(m => ({ default: m.TasksFeedPage || m.default }))
+const DashboardPage = React.lazy(() =>
+  import('./pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage || m.default }))
 );
 const WorkspaceCanvasPage = React.lazy(() =>
   import('./pages/workspace/WorkspaceCanvasPage').then(m => ({ default: m.WorkspaceCanvasPage || m.default }))
@@ -60,7 +60,7 @@ const GlobalLoader = () => (
 
 function TasksRedirect() {
   const location = useLocation();
-  return <Navigate to={`/${location.search}`} replace />;
+  return <Navigate to={`/workspace${location.search}`} replace />;
 }
 
 function StudioRedirect() {
@@ -114,13 +114,13 @@ function AppContent() {
       {/* Onboarding — requires auth, but not completed onboarding */}
       <Route path="/onboarding/*" element={<OnboardingRoot />} />
 
-      {/* ─── 1. Root: Unified Tasks & Request Execution View ───────────────── */}
+      {/* ─── 1. Root: Dedicated Dashboard View ─────────────────────────────── */}
       <Route
         path="/"
         element={
           <ProtectedRoute>
             <RedesignLayout>
-              <TasksFeedPage />
+              <DashboardPage />
             </RedesignLayout>
           </ProtectedRoute>
         }
@@ -166,6 +166,7 @@ function AppContent() {
 
       {/* ─── Legacy Redirects ──────────────────────────────────────────────── */}
       <Route path="/tasks" element={<TasksRedirect />} />
+      <Route path="/tasks/*" element={<TasksRedirect />} />
       <Route path="/feed" element={<Navigate to="/" replace />} />
       <Route path="/dashboard" element={<Navigate to="/" replace />} />
       <Route path="/studio" element={<StudioRedirect />} />

@@ -7,7 +7,6 @@ import {
   User,
   Hash,
   ChevronDown,
-  Sparkles,
   Layers
 } from 'lucide-react';
 import { cn } from '@guild/utils';
@@ -25,12 +24,12 @@ const STATUS_OPTIONS: { id: IssueStatus; label: string; dotColor: string }[] = [
   { id: 'canceled', label: 'Canceled', dotColor: 'bg-rose-400' }
 ];
 
-const PRIORITY_OPTIONS: { id: IssuePriority; label: string; icon: string }[] = [
-  { id: 'urgent', label: 'Urgent', icon: '🚨' },
-  { id: 'high', label: 'High', icon: '🔺' },
-  { id: 'medium', label: 'Medium', icon: '🔸' },
-  { id: 'low', label: 'Low', icon: '🔹' },
-  { id: 'none', label: 'None', icon: '▫️' }
+const PRIORITY_OPTIONS: { id: IssuePriority; label: string; dotColor: string }[] = [
+  { id: 'urgent', label: 'Urgent', dotColor: 'bg-rose-500' },
+  { id: 'high', label: 'High', dotColor: 'bg-orange-500' },
+  { id: 'medium', label: 'Medium', dotColor: 'bg-amber-500' },
+  { id: 'low', label: 'Low', dotColor: 'bg-blue-400' },
+  { id: 'none', label: 'None', dotColor: 'bg-slate-400' }
 ];
 
 const POINT_OPTIONS = [1, 2, 3, 5, 8];
@@ -183,7 +182,7 @@ export function InlineIssueBlock({ node, updateAttributes, deleteNode }: NodeVie
               className="flex items-center gap-1 px-2 py-1 rounded-xl bg-secondary/60 hover:bg-secondary border border-border text-[11px] font-medium text-foreground transition-all active:scale-[0.98]"
               title={`Priority: ${currentPriority.label}`}
             >
-              <span>{currentPriority.icon}</span>
+              <span className={cn('w-2 h-2 rounded-full', currentPriority.dotColor)} />
               <span className="hidden sm:inline text-[11px]">{currentPriority.label}</span>
             </button>
 
@@ -202,7 +201,7 @@ export function InlineIssueBlock({ node, updateAttributes, deleteNode }: NodeVie
                       priority === opt.id ? 'bg-primary/10 text-primary font-bold' : 'text-foreground hover:bg-secondary'
                     )}
                   >
-                    <span>{opt.icon}</span>
+                    <span className={cn('w-2 h-2 rounded-full', opt.dotColor)} />
                     <span>{opt.label}</span>
                   </button>
                 ))}

@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { 
   X, Check, Calendar, User, Tag, 
   Trash2, Send, Clock, AlertCircle, Play, 
-  ChevronRight, Sparkles, MessageSquare, ListTodo,
+  ChevronRight, PlusCircle, MessageSquare, ListTodo,
   Paperclip, Loader2, ListChecks, CheckCircle2, UserPlus, HelpCircle,
   Flag, Share2
 } from 'lucide-react';
@@ -340,7 +340,7 @@ export function TaskDetailDrawer({
     const iconClass = "w-3.5 h-3.5";
     switch (type) {
       case 'created':
-        return <Sparkles className={cn(iconClass, "text-cyan-500")} />;
+        return <PlusCircle className={cn(iconClass, "text-cyan-500")} />;
       case 'status_changed':
         return <CheckCircle2 className={cn(iconClass, "text-emerald-500")} />;
       case 'priority_changed':

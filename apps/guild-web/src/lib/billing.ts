@@ -119,6 +119,13 @@ export const PROMO_COUPONS: Record<string, PromoCoupon> = {
     description: 'Special 99% discount across all Guild Pro plans',
     applicablePlans: ['pro_monthly', 'pro_annual'],
   },
+  GUILD100: {
+    code: 'GUILD100',
+    name: '100% Full Access Promo',
+    discountPercent: 100,
+    description: '100% full promotional credit across Guild Pro plans',
+    applicablePlans: ['pro_monthly', 'pro_annual'],
+  },
 };
 
 /**
@@ -157,10 +164,12 @@ export function applyPromoCoupon(
     };
   }
 
-  // Calculate 99% discount
+  // Calculate discount percentage
   const discountAmount = Math.round(((originalAmount * coupon.discountPercent) / 100) * 100) / 100;
-  // Floor to minimum 1 rupee / dollar / cent to keep payment gateway valid
-  const finalAmount = Math.max(1, Math.round((originalAmount - discountAmount) * 100) / 100);
+  // If 100% coupon, payable is 0. Otherwise floor to minimum 1 unit.
+  const finalAmount = coupon.discountPercent === 100
+    ? 0
+    : Math.max(1, Math.round((originalAmount - discountAmount) * 100) / 100);
 
   return {
     valid: true,
@@ -534,10 +543,16 @@ export async function activateSubscription(params: {
     updatedAt: now,
   };
 
-  await setDoc(billingDocRef(params.orgId), {
-    ...billingInfo,
-    nextBillingDate: new Date(nextBillingDate),
-  }, { merge: true });
+  await Promise.all([
+    setDoc(billingDocRef(params.orgId), {
+      ...billingInfo,
+      nextBillingDate: new Date(nextBillingDate),
+    }, { merge: true }),
+    setDoc(doc(db, 'organizations', params.orgId), {
+      billingPlan: params.plan,
+      updatedAt: now,
+    }, { merge: true }),
+  ]);
 
   const isDiscounted = !!params.appliedCoupon && (params.discountPercent || 0) > 0;
   const baseDescription = params.plan === 'pro_annual'
@@ -605,17 +620,23 @@ export async function activateCreditTopUp(params: {
   const existing = await getOrgBilling(params.orgId);
   const currentBalance = existing?.creditBalance ?? 0;
 
-  await setDoc(billingDocRef(params.orgId), {
-    plan: 'credit',
-    status: 'active',
-    seats: 0,
-    currency: params.currency,
-    creditBalance: currentBalance + creditedInSmallestUnit,
-    lastTopUpAt: now,
-    // Annual bonus for Growth pack (₹1L / $1k)
-    annualBonusActivated: params.packId === 'growth',
-    updatedAt: now,
-  }, { merge: true });
+  await Promise.all([
+    setDoc(billingDocRef(params.orgId), {
+      plan: 'credit',
+      status: 'active',
+      seats: 0,
+      currency: params.currency,
+      creditBalance: currentBalance + creditedInSmallestUnit,
+      lastTopUpAt: now,
+      // Annual bonus for Growth pack (₹1L / $1k)
+      annualBonusActivated: params.packId === 'growth',
+      updatedAt: now,
+    }, { merge: true }),
+    setDoc(doc(db, 'organizations', params.orgId), {
+      billingPlan: 'credit',
+      updatedAt: now,
+    }, { merge: true }),
+  ]);
 
   const bonusPct = params.packId === 'growth' ? '20%' : '10%';
   const paidFmt = params.currency === 'INR'
@@ -671,7 +692,13 @@ export async function activateTrial(params: {
     updatedAt: now,
   };
 
-  await setDoc(billingDocRef(params.orgId), billingInfo, { merge: true });
+  await Promise.all([
+    setDoc(billingDocRef(params.orgId), billingInfo, { merge: true }),
+    setDoc(doc(db, 'organizations', params.orgId), {
+      billingPlan: 'pro_monthly',
+      updatedAt: now,
+    }, { merge: true }),
+  ]);
 
   // Log the transaction
   await addDoc(transactionsRef(params.orgId), {
@@ -684,6 +711,28 @@ export async function activateTrial(params: {
     status: 'success',
     createdAt: now,
   });
+}
+
+/**
+ * Synchronously updates both organizations/{orgId}/billing/info and organizations/{orgId}.billingPlan
+ */
+export async function updateOrgBillingPlan(
+  orgId: string,
+  plan: 'free' | 'pro_monthly' | 'pro_annual' | 'credit' | 'enterprise',
+  status: 'active' | 'trialing' | 'past_due' | 'cancelled' = 'active'
+): Promise<void> {
+  const now = serverTimestamp();
+  await Promise.all([
+    setDoc(billingDocRef(orgId), {
+      plan,
+      status,
+      updatedAt: now,
+    }, { merge: true }),
+    setDoc(doc(db, 'organizations', orgId), {
+      billingPlan: plan,
+      updatedAt: now,
+    }, { merge: true }),
+  ]);
 }
 
 /** Estimate months of credit remaining based on member count */

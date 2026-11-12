@@ -26,11 +26,11 @@ export const ISSUE_PRIORITY_CONFIG: Record<
   IssuePriority,
   { label: string; color: string; icon: string }
 > = {
-  urgent: { label: 'Urgent', color: 'text-rose-500 bg-rose-500/10', icon: '🚨' },
-  high: { label: 'High', color: 'text-orange-500 bg-orange-500/10', icon: '🔺' },
-  medium: { label: 'Medium', color: 'text-amber-500 bg-amber-500/10', icon: '🔸' },
-  low: { label: 'Low', color: 'text-blue-400 bg-blue-500/10', icon: '🔹' },
-  none: { label: 'No Priority', color: 'text-muted-foreground bg-muted/40', icon: '▫️' }
+  urgent: { label: 'Urgent', color: 'text-rose-500 bg-rose-500/10', icon: '' },
+  high: { label: 'High', color: 'text-orange-500 bg-orange-500/10', icon: '' },
+  medium: { label: 'Medium', color: 'text-amber-500 bg-amber-500/10', icon: '' },
+  low: { label: 'Low', color: 'text-blue-400 bg-blue-500/10', icon: '' },
+  none: { label: 'No Priority', color: 'text-muted-foreground bg-muted/40', icon: '' }
 };
 
 export function useWorkspaceIssues(orgId: string | undefined, cycleId?: string | null) {

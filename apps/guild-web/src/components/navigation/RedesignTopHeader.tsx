@@ -6,31 +6,32 @@ import {
   Bell,
   Command,
   ChevronDown,
-  CheckSquare,
+  LayoutDashboard,
   FileText,
   MessageSquare,
-  MoreHorizontal,
   User,
-  Palette,
   Settings,
   LogOut,
   Sun,
   Moon,
   ExternalLink,
   Shield,
-  Circle,
-  Building2,
   Users,
+  BarChart3,
+  Calendar,
+  Target,
+  Check,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
+import { useBilling } from '../../hooks/useBilling';
 import { useUnreadChatCount } from '../../hooks/useChat';
 import { updateUserProfile, type Organization, type UserProfile } from '../../lib/firestore';
+import { Timestamp } from 'firebase/firestore';
 import type { Notification } from '@guild/types';
-import { MoreMenuPopover } from './MoreMenuPopover';
 import { NotificationPanel } from '../NotificationPanel';
-import { ThemeSlider } from '../ThemeSlider';
 
 export interface RedesignTopHeaderProps {
   org: Organization | null;
@@ -61,12 +62,12 @@ const STATUS_CONFIG: Record<
   active: {
     label: 'Active',
     dotClass: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]',
-    desc: 'Available for tasks & chat',
+    desc: 'Available for collaboration & chat',
   },
   focus: {
     label: 'Focus',
-    dotClass: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)] animate-pulse',
-    desc: 'Deep work / Do not disturb',
+    dotClass: 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] animate-pulse',
+    desc: 'Deep focus / Do not disturb',
   },
   away: {
     label: 'Away',
@@ -97,18 +98,28 @@ export function RedesignTopHeader({
   const location = useLocation();
   const { userProfile, logout } = useAuth();
   const { mode, toggleMode } = useTheme();
+  const { billing } = useBilling(org?.id);
   const unreadChatCount = useUnreadChatCount(userProfile?.organizationId);
+
+  // Focus & Status state
+  const [focusText, setFocusText] = React.useState(userProfile?.focusStatus?.text || '');
+  const [savingFocus, setSavingFocus] = React.useState(false);
+  const [focusSaved, setFocusSaved] = React.useState(false);
+
+  React.useEffect(() => {
+    if (userProfile?.focusStatus?.text !== undefined) {
+      setFocusText(userProfile.focusStatus.text || '');
+    }
+  }, [userProfile?.focusStatus?.text]);
 
   // Popover States
   const [orgDropdownOpen, setOrgDropdownOpen] = React.useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = React.useState(false);
-  const [moreMenuOpen, setMoreMenuOpen] = React.useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = React.useState(false);
 
   // Refs for outside click handling
   const orgDropdownRef = React.useRef<HTMLDivElement>(null);
   const statusDropdownRef = React.useRef<HTMLDivElement>(null);
-  const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const userDropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Close menus on outside click or Escape
@@ -121,9 +132,6 @@ export function RedesignTopHeader({
       if (statusDropdownRef.current && !statusDropdownRef.current.contains(target)) {
         setStatusDropdownOpen(false);
       }
-      if (moreMenuRef.current && !moreMenuRef.current.contains(target)) {
-        setMoreMenuOpen(false);
-      }
       if (userDropdownRef.current && !userDropdownRef.current.contains(target)) {
         setUserDropdownOpen(false);
       }
@@ -133,7 +141,6 @@ export function RedesignTopHeader({
       if (e.key === 'Escape') {
         setOrgDropdownOpen(false);
         setStatusDropdownOpen(false);
-        setMoreMenuOpen(false);
         setUserDropdownOpen(false);
       }
     }
@@ -152,11 +159,32 @@ export function RedesignTopHeader({
   const handleUpdateStatus = async (status: AvailabilityStatus) => {
     if (!userProfile?.uid) return;
     setStatusDropdownOpen(false);
-    setUserDropdownOpen(false);
     try {
       await updateUserProfile(userProfile.uid, { availabilityStatus: status });
     } catch (err) {
       console.error('Failed to update status:', err);
+    }
+  };
+
+  const handleSaveFocus = async () => {
+    if (!userProfile?.uid) return;
+    const trimmed = focusText.trim();
+    if (trimmed === (userProfile.focusStatus?.text || '')) return;
+    setSavingFocus(true);
+    try {
+      await updateUserProfile(userProfile.uid, {
+        focusStatus: {
+          text: trimmed,
+          updatedAt: Timestamp.now(),
+        },
+        availabilityStatus: currentStatus,
+      });
+      setFocusSaved(true);
+      setTimeout(() => setFocusSaved(false), 2000);
+    } catch (err) {
+      console.error('Failed to update focus status:', err);
+    } finally {
+      setSavingFocus(false);
     }
   };
 
@@ -178,31 +206,25 @@ export function RedesignTopHeader({
     userProfile?.username?.slice(0, 2).toUpperCase() ||
     'U';
 
-  // Navigation segment active calculation
-  const isTasksActive =
-    location.pathname === '/' ||
-    location.pathname.startsWith('/tasks') ||
-    location.pathname.startsWith('/requests');
+  // Navigation segment active calculation - exactly 3 destinations
+  const isDashboardActive =
+    location.pathname === '/' || location.pathname.startsWith('/dashboard');
   const isWorkspaceActive =
     location.pathname.startsWith('/workspace') ||
+    location.pathname.startsWith('/tasks') ||
     location.pathname.startsWith('/studio') ||
     location.pathname.startsWith('/projects');
   const isChatActive = location.pathname.startsWith('/chat');
-  const isMoreActive =
-    moreMenuOpen ||
-    location.pathname.startsWith('/people') ||
-    location.pathname.startsWith('/reports') ||
-    location.pathname.startsWith('/calendar') ||
-    location.pathname.startsWith('/settings');
 
   const isAdminOrOwner = userProfile?.role === 'owner' || userProfile?.role === 'admin';
+  const displayPlan = (billing?.plan || org?.billingPlan || 'free').replace('_', ' ');
 
   return (
     <header className="flex h-14 w-full items-center justify-between gap-3 border-b border-border bg-surface/85 dark:bg-surface/75 backdrop-blur-xl px-4 sm:px-6 z-40 shrink-0 select-none print:hidden transition-colors">
-      {/* ─── LEFT: Organization & User Status ───────────────────────────── */}
-      <div className="flex items-center gap-2.5 min-w-0">
+      {/* ─── LEFT: Organization & User Status & Focus Bar ───────────────── */}
+      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
         {/* Org Dropdown Container */}
-        <div ref={orgDropdownRef} className="relative">
+        <div ref={orgDropdownRef} className="relative shrink-0">
           <button
             type="button"
             onClick={() => setOrgDropdownOpen((v) => !v)}
@@ -224,7 +246,7 @@ export function RedesignTopHeader({
             </div>
 
             {/* Org Name */}
-            <span className="hidden sm:inline-block max-w-[140px] truncate text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+            <span className="hidden sm:inline-block max-w-[120px] lg:max-w-[140px] truncate text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
               {org?.name || 'Guild Orbit'}
             </span>
 
@@ -260,7 +282,7 @@ export function RedesignTopHeader({
                       {org?.name || 'Guild Orbit'}
                     </p>
                     <span className="inline-flex items-center text-[10px] text-muted-foreground capitalize">
-                      {org?.billingPlan ? `${org.billingPlan.replace('_', ' ')} Plan` : 'Free Plan'}
+                      {displayPlan} Plan
                     </span>
                   </div>
                 </div>
@@ -316,86 +338,120 @@ export function RedesignTopHeader({
         {/* Separator */}
         <div className="h-3.5 w-px bg-border/60 shrink-0 hidden sm:block" />
 
-        {/* User Status Dot Pill */}
-        <div ref={statusDropdownRef} className="relative">
-          <button
-            type="button"
-            onClick={() => setStatusDropdownOpen((v) => !v)}
-            className="flex items-center gap-1.5 rounded-full py-1 px-2.5 bg-secondary/50 dark:bg-secondary/40 border border-border/70 hover:bg-secondary transition-colors cursor-pointer text-xs"
-            title={`Status: ${STATUS_CONFIG[currentStatus].label} — Click to change`}
-            aria-expanded={statusDropdownOpen}
-          >
-            <span className={cn('h-2 w-2 rounded-full shrink-0', STATUS_CONFIG[currentStatus].dotClass)} />
-            <span className="text-[11px] font-medium text-muted-foreground hidden md:inline-block">
-              {STATUS_CONFIG[currentStatus].label}
-            </span>
-            <ChevronDown className="h-3 w-3 text-muted-foreground/70" />
-          </button>
+        {/* Top Bar Status & Focus Text Bar */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          {/* Availability Status Dropdown */}
+          <div ref={statusDropdownRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setStatusDropdownOpen((v) => !v)}
+              className="flex items-center gap-1.5 rounded-full py-1 px-2 sm:px-2.5 bg-secondary/50 dark:bg-secondary/40 border border-border/70 hover:bg-secondary transition-colors cursor-pointer text-xs"
+              title={`Status: ${STATUS_CONFIG[currentStatus].label} — Click to change`}
+              aria-expanded={statusDropdownOpen}
+            >
+              <span className={cn('h-2 w-2 rounded-full shrink-0', STATUS_CONFIG[currentStatus].dotClass)} />
+              <span className="text-[11px] font-medium text-foreground hidden sm:inline-block">
+                {STATUS_CONFIG[currentStatus].label}
+              </span>
+              <ChevronDown
+                className={cn(
+                  'h-3 w-3 text-muted-foreground/70 transition-transform duration-200',
+                  statusDropdownOpen && 'rotate-180',
+                )}
+              />
+            </button>
 
-          {/* Status Selection Popover */}
-          <AnimatePresence>
-            {statusDropdownOpen && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.96, y: -4 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.96, y: -4 }}
-                transition={{ type: 'spring', stiffness: 450, damping: 30 }}
-                className="absolute top-full left-0 mt-2 w-56 rounded-2xl p-2 z-50 select-none shadow-2xl bg-surface/95 dark:bg-surface/85 backdrop-blur-2xl border border-border/80 dark:border-border-strong"
-              >
-                <div className="px-2 py-1 mb-1 border-b border-border/50">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Set Your Status
-                  </span>
-                </div>
-                {(Object.keys(STATUS_CONFIG) as AvailabilityStatus[]).map((st) => {
-                  const cfg = STATUS_CONFIG[st];
-                  const isCurrent = currentStatus === st;
-                  return (
-                    <button
-                      key={st}
-                      type="button"
-                      onClick={() => handleUpdateStatus(st)}
-                      className={cn(
-                        'flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs transition-colors cursor-pointer',
-                        isCurrent
-                          ? 'bg-secondary font-semibold text-foreground'
-                          : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
-                      )}
-                    >
-                      <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', cfg.dotClass)} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span>{cfg.label}</span>
-                          {isCurrent && <span className="text-[10px] text-primary font-mono">Current</span>}
+            {/* Status Selection Popover */}
+            <AnimatePresence>
+              {statusDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: -4 }}
+                  transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+                  className="absolute top-full left-0 mt-2 w-56 rounded-2xl p-2 z-50 select-none shadow-2xl bg-surface/95 dark:bg-surface/85 backdrop-blur-2xl border border-border/80 dark:border-border-strong"
+                >
+                  <div className="px-2 py-1 mb-1 border-b border-border/50">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Availability Status
+                    </span>
+                  </div>
+                  {(Object.keys(STATUS_CONFIG) as AvailabilityStatus[]).map((st) => {
+                    const cfg = STATUS_CONFIG[st];
+                    const isCurrent = currentStatus === st;
+                    return (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => handleUpdateStatus(st)}
+                        className={cn(
+                          'flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs transition-colors cursor-pointer',
+                          isCurrent
+                            ? 'bg-secondary font-semibold text-foreground'
+                            : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
+                        )}
+                      >
+                        <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', cfg.dotClass)} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span>{cfg.label}</span>
+                            {isCurrent && <span className="text-[10px] text-primary font-mono">Current</span>}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground truncate">{cfg.desc}</p>
                         </div>
-                        <p className="text-[10px] text-muted-foreground truncate">{cfg.desc}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Inline Editable Focus Text Input */}
+          <div className="hidden md:flex items-center gap-1.5 rounded-full bg-secondary/40 dark:bg-secondary/30 border border-border/60 px-2.5 py-1 text-xs transition-all focus-within:border-primary/50 focus-within:bg-secondary/60 focus-within:ring-1 focus-within:ring-primary/20">
+            <Target className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+            <input
+              type="text"
+              value={focusText}
+              onChange={(e) => setFocusText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                  handleSaveFocus();
+                }
+              }}
+              onBlur={handleSaveFocus}
+              placeholder="What are you working on?"
+              className="w-28 lg:w-44 xl:w-56 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 outline-none truncate"
+              maxLength={80}
+              title="Set your daily focus status (Press Enter to save)"
+            />
+            {savingFocus ? (
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground shrink-0" />
+            ) : focusSaved ? (
+              <Check className="h-3 w-3 text-emerald-500 shrink-0" />
+            ) : null}
+          </div>
         </div>
       </div>
 
-      {/* ─── CENTER: Animated Pill Segmented Control ────────────────────── */}
+      {/* ─── CENTER: Animated Pill Segmented Control (Exactly 3 items) ──── */}
       <nav
         aria-label="Workspace Sections"
         className="relative inline-flex items-center p-1 rounded-full bg-secondary/70 dark:bg-secondary/40 border border-border/80 dark:border-border backdrop-blur-xl shadow-xs"
       >
-        {/* 1. Tasks & Feed */}
+        {/* 1. Dashboard */}
         <button
           type="button"
           onClick={() => navigate('/')}
           className={cn(
             'relative px-3 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-colors active:scale-[0.98] cursor-pointer',
-            isTasksActive
+            isDashboardActive
               ? 'text-foreground font-semibold'
               : 'text-muted-foreground hover:text-foreground',
           )}
         >
-          {isTasksActive && (
+          {isDashboardActive && (
             <motion.div
               layoutId="top-nav-active-pill"
               className="absolute inset-0 rounded-full bg-surface dark:bg-card shadow-xs border border-border/60"
@@ -403,13 +459,12 @@ export function RedesignTopHeader({
             />
           )}
           <span className="relative z-10 flex items-center gap-1.5">
-            <CheckSquare className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Tasks & Feed</span>
-            <span className="sm:hidden">Tasks</span>
+            <LayoutDashboard className="h-3.5 w-3.5" />
+            <span>Dashboard</span>
           </span>
         </button>
 
-        {/* 2. Workspace Canvas */}
+        {/* 2. Workspace */}
         <button
           type="button"
           onClick={() => navigate('/workspace')}
@@ -429,8 +484,7 @@ export function RedesignTopHeader({
           )}
           <span className="relative z-10 flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Workspace Canvas</span>
-            <span className="sm:hidden">Canvas</span>
+            <span>Workspace</span>
           </span>
         </button>
 
@@ -462,45 +516,9 @@ export function RedesignTopHeader({
             )}
           </span>
         </button>
-
-        {/* 4. More (Popover Trigger) */}
-        <div ref={moreMenuRef} className="relative">
-          <button
-            type="button"
-            onClick={() => setMoreMenuOpen((v) => !v)}
-            className={cn(
-              'relative px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-full transition-colors active:scale-[0.98] cursor-pointer flex items-center gap-1',
-              isMoreActive
-                ? 'text-foreground font-semibold'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-            title="More workspace areas"
-            aria-expanded={moreMenuOpen}
-          >
-            {isMoreActive && (
-              <motion.div
-                layoutId="top-nav-active-pill"
-                className="absolute inset-0 rounded-full bg-surface dark:bg-card shadow-xs border border-border/60"
-                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-              />
-            )}
-            <span className="relative z-10 flex items-center gap-1">
-              <span>More</span>
-              <ChevronDown
-                className={cn(
-                  'h-3 w-3 transition-transform duration-200',
-                  moreMenuOpen && 'rotate-180',
-                )}
-              />
-            </span>
-          </button>
-
-          {/* Johnny.Decimal Popover */}
-          <MoreMenuPopover isOpen={moreMenuOpen} onClose={() => setMoreMenuOpen(false)} />
-        </div>
       </nav>
 
-      {/* ─── RIGHT: Search, Notifications, Theme, User Avatar ─────────── */}
+      {/* ─── RIGHT: Search, Notifications, User Avatar Dropdown ─────────── */}
       <div className="flex items-center gap-2 shrink-0">
         {/* Command Palette / Search Shortcut Pill */}
         <button
@@ -561,11 +579,6 @@ export function RedesignTopHeader({
             open={notifOpen}
             onClose={onCloseNotifications}
           />
-        </div>
-
-        {/* Theme Dimmer Slider (Desktop) */}
-        <div className="hidden lg:flex items-center">
-          <ThemeSlider />
         </div>
 
         {/* User Avatar & Dropdown */}
@@ -633,33 +646,9 @@ export function RedesignTopHeader({
                   </div>
                 </div>
 
-                {/* Status Switcher Row */}
-                <div className="mb-2 px-1 pt-1">
-                  <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                    Status
-                  </div>
-                  <div className="grid grid-cols-3 gap-1">
-                    {(Object.keys(STATUS_CONFIG) as AvailabilityStatus[]).map((st) => (
-                      <button
-                        key={st}
-                        type="button"
-                        onClick={() => handleUpdateStatus(st)}
-                        className={cn(
-                          'flex items-center justify-center gap-1.5 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer',
-                          currentStatus === st
-                            ? 'bg-secondary font-semibold text-foreground border border-border'
-                            : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
-                        )}
-                      >
-                        <span className={cn('h-1.5 w-1.5 rounded-full', STATUS_CONFIG[st].dotClass)} />
-                        <span>{STATUS_CONFIG[st].label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="border-t border-border/50 pt-1 space-y-0.5">
-                  {/* View Profile */}
+                {/* Secondary Destinations */}
+                <div className="space-y-0.5 pt-1">
+                  {/* View Profile Drawer */}
                   <button
                     type="button"
                     onClick={() => {
@@ -672,39 +661,43 @@ export function RedesignTopHeader({
                     <span>View Profile Drawer</span>
                   </button>
 
-                  {/* Theme & Appearance */}
+                  {/* People & Directory */}
                   <button
                     type="button"
                     onClick={() => {
                       setUserDropdownOpen(false);
-                      onOpenThemePicker?.();
+                      navigate('/people');
                     }}
-                    className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <Palette className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>Theme & Colors</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground/80 font-mono">Customize</span>
+                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>People & Directory</span>
                   </button>
 
-                  {/* Light / Dark Mode Toggle */}
+                  {/* Analytics & Reports */}
                   <button
                     type="button"
-                    onClick={toggleMode}
-                    className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+                    onClick={() => {
+                      setUserDropdownOpen(false);
+                      navigate('/reports');
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center gap-2.5">
-                      {mode === 'dark' ? (
-                        <Sun className="h-3.5 w-3.5 text-amber-500" />
-                      ) : (
-                        <Moon className="h-3.5 w-3.5 text-primary" />
-                      )}
-                      <span>Theme Mode</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground/80 capitalize font-mono">
-                      {mode}
-                    </span>
+                    <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>Analytics & Reports</span>
+                  </button>
+
+                  {/* Schedule & Calendar */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserDropdownOpen(false);
+                      navigate('/calendar');
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>Schedule & Calendar</span>
                   </button>
 
                   {/* Workspace Settings */}
@@ -719,6 +712,56 @@ export function RedesignTopHeader({
                     <Settings className="h-3.5 w-3.5 text-muted-foreground" />
                     <span>Workspace Settings</span>
                   </button>
+
+                  {/* Admin Console (if owner/admin) */}
+                  {isAdminOrOwner && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        window.open('https://admin.guildorbit.com', '_blank', 'noopener,noreferrer');
+                      }}
+                      className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Shield className="h-3.5 w-3.5 text-amber-500" />
+                        <span>Admin Console</span>
+                      </div>
+                      <ExternalLink className="h-3 w-3 text-muted-foreground/60" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Apple-style Light / Dark Mode Switcher */}
+                <div className="border-t border-border/50 pt-2 pb-1 mt-1">
+                  <div className="flex items-center justify-between p-1 rounded-xl bg-secondary/60 dark:bg-secondary/40 border border-border/60">
+                    <button
+                      type="button"
+                      onClick={() => mode !== 'light' && toggleMode()}
+                      className={cn(
+                        'flex flex-1 items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
+                        mode === 'light'
+                          ? 'bg-surface dark:bg-card text-foreground shadow-xs font-semibold'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      <Sun className="h-3.5 w-3.5 text-amber-500" />
+                      <span>Light</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => mode !== 'dark' && toggleMode()}
+                      className={cn(
+                        'flex flex-1 items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
+                        mode === 'dark'
+                          ? 'bg-surface dark:bg-card text-foreground shadow-xs font-semibold'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      <Moon className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+                      <span>Dark</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Sign Out */}

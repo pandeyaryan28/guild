@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Loader2, AlertCircle, CheckCircle2, Sun, Moon, Sparkles } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, Sun, Moon, UserPlus } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { validateInviteToken, acceptInvite, type Organization } from '../../lib/firestore';
@@ -168,7 +168,7 @@ export function JoinInvitePage() {
             /* ── Pre-login state (unauthenticated) ───────────────────────── */
             <div className="flex flex-col items-center">
               <div className="h-12 w-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-4 border border-indigo-500/20">
-                <Sparkles className="h-6 w-6 text-indigo-500" />
+                <UserPlus className="h-6 w-6 text-indigo-500" />
               </div>
               <h1 className="text-lg font-bold text-foreground mb-2">You're Invited!</h1>
               <p className="text-xs text-muted-foreground mb-6 leading-relaxed max-w-[280px]">

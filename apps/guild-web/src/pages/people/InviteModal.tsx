@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserPlus, X, Link2, Copy, Check, Loader2, Mail, ShieldAlert, Sparkles, Clock } from 'lucide-react';
+import { UserPlus, X, Link2, Copy, Check, Loader2, Mail, ShieldAlert, Clock } from 'lucide-react';
 import { createInviteLink } from '../../lib/firestore';
 import { cn } from '@/lib/utils';
 import { isValidEmail } from '../../lib/validation';
@@ -310,7 +310,7 @@ export function InviteModal({ isOpen, onClose, orgId, userId }: InviteModalProps
                     ) : (
                       <div className="space-y-4">
                         <div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/15 flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                          <Sparkles className="h-4 w-4 flex-shrink-0" />
+                          <Link2 className="h-4 w-4 flex-shrink-0" />
                           Shareable invite link generated. Copy the URL below.
                         </div>
 
