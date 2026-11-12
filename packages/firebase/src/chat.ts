@@ -201,28 +201,34 @@ export async function getOrCreateDM(uid1: string, uid2: string, orgId: string): 
   const ref = doc(db, 'directMessages', dmId);
   try {
     const snap = await getDoc(ref);
+    const now = Timestamp.now();
     if (!snap.exists()) {
       await setDoc(ref, {
         id: dmId,
         orgId,
         participants: [uid1, uid2],
         lastMessage: '',
-        lastMessageAt: serverTimestamp(),
+        lastMessageAt: now,
         lastSenderId: uid1,
-        createdAt: serverTimestamp(),
+        createdAt: now,
       });
     } else {
       const data = snap.data();
-      if (!data.participants || !data.orgId) {
-        await setDoc(
-          ref,
-          {
-            id: dmId,
-            orgId: data.orgId || orgId,
-            participants: data.participants || [uid1, uid2],
-          },
-          { merge: true },
-        );
+      const updates: Record<string, any> = {};
+      if (!data.participants || data.participants.length < 2) {
+        updates.participants = [uid1, uid2];
+      }
+      if (!data.orgId && orgId) {
+        updates.orgId = orgId;
+      }
+      if (!data.lastMessageAt) {
+        updates.lastMessageAt = now;
+      }
+      if (!data.createdAt) {
+        updates.createdAt = now;
+      }
+      if (Object.keys(updates).length > 0) {
+        await setDoc(ref, updates, { merge: true });
       }
     }
   } catch (err) {
@@ -760,6 +766,22 @@ export async function fetchOlderMessages(
   return [msgs, newOldest, hasMore];
 }
 
+function sortDMThreadsChronologically(threads: DirectMessageThread[]): DirectMessageThread[] {
+  return [...threads].sort((a, b) => {
+    const getTime = (val: any) => {
+      if (!val) return 0;
+      if (typeof val.toMillis === 'function') return val.toMillis();
+      if (typeof val.seconds === 'number') return val.seconds * 1000;
+      if (val instanceof Date) return val.getTime();
+      const parsed = new Date(val).getTime();
+      return isNaN(parsed) ? 0 : parsed;
+    };
+    const aTime = getTime(a.lastMessageAt) || getTime((a as any).createdAt);
+    const bTime = getTime(b.lastMessageAt) || getTime((b as any).createdAt);
+    return bTime - aTime;
+  });
+}
+
 export function listenToUserDMs(
   userId: string,
   orgId: string,
@@ -767,35 +789,39 @@ export function listenToUserDMs(
 ): () => void {
   let threads: DirectMessageThread[] = [];
   let dmReads = new Map<string, Timestamp>();
+  let fallbackUnsub: (() => void) | null = null;
+  let isCancelled = false;
 
-  const unsubThreads = onSnapshot(
+  // We query by orgId and participants array-contains userId without Firestore orderBy,
+  // then sort in-memory. This prevents missing composite index errors and ensures that
+  // newly created DMs with 0 messages or pending timestamps are immediately returned.
+  const primaryUnsub = onSnapshot(
     query(
       collection(db, 'directMessages'),
       where('orgId', '==', orgId),
       where('participants', 'array-contains', userId),
-      orderBy('lastMessageAt', 'desc'),
     ),
     (snap) => {
-      threads = snap.docs.map((d) => d.data() as DirectMessageThread);
+      const rawThreads = snap.docs.map((d) => d.data() as DirectMessageThread);
+      threads = sortDMThreadsChronologically(rawThreads);
       cb(threads, dmReads);
     },
     (err) => {
       console.error('Error listening to user DMs (primary query):', err);
-      // Fallback query without orderBy in case composite index is not yet built
+      if (isCancelled) return;
+
+      // Fallback query without orgId filter in case some threads have missing/legacy orgId
       try {
-        onSnapshot(
+        fallbackUnsub = onSnapshot(
           query(
             collection(db, 'directMessages'),
-            where('orgId', '==', orgId),
             where('participants', 'array-contains', userId),
           ),
           (fallbackSnap) => {
-            threads = fallbackSnap.docs.map((d) => d.data() as DirectMessageThread);
-            threads.sort((a, b) => {
-              const aTime = a.lastMessageAt?.toMillis ? a.lastMessageAt.toMillis() : 0;
-              const bTime = b.lastMessageAt?.toMillis ? b.lastMessageAt.toMillis() : 0;
-              return bTime - aTime;
-            });
+            const rawThreads = fallbackSnap.docs
+              .map((d) => d.data() as DirectMessageThread)
+              .filter((t) => !orgId || !t.orgId || t.orgId === orgId);
+            threads = sortDMThreadsChronologically(rawThreads);
             cb(threads, dmReads);
           },
           (fallbackErr) => {
@@ -830,7 +856,14 @@ export function listenToUserDMs(
     },
   );
 
-  return () => { unsubThreads(); unsubReads(); };
+  return () => {
+    isCancelled = true;
+    primaryUnsub();
+    if (fallbackUnsub) {
+      fallbackUnsub();
+    }
+    unsubReads();
+  };
 }
 
 export async function updateChannelSettings(

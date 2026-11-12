@@ -10,7 +10,8 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/useAuth';
 import { useChannels, useDMs, useOrgMembers } from '../../hooks/useChat';
 import { useTeams } from '../../hooks/useTeams';
-import { getOrCreateDM, markChannelRead, markDMRead, createChannel } from '../../lib/chat';
+import { getOrCreateDM, markChannelRead, markDMRead, createChannel, type DirectMessageThread } from '../../lib/chat';
+import { Timestamp } from 'firebase/firestore';
 import { CreateChannelModal } from '../../components/chat/CreateChannelModal';
 import { NewDMModal } from '../../components/chat/NewDMModal';
 import { ChannelSettingsModal } from '../../components/chat/ChannelSettingsModal';
@@ -31,6 +32,8 @@ interface RedesignChatSidebarProps {
   onToggle: () => void;
   onOpenChannelModal: () => void;
   onOpenDMModal: () => void;
+  optimisticDMs?: Map<string, { thread: DirectMessageThread; otherMember?: UserProfile }>;
+  activeDmId?: string;
 }
 
 // ─── Apple macOS / SwiftUI Minimalist Chat Directory Sidebar ──────────────────
@@ -39,14 +42,62 @@ function RedesignChatSidebar({
   onToggle,
   onOpenChannelModal,
   onOpenDMModal,
+  optimisticDMs,
+  activeDmId,
 }: RedesignChatSidebarProps) {
   const location = useLocation();
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
 
   const { channels, hasUnread, loading } = useChannels(orgId);
-  const { threads: dmThreads, hasUnreadDM } = useDMs(orgId);
+  const { threads: rawDmThreads, hasUnreadDM } = useDMs(orgId);
   const members = useOrgMembers(orgId);
+
+  // Merge Firestore threads with optimistic threads and active dmId
+  const dmThreads = React.useMemo(() => {
+    const threadMap = new Map<string, DirectMessageThread>();
+
+    // 1. Add optimistic threads
+    if (optimisticDMs) {
+      optimisticDMs.forEach((opt) => {
+        threadMap.set(opt.thread.id, opt.thread);
+      });
+    }
+
+    // 2. Synthesize active DM thread if in route and not present
+    if (activeDmId && user && !threadMap.has(activeDmId)) {
+      const parts = activeDmId.split('_');
+      if (parts.includes(user.uid)) {
+        threadMap.set(activeDmId, {
+          id: activeDmId,
+          orgId: orgId || '',
+          participants: parts,
+          lastMessage: '',
+          lastMessageAt: Timestamp.now(),
+          lastSenderId: user.uid,
+        });
+      }
+    }
+
+    // 3. Overlay real threads from Firestore
+    rawDmThreads.forEach((t) => {
+      threadMap.set(t.id, t);
+    });
+
+    return Array.from(threadMap.values()).sort((a, b) => {
+      const getTime = (val: any) => {
+        if (!val) return 0;
+        if (typeof val.toMillis === 'function') return val.toMillis();
+        if (typeof val.seconds === 'number') return val.seconds * 1000;
+        if (val instanceof Date) return val.getTime();
+        const p = new Date(val).getTime();
+        return isNaN(p) ? 0 : p;
+      };
+      const aTime = getTime(a.lastMessageAt) || getTime((a as any).createdAt);
+      const bTime = getTime(b.lastMessageAt) || getTime((b as any).createdAt);
+      return bTime - aTime;
+    });
+  }, [rawDmThreads, optimisticDMs, activeDmId, user, orgId]);
 
   const [localOrg, setLocalOrg] = React.useState<Organization | null>(null);
   const [channelsOpen, setChannelsOpen] = React.useState(true);
@@ -62,9 +113,14 @@ function RedesignChatSidebar({
 
   const currentPath = location.pathname;
 
-  const getDMMember = (participants: string[]) => {
+  const getDMMember = (participants: string[], threadId?: string) => {
     const otherId = participants.find((p) => p !== user?.uid) ?? '';
-    return members.find((m) => m.uid === otherId);
+    const found = members.find((m) => m.uid === otherId);
+    if (found) return found;
+    if (threadId && optimisticDMs?.has(threadId)) {
+      return optimisticDMs.get(threadId)?.otherMember;
+    }
+    return undefined;
   };
 
   return (
@@ -222,7 +278,7 @@ function RedesignChatSidebar({
             {dmThreads.map((thread) => {
               const isActive = currentPath === `/chat/dm/${thread.id}`;
               const unread = hasUnreadDM(thread);
-              const otherMember = getDMMember(thread.participants);
+              const otherMember = getDMMember(thread.participants, thread.id);
               const dmName = otherMember?.fullName ?? 'Unknown';
               const dmPhotoURL = otherMember?.photoURL;
               const dmInitials = dmName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
@@ -250,7 +306,9 @@ function RedesignChatSidebar({
                       <div
                         className={cn(
                           'flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-bold border',
-                          isActive ? 'bg-white/20 border-white/20 text-white' : 'bg-secondary border-border text-foreground'
+                          isActive
+                            ? 'bg-primary-foreground/20 border-primary-foreground/30 text-primary-foreground'
+                            : 'bg-secondary border-border text-foreground'
                         )}
                       >
                         {dmInitials}
@@ -309,12 +367,14 @@ export function ChatLayout() {
   const [showChannelModal, setShowChannelModal] = React.useState(false);
   const [showDMModal, setShowDMModal] = React.useState(false);
   const [isCreatingGeneral, setIsCreatingGeneral] = React.useState(false);
+  const [optimisticDMs, setOptimisticDMs] = React.useState<Map<string, { thread: DirectMessageThread; otherMember?: UserProfile }>>(new Map());
 
   const [searchParams, setSearchParams] = useSearchParams();
   const openTaskId = searchParams.get('task');
   const openGoalId = searchParams.get('goal');
   const openRequestId = searchParams.get('request');
-  const openSettings = searchParams.get('settings') === 'true';
+  const openTab = (searchParams.get('tab') as any) || (searchParams.get('settings') === 'integrations' ? 'integrations' : 'general');
+  const openSettings = searchParams.get('settings') === 'true' || searchParams.get('settings') === 'integrations' || !!searchParams.get('tab');
   const openCanvas = searchParams.get('canvas') === 'true';
 
   const openTask = useSingleTask(openTaskId);
@@ -329,6 +389,9 @@ export function ChatLayout() {
   const handleClosePanel = React.useCallback((key: string) => {
     const params = new URLSearchParams(searchParams);
     params.delete(key);
+    if (key === 'settings') {
+      params.delete('tab');
+    }
     setSearchParams(params);
   }, [searchParams, setSearchParams]);
 
@@ -346,8 +409,25 @@ export function ChatLayout() {
     navigate(`/chat/c/${chId}`);
   };
 
-  const handleDMCreated = (dId: string) => {
+  const handleDMCreated = (dId: string, otherMember?: UserProfile) => {
     setShowDMModal(false);
+    if (user) {
+      const parts = dId.split('_');
+      const otherUid = otherMember?.uid || parts.find((p) => p !== user.uid) || '';
+      const optimisticThread: DirectMessageThread = {
+        id: dId,
+        orgId: orgId || '',
+        participants: [user.uid, otherUid],
+        lastMessage: '',
+        lastMessageAt: Timestamp.now(),
+        lastSenderId: user.uid,
+      };
+      setOptimisticDMs((prev) => {
+        const next = new Map(prev);
+        next.set(dId, { thread: optimisticThread, otherMember });
+        return next;
+      });
+    }
     navigate(`/chat/dm/${dId}`);
   };
 
@@ -355,12 +435,15 @@ export function ChatLayout() {
 
   // ─── Automatic Channel Redirection ──────────────────────────────────────────
   // When user navigates to /chat with no channelId or dmId:
-  // As soon as channels load, if channels.length > 0, redirect to #general (or first channel)
+  // On desktop screens only (>= 1024px), redirect to #general (or first channel).
+  // On mobile (< 1024px), keep on /chat so the user sees the channel directory without being bounced.
   React.useEffect(() => {
     if (!channelId && !dmId && !channelsLoading && channels.length > 0) {
-      const generalChannel = channels.find((c) => c.name.toLowerCase() === 'general');
-      const targetChannel = generalChannel || channels[0];
-      navigate(`/chat/c/${targetChannel.id}`, { replace: true });
+      if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+        const generalChannel = channels.find((c) => c.name.toLowerCase() === 'general');
+        const targetChannel = generalChannel || channels[0];
+        navigate(`/chat/c/${targetChannel.id}`, { replace: true });
+      }
     }
   }, [channelId, dmId, channelsLoading, channels, navigate]);
 
@@ -423,6 +506,8 @@ export function ChatLayout() {
           onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           onOpenChannelModal={() => setShowChannelModal(true)}
           onOpenDMModal={() => setShowDMModal(true)}
+          optimisticDMs={optimisticDMs}
+          activeDmId={dmId}
         />
 
         {/* Message Thread Workspace */}
@@ -489,6 +574,7 @@ export function ChatLayout() {
                   currentUserProfile={userProfile}
                   onClose={() => handleClosePanel('settings')}
                   onUpdated={() => {}}
+                  initialTab={openTab}
                   inline={true}
                 />
               )}
