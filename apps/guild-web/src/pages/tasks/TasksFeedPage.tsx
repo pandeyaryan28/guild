@@ -4,7 +4,8 @@ import {
   Search, Plus, Check, CheckCircle2, XCircle, Clock,
   Zap, ClipboardList, ListTodo, Calendar as CalendarIcon,
   ChevronDown, ArrowRight, X, AtSign, Loader2,
-  UserPlus, RefreshCw, Layers
+  UserPlus, RefreshCw, LayoutGrid, List, Route,
+  Sparkles, Flame, SlidersHorizontal, ChevronRight, CheckCheck
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useWorkspaceData } from '../../context/WorkspaceDataContext';
@@ -12,6 +13,7 @@ import { useWorkspaceIssues, ISSUE_STATUS_CONFIG, ISSUE_PRIORITY_CONFIG } from '
 import { useWorkspaceCycles } from '../../hooks/useWorkspaceCycles';
 import { TaskDetailDrawer } from '../../components/tasks/TaskDetailDrawer';
 import { RequestDetailDrawer } from '../../components/tasks/RequestDetailDrawer';
+import { CreateTaskModal } from '../../components/tasks/CreateTaskModal';
 import { StudioCreateIssueModal } from '../studio/StudioCreateIssueModal';
 import { IssueDetailDrawer } from './IssueDetailDrawer';
 import {
@@ -27,9 +29,10 @@ import {
 import type { WorkspaceIssue, IssueStatus, IssuePriority, UserProfile } from '@guild/types';
 import { cn } from '@/lib/utils';
 
-// ─── Filter Types ─────────────────────────────────────────────────────────────
+// ─── Filter & View Types ──────────────────────────────────────────────────────
 
-type SegmentFilter = 'all' | 'assigned_to_me' | 'completed';
+type ViewMode = 'board' | 'list' | 'journey';
+type SegmentFilter = 'assigned_to_me' | 'all' | 'completed';
 type ObjectTypeFilter = 'all' | 'task' | 'request' | 'issue';
 type PriorityFilter = 'all' | 'urgent' | 'high' | 'medium' | 'low';
 
@@ -72,6 +75,77 @@ interface UnifiedItem {
   rawRequest?: OrgRequest;
 }
 
+// ─── Board Column Definitions ─────────────────────────────────────────────────
+
+interface BoardColumn {
+  id: 'todo' | 'in_progress' | 'in_review' | 'done';
+  title: string;
+  subtitle: string;
+  accentColor: string;
+  bgLight: string;
+  bgDark: string;
+}
+
+const BOARD_COLUMNS: BoardColumn[] = [
+  {
+    id: 'todo',
+    title: 'To Do',
+    subtitle: 'Ready for action',
+    accentColor: '#6366f1',
+    bgLight: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
+    bgDark: 'dark:bg-indigo-500/15 dark:text-indigo-400 dark:border-indigo-500/30'
+  },
+  {
+    id: 'in_progress',
+    title: 'In Progress',
+    subtitle: 'Actively in motion',
+    accentColor: '#f59e0b',
+    bgLight: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    bgDark: 'dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30'
+  },
+  {
+    id: 'in_review',
+    title: 'In Review',
+    subtitle: 'Pending verification & approvals',
+    accentColor: '#0ea5e9',
+    bgLight: 'bg-sky-500/10 text-sky-600 border-sky-500/20',
+    bgDark: 'dark:bg-sky-500/15 dark:text-sky-400 dark:border-sky-500/30'
+  },
+  {
+    id: 'done',
+    title: 'Completed',
+    subtitle: 'Delivered & verified',
+    accentColor: '#10b981',
+    bgLight: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    bgDark: 'dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30'
+  }
+];
+
+function getItemColumn(item: UnifiedItem): BoardColumn['id'] {
+  if (item.isCompleted) return 'done';
+
+  if (item.type === 'task') {
+    if (item.status === 'in_progress') return 'in_progress';
+    if (item.status === 'review' || item.status === 'in_review') return 'in_review';
+    if (item.status === 'done') return 'done';
+    return 'todo';
+  }
+
+  if (item.type === 'issue') {
+    if (item.status === 'in_progress') return 'in_progress';
+    if (item.status === 'in_review') return 'in_review';
+    if (item.status === 'done' || item.status === 'canceled') return 'done';
+    return 'todo';
+  }
+
+  if (item.type === 'request') {
+    if (item.status === 'pending') return 'in_review';
+    return 'done';
+  }
+
+  return 'todo';
+}
+
 // ─── Avatar Color Helper ──────────────────────────────────────────────────────
 
 const AVATAR_COLORS = [
@@ -97,6 +171,25 @@ function parseDateMs(val: any): number {
   if (val instanceof Date) return val.getTime();
   const parsed = new Date(val).getTime();
   return isNaN(parsed) ? 0 : parsed;
+}
+
+function isToday(date: Date | null | undefined): boolean {
+  if (!date) return false;
+  const now = new Date();
+  return (
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear()
+  );
+}
+
+function isOverdue(date: Date | null | undefined): boolean {
+  if (!date) return false;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+  return target.getTime() < now.getTime();
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -166,15 +259,38 @@ export function TasksFeedPage() {
     );
   }, [userProfile, org]);
 
+  // ─── View & Filter States ──────────────────────────────────────────────────
+  const [viewMode, setViewMode] = React.useState<ViewMode>(() => {
+    try {
+      const saved = localStorage.getItem('guild_tasks_view_mode');
+      if (saved === 'board' || saved === 'list' || saved === 'journey') return saved;
+    } catch {}
+    return 'board';
+  });
+
+  const handleSetViewMode = (mode: ViewMode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('guild_tasks_view_mode', mode);
+    } catch {}
+  };
+
+  const [activeSegment, setActiveSegment] = React.useState<SegmentFilter>('assigned_to_me');
+  const [objectFilter, setObjectFilter] = React.useState<ObjectTypeFilter>('all');
+  const [priorityFilter, setPriorityFilter] = React.useState<PriorityFilter>('all');
+  const [searchQuery, setSearchQuery] = React.useState('');
+
   // ─── Inline Quick-Add State ──────────────────────────────────────────────────
   const [quickTitle, setQuickTitle] = React.useState('');
   const [quickType, setQuickType] = React.useState<'task' | 'request'>('task');
+  const [quickPriority, setQuickPriority] = React.useState<TaskPriority>('none');
   const [quickRequestType, setQuickRequestType] = React.useState<RequestType>('other');
   const [quickAssignee, setQuickAssignee] = React.useState<UserProfile | null>(null);
   const [deadlineMode, setDeadlineMode] = React.useState<'today' | 'tomorrow' | 'custom' | null>(null);
   const [customDateStr, setCustomDateStr] = React.useState('');
   const [assigneePickerOpen, setAssigneePickerOpen] = React.useState(false);
   const [requestTypePickerOpen, setRequestTypePickerOpen] = React.useState(false);
+  const [priorityPickerOpen, setPriorityPickerOpen] = React.useState(false);
   const [memberSearch, setMemberSearch] = React.useState('');
   const [isSubmittingQuick, setIsSubmittingQuick] = React.useState(false);
   const [quickSubmitSuccess, setQuickSubmitSuccess] = React.useState(false);
@@ -182,6 +298,7 @@ export function TasksFeedPage() {
   const quickInputRef = React.useRef<HTMLInputElement>(null);
   const assigneePickerRef = React.useRef<HTMLDivElement>(null);
   const requestTypeRef = React.useRef<HTMLDivElement>(null);
+  const priorityPickerRef = React.useRef<HTMLDivElement>(null);
   const dateInputRef = React.useRef<HTMLInputElement>(null);
 
   // ─── Direct Decision State ───────────────────────────────────────────────────
@@ -199,6 +316,9 @@ export function TasksFeedPage() {
       if (requestTypeRef.current && !requestTypeRef.current.contains(e.target as Node)) {
         setRequestTypePickerOpen(false);
       }
+      if (priorityPickerRef.current && !priorityPickerRef.current.contains(e.target as Node)) {
+        setPriorityPickerOpen(false);
+      }
       if (rejectPopoverRef.current && !rejectPopoverRef.current.contains(e.target as Node)) {
         setRejectTargetId(null);
       }
@@ -207,17 +327,12 @@ export function TasksFeedPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ─── Filter States ───────────────────────────────────────────────────────────
-  const [activeSegment, setActiveSegment] = React.useState<SegmentFilter>('assigned_to_me');
-  const [objectFilter, setObjectFilter] = React.useState<ObjectTypeFilter>('all');
-  const [priorityFilter, setPriorityFilter] = React.useState<PriorityFilter>('all');
-  const [searchQuery, setSearchQuery] = React.useState('');
-
   // ─── Drawers & Modals State ──────────────────────────────────────────────────
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [selectedRequest, setSelectedRequest] = React.useState<OrgRequest | null>(null);
   const [selectedIssue, setSelectedIssue] = React.useState<WorkspaceIssue | null>(null);
   const [createIssueOpen, setCreateIssueOpen] = React.useState(false);
+  const [createTaskOpen, setCreateTaskOpen] = React.useState(false);
 
   // Reassign popover state
   const [reassignTarget, setReassignTarget] = React.useState<{
@@ -230,7 +345,6 @@ export function TasksFeedPage() {
 
   // ─── Aggregate & Normalize All Items ─────────────────────────────────────────
 
-  // Merge unique requests from sent + received
   const aggregatedRequests = React.useMemo(() => {
     const map = new Map<string, OrgRequest>();
     for (const r of receivedRequests) map.set(r.id, r);
@@ -331,6 +445,44 @@ export function TasksFeedPage() {
     return list;
   }, [allTasks, issues, aggregatedRequests, memberMap, cycleMap]);
 
+  // ─── Metrics & Journey Progress ──────────────────────────────────────────────
+
+  const journeyStats = React.useMemo(() => {
+    let completedCount = 0;
+    let inFlightCount = 0;
+    let urgentCount = 0;
+    let myCount = 0;
+
+    for (const item of unifiedItems) {
+      if (item.isCompleted) {
+        completedCount++;
+      } else {
+        inFlightCount++;
+        if (item.priority === 'urgent' || item.priority === 'high') {
+          urgentCount++;
+        }
+        if (
+          (item.type === 'task' && item.assigneeIds.includes(currentUserId)) ||
+          (item.type === 'issue' && item.assigneeIds.includes(currentUserId)) ||
+          (item.type === 'request' && (item.approverId === currentUserId || item.creatorId === currentUserId))
+        ) {
+          myCount++;
+        }
+      }
+    }
+
+    const total = completedCount + inFlightCount;
+    const progressPercent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+
+    return {
+      completedCount,
+      inFlightCount,
+      urgentCount,
+      myCount,
+      progressPercent
+    };
+  }, [unifiedItems, currentUserId]);
+
   // ─── Segment Counts (Personalized Counters) ───────────────────────────────────
 
   const segmentCounts = React.useMemo(() => {
@@ -344,10 +496,8 @@ export function TasksFeedPage() {
         continue;
       }
 
-      // Active items
       all++;
 
-      // Assigned to Me / Involving Me
       if (item.type === 'task' && item.assigneeIds.includes(currentUserId)) {
         assigned++;
       } else if (item.type === 'issue' && item.assigneeIds.includes(currentUserId)) {
@@ -440,7 +590,6 @@ export function TasksFeedPage() {
 
       return true;
     }).sort((a, b) => {
-      // Sort priority rank
       const priorityWeights: Record<string, number> = {
         urgent: 4,
         high: 3,
@@ -450,21 +599,70 @@ export function TasksFeedPage() {
       };
 
       if (!a.isCompleted && !b.isCompleted) {
-        // Pending requests for current user to approve first
         const aNeedsMyApproval = a.type === 'request' && a.status === 'pending' && (a.approverId === currentUserId || isManagerOrAdmin);
         const bNeedsMyApproval = b.type === 'request' && b.status === 'pending' && (b.approverId === currentUserId || isManagerOrAdmin);
         if (aNeedsMyApproval && !bNeedsMyApproval) return -1;
         if (!aNeedsMyApproval && bNeedsMyApproval) return 1;
 
-        // Then priority weight
         const pDiff = (priorityWeights[b.priority] || 0) - (priorityWeights[a.priority] || 0);
         if (pDiff !== 0) return pDiff;
       }
 
-      // Otherwise most recently updated
       return b.updatedAtMs - a.updatedAtMs;
     });
   }, [unifiedItems, activeSegment, objectFilter, priorityFilter, searchQuery, currentUserId, isManagerOrAdmin]);
+
+  // Grouped items for Kanban Board
+  const boardGroupedItems = React.useMemo(() => {
+    const groups: Record<BoardColumn['id'], UnifiedItem[]> = {
+      todo: [],
+      in_progress: [],
+      in_review: [],
+      done: []
+    };
+
+    for (const item of filteredItems) {
+      const col = getItemColumn(item);
+      groups[col].push(item);
+    }
+
+    return groups;
+  }, [filteredItems]);
+
+  // Grouped items for Journey / Timeline feed
+  const journeyGroupedItems = React.useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfToday - 86400000;
+    const startOfWeek = startOfToday - 86400000 * 6;
+
+    const groups: {
+      id: string;
+      title: string;
+      subtitle: string;
+      items: UnifiedItem[];
+    }[] = [
+      { id: 'today', title: "Today's Journey", subtitle: 'Active today & recent moves', items: [] },
+      { id: 'yesterday', title: 'Yesterday', subtitle: 'Previous day progress', items: [] },
+      { id: 'this_week', title: 'Earlier This Week', subtitle: 'Paced sprint accomplishments', items: [] },
+      { id: 'older', title: 'Journey Archives', subtitle: 'Foundational deliveries', items: [] }
+    ];
+
+    for (const item of filteredItems) {
+      const ts = item.updatedAtMs || item.createdAtMs;
+      if (ts >= startOfToday) {
+        groups[0].items.push(item);
+      } else if (ts >= startOfYesterday) {
+        groups[1].items.push(item);
+      } else if (ts >= startOfWeek) {
+        groups[2].items.push(item);
+      } else {
+        groups[3].items.push(item);
+      }
+    }
+
+    return groups.filter((g) => g.items.length > 0);
+  }, [filteredItems]);
 
   // ─── Filtered Teammates for Assignee Picker ───────────────────────────────────
 
@@ -485,7 +683,6 @@ export function TasksFeedPage() {
     setIsSubmittingQuick(true);
 
     try {
-      // Compute due date
       let derivedDueDate: Date | null = null;
       if (deadlineMode === 'today') {
         derivedDueDate = new Date();
@@ -503,12 +700,12 @@ export function TasksFeedPage() {
         await createTask({
           orgId,
           title: quickTitle.trim(),
+          priority: quickPriority,
           dueDate: derivedDueDate,
           assigneeIds: quickAssignee ? [quickAssignee.uid] : [],
           actor
         });
       } else {
-        // Resolve Approver for request
         let approver = quickAssignee;
         if (!approver && userProfile?.managerId) {
           approver = memberMap.get(userProfile.managerId) || null;
@@ -548,6 +745,7 @@ export function TasksFeedPage() {
       setDeadlineMode(null);
       setCustomDateStr('');
       setQuickAssignee(null);
+      setQuickPriority('none');
       setQuickSubmitSuccess(true);
       setTimeout(() => setQuickSubmitSuccess(false), 2000);
     } catch (err) {
@@ -583,7 +781,39 @@ export function TasksFeedPage() {
     }
   };
 
-  // 2. Direct 1-Click Approve for Requests
+  // 2. Advance Status in Kanban Board
+  const handleAdvanceStatus = async (e: React.MouseEvent, item: UnifiedItem, nextColumn: BoardColumn['id']) => {
+    e.stopPropagation();
+
+    if (item.type === 'task' && item.rawTask) {
+      let targetStatus: TaskStatus = 'todo';
+      if (nextColumn === 'in_progress') targetStatus = 'in_progress';
+      else if (nextColumn === 'in_review') targetStatus = 'review';
+      else if (nextColumn === 'done') targetStatus = 'done';
+
+      try {
+        await moveTask(item.rawTask.id, orgId, targetStatus, item.rawTask.orderIndex, item.rawTask.status, actor);
+      } catch (err) {
+        console.error('Failed to advance task status:', err);
+      }
+    } else if (item.type === 'issue' && item.rawIssue) {
+      let targetIssueStatus: IssueStatus = 'todo';
+      if (nextColumn === 'in_progress') targetIssueStatus = 'in_progress';
+      else if (nextColumn === 'in_review') targetIssueStatus = 'in_review';
+      else if (nextColumn === 'done') targetIssueStatus = 'done';
+
+      try {
+        await updateIssue(item.rawIssue.id, {
+          status: targetIssueStatus,
+          completedAt: targetIssueStatus === 'done' ? (new Date() as any) : null
+        });
+      } catch (err) {
+        console.error('Failed to advance issue status:', err);
+      }
+    }
+  };
+
+  // 3. Direct 1-Click Approve for Requests
   const handleDirectApprove = async (e: React.MouseEvent, req: OrgRequest) => {
     e.stopPropagation();
     setApprovingId(req.id);
@@ -605,7 +835,7 @@ export function TasksFeedPage() {
     }
   };
 
-  // 3. Direct Reject with Optional Note
+  // 4. Direct Reject with Optional Note
   const handleDirectReject = async (req: OrgRequest, note?: string) => {
     try {
       await updateRequestStatus(
@@ -626,7 +856,7 @@ export function TasksFeedPage() {
     }
   };
 
-  // 4. Reassign Member
+  // 5. Reassign Member
   const handleReassignMember = async (member: UserProfile | null) => {
     const item = reassignTarget.item;
     if (!item) return;
@@ -676,28 +906,48 @@ export function TasksFeedPage() {
 
   return (
     <div className="min-h-full w-full bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
-      {/* ── Page Header: Apple SwiftUI Style ─────────────────────────────────── */}
+      {/* ── Page Header: Apple SwiftUI Radical Minimalism ───────────────────── */}
       <div className="pt-8 pb-4 px-4 sm:px-8 max-w-7xl mx-auto w-full">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
-                Execution Hub
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5 shadow-xs">
+                <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                Execution Journey
               </span>
               <span className="text-xs text-muted-foreground font-medium">
                 {org?.name || 'Workspace'}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              Tasks & Unified Feed
+              Tasks & Execution Journey
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Personal tasks, operational requests, and workspace issues integrated in one seamless stream.
+              Personal focus, operational requests, and workspace issues integrated into an uncluttered journey.
             </p>
           </div>
 
-          {/* Quick Actions */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          {/* Header Controls: Progress Capsule & Quick Actions */}
+          <div className="flex items-center gap-3 shrink-0 flex-wrap">
+            {/* Journey Accomplishment Capsule */}
+            <div className="hidden lg:flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-surface/80 dark:bg-surface/50 border border-border dark:border-border-strong shadow-xs">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Accomplishment Rate
+                </span>
+                <span className="text-xs font-extrabold text-foreground">
+                  {journeyStats.completedCount} delivered · {journeyStats.inFlightCount} in flight
+                </span>
+              </div>
+              <div className="w-10 h-2 bg-secondary rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                  style={{ width: `${journeyStats.progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Quick Actions */}
             <button
               type="button"
               onClick={() => {
@@ -707,7 +957,16 @@ export function TasksFeedPage() {
               className="px-3.5 py-2 rounded-2xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/95 transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-sm shadow-primary/20"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Quick Add</span>
+              <span>Quick Capture</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCreateTaskOpen(true)}
+              className="px-3.5 py-2 rounded-2xl text-xs font-semibold bg-secondary/80 hover:bg-secondary text-foreground border border-border transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-xs"
+            >
+              <ListTodo className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Full Task</span>
             </button>
 
             <button
@@ -716,14 +975,13 @@ export function TasksFeedPage() {
               className="px-3.5 py-2 rounded-2xl text-xs font-semibold bg-secondary/80 hover:bg-secondary text-foreground border border-border transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <Zap className="w-3.5 h-3.5 text-amber-500" />
-              <span>New Issue</span>
+              <span>Issue</span>
             </button>
           </div>
         </div>
 
         {/* ── Apple Minimalist Quick-Add Task & Request Bar ───────────────────── */}
         <div className="mt-6 rounded-3xl bg-surface/90 dark:bg-surface/50 backdrop-blur-2xl border border-border dark:border-border-strong p-3.5 sm:p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.45)] transition-all">
-          {/* Main Input Row */}
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-2xl bg-secondary/80 flex items-center justify-center shrink-0 text-muted-foreground">
               {quickType === 'task' ? (
@@ -746,13 +1004,12 @@ export function TasksFeedPage() {
               }}
               placeholder={
                 quickType === 'task'
-                  ? 'Write a task or request... (Press Enter to add)'
-                  : 'Write a request (e.g. Work from home Friday)... (Press Enter to add)'
+                  ? 'Add a task or issue... (Press Enter to capture)'
+                  : 'Add an operational request (e.g. Work from home Friday)... (Press Enter)'
               }
               className="flex-1 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 bg-transparent outline-none font-medium"
             />
 
-            {/* Quick Add Button */}
             <button
               type="button"
               disabled={!quickTitle.trim() || isSubmittingQuick}
@@ -771,11 +1028,11 @@ export function TasksFeedPage() {
               ) : (
                 <Plus className="w-3.5 h-3.5" />
               )}
-              <span>{quickSubmitSuccess ? 'Added!' : '+ Add'}</span>
+              <span>{quickSubmitSuccess ? 'Captured!' : '+ Capture'}</span>
             </button>
           </div>
 
-          {/* Accessory Controls Row */}
+          {/* Quick-Add Accessory Attributes */}
           <div className="mt-3 pt-3 border-t border-border/40 flex flex-wrap items-center gap-2 text-xs">
             {/* Quick Type switcher */}
             <div className="inline-flex p-0.5 rounded-full bg-secondary/80 dark:bg-secondary/40 border border-border/60">
@@ -845,6 +1102,51 @@ export function TasksFeedPage() {
               </div>
             )}
 
+            {/* Priority Selector for Task */}
+            {quickType === 'task' && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setPriorityPickerOpen(!priorityPickerOpen)}
+                  className={cn(
+                    'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all flex items-center gap-1 active:scale-[0.98] cursor-pointer',
+                    quickPriority !== 'none'
+                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold'
+                      : 'bg-secondary/60 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Flame className="w-3 h-3" />
+                  <span className="capitalize">{quickPriority !== 'none' ? quickPriority : 'Priority'}</span>
+                  <ChevronDown className="w-2.5 h-2.5 text-muted-foreground" />
+                </button>
+
+                {priorityPickerOpen && (
+                  <div
+                    ref={priorityPickerRef}
+                    className="absolute left-0 top-full mt-2 w-36 bg-surface/95 dark:bg-surface/90 border border-border dark:border-border-strong rounded-2xl shadow-xl p-1.5 z-50 backdrop-blur-2xl"
+                  >
+                    {(['none', 'low', 'medium', 'high', 'urgent'] as TaskPriority[]).map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => {
+                          setQuickPriority(p);
+                          setPriorityPickerOpen(false);
+                        }}
+                        className={cn(
+                          'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between cursor-pointer capitalize transition-colors',
+                          quickPriority === p ? 'bg-primary/10 text-primary font-bold' : 'text-foreground hover:bg-secondary'
+                        )}
+                      >
+                        <span>{p}</span>
+                        {quickPriority === p && <Check className="w-3 h-3 text-primary" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <span className="w-1 h-1 rounded-full bg-border" />
 
             {/* Quick Assignee / Approver Selector */}
@@ -878,7 +1180,6 @@ export function TasksFeedPage() {
                 )}
               </button>
 
-              {/* Member Picker Popover */}
               {assigneePickerOpen && (
                 <div
                   ref={assigneePickerRef}
@@ -985,7 +1286,6 @@ export function TasksFeedPage() {
                 Tomorrow
               </button>
 
-              {/* Native Calendar Picker Input */}
               <input
                 ref={dateInputRef}
                 type="date"
@@ -1036,14 +1336,15 @@ export function TasksFeedPage() {
           </div>
         </div>
 
-        {/* ── Apple Segmented Control Bar (Unified Tasks & Requests) ───────────── */}
-        <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative inline-flex p-1 bg-secondary/70 dark:bg-secondary/40 backdrop-blur-xl border border-border rounded-2xl self-start overflow-x-auto max-w-full">
+        {/* ── Apple Segmented Control Bar & Multi-View Switcher ─────────────────── */}
+        <div className="mt-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Segment Filter (My Focus / All / Completed) */}
+          <div className="relative inline-flex p-1 bg-secondary/70 dark:bg-secondary/40 backdrop-blur-xl border border-border rounded-2xl self-start overflow-x-auto max-w-full shadow-xs">
             {(
               [
+                { id: 'assigned_to_me', label: 'My Focus', count: segmentCounts.assigned },
                 { id: 'all', label: 'All Work', count: segmentCounts.all },
-                { id: 'assigned_to_me', label: 'Assigned to Me', count: segmentCounts.assigned },
-                { id: 'completed', label: 'Completed', count: segmentCounts.completed },
+                { id: 'completed', label: 'Accomplished', count: segmentCounts.completed },
               ] as const
             ).map((tab) => {
               const isActive = activeSegment === tab.id;
@@ -1080,25 +1381,64 @@ export function TasksFeedPage() {
             })}
           </div>
 
-          {/* Quick Search Input */}
-          <div className="relative w-full md:w-72">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tasks, requests, issues..."
-              className="w-full text-xs rounded-2xl bg-surface border border-border pl-8.5 pr-8 py-2 text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+          {/* Right Controls: View Switcher (Board / List / Journey) + Search */}
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            {/* View Switcher Pills */}
+            <div className="relative inline-flex p-1 bg-secondary/70 dark:bg-secondary/40 backdrop-blur-xl border border-border rounded-2xl shrink-0 shadow-xs">
+              {(
+                [
+                  { id: 'board', label: 'Board', icon: LayoutGrid },
+                  { id: 'list', label: 'List', icon: List },
+                  { id: 'journey', label: 'Journey', icon: Route },
+                ] as const
+              ).map((v) => {
+                const isSelected = viewMode === v.id;
+                const IconComponent = v.icon;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => handleSetViewMode(v.id)}
+                    className={cn(
+                      'relative px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer z-10 flex items-center gap-1.5',
+                      isSelected ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    )}
+                    title={`${v.label} View`}
+                  >
+                    {isSelected && (
+                      <motion.div
+                        layoutId="view-mode-pill"
+                        className="absolute inset-0 bg-surface rounded-xl shadow-xs border border-border/80 dark:border-white/10 -z-10"
+                        transition={{ type: 'spring', damping: 26, stiffness: 380 }}
+                      />
+                    )}
+                    <IconComponent className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">{v.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Quick Search Input */}
+            <div className="relative flex-1 md:w-64">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search journey..."
+                className="w-full text-xs rounded-2xl bg-surface border border-border pl-8.5 pr-8 py-2 text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1187,13 +1527,13 @@ export function TasksFeedPage() {
         </div>
       </div>
 
-      {/* ── Main Unified Object Feed ────────────────────────────────────────── */}
+      {/* ── Main Dynamic View Canvas ─────────────────────────────────────────── */}
       <div className="flex-1 px-4 sm:px-8 pb-16 max-w-7xl mx-auto w-full">
         {isLoading && (
-          <div className="py-16 flex flex-col items-center justify-center gap-3">
+          <div className="py-20 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
             <p className="text-xs text-muted-foreground font-medium tracking-wide">
-              Loading execution feed…
+              Loading execution journey…
             </p>
           </div>
         )}
@@ -1208,7 +1548,7 @@ export function TasksFeedPage() {
               {searchQuery
                 ? 'No items match your search and filter criteria.'
                 : activeSegment === 'assigned_to_me'
-                ? 'You have no pending tasks, requests, or issues assigned to you. Enjoy the momentum!'
+                ? 'You have no pending tasks, requests, or issues assigned to you. Enjoy the focus!'
                 : 'No items recorded in this segment yet.'}
             </p>
             <div className="flex items-center gap-2">
@@ -1220,7 +1560,7 @@ export function TasksFeedPage() {
                 }}
                 className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer"
               >
-                Add Task or Request
+                Capture Item
               </button>
               <button
                 type="button"
@@ -1233,9 +1573,215 @@ export function TasksFeedPage() {
           </div>
         )}
 
-        {/* ── Feed List ──────────────────────────────────────────────────────── */}
-        {!isLoading && filteredItems.length > 0 && (
-          <div className="space-y-3">
+        {/* ── VIEW 1: KANBAN BOARD VIEW ───────────────────────────────────────── */}
+        {!isLoading && filteredItems.length > 0 && viewMode === 'board' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+            {BOARD_COLUMNS.map((col) => {
+              const colItems = boardGroupedItems[col.id];
+              return (
+                <div
+                  key={col.id}
+                  className="rounded-3xl bg-surface/50 dark:bg-surface/30 border border-border/80 dark:border-border-strong/70 p-3.5 flex flex-col min-h-[480px] shadow-xs"
+                >
+                  {/* Column Header */}
+                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-border/50">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: col.accentColor }}
+                      />
+                      <h3 className="text-xs font-bold text-foreground tracking-tight">
+                        {col.title}
+                      </h3>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">
+                      {colItems.length}
+                    </span>
+                  </div>
+
+                  {/* Column Cards */}
+                  <div className="space-y-3 flex-1">
+                    {colItems.length === 0 ? (
+                      <div className="h-32 border border-dashed border-border/60 rounded-2xl flex items-center justify-center text-[11px] text-muted-foreground/60 font-medium">
+                        No {col.title.toLowerCase()} items
+                      </div>
+                    ) : (
+                      colItems.map((item) => {
+                        const isIssue = item.type === 'issue';
+                        const isRequest = item.type === 'request';
+                        const isTask = item.type === 'task';
+                        const canActOnRequest =
+                          isRequest &&
+                          item.status === 'pending' &&
+                          (item.approverId === currentUserId || isManagerOrAdmin);
+
+                        return (
+                          <motion.div
+                            key={item.id}
+                            layout="position"
+                            onClick={() => handleCardClick(item)}
+                            whileHover={{ y: -2 }}
+                            transition={{ duration: 0.15 }}
+                            className={cn(
+                              'group relative rounded-2xl p-3.5 transition-all cursor-pointer',
+                              'bg-surface/90 dark:bg-surface/50 border border-border/80 dark:border-border/60',
+                              'shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:border-border',
+                              item.isCompleted && 'opacity-65'
+                            )}
+                          >
+                            {/* Card Badges Row */}
+                            <div className="flex items-center justify-between gap-1.5 mb-2">
+                              <div className="flex items-center gap-1.5 truncate">
+                                {isIssue && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                    <Zap className="w-2.5 h-2.5" />
+                                    {item.issueIdentifier || 'ISSUE'}
+                                  </span>
+                                )}
+                                {isRequest && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                                    <ClipboardList className="w-2.5 h-2.5" />
+                                    {item.requestType ? REQUEST_TYPE_LABELS[item.requestType] : 'Request'}
+                                  </span>
+                                )}
+                                {isTask && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                                    <ListTodo className="w-2.5 h-2.5" />
+                                    Task
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Priority Dot/Pill */}
+                              {item.priority !== 'none' && (
+                                <span
+                                  className={cn(
+                                    'px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider',
+                                    item.priority === 'urgent' && 'bg-rose-500/10 text-rose-500 border border-rose-500/20',
+                                    item.priority === 'high' && 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
+                                    item.priority === 'medium' && 'bg-sky-500/10 text-sky-500 border border-sky-500/20',
+                                    item.priority === 'low' && 'bg-secondary text-muted-foreground'
+                                  )}
+                                >
+                                  {item.priority}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Card Title */}
+                            <h4
+                              className={cn(
+                                'text-xs font-semibold text-foreground leading-snug line-clamp-2 mb-2',
+                                item.isCompleted && 'line-through text-muted-foreground'
+                              )}
+                            >
+                              {item.title}
+                            </h4>
+
+                            {/* Card Footer: Assignee & Due Date */}
+                            <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-2 border-t border-border/40">
+                              <div className="flex items-center gap-1.5">
+                                <div
+                                  className={cn(
+                                    'w-4.5 h-4.5 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0',
+                                    getAvatarColor(item.assigneeIds[0] || 'none')
+                                  )}
+                                >
+                                  {item.assigneeName ? item.assigneeName[0].toUpperCase() : '?'}
+                                </div>
+                                <span className="truncate max-w-[80px]">
+                                  {item.assigneeName ? item.assigneeName.split(' ')[0] : 'Unassigned'}
+                                </span>
+                              </div>
+
+                              {item.dueDate && (
+                                <span
+                                  className={cn(
+                                    'font-mono text-[9px]',
+                                    isOverdue(item.dueDate) && !item.isCompleted ? 'text-rose-500 font-bold' : '',
+                                    isToday(item.dueDate) && !item.isCompleted ? 'text-amber-500 font-bold' : ''
+                                  )}
+                                >
+                                  {item.dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Fast Column Advance Actions on Hover */}
+                            <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between gap-1">
+                              {/* 1-Click Complete */}
+                              {!isRequest && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleToggleComplete(e, item)}
+                                  className="text-[10px] text-muted-foreground hover:text-emerald-500 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                                >
+                                  <Check className="w-3 h-3" />
+                                  <span>{item.isCompleted ? 'Reopen' : 'Done'}</span>
+                                </button>
+                              )}
+
+                              {/* Direct Approve for Request */}
+                              {canActOnRequest && (
+                                <button
+                                  type="button"
+                                  disabled={approvingId === item.rawRequest?.id}
+                                  onClick={(e) => item.rawRequest && handleDirectApprove(e, item.rawRequest)}
+                                  className="text-[10px] text-emerald-500 font-bold flex items-center gap-1 cursor-pointer hover:underline disabled:opacity-50"
+                                >
+                                  <Check className="w-3 h-3" />
+                                  <span>Approve</span>
+                                </button>
+                              )}
+
+                              {/* Advance Stage button */}
+                              {col.id === 'todo' && !isRequest && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleAdvanceStatus(e, item, 'in_progress')}
+                                  className="text-[10px] text-primary font-semibold flex items-center gap-0.5 ml-auto cursor-pointer hover:underline"
+                                >
+                                  <span>Start</span>
+                                  <ArrowRight className="w-3 h-3" />
+                                </button>
+                              )}
+
+                              {col.id === 'in_progress' && !isRequest && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleAdvanceStatus(e, item, 'in_review')}
+                                  className="text-[10px] text-primary font-semibold flex items-center gap-0.5 ml-auto cursor-pointer hover:underline"
+                                >
+                                  <span>Review</span>
+                                  <ArrowRight className="w-3 h-3" />
+                                </button>
+                              )}
+
+                              {col.id === 'in_review' && !isRequest && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleAdvanceStatus(e, item, 'done')}
+                                  className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5 ml-auto cursor-pointer hover:underline"
+                                >
+                                  <span>Finish</span>
+                                  <Check className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── VIEW 2: COMPACT & RADICAL MINIMALIST LIST VIEW ───────────────────── */}
+        {!isLoading && filteredItems.length > 0 && viewMode === 'list' && (
+          <div className="space-y-2.5">
             {filteredItems.map((item) => {
               const isIssue = item.type === 'issue';
               const isRequest = item.type === 'request';
@@ -1246,7 +1792,6 @@ export function TasksFeedPage() {
               const taskPriorityCfg = isTask && item.priority !== 'none' ? PRIORITY_CONFIG[item.priority as TaskPriority] : null;
               const taskStatusCfg = isTask ? STATUS_CONFIG[item.status as TaskStatus] : null;
 
-              // Manager/Approver can act on pending requests
               const canActOnRequest =
                 isRequest &&
                 item.status === 'pending' &&
@@ -1260,15 +1805,16 @@ export function TasksFeedPage() {
                   whileHover={{ y: -1 }}
                   transition={{ duration: 0.15 }}
                   className={cn(
-                    'group relative rounded-2xl p-4 sm:p-4.5 transition-all cursor-pointer',
+                    'group relative rounded-2xl px-4 py-3 sm:py-3.5 transition-all cursor-pointer flex items-center justify-between gap-3',
                     'bg-surface/90 dark:bg-surface/50 border border-border/80 dark:border-border/60',
-                    'shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:border-border',
+                    'shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.05)] hover:border-border',
                     item.isCompleted && 'opacity-65 bg-surface/50 dark:bg-surface/30'
                   )}
                 >
-                  <div className="flex items-start gap-3.5">
-                    {/* Checkbox / Status Circle */}
-                    <div className="pt-0.5 shrink-0">
+                  {/* Left: Checkbox + Title + Identifier */}
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                    {/* Squircle Checkbox */}
+                    <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
                       {isRequest ? (
                         <div
                           className={cn(
@@ -1277,7 +1823,6 @@ export function TasksFeedPage() {
                             item.status === 'rejected' && 'bg-rose-500/10 text-rose-500 border-rose-500/20',
                             item.status === 'pending' && 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                           )}
-                          title={`Request status: ${item.status}`}
                         >
                           {item.status === 'approved' ? (
                             <CheckCircle2 className="w-3.5 h-3.5" />
@@ -1297,252 +1842,261 @@ export function TasksFeedPage() {
                               ? 'bg-emerald-500 border-emerald-500 text-white'
                               : 'border-border/80 hover:border-primary/60 bg-secondary/40 text-transparent hover:text-muted-foreground'
                           )}
-                          title={item.isCompleted ? 'Mark incomplete' : 'Mark completed'}
                         >
                           <Check className="w-3 h-3 stroke-[3]" />
                         </button>
                       )}
                     </div>
 
-                    {/* Card Content */}
-                    <div className="flex-1 min-w-0">
-                      {/* Top Badges Row */}
-                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                        {/* ⚡ Issue Type Badge */}
-                        {isIssue && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                              <Zap className="w-2.5 h-2.5" />
-                              {item.issueIdentifier || 'ISSUE'}
-                            </span>
+                    {/* Tag badge */}
+                    {isIssue && (
+                      <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        {item.issueIdentifier || 'ISSUE'}
+                      </span>
+                    )}
 
-                            {issuePriorityCfg && (
-                              <span className={cn('px-2 py-0.5 rounded-md text-[10px] font-semibold', issuePriorityCfg.color)}>
-                                {issuePriorityCfg.label}
-                              </span>
-                            )}
+                    {isRequest && (
+                      <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                        {item.requestType ? REQUEST_TYPE_LABELS[item.requestType] : 'Request'}
+                      </span>
+                    )}
 
-                            {item.estimatePoints != null && (
-                              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-secondary text-muted-foreground border border-border/60">
-                                {item.estimatePoints} pts
-                              </span>
-                            )}
+                    {/* Title */}
+                    <span
+                      className={cn(
+                        'text-xs sm:text-sm font-semibold text-foreground truncate',
+                        item.isCompleted && 'line-through text-muted-foreground'
+                      )}
+                    >
+                      {item.title}
+                    </span>
+                  </div>
 
-                            {item.cycleName && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-secondary/80 text-foreground border border-border/40">
-                                <RefreshCw className="w-2.5 h-2.5 text-muted-foreground" />
-                                <span>{item.cycleName}</span>
-                              </span>
-                            )}
-
-                            {issueStatusCfg && (
-                              <span className={cn('px-2 py-0.5 rounded-md text-[10px] font-semibold', issueStatusCfg.color)}>
-                                {issueStatusCfg.label}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Request Type Badge */}
-                        {isRequest && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
-                              <ClipboardList className="w-2.5 h-2.5" />
-                              {item.requestType ? REQUEST_TYPE_LABELS[item.requestType] : 'Request'}
-                            </span>
-
-                            <span
-                              className={cn(
-                                'px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider',
-                                item.status === 'approved' && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
-                                item.status === 'rejected' && 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
-                                item.status === 'pending' && 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                              )}
-                            >
-                              {item.status}
-                            </span>
-
-                            {(item.startDate || item.endDate) && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono text-muted-foreground bg-secondary/60">
-                                <CalendarIcon className="w-2.5 h-2.5 text-muted-foreground" />
-                                <span>{item.startDate} {item.endDate && item.endDate !== item.startDate ? `→ ${item.endDate}` : ''}</span>
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* ☑ Task Type Badge */}
-                        {isTask && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                              <ListTodo className="w-2.5 h-2.5" />
-                              Task
-                            </span>
-
-                            {taskStatusCfg && (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-secondary text-foreground border border-border/40">
-                                {taskStatusCfg.label}
-                              </span>
-                            )}
-
-                            {taskPriorityCfg && (
-                              <span
-                                className="px-2 py-0.5 rounded-md text-[10px] font-bold"
-                                style={{ backgroundColor: `${taskPriorityCfg.color}15`, color: taskPriorityCfg.color }}
-                              >
-                                {taskPriorityCfg.label}
-                              </span>
-                            )}
-
-                            {item.dueDate && (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono text-muted-foreground bg-secondary/60">
-                                Due {item.dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Title & Preview */}
-                      <h3
+                  {/* Right Metadata & Inline Actions */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    {/* Priority Indicator */}
+                    {item.priority !== 'none' && (
+                      <span
                         className={cn(
-                          'text-sm font-semibold text-foreground leading-snug line-clamp-1',
-                          item.isCompleted && 'line-through text-muted-foreground'
+                          'hidden sm:inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider',
+                          item.priority === 'urgent' && 'bg-rose-500/10 text-rose-500 border border-rose-500/20',
+                          item.priority === 'high' && 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
+                          item.priority === 'medium' && 'bg-sky-500/10 text-sky-500 border border-sky-500/20',
+                          item.priority === 'low' && 'bg-secondary text-muted-foreground'
                         )}
                       >
-                        {item.title}
-                      </h3>
+                        {item.priority}
+                      </span>
+                    )}
 
-                      {item.description && (
-                        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                          {item.description.replace(/<[^>]*>/g, '')}
-                        </p>
-                      )}
+                    {/* Due Date */}
+                    {item.dueDate && (
+                      <span
+                        className={cn(
+                          'hidden md:inline-block text-[11px] font-mono text-muted-foreground',
+                          isOverdue(item.dueDate) && !item.isCompleted && 'text-rose-500 font-bold',
+                          isToday(item.dueDate) && !item.isCompleted && 'text-amber-500 font-bold'
+                        )}
+                      >
+                        {item.dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
 
-                      {/* Request Requester & Approver summary */}
-                      {isRequest && (
-                        <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-muted-foreground">
-                          <span className="font-medium text-foreground">
-                            @{item.creatorUsername || item.creatorName || 'requester'}
-                          </span>
-                          <ArrowRight className="w-3 h-3 text-muted-foreground/60" />
-                          <span className="font-medium text-foreground">
-                            @{item.approverUsername || item.approverName || 'approver'}
-                          </span>
-                          {item.approverNote && (
-                            <span className="italic text-muted-foreground/80 line-clamp-1 ml-2">
-                              “{item.approverNote}”
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Right-Side Inline Actions */}
-                    <div className="flex items-center gap-2 shrink-0 self-center">
-                      {/* Direct 1-Click Approve / Reject for managers */}
-                      {canActOnRequest && (
-                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            type="button"
-                            disabled={approvingId === item.rawRequest?.id}
-                            onClick={(e) => item.rawRequest && handleDirectApprove(e, item.rawRequest)}
-                            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all cursor-pointer flex items-center gap-1 active:scale-[0.97] shadow-xs disabled:opacity-50"
-                            title="1-Click Approve"
-                          >
-                            {approvingId === item.rawRequest?.id ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <Check className="w-3.5 h-3.5" />
-                            )}
-                            <span>Approve</span>
-                          </button>
-
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setRejectTargetId(rejectTargetId === item.rawRequest?.id ? null : (item.rawRequest?.id || null))}
-                              className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-rose-500/15 text-rose-600 dark:text-rose-400 hover:bg-rose-500/25 border border-rose-500/30 transition-all cursor-pointer flex items-center gap-1 active:scale-[0.97] shadow-xs"
-                              title="Reject request"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                              <span>Reject</span>
-                            </button>
-
-                            {/* Sleek Micro-Popover for Reject */}
-                            {rejectTargetId === item.rawRequest?.id && (
-                              <div
-                                ref={rejectPopoverRef}
-                                className="absolute right-0 top-full mt-2 w-64 p-3.5 bg-surface border border-border dark:border-border-strong rounded-2xl shadow-2xl z-50 backdrop-blur-2xl"
-                              >
-                                <p className="text-xs font-bold text-foreground mb-1.5">Reject this request?</p>
-                                <input
-                                  type="text"
-                                  value={rejectNote}
-                                  onChange={(e) => setRejectNote(e.target.value)}
-                                  placeholder="Reason (optional)..."
-                                  className="w-full text-xs bg-secondary/60 rounded-xl px-2.5 py-1.5 outline-none text-foreground placeholder:text-muted-foreground mb-2.5 border border-border/60"
-                                  autoFocus
-                                />
-                                <div className="flex items-center justify-end gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setRejectTargetId(null);
-                                      setRejectNote('');
-                                    }}
-                                    className="px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg cursor-pointer"
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => item.rawRequest && handleDirectReject(item.rawRequest, rejectNote)}
-                                    className="px-3 py-1 text-xs font-semibold bg-rose-500 text-white rounded-xl hover:bg-rose-600 active:scale-[0.97] transition-all cursor-pointer shadow-xs"
-                                  >
-                                    Confirm Reject
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Reassign @username button */}
-                      {(isTask || isIssue) && (
+                    {/* Direct 1-Click Approve for Requests */}
+                    {canActOnRequest && (
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setReassignTarget({ isOpen: true, item });
-                          }}
-                          className={cn(
-                            'flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-medium border border-border/60 transition-colors cursor-pointer',
-                            item.assigneeName
-                              ? 'bg-secondary/60 hover:bg-secondary text-foreground'
-                              : 'bg-transparent hover:bg-secondary/60 text-muted-foreground'
-                          )}
-                          title="Click to reassign"
+                          disabled={approvingId === item.rawRequest?.id}
+                          onClick={(e) => item.rawRequest && handleDirectApprove(e, item.rawRequest)}
+                          className="px-2.5 py-1 rounded-xl text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all cursor-pointer flex items-center gap-1 active:scale-[0.97]"
                         >
-                          <div
-                            className={cn(
-                              'w-4.5 h-4.5 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0',
-                              getAvatarColor(item.assigneeIds[0] || 'none')
-                            )}
-                          >
-                            {item.assigneeName ? item.assigneeName[0].toUpperCase() : <UserPlus className="w-2.5 h-2.5" />}
-                          </div>
-                          <span className="truncate max-w-[80px]">
-                            {item.assigneeName ? item.assigneeName.split(' ')[0] : 'Assign'}
-                          </span>
+                          {approvingId === item.rawRequest?.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Check className="w-3 h-3" />
+                          )}
+                          <span>Approve</span>
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
+
+                    {/* Assignee Avatar */}
+                    {(isTask || isIssue) && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReassignTarget({ isOpen: true, item });
+                        }}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-medium border border-border/60 hover:bg-secondary/60 cursor-pointer transition-colors"
+                        title="Click to reassign"
+                      >
+                        <div
+                          className={cn(
+                            'w-4.5 h-4.5 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0',
+                            getAvatarColor(item.assigneeIds[0] || 'none')
+                          )}
+                        >
+                          {item.assigneeName ? item.assigneeName[0].toUpperCase() : <UserPlus className="w-2.5 h-2.5" />}
+                        </div>
+                        <span className="hidden sm:inline truncate max-w-[70px]">
+                          {item.assigneeName ? item.assigneeName.split(' ')[0] : 'Assign'}
+                        </span>
+                      </button>
+                    )}
+
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/60" />
                   </div>
                 </motion.div>
               );
             })}
+          </div>
+        )}
+
+        {/* ── VIEW 3: JOURNEY & TIMELINE STREAM ──────────────────────────────── */}
+        {!isLoading && filteredItems.length > 0 && viewMode === 'journey' && (
+          <div className="space-y-8">
+            {journeyGroupedItems.map((group) => (
+              <div key={group.id} className="relative">
+                {/* Milestone Section Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-3 h-3 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center shrink-0" />
+                  <div>
+                    <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                      {group.title}
+                    </h3>
+                    <p className="text-[10px] text-muted-foreground font-medium">
+                      {group.subtitle}
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground ml-auto">
+                    {group.items.length} events
+                  </span>
+                </div>
+
+                {/* Milestone Connecting Timeline Line */}
+                <div className="relative pl-6 space-y-3.5 border-l-2 border-border/60 ml-1.5">
+                  {group.items.map((item) => {
+                    const isIssue = item.type === 'issue';
+                    const isRequest = item.type === 'request';
+                    const isTask = item.type === 'task';
+                    const canActOnRequest =
+                      isRequest &&
+                      item.status === 'pending' &&
+                      (item.approverId === currentUserId || isManagerOrAdmin);
+
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => handleCardClick(item)}
+                        className="relative group rounded-2xl p-4 bg-surface/90 dark:bg-surface/50 border border-border/80 dark:border-border/60 hover:border-border transition-all cursor-pointer shadow-xs"
+                      >
+                        {/* Timeline Node Point */}
+                        <span
+                          className={cn(
+                            'absolute -left-[31px] top-4.5 w-3.5 h-3.5 rounded-full border-2 bg-surface',
+                            item.isCompleted ? 'border-emerald-500' : 'border-primary'
+                          )}
+                        />
+
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {isIssue && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                  <Zap className="w-2.5 h-2.5" />
+                                  {item.issueIdentifier}
+                                </span>
+                              )}
+                              {isRequest && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                                  <ClipboardList className="w-2.5 h-2.5" />
+                                  {item.requestType ? REQUEST_TYPE_LABELS[item.requestType] : 'Request'}
+                                </span>
+                              )}
+                              {isTask && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                                  <ListTodo className="w-2.5 h-2.5" />
+                                  Task
+                                </span>
+                              )}
+
+                              <span
+                                className={cn(
+                                  'text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider',
+                                  item.isCompleted ? 'bg-emerald-500/10 text-emerald-500' : 'bg-secondary text-muted-foreground'
+                                )}
+                              >
+                                {item.status}
+                              </span>
+                            </div>
+
+                            <h4
+                              className={cn(
+                                'text-sm font-semibold text-foreground leading-snug',
+                                item.isCompleted && 'line-through text-muted-foreground'
+                              )}
+                            >
+                              {item.title}
+                            </h4>
+
+                            {item.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {item.description.replace(/<[^>]*>/g, '')}
+                              </p>
+                            )}
+
+                            {isRequest && (
+                              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
+                                <span className="font-semibold text-foreground">
+                                  @{item.creatorUsername || item.creatorName}
+                                </span>
+                                <ArrowRight className="w-3 h-3 text-muted-foreground/60" />
+                                <span className="font-semibold text-foreground">
+                                  @{item.approverUsername || item.approverName}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Quick Right Action */}
+                          <div className="shrink-0 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            {canActOnRequest && (
+                              <button
+                                type="button"
+                                disabled={approvingId === item.rawRequest?.id}
+                                onClick={(e) => item.rawRequest && handleDirectApprove(e, item.rawRequest)}
+                                className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all cursor-pointer flex items-center gap-1"
+                              >
+                                <Check className="w-3 h-3" />
+                                <span>Approve</span>
+                              </button>
+                            )}
+
+                            {!isRequest && (
+                              <button
+                                type="button"
+                                onClick={(e) => handleToggleComplete(e, item)}
+                                className={cn(
+                                  'px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5',
+                                  item.isCompleted
+                                    ? 'bg-secondary text-muted-foreground border-border'
+                                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                                )}
+                              >
+                                <Check className="w-3 h-3" />
+                                <span>{item.isCompleted ? 'Completed' : 'Mark Done'}</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -1612,7 +2166,7 @@ export function TasksFeedPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Drawers ───────────────────────────────────────────────────────────── */}
+      {/* ── Drawers & Full Modals ──────────────────────────────────────────────── */}
 
       {/* 1. Task Detail Drawer */}
       <TaskDetailDrawer
@@ -1644,7 +2198,16 @@ export function TasksFeedPage() {
         onIssueUpdated={(id, patch) => updateIssue(id, patch)}
       />
 
-      {/* 4. Create Issue Modal */}
+      {/* 4. Full Create Task Modal */}
+      <CreateTaskModal
+        open={createTaskOpen}
+        onClose={() => setCreateTaskOpen(false)}
+        orgId={orgId}
+        actor={actor}
+        labels={labels}
+      />
+
+      {/* 5. Create Issue Modal */}
       <StudioCreateIssueModal
         isOpen={createIssueOpen}
         onClose={() => setCreateIssueOpen(false)}
