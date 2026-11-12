@@ -166,26 +166,30 @@ export function CanvasBlockEditor({
   const [highlightPos, setHighlightPos] = React.useState<{ top: number; left: number } | null>(null);
   const [selectedText, setSelectedText] = React.useState('');
 
-  // Fallback demo users if workspace members aren't loaded yet
+  // Real workspace users for mentions
   const userList = React.useMemo(() => {
     if (members && members.length > 0) {
       return members.map((m) => ({
         id: m.uid,
         name: m.fullName || m.email || 'Teammate',
         username: m.username || (m.fullName || m.email || 'teammate').toLowerCase().replace(/\s+/g, '.'),
-        avatar: '',
-        status: 'active' as const,
+        avatar: m.photoURL || '',
+        status: (m.availabilityStatus || 'active') as 'active' | 'focus' | 'away',
         role: m.designation || m.role || 'Member'
       }));
     }
-    return [
-      { id: 'u1', name: 'Alex Chen', username: 'alex.chen', avatar: '', status: 'active' as const, role: 'Design Lead' },
-      { id: 'u2', name: 'Elena Rostova', username: 'elena.r', avatar: '', status: 'focus' as const, role: 'Staff Engineer' },
-      { id: 'u3', name: 'Aryan Pandey', username: 'aryan.p', avatar: '', status: 'active' as const, role: 'Tech Lead' },
-      { id: 'u4', name: 'Marcus Vance', username: 'marcus.v', avatar: '', status: 'away' as const, role: 'Product Lead' },
-      { id: 'u5', name: 'Sarah Lin', username: 'sarah.lin', avatar: '', status: 'active' as const, role: 'Operations' }
-    ];
-  }, [members]);
+    if (userProfile) {
+      return [{
+        id: userProfile.uid,
+        name: userProfile.fullName || userProfile.email || 'Me',
+        username: userProfile.username || 'me',
+        avatar: userProfile.photoURL || '',
+        status: (userProfile.availabilityStatus || 'active') as 'active' | 'focus' | 'away',
+        role: userProfile.designation || userProfile.role || 'Member'
+      }];
+    }
+    return [];
+  }, [members, userProfile]);
 
   const filteredMembers = React.useMemo(() => {
     const q = mentionFilter.toLowerCase();
@@ -360,8 +364,8 @@ export function CanvasBlockEditor({
         editor.chain().focus().insertContent({
           type: 'sprintCycleBlock',
           attrs: {
-            title: 'Sprint Cycle 24: Core Platform & Speed',
-            cycleNumber: 24
+            title: '',
+            cycleNumber: null
           }
         }).run();
         break;
@@ -370,11 +374,11 @@ export function CanvasBlockEditor({
         editor.chain().focus().insertContent({
           type: 'inlineIssueBlock',
           attrs: {
-            identifier: `ORB-${Math.floor(Math.random() * 800 + 100)}`,
-            title: 'New Workspace Issue',
+            identifier: `TASK-${Math.floor(Math.random() * 800 + 100)}`,
+            title: '',
             status: 'todo',
             priority: 'medium',
-            estimatePoints: 3
+            estimatePoints: null
           }
         }).run();
         break;
@@ -383,7 +387,7 @@ export function CanvasBlockEditor({
         editor.chain().focus().insertContent({
           type: 'databaseTableBlock',
           attrs: {
-            title: 'Sprint Deliverables Matrix'
+            title: ''
           }
         }).run();
         break;
@@ -393,8 +397,8 @@ export function CanvasBlockEditor({
           type: 'inlineRequestBlock',
           attrs: {
             type: 'equipment',
-            title: 'Hardware & Infrastructure Requisition',
-            amount: '$3,499.00 USD',
+            title: '',
+            amount: '',
             department: 'Engineering',
             status: 'pending'
           }

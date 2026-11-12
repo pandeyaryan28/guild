@@ -34,14 +34,25 @@ export function SprintCycleBlock({ node, updateAttributes, deleteNode }: NodeVie
     deleteIssue
   } = useWorkspaceIssues(orgId, activeCycle?.id || null);
 
-  // Attributes with sensible defaults
-  const title = node.attrs.title || (activeCycle ? activeCycle.title : 'Sprint Cycle: Active Deliverables');
-  const cycleNumber = node.attrs.cycleNumber || (activeCycle ? activeCycle.number : 1);
+  const title = node.attrs.title ?? '';
+  const cycleNumber = node.attrs.cycleNumber || (activeCycle ? activeCycle.number : null);
+
+  const [isEditingTitle, setIsEditingTitle] = React.useState(false);
+  const [titleDraft, setTitleDraft] = React.useState(title);
+
+  React.useEffect(() => {
+    setTitleDraft(node.attrs.title ?? '');
+  }, [node.attrs.title]);
 
   const [newTitle, setNewTitle] = React.useState('');
   const [newPoints, setNewPoints] = React.useState<number>(3);
   const [showAddForm, setShowAddForm] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const handleTitleSave = () => {
+    setIsEditingTitle(false);
+    updateAttributes({ title: titleDraft.trim() });
+  };
 
   // Velocity metrics calculation based on live Firestore workspaceIssues
   const totalPoints = React.useMemo(() => {
@@ -99,6 +110,8 @@ export function SprintCycleBlock({ node, updateAttributes, deleteNode }: NodeVie
     }
   };
 
+  const displayedTitle = title || (activeCycle ? activeCycle.title : '');
+
   return (
     <NodeViewWrapper className="my-6 not-prose">
       <div className="relative group/block rounded-2xl border border-border dark:border-border-strong bg-surface/90 dark:bg-surface/55 backdrop-blur-2xl shadow-xl transition-all duration-300 hover:shadow-2xl overflow-hidden">
@@ -115,16 +128,42 @@ export function SprintCycleBlock({ node, updateAttributes, deleteNode }: NodeVie
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                    Active Sprint • Cycle {cycleNumber}
+                    {cycleNumber
+                      ? `Active Sprint • Cycle ${cycleNumber}`
+                      : (activeCycle ? `Active Sprint • Cycle ${activeCycle.number || 1}` : 'Active Sprint')}
                   </span>
                   <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
                     <Calendar className="w-3 h-3" />
-                    In Progress
+                    {activeCycle ? 'In Progress' : 'Sprint Planning'}
                   </span>
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight mt-0.5">
-                  {title}
-                </h3>
+
+                {isEditingTitle ? (
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Sprint cycle name..."
+                    value={titleDraft}
+                    onChange={(e) => setTitleDraft(e.target.value)}
+                    onBlur={handleTitleSave}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleTitleSave();
+                      if (e.key === 'Escape') {
+                        setTitleDraft(title);
+                        setIsEditingTitle(false);
+                      }
+                    }}
+                    className="mt-0.5 bg-transparent border-b border-primary text-base sm:text-lg font-bold text-foreground placeholder:text-muted-foreground/40 outline-none px-1"
+                  />
+                ) : (
+                  <h3
+                    onClick={() => setIsEditingTitle(true)}
+                    className="text-base sm:text-lg font-bold text-foreground hover:text-primary cursor-pointer tracking-tight mt-0.5 transition-colors"
+                    title="Click to rename sprint cycle"
+                  >
+                    {displayedTitle || <span className="text-muted-foreground/50 italic font-normal">Sprint cycle name...</span>}
+                  </h3>
+                )}
               </div>
             </div>
 

@@ -12,8 +12,8 @@ export const SprintCycleBlockNode = Node.create({
   selectable: true,
   addAttributes() {
     return {
-      title: { default: 'Sprint Cycle 24: Core Platform & Speed' },
-      cycleNumber: { default: 24 },
+      title: { default: '' },
+      cycleNumber: { default: null },
       tasks: { default: [] },
       totalPoints: { default: 0 },
       completedPoints: { default: 0 }
@@ -39,12 +39,12 @@ export const InlineIssueBlockNode = Node.create({
   addAttributes() {
     return {
       issueId: { default: null },
-      identifier: { default: 'ORB-108' },
-      title: { default: 'Interactive UI Task' },
+      identifier: { default: 'TASK-101' },
+      title: { default: '' },
       status: { default: 'todo' },
       priority: { default: 'medium' },
-      estimatePoints: { default: 3 },
-      assigneeName: { default: 'Assignee' },
+      estimatePoints: { default: null },
+      assigneeName: { default: '' },
       assigneeAvatar: { default: '' }
     };
   },
@@ -69,11 +69,11 @@ export const InlineRequestBlockNode = Node.create({
     return {
       requestId: { default: null },
       type: { default: 'equipment' },
-      title: { default: 'Hardware & Infrastructure Requisition' },
-      amount: { default: '$3,499.00 USD' },
+      title: { default: '' },
+      amount: { default: '' },
       department: { default: 'Engineering' },
       status: { default: 'pending' },
-      requesterName: { default: 'Sarah Lin' },
+      requesterName: { default: '' },
       requesterAvatar: { default: '' },
       reviewerName: { default: '' },
       reviewerNotes: { default: null },
@@ -99,7 +99,7 @@ export const DatabaseTableBlockNode = Node.create({
   selectable: true,
   addAttributes() {
     return {
-      title: { default: 'Interactive Workspace Database' },
+      title: { default: '' },
       columns: { default: [] },
       rows: { default: [] }
     };

@@ -34,7 +34,10 @@ function resolveDmOtherUserId(dmId: string, currentUid: string, membersList?: Ar
     if (matched) return matched.uid;
   }
   const parts = dmId.split('_');
-  return parts.find((p) => p !== currentUid) ?? '';
+  if (parts.length === 2) {
+    return parts.find((p) => p !== currentUid) ?? '';
+  }
+  return '';
 }
 
 interface MessageAreaProps {
@@ -61,7 +64,7 @@ export function MessageArea({
   onOpenDiscussion
 }: MessageAreaProps) {
   const navigate = useNavigate();
-  const { messages, loadingOlder, hasMore, loadOlderMessages } = useMessages(channelId, dmId);
+  const { messages, loadingOlder, hasMore, loadOlderMessages } = useMessages(channelId, dmId, orgId);
   const { channels } = useChannels(orgId);
   const [dmPartnerName, setDmPartnerName] = React.useState('');
   const [channel, setChannel] = React.useState<Channel | null>(null);
@@ -112,32 +115,85 @@ export function MessageArea({
 
   // Find DM partner profile and name
   React.useEffect(() => {
+    let isCurrent = true;
+
     if (!dmId || !currentUser) {
       setDmPartner(null);
       setDmPartnerName('');
       return;
     }
-    const otherId = resolveDmOtherUserId(dmId, currentUser.uid, members);
-    const m = members.find((m) => m.uid === otherId);
-    if (m) {
-      setDmPartner(m);
-      setDmPartnerName(m.fullName);
-    } else if (otherId) {
-      getDoc(doc(db, 'users', otherId)).then((snap) => {
-        if (snap.exists()) {
-          const profileData = snap.data() as UserProfile;
-          setDmPartner(profileData);
-          setDmPartnerName(profileData.fullName ?? 'Unknown');
+
+    const resolvePartner = async () => {
+      let otherId = resolveDmOtherUserId(dmId, currentUser.uid, members);
+
+      // If otherId could not be resolved from dmId string, inspect directMessages doc participants
+      if (!otherId) {
+        try {
+          const dmSnap = await getDoc(doc(db, 'directMessages', dmId));
+          if (!isCurrent) return;
+          if (dmSnap.exists()) {
+            const data = dmSnap.data();
+            const participants: string[] = data?.participants || [];
+            otherId = participants.find((p) => p !== currentUser.uid) || participants[0] || '';
+          }
+        } catch (err) {
+          console.error('Failed to fetch direct message thread doc:', err);
         }
-      });
-    }
+      }
+
+      if (!otherId) {
+        if (isCurrent) {
+          setDmPartner(null);
+          setDmPartnerName('Direct Message');
+        }
+        return;
+      }
+
+      // Check if partner is already in members list
+      const matchedMember = members.find((m) => m.uid === otherId);
+      if (matchedMember) {
+        if (isCurrent) {
+          setDmPartner(matchedMember);
+          setDmPartnerName(matchedMember.fullName || (matchedMember as any).displayName || matchedMember.username || 'Team Member');
+        }
+        return;
+      }
+
+      // If not in members list, fetch user document from Firestore
+      try {
+        const userSnap = await getDoc(doc(db, 'users', otherId));
+        if (!isCurrent) return;
+        if (userSnap.exists()) {
+          const profileData = userSnap.data() as UserProfile;
+          setDmPartner(profileData);
+          setDmPartnerName(
+            profileData.fullName || (profileData as any).displayName || profileData.username || 'Team Member'
+          );
+        } else {
+          setDmPartner(null);
+          setDmPartnerName('Team Member');
+        }
+      } catch (err) {
+        console.error('Failed to load DM partner profile:', err);
+        if (isCurrent) {
+          setDmPartner(null);
+          setDmPartnerName('Team Member');
+        }
+      }
+    };
+
+    resolvePartner();
+
+    return () => {
+      isCurrent = false;
+    };
   }, [dmId, currentUser?.uid, members]);
 
   // Mark as read when opened or when new messages arrive
   React.useEffect(() => {
     if (!currentUser || !orgId) return;
     if (channelId) markChannelRead(channelId, currentUser.uid, orgId);
-    if (dmId) markDMRead(dmId, currentUser.uid);
+    if (dmId) markDMRead(dmId, currentUser.uid, orgId);
   }, [channelId, dmId, currentUser?.uid, messages?.length, orgId]);
 
   const handleSend = async (
@@ -408,7 +464,9 @@ export function MessageArea({
     }
   }, [channelId, dmId, orgId, currentUser, profile, searchParams, setSearchParams]);
 
-  const headerTitle = channelId ? `${channel?.isPrivate ? '' : '#'}\u200B${channel?.name ?? '…'}` : dmPartnerName || '…';
+  const headerTitle = channelId
+    ? `${channel?.isPrivate ? '' : '#'}\u200B${channel?.name ?? '…'}`
+    : dmPartnerName || dmPartner?.fullName || 'Direct Message';
   const headerSub = channelId
     ? channel?.description ?? ''
     : dmPartner?.focusStatus?.text 
@@ -457,16 +515,18 @@ export function MessageArea({
         {/* Channel or DM Avatar */}
         {dmId ? (
           (() => {
-            const otherId = resolveDmOtherUserId(dmId, currentUser?.uid || '', members);
+            const otherId = resolveDmOtherUserId(dmId, currentUser?.uid || '', members) || dmPartner?.uid || '';
+            const displayName = dmPartnerName || dmPartner?.fullName || dmPartner?.username || 'DM';
+            const initials = avatarInitials(displayName);
             return (
               <div 
                 className="w-9 h-9 flex items-center justify-center rounded-full shrink-0 border border-border relative shadow-xs"
-                style={{ background: `hsl(${avatarHue(otherId)} 55% 45%)` }}
+                style={{ background: `hsl(${avatarHue(otherId || displayName)} 55% 45%)` }}
               >
                 {dmPartner?.photoURL ? (
-                  <img src={dmPartner.photoURL} alt={dmPartnerName} className="h-full w-full object-cover rounded-full" />
+                  <img src={dmPartner.photoURL} alt={displayName} className="h-full w-full object-cover rounded-full" />
                 ) : (
-                  <span className="text-xs font-bold text-white">{avatarInitials(dmPartnerName || '?')}</span>
+                  <span className="text-xs font-bold text-white">{initials}</span>
                 )}
                 <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-surface flex items-center justify-center shadow-xs">
                   <span className={cn(
@@ -587,7 +647,7 @@ export function MessageArea({
             ? 'Only administrators can send messages in this channel'
             : channelId
             ? `Message #${channel?.name ?? '…'}`
-            : `Message ${dmPartnerName || '…'}`
+            : `Message ${dmPartnerName || dmPartner?.fullName || 'Direct Message'}`
         }
         members={members}
         disabled={!currentUser || !orgId || !canPost}

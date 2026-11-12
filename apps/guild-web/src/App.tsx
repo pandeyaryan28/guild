@@ -60,7 +60,10 @@ const GlobalLoader = () => (
 
 function TasksRedirect() {
   const location = useLocation();
-  return <Navigate to={`/workspace${location.search}`} replace />;
+  const search = location.search
+    ? (location.search.includes('tab=') ? location.search : `${location.search}&tab=tasks`)
+    : '?tab=tasks';
+  return <Navigate to={`/workspace${search}`} replace />;
 }
 
 function StudioRedirect() {

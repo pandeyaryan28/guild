@@ -37,18 +37,23 @@ const POINT_OPTIONS = [1, 2, 3, 5, 8];
 export function InlineIssueBlock({ node, updateAttributes, deleteNode }: NodeViewProps) {
   const { userProfile } = useAuth();
   const workspace = useWorkspaceData();
-  const members = workspace?.members || [];
+  const rawMembers = workspace?.members || [];
+  const members = rawMembers.length > 0 ? rawMembers : (userProfile ? [userProfile] : []);
 
-  const identifier = node.attrs.identifier || 'ORB-108';
-  const title = node.attrs.title || 'Interactive UI Task';
+  const identifier = node.attrs.identifier || 'TASK-101';
+  const title = node.attrs.title ?? '';
   const status: IssueStatus = node.attrs.status || 'todo';
   const priority: IssuePriority = node.attrs.priority || 'medium';
-  const estimatePoints: number | null = node.attrs.estimatePoints ?? 3;
-  const assigneeName = node.attrs.assigneeName || (userProfile?.fullName || 'Assignee');
+  const estimatePoints: number | null = node.attrs.estimatePoints ?? null;
+  const assigneeName = node.attrs.assigneeName || '';
   const assigneeAvatar = node.attrs.assigneeAvatar || '';
 
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [titleValue, setTitleValue] = React.useState(title);
+
+  React.useEffect(() => {
+    setTitleValue(node.attrs.title ?? '');
+  }, [node.attrs.title]);
 
   const [openStatusMenu, setOpenStatusMenu] = React.useState(false);
   const [openPriorityMenu, setOpenPriorityMenu] = React.useState(false);
@@ -64,11 +69,7 @@ export function InlineIssueBlock({ node, updateAttributes, deleteNode }: NodeVie
 
   const handleTitleSubmit = () => {
     setIsEditingTitle(false);
-    if (titleValue.trim()) {
-      updateAttributes({ title: titleValue.trim() });
-    } else {
-      setTitleValue(title);
-    }
+    updateAttributes({ title: titleValue.trim() });
   };
 
   const currentPriority = PRIORITY_OPTIONS.find((p) => p.id === priority) || PRIORITY_OPTIONS[2];
@@ -96,11 +97,12 @@ export function InlineIssueBlock({ node, updateAttributes, deleteNode }: NodeVie
             {identifier}
           </span>
 
-          {/* Editable Title */}
+          {/* Editable Title with immediate placeholder vanishing */}
           {isEditingTitle ? (
             <input
               type="text"
               autoFocus
+              placeholder="Issue title..."
               value={titleValue}
               onChange={(e) => setTitleValue(e.target.value)}
               onBlur={handleTitleSubmit}
@@ -111,18 +113,19 @@ export function InlineIssueBlock({ node, updateAttributes, deleteNode }: NodeVie
                   setIsEditingTitle(false);
                 }
               }}
-              className="flex-1 bg-transparent border-b border-primary text-xs font-semibold text-foreground outline-none px-1 py-0.5"
+              className="flex-1 bg-transparent border-b border-primary text-xs font-semibold text-foreground placeholder:text-muted-foreground/40 outline-none px-1 py-0.5"
             />
           ) : (
             <span
               onClick={() => setIsEditingTitle(true)}
               className={cn(
-                'text-xs font-semibold text-foreground hover:text-primary cursor-pointer truncate transition-colors',
+                'text-xs cursor-pointer truncate transition-colors flex-1',
+                !title ? 'text-muted-foreground/50 italic font-normal' : 'font-semibold text-foreground hover:text-primary',
                 isDone && 'line-through text-muted-foreground'
               )}
               title="Click to edit title"
             >
-              {title}
+              {title || 'Issue title...'}
             </span>
           )}
         </div>
@@ -222,11 +225,24 @@ export function InlineIssueBlock({ node, updateAttributes, deleteNode }: NodeVie
               className="px-2 py-1 rounded-xl bg-secondary/60 hover:bg-secondary border border-border text-[11px] font-mono font-semibold text-foreground transition-all active:scale-[0.98]"
               title="Estimate Points"
             >
-              {estimatePoints ? `${estimatePoints} pts` : '– pts'}
+              {estimatePoints !== null && estimatePoints !== undefined ? `${estimatePoints} pts` : '– pts'}
             </button>
 
             {openPointsMenu && (
               <div className="absolute right-0 top-full mt-1.5 w-24 bg-surface dark:bg-surface/95 backdrop-blur-2xl border border-border dark:border-border-strong rounded-xl shadow-xl p-1 z-30 animate-in fade-in zoom-in-95 duration-150">
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateAttributes({ estimatePoints: null });
+                    setOpenPointsMenu(false);
+                  }}
+                  className={cn(
+                    'w-full text-center px-2 py-1 text-xs font-mono rounded-lg transition-colors',
+                    estimatePoints === null ? 'bg-primary text-primary-foreground font-bold' : 'text-foreground hover:bg-secondary'
+                  )}
+                >
+                  –
+                </button>
                 {POINT_OPTIONS.map((pts) => (
                   <button
                     key={pts}
@@ -259,39 +275,56 @@ export function InlineIssueBlock({ node, updateAttributes, deleteNode }: NodeVie
               }}
               className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-secondary/60 hover:bg-secondary border border-border text-[11px] font-medium text-foreground transition-all active:scale-[0.98]"
             >
-              <div className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center">
-                {assigneeName.charAt(0).toUpperCase()}
-              </div>
-              <span className="max-w-[70px] truncate text-muted-foreground font-mono">
-                @{assigneeName.split(' ')[0].toLowerCase()}
+              {assigneeAvatar ? (
+                <img src={assigneeAvatar} alt={assigneeName} className="w-4 h-4 rounded-full object-cover" />
+              ) : (
+                <div className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center">
+                  {(assigneeName || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="max-w-[75px] truncate text-muted-foreground font-mono">
+                {assigneeName ? `@${assigneeName.split(' ')[0].toLowerCase()}` : 'Assign'}
               </span>
             </button>
 
             {openAssigneeMenu && (
-              <div className="absolute right-0 top-full mt-1.5 w-44 bg-surface dark:bg-surface/95 backdrop-blur-2xl border border-border dark:border-border-strong rounded-xl shadow-xl p-1 z-30 max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-2 py-1 text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
+              <div className="absolute right-0 top-full mt-1.5 w-48 bg-surface dark:bg-surface/95 backdrop-blur-2xl border border-border dark:border-border-strong rounded-xl shadow-xl p-1 z-30 max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-2 py-1 text-[10px] font-bold uppercase text-muted-foreground tracking-wider border-b border-border/40 mb-1">
                   Assign To
                 </div>
-                {(members.length > 0 ? members : [
-                  { uid: 'm1', fullName: 'Alex Chen', email: 'alex@company.com' },
-                  { uid: 'm2', fullName: 'Elena Rostova', email: 'elena@company.com' },
-                  { uid: 'm3', fullName: 'Aryan Pandey', email: 'aryan@company.com' }
-                ]).map((m) => (
-                  <button
-                    key={m.uid}
-                    type="button"
-                    onClick={() => {
-                      updateAttributes({ assigneeName: m.fullName || m.email });
-                      setOpenAssigneeMenu(false);
-                    }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded-lg text-left text-foreground hover:bg-secondary transition-colors"
-                  >
-                    <div className="w-4 h-4 rounded-full bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center shrink-0">
-                      {(m.fullName || m.email).charAt(0).toUpperCase()}
-                    </div>
-                    <span className="truncate">{m.fullName || m.email}</span>
-                  </button>
-                ))}
+                {members.length === 0 ? (
+                  <div className="px-2 py-2 text-xs text-muted-foreground text-center">
+                    No members in workspace
+                  </div>
+                ) : (
+                  members.map((m) => {
+                    const mName = m.fullName || m.email || 'Member';
+                    const mPhoto = m.photoURL;
+                    return (
+                      <button
+                        key={m.uid}
+                        type="button"
+                        onClick={() => {
+                          updateAttributes({
+                            assigneeName: mName,
+                            assigneeAvatar: mPhoto || ''
+                          });
+                          setOpenAssigneeMenu(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded-lg text-left text-foreground hover:bg-secondary transition-colors"
+                      >
+                        {mPhoto ? (
+                          <img src={mPhoto} alt={mName} className="w-4 h-4 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center shrink-0">
+                            {mName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <span className="truncate">{mName}</span>
+                      </button>
+                    );
+                  })
+                )}
               </div>
             )}
           </div>

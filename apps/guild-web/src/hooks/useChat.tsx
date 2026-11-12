@@ -69,7 +69,13 @@ export interface UseMessagesResult {
   loadOlderMessages: () => void;
 }
 
-export function useMessages(channelId: string | null, dmId: string | null): UseMessagesResult {
+export function useMessages(
+  channelId: string | null,
+  dmId: string | null,
+  orgId?: string,
+): UseMessagesResult {
+  const { userProfile } = useAuth();
+  const effectiveOrgId = orgId || userProfile?.organizationId;
   const [allMessages, setAllMessages] = React.useState<Message[] | null>(null);
   const [displayLimit, setDisplayLimit] = React.useState(WINDOW_SIZE);
 
@@ -77,15 +83,18 @@ export function useMessages(channelId: string | null, dmId: string | null): UseM
     setAllMessages(null);
     setDisplayLimit(WINDOW_SIZE);
 
-    if (!channelId && !dmId) return;
+    if (!channelId && !dmId) {
+      setAllMessages([]);
+      return;
+    }
 
     if (channelId) {
-      return listenToMessages(channelId, setAllMessages);
+      return listenToMessages(channelId, setAllMessages, effectiveOrgId);
     }
     if (dmId) {
-      return listenToDMMessages(dmId, setAllMessages);
+      return listenToDMMessages(dmId, setAllMessages, effectiveOrgId);
     }
-  }, [channelId, dmId]);
+  }, [channelId, dmId, effectiveOrgId]);
 
   const messages = React.useMemo(() => {
     if (allMessages === null) return null;

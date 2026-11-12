@@ -199,12 +199,34 @@ export function buildDmId(uid1: string, uid2: string): string {
 export async function getOrCreateDM(uid1: string, uid2: string, orgId: string): Promise<string> {
   const dmId = buildDmId(uid1, uid2);
   const ref = doc(db, 'directMessages', dmId);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, {
-      id: dmId, orgId, participants: [uid1, uid2],
-      lastMessage: '', lastMessageAt: serverTimestamp(), lastSenderId: uid1,
-    });
+  try {
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(ref, {
+        id: dmId,
+        orgId,
+        participants: [uid1, uid2],
+        lastMessage: '',
+        lastMessageAt: serverTimestamp(),
+        lastSenderId: uid1,
+        createdAt: serverTimestamp(),
+      });
+    } else {
+      const data = snap.data();
+      if (!data.participants || !data.orgId) {
+        await setDoc(
+          ref,
+          {
+            id: dmId,
+            orgId: data.orgId || orgId,
+            participants: data.participants || [uid1, uid2],
+          },
+          { merge: true },
+        );
+      }
+    }
+  } catch (err) {
+    console.error('Error in getOrCreateDM:', err);
   }
   return dmId;
 }
@@ -539,20 +561,76 @@ export function listenToChannels(
   };
 }
 
+function sortMessagesChronologically(msgs: Message[]): Message[] {
+  return [...msgs].sort((a, b) => {
+    const getTime = (val: any) => {
+      if (!val) return Date.now();
+      if (typeof val.toMillis === 'function') return val.toMillis();
+      if (typeof val.seconds === 'number') return val.seconds * 1000;
+      if (val instanceof Date) return val.getTime();
+      const parsed = new Date(val).getTime();
+      return isNaN(parsed) ? Date.now() : parsed;
+    };
+    return getTime(a.createdAt) - getTime(b.createdAt);
+  });
+}
+
 export function listenToMessages(
   channelId: string,
   cb: (msgs: Message[]) => void,
   orgId?: string,
 ): () => void {
+  let fallbackUnsub: (() => void) | null = null;
+  let isCancelled = false;
+
   const constraints = [
     ...(orgId ? [where('orgId', '==', orgId)] : []),
     where('channelId', '==', channelId),
     orderBy('createdAt', 'asc'),
   ];
-  return onSnapshot(
+
+  const primaryUnsub = onSnapshot(
     query(collection(db, 'messages'), ...constraints),
-    (snap) => cb(snap.docs.map((d) => d.data() as Message)),
+    (snap) => {
+      cb(snap.docs.map((d) => d.data() as Message));
+    },
+    (err) => {
+      console.error('Error listening to messages:', err);
+      if (isCancelled) return;
+
+      // Gracefully fallback to querying without orderBy in case of missing index or orderBy errors,
+      // and sort documents client-side by createdAt
+      const fallbackConstraints = [
+        ...(orgId ? [where('orgId', '==', orgId)] : []),
+        where('channelId', '==', channelId),
+      ];
+
+      try {
+        fallbackUnsub = onSnapshot(
+          query(collection(db, 'messages'), ...fallbackConstraints),
+          (fallbackSnap) => {
+            const rawMsgs = fallbackSnap.docs.map((d) => d.data() as Message);
+            cb(sortMessagesChronologically(rawMsgs));
+          },
+          (fallbackErr) => {
+            console.error('Error listening to messages (fallback query):', fallbackErr);
+            cb([]);
+          },
+        );
+      } catch (fallbackInitErr) {
+        console.error('Failed to initialize fallback messages listener:', fallbackInitErr);
+        cb([]);
+      }
+    },
   );
+
+  return () => {
+    isCancelled = true;
+    primaryUnsub();
+    if (fallbackUnsub) {
+      fallbackUnsub();
+    }
+  };
 }
 
 export function listenToDMMessages(
@@ -560,15 +638,57 @@ export function listenToDMMessages(
   cb: (msgs: Message[]) => void,
   orgId?: string,
 ): () => void {
+  let fallbackUnsub: (() => void) | null = null;
+  let isCancelled = false;
+
   const constraints = [
     ...(orgId ? [where('orgId', '==', orgId)] : []),
     where('dmId', '==', dmId),
     orderBy('createdAt', 'asc'),
   ];
-  return onSnapshot(
+
+  const primaryUnsub = onSnapshot(
     query(collection(db, 'messages'), ...constraints),
-    (snap) => cb(snap.docs.map((d) => d.data() as Message)),
+    (snap) => {
+      cb(snap.docs.map((d) => d.data() as Message));
+    },
+    (err) => {
+      console.error('Error listening to DM messages:', err);
+      if (isCancelled) return;
+
+      // Gracefully fallback to querying without orderBy in case of missing index or orderBy errors,
+      // and sort documents client-side by createdAt
+      const fallbackConstraints = [
+        ...(orgId ? [where('orgId', '==', orgId)] : []),
+        where('dmId', '==', dmId),
+      ];
+
+      try {
+        fallbackUnsub = onSnapshot(
+          query(collection(db, 'messages'), ...fallbackConstraints),
+          (fallbackSnap) => {
+            const rawMsgs = fallbackSnap.docs.map((d) => d.data() as Message);
+            cb(sortMessagesChronologically(rawMsgs));
+          },
+          (fallbackErr) => {
+            console.error('Error listening to DM messages (fallback query):', fallbackErr);
+            cb([]);
+          },
+        );
+      } catch (fallbackInitErr) {
+        console.error('Failed to initialize fallback DM messages listener:', fallbackInitErr);
+        cb([]);
+      }
+    },
   );
+
+  return () => {
+    isCancelled = true;
+    primaryUnsub();
+    if (fallbackUnsub) {
+      fallbackUnsub();
+    }
+  };
 }
 
 // ─── Paginated Message Listeners ──────────────────────────────────────────────
@@ -602,6 +722,10 @@ export function listenToLatestMessages(
       // The oldest doc in the window is the last in the DESC result (first reversed)
       const oldest = reversed[0] ?? null;
       cb(msgs, oldest);
+    },
+    (err) => {
+      console.error(`Error listening to latest messages (${type} ${id}):`, err);
+      cb([], null);
     },
   );
 }
@@ -655,6 +779,34 @@ export function listenToUserDMs(
       threads = snap.docs.map((d) => d.data() as DirectMessageThread);
       cb(threads, dmReads);
     },
+    (err) => {
+      console.error('Error listening to user DMs (primary query):', err);
+      // Fallback query without orderBy in case composite index is not yet built
+      try {
+        onSnapshot(
+          query(
+            collection(db, 'directMessages'),
+            where('orgId', '==', orgId),
+            where('participants', 'array-contains', userId),
+          ),
+          (fallbackSnap) => {
+            threads = fallbackSnap.docs.map((d) => d.data() as DirectMessageThread);
+            threads.sort((a, b) => {
+              const aTime = a.lastMessageAt?.toMillis ? a.lastMessageAt.toMillis() : 0;
+              const bTime = b.lastMessageAt?.toMillis ? b.lastMessageAt.toMillis() : 0;
+              return bTime - aTime;
+            });
+            cb(threads, dmReads);
+          },
+          (fallbackErr) => {
+            console.error('Error listening to user DMs (fallback query):', fallbackErr);
+            cb([], dmReads);
+          },
+        );
+      } catch (e) {
+        cb([], dmReads);
+      }
+    },
   );
 
   const unsubReads = onSnapshot(
@@ -672,6 +824,9 @@ export function listenToUserDMs(
         }
       });
       cb(threads, dmReads);
+    },
+    (err) => {
+      console.error('Error listening to dmReadState:', err);
     },
   );
 
