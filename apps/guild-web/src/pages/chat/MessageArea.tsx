@@ -1,9 +1,16 @@
 import * as React from 'react';
-import { Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus, PanelLeftClose, PanelLeftOpen, FileText } from 'lucide-react';
+import {
+  Hash, MessageSquare, Users, ChevronLeft, Lock, Settings, UserPlus,
+  PanelLeftClose, PanelLeftOpen, FileText, Webhook, Copy, Check, Send,
+  Download, Bot, Sparkles, ExternalLink, Info, CheckCircle2, AlertCircle, Loader2
+} from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useChannels, useMessages } from '../../hooks/useChat';
-import { sendChannelMessage, sendDMMessage, markChannelRead, markDMRead } from '../../lib/chat';
+import {
+  sendChannelMessage, sendDMMessage, markChannelRead, markDMRead,
+  generateChannelWebhook
+} from '../../lib/chat';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { type UserProfile } from '../../lib/firestore';
@@ -20,6 +27,7 @@ import { InviteChannelMembersModal } from '../../components/chat/InviteChannelMe
 import { avatarInitials, avatarHue } from '../../components/MemberProfileDrawer';
 import { type MessageAttachment } from '@guild/types';
 import { getOrCreateCanvas, updateCanvasContent } from '../../lib/canvases';
+import { generateWebhookDocsPdf } from '../../utils/generateWebhookPdf';
 
 function resolveDmOtherUserId(dmId: string, currentUid: string, membersList?: Array<{ uid: string }>): string {
   if (!dmId || !currentUid) return '';
@@ -72,10 +80,118 @@ export function MessageArea({
   const [searchParams, setSearchParams] = useSearchParams();
   const [quotedMessage, setQuotedMessage] = React.useState<Message | null>(null);
 
-  // Reset quote when switching channel or DM
+  // Webhooks & Plugins Integration state
+  const [showIntegrationsFlyout, setShowIntegrationsFlyout] = React.useState(false);
+  const [copiedWebhookUrl, setCopiedWebhookUrl] = React.useState(false);
+  const [generatingWebhook, setGeneratingWebhook] = React.useState(false);
+  const [testingWebhook, setTestingWebhook] = React.useState(false);
+  const [testWebhookStatus, setTestWebhookStatus] = React.useState<{ success: boolean; message: string } | null>(null);
+  const [downloadingDoc, setDownloadingDoc] = React.useState(false);
+
+  // Reset quote & integrations flyout when switching channel or DM
   React.useEffect(() => {
     setQuotedMessage(null);
+    setShowIntegrationsFlyout(false);
+    setTestWebhookStatus(null);
   }, [channelId, dmId]);
+
+  const origin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'https://guildorbit.com';
+
+  const webhookUrl = React.useMemo(() => {
+    if (!channel?.webhookToken || !channelId) return '';
+    return `${origin}/api/webhooks/channel?channelId=${channelId}&token=${channel.webhookToken}`;
+  }, [channelId, channel?.webhookToken, origin]);
+
+  const handleCopyWebhookUrl = async () => {
+    if (!webhookUrl) return;
+    try {
+      await navigator.clipboard.writeText(webhookUrl);
+      setCopiedWebhookUrl(true);
+      setTimeout(() => setCopiedWebhookUrl(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy webhook URL:', err);
+    }
+  };
+
+  const handleGenerateWebhookQuick = async () => {
+    if (!channelId || generatingWebhook) return;
+    setGeneratingWebhook(true);
+    try {
+      const botName = channel?.webhookBotName || 'Inbound Bot';
+      const res = await generateChannelWebhook(channelId, botName, currentUser?.uid);
+      setChannel((prev) => prev ? { ...prev, webhookToken: res.token } : prev);
+    } catch (err) {
+      console.error('Failed to generate webhook token:', err);
+    } finally {
+      setGeneratingWebhook(false);
+    }
+  };
+
+  const handleTestWebhookQuick = async () => {
+    if (!webhookUrl || testingWebhook) return;
+    setTestingWebhook(true);
+    setTestWebhookStatus(null);
+    try {
+      const res = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Header Integration Test',
+          message: `Inbound webhook test triggered from #${channel?.name || 'channel'} header quick action.`,
+          customerName: currentUser?.displayName || 'Integration Test Bot',
+          customerEmail: 'integration-test@guildorbit.com',
+          source: 'channel-header',
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        setTestWebhookStatus({ success: true, message: 'Test message delivered to chat feed!' });
+      } else {
+        setTestWebhookStatus({
+          success: false,
+          message: data.error || 'Failed to deliver test payload.',
+        });
+      }
+    } catch (err: any) {
+      setTestWebhookStatus({
+        success: false,
+        message: err.message || 'Network error delivering test message.',
+      });
+    } finally {
+      setTestingWebhook(false);
+      setTimeout(() => setTestWebhookStatus(null), 5000);
+    }
+  };
+
+  const handleDownloadDocQuick = () => {
+    if (!channel) return;
+    setDownloadingDoc(true);
+    try {
+      generateWebhookDocsPdf({
+        channelName: channel.name,
+        channelId: channel.id,
+        webhookUrl: webhookUrl || `${origin}/api/webhooks/channel?channelId=${channel.id}&token=${channel.webhookToken || 'YOUR_TOKEN'}`,
+        webhookToken: channel.webhookToken || '',
+        botName: channel.webhookBotName || 'Inbound Bot',
+        autoCreateTask: channel.webhookAutoCreateTask || false,
+        origin,
+      });
+    } catch (err) {
+      console.error('Failed to generate webhook documentation PDF:', err);
+    } finally {
+      setTimeout(() => setDownloadingDoc(false), 600);
+    }
+  };
+
+  const handleOpenFullSettings = () => {
+    const params = new URLSearchParams(searchParams);
+    params.set('settings', 'true');
+    params.set('tab', 'integrations');
+    setSearchParams(params);
+    setShowIntegrationsFlyout(false);
+  };
 
   // PWA Offline Message Sync Hooks
   const isOnline = useOnlineStatus();
@@ -489,8 +605,14 @@ export function MessageArea({
       <div className="flex items-center gap-3 border-b border-border bg-surface/90 backdrop-blur-2xl px-4 py-2.5 shrink-0 z-10 select-none shadow-xs">
         <button
           type="button"
-          onClick={() => navigate('/chat')}
-          className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground shrink-0 transition-colors cursor-pointer"
+          onClick={() => {
+            if (onToggleSidebar && isSidebarCollapsed) {
+              onToggleSidebar();
+            } else {
+              navigate('/chat');
+            }
+          }}
+          className="md:hidden flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground shrink-0 transition-colors cursor-pointer active:scale-95"
           title="Back to Directory"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -589,6 +711,205 @@ export function MessageArea({
 
           {channelId && channel && (
             <>
+              {/* Webhooks & Plugins Integration Pill */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowIntegrationsFlyout(!showIntegrationsFlyout)}
+                  title="Webhooks & Plugins"
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer border shadow-2xs active:scale-[0.98]",
+                    channel.webhookToken
+                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/15"
+                      : "bg-secondary/60 text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    {channel.webhookToken ? (
+                      <>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                      </>
+                    ) : (
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-muted-foreground/40" />
+                    )}
+                  </span>
+                  <Webhook className="h-3.5 w-3.5 shrink-0" />
+                  <span className="hidden sm:inline">Webhooks & Plugins</span>
+                  <span className="sm:hidden">Plugins</span>
+                </button>
+
+                {/* Quick Access Popover Flyout */}
+                <AnimatePresence>
+                  {showIntegrationsFlyout && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowIntegrationsFlyout(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute right-0 top-11 z-50 w-80 sm:w-96 rounded-3xl border border-border dark:border-border-strong bg-surface/95 dark:bg-surface/85 backdrop-blur-2xl shadow-2xl shadow-black/25 dark:shadow-black/70 p-4 space-y-3.5 select-none"
+                      >
+                        {/* Flyout Header */}
+                        <div className="flex items-center justify-between border-b border-border/80 pb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+                              <Webhook className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <h3 className="text-xs font-bold text-foreground">Webhooks & Plugins</h3>
+                              <p className="text-[10px] text-muted-foreground">#{channel.name} Integrations</p>
+                            </div>
+                          </div>
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-[10px] font-bold border",
+                              channel.webhookToken
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                                : "bg-secondary text-muted-foreground border-border"
+                            )}
+                          >
+                            {channel.webhookToken ? 'Active' : 'Unconfigured'}
+                          </span>
+                        </div>
+
+                        {/* Body */}
+                        {channel.webhookToken ? (
+                          <div className="space-y-3">
+                            <div className="rounded-2xl border border-border/80 bg-secondary/40 p-3 space-y-2">
+                              <div className="flex items-center justify-between text-[11px]">
+                                <span className="font-semibold text-foreground flex items-center gap-1.5">
+                                  <Bot className="h-3.5 w-3.5 text-primary" />
+                                  {channel.webhookBotName || 'Inbound Bot'}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground font-mono">POST Endpoint</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 rounded-xl border border-border bg-surface px-2.5 py-1.5 text-[11px] font-mono text-muted-foreground overflow-hidden">
+                                <span className="truncate flex-1 select-all">{webhookUrl}</span>
+                              </div>
+                            </div>
+
+                            {/* Quick Actions Grid */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                type="button"
+                                onClick={handleCopyWebhookUrl}
+                                className={cn(
+                                  "flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all active:scale-[0.98] cursor-pointer",
+                                  copiedWebhookUrl
+                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                                    : "bg-surface hover:bg-secondary border-border text-foreground"
+                                )}
+                              >
+                                {copiedWebhookUrl ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                                <span>{copiedWebhookUrl ? 'Copied URL' : 'Copy URL'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={handleTestWebhookQuick}
+                                disabled={testingWebhook}
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-surface hover:bg-secondary border border-border text-foreground transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                              >
+                                {testingWebhook ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                                <span>Test Webhook</span>
+                              </button>
+                            </div>
+
+                            {/* Test Status feedback */}
+                            {testWebhookStatus && (
+                              <div
+                                className={cn(
+                                  "rounded-xl p-2.5 text-[11px] flex items-center gap-2 border",
+                                  testWebhookStatus.success
+                                    ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-300"
+                                    : "bg-destructive/10 border-destructive/25 text-destructive"
+                                )}
+                              >
+                                {testWebhookStatus.success ? (
+                                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                                ) : (
+                                  <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive" />
+                                )}
+                                <span className="truncate">{testWebhookStatus.message}</span>
+                              </div>
+                            )}
+
+                            {/* PDF Guide Download button */}
+                            <button
+                              type="button"
+                              onClick={handleDownloadDocQuick}
+                              disabled={downloadingDoc}
+                              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-secondary/80 hover:bg-secondary border border-border text-foreground transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                            >
+                              {downloadingDoc ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                              <span>Download Integration Guide (PDF)</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3 py-1">
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                              Connect external contact forms, website inquiry widgets, and automated alert systems directly to this channel.
+                            </p>
+
+                            {isChannelAdmin ? (
+                              <button
+                                type="button"
+                                onClick={handleGenerateWebhookQuick}
+                                disabled={generatingWebhook}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold bg-primary text-primary-foreground shadow-xs hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                              >
+                                {generatingWebhook ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                                <span>Generate Webhook Token</span>
+                              </button>
+                            ) : (
+                              <div className="rounded-xl border border-border bg-secondary/40 p-2.5 text-[11px] text-muted-foreground flex items-center gap-2">
+                                <Info className="h-4 w-4 shrink-0 text-muted-foreground/80" />
+                                <span>Channel creators or workspace administrators can generate webhook tokens for this channel.</span>
+                              </div>
+                            )}
+
+                            {/* View/download guide even when unconfigured */}
+                            <button
+                              type="button"
+                              onClick={handleDownloadDocQuick}
+                              disabled={downloadingDoc}
+                              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-surface hover:bg-secondary border border-border text-foreground transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                            >
+                              {downloadingDoc ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                              <span>View Integration Guide (PDF)</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Footer Link to Full Settings */}
+                        <div className="border-t border-border/80 pt-2.5 flex items-center justify-between text-[11px]">
+                          <button
+                            type="button"
+                            onClick={handleOpenFullSettings}
+                            className="font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>Channel Settings & API Specs</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowIntegrationsFlyout(false)}
+                            className="text-muted-foreground hover:text-foreground cursor-pointer"
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-secondary/50 border border-border text-muted-foreground text-xs font-mono">
                 <Users className="h-3.5 w-3.5" />
                 <span className="font-semibold">{channel.memberCount}</span>
@@ -604,21 +925,19 @@ export function MessageArea({
                 <UserPlus className="h-4 w-4" />
               </button>
 
-              {/* Channel Settings Gear */}
-              {isChannelAdmin && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newParams = new URLSearchParams(searchParams);
-                    newParams.set('settings', 'true');
-                    setSearchParams(newParams);
-                  }}
-                  title="Channel settings"
-                  className="flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-border bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 cursor-pointer"
-                >
-                  <Settings className="h-4 w-4" />
-                </button>
-              )}
+              {/* Channel Settings Gear - accessible to all, with member/admin mode */}
+              <button
+                type="button"
+                onClick={() => {
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.set('settings', 'true');
+                  setSearchParams(newParams);
+                }}
+                title={isChannelAdmin ? "Channel settings" : "Channel details & members"}
+                className="flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-border bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 cursor-pointer"
+              >
+                <Settings className="h-4 w-4" />
+              </button>
             </>
           )}
         </div>
