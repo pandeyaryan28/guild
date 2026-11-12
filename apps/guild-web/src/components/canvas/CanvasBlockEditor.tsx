@@ -7,7 +7,9 @@ import Highlight from '@tiptap/extension-highlight';
 import {
   Heading1,
   Heading2,
+  Heading3,
   List,
+  ListOrdered,
   ListTodo,
   Quote,
   Code,
@@ -18,7 +20,21 @@ import {
   FileCheck2,
   ArrowRight,
   User,
-  Check
+  Check,
+  Plus,
+  GripVertical,
+  Trash2,
+  Copy,
+  ArrowUp,
+  ArrowDown,
+  Bold,
+  Italic,
+  Strikethrough,
+  Highlighter,
+  MessageSquareQuote,
+  Sparkles,
+  ChevronRight,
+  CornerDownLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@guild/utils';
@@ -28,8 +44,10 @@ import {
   SprintCycleBlockNode,
   InlineIssueBlockNode,
   InlineRequestBlockNode,
-  DatabaseTableBlockNode
+  DatabaseTableBlockNode,
+  CalloutBlockNode
 } from './canvasExtensions';
+import './CanvasBlockEditor.css';
 
 export interface CanvasBlockEditorProps {
   initialContent?: string;
@@ -45,25 +63,28 @@ interface SlashCommandItem {
   icon: any;
   category: 'guild' | 'basic';
   shortcut?: string;
+  keywords?: string[];
 }
 
 const SLASH_COMMANDS: SlashCommandItem[] = [
-  // Interactive Guild Blocks
+  // Interactive Guild & Linear Blocks
   {
     id: 'sprint',
     label: 'Sprint Cycle',
     description: 'Active sprint progress, velocity burn, & task backlog',
     icon: Zap,
     category: 'guild',
-    shortcut: '/sprint'
+    shortcut: '/sprint',
+    keywords: ['cycle', 'scrum', 'agile', 'points', 'velocity']
   },
   {
     id: 'issue',
     label: 'Inline Issue',
-    description: 'Trackable issue with status, priority, points, & assignee',
+    description: 'Linear-style trackable issue with status, priority, & points',
     icon: CheckSquare,
     category: 'guild',
-    shortcut: '/issue'
+    shortcut: '/issue',
+    keywords: ['task', 'linear', 'bug', 'ticket', 'work', 'todo']
   },
   {
     id: 'table',
@@ -71,7 +92,8 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
     description: 'Spreadsheet database with dynamic property columns',
     icon: TableIcon,
     category: 'guild',
-    shortcut: '/table'
+    shortcut: '/table',
+    keywords: ['database', 'grid', 'spreadsheet', 'rows', 'columns', 'db']
   },
   {
     id: 'request',
@@ -79,16 +101,18 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
     description: 'Operational requisition with manager 1-click approvals',
     icon: FileCheck2,
     category: 'guild',
-    shortcut: '/request'
+    shortcut: '/request',
+    keywords: ['approval', 'expense', 'equipment', 'leave', 'access', 'signoff']
   },
-  // Basic Blocks
+  // Basic Notion Blocks
   {
     id: 'h1',
     label: 'Heading 1',
     description: 'Large title section header',
     icon: Heading1,
     category: 'basic',
-    shortcut: '/h1'
+    shortcut: '# ',
+    keywords: ['h1', 'title', 'header', 'big']
   },
   {
     id: 'h2',
@@ -96,7 +120,17 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
     description: 'Medium sub-section header',
     icon: Heading2,
     category: 'basic',
-    shortcut: '/h2'
+    shortcut: '## ',
+    keywords: ['h2', 'sub', 'header', 'medium']
+  },
+  {
+    id: 'h3',
+    label: 'Heading 3',
+    description: 'Small section header',
+    icon: Heading3,
+    category: 'basic',
+    shortcut: '### ',
+    keywords: ['h3', 'sub2', 'header', 'small']
   },
   {
     id: 'bullet',
@@ -104,23 +138,44 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
     description: 'Classic bulleted list points',
     icon: List,
     category: 'basic',
-    shortcut: '/bullet'
+    shortcut: '- ',
+    keywords: ['ul', 'unordered', 'bullet', 'point']
+  },
+  {
+    id: 'number',
+    label: 'Numbered List',
+    description: 'Ordered sequence list',
+    icon: ListOrdered,
+    category: 'basic',
+    shortcut: '1. ',
+    keywords: ['ol', 'ordered', 'numbered', 'sequence', 'count']
   },
   {
     id: 'todo',
-    label: 'Todo Checklist',
+    label: 'To-do Checklist',
     description: 'Track quick checkbox action items',
     icon: ListTodo,
     category: 'basic',
-    shortcut: '/todo'
+    shortcut: '[] ',
+    keywords: ['task', 'check', 'checkbox', 'checklist', 'action']
+  },
+  {
+    id: 'callout',
+    label: 'Callout Box',
+    description: 'Notion-style highlighted note with emoji & color tint',
+    icon: MessageSquareQuote,
+    category: 'basic',
+    shortcut: '/callout',
+    keywords: ['callout', 'note', 'box', 'alert', 'info', 'highlight', 'tip']
   },
   {
     id: 'quote',
     label: 'Quote Block',
-    description: 'Capture quotation or callout',
+    description: 'Capture quotation or callout excerpt',
     icon: Quote,
     category: 'basic',
-    shortcut: '/quote'
+    shortcut: '> ',
+    keywords: ['quote', 'blockquote', 'citation', 'excerpt']
   },
   {
     id: 'code',
@@ -128,17 +183,27 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
     description: 'Syntax-friendly code snippet',
     icon: Code,
     category: 'basic',
-    shortcut: '/code'
+    shortcut: '```',
+    keywords: ['code', 'snippet', 'syntax', 'programming', 'script']
   },
   {
     id: 'divider',
     label: 'Divider Line',
-    description: 'Clean horizontal partition',
+    description: 'Clean horizontal partition rule',
     icon: Minus,
     category: 'basic',
-    shortcut: '/divider'
+    shortcut: '---',
+    keywords: ['hr', 'line', 'divider', 'separator', 'partition']
   }
 ];
+
+interface HoveredBlockState {
+  pos: number;
+  node: any;
+  top: number;
+  height: number;
+  dom: HTMLElement;
+}
 
 export function CanvasBlockEditor({
   initialContent,
@@ -149,6 +214,9 @@ export function CanvasBlockEditor({
   const { userProfile } = useAuth();
   const workspace = useWorkspaceData();
   const members = workspace?.members || [];
+
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const blockMenuRef = React.useRef<HTMLDivElement>(null);
 
   // Slash menu state
   const [slashOpen, setSlashOpen] = React.useState(false);
@@ -162,9 +230,20 @@ export function CanvasBlockEditor({
   const [mentionIndex, setMentionIndex] = React.useState(0);
   const [mentionPos, setMentionPos] = React.useState<{ top: number; left: number } | null>(null);
 
-  // Text highlight selection state
-  const [highlightPos, setHighlightPos] = React.useState<{ top: number; left: number } | null>(null);
+  // Text selection toolbar state
+  const [selectionPos, setSelectionPos] = React.useState<{ top: number; left: number } | null>(null);
   const [selectedText, setSelectedText] = React.useState('');
+
+  // Gutter Handle & Block Options State
+  const [hoveredBlock, setHoveredBlock] = React.useState<HoveredBlockState | null>(null);
+  const [blockMenuOpen, setBlockMenuOpen] = React.useState(false);
+  const [turnIntoOpen, setTurnIntoOpen] = React.useState(false);
+
+  // Drag-and-drop reorder state
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [draggedBlock, setDraggedBlock] = React.useState<HoveredBlockState | null>(null);
+  const [dropIndicatorTop, setDropIndicatorTop] = React.useState<number | null>(null);
+  const [dropTargetPos, setDropTargetPos] = React.useState<number | null>(null);
 
   // Real workspace users for mentions
   const userList = React.useMemo(() => {
@@ -199,12 +278,14 @@ export function CanvasBlockEditor({
   }, [userList, mentionFilter]);
 
   const filteredSlash = React.useMemo(() => {
-    const q = slashFilter.toLowerCase();
+    const q = slashFilter.toLowerCase().trim();
+    if (!q) return SLASH_COMMANDS;
     return SLASH_COMMANDS.filter(
       (cmd) =>
         cmd.id.includes(q) ||
         cmd.label.toLowerCase().includes(q) ||
-        cmd.description.toLowerCase().includes(q)
+        cmd.description.toLowerCase().includes(q) ||
+        (cmd.keywords && cmd.keywords.some((k) => k.includes(q)))
     );
   }, [slashFilter]);
 
@@ -222,7 +303,8 @@ export function CanvasBlockEditor({
       SprintCycleBlockNode,
       InlineIssueBlockNode,
       InlineRequestBlockNode,
-      DatabaseTableBlockNode
+      DatabaseTableBlockNode,
+      CalloutBlockNode
     ],
     content: (() => {
       if (!initialContent) return '<p></p>';
@@ -251,7 +333,7 @@ export function CanvasBlockEditor({
             setSlashIndex((prev) => (prev - 1 + filteredSlash.length) % Math.max(1, filteredSlash.length));
             return true;
           }
-          if (event.key === 'Enter') {
+          if (event.key === 'Enter' || event.key === 'Tab') {
             event.preventDefault();
             if (filteredSlash[slashIndex]) {
               executeSlash(filteredSlash[slashIndex].id);
@@ -289,6 +371,52 @@ export function CanvasBlockEditor({
           }
         }
 
+        // List Indentation (Tab / Shift-Tab)
+        if (event.key === 'Tab') {
+          if (editor?.isActive('listItem')) {
+            event.preventDefault();
+            if (event.shiftKey) {
+              editor.chain().focus().liftListItem('listItem').run();
+            } else {
+              editor.chain().focus().sinkListItem('listItem').run();
+            }
+            return true;
+          }
+          if (editor?.isActive('taskItem')) {
+            event.preventDefault();
+            if (event.shiftKey) {
+              editor.chain().focus().liftListItem('taskItem').run();
+            } else {
+              editor.chain().focus().sinkListItem('taskItem').run();
+            }
+            return true;
+          }
+        }
+
+        // Backspace on empty formatting block converts to paragraph
+        if (event.key === 'Backspace') {
+          if (editor) {
+            const { selection } = editor.state;
+            if (selection.empty && selection.$from.parentOffset === 0) {
+              if (editor.isActive('heading')) {
+                event.preventDefault();
+                editor.chain().focus().setParagraph().run();
+                return true;
+              }
+              if (editor.isActive('blockquote')) {
+                event.preventDefault();
+                editor.chain().focus().toggleBlockquote().run();
+                return true;
+              }
+              if (editor.isActive('codeBlock')) {
+                event.preventDefault();
+                editor.chain().focus().toggleCodeBlock().run();
+                return true;
+              }
+            }
+          }
+        }
+
         return false;
       }
     },
@@ -298,12 +426,12 @@ export function CanvasBlockEditor({
         const text = editor.state.doc.textBetween(selection.from, selection.to, ' ').trim();
         if (text.length > 0) {
           const coords = editor.view.coordsAtPos(selection.from);
-          setHighlightPos({ top: coords.top - 46, left: coords.left });
+          setSelectionPos({ top: coords.top - 48, left: Math.max(16, coords.left) });
           setSelectedText(text);
           return;
         }
       }
-      setHighlightPos(null);
+      setSelectionPos(null);
       setSelectedText('');
     },
     onUpdate: ({ editor }) => {
@@ -317,18 +445,24 @@ export function CanvasBlockEditor({
       const posInLine = $from.parentOffset;
       const textBefore = lineText.slice(0, posInLine);
 
-      // Check for Slash command
-      if (textBefore.startsWith('/')) {
-        const coords = editor.view.coordsAtPos(selection.from);
-        setSlashPos({ top: coords.bottom + 8, left: coords.left });
-        setSlashFilter(textBefore.slice(1));
-        setSlashIndex(0);
-        setSlashOpen(true);
+      // Check for Slash command trigger
+      const lastSlashIndex = textBefore.lastIndexOf('/');
+      if (lastSlashIndex !== -1 && (lastSlashIndex === 0 || textBefore[lastSlashIndex - 1] === ' ')) {
+        const query = textBefore.slice(lastSlashIndex + 1);
+        if (!query.includes(' ')) {
+          const coords = editor.view.coordsAtPos(selection.from);
+          setSlashPos({ top: coords.bottom + 8, left: coords.left });
+          setSlashFilter(query);
+          setSlashIndex(0);
+          setSlashOpen(true);
+        } else {
+          setSlashOpen(false);
+        }
       } else {
         setSlashOpen(false);
       }
 
-      // Check for @ Mention
+      // Check for @ Mention trigger
       const lastAt = textBefore.lastIndexOf('@');
       if (lastAt !== -1 && (lastAt === 0 || textBefore[lastAt - 1] === ' ')) {
         const query = textBefore.slice(lastAt + 1);
@@ -347,26 +481,28 @@ export function CanvasBlockEditor({
     }
   });
 
-  // Execute Slash command
+  // Execute Slash command cleanly
   const executeSlash = (cmdId: string) => {
     if (!editor) return;
 
-    // Delete the slash query
+    // Delete the slash trigger text cleanly
     const { selection } = editor.state;
     const { $from } = selection;
     const lineText = $from.parent.textContent;
-    const startPos = selection.from - lineText.length;
+    const posInLine = $from.parentOffset;
+    const textBefore = lineText.slice(0, posInLine);
+    const lastSlashIndex = textBefore.lastIndexOf('/');
 
-    editor.chain().focus().deleteRange({ from: startPos, to: selection.from }).run();
+    if (lastSlashIndex !== -1) {
+      const startPos = selection.from - (posInLine - lastSlashIndex);
+      editor.chain().focus().deleteRange({ from: startPos, to: selection.from }).run();
+    }
 
     switch (cmdId) {
       case 'sprint':
         editor.chain().focus().insertContent({
           type: 'sprintCycleBlock',
-          attrs: {
-            title: '',
-            cycleNumber: null
-          }
+          attrs: { title: '', cycleNumber: null }
         }).run();
         break;
 
@@ -386,9 +522,7 @@ export function CanvasBlockEditor({
       case 'table':
         editor.chain().focus().insertContent({
           type: 'databaseTableBlock',
-          attrs: {
-            title: ''
-          }
+          attrs: { title: '' }
         }).run();
         break;
 
@@ -405,6 +539,18 @@ export function CanvasBlockEditor({
         }).run();
         break;
 
+      case 'callout':
+        editor.chain().focus().insertContent({
+          type: 'calloutBlock',
+          attrs: {
+            icon: '💡',
+            tint: 'amber',
+            title: '',
+            text: ''
+          }
+        }).run();
+        break;
+
       case 'h1':
         editor.chain().focus().setHeading({ level: 1 }).run();
         break;
@@ -413,8 +559,16 @@ export function CanvasBlockEditor({
         editor.chain().focus().setHeading({ level: 2 }).run();
         break;
 
+      case 'h3':
+        editor.chain().focus().setHeading({ level: 3 }).run();
+        break;
+
       case 'bullet':
         editor.chain().focus().toggleBulletList().run();
+        break;
+
+      case 'number':
+        editor.chain().focus().toggleOrderedList().run();
         break;
 
       case 'todo':
@@ -476,12 +630,557 @@ export function CanvasBlockEditor({
       }
     }).run();
 
-    setHighlightPos(null);
+    setSelectionPos(null);
     setSelectedText('');
   };
 
+  // Close block menu on outside click
+  React.useEffect(() => {
+    if (!blockMenuOpen) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (blockMenuRef.current && !blockMenuRef.current.contains(e.target as Node)) {
+        setBlockMenuOpen(false);
+        setTurnIntoOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [blockMenuOpen]);
+
+  // Mouse move handler to position Gutter Handle next to hovered block
+  const handleContainerMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!editor || blockMenuOpen || isDragging) return;
+    if (!containerRef.current) return;
+
+    const target = e.target as HTMLElement;
+    const proseMirror = editor.view.dom;
+    if (!proseMirror) return;
+
+    // Find the direct child of .ProseMirror
+    let blockEl: HTMLElement | null = target;
+    while (blockEl && blockEl.parentElement !== proseMirror && blockEl !== proseMirror && blockEl !== document.body) {
+      blockEl = blockEl.parentElement;
+    }
+
+    if (blockEl && blockEl.parentElement === proseMirror) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const blockRect = blockEl.getBoundingClientRect();
+      const top = blockRect.top - containerRect.top;
+
+      try {
+        const pos = editor.view.posAtDOM(blockEl, 0);
+        const $pos = editor.state.doc.resolve(pos);
+        const blockPos = $pos.start(1) - 1;
+        const node = editor.state.doc.nodeAt(blockPos);
+
+        if (node) {
+          setHoveredBlock({
+            pos: blockPos,
+            node,
+            top: Math.max(0, top + (blockRect.height > 40 ? 4 : 2)),
+            height: blockRect.height,
+            dom: blockEl
+          });
+        }
+      } catch (err) {
+        // Safe catch if DOM position cannot be resolved
+      }
+    }
+  };
+
+  // Quick '+' button handler (insert empty block below and focus)
+  const handleQuickAddBelow = () => {
+    if (!editor || !hoveredBlock) return;
+    const insertPos = hoveredBlock.pos + hoveredBlock.node.nodeSize;
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(insertPos, { type: 'paragraph' })
+      .setTextSelection(insertPos + 1)
+      .run();
+
+    // Trigger slash menu immediately
+    setTimeout(() => {
+      const coords = editor.view.coordsAtPos(insertPos + 1);
+      setSlashPos({ top: coords.bottom + 8, left: coords.left });
+      setSlashFilter('');
+      setSlashIndex(0);
+      setSlashOpen(true);
+    }, 50);
+  };
+
+  // Duplicate Block
+  const handleDuplicateBlock = () => {
+    if (!editor || !hoveredBlock) return;
+    const insertPos = hoveredBlock.pos + hoveredBlock.node.nodeSize;
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(insertPos, hoveredBlock.node.toJSON())
+      .run();
+    setBlockMenuOpen(false);
+  };
+
+  // Delete Block
+  const handleDeleteBlock = () => {
+    if (!editor || !hoveredBlock) return;
+    editor
+      .chain()
+      .focus()
+      .deleteRange({ from: hoveredBlock.pos, to: hoveredBlock.pos + hoveredBlock.node.nodeSize })
+      .run();
+    setBlockMenuOpen(false);
+    setHoveredBlock(null);
+  };
+
+  // Move Block Up
+  const handleMoveBlockUp = () => {
+    if (!editor || !hoveredBlock) return;
+    const { doc } = editor.state;
+    const currentPos = hoveredBlock.pos;
+    const $pos = doc.resolve(currentPos);
+    const index = $pos.index(0);
+
+    if (index > 0) {
+      let prevPos = 0;
+      for (let i = 0; i < index - 1; i++) {
+        prevPos += doc.child(i).nodeSize;
+      }
+      const nodeJSON = hoveredBlock.node.toJSON();
+      const nodeSize = hoveredBlock.node.nodeSize;
+
+      editor
+        .chain()
+        .focus()
+        .deleteRange({ from: currentPos, to: currentPos + nodeSize })
+        .insertContentAt(prevPos, nodeJSON)
+        .run();
+    }
+    setBlockMenuOpen(false);
+  };
+
+  // Move Block Down
+  const handleMoveBlockDown = () => {
+    if (!editor || !hoveredBlock) return;
+    const { doc } = editor.state;
+    const currentPos = hoveredBlock.pos;
+    const $pos = doc.resolve(currentPos);
+    const index = $pos.index(0);
+
+    if (index < doc.childCount - 1) {
+      const nextNode = doc.child(index + 1);
+      const nextPos = currentPos + hoveredBlock.node.nodeSize + nextNode.nodeSize;
+      const nodeJSON = hoveredBlock.node.toJSON();
+      const nodeSize = hoveredBlock.node.nodeSize;
+
+      editor
+        .chain()
+        .focus()
+        .deleteRange({ from: currentPos, to: currentPos + nodeSize })
+        .insertContentAt(nextPos - nodeSize, nodeJSON)
+        .run();
+    }
+    setBlockMenuOpen(false);
+  };
+
+  // Turn block into another type
+  const handleTurnInto = (targetType: string) => {
+    if (!editor || !hoveredBlock) return;
+    const textContent = hoveredBlock.node.textContent || '';
+    const currentPos = hoveredBlock.pos;
+    const nodeSize = hoveredBlock.node.nodeSize;
+
+    let targetContent: any;
+    switch (targetType) {
+      case 'h1':
+        targetContent = {
+          type: 'heading',
+          attrs: { level: 1 },
+          content: textContent ? [{ type: 'text', text: textContent }] : []
+        };
+        break;
+      case 'h2':
+        targetContent = {
+          type: 'heading',
+          attrs: { level: 2 },
+          content: textContent ? [{ type: 'text', text: textContent }] : []
+        };
+        break;
+      case 'h3':
+        targetContent = {
+          type: 'heading',
+          attrs: { level: 3 },
+          content: textContent ? [{ type: 'text', text: textContent }] : []
+        };
+        break;
+      case 'bullet':
+        targetContent = {
+          type: 'bulletList',
+          content: [
+            {
+              type: 'listItem',
+              content: [{ type: 'paragraph', content: textContent ? [{ type: 'text', text: textContent }] : [] }]
+            }
+          ]
+        };
+        break;
+      case 'number':
+        targetContent = {
+          type: 'orderedList',
+          content: [
+            {
+              type: 'listItem',
+              content: [{ type: 'paragraph', content: textContent ? [{ type: 'text', text: textContent }] : [] }]
+            }
+          ]
+        };
+        break;
+      case 'todo':
+        targetContent = {
+          type: 'taskList',
+          content: [
+            {
+              type: 'taskItem',
+              attrs: { checked: false },
+              content: [{ type: 'paragraph', content: textContent ? [{ type: 'text', text: textContent }] : [] }]
+            }
+          ]
+        };
+        break;
+      case 'callout':
+        targetContent = {
+          type: 'calloutBlock',
+          attrs: {
+            icon: '💡',
+            tint: 'amber',
+            title: '',
+            text: textContent
+          }
+        };
+        break;
+      case 'quote':
+        targetContent = {
+          type: 'blockquote',
+          content: [{ type: 'paragraph', content: textContent ? [{ type: 'text', text: textContent }] : [] }]
+        };
+        break;
+      case 'code':
+        targetContent = {
+          type: 'codeBlock',
+          content: textContent ? [{ type: 'text', text: textContent }] : []
+        };
+        break;
+      default:
+        targetContent = {
+          type: 'paragraph',
+          content: textContent ? [{ type: 'text', text: textContent }] : []
+        };
+    }
+
+    editor
+      .chain()
+      .focus()
+      .deleteRange({ from: currentPos, to: currentPos + nodeSize })
+      .insertContentAt(currentPos, targetContent)
+      .run();
+
+    setTurnIntoOpen(false);
+    setBlockMenuOpen(false);
+  };
+
+  // Drag and Drop Handlers for block reordering
+  const handleDragStart = (e: React.DragEvent) => {
+    if (!hoveredBlock) return;
+    setIsDragging(true);
+    setDraggedBlock(hoveredBlock);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', hoveredBlock.node.textContent);
+  };
+
+  const handleContainerDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!isDragging || !draggedBlock || !containerRef.current || !editor) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const proseMirror = editor.view.dom;
+    const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement;
+    if (!target) return;
+
+    let blockEl: HTMLElement | null = target;
+    while (blockEl && blockEl.parentElement !== proseMirror && blockEl !== proseMirror && blockEl !== document.body) {
+      blockEl = blockEl.parentElement;
+    }
+
+    if (blockEl && blockEl.parentElement === proseMirror) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const blockRect = blockEl.getBoundingClientRect();
+      const midY = blockRect.top + blockRect.height / 2;
+      const isBottom = e.clientY > midY;
+
+      try {
+        const pos = editor.view.posAtDOM(blockEl, 0);
+        const $pos = editor.state.doc.resolve(pos);
+        const targetBlockPos = $pos.start(1) - 1;
+        const targetNode = editor.state.doc.nodeAt(targetBlockPos);
+
+        if (targetNode) {
+          const indicatorTop = isBottom
+            ? blockRect.bottom - containerRect.top
+            : blockRect.top - containerRect.top;
+          setDropIndicatorTop(indicatorTop);
+          setDropTargetPos(isBottom ? targetBlockPos + targetNode.nodeSize : targetBlockPos);
+        }
+      } catch {
+        // Safe catch
+      }
+    }
+  };
+
+  const handleContainerDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!isDragging || !draggedBlock || dropTargetPos === null || !editor) return;
+    e.preventDefault();
+
+    const fromPos = draggedBlock.pos;
+    const toPos = dropTargetPos;
+
+    if (fromPos !== toPos) {
+      const nodeJSON = draggedBlock.node.toJSON();
+      const nodeSize = draggedBlock.node.nodeSize;
+
+      editor
+        .chain()
+        .focus()
+        .deleteRange({ from: fromPos, to: fromPos + nodeSize })
+        .insertContentAt(toPos > fromPos ? toPos - nodeSize : toPos, nodeJSON)
+        .run();
+    }
+
+    setIsDragging(false);
+    setDraggedBlock(null);
+    setDropIndicatorTop(null);
+    setDropTargetPos(null);
+  };
+
+  const handleContainerDragEnd = () => {
+    setIsDragging(false);
+    setDraggedBlock(null);
+    setDropIndicatorTop(null);
+    setDropTargetPos(null);
+  };
+
   return (
-    <div className="relative w-full">
+    <div
+      ref={containerRef}
+      onMouseMove={handleContainerMouseMove}
+      onDragOver={handleContainerDragOver}
+      onDrop={handleContainerDrop}
+      onDragEnd={handleContainerDragEnd}
+      className="relative w-full pl-8 sm:pl-10"
+    >
+      {/* ─── Notion & Linear Floating Gutter Handle ─── */}
+      {hoveredBlock && (
+        <div
+          style={{
+            position: 'absolute',
+            top: `${hoveredBlock.top}px`,
+            left: '0px',
+            transform: 'translateX(0)'
+          }}
+          className={cn(
+            'flex items-center gap-0.5 select-none transition-all duration-150 z-20',
+            isDragging ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          )}
+        >
+          {/* Quick Add Button (+) */}
+          <button
+            type="button"
+            onClick={handleQuickAddBelow}
+            className="w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-secondary border border-transparent hover:border-border transition-all active:scale-90 cursor-pointer"
+            title="Click to add block below (/)"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Grip / Drag Handle (⋮⋮) */}
+          <div
+            draggable
+            onDragStart={handleDragStart}
+            onClick={() => setBlockMenuOpen(!blockMenuOpen)}
+            className="w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-secondary border border-transparent hover:border-border transition-all cursor-grab active:cursor-grabbing active:scale-90"
+            title="Drag to reorder or click for options"
+          >
+            <GripVertical className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      )}
+
+      {/* ─── Drag Insertion Drop Indicator Line ─── */}
+      {isDragging && dropIndicatorTop !== null && (
+        <div
+          style={{ top: `${dropIndicatorTop}px` }}
+          className="absolute left-8 right-0 h-0.5 bg-primary shadow-sm rounded-full pointer-events-none z-30 animate-pulse"
+        />
+      )}
+
+      {/* ─── Block Options Contextual Menu ─── */}
+      <AnimatePresence>
+        {blockMenuOpen && hoveredBlock && (
+          <motion.div
+            ref={blockMenuRef}
+            initial={{ opacity: 0, y: 4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ duration: 0.12 }}
+            style={{
+              position: 'absolute',
+              top: `${hoveredBlock.top + 28}px`,
+              left: '12px'
+            }}
+            className="w-56 p-1.5 rounded-2xl bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-border dark:border-border-strong shadow-2xl z-40 select-none custom-scrollbar"
+          >
+            {/* Quick Actions */}
+            <div className="space-y-0.5">
+              <button
+                type="button"
+                onClick={handleDuplicateBlock}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors text-left"
+              >
+                <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>Duplicate Block</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTurnIntoOpen(!turnIntoOpen)}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span>Turn into...</span>
+                </div>
+                <ChevronRight className="w-3 h-3 text-muted-foreground" />
+              </button>
+
+              {/* Turn into sub-list */}
+              {turnIntoOpen && (
+                <div className="my-1 p-1 bg-secondary/50 dark:bg-secondary/30 rounded-xl border border-border/60 space-y-0.5 max-h-48 overflow-y-auto custom-scrollbar">
+                  <button
+                    type="button"
+                    onClick={() => handleTurnInto('paragraph')}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-foreground hover:bg-surface transition-colors"
+                  >
+                    <span>Text / Paragraph</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTurnInto('h1')}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-foreground hover:bg-surface transition-colors"
+                  >
+                    <Heading1 className="w-3 h-3 text-muted-foreground" />
+                    <span>Heading 1</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTurnInto('h2')}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-foreground hover:bg-surface transition-colors"
+                  >
+                    <Heading2 className="w-3 h-3 text-muted-foreground" />
+                    <span>Heading 2</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTurnInto('h3')}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-foreground hover:bg-surface transition-colors"
+                  >
+                    <Heading3 className="w-3 h-3 text-muted-foreground" />
+                    <span>Heading 3</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTurnInto('bullet')}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-foreground hover:bg-surface transition-colors"
+                  >
+                    <List className="w-3 h-3 text-muted-foreground" />
+                    <span>Bulleted List</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTurnInto('number')}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-foreground hover:bg-surface transition-colors"
+                  >
+                    <ListOrdered className="w-3 h-3 text-muted-foreground" />
+                    <span>Numbered List</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTurnInto('todo')}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-foreground hover:bg-surface transition-colors"
+                  >
+                    <ListTodo className="w-3 h-3 text-muted-foreground" />
+                    <span>To-do Checklist</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTurnInto('callout')}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-foreground hover:bg-surface transition-colors"
+                  >
+                    <MessageSquareQuote className="w-3 h-3 text-amber-500" />
+                    <span>Callout Box</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTurnInto('quote')}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-foreground hover:bg-surface transition-colors"
+                  >
+                    <Quote className="w-3 h-3 text-muted-foreground" />
+                    <span>Quote Block</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTurnInto('code')}
+                    className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-foreground hover:bg-surface transition-colors"
+                  >
+                    <Code className="w-3 h-3 text-muted-foreground" />
+                    <span>Code Block</span>
+                  </button>
+                </div>
+              )}
+
+              <div className="h-px bg-border/60 my-1" />
+
+              <button
+                type="button"
+                onClick={handleMoveBlockUp}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors text-left"
+              >
+                <ArrowUp className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>Move Up</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleMoveBlockDown}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors text-left"
+              >
+                <ArrowDown className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>Move Down</span>
+              </button>
+
+              <div className="h-px bg-border/60 my-1" />
+
+              <button
+                type="button"
+                onClick={handleDeleteBlock}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-500/10 transition-colors text-left"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Block</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* TipTap Rich Text Surface */}
       <EditorContent editor={editor} />
 
@@ -495,105 +1194,133 @@ export function CanvasBlockEditor({
             transition={{ duration: 0.15 }}
             style={{
               position: 'fixed',
-              top: `${Math.min(slashPos.top, window.innerHeight - 340)}px`,
-              left: `${Math.min(slashPos.left, window.innerWidth - 320)}px`
+              top: `${Math.min(slashPos.top, window.innerHeight - 380)}px`,
+              left: `${Math.min(slashPos.left, window.innerWidth - 340)}px`
             }}
-            className="w-72 max-h-80 overflow-y-auto bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-border dark:border-border-strong rounded-2xl shadow-2xl p-1.5 z-50 select-none custom-scrollbar"
+            className="w-80 max-h-88 overflow-y-auto bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-border dark:border-border-strong rounded-2xl shadow-2xl p-2 z-50 select-none custom-scrollbar"
           >
             {/* Interactive Guild Blocks Section */}
-            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/50 mb-1 flex items-center justify-between">
-              <span>Interactive Guild Blocks</span>
-              <span className="text-primary font-mono text-[9px]">ENGINE</span>
-            </div>
+            {filteredSlash.some((c) => c.category === 'guild') && (
+              <>
+                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/50 mb-1 flex items-center justify-between">
+                  <span>Interactive Linear & Guild</span>
+                  <span className="text-primary font-mono text-[9px] bg-primary/10 px-1.5 py-0.5 rounded">ENGINE</span>
+                </div>
 
-            {filteredSlash.filter((c) => c.category === 'guild').map((cmd) => {
-              const Icon = cmd.icon;
-              const globalIndex = filteredSlash.indexOf(cmd);
-              const isSelected = globalIndex === slashIndex;
+                {filteredSlash.filter((c) => c.category === 'guild').map((cmd) => {
+                  const Icon = cmd.icon;
+                  const globalIndex = filteredSlash.indexOf(cmd);
+                  const isSelected = globalIndex === slashIndex;
 
-              return (
-                <div
-                  key={cmd.id}
-                  onClick={() => executeSlash(cmd.id)}
-                  onMouseEnter={() => setSlashIndex(globalIndex)}
-                  className={cn(
-                    'flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer text-xs font-medium transition-all',
-                    isSelected
-                      ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
-                      : 'text-foreground hover:bg-secondary/70'
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'w-7 h-7 rounded-lg flex items-center justify-center border shrink-0',
-                      isSelected
-                        ? 'border-white/30 bg-white/20 text-white'
-                        : 'border-border bg-secondary/60 text-primary'
-                    )}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <span className="truncate">{cmd.label}</span>
-                    <span
+                  return (
+                    <div
+                      key={cmd.id}
+                      onClick={() => executeSlash(cmd.id)}
+                      onMouseEnter={() => setSlashIndex(globalIndex)}
                       className={cn(
-                        'text-[10px] truncate',
-                        isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                        'flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer text-xs font-medium transition-all',
+                        isSelected
+                          ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+                          : 'text-foreground hover:bg-secondary/70'
                       )}
                     >
-                      {cmd.description}
-                    </span>
-                  </div>
+                      <div
+                        className={cn(
+                          'w-7 h-7 rounded-lg flex items-center justify-center border shrink-0',
+                          isSelected
+                            ? 'border-primary-foreground/30 bg-primary-foreground/20 text-primary-foreground'
+                            : 'border-border bg-secondary/60 text-primary'
+                        )}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="truncate">{cmd.label}</span>
+                          {cmd.shortcut && (
+                            <span className={cn('text-[10px] font-mono', isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+                              {cmd.shortcut}
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          className={cn(
+                            'text-[10px] truncate',
+                            isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                          )}
+                        >
+                          {cmd.description}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Standard Typography & Notion Blocks Section */}
+            {filteredSlash.some((c) => c.category === 'basic') && (
+              <>
+                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/50 my-1">
+                  Basic Notion Blocks
                 </div>
-              );
-            })}
 
-            {/* Standard Typography Section */}
-            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/50 my-1">
-              Basic Blocks
-            </div>
+                {filteredSlash.filter((c) => c.category === 'basic').map((cmd) => {
+                  const Icon = cmd.icon;
+                  const globalIndex = filteredSlash.indexOf(cmd);
+                  const isSelected = globalIndex === slashIndex;
 
-            {filteredSlash.filter((c) => c.category === 'basic').map((cmd) => {
-              const Icon = cmd.icon;
-              const globalIndex = filteredSlash.indexOf(cmd);
-              const isSelected = globalIndex === slashIndex;
-
-              return (
-                <div
-                  key={cmd.id}
-                  onClick={() => executeSlash(cmd.id)}
-                  onMouseEnter={() => setSlashIndex(globalIndex)}
-                  className={cn(
-                    'flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer text-xs font-medium transition-all',
-                    isSelected
-                      ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
-                      : 'text-foreground hover:bg-secondary/70'
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'w-7 h-7 rounded-lg flex items-center justify-center border shrink-0',
-                      isSelected
-                        ? 'border-white/30 bg-white/20 text-white'
-                        : 'border-border bg-secondary/60 text-foreground'
-                    )}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <span className="truncate">{cmd.label}</span>
-                    <span
+                  return (
+                    <div
+                      key={cmd.id}
+                      onClick={() => executeSlash(cmd.id)}
+                      onMouseEnter={() => setSlashIndex(globalIndex)}
                       className={cn(
-                        'text-[10px] truncate',
-                        isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                        'flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer text-xs font-medium transition-all',
+                        isSelected
+                          ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+                          : 'text-foreground hover:bg-secondary/70'
                       )}
                     >
-                      {cmd.description}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                      <div
+                        className={cn(
+                          'w-7 h-7 rounded-lg flex items-center justify-center border shrink-0',
+                          isSelected
+                            ? 'border-primary-foreground/30 bg-primary-foreground/20 text-primary-foreground'
+                            : 'border-border bg-secondary/60 text-foreground'
+                        )}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="truncate">{cmd.label}</span>
+                          {cmd.shortcut && (
+                            <span className={cn('text-[10px] font-mono', isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+                              {cmd.shortcut}
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          className={cn(
+                            'text-[10px] truncate',
+                            isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                          )}
+                        >
+                          {cmd.description}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+
+            {filteredSlash.length === 0 && (
+              <div className="p-4 text-center text-xs text-muted-foreground">
+                No matching blocks found
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -611,7 +1338,7 @@ export function CanvasBlockEditor({
               top: `${Math.min(mentionPos.top, window.innerHeight - 280)}px`,
               left: `${Math.min(mentionPos.left, window.innerWidth - 260)}px`
             }}
-            className="w-64 max-h-64 overflow-y-auto bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-border dark:border-border-strong rounded-2xl shadow-2xl p-1.5 z-50 select-none custom-scrollbar"
+            className="w-68 max-h-64 overflow-y-auto bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-border dark:border-border-strong rounded-2xl shadow-2xl p-1.5 z-50 select-none custom-scrollbar"
           >
             <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/50 mb-1">
               Mention Teammate
@@ -635,9 +1362,13 @@ export function CanvasBlockEditor({
                     )}
                   >
                     <div className="relative">
-                      <div className="w-6 h-6 rounded-full bg-primary/15 border border-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
+                      {user.avatar ? (
+                        <img src={user.avatar} alt={user.name} className="w-6 h-6 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-primary/15 border border-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <span
                         className={cn(
                           'absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-surface',
@@ -668,9 +1399,9 @@ export function CanvasBlockEditor({
         )}
       </AnimatePresence>
 
-      {/* ─── 3. Text Highlight Popover [ Convert to Issue ] ─── */}
+      {/* ─── 3. Floating Text Selection Bubble Toolbar ─── */}
       <AnimatePresence>
-        {highlightPos && selectedText && (
+        {selectionPos && selectedText && editor && (
           <motion.div
             initial={{ opacity: 0, y: 6, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -678,19 +1409,78 @@ export function CanvasBlockEditor({
             transition={{ duration: 0.15 }}
             style={{
               position: 'fixed',
-              top: `${highlightPos.top}px`,
-              left: `${Math.min(highlightPos.left, window.innerWidth - 220)}px`
+              top: `${selectionPos.top}px`,
+              left: `${Math.min(selectionPos.left, window.innerWidth - 320)}px`
             }}
-            className="z-50 select-none"
+            className="z-50 select-none flex items-center gap-1 p-1 rounded-full bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-border dark:border-border-strong shadow-2xl"
           >
+            {/* Formatting shortcuts */}
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              className={cn(
+                'w-7 h-7 rounded-full flex items-center justify-center text-xs transition-colors',
+                editor.isActive('bold') ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-secondary'
+              )}
+              title="Bold (⌘B)"
+            >
+              <Bold className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              className={cn(
+                'w-7 h-7 rounded-full flex items-center justify-center text-xs transition-colors',
+                editor.isActive('italic') ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-secondary'
+              )}
+              title="Italic (⌘I)"
+            >
+              <Italic className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+              className={cn(
+                'w-7 h-7 rounded-full flex items-center justify-center text-xs transition-colors',
+                editor.isActive('strike') ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-secondary'
+              )}
+              title="Strikethrough"
+            >
+              <Strikethrough className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleCode().run()}
+              className={cn(
+                'w-7 h-7 rounded-full flex items-center justify-center text-xs transition-colors',
+                editor.isActive('code') ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-secondary'
+              )}
+              title="Inline Code"
+            >
+              <Code className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleHighlight().run()}
+              className={cn(
+                'w-7 h-7 rounded-full flex items-center justify-center text-xs transition-colors',
+                editor.isActive('highlight') ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-secondary'
+              )}
+              title="Highlight"
+            >
+              <Highlighter className="w-3.5 h-3.5" />
+            </button>
+
+            <div className="w-px h-4 bg-border/60 mx-1" />
+
+            {/* Convert to Linear Issue */}
             <button
               type="button"
               onClick={convertSelectionToIssue}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-primary/40 dark:border-primary/50 text-foreground hover:bg-primary hover:text-primary-foreground text-xs font-semibold shadow-2xl transition-all duration-200 active:scale-95 group cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-all active:scale-95 shadow-xs cursor-pointer"
             >
-              <Zap className="w-3.5 h-3.5 text-primary group-hover:text-primary-foreground transition-colors fill-primary/20" />
+              <Zap className="w-3 h-3 fill-current" />
               <span>Convert to Issue</span>
-              <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:text-primary-foreground transition-colors" />
             </button>
           </motion.div>
         )}

@@ -3,6 +3,32 @@ import { SprintCycleBlock } from './blocks/SprintCycleBlock';
 import { InlineIssueBlock } from './blocks/InlineIssueBlock';
 import { InlineRequestBlock } from './blocks/InlineRequestBlock';
 import { DatabaseTableBlock } from './blocks/DatabaseTableBlock';
+import { CalloutBlock } from './blocks/CalloutBlock';
+
+export const CalloutBlockNode = Node.create({
+  name: 'calloutBlock',
+  group: 'block',
+  atom: true,
+  draggable: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      icon: { default: '💡' },
+      tint: { default: 'amber' },
+      title: { default: '' },
+      text: { default: '' }
+    };
+  },
+  parseHTML() {
+    return [{ tag: 'div[data-type="callout-block"]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'callout-block' })];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(CalloutBlock);
+  }
+});
 
 export const SprintCycleBlockNode = Node.create({
   name: 'sprintCycleBlock',
