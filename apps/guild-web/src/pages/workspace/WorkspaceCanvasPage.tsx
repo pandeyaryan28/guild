@@ -68,7 +68,10 @@ import {
   CanvasEditorProvider,
   type CanvasHeadingItem
 } from '../../components/canvas/CanvasEditorContext';
-import { CanvasAccessModal } from '../../components/canvas/CanvasAccessModal';
+import {
+  CanvasAccessModal,
+  normalizeCollaboratorsList
+} from '../../components/canvas/CanvasAccessModal';
 import {
   CANVAS_TEMPLATES,
   type CanvasTemplatePreset
@@ -416,7 +419,11 @@ function SidePeekCanvasDrawer({
               headings: peekHeadings,
               onSelectDoc,
               onOpenSidePeek: () => {},
-              createSubCanvas: onCreateSubCanvas
+              createSubCanvas: (params) =>
+                onCreateSubCanvas({
+                  ...params,
+                  parentId: params?.parentId !== undefined ? params.parentId : peekDoc.id
+                })
             }}
           >
             <div className="flex items-center gap-3">
@@ -448,6 +455,15 @@ function SidePeekCanvasDrawer({
                 key={peekDoc.id}
                 initialContent={peekDoc.contentJson}
                 readOnly={!canEdit}
+                activeDoc={peekDoc}
+                documents={documents}
+                onSelectDoc={onSelectDoc}
+                createSubCanvas={(params) =>
+                  onCreateSubCanvas({
+                    ...params,
+                    parentId: params?.parentId !== undefined ? params.parentId : peekDoc.id
+                  })
+                }
                 onHeadingsChange={setPeekHeadings}
                 onChange={(json, html) => {
                   saveContent(json, html, peekTitle);
@@ -567,6 +583,7 @@ export function WorkspaceCanvasPage() {
   const [showTagInput, setShowTagInput] = React.useState(false);
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
   const [headings, setHeadings] = React.useState<CanvasHeadingItem[]>([]);
+  const [templateRenderKey, setTemplateRenderKey] = React.useState(0);
 
   // Full-Width Fluid Canvas by DEFAULT (fixes wasted left/right whitespace)
   const [isFullWidth, setIsFullWidth] = React.useState<boolean>(() => {
@@ -736,6 +753,7 @@ export function WorkspaceCanvasPage() {
       tags: tpl.tags
     });
     saveContent(tpl.contentJson, '', tpl.title);
+    setTemplateRenderKey((k) => k + 1);
     setShowTemplatesModal(false);
     showToast(`Applied "${tpl.title}" template`);
   };
@@ -866,9 +884,16 @@ export function WorkspaceCanvasPage() {
   }, [documents, docSearch]);
 
   const activeVisibility = activeDoc?.visibility || 'private';
-  const collaboratorCount = (activeDoc?.collaborators || []).filter(
-    (c) => c.uid !== activeDoc?.createdBy
-  ).length;
+  const collaboratorCount = React.useMemo(() => {
+    if (!activeDoc) return 0;
+    const list = normalizeCollaboratorsList(activeDoc);
+    const uids = new Set<string>(list.map((c) => c.uid));
+    for (const uid of activeDoc.allowedUserIds || []) {
+      if (uid) uids.add(uid);
+    }
+    if (activeDoc.createdBy) uids.delete(activeDoc.createdBy);
+    return uids.size;
+  }, [activeDoc]);
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-background select-text">
@@ -1819,7 +1844,7 @@ export function WorkspaceCanvasPage() {
                             className="bg-transparent font-semibold text-foreground outline-none cursor-pointer text-xs"
                           >
                             <option value="draft">Draft</option>
-                            <option value="review">In Review</option>
+                            <option value="in_review">In Review</option>
                             <option value="published">Published</option>
                           </select>
                         </div>
@@ -2030,10 +2055,15 @@ export function WorkspaceCanvasPage() {
                     {/* ─── TipTap Unified Block Engine ─── */}
                     <div className="pt-1">
                       <CanvasBlockEditor
-                        key={activeDoc.id}
+                        key={`${activeDoc.id}-${templateRenderKey}`}
                         initialContent={activeDoc.contentJson}
                         readOnly={!canEdit}
                         smallText={smallText}
+                        activeDoc={activeDoc}
+                        documents={documents}
+                        onSelectDoc={handleSelectDoc}
+                        onOpenSidePeek={(id) => setSidePeekDocId(id)}
+                        createSubCanvas={handleCreateSubCanvasFromBlock}
                         onHeadingsChange={setHeadings}
                         onChange={(json, html) => {
                           saveContent(json, html, localTitle);

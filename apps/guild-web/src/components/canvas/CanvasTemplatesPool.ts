@@ -22,22 +22,28 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
         {
           type: 'calloutBlock',
           attrs: {
-            variant: 'info',
-            text: 'Executive Summary: Define problem statement, user personas, measurable success metrics, and milestone database below.'
+            icon: '💡',
+            tint: 'indigo',
+            title: 'Executive Summary',
+            text: 'Define the problem statement, user personas, measurable success metrics, and milestone database below.'
           }
         },
         {
           type: 'columnsBlock',
           attrs: {
-            columns: 2,
-            col1Title: '🎯 Problem & Opportunity',
-            col1Body:
-              'Users need a unified workspace where pages, sub-canvases, and multi-view databases coexist with granular privacy controls.',
-            col2Title: '📈 Success Metrics (KPIs)',
-            col2Body:
-              '• 45% faster spec-to-sprint cycle time\n• 100% private-by-default document governance\n• Zero context switching across sub-pages',
-            col3Title: 'Constraints',
-            col3Body: ''
+            columnCount: 2,
+            items: [
+              {
+                id: 'col-1',
+                title: '🎯 Problem & Opportunity',
+                body: 'Users need a unified workspace where pages, sub-canvases, and multi-view databases coexist with granular privacy controls.'
+              },
+              {
+                id: 'col-2',
+                title: '📈 Success Metrics (KPIs)',
+                body: '• 45% faster spec-to-sprint cycle time\n• 100% private-by-default document governance\n• Zero context switching across sub-pages'
+              }
+            ]
           }
         },
         {
@@ -46,10 +52,12 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
           content: [{ type: 'text', text: 'Feature Scope & Milestones Database' }]
         },
         {
-          type: 'databaseTable',
+          type: 'databaseTableBlock',
           attrs: {
             title: 'PRD Feature Deliverables',
-            viewType: 'table'
+            activeView: 'table',
+            columns: [],
+            rows: []
           }
         },
         {
@@ -60,10 +68,9 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
         {
           type: 'toggleBlock',
           attrs: {
-            summary: 'Security & Permission Inheritance Rules',
-            details:
-              'All newly created canvases default to Private (Creator-only). When shared with selected members, child sub-canvases inherit collaborator roles automatically.',
-            defaultOpen: true
+            title: 'Security & Permission Inheritance Rules',
+            body: 'All newly created canvases default to Private (Creator-only). When shared with selected members, child sub-canvases inherit collaborator roles automatically.',
+            isOpen: true
           }
         }
       ]
@@ -80,7 +87,7 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
       type: 'doc',
       content: [
         {
-          type: 'tableOfContents'
+          type: 'tableOfContentsBlock'
         },
         {
           type: 'heading',
@@ -99,13 +106,24 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
         {
           type: 'columnsBlock',
           attrs: {
-            columns: 3,
-            col1Title: '⚡ Throughput Target',
-            col1Body: '15,000 req/s sustained with p99 latency under 45ms across regional edges.',
-            col2Title: '🔒 Security Posture',
-            col2Body: 'Zero-trust Firestore rules with strict UID-based RBAC verification.',
-            col3Title: '🔄 Rollback Strategy',
-            col3Body: 'Instant feature-flag killswitch with dual-write schema compatibility.'
+            columnCount: 3,
+            items: [
+              {
+                id: 'col-1',
+                title: '⚡ Throughput Target',
+                body: '15,000 req/s sustained with p99 latency under 45ms across regional edges.'
+              },
+              {
+                id: 'col-2',
+                title: '🔒 Security Posture',
+                body: 'Zero-trust Firestore rules with strict UID-based RBAC verification.'
+              },
+              {
+                id: 'col-3',
+                title: '🔄 Rollback Strategy',
+                body: 'Instant feature-flag killswitch with dual-write schema compatibility.'
+              }
+            ]
           }
         },
         {
@@ -114,10 +132,12 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
           content: [{ type: 'text', text: '2. Implementation Phases & Owners' }]
         },
         {
-          type: 'databaseTable',
+          type: 'databaseTableBlock',
           attrs: {
             title: 'RFC Rollout Checklist',
-            viewType: 'board'
+            activeView: 'board',
+            columns: [],
+            rows: []
           }
         }
       ]
@@ -136,8 +156,10 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
         {
           type: 'calloutBlock',
           attrs: {
-            variant: 'success',
-            text: 'Active Sprint Command Center: Track real-time engineering issues, blockers, and release deliverables.'
+            icon: '🚀',
+            tint: 'emerald',
+            title: 'Active Sprint Command Center',
+            text: 'Track real-time engineering issues, blockers, and release deliverables.'
           }
         },
         {
@@ -146,9 +168,10 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
           content: [{ type: 'text', text: 'Live Sprint Kanban & Cycle Velocity' }]
         },
         {
-          type: 'sprintBoard',
+          type: 'sprintCycleBlock',
           attrs: {
-            defaultFilter: 'all'
+            title: 'Active Sprint Cycle',
+            cycleNumber: 24
           }
         },
         {
@@ -157,10 +180,12 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
           content: [{ type: 'text', text: 'Release Deliverables Timeline' }]
         },
         {
-          type: 'databaseTable',
+          type: 'databaseTableBlock',
           attrs: {
             title: 'Sprint Deliverables & QA Sign-off',
-            viewType: 'timeline'
+            activeView: 'timeline',
+            columns: [],
+            rows: []
           }
         }
       ]
@@ -179,15 +204,19 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
         {
           type: 'columnsBlock',
           attrs: {
-            columns: 2,
-            col1Title: '🧭 Core Team Principles',
-            col1Body:
-              '1. Radical Minimalism & Clarity\n2. Private-by-Default Ownership\n3. Ship iteratively with measurable quality',
-            col2Title: '🔗 Essential Rituals',
-            col2Body:
-              '• Monday 9:30 AM — Sprint Planning\n• Wednesday 2:00 PM — Design & Architecture Review\n• Friday 4:00 PM — Demo & Retro',
-            col3Title: '',
-            col3Body: ''
+            columnCount: 2,
+            items: [
+              {
+                id: 'col-1',
+                title: '🧭 Core Team Principles',
+                body: '1. Radical Minimalism & Clarity\n2. Private-by-Default Ownership\n3. Ship iteratively with measurable quality'
+              },
+              {
+                id: 'col-2',
+                title: '🔗 Essential Rituals',
+                body: '• Monday 9:30 AM — Sprint Planning\n• Wednesday 2:00 PM — Design & Architecture Review\n• Friday 4:00 PM — Demo & Retro'
+              }
+            ]
           }
         },
         {
@@ -196,10 +225,12 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
           content: [{ type: 'text', text: 'Resource & Documentation Gallery' }]
         },
         {
-          type: 'databaseTable',
+          type: 'databaseTableBlock',
           attrs: {
             title: 'Team Playbooks & Guides',
-            viewType: 'gallery'
+            activeView: 'gallery',
+            columns: [],
+            rows: []
           }
         },
         {
@@ -210,10 +241,9 @@ export const CANVAS_TEMPLATES: CanvasTemplatePreset[] = [
         {
           type: 'toggleBlock',
           attrs: {
-            summary: 'How do I create a nested sub-canvas or database inside a row?',
-            details:
-              'Type /page anywhere to embed a nested sub-canvas, or hover over any row in a Database and click "Open" to open that row as its own full canvas with nested blocks and sub-databases.',
-            defaultOpen: true
+            title: 'How do I create a nested sub-canvas or database inside a row?',
+            body: 'Type /page anywhere to embed a nested sub-canvas, or hover over any row in a Database and click "Open" to open that row as its own full canvas with nested blocks and sub-databases.',
+            isOpen: true
           }
         }
       ]

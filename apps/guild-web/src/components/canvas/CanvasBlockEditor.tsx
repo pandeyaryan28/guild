@@ -57,7 +57,11 @@ import {
   TableOfContentsBlockNode,
   BookmarkEmbedBlockNode
 } from './canvasExtensions';
-import { CanvasEditorContext, type HeadingItem } from './CanvasEditorContext';
+import {
+  CanvasEditorContext,
+  useCanvasEditorContext,
+  type HeadingItem
+} from './CanvasEditorContext';
 import './CanvasBlockEditor.css';
 
 export interface CanvasBlockEditorProps {
@@ -322,13 +326,19 @@ export function CanvasBlockEditor({
   autoFocus = false,
   readOnly = false,
   smallText = false,
-  activeDoc = null,
-  documents = [],
-  onSelectDoc = () => {},
+  activeDoc,
+  documents,
+  onSelectDoc,
   onOpenSidePeek,
-  createSubCanvas = async () => '',
+  createSubCanvas,
   onHeadingsChange
 }: CanvasBlockEditorProps) {
+  const parentCtx = useCanvasEditorContext();
+  const resolvedActiveDoc = activeDoc !== undefined ? activeDoc : parentCtx.activeDoc;
+  const resolvedDocuments = documents !== undefined ? documents : parentCtx.documents;
+  const resolvedOnSelectDoc = onSelectDoc !== undefined ? onSelectDoc : parentCtx.onSelectDoc;
+  const resolvedOnOpenSidePeek = onOpenSidePeek !== undefined ? onOpenSidePeek : parentCtx.onOpenSidePeek;
+  const resolvedCreateSubCanvas = createSubCanvas !== undefined ? createSubCanvas : parentCtx.createSubCanvas;
   const { userProfile } = useAuth();
   const workspace = useWorkspaceData();
   const members = workspace?.members || [];
@@ -1341,16 +1351,25 @@ export function CanvasBlockEditor({
 
   const contextValue = React.useMemo(
     () => ({
-      activeDoc,
-      documents,
+      activeDoc: resolvedActiveDoc,
+      documents: resolvedDocuments,
       canEdit: !readOnly,
       headings,
-      onSelectDoc,
-      onOpenSidePeek,
-      createSubCanvas,
+      onSelectDoc: resolvedOnSelectDoc,
+      onOpenSidePeek: resolvedOnOpenSidePeek,
+      createSubCanvas: resolvedCreateSubCanvas,
       scrollToPos
     }),
-    [activeDoc, documents, readOnly, headings, onSelectDoc, onOpenSidePeek, createSubCanvas, scrollToPos]
+    [
+      resolvedActiveDoc,
+      resolvedDocuments,
+      readOnly,
+      headings,
+      resolvedOnSelectDoc,
+      resolvedOnOpenSidePeek,
+      resolvedCreateSubCanvas,
+      scrollToPos
+    ]
   );
 
   return (

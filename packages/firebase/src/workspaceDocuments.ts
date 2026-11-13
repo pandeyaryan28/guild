@@ -31,6 +31,9 @@ const PRESENCE_COLLECTION = 'workspaceDocumentPresence';
  */
 export function canUserAccessDocument(docData: WorkspaceDocument, userId?: string): boolean {
   if (!userId) return true;
+  if (!docData.createdBy && !(docData as any).creatorId) {
+    return true;
+  }
   if (docData.createdBy === userId || (docData as any).creatorId === userId) {
     return true;
   }
@@ -43,6 +46,14 @@ export function canUserAccessDocument(docData: WorkspaceDocument, userId?: strin
   if (docData.permissions && Boolean(docData.permissions[userId])) {
     return true;
   }
+  if (
+    docData.collaborators &&
+    !Array.isArray(docData.collaborators) &&
+    typeof docData.collaborators === 'object' &&
+    Boolean((docData.collaborators as any)[userId])
+  ) {
+    return true;
+  }
   return false;
 }
 
@@ -53,7 +64,11 @@ export function getUserDocumentRole(
   docData: WorkspaceDocument | null | undefined,
   userId?: string
 ): CanvasAccessRole {
-  if (!docData || !userId) return 'view';
+  if (!docData) return 'edit';
+  if (!userId) return 'edit';
+  if (!docData.createdBy && !(docData as any).creatorId) {
+    return 'admin';
+  }
   if (docData.createdBy === userId || (docData as any).creatorId === userId) {
     return 'admin';
   }
@@ -237,8 +252,14 @@ export async function updateWorkspaceDocumentMeta(
   userName?: string
 ): Promise<void> {
   const ref = doc(db, COLLECTION, docId);
+  const cleanedPatch: Record<string, any> = {};
+  for (const [k, v] of Object.entries(patch)) {
+    if (v !== undefined) {
+      cleanedPatch[k] = v;
+    }
+  }
   const updates: Record<string, any> = {
-    ...patch,
+    ...cleanedPatch,
     updatedAt: serverTimestamp()
   };
 
@@ -273,9 +294,22 @@ export async function upsertCanvasCollaborator(params: {
     [creatorId]: 'admin',
     [params.collaborator.uid]: params.collaborator.role
   };
+  const sanitizedCollaborator: CanvasCollaborator = {
+    uid: params.collaborator.uid,
+    name: params.collaborator.name || 'Member',
+    email: params.collaborator.email || '',
+    username: params.collaborator.username || '',
+    avatarUrl: params.collaborator.avatarUrl || '',
+    role: params.collaborator.role || 'edit',
+    addedAt: params.collaborator.addedAt || Date.now()
+  };
+  const existingCollabMap =
+    data.collaborators && !Array.isArray(data.collaborators) && typeof data.collaborators === 'object'
+      ? data.collaborators
+      : {};
   const nextCollaborators: Record<string, CanvasCollaborator> = {
-    ...(data.collaborators || {}),
-    [params.collaborator.uid]: params.collaborator
+    ...existingCollabMap,
+    [params.collaborator.uid]: sanitizedCollaborator
   };
 
   const nextVisibility: CanvasVisibility =
@@ -473,7 +507,10 @@ export function listenToWorkspaceDocuments(
     q,
     (snap) => {
       const docs = snap.docs
-        .map((d) => d.data() as WorkspaceDocument)
+        .map((d) => {
+          const data = d.data();
+          return { ...data, id: data.id || d.id } as WorkspaceDocument;
+        })
         .filter((d) => !d.isArchived && canUserAccessDocument(d, userId))
         .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
       cb(docs);

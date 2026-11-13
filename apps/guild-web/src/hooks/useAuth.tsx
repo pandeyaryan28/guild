@@ -83,7 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             userRef,
             (snap) => {
               if (snap.exists()) {
-                const profile = snap.data() as UserProfile;
+                const rawData = snap.data();
+                const profile = { ...rawData, uid: rawData.uid || snap.id } as UserProfile;
                 setUserProfile(profile);
 
                 // Self-healing: If user is already assigned to a workspace, ensure onboarding is marked completed

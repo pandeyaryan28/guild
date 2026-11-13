@@ -29,6 +29,8 @@ export interface DocumentTreeNode extends WorkspaceDocument {
   children: DocumentTreeNode[];
 }
 
+export type WorkspaceDocumentTreeNode = DocumentTreeNode;
+
 export function buildDocumentTree(docs: WorkspaceDocument[]): DocumentTreeNode[] {
   const map = new Map<string, DocumentTreeNode>();
   const roots: DocumentTreeNode[] = [];
@@ -63,8 +65,8 @@ export function buildDocumentTree(docs: WorkspaceDocument[]): DocumentTreeNode[]
 }
 
 export function useWorkspaceDocuments(orgId: string | undefined) {
-  const { userProfile } = useAuth();
-  const userId = userProfile?.uid;
+  const { user, userProfile } = useAuth();
+  const userId = user?.uid || userProfile?.uid;
   const [documents, setDocuments] = React.useState<WorkspaceDocument[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -197,7 +199,7 @@ export function useWorkspaceDocuments(orgId: string | undefined) {
       contentHtml?: string;
       visibility?: CanvasVisibility;
     }) => {
-      if (!orgId || !userProfile) throw new Error('Not authenticated');
+      if (!orgId || !userId) throw new Error('Not authenticated');
       return await createWorkspaceDocument({
         orgId,
         parentId: params?.parentId ?? null,
@@ -207,21 +209,26 @@ export function useWorkspaceDocuments(orgId: string | undefined) {
         contentJson: params?.contentJson,
         contentHtml: params?.contentHtml,
         visibility: params?.visibility,
-        userId: userProfile.uid,
-        userName: userProfile.fullName || 'Teammate',
-        userEmail: userProfile.email || '',
-        userAvatar: userProfile.photoURL || ''
+        userId,
+        userName: userProfile?.fullName || user?.displayName || 'Teammate',
+        userEmail: userProfile?.email || user?.email || '',
+        userAvatar: userProfile?.photoURL || user?.photoURL || ''
       });
     },
-    [orgId, userProfile]
+    [orgId, userId, userProfile, user]
   );
 
   const handleUpdateMeta = React.useCallback(
     async (docId: string, patch: Partial<WorkspaceDocument>) => {
-      if (!userProfile) return;
-      await updateWorkspaceDocumentMeta(docId, patch, userProfile.uid, userProfile.fullName);
+      if (!userId) return;
+      await updateWorkspaceDocumentMeta(
+        docId,
+        patch,
+        userId,
+        userProfile?.fullName || user?.displayName || 'Teammate'
+      );
     },
-    [userProfile]
+    [userId, userProfile, user]
   );
 
   const handleDelete = React.useCallback(async (docId: string) => {
@@ -298,7 +305,8 @@ export function useWorkspaceDocuments(orgId: string | undefined) {
 }
 
 export function useWorkspaceDocument(docId: string | undefined) {
-  const { userProfile } = useAuth();
+  const { user, userProfile } = useAuth();
+  const userId = user?.uid || userProfile?.uid;
   const [document, setDocument] = React.useState<WorkspaceDocument | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [saveStatus, setSaveStatus] = React.useState<'saved' | 'saving' | 'unsaved'>('saved');
@@ -313,7 +321,7 @@ export function useWorkspaceDocument(docId: string | undefined) {
 
     setLoading(true);
     const unsubscribe = listenToWorkspaceDocument(docId, (doc) => {
-      if (doc && canUserAccessDocument(doc, userProfile?.uid)) {
+      if (doc && canUserAccessDocument(doc, userId)) {
         setDocument(doc);
       } else {
         setDocument(null);
@@ -322,11 +330,11 @@ export function useWorkspaceDocument(docId: string | undefined) {
     });
 
     return () => unsubscribe();
-  }, [docId, userProfile?.uid]);
+  }, [docId, userId]);
 
   const accessRole: CanvasAccessRole = React.useMemo(
-    () => getUserDocumentRole(document, userProfile?.uid),
-    [document, userProfile?.uid]
+    () => getUserDocumentRole(document, userId),
+    [document, userId]
   );
 
   const canEdit = accessRole === 'admin' || accessRole === 'edit';
@@ -335,7 +343,7 @@ export function useWorkspaceDocument(docId: string | undefined) {
   // Debounced content auto-save
   const saveContent = React.useCallback(
     (contentJson: string, contentHtml?: string, title?: string) => {
-      if (!docId || !userProfile || !canEdit) return;
+      if (!docId || !userId || !canEdit) return;
       setSaveStatus('saving');
 
       if (timerRef.current) {
@@ -349,8 +357,8 @@ export function useWorkspaceDocument(docId: string | undefined) {
             contentJson,
             contentHtml,
             title,
-            userId: userProfile.uid,
-            userName: userProfile.fullName || 'Teammate'
+            userId,
+            userName: userProfile?.fullName || user?.displayName || 'Teammate'
           });
           setSaveStatus('saved');
         } catch (err) {
@@ -359,7 +367,7 @@ export function useWorkspaceDocument(docId: string | undefined) {
         }
       }, 1500);
     },
-    [docId, userProfile, canEdit]
+    [docId, userId, userProfile, user, canEdit]
   );
 
   return {
@@ -374,19 +382,20 @@ export function useWorkspaceDocument(docId: string | undefined) {
 }
 
 export function useWorkspaceDocumentPresence(docId: string | undefined) {
-  const { userProfile } = useAuth();
+  const { user, userProfile } = useAuth();
+  const userId = user?.uid || userProfile?.uid;
   const [presenceList, setPresenceList] = React.useState<WorkspaceDocumentPresence[]>([]);
 
   // 15-second heartbeat
   React.useEffect(() => {
-    if (!docId || !userProfile) return;
+    if (!docId || !userId) return;
 
     const sendHeartbeat = () => {
       updateWorkspaceDocumentPresence({
         docId,
-        userId: userProfile.uid,
-        userName: userProfile.fullName || 'Teammate',
-        avatarUrl: userProfile.photoURL || null
+        userId,
+        userName: userProfile?.fullName || user?.displayName || 'Teammate',
+        avatarUrl: userProfile?.photoURL || user?.photoURL || null
       }).catch((err) => {
         console.warn('[useWorkspaceDocumentPresence] heartbeat failed:', err);
       });
@@ -400,9 +409,9 @@ export function useWorkspaceDocumentPresence(docId: string | undefined) {
 
     return () => {
       clearInterval(interval);
-      removeWorkspaceDocumentPresence(docId, userProfile.uid).catch(() => {});
+      removeWorkspaceDocumentPresence(docId, userId).catch(() => {});
     };
-  }, [docId, userProfile]);
+  }, [docId, userId, userProfile, user]);
 
   // Real-time listener for active document viewers
   React.useEffect(() => {

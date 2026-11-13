@@ -21,6 +21,7 @@ import type {
   WorkspaceDocument,
   CanvasVisibility,
   CanvasAccessRole,
+  CanvasCollaborator,
   UserProfile
 } from '@guild/types';
 
@@ -34,14 +35,7 @@ interface CanvasAccessModalProps {
   childCount: number;
   onUpsertCollaborator: (
     docId: string,
-    targetUser: {
-      uid: string;
-      fullName: string;
-      email: string;
-      photoURL?: string;
-      designation?: string;
-    },
-    role: CanvasAccessRole,
+    collaborator: CanvasCollaborator,
     cascadeToChildren?: boolean
   ) => Promise<void>;
   onRemoveCollaborator: (
@@ -82,6 +76,19 @@ const ROLE_OPTIONS: {
   }
 ];
 
+export function normalizeCollaboratorsList(
+  docData: WorkspaceDocument | null | undefined
+): CanvasCollaborator[] {
+  if (!docData || !docData.collaborators) return [];
+  if (Array.isArray(docData.collaborators)) {
+    return docData.collaborators.filter(Boolean);
+  }
+  if (typeof docData.collaborators === 'object') {
+    return Object.values(docData.collaborators).filter(Boolean);
+  }
+  return [];
+}
+
 export function CanvasAccessModal({
   isOpen,
   onClose,
@@ -102,25 +109,57 @@ export function CanvasAccessModal({
 
   const visibility: CanvasVisibility = document.visibility || 'private';
 
-  // Collaborators list excluding creator
+  // Collaborators list excluding creator (handles both Record<uid, CanvasCollaborator> and array)
+  const allCollaborators = React.useMemo(
+    () => normalizeCollaboratorsList(document),
+    [document]
+  );
+
   const collaborators = React.useMemo(() => {
-    const list = document.collaborators || [];
-    return list.filter((c) => c.uid !== document.createdBy);
-  }, [document.collaborators, document.createdBy]);
+    const byUid = new Map<string, CanvasCollaborator>();
+    for (const c of allCollaborators) {
+      if (c && c.uid && c.uid !== document.createdBy) {
+        byUid.set(c.uid, c);
+      }
+    }
+    // Also include any UIDs in allowedUserIds that aren't in collaborators map yet
+    for (const uid of document.allowedUserIds || []) {
+      if (uid && uid !== document.createdBy && !byUid.has(uid)) {
+        const foundMember = orgMembers.find((m) => m.uid === uid);
+        byUid.set(uid, {
+          uid,
+          name: foundMember?.fullName || foundMember?.username || 'Collaborator',
+          email: foundMember?.email || '',
+          avatarUrl: foundMember?.photoURL || '',
+          role: document.permissions?.[uid] || 'edit',
+          addedAt: Date.now()
+        });
+      }
+    }
+    return Array.from(byUid.values());
+  }, [allCollaborators, document.createdBy, document.allowedUserIds, document.permissions, orgMembers]);
 
   // Creator profile from orgMembers or fallback
   const creatorProfile = React.useMemo(() => {
     const found = orgMembers.find((m) => m.uid === document.createdBy);
-    if (found) return found;
-    const fromCollab = (document.collaborators || []).find((c) => c.uid === document.createdBy);
+    if (found) {
+      return {
+        uid: found.uid,
+        name: found.fullName || found.username || 'Owner',
+        email: found.email || '',
+        avatarUrl: found.photoURL || '',
+        designation: found.designation || 'Canvas Creator'
+      };
+    }
+    const fromCollab = allCollaborators.find((c) => c.uid === document.createdBy);
     return {
       uid: document.createdBy,
-      fullName: fromCollab?.fullName || document.createdByName || 'Canvas Creator',
+      name: fromCollab?.name || document.creatorName || 'Canvas Creator',
       email: fromCollab?.email || '',
-      photoURL: fromCollab?.photoURL || document.createdByAvatar,
-      designation: fromCollab?.designation || 'Owner'
+      avatarUrl: fromCollab?.avatarUrl || '',
+      designation: 'Canvas Creator'
     };
-  }, [orgMembers, document]);
+  }, [orgMembers, document, allCollaborators]);
 
   // Filter org members available to invite
   const inviteCandidates = React.useMemo(() => {
@@ -149,12 +188,13 @@ export function CanvasAccessModal({
         document.id,
         {
           uid: member.uid,
-          fullName: member.fullName || member.username || 'Member',
+          name: member.fullName || member.username || 'Member',
           email: member.email || '',
-          photoURL: member.photoURL,
-          designation: member.designation
+          username: member.username,
+          avatarUrl: member.photoURL || '',
+          role: selectedRole,
+          addedAt: Date.now()
         },
-        selectedRole,
         cascadeToChildren
       );
       setMemberSearch('');
@@ -163,20 +203,18 @@ export function CanvasAccessModal({
     }
   };
 
-  const handleChangeRole = async (
-    collab: {
-      uid: string;
-      fullName: string;
-      email: string;
-      photoURL?: string;
-      designation?: string;
-    },
-    nextRole: CanvasAccessRole
-  ) => {
+  const handleChangeRole = async (collab: CanvasCollaborator, nextRole: CanvasAccessRole) => {
     if (!canManageAccess) return;
     setBusyUid(collab.uid);
     try {
-      await onUpsertCollaborator(document.id, collab, nextRole, cascadeToChildren);
+      await onUpsertCollaborator(
+        document.id,
+        {
+          ...collab,
+          role: nextRole
+        },
+        cascadeToChildren
+      );
     } finally {
       setBusyUid(null);
     }
@@ -425,20 +463,20 @@ export function CanvasAccessModal({
                   <div className="flex items-center justify-between gap-2 px-3.5 py-2.5">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold text-xs flex items-center justify-center shrink-0 overflow-hidden">
-                        {creatorProfile.photoURL ? (
+                        {creatorProfile.avatarUrl ? (
                           <img
-                            src={creatorProfile.photoURL}
-                            alt={creatorProfile.fullName}
+                            src={creatorProfile.avatarUrl}
+                            alt={creatorProfile.name}
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span>{(creatorProfile.fullName || 'O').charAt(0).toUpperCase()}</span>
+                          <span>{(creatorProfile.name || 'O').charAt(0).toUpperCase()}</span>
                         )}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs font-bold text-foreground truncate">
-                            {creatorProfile.fullName}
+                            {creatorProfile.name}
                           </span>
                           {creatorProfile.uid === currentUserId && (
                             <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-primary/10 text-primary font-semibold">
@@ -462,6 +500,9 @@ export function CanvasAccessModal({
                   {collaborators.map((collab) => {
                     const currentRole =
                       document.permissions?.[collab.uid] || collab.role || 'view';
+                    const displayName =
+                      collab.name || (collab as any).fullName || collab.username || 'Teammate';
+                    const displayAvatar = collab.avatarUrl || (collab as any).photoURL || '';
                     return (
                       <div
                         key={collab.uid}
@@ -469,20 +510,20 @@ export function CanvasAccessModal({
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-xs flex items-center justify-center shrink-0 overflow-hidden">
-                            {collab.photoURL ? (
+                            {displayAvatar ? (
                               <img
-                                src={collab.photoURL}
-                                alt={collab.fullName}
+                                src={displayAvatar}
+                                alt={displayName}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <span>{(collab.fullName || 'U').charAt(0).toUpperCase()}</span>
+                              <span>{displayName.charAt(0).toUpperCase()}</span>
                             )}
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="text-xs font-semibold text-foreground truncate">
-                                {collab.fullName}
+                                {displayName}
                               </span>
                               {collab.uid === currentUserId && (
                                 <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-primary/10 text-primary font-semibold">
@@ -491,7 +532,7 @@ export function CanvasAccessModal({
                               )}
                             </div>
                             <div className="text-[10px] text-muted-foreground truncate">
-                              {collab.designation || collab.email}
+                              {collab.email || 'Workspace Collaborator'}
                             </div>
                           </div>
                         </div>

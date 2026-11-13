@@ -206,7 +206,12 @@ export function WorkspaceDataProvider({ children }: { children: React.ReactNode 
     }
     const q = query(collection(db, 'users'), where('organizationId', '==', orgId));
     return onSnapshot(q, (snap) => {
-      setMembers(snap.docs.map((d) => d.data() as UserProfile));
+      setMembers(
+        snap.docs.map((d) => {
+          const data = d.data();
+          return { ...data, uid: data.uid || d.id } as UserProfile;
+        })
+      );
     });
   }, [orgId]);
 
