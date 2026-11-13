@@ -4,6 +4,123 @@ import { InlineIssueBlock } from './blocks/InlineIssueBlock';
 import { InlineRequestBlock } from './blocks/InlineRequestBlock';
 import { DatabaseTableBlock } from './blocks/DatabaseTableBlock';
 import { CalloutBlock } from './blocks/CalloutBlock';
+import { SubCanvasBlock } from './blocks/SubCanvasBlock';
+import { ToggleBlock } from './blocks/ToggleBlock';
+import { ColumnsBlock } from './blocks/ColumnsBlock';
+import { TableOfContentsBlock } from './blocks/TableOfContentsBlock';
+import { BookmarkEmbedBlock } from './blocks/BookmarkEmbedBlock';
+
+export const SubCanvasBlockNode = Node.create({
+  name: 'subCanvasBlock',
+  group: 'block',
+  atom: true,
+  draggable: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      childDocId: { default: null },
+      title: { default: 'Untitled Sub-Canvas' },
+      icon: { default: 'FileText' }
+    };
+  },
+  parseHTML() {
+    return [{ tag: 'div[data-type="sub-canvas-block"]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'sub-canvas-block' })];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(SubCanvasBlock);
+  }
+});
+
+export const ToggleBlockNode = Node.create({
+  name: 'toggleBlock',
+  group: 'block',
+  atom: true,
+  draggable: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      title: { default: '' },
+      body: { default: '' },
+      isOpen: { default: true }
+    };
+  },
+  parseHTML() {
+    return [{ tag: 'div[data-type="toggle-block"]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'toggle-block' })];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(ToggleBlock);
+  }
+});
+
+export const ColumnsBlockNode = Node.create({
+  name: 'columnsBlock',
+  group: 'block',
+  atom: true,
+  draggable: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      columnCount: { default: 2 },
+      items: { default: [] }
+    };
+  },
+  parseHTML() {
+    return [{ tag: 'div[data-type="columns-block"]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'columns-block' })];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(ColumnsBlock);
+  }
+});
+
+export const TableOfContentsBlockNode = Node.create({
+  name: 'tableOfContentsBlock',
+  group: 'block',
+  atom: true,
+  draggable: true,
+  selectable: true,
+  parseHTML() {
+    return [{ tag: 'div[data-type="table-of-contents-block"]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'table-of-contents-block' })];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(TableOfContentsBlock);
+  }
+});
+
+export const BookmarkEmbedBlockNode = Node.create({
+  name: 'bookmarkEmbedBlock',
+  group: 'block',
+  atom: true,
+  draggable: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      url: { default: '' },
+      title: { default: '' },
+      description: { default: '' }
+    };
+  },
+  parseHTML() {
+    return [{ tag: 'div[data-type="bookmark-embed-block"]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'bookmark-embed-block' })];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(BookmarkEmbedBlock);
+  }
+});
 
 export const CalloutBlockNode = Node.create({
   name: 'calloutBlock',
@@ -126,6 +243,7 @@ export const DatabaseTableBlockNode = Node.create({
   addAttributes() {
     return {
       title: { default: '' },
+      activeView: { default: 'table' },
       columns: { default: [] },
       rows: { default: [] }
     };

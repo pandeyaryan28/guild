@@ -369,14 +369,53 @@ service cloud.firestore {
     // ─── WORKSPACE (DOCUMENTS, ISSUES, CYCLES & DATABASES) ───────────────────
 
     match /workspaceDocuments/{documentId} {
-      allow read: if isMemberOfOrg(resource.data.orgId);
-      allow create: if isNewDocInMyOrg();
-      allow update: if isDocInMyOrg();
+      allow read: if isMemberOfOrg(resource.data.orgId) && (
+        resource.data.createdBy == request.auth.uid ||
+        ('creatorId' in resource.data && resource.data.creatorId == request.auth.uid) ||
+        ('allowedUserIds' in resource.data && resource.data.allowedUserIds is list && request.auth.uid in resource.data.allowedUserIds) ||
+        ('permissions' in resource.data && resource.data.permissions is map && request.auth.uid in resource.data.permissions) ||
+        ('visibility' in resource.data && resource.data.visibility == 'workspace')
+      );
+
+      allow create: if isNewDocInMyOrg() &&
+        request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isDocInMyOrg() && (
+        resource.data.createdBy == request.auth.uid ||
+        ('creatorId' in resource.data && resource.data.creatorId == request.auth.uid) ||
+        ('permissions' in resource.data && resource.data.permissions is map &&
+          request.auth.uid in resource.data.permissions &&
+          resource.data.permissions[request.auth.uid] in ['admin', 'edit']) ||
+        ('allowedUserIds' in resource.data && resource.data.allowedUserIds is list &&
+          request.auth.uid in resource.data.allowedUserIds &&
+          (!('permissions' in resource.data) ||
+           !(request.auth.uid in resource.data.permissions) ||
+           resource.data.permissions[request.auth.uid] in ['admin', 'edit'])) ||
+        ('visibility' in resource.data && resource.data.visibility == 'workspace')
+      ) && (
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['visibility', 'allowedUserIds', 'permissions', 'createdBy', 'orgId']) ||
+        (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdBy', 'orgId']) && (
+            resource.data.createdBy == request.auth.uid ||
+            ('creatorId' in resource.data && resource.data.creatorId == request.auth.uid) ||
+            ('permissions' in resource.data && resource.data.permissions is map &&
+              request.auth.uid in resource.data.permissions &&
+              resource.data.permissions[request.auth.uid] == 'admin')
+          )
+        )
+      );
+
       allow delete: if isDocInMyOrg() && (
         ('createdBy' in resource.data && request.auth.uid == resource.data.createdBy) ||
         ('creatorId' in resource.data && request.auth.uid == resource.data.creatorId) ||
-        isOrgAdminOrOwner(resource.data.orgId)
+        ('permissions' in resource.data && resource.data.permissions is map &&
+          request.auth.uid in resource.data.permissions &&
+          resource.data.permissions[request.auth.uid] == 'admin')
       );
+    }
+
+    match /workspaceDocumentPresence/{presenceId} {
+      allow read, create, update, delete: if isAuth();
     }
 
     match /workspaceIssues/{issueId} {

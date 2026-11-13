@@ -626,10 +626,31 @@ export interface DemoRequest {
 
 export type DocumentStatus = 'draft' | 'in_review' | 'published' | 'archived';
 
+export type CanvasVisibility = 'private' | 'shared' | 'workspace';
+export type CanvasAccessRole = 'admin' | 'edit' | 'view'; // Full Access | Can Edit | Can View
+
+export interface CanvasCollaborator {
+  uid: string;
+  name: string;
+  email?: string;
+  username?: string;
+  avatarUrl?: string;
+  role: CanvasAccessRole;
+  addedAt: number;
+}
+
+export interface CanvasCustomProperty {
+  id: string;
+  name: string;
+  type: 'text' | 'url' | 'date' | 'person' | 'select';
+  value: any;
+}
+
 export interface WorkspaceDocument {
   id: string;
   orgId: string;
   parentId: string | null;          // null = Root level page; string = nested subpage
+  parentDatabaseRowId?: string | null; // Set when this canvas backs a specific Database Row
   title: string;
   icon?: string;                    // Emoji character or Lucide icon token
   coverUrl?: string | null;         // Banner image header
@@ -644,12 +665,26 @@ export interface WorkspaceDocument {
   isArchived: boolean;
   isFavorite: boolean;
   orderIndex: number;               // Lexicographical or floating order index for drag-and-drop
-  
-  // Notion-style properties
+
+  // Notion Access Control & Top-Down Inheritance (Private by Default)
+  visibility?: CanvasVisibility;                      // Default: 'private'
+  allowedUserIds?: string[];                          // Always includes createdBy + invited UIDs
+  permissions?: Record<string, CanvasAccessRole>;     // uid -> 'admin' | 'edit' | 'view'
+  collaborators?: Record<string, CanvasCollaborator>; // Rich collaborator entries for Share Modal
+  inheritPermissions?: boolean;                       // Default: true for nested sub-pages
+
+  // Notion Page Layout & Display Settings
+  fullWidth?: boolean;                                // Default: true (fluid space utilization)
+  smallText?: boolean;                                // Default: false (compact typography density)
+  showToc?: boolean;                                  // Default: true on wide screens
+
+  // Notion & Linear Page Properties
   tags?: string[];
   status?: DocumentStatus;
   linkedIssueIds?: string[];        // Relational links to Linear-style issues
   linkedCycleId?: string | null;
+  linkedProjectId?: string | null;
+  customProperties?: CanvasCustomProperty[];
 }
 
 export interface WorkspaceDocumentPresence {
@@ -711,7 +746,7 @@ export interface WorkspaceCycle {
   updatedAt: Timestamp;
 }
 
-export type DatabaseViewType = 'table' | 'board' | 'list' | 'gallery';
+export type DatabaseViewType = 'table' | 'board' | 'list' | 'gallery' | 'timeline';
 export type PropertyType = 'text' | 'number' | 'select' | 'multi_select' | 'status' | 'date' | 'person' | 'checkbox' | 'url';
 
 export interface DatabasePropertyDefinition {
