@@ -594,164 +594,156 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
   }, [summaryMode, rows, filteredRows.length, checkCol, statusCol, columns]);
 
   return (
-    <NodeViewWrapper className="my-6 not-prose">
-      <div className="relative group/db rounded-2xl border border-border dark:border-border-strong bg-surface/90 dark:bg-surface/55 backdrop-blur-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
-        {/* ─── Top Bar: Database Title + View Switcher Tabs + Search & Filters ─── */}
-        <div className="p-3.5 sm:px-5 flex flex-col gap-3 border-b border-border/80 bg-secondary/30 dark:bg-secondary/15">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Title + Record Count */}
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shadow-xs shrink-0">
-                <TableIcon className="w-4 h-4" />
-              </div>
-
-              {isEditingTitle && canEdit ? (
-                <input
-                  type="text"
-                  autoFocus
-                  placeholder="Database title..."
-                  value={tableTitle}
-                  onChange={(e) => setTableTitle(e.target.value)}
-                  onBlur={() => {
-                    setIsEditingTitle(false);
-                    persistData(columns, rows, tableTitle);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      setIsEditingTitle(false);
-                      persistData(columns, rows, tableTitle);
-                    }
-                    if (e.key === 'Escape') {
-                      setIsEditingTitle(false);
-                    }
-                  }}
-                  className="bg-transparent border-b border-primary text-sm font-bold text-foreground placeholder:text-muted-foreground/40 outline-none px-1"
-                />
-              ) : (
-                <h4
-                  onClick={() => canEdit && setIsEditingTitle(true)}
-                  className="text-sm font-bold text-foreground hover:text-primary cursor-pointer tracking-tight transition-colors truncate"
-                  title="Click to rename database"
-                >
-                  {tableTitle || (
-                    <span className="text-muted-foreground/60 font-semibold">Untitled Database</span>
-                  )}
-                </h4>
-              )}
-
-              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border shrink-0">
-                {filteredRows.length} {filteredRows.length === 1 ? 'item' : 'items'}
-              </span>
+    <NodeViewWrapper className="my-3.5 not-prose">
+      <div className="relative group/db rounded-xl border border-border/60 dark:border-border-strong bg-surface/50 dark:bg-surface/20 transition-all duration-200 overflow-hidden">
+        {/* ─── Top Bar: Single-Row Consolidated Notion-Style Header ─── */}
+        <div className="px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 border-b border-border/50 bg-secondary/20 dark:bg-secondary/10">
+          {/* Left: Icon + Title + View Tabs */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <TableIcon className="w-3.5 h-3.5" />
             </div>
 
-            {/* Right Controls: View Switcher Pills + Delete */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Notion 5-View Switcher */}
-              <div className="inline-flex items-center p-0.5 rounded-xl bg-surface/80 dark:bg-surface/40 border border-border shadow-2xs">
-                {VIEW_TABS.map((vt) => {
-                  const Icon = vt.icon;
-                  const isActive = activeView === vt.id;
-                  return (
-                    <button
-                      key={vt.id}
-                      type="button"
-                      onClick={() => handleSwitchView(vt.id)}
-                      className={cn(
-                        'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer active:scale-95',
-                        isActive
-                          ? 'bg-primary text-primary-foreground shadow-xs'
-                          : 'text-muted-foreground hover:text-foreground'
-                      )}
-                    >
-                      <Icon className="w-3 h-3" />
-                      <span className="hidden sm:inline">{vt.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+            {isEditingTitle && canEdit ? (
+              <input
+                type="text"
+                autoFocus
+                placeholder="Database title..."
+                value={tableTitle}
+                onChange={(e) => setTableTitle(e.target.value)}
+                onBlur={() => {
+                  setIsEditingTitle(false);
+                  persistData(columns, rows, tableTitle);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setIsEditingTitle(false);
+                    persistData(columns, rows, tableTitle);
+                  }
+                  if (e.key === 'Escape') {
+                    setIsEditingTitle(false);
+                  }
+                }}
+                className="bg-transparent border-b border-primary text-xs font-bold text-foreground placeholder:text-muted-foreground/40 outline-none px-1"
+              />
+            ) : (
+              <h4
+                onClick={() => canEdit && setIsEditingTitle(true)}
+                className="text-xs font-bold text-foreground hover:text-primary cursor-pointer tracking-tight transition-colors truncate"
+                title="Click to rename database"
+              >
+                {tableTitle || (
+                  <span className="text-muted-foreground/60 font-medium">Untitled Database</span>
+                )}
+              </h4>
+            )}
 
-              {canEdit && (
-                <button
-                  type="button"
-                  onClick={() => deleteNode()}
-                  title="Remove Database Block"
-                  className="opacity-0 group-hover/db:opacity-100 p-1.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
+            <div className="h-3.5 w-px bg-border/60 mx-0.5 shrink-0" />
+
+            {/* View Switcher Tabs */}
+            <div className="flex items-center gap-0.5 overflow-x-auto custom-scrollbar">
+              {VIEW_TABS.map((vt) => {
+                const Icon = vt.icon;
+                const isActive = activeView === vt.id;
+                return (
+                  <button
+                    key={vt.id}
+                    type="button"
+                    onClick={() => handleSwitchView(vt.id)}
+                    className={cn(
+                      'flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium transition-all cursor-pointer',
+                      isActive
+                        ? 'bg-surface dark:bg-surface/80 text-foreground font-semibold shadow-2xs'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                    )}
+                  >
+                    <Icon className="w-3 h-3" />
+                    <span>{vt.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Filter, Sort & Search Sub-Toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-            <div className="flex items-center gap-2 flex-wrap flex-1 min-w-[200px]">
-              {/* Search Input */}
-              <div className="relative w-44 sm:w-56">
-                <Search className="w-3 h-3 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Filter records..."
-                  className="w-full pl-7 pr-6 py-1 rounded-lg bg-surface/80 dark:bg-surface/40 border border-border text-[11px] text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-primary"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-
-              {/* Status Filter Pill */}
-              {statusCol && statusCol.options && (
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-2.5 py-1 rounded-lg bg-surface/80 dark:bg-surface/40 border border-border text-[11px] font-medium text-foreground outline-none cursor-pointer"
+          {/* Right: Search, Filter, Sort, New */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="w-3 h-3 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Filter..."
+                className="w-24 sm:w-36 pl-6 pr-5 py-0.5 rounded-md bg-surface/70 dark:bg-surface/40 border border-border/50 text-[11px] text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-primary transition-all"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  <option value="all">All {statusCol.name}</option>
-                  {statusCol.options.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
+                  <X className="w-3 h-3" />
+                </button>
               )}
-
-              {/* Sort Toggle Button */}
-              <button
-                type="button"
-                onClick={() =>
-                  setSortDir((prev) => (prev === 'none' ? 'asc' : prev === 'asc' ? 'desc' : 'none'))
-                }
-                className={cn(
-                  'inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-colors cursor-pointer',
-                  sortDir !== 'none'
-                    ? 'bg-primary/10 border-primary/30 text-primary font-semibold'
-                    : 'bg-surface/80 dark:bg-surface/40 border-border text-muted-foreground hover:text-foreground'
-                )}
-                title="Sort by primary column"
-              >
-                <ArrowUpDown className="w-3 h-3" />
-                <span>
-                  Sort {sortDir === 'asc' ? '(A→Z)' : sortDir === 'desc' ? '(Z→A)' : ''}
-                </span>
-              </button>
             </div>
+
+            {/* Status Filter Pill */}
+            {statusCol && statusCol.options && (
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-2 py-0.5 rounded-md bg-surface/70 dark:bg-surface/40 border border-border/50 text-[11px] font-medium text-foreground outline-none cursor-pointer max-w-[110px] truncate"
+              >
+                <option value="all">All</option>
+                {statusCol.options.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Sort Toggle Button */}
+            <button
+              type="button"
+              onClick={() =>
+                setSortDir((prev) => (prev === 'none' ? 'asc' : prev === 'asc' ? 'desc' : 'none'))
+              }
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-medium transition-colors cursor-pointer',
+                sortDir !== 'none'
+                  ? 'bg-primary/10 border-primary/30 text-primary font-semibold'
+                  : 'bg-surface/70 dark:bg-surface/40 border-border/50 text-muted-foreground hover:text-foreground'
+              )}
+              title="Sort by primary column"
+            >
+              <ArrowUpDown className="w-3 h-3" />
+              <span className="hidden sm:inline">
+                {sortDir === 'asc' ? 'A→Z' : sortDir === 'desc' ? 'Z→A' : 'Sort'}
+              </span>
+            </button>
 
             {canEdit && (
               <button
                 type="button"
                 onClick={() => addRow()}
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 active:scale-95 transition-all shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90 active:scale-95 transition-all shadow-2xs cursor-pointer"
+                title="Add new row"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>New Item</span>
+                <Plus className="w-3 h-3" />
+                <span>New</span>
+              </button>
+            )}
+
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => deleteNode()}
+                title="Remove Database Block"
+                className="opacity-0 group-hover/db:opacity-100 p-1 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded transition-all cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -762,15 +754,15 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-border bg-secondary/40 dark:bg-secondary/20 select-none">
-                  <th className="w-10 min-w-10 px-3 py-2 text-center text-[10px] font-bold text-muted-foreground uppercase border-r border-border/50">
+                <tr className="border-b border-border/50 bg-secondary/30 dark:bg-secondary/15 select-none">
+                  <th className="w-8 min-w-8 px-2 py-1.5 text-center text-[10px] font-bold text-muted-foreground uppercase border-r border-border/40">
                     #
                   </th>
                   {columns.map((col) => (
                     <th
                       key={col.id}
                       style={{ width: `${col.width || 160}px`, minWidth: `${col.width || 160}px` }}
-                      className="group/colHeader px-3.5 py-2.5 font-semibold text-foreground/90 border-r border-border/50 relative select-none"
+                      className="group/colHeader px-2.5 py-1.5 font-semibold text-foreground/90 border-r border-border/40 relative select-none"
                     >
                       <div className="flex items-center justify-between gap-1.5 pr-2">
                         <span className="flex items-center gap-1.5 min-w-0 flex-1">
@@ -946,9 +938,9 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                     return (
                       <tr
                         key={row.id}
-                        className="group/row border-b border-border/50 hover:bg-secondary/30 dark:hover:bg-secondary/15 transition-colors"
+                        className="group/row border-b border-border/40 hover:bg-secondary/30 dark:hover:bg-secondary/15 transition-colors"
                       >
-                        <td className="w-10 min-w-10 px-3 py-2 text-center text-muted-foreground font-mono text-[10px] border-r border-border/50 relative">
+                        <td className="w-8 min-w-8 px-2 py-1.5 text-center text-muted-foreground font-mono text-[10px] border-r border-border/40 relative">
                           <span className={cn(canEdit && 'group-hover/row:hidden')}>{idx + 1}</span>
                           {canEdit && (
                             <button
@@ -970,7 +962,7 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                             <td
                               key={col.id}
                               style={{ width: `${col.width || 160}px`, minWidth: `${col.width || 160}px` }}
-                              className="px-3.5 py-2 border-r border-border/50 overflow-visible"
+                              className="px-2.5 py-1.5 border-r border-border/40 overflow-visible"
                             >
                               {isPrimaryCol ? (
                                 /* Primary Column with Notion "Open as Page / Side Peek" Trigger */
@@ -1114,10 +1106,26 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                           );
                         })}
 
-                        {canEdit && <td className="px-3 py-2" />}
+                        {canEdit && <td className="px-2.5 py-1.5" />}
                       </tr>
                     );
                   })
+                )}
+                {canEdit && filteredRows.length > 0 && (
+                  <tr className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
+                    <td className="w-8 min-w-8 px-2 py-1.5 text-center text-muted-foreground font-mono text-[10px] border-r border-border/40">
+                      <Plus className="w-3 h-3 mx-auto text-muted-foreground/60" />
+                    </td>
+                    <td colSpan={columns.length + 1} className="px-2.5 py-1.5">
+                      <button
+                        type="button"
+                        onClick={() => addRow()}
+                        className="text-xs text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <span>New row</span>
+                      </button>
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -1420,20 +1428,11 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
           </div>
         )}
 
-        {/* ─── Database Footer: Add Row + Rollup Summary Selector ─── */}
-        <div className="p-3 px-5 flex items-center justify-between text-xs text-muted-foreground bg-secondary/20 border-t border-border/50">
-          {canEdit ? (
-            <button
-              type="button"
-              onClick={() => addRow()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-semibold text-xs transition-all active:scale-[0.98] cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Row</span>
-            </button>
-          ) : (
-            <span className="text-[11px] italic">View-only database</span>
-          )}
+        {/* ─── Database Footer: Rollup Summary ─── */}
+        <div className="px-3 py-1 flex items-center justify-between text-[11px] text-muted-foreground/70 border-t border-border/40 select-none">
+          <span className="font-mono text-[10px]">
+            {filteredRows.length} {filteredRows.length === 1 ? 'item' : 'items'}
+          </span>
 
           {/* Interactive Rollup Calculation Selector */}
           <button
@@ -1443,7 +1442,7 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                 prev === 'count' ? 'done_pct' : prev === 'done_pct' ? 'sum' : 'count'
               )
             }
-            className="px-2.5 py-1 rounded-lg hover:bg-secondary text-[11px] font-mono font-semibold text-foreground/80 transition-colors cursor-pointer"
+            className="px-1.5 py-0.5 rounded hover:bg-secondary text-[10px] font-mono font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             title="Click to switch rollup calculation (Count / % Done / Sum)"
           >
             {footerSummaryText}

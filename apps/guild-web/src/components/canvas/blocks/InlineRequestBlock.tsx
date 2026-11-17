@@ -118,24 +118,24 @@ export function InlineRequestBlock({ node, updateAttributes, deleteNode }: NodeV
   };
 
   return (
-    <NodeViewWrapper className="my-5 not-prose">
-      <div className="relative group/req rounded-2xl border border-border dark:border-border-strong bg-surface/90 dark:bg-surface/55 backdrop-blur-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+    <NodeViewWrapper className="my-2.5 not-prose">
+      <div className="relative group/req rounded-xl border border-border/60 dark:border-border-strong/70 bg-surface/60 dark:bg-surface/30 transition-all duration-200 overflow-hidden">
         {/* Specular status glow bar */}
         <div
           className={cn(
-            'h-1 w-full transition-colors duration-300',
+            'h-0.5 w-full transition-colors duration-300',
             status === 'approved' && 'bg-emerald-500',
             status === 'rejected' && 'bg-rose-500',
             status === 'pending' && 'bg-amber-500'
           )}
         />
 
-        <div className="p-5 sm:p-6 space-y-4">
+        <div className="p-3.5 space-y-2.5">
           {/* Header Row */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-secondary/80 dark:bg-secondary/40 border border-border flex items-center justify-center text-primary shadow-xs">
-                <FileCheck2 className="w-5 h-5" />
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-secondary/80 dark:bg-secondary/40 border border-border flex items-center justify-center text-primary shadow-xs">
+                <FileCheck2 className="w-4 h-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">

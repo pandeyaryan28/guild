@@ -50,7 +50,8 @@ import {
   Link2,
   Eye,
   LayoutGrid,
-  Columns2
+  Columns2,
+  Smile
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@guild/utils';
@@ -1187,6 +1188,12 @@ export function WorkspaceCanvasPage() {
                       <span>Print / Export PDF</span>
                     </button>
 
+                    <div className="h-px bg-border/60 my-1" />
+                    <div className="px-2.5 py-1 text-[10px] text-muted-foreground flex items-center justify-between font-mono">
+                      <span>Statistics</span>
+                      <span>{stats.words} words · {stats.readingTime}m read</span>
+                    </div>
+
                     {canManageAccess && (
                       <>
                         <div className="h-px bg-border/60 my-1" />
@@ -1360,17 +1367,8 @@ export function WorkspaceCanvasPage() {
                   </div>
                 </div>
 
-                {/* Quick Actions & Filter */}
-                <div className="p-2 space-y-1.5 border-b border-border/40">
-                  <button
-                    type="button"
-                    onClick={() => handleCreateNewCanvas(null)}
-                    className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-xs cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    New Private Canvas
-                  </button>
-
+                {/* Document Search / Filter */}
+                <div className="p-2 border-b border-border/40">
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
                     <input
@@ -1630,7 +1628,7 @@ export function WorkspaceCanvasPage() {
                   {/* Primary Fluid Canvas Container */}
                   <div
                     className={cn(
-                      'flex-1 min-w-0 py-6 space-y-5 pb-36 transition-all duration-300',
+                      'flex-1 min-w-0 py-4 sm:py-6 space-y-3 pb-36 transition-all duration-300',
                       isFullWidth
                         ? 'w-full px-6'
                         : 'max-w-4xl mx-auto px-6'
@@ -1714,51 +1712,40 @@ export function WorkspaceCanvasPage() {
                       </div>
                     )}
 
-                    {/* ─── Streamlined Horizontal Icon + Title + Quick Action Strip ─── */}
-                    <div className="group/header space-y-2.5">
-                      {/* Quick Hover Action Strip */}
+                    {/* ─── Minimalist Notion-Grade Document Header ─── */}
+                    <div className="group/header space-y-1.5">
+                      {/* Notion Hover Utility Triggers (revealed on title hover) */}
                       {canEdit && (
-                        <div className="flex items-center gap-1.5 flex-wrap text-[11px] text-muted-foreground">
-                          <button
-                            type="button"
-                            onClick={() => handleCreateNewCanvas(activeDoc.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-secondary/50 hover:bg-secondary text-foreground/85 hover:text-foreground font-medium transition-colors cursor-pointer"
-                          >
-                            <Plus className="w-3 h-3 text-primary" />
-                            <span>New Sub-Canvas</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setShowTemplatesModal(true)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-secondary/50 hover:bg-secondary text-foreground/85 hover:text-foreground font-medium transition-colors cursor-pointer"
-                          >
-                            <Sparkles className="w-3 h-3 text-primary" />
-                            <span>Templates</span>
-                          </button>
+                        <div className="h-5 flex items-center gap-2 text-xs text-muted-foreground opacity-0 group-hover/header:opacity-100 transition-opacity">
                           {!activeDoc.coverUrl && (
                             <button
                               type="button"
                               onClick={() => setShowCoverPicker(!showCoverPicker)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-secondary/40 hover:bg-secondary text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                             >
                               <ImageIcon className="w-3 h-3" />
-                              <span>Add Cover</span>
+                              <span>Add cover</span>
                             </button>
                           )}
-                          <span className="text-[10px] text-muted-foreground/60 ml-auto hidden sm:inline font-mono">
-                            {stats.words} words · {stats.readingTime} min read
-                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowIconPicker(!showIconPicker)}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                          >
+                            <Smile className="w-3 h-3" />
+                            <span>Change icon</span>
+                          </button>
                         </div>
                       )}
 
                       {/* Inline Icon + Title Row */}
-                      <div className="flex items-center gap-3.5 relative">
+                      <div className="flex items-center gap-3 relative">
                         <div className="relative shrink-0">
                           <button
                             type="button"
                             disabled={!canEdit}
                             onClick={() => setShowIconPicker(!showIconPicker)}
-                            className="w-11 h-11 rounded-2xl bg-surface/90 dark:bg-surface/50 border border-border dark:border-border-strong shadow-xs flex items-center justify-center text-primary hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:cursor-default"
+                            className="w-10 h-10 rounded-xl bg-surface/85 dark:bg-surface/50 border border-border/60 hover:border-border text-primary hover:bg-secondary transition-all flex items-center justify-center cursor-pointer disabled:cursor-default"
                             title="Change Canvas Icon"
                           >
                             <DocumentIcon icon={activeDoc.icon} className="w-5 h-5 text-primary" />
@@ -1831,10 +1818,10 @@ export function WorkspaceCanvasPage() {
                       </div>
 
                       {/* ─── Notion & Linear Properties & Metadata Strip ─── */}
-                      <div className="flex items-center gap-2 flex-wrap pt-1 pb-2 border-b border-border/50 text-xs">
+                      <div className="flex items-center gap-1.5 flex-wrap pt-0.5 pb-1 text-xs text-muted-foreground">
                         {/* Status Pill */}
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-secondary/45 dark:bg-secondary/25 border border-border">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-secondary/60 text-xs transition-colors">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                             Status
                           </span>
                           <select
@@ -1843,7 +1830,7 @@ export function WorkspaceCanvasPage() {
                             onChange={(e) =>
                               updateMeta(activeDoc.id, { status: e.target.value as DocumentStatus })
                             }
-                            className="bg-transparent font-semibold text-foreground outline-none cursor-pointer text-xs"
+                            className="bg-transparent font-medium text-foreground outline-none cursor-pointer text-xs"
                           >
                             <option value="draft">Draft</option>
                             <option value="in_review">In Review</option>
@@ -1853,7 +1840,7 @@ export function WorkspaceCanvasPage() {
 
                         {/* Linked Project Pill */}
                         {orgProjects.length > 0 && (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-secondary/45 dark:bg-secondary/25 border border-border">
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-secondary/60 text-xs transition-colors">
                             <Briefcase className="w-3 h-3 text-primary" />
                             <select
                               disabled={!canEdit}
@@ -1877,7 +1864,7 @@ export function WorkspaceCanvasPage() {
 
                         {/* Linked Sprint Cycle Pill */}
                         {cycles.length > 0 && (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-secondary/45 dark:bg-secondary/25 border border-border">
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-secondary/60 text-xs transition-colors">
                             <RefreshCw className="w-3 h-3 text-emerald-500" />
                             <select
                               disabled={!canEdit}
@@ -1905,7 +1892,7 @@ export function WorkspaceCanvasPage() {
                             <button
                               type="button"
                               onClick={() => setShowBacklinksMenu(!showBacklinksMenu)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-primary/10 border border-primary/25 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors cursor-pointer"
                             >
                               <Link2 className="w-3 h-3" />
                               <span>
@@ -1940,7 +1927,7 @@ export function WorkspaceCanvasPage() {
                         {(activeDoc.tags || []).map((tag) => (
                           <span
                             key={tag}
-                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary text-foreground text-[11px] font-medium border border-border"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-secondary text-foreground text-[11px] font-medium border border-border/40"
                           >
                             <Tag className="w-2.5 h-2.5 text-primary" />
                             <span>{tag}</span>
@@ -1983,7 +1970,7 @@ export function WorkspaceCanvasPage() {
                             <button
                               type="button"
                               onClick={() => setShowTagInput(true)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors cursor-pointer"
                             >
                               <Plus className="w-3 h-3" />
                               <span>Add Tag</span>
@@ -1992,65 +1979,33 @@ export function WorkspaceCanvasPage() {
                       </div>
                     </div>
 
-                    {/* ─── Child Sub-Canvases Tray (Pages under Pages / Canvas under Canvas) ─── */}
+                    {/* ─── Compact Child Sub-Canvases Disclosure ─── */}
                     {childCanvases.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                            <Layers className="w-3 h-3 text-primary" />
-                            Nested Sub-Canvases ({childCanvases.length})
-                          </span>
-                          {canEdit && (
-                            <button
-                              type="button"
-                              onClick={() => handleCreateNewCanvas(activeDoc.id)}
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
-                            >
-                              <Plus className="w-3 h-3" />
-                              <span>New Sub-Canvas</span>
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
-                          {childCanvases.map((child) => (
-                            <div
-                              key={child.id}
-                              onClick={() => handleSelectDoc(child.id)}
-                              className="group flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-surface/85 dark:bg-surface/50 border border-border hover:border-primary/40 shadow-2xs hover:shadow-md transition-all cursor-pointer select-none"
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
-                                  <DocumentIcon icon={child.icon} className="w-4 h-4 text-primary" />
-                                </div>
-                                <div className="min-w-0">
-                                  <div className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                                    {child.title || 'Untitled Sub-Canvas'}
-                                  </div>
-                                  <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                    {child.parentDatabaseRowId ? (
-                                      <span>Database Row Page</span>
-                                    ) : (
-                                      <span>Sub-Canvas</span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
+                      <div className="pt-0.5 pb-1">
+                        <details className="group/subpages text-xs">
+                          <summary className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer select-none font-medium py-1">
+                            <Layers className="w-3.5 h-3.5 text-primary" />
+                            <span>Sub-Canvases ({childCanvases.length})</span>
+                          </summary>
+                          <div className="mt-1.5 space-y-0.5 pl-2 border-l border-border/40">
+                            {childCanvases.map((child) => (
                               <button
+                                key={child.id}
                                 type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSidePeekDocId(child.id);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-secondary/80 hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all cursor-pointer shrink-0"
-                                title="Open in Side Peek"
+                                onClick={() => handleSelectDoc(child.id)}
+                                className="w-full flex items-center justify-between gap-2 px-2 py-1 rounded-md hover:bg-secondary/60 text-xs text-foreground group text-left transition-colors cursor-pointer"
                               >
-                                <PanelRightOpen className="w-3.5 h-3.5" />
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <DocumentIcon icon={child.icon} className="w-3.5 h-3.5 text-primary shrink-0" />
+                                  <span className="truncate font-medium">{child.title || 'Untitled Sub-Canvas'}</span>
+                                </div>
+                                <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                                  Open →
+                                </span>
                               </button>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        </details>
                       </div>
                     )}
 
