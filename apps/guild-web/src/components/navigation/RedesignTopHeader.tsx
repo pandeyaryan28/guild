@@ -252,7 +252,7 @@ export function RedesignTopHeader({
 
             <ChevronDown
               className={cn(
-                'h-3.5 w-3.5 text-muted-foreground transition-transform duration-200',
+                'h-4 w-4 text-muted-foreground transition-transform duration-200',
                 orgDropdownOpen && 'rotate-180',
               )}
             />
@@ -297,7 +297,7 @@ export function RedesignTopHeader({
                     }}
                     className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
                   >
-                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Users className="h-4 w-4 text-muted-foreground" />
                     <span>People & Directory</span>
                   </button>
 
@@ -309,7 +309,7 @@ export function RedesignTopHeader({
                     }}
                     className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
                   >
-                    <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Settings className="h-4 w-4 text-muted-foreground" />
                     <span>Workspace Settings</span>
                   </button>
 
@@ -323,10 +323,10 @@ export function RedesignTopHeader({
                       className="flex w-full items-center justify-between rounded-xl px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2.5">
-                        <Shield className="h-3.5 w-3.5 text-amber-500" />
+                        <Shield className="h-4 w-4 text-amber-500" />
                         <span>Admin Console</span>
                       </div>
-                      <ExternalLink className="h-3 w-3 text-muted-foreground/60" />
+                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/60" />
                     </button>
                   )}
                 </div>
@@ -465,7 +465,7 @@ export function RedesignTopHeader({
             />
           )}
           <span className="relative z-10 flex items-center gap-1.5">
-            <LayoutDashboard className="h-3.5 w-3.5" />
+            <LayoutDashboard className="h-4 w-4" />
             <span>Dashboard</span>
           </span>
         </button>
@@ -489,7 +489,7 @@ export function RedesignTopHeader({
             />
           )}
           <span className="relative z-10 flex items-center gap-1.5">
-            <FileText className="h-3.5 w-3.5" />
+            <FileText className="h-4 w-4" />
             <span>Workspace</span>
           </span>
         </button>
@@ -513,7 +513,7 @@ export function RedesignTopHeader({
             />
           )}
           <span className="relative z-10 flex items-center gap-1.5">
-            <MessageSquare className="h-3.5 w-3.5" />
+            <MessageSquare className="h-4 w-4" />
             <span>Chat</span>
             {unreadChatCount > 0 && (
               <span className="ml-0.5 inline-flex h-3.5 min-w-3.5 px-1 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground leading-none">
@@ -534,7 +534,7 @@ export function RedesignTopHeader({
           title="Search or jump to... (⌘K)"
         >
           <span className="flex items-center gap-1.5 truncate">
-            <Search className="h-3 w-3 shrink-0" />
+            <Search className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">Search…</span>
           </span>
           <kbd className="inline-flex items-center gap-0.5 rounded border border-border/80 bg-surface/90 dark:bg-surface/50 px-1 py-0.2 font-mono text-[9px] text-muted-foreground shrink-0 shadow-2xs">
@@ -549,7 +549,7 @@ export function RedesignTopHeader({
           className="md:hidden flex h-7 w-7 items-center justify-center rounded-full border border-border bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer active:scale-95"
           title="Search (⌘K)"
         >
-          <Search className="h-3.5 w-3.5" />
+          <Search className="h-4 w-4" />
         </button>
 
         {/* Notification Bell */}
@@ -563,7 +563,7 @@ export function RedesignTopHeader({
               notifOpen && 'bg-secondary text-foreground border-border-strong',
             )}
           >
-            <Bell className="h-3.5 w-3.5" />
+            <Bell className="h-4 w-4" />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 px-0.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground shadow-xs animate-in zoom-in-50">
                 {unreadCount > 99 ? '99+' : unreadCount}

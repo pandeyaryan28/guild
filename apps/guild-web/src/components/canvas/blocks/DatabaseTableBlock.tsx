@@ -757,18 +757,6 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
             {canEdit && (
               <button
                 type="button"
-                onClick={() => addRow()}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90 active:scale-95 transition-all shadow-2xs cursor-pointer"
-                title="Add new row"
-              >
-                <Plus className="w-3 h-3" />
-                <span>New</span>
-              </button>
-            )}
-
-            {canEdit && (
-              <button
-                type="button"
                 onClick={() => deleteNode()}
                 title="Remove Database Block"
                 className="opacity-0 group-hover/db:opacity-100 p-1 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded transition-all cursor-pointer"
@@ -856,11 +844,12 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                   ))}
 
                   {canEdit && (
-                    <th className="px-3 py-2 w-36 min-w-36 relative select-none">
+                    <th className="px-3 py-2 w-36 min-w-[140px] shrink-0 relative select-none">
                       <button
                         type="button"
                         onClick={() => setShowAddColMenu(!showAddColMenu)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-dashed border-border hover:border-primary text-[11px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-dashed border-border hover:border-primary text-xs font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+                        title="Add Property Column"
                       >
                         <Plus className="w-3.5 h-3.5" />
                         <span>Add Property</span>
@@ -970,7 +959,7 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                         key={row.id}
                         className="group/row border-b border-border/40 hover:bg-secondary/30 dark:hover:bg-secondary/15 transition-colors"
                       >
-                        <td className="w-8 min-w-8 px-2 py-1.5 text-center text-muted-foreground font-mono text-[10px] border-r border-border/40 relative">
+                        <td className="w-8 min-w-8 px-2 py-1.5 text-center text-muted-foreground font-mono text-[11px] border-r border-border/40 relative">
                           <span className={cn(canEdit && 'group-hover/row:hidden')}>{idx + 1}</span>
                           {canEdit && (
                             <button
@@ -1009,7 +998,7 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                                       value={value || ''}
                                       onChange={(e) => updateCell(row.id, col.id, e.target.value)}
                                       placeholder="Item title..."
-                                      className="w-full bg-transparent border-none text-xs text-foreground placeholder:text-muted-foreground/35 outline-none focus:ring-1 focus:ring-primary/40 rounded px-1 py-0.5 font-semibold"
+                                      className="w-full bg-transparent border-none text-[13px] sm:text-sm text-foreground placeholder:text-muted-foreground/35 outline-none focus:ring-1 focus:ring-primary/40 rounded px-1 py-0.5 font-semibold"
                                     />
                                   </div>
 
@@ -1049,7 +1038,7 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                                       value={value || ''}
                                       onChange={(e) => updateCell(row.id, col.id, e.target.value)}
                                       placeholder="Empty..."
-                                      className="w-full bg-transparent border-none text-xs text-foreground placeholder:text-muted-foreground/30 outline-none focus:ring-1 focus:ring-primary/40 rounded px-1 py-0.5 font-medium"
+                                      className="w-full bg-transparent border-none text-[13px] sm:text-sm text-foreground placeholder:text-muted-foreground/30 outline-none focus:ring-1 focus:ring-primary/40 rounded px-1 py-0.5 font-medium"
                                     />
                                   )}
 
@@ -1061,7 +1050,7 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                                         value={value || ''}
                                         onChange={(e) => updateCell(row.id, col.id, e.target.value)}
                                         placeholder="https://..."
-                                        className="w-full bg-transparent border-none text-xs text-primary underline placeholder:no-underline placeholder:text-muted-foreground/30 outline-none focus:ring-1 focus:ring-primary/40 rounded px-1 py-0.5"
+                                        className="w-full bg-transparent border-none text-[13px] sm:text-sm text-primary underline placeholder:no-underline placeholder:text-muted-foreground/30 outline-none focus:ring-1 focus:ring-primary/40 rounded px-1 py-0.5"
                                       />
                                       {value && (
                                         <a
@@ -1070,7 +1059,7 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                                           rel="noreferrer"
                                           className="text-muted-foreground hover:text-primary shrink-0"
                                         >
-                                          <ExternalLink className="w-3 h-3" />
+                                          <ExternalLink className="w-3.5 h-3.5" />
                                         </a>
                                       )}
                                     </div>
@@ -1093,7 +1082,7 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                                       type="button"
                                       onClick={() => cycleSelectValue(row.id, col)}
                                       className={cn(
-                                        'px-2 py-0.5 rounded-md border text-[11px] font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer',
+                                        'px-2 py-0.5 rounded-md border text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer',
                                         STATUS_COLORS[value] || 'bg-secondary text-foreground border-border'
                                       )}
                                       title="Click to cycle option"
@@ -1117,7 +1106,7 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                                       readOnly={!canEdit}
                                       value={value || ''}
                                       onChange={(e) => updateCell(row.id, col.id, e.target.value)}
-                                      className="bg-transparent border-none text-xs text-foreground outline-none focus:ring-1 focus:ring-primary/40 rounded px-1 py-0.5"
+                                      className="bg-transparent border-none text-[13px] sm:text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/40 rounded px-1 py-0.5"
                                     />
                                   )}
 
@@ -1127,7 +1116,7 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                                       readOnly={!canEdit}
                                       value={value ?? 0}
                                       onChange={(e) => updateCell(row.id, col.id, Number(e.target.value))}
-                                      className="w-20 bg-transparent border-none text-xs font-mono text-foreground outline-none focus:ring-1 focus:ring-primary/40 rounded px-1 py-0.5"
+                                      className="w-20 bg-transparent border-none text-[13px] sm:text-sm font-mono text-foreground outline-none focus:ring-1 focus:ring-primary/40 rounded px-1 py-0.5"
                                     />
                                   )}
                                 </>
@@ -1143,17 +1132,31 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                 )}
                 {canEdit && filteredRows.length > 0 && (
                   <tr className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
-                    <td className="w-8 min-w-8 px-2 py-1.5 text-center text-muted-foreground font-mono text-[10px] border-r border-border/40">
-                      <Plus className="w-3 h-3 mx-auto text-muted-foreground/60" />
+                    <td className="w-8 min-w-8 px-2 py-1.5 text-center text-muted-foreground font-mono text-[11px] border-r border-border/40">
+                      <Plus className="w-3.5 h-3.5 mx-auto text-muted-foreground/60" />
                     </td>
-                    <td colSpan={columns.length + 1} className="px-2.5 py-1.5">
-                      <button
-                        type="button"
-                        onClick={() => addRow()}
-                        className="text-xs text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 cursor-pointer transition-colors"
-                      >
-                        <span>New row</span>
-                      </button>
+                    <td colSpan={columns.length + 1} className="px-3 py-2">
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => addRow()}
+                          className="text-xs text-muted-foreground hover:text-primary font-medium flex items-center gap-1.5 cursor-pointer transition-colors active:scale-95"
+                          title="Add new row"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>New row</span>
+                        </button>
+                        <span className="text-border/60">•</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddColMenu(true)}
+                          className="text-xs text-muted-foreground hover:text-primary font-medium flex items-center gap-1.5 cursor-pointer transition-colors active:scale-95"
+                          title="Add property column"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add column</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )}

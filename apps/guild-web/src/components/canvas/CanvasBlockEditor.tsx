@@ -71,6 +71,7 @@ export interface CanvasBlockEditorProps {
   autoFocus?: boolean;
   readOnly?: boolean;
   smallText?: boolean;
+  fontSize?: 'compact' | 'default' | 'large';
   activeDoc?: WorkspaceDocument | null;
   documents?: WorkspaceDocument[];
   onSelectDoc?: (docId: string) => void;
@@ -326,6 +327,7 @@ export function CanvasBlockEditor({
   autoFocus = false,
   readOnly = false,
   smallText = false,
+  fontSize = 'default',
   activeDoc,
   documents,
   onSelectDoc,
@@ -482,7 +484,11 @@ export function CanvasBlockEditor({
       attributes: {
         class: cn(
           'canvas-tiptap-content focus:outline-none min-h-[460px] select-text text-foreground prose dark:prose-invert max-w-none py-1',
-          smallText && 'text-[13px] leading-relaxed'
+          fontSize === 'large'
+            ? 'canvas-text-large text-[17px] leading-relaxed'
+            : fontSize === 'compact' || smallText
+            ? 'canvas-text-compact text-[13px] leading-normal'
+            : 'canvas-text-default text-[15px] leading-relaxed'
         ),
         'data-placeholder': placeholder
       },
@@ -663,6 +669,20 @@ export function CanvasBlockEditor({
       editor.setEditable(!readOnly);
     }
   }, [editor, readOnly]);
+
+  // Keep dynamic font size class synced reactively
+  React.useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    const dom = editor.view.dom;
+    dom.classList.remove('canvas-text-compact', 'canvas-text-default', 'canvas-text-large', 'text-[13px]', 'text-[15px]', 'text-[17px]');
+    if (fontSize === 'large') {
+      dom.classList.add('canvas-text-large', 'text-[17px]');
+    } else if (fontSize === 'compact' || smallText) {
+      dom.classList.add('canvas-text-compact', 'text-[13px]');
+    } else {
+      dom.classList.add('canvas-text-default', 'text-[15px]');
+    }
+  }, [editor, fontSize, smallText]);
 
   const scrollToPos = React.useCallback(
     (pos: number) => {

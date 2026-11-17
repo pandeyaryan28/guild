@@ -51,7 +51,8 @@ import {
   Eye,
   LayoutGrid,
   Columns2,
-  Smile
+  Smile,
+  Type
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@guild/utils';
@@ -154,6 +155,7 @@ interface DocumentTreeItemProps {
   onCreateChild: (parentId: string) => void;
   onToggleFavorite: (doc: WorkspaceDocument) => void;
   onDelete: (id: string) => void;
+  onOpenAccess?: (doc: WorkspaceDocument) => void;
 }
 
 function DocumentTreeItem({
@@ -166,7 +168,8 @@ function DocumentTreeItem({
   onOpenSidePeek,
   onCreateChild,
   onToggleFavorite,
-  onDelete
+  onDelete,
+  onOpenAccess
 }: DocumentTreeItemProps) {
   const isSelected = selectedDocId === node.id;
   const hasChildren = node.children.length > 0;
@@ -203,9 +206,9 @@ function DocumentTreeItem({
           >
             {hasChildren ? (
               isExpanded ? (
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3.5 h-3.5" />
               ) : (
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-3.5 h-3.5" />
               )
             ) : (
               <span className="w-1 h-1 rounded-full bg-current opacity-50" />
@@ -214,7 +217,7 @@ function DocumentTreeItem({
 
           <DocumentIcon
             icon={node.icon}
-            className={cn('w-3.5 h-3.5 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')}
+            className={cn('w-4 h-4 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')}
           />
 
           <span className="truncate flex-1 min-w-0" title={node.title || 'Untitled'}>
@@ -222,7 +225,7 @@ function DocumentTreeItem({
           </span>
         </div>
 
-        {/* Floating Hover Actions: Add Sub-Canvas, Side Peek, Favorite, Delete */}
+        {/* Floating Hover Actions: Add Sub-Canvas, Side Peek, Share/Access, Favorite, Delete */}
         <div
           className={cn(
             'absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5 px-1 py-0.5 rounded-md shadow-xs z-10',
@@ -243,7 +246,7 @@ function DocumentTreeItem({
             )}
             title="Create Sub-Canvas inside"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
@@ -257,8 +260,24 @@ function DocumentTreeItem({
             )}
             title="Open in Side Peek"
           >
-            <PanelRightOpen className="w-3 h-3" />
+            <PanelRightOpen className="w-3.5 h-3.5" />
           </button>
+          {onOpenAccess && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenAccess(node);
+              }}
+              className={cn(
+                'p-1 rounded-md transition-colors',
+                isSelected ? 'hover:bg-primary-foreground/20 text-primary-foreground' : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
+              )}
+              title="Share & Permissions"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             type="button"
             onClick={(e) => {
@@ -275,7 +294,7 @@ function DocumentTreeItem({
             )}
             title="Favorite"
           >
-            <Star className={cn('w-3 h-3', node.isFavorite && 'fill-current')} />
+            <Star className={cn('w-3.5 h-3.5', node.isFavorite && 'fill-current')} />
           </button>
           <button
             type="button"
@@ -289,7 +308,7 @@ function DocumentTreeItem({
             )}
             title="Delete Canvas"
           >
-            <Trash2 className="w-3 h-3" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -310,6 +329,7 @@ function DocumentTreeItem({
               onCreateChild={onCreateChild}
               onToggleFavorite={onToggleFavorite}
               onDelete={onDelete}
+              onOpenAccess={onOpenAccess}
             />
           ))}
         </div>
@@ -465,6 +485,7 @@ function SidePeekCanvasDrawer({
                 key={peekDoc.id}
                 initialContent={peekDoc.contentJson}
                 readOnly={!canEdit}
+                fontSize={canvasFontSize}
                 activeDoc={peekDoc}
                 documents={documents}
                 onSelectDoc={onSelectDoc}
@@ -608,6 +629,16 @@ export function WorkspaceCanvasPage() {
   });
 
   const [smallText, setSmallText] = React.useState<boolean>(false);
+  const [canvasFontSize, setCanvasFontSize] = React.useState<'compact' | 'default' | 'large'>(() => {
+    try {
+      const saved = localStorage.getItem('guild_canvas_font_size');
+      if (saved === 'compact' || saved === 'default' || saved === 'large') return saved;
+      return 'default';
+    } catch {
+      return 'default';
+    }
+  });
+  const [showTypographyMenu, setShowTypographyMenu] = React.useState(false);
   const [showRightToc, setShowRightToc] = React.useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('guild_canvas_show_toc');
@@ -620,9 +651,27 @@ export function WorkspaceCanvasPage() {
   // Sync per-document display preferences if present
   React.useEffect(() => {
     if (activeDoc) {
-      if (typeof activeDoc.smallText === 'boolean') setSmallText(activeDoc.smallText);
+      if ((activeDoc as any).fontSize === 'compact' || (activeDoc as any).fontSize === 'default' || (activeDoc as any).fontSize === 'large') {
+        const sz = (activeDoc as any).fontSize as 'compact' | 'default' | 'large';
+        setCanvasFontSize(sz);
+        setSmallText(sz === 'compact');
+      } else if (typeof activeDoc.smallText === 'boolean') {
+        setSmallText(activeDoc.smallText);
+        setCanvasFontSize(activeDoc.smallText ? 'compact' : 'default');
+      }
     }
   }, [activeDoc?.id]);
+
+  const handleSelectFontSize = (size: 'compact' | 'default' | 'large') => {
+    setCanvasFontSize(size);
+    setSmallText(size === 'compact');
+    try {
+      localStorage.setItem('guild_canvas_font_size', size);
+    } catch {}
+    if (activeDoc && canEdit) {
+      updateMeta(activeDoc.id, { smallText: size === 'compact', fontSize: size } as any);
+    }
+  };
 
   const toggleFullWidth = () => {
     const next = !isFullWidth;
@@ -924,7 +973,7 @@ export function WorkspaceCanvasPage() {
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <Layers className="w-3.5 h-3.5 text-primary" />
+              <Layers className="w-4 h-4 text-primary" />
               <span>Canvas</span>
             </button>
             <button
@@ -937,7 +986,7 @@ export function WorkspaceCanvasPage() {
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <CheckSquare className="w-3.5 h-3.5" />
+              <CheckSquare className="w-4 h-4" />
               <span>Tasks & Requests</span>
             </button>
           </div>
@@ -949,7 +998,7 @@ export function WorkspaceCanvasPage() {
               className="p-1 rounded-lg border border-border/50 bg-surface/80 hover:bg-secondary text-foreground shadow-xs transition-colors shrink-0 cursor-pointer"
               title="Expand Document Rail (⌘\)"
             >
-              <SidebarOpen className="w-3.5 h-3.5" />
+              <SidebarOpen className="w-4 h-4" />
             </button>
           )}
 
@@ -963,7 +1012,7 @@ export function WorkspaceCanvasPage() {
                 const isLast = idx === breadcrumbs.length - 1;
                 return (
                   <React.Fragment key={crumb.id}>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
                     <button
                       type="button"
                       onClick={() => handleSelectDoc(crumb.id)}
@@ -974,7 +1023,7 @@ export function WorkspaceCanvasPage() {
                           : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
                       )}
                     >
-                      <DocumentIcon icon={crumb.icon} className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <DocumentIcon icon={crumb.icon} className="w-4 h-4 text-primary shrink-0" />
                       <span className="truncate">{crumb.title || 'Untitled'}</span>
                     </button>
                   </React.Fragment>
@@ -984,42 +1033,10 @@ export function WorkspaceCanvasPage() {
           )}
         </div>
 
-        {/* Right Controls: Share/Access Button + Presence + Save Status + Layout Controls */}
+        {/* Right Controls: Presence + Save Status + Typography / Display Control */}
         <div className="flex items-center gap-1.5 shrink-0">
           {activeTab === 'canvas' && activeDoc && (
             <>
-              {/* Share & Granular Access Control Button */}
-              <button
-                type="button"
-                onClick={() => setShowAccessModal(true)}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-xs',
-                  activeVisibility === 'private'
-                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/15'
-                    : activeVisibility === 'shared'
-                    ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/15'
-                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15'
-                )}
-                title="Manage who has access to this canvas"
-              >
-                {activeVisibility === 'private' ? (
-                  <>
-                    <Lock className="w-3 h-3" />
-                    <span>Private</span>
-                  </>
-                ) : activeVisibility === 'shared' ? (
-                  <>
-                    <Users className="w-3 h-3" />
-                    <span>Shared ({1 + collaboratorCount})</span>
-                  </>
-                ) : (
-                  <>
-                    <Globe className="w-3 h-3" />
-                    <span>Organization</span>
-                  </>
-                )}
-              </button>
-
               {/* Live Canvas Presence */}
               {presenceList.length > 0 && (
                 <div className="hidden lg:flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface/90 dark:bg-surface/50 border border-border/50 text-xs shadow-xs select-none">
@@ -1043,7 +1060,7 @@ export function WorkspaceCanvasPage() {
               )}
 
               {/* Auto-save status indicator */}
-              <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface/80 dark:bg-surface/50 border border-border/50 text-[11px] font-medium text-muted-foreground shadow-xs select-none">
+              <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface/80 dark:bg-surface/50 border border-border/50 text-[11px] font-medium text-muted-foreground shadow-xs select-none">
                 {saveStatus === 'saving' ? (
                   <>
                     <Loader2 className="w-3 h-3 animate-spin text-primary" />
@@ -1057,139 +1074,104 @@ export function WorkspaceCanvasPage() {
                 )}
               </div>
 
-              {/* Favorite toggle */}
-              <button
-                type="button"
-                onClick={() => handleToggleFavorite(activeDoc)}
-                className={cn(
-                  'p-1.5 rounded-xl border border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground transition-colors active:scale-95 cursor-pointer shadow-2xs',
-                  activeDoc.isFavorite && 'text-amber-500 fill-amber-500 bg-amber-500/10 border-amber-500/30'
-                )}
-                title={activeDoc.isFavorite ? 'Remove Favorite' : 'Add to Favorites'}
-              >
-                <Star className={cn('w-3.5 h-3.5', activeDoc.isFavorite && 'fill-current')} />
-              </button>
-
-              {/* More Actions & Display Settings Menu */}
+              {/* Apple-style Aa Typography & Display Settings */}
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setShowMoreMenu(!showMoreMenu)}
-                  className="p-1.5 rounded-xl border border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer shadow-2xs"
-                  title="Canvas Display & Options"
+                  onClick={() => setShowTypographyMenu(!showTypographyMenu)}
+                  className={cn(
+                    'flex items-center gap-1 px-2 py-1 rounded-xl border transition-all cursor-pointer shadow-xs active:scale-95',
+                    showTypographyMenu
+                      ? 'bg-secondary border-primary/40 text-primary'
+                      : 'border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground'
+                  )}
+                  title="Text Size & Display Settings"
                 >
-                  <MoreHorizontal className="w-3.5 h-3.5" />
+                  <Type className="w-3.5 h-3.5" />
+                  <span className="text-xs font-semibold">Aa</span>
+                  <ChevronDown className={cn('w-3 h-3 transition-transform duration-150', showTypographyMenu && 'rotate-180')} />
                 </button>
 
-                {showMoreMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-56 p-1.5 rounded-2xl bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-border dark:border-border-strong shadow-2xl z-40 space-y-0.5 animate-in fade-in zoom-in-95 duration-150 select-none">
-                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Layout & Display
+                {showTypographyMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-60 p-2.5 rounded-2xl bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-border dark:border-border-strong shadow-2xl z-40 space-y-2.5 animate-in fade-in zoom-in-95 duration-150 select-none">
+                    <div>
+                      <div className="px-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Text Size
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 p-0.5 rounded-xl bg-secondary/60 dark:bg-secondary/40 border border-border/50">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectFontSize('compact')}
+                          className={cn(
+                            'py-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer',
+                            canvasFontSize === 'compact'
+                              ? 'bg-surface text-primary font-bold shadow-xs'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
+                        >
+                          Compact
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectFontSize('default')}
+                          className={cn(
+                            'py-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer',
+                            canvasFontSize === 'default'
+                              ? 'bg-surface text-primary font-bold shadow-xs'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
+                        >
+                          Default
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectFontSize('large')}
+                          className={cn(
+                            'py-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer',
+                            canvasFontSize === 'large'
+                              ? 'bg-surface text-primary font-bold shadow-xs'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
+                        >
+                          Large
+                        </button>
+                      </div>
                     </div>
-                    {canEdit && (
+
+                    <div className="h-px bg-border/50 my-1" />
+
+                    <div className="space-y-1">
+                      <div className="px-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Layout
+                      </div>
                       <button
                         type="button"
-                        onClick={() => {
-                          setShowTemplatesModal(true);
-                          setShowMoreMenu(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors text-left cursor-pointer"
+                        onClick={toggleFullWidth}
+                        className="w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors cursor-pointer"
                       >
-                        <Sparkles className="w-3.5 h-3.5 text-primary" />
-                        <span>Starter Templates</span>
+                        <span>Full Width Layout</span>
+                        <span className={cn('text-[10px] font-bold', isFullWidth ? 'text-primary' : 'text-muted-foreground')}>
+                          {isFullWidth ? 'ON' : 'OFF'}
+                        </span>
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={toggleFullWidth}
-                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                    >
-                      <span>Full Width Layout</span>
-                      <span className={cn('text-[10px] font-bold', isFullWidth ? 'text-primary' : 'text-muted-foreground')}>
-                        {isFullWidth ? 'ON' : 'OFF'}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={toggleSmallText}
-                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                    >
-                      <span>Compact Text Density</span>
-                      <span className={cn('text-[10px] font-bold', smallText ? 'text-primary' : 'text-muted-foreground')}>
-                        {smallText ? 'ON' : 'OFF'}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={toggleRightToc}
-                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                    >
-                      <span>Right Outline Rail</span>
-                      <span className={cn('text-[10px] font-bold', showRightToc ? 'text-primary' : 'text-muted-foreground')}>
-                        {showRightToc ? 'ON' : 'OFF'}
-                      </span>
-                    </button>
-
-                    <div className="h-px bg-border/60 my-1" />
-                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Actions & Export
+                      <button
+                        type="button"
+                        onClick={toggleRightToc}
+                        className="w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                      >
+                        <span>Outline Table of Contents</span>
+                        <span className={cn('text-[10px] font-bold', showRightToc ? 'text-primary' : 'text-muted-foreground')}>
+                          {showRightToc ? 'ON' : 'OFF'}
+                        </span>
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleDuplicateCanvas}
-                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors text-left cursor-pointer"
-                    >
-                      <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span>Duplicate Canvas</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleCopyMarkdown}
-                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors text-left cursor-pointer"
-                    >
-                      <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span>Copy Markdown</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDownloadMarkdown}
-                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors text-left cursor-pointer"
-                    >
-                      <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span>Download .md</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handlePrintPDF}
-                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors text-left cursor-pointer"
-                    >
-                      <Printer className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span>Print / Export PDF</span>
-                    </button>
 
-                    <div className="h-px bg-border/60 my-1" />
-                    <div className="px-2.5 py-1 text-[10px] text-muted-foreground flex items-center justify-between font-mono">
+                    <div className="h-px bg-border/50 my-1" />
+
+                    <div className="px-1 py-0.5 text-[10px] text-muted-foreground flex items-center justify-between font-mono">
                       <span>Statistics</span>
                       <span>{stats.words} words · {stats.readingTime}m read</span>
                     </div>
-
-                    {canManageAccess && (
-                      <>
-                        <div className="h-px bg-border/60 my-1" />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            deleteDocument(activeDoc.id);
-                            setSelectedDocId(null);
-                            setShowMoreMenu(false);
-                          }}
-                          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-500/10 transition-colors text-left cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Delete Canvas</span>
-                        </button>
-                      </>
-                    )}
                   </div>
                 )}
               </div>
@@ -1318,8 +1300,8 @@ export function WorkspaceCanvasPage() {
                 {/* Rail Header */}
                 <div className="p-2.5 flex items-center justify-between border-b border-border/40">
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center">
-                      <FolderOpen className="w-3 h-3" />
+                    <div className="w-6 h-6 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center">
+                      <FolderOpen className="w-3.5 h-3.5" />
                     </div>
                     <span className="text-xs font-bold text-foreground tracking-tight">
                       Workspace Pages
@@ -1349,7 +1331,7 @@ export function WorkspaceCanvasPage() {
                 {/* Document Search / Filter */}
                 <div className="p-2 border-b border-border/40">
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <Search className="w-4 h-4 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       placeholder="Filter pages & sub-pages..."
@@ -1392,7 +1374,7 @@ export function WorkspaceCanvasPage() {
                             <DocumentIcon
                               icon={doc.icon}
                               className={cn(
-                                'w-3.5 h-3.5 shrink-0',
+                                'w-4 h-4 shrink-0',
                                 selectedDocId === doc.id ? 'text-primary-foreground' : 'text-primary'
                               )}
                             />
@@ -1408,7 +1390,7 @@ export function WorkspaceCanvasPage() {
                         <div>
                           <div className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                             <span className="flex items-center gap-1">
-                              <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                               Favorites
                             </span>
                             <span className="font-mono text-[9px] px-1 rounded bg-secondary">
@@ -1428,7 +1410,7 @@ export function WorkspaceCanvasPage() {
                                     : 'text-foreground/80 hover:bg-secondary/60'
                                 )}
                               >
-                                <DocumentIcon icon={doc.icon} className="w-3.5 h-3.5 shrink-0 text-primary" />
+                                <DocumentIcon icon={doc.icon} className="w-4 h-4 shrink-0 text-primary" />
                                 <span className="truncate flex-1">{doc.title || 'Untitled'}</span>
                               </button>
                             ))}
@@ -1440,7 +1422,7 @@ export function WorkspaceCanvasPage() {
                       <div>
                         <div className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                           <span className="flex items-center gap-1">
-                            <Lock className="w-3 h-3 text-amber-500" />
+                            <Lock className="w-3.5 h-3.5 text-amber-500" />
                             Private
                           </span>
                           <button
@@ -1449,7 +1431,7 @@ export function WorkspaceCanvasPage() {
                             className="p-0.5 rounded hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
                             title="Add Private Canvas"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
                         {privateTree.length === 0 ? (
@@ -1473,6 +1455,10 @@ export function WorkspaceCanvasPage() {
                                   deleteDocument(id);
                                   if (selectedDocId === id) setSelectedDocId(null);
                                 }}
+                                onOpenAccess={(doc) => {
+                                  setSelectedDocId(doc.id);
+                                  setShowAccessModal(true);
+                                }}
                               />
                             ))}
                           </div>
@@ -1484,7 +1470,7 @@ export function WorkspaceCanvasPage() {
                         <div>
                           <div className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                             <span className="flex items-center gap-1">
-                              <Users className="w-3 h-3 text-primary" />
+                              <Users className="w-3.5 h-3.5 text-primary" />
                               Shared
                             </span>
                             <span className="font-mono text-[9px] px-1 rounded bg-secondary">
@@ -1507,6 +1493,10 @@ export function WorkspaceCanvasPage() {
                                   deleteDocument(id);
                                   if (selectedDocId === id) setSelectedDocId(null);
                                 }}
+                                onOpenAccess={(doc) => {
+                                  setSelectedDocId(doc.id);
+                                  setShowAccessModal(true);
+                                }}
                               />
                             ))}
                           </div>
@@ -1518,7 +1508,7 @@ export function WorkspaceCanvasPage() {
                         <div>
                           <div className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                             <span className="flex items-center gap-1">
-                              <Globe className="w-3 h-3 text-emerald-500" />
+                              <Globe className="w-3.5 h-3.5 text-emerald-500" />
                               Organization
                             </span>
                             <span className="font-mono text-[9px] px-1 rounded bg-secondary">
@@ -1541,6 +1531,10 @@ export function WorkspaceCanvasPage() {
                                   deleteDocument(id);
                                   if (selectedDocId === id) setSelectedDocId(null);
                                 }}
+                                onOpenAccess={(doc) => {
+                                  setSelectedDocId(doc.id);
+                                  setShowAccessModal(true);
+                                }}
                               />
                             ))}
                           </div>
@@ -1553,7 +1547,7 @@ export function WorkspaceCanvasPage() {
                 {/* Rail Footer */}
                 <div className="p-2.5 border-t border-border/40 text-[10px] text-muted-foreground flex items-center justify-between">
                   <span className="flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-amber-500" />
+                    <Lock className="w-3.5 h-3.5 text-amber-500" />
                     Private by default
                   </span>
                   <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border text-[9px] font-mono">
@@ -1804,6 +1798,7 @@ export function WorkspaceCanvasPage() {
                         initialContent={activeDoc.contentJson}
                         readOnly={!canEdit}
                         smallText={smallText}
+                        fontSize={canvasFontSize}
                         activeDoc={activeDoc}
                         documents={documents}
                         onSelectDoc={handleSelectDoc}

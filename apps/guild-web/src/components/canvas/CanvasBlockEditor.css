@@ -1,12 +1,41 @@
 /* Notion & Linear Canvas Editor Typography & Elements */
 .canvas-tiptap-content {
   outline: none !important;
+  font-size: 0.95rem; /* ~15.2px standard body text */
 }
 
 .canvas-tiptap-content p {
-  margin: 0.35rem 0;
-  line-height: 1.65;
+  margin: 0.4rem 0;
+  line-height: 1.7;
 }
+
+/* Dynamic Font Sizing Modes */
+.canvas-text-compact {
+  font-size: 0.8125rem !important; /* 13px */
+}
+.canvas-text-compact p {
+  line-height: 1.6;
+}
+.canvas-text-compact h1 { font-size: 1.5rem !important; }
+.canvas-text-compact h2 { font-size: 1.25rem !important; }
+.canvas-text-compact h3 { font-size: 1.05rem !important; }
+
+.canvas-text-default {
+  font-size: 0.95rem !important; /* ~15.2px */
+}
+.canvas-text-default p {
+  line-height: 1.7;
+}
+
+.canvas-text-large {
+  font-size: 1.085rem !important; /* ~17.4px */
+}
+.canvas-text-large p {
+  line-height: 1.75;
+}
+.canvas-text-large h1 { font-size: 2.1rem !important; }
+.canvas-text-large h2 { font-size: 1.6rem !important; }
+.canvas-text-large h3 { font-size: 1.3rem !important; }
 
 .canvas-tiptap-content p.is-empty:first-child::before,
 .canvas-tiptap-content p.is-editor-empty:first-child::before {
@@ -19,30 +48,30 @@
 }
 
 .canvas-tiptap-content h1 {
-  font-size: 1.75rem;
+  font-size: 1.85rem;
   font-weight: 800;
   letter-spacing: -0.025em;
-  margin-top: 1.25rem;
+  margin-top: 1.35rem;
   margin-bottom: 0.35rem;
   line-height: 1.25;
   color: var(--text-primary);
 }
 
 .canvas-tiptap-content h2 {
-  font-size: 1.375rem;
+  font-size: 1.45rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  margin-top: 1rem;
+  margin-top: 1.1rem;
   margin-bottom: 0.25rem;
   line-height: 1.3;
   color: var(--text-primary);
 }
 
 .canvas-tiptap-content h3 {
-  font-size: 1.125rem;
+  font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: -0.015em;
-  margin-top: 0.85rem;
+  margin-top: 0.95rem;
   margin-bottom: 0.2rem;
   line-height: 1.35;
   color: var(--text-primary);
