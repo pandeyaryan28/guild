@@ -146,7 +146,6 @@ export function InlineIssueBlock({ node, updateAttributes, deleteNode }: NodeVie
             >
               <span className={cn('w-2 h-2 rounded-full', currentStatus.dotColor)} />
               <span>{currentStatus.label}</span>
-              <ChevronDown className="w-3 h-3 text-muted-foreground opacity-60" />
             </button>
 
             {openStatusMenu && (

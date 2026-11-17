@@ -173,7 +173,7 @@ function DocumentTreeItem({
   const isExpanded = expandedIds.has(node.id);
 
   return (
-    <div className="select-none">
+    <div className="select-none relative">
       <div
         onClick={() => onSelect(node.id)}
         style={{ paddingLeft: `${Math.min(depth * 10, 40) + 4}px` }}
@@ -184,7 +184,7 @@ function DocumentTreeItem({
             : 'text-foreground/85 hover:bg-secondary/65 hover:text-foreground'
         )}
       >
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-1">
           <button
             type="button"
             onClick={(e) => {
@@ -217,11 +217,20 @@ function DocumentTreeItem({
             className={cn('w-3.5 h-3.5 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')}
           />
 
-          <span className="truncate">{node.title || 'Untitled'}</span>
+          <span className="truncate flex-1 min-w-0" title={node.title || 'Untitled'}>
+            {node.title || 'Untitled'}
+          </span>
         </div>
 
-        {/* Hover Actions: Add Sub-Canvas, Side Peek, Favorite, Delete */}
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        {/* Floating Hover Actions: Add Sub-Canvas, Side Peek, Favorite, Delete */}
+        <div
+          className={cn(
+            'absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5 px-1 py-0.5 rounded-md shadow-xs z-10',
+            isSelected
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-surface/95 dark:bg-card/95 border border-border/50 text-foreground'
+          )}
+        >
           <button
             type="button"
             onClick={(e) => {
@@ -1048,55 +1057,12 @@ export function WorkspaceCanvasPage() {
                 )}
               </div>
 
-              {/* Templates Button */}
-              {canEdit && (
-                <button
-                  type="button"
-                  onClick={() => setShowTemplatesModal(true)}
-                  className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border border-border/50 bg-surface/80 hover:bg-secondary text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  title="Apply Starter Template"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  <span className="hidden xl:inline">Templates</span>
-                </button>
-              )}
-
-              {/* Full-Width Toggle */}
-              <button
-                type="button"
-                onClick={toggleFullWidth}
-                className={cn(
-                  'p-1 rounded-lg border transition-colors cursor-pointer',
-                  isFullWidth
-                    ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground'
-                )}
-                title={isFullWidth ? 'Standard Reading Width (max-w-4xl)' : 'Switch to Full Width Canvas'}
-              >
-                {isFullWidth ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-              </button>
-
-              {/* Right TOC Outline Toggle */}
-              <button
-                type="button"
-                onClick={toggleRightToc}
-                className={cn(
-                  'hidden xl:inline-flex p-1 rounded-lg border transition-colors cursor-pointer',
-                  showRightToc
-                    ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground'
-                )}
-                title="Toggle Right Outline (Table of Contents)"
-              >
-                <ListTree className="w-3.5 h-3.5" />
-              </button>
-
               {/* Favorite toggle */}
               <button
                 type="button"
                 onClick={() => handleToggleFavorite(activeDoc)}
                 className={cn(
-                  'p-1 rounded-lg border border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground transition-colors active:scale-95 cursor-pointer',
+                  'p-1.5 rounded-xl border border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground transition-colors active:scale-95 cursor-pointer shadow-2xs',
                   activeDoc.isFavorite && 'text-amber-500 fill-amber-500 bg-amber-500/10 border-amber-500/30'
                 )}
                 title={activeDoc.isFavorite ? 'Remove Favorite' : 'Add to Favorites'}
@@ -1109,8 +1075,8 @@ export function WorkspaceCanvasPage() {
                 <button
                   type="button"
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
-                  className="p-1 rounded-lg border border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  title="Canvas Display & Export Options"
+                  className="p-1.5 rounded-xl border border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer shadow-2xs"
+                  title="Canvas Display & Options"
                 >
                   <MoreHorizontal className="w-3.5 h-3.5" />
                 </button>
@@ -1120,6 +1086,19 @@ export function WorkspaceCanvasPage() {
                     <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Layout & Display
                     </div>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowTemplatesModal(true);
+                          setShowMoreMenu(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary transition-colors text-left cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                        <span>Starter Templates</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={toggleFullWidth}
@@ -1816,201 +1795,10 @@ export function WorkspaceCanvasPage() {
                           className="w-full text-2xl sm:text-3xl lg:text-4xl font-extrabold text-foreground placeholder:text-muted-foreground/30 bg-transparent outline-none tracking-tight transition-colors"
                         />
                       </div>
-
-                      {/* ─── Notion & Linear Properties & Metadata Strip ─── */}
-                      <div className="flex items-center gap-1.5 flex-wrap pt-0.5 pb-1 text-xs text-muted-foreground">
-                        {/* Status Pill */}
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-secondary/60 text-xs transition-colors">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
-                            Status
-                          </span>
-                          <select
-                            disabled={!canEdit}
-                            value={activeDoc.status || 'draft'}
-                            onChange={(e) =>
-                              updateMeta(activeDoc.id, { status: e.target.value as DocumentStatus })
-                            }
-                            className="bg-transparent font-medium text-foreground outline-none cursor-pointer text-xs"
-                          >
-                            <option value="draft">Draft</option>
-                            <option value="in_review">In Review</option>
-                            <option value="published">Published</option>
-                          </select>
-                        </div>
-
-                        {/* Linked Project Pill */}
-                        {orgProjects.length > 0 && (
-                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-secondary/60 text-xs transition-colors">
-                            <Briefcase className="w-3 h-3 text-primary" />
-                            <select
-                              disabled={!canEdit}
-                              value={activeDoc.linkedProjectId || ''}
-                              onChange={(e) =>
-                                updateMeta(activeDoc.id, {
-                                  linkedProjectId: e.target.value || null
-                                })
-                              }
-                              className="bg-transparent font-medium text-foreground outline-none cursor-pointer text-xs max-w-[140px] truncate"
-                            >
-                              <option value="">No Linked Project</option>
-                              {orgProjects.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                  {p.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        )}
-
-                        {/* Linked Sprint Cycle Pill */}
-                        {cycles.length > 0 && (
-                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-secondary/60 text-xs transition-colors">
-                            <RefreshCw className="w-3 h-3 text-emerald-500" />
-                            <select
-                              disabled={!canEdit}
-                              value={activeDoc.linkedCycleId || ''}
-                              onChange={(e) =>
-                                updateMeta(activeDoc.id, {
-                                  linkedCycleId: e.target.value || null
-                                })
-                              }
-                              className="bg-transparent font-medium text-foreground outline-none cursor-pointer text-xs max-w-[140px] truncate"
-                            >
-                              <option value="">No Sprint Cycle</option>
-                              {cycles.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.title}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        )}
-
-                        {/* Backlinks Pill */}
-                        {backlinks.length > 0 && (
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setShowBacklinksMenu(!showBacklinksMenu)}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors cursor-pointer"
-                            >
-                              <Link2 className="w-3 h-3" />
-                              <span>
-                                {backlinks.length} Backlink{backlinks.length === 1 ? '' : 's'}
-                              </span>
-                            </button>
-                            {showBacklinksMenu && (
-                              <div className="absolute left-0 top-full mt-1.5 w-60 p-2 rounded-2xl bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border border-border shadow-xl z-30 space-y-1">
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 py-0.5">
-                                  Referenced By
-                                </div>
-                                {backlinks.map((bl) => (
-                                  <button
-                                    key={bl.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setShowBacklinksMenu(false);
-                                      handleSelectDoc(bl.id);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-xl text-xs font-medium text-foreground hover:bg-secondary text-left cursor-pointer"
-                                  >
-                                    <DocumentIcon icon={bl.icon} className="w-3.5 h-3.5 text-primary shrink-0" />
-                                    <span className="truncate">{bl.title || 'Untitled'}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Tags List */}
-                        {(activeDoc.tags || []).map((tag) => (
-                          <span
-                            key={tag}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-secondary text-foreground text-[11px] font-medium border border-border/40"
-                          >
-                            <Tag className="w-2.5 h-2.5 text-primary" />
-                            <span>{tag}</span>
-                            {canEdit && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveTag(tag)}
-                                className="text-muted-foreground hover:text-rose-500 cursor-pointer"
-                              >
-                                <X className="w-2.5 h-2.5" />
-                              </button>
-                            )}
-                          </span>
-                        ))}
-
-                        {canEdit &&
-                          (showTagInput ? (
-                            <div className="inline-flex items-center gap-1">
-                              <input
-                                type="text"
-                                autoFocus
-                                value={newTagInput}
-                                onChange={(e) => setNewTagInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleAddTag();
-                                  if (e.key === 'Escape') setShowTagInput(false);
-                                }}
-                                placeholder="Tag name..."
-                                className="px-2 py-0.5 rounded-lg bg-secondary/70 border border-border text-xs text-foreground outline-none focus:border-primary w-24"
-                              />
-                              <button
-                                type="button"
-                                onClick={handleAddTag}
-                                className="p-1 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold cursor-pointer"
-                              >
-                                Add
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setShowTagInput(true)}
-                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors cursor-pointer"
-                            >
-                              <Plus className="w-3 h-3" />
-                              <span>Add Tag</span>
-                            </button>
-                          ))}
-                      </div>
                     </div>
 
-                    {/* ─── Compact Child Sub-Canvases Disclosure ─── */}
-                    {childCanvases.length > 0 && (
-                      <div className="pt-0.5 pb-1">
-                        <details className="group/subpages text-xs">
-                          <summary className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer select-none font-medium py-1">
-                            <Layers className="w-3.5 h-3.5 text-primary" />
-                            <span>Sub-Canvases ({childCanvases.length})</span>
-                          </summary>
-                          <div className="mt-1.5 space-y-0.5 pl-2 border-l border-border/40">
-                            {childCanvases.map((child) => (
-                              <button
-                                key={child.id}
-                                type="button"
-                                onClick={() => handleSelectDoc(child.id)}
-                                className="w-full flex items-center justify-between gap-2 px-2 py-1 rounded-md hover:bg-secondary/60 text-xs text-foreground group text-left transition-colors cursor-pointer"
-                              >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <DocumentIcon icon={child.icon} className="w-3.5 h-3.5 text-primary shrink-0" />
-                                  <span className="truncate font-medium">{child.title || 'Untitled Sub-Canvas'}</span>
-                                </div>
-                                <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                                  Open →
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        </details>
-                      </div>
-                    )}
-
                     {/* ─── TipTap Unified Block Engine ─── */}
-                    <div className="pt-1">
+                    <div className="pt-2">
                       <CanvasBlockEditor
                         key={`${activeDoc.id}-${templateRenderKey}`}
                         initialContent={activeDoc.contentJson}

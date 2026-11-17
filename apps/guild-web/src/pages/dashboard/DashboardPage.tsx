@@ -232,7 +232,15 @@ export function DashboardPage() {
   }>({ isOpen: false, request: null, mode: 'approved' });
 
   // Priority Tab State: 'today' | 'upcoming'
+  // Auto-surface upcoming tasks if today is empty and upcoming has tasks
   const [priorityTab, setPriorityTab] = React.useState<'today' | 'upcoming'>('today');
+
+  // Sync initial tab when priorities load if today is empty
+  React.useEffect(() => {
+    if (todaysPriorities.length === 0 && upcomingPriorities.length > 0 && priorityTab === 'today') {
+      setPriorityTab('upcoming');
+    }
+  }, [todaysPriorities.length, upcomingPriorities.length]);
 
   // Loading state for 1-click DM opening
   const [loadingDmUid, setLoadingDmUid] = React.useState<string | null>(null);
@@ -502,12 +510,6 @@ export function DashboardPage() {
           <p className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground truncate">
             <Calendar className="w-3.5 h-3.5 text-muted-foreground/70 flex-shrink-0" />
             <span>{getFormattedToday()}</span>
-            {org?.name && (
-              <>
-                <span className="text-border/60">•</span>
-                <span className="font-medium text-foreground">{org.name}</span>
-              </>
-            )}
           </p>
         </div>
 
@@ -528,8 +530,8 @@ export function DashboardPage() {
       {/* ─── Compact Stat Ribbon ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {/* Chip 1: My Priorities */}
-        <div className="p-3 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/50 shadow-2xs flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+        <div className="p-3 rounded-2xl bg-surface/80 dark:bg-card/45 border border-border/40 dark:border-border/30 backdrop-blur-xl shadow-xs flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
             <CheckSquare className="w-4 h-4" />
           </div>
           <div className="min-w-0">
@@ -543,8 +545,8 @@ export function DashboardPage() {
         </div>
 
         {/* Chip 2: Team Active */}
-        <div className="p-3 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/50 shadow-2xs flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+        <div className="p-3 rounded-2xl bg-surface/80 dark:bg-card/45 border border-border/40 dark:border-border/30 backdrop-blur-xl shadow-xs flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
             <Users className="w-4 h-4" />
           </div>
           <div className="min-w-0">
@@ -558,8 +560,8 @@ export function DashboardPage() {
         </div>
 
         {/* Chip 3: Operational Approvals / Requests */}
-        <div className="p-3 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/50 shadow-2xs flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+        <div className="p-3 rounded-2xl bg-surface/80 dark:bg-card/45 border border-border/40 dark:border-border/30 backdrop-blur-xl shadow-xs flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
             <FileCheck2 className="w-4 h-4" />
           </div>
           <div className="min-w-0">
@@ -572,17 +574,17 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Chip 4: Sprint Velocity */}
-        <div className="p-3 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/50 shadow-2xs flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 flex items-center justify-center flex-shrink-0">
+        {/* Chip 4: Sprint Velocity or Rhythm */}
+        <div className="p-3 rounded-2xl bg-surface/80 dark:bg-card/45 border border-border/40 dark:border-border/30 backdrop-blur-xl shadow-xs flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center flex-shrink-0">
             <Zap className="w-4 h-4" />
           </div>
           <div className="min-w-0">
             <div className="text-base font-bold text-foreground tracking-tight leading-none">
-              {currentCycle ? `${percentVelocity}%` : '—'}
+              {currentCycle ? `${percentVelocity}%` : `${allTasks.filter((t) => t.status === 'done').length}`}
             </div>
             <div className="text-[11px] text-muted-foreground font-medium truncate mt-0.5">
-              {currentCycle ? `Sprint • ${daysRemaining}d left` : 'No Active Sprint'}
+              {currentCycle ? `Sprint • ${daysRemaining}d left` : 'Completed Tasks'}
             </div>
           </div>
         </div>
@@ -600,9 +602,6 @@ export function DashboardPage() {
                 <h2 className="text-sm sm:text-base font-bold text-foreground tracking-tight">
                   My Priorities
                 </h2>
-                <span className="text-xs text-muted-foreground hidden sm:inline">
-                  — {priorityTab === 'today' ? "Today's schedule" : 'Upcoming tasks'}
-                </span>
               </div>
 
               {/* Compact Segmented Control */}
@@ -741,61 +740,53 @@ export function DashboardPage() {
                 })}
               </div>
             ) : priorityTab === 'today' ? (
-              /* Apple Clean Empty State: No tasks due today */
-              <div className="text-center py-6 px-4 rounded-xl bg-secondary/20 border border-border/40 space-y-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <div className="space-y-0.5">
-                  <h4 className="text-xs font-bold text-foreground">No tasks due today</h4>
-                  <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
+              /* Apple Clean Minimal Status: No tasks due today */
+              <div className="py-3 px-4 rounded-2xl bg-surface/80 dark:bg-card/45 border border-border/40 backdrop-blur-xl flex items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span className="text-xs text-foreground font-medium truncate">
                     {upcomingPriorities.length > 0
-                      ? `Caught up for today! You have ${upcomingPriorities.length} upcoming task${upcomingPriorities.length > 1 ? 's' : ''} scheduled.`
-                      : 'You are completely caught up. No active tasks or issues currently assigned to you.'}
-                  </p>
+                      ? `Caught up for today! You have ${upcomingPriorities.length} upcoming task${upcomingPriorities.length > 1 ? 's' : ''}.`
+                      : 'You are completely caught up! No active tasks due today.'}
+                  </span>
                 </div>
-                <div className="flex items-center justify-center gap-2 pt-1">
+                <div className="flex items-center gap-2 shrink-0">
                   {upcomingPriorities.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setPriorityTab('upcoming')}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-foreground bg-secondary hover:bg-secondary/80 border border-border/50 transition-colors cursor-pointer"
+                      className="px-2.5 py-1 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/15 transition-colors cursor-pointer"
                     >
-                      <span>View upcoming ({upcomingPriorities.length})</span>
+                      View Upcoming ({upcomingPriorities.length})
                     </button>
                   )}
-                  <motion.button
-                    whileTap={{ scale: 0.98 }}
+                  <button
                     type="button"
                     onClick={() => setCreateTaskOpen(true)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-95 transition-opacity cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground bg-secondary hover:bg-secondary/80 transition-colors cursor-pointer"
                   >
                     <Plus className="w-3 h-3" />
-                    <span>Create task</span>
-                  </motion.button>
+                    <span>New Task</span>
+                  </button>
                 </div>
               </div>
             ) : (
-              /* Apple Clean Empty State: No upcoming tasks */
-              <div className="text-center py-6 px-4 rounded-xl bg-secondary/20 border border-border/40 space-y-2">
-                <div className="w-8 h-8 rounded-lg bg-secondary text-muted-foreground border border-border/50 flex items-center justify-center mx-auto">
-                  <CheckSquare className="w-4 h-4" />
-                </div>
-                <div className="space-y-0.5">
-                  <h4 className="text-xs font-bold text-foreground">No upcoming tasks</h4>
-                  <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
+              /* Apple Clean Minimal Status: No upcoming tasks */
+              <div className="py-3 px-4 rounded-2xl bg-surface/80 dark:bg-card/45 border border-border/40 backdrop-blur-xl flex items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <CheckSquare className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="text-xs text-muted-foreground font-medium truncate">
                     No future tasks or issues currently scheduled.
-                  </p>
+                  </span>
                 </div>
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
+                <button
                   type="button"
                   onClick={() => setCreateTaskOpen(true)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-95 transition-opacity cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-primary text-primary-foreground shadow-xs cursor-pointer"
                 >
                   <Plus className="w-3 h-3" />
-                  <span>Create a task</span>
-                </motion.button>
+                  <span>Create Task</span>
+                </button>
               </div>
             )}
           </div>
@@ -808,9 +799,6 @@ export function DashboardPage() {
                 <h2 className="text-sm sm:text-base font-bold text-foreground tracking-tight">
                   {isManagerOrLead ? 'Pending Approvals' : 'My Requests'}
                 </h2>
-                <span className="text-xs text-muted-foreground hidden sm:inline">
-                  — {isManagerOrLead ? 'Requisitions requiring review' : 'Status of your requisitions'}
-                </span>
               </div>
 
               {isManagerOrLead ? (
@@ -882,14 +870,14 @@ export function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 px-4 rounded-xl bg-secondary/20 border border-border/40 space-y-1.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
-                    <CheckCircle2 className="w-4 h-4" />
+                <div className="py-3 px-4 rounded-2xl bg-surface/80 dark:bg-card/45 border border-border/40 backdrop-blur-xl flex items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span className="text-xs font-medium text-foreground">
+                      All operational requisitions have been reviewed.
+                    </span>
                   </div>
-                  <h4 className="text-xs font-bold text-foreground">No pending approvals</h4>
-                  <p className="text-[11px] text-muted-foreground">
-                    All operational requisitions have been reviewed.
-                  </p>
+                  <span className="text-[11px] font-mono text-muted-foreground/60">0 pending</span>
                 </div>
               )
             ) : (
@@ -936,14 +924,14 @@ export function DashboardPage() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-6 px-4 rounded-xl bg-secondary/20 border border-border/40 space-y-1.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center mx-auto">
-                    <FileCheck2 className="w-4 h-4" />
+                <div className="py-3 px-4 rounded-2xl bg-surface/80 dark:bg-card/45 border border-border/40 backdrop-blur-xl flex items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-2.5">
+                    <FileCheck2 className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span className="text-xs font-medium text-foreground">
+                      No active leave or expense requisitions submitted.
+                    </span>
                   </div>
-                  <h4 className="text-xs font-bold text-foreground">No active requests</h4>
-                  <p className="text-[11px] text-muted-foreground">
-                    You have not submitted any leave, expense, or equipment requisitions.
-                  </p>
+                  <span className="text-[11px] font-mono text-muted-foreground/60">0 submitted</span>
                 </div>
               )
             )}
@@ -1032,9 +1020,6 @@ export function DashboardPage() {
               <div className="flex items-center gap-2 min-w-0">
                 <Users className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                 <h3 className="text-sm sm:text-base font-bold text-foreground tracking-tight">Team Focus</h3>
-                <span className="text-xs text-muted-foreground hidden sm:inline">
-                  — Live status
-                </span>
               </div>
 
               <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border/50">
@@ -1042,7 +1027,7 @@ export function DashboardPage() {
               </span>
             </div>
 
-            {/* High-density roster grid (avatar, name, status dot, 1-click DM button) */}
+            {/* High-density roster grid (avatar, name, status dot, tactile 1-click DM card) */}
             {teamRoster.length > 0 ? (
               <div className="grid grid-cols-1 gap-1.5">
                 {teamRoster.map((teammate) => {
@@ -1058,9 +1043,16 @@ export function DashboardPage() {
                   const isStartingDM = loadingDmUid === teammate.uid;
 
                   return (
-                    <div
+                    <motion.div
                       key={teammate.uid}
-                      className="py-2 px-2.5 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/40 hover:border-border hover:bg-surface dark:hover:bg-card transition-all flex items-center justify-between gap-2.5 group"
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: isStartingDM ? 1 : 0.99 }}
+                      onClick={() => !loadingDmUid && handleStartDM(teammate.uid)}
+                      className={cn(
+                        'py-2.5 px-3 rounded-2xl bg-surface/75 dark:bg-card/45 border border-border/40 hover:border-border hover:bg-surface dark:hover:bg-card hover:shadow-xs transition-all flex items-center justify-between gap-3 group cursor-pointer',
+                        isStartingDM && 'opacity-70 cursor-wait'
+                      )}
+                      title={`Message ${teammate.fullName || teammate.username}`}
                     >
                       {/* Left: Avatar with Live Status Dot + Name + Focus snippet */}
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -1087,7 +1079,7 @@ export function DashboardPage() {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-semibold text-foreground truncate">
+                            <span className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                               {teammate.fullName || teammate.username}
                             </span>
                             <span className="text-[10px] text-muted-foreground truncate hidden sm:inline">
@@ -1113,38 +1105,25 @@ export function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Right: 1-click DM button */}
-                      <motion.button
-                        whileTap={{ scale: isStartingDM ? 1 : 0.94 }}
-                        type="button"
-                        disabled={!!loadingDmUid}
-                        onClick={() => handleStartDM(teammate.uid)}
-                        className={cn(
-                          'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all cursor-pointer flex-shrink-0',
-                          isStartingDM
-                            ? 'bg-primary/10 text-primary border border-primary/30 cursor-wait'
-                            : 'text-foreground bg-secondary/70 hover:bg-secondary border border-border/50 group-hover:border-border'
-                        )}
-                        title={`Message ${teammate.fullName || teammate.username}`}
-                      >
+                      {/* Right: Smooth Hover DM Icon or Loading Spinner */}
+                      <div className="flex items-center shrink-0">
                         {isStartingDM ? (
-                          <>
-                            <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                            <span>Opening...</span>
-                          </>
+                          <div className="flex items-center gap-1 text-[10px] text-primary font-medium">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                            <span className="hidden sm:inline">Opening...</span>
+                          </div>
                         ) : (
-                          <>
-                            <MessageSquare className="w-3 h-3 text-muted-foreground" />
-                            <span>DM</span>
-                          </>
+                          <div className="p-1 rounded-lg text-muted-foreground/40 group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </div>
                         )}
-                      </motion.button>
-                    </div>
+                      </div>
+                    </motion.div>
                   );
                 })}
               </div>
             ) : (
-              <div className="text-center py-6 px-3 rounded-xl bg-secondary/20 border border-border/40 text-xs text-muted-foreground">
+              <div className="text-center py-6 px-3 rounded-2xl bg-surface/75 dark:bg-card/45 border border-border/40 text-xs text-muted-foreground">
                 No teammates registered in this organization yet.
               </div>
             )}
