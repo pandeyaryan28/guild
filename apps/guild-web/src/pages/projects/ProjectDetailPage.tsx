@@ -360,95 +360,94 @@ export function ProjectDetailPage() {
   const progressRate = allTasks.length > 0 ? Math.round((completedTasks.length / allTasks.length) * 100) : 0;
 
   return (
-    <div className="h-full w-full bg-transparent p-3 flex flex-col min-h-0 overflow-hidden gap-5">
+    <div className="h-full w-full bg-transparent flex flex-col min-h-0 overflow-hidden">
       
-      {/* Premium Glassmorphic Card Panel */}
-      <div className="flex-1 min-h-0 border border-neutral-200/40 dark:border-neutral-800/40 bg-white/40 dark:bg-neutral-900/35 backdrop-blur-xl rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col z-10 relative">
+      {/* Main Plane Workspace Content */}
+      <div className="flex-1 min-h-0 flex flex-col z-10 relative overflow-hidden">
         
-        {/* Obsidian Glassmorphic Header */}
-        <div className="p-6 border-b border-neutral-200/45 dark:border-neutral-800/45 flex flex-col gap-4 shrink-0 bg-white/30 dark:bg-neutral-950/20 backdrop-blur-md">
-          <div className="flex items-center justify-between shrink-0 flex-wrap gap-4">
-            <div className="flex items-center gap-4 min-w-0 flex-1">
+        {/* Streamlined Workspace Header */}
+        <div className="px-5 py-3 border-b border-border/50 flex flex-col gap-2.5 shrink-0 bg-surface/50 dark:bg-card/40 backdrop-blur-md">
+          <div className="flex items-center justify-between shrink-0 flex-wrap gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <button
                 onClick={() => navigate('/workspace')}
-                className="w-10 h-10 rounded-2xl border border-neutral-200/70 dark:border-neutral-800/80 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-350 flex items-center justify-center transition-all hover:scale-105 active:scale-95 shrink-0 shadow-sm"
+                className="w-8 h-8 rounded-xl border border-border/60 bg-surface/60 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-all hover:scale-105 active:scale-95 shrink-0 shadow-2xs cursor-pointer"
                 title="Return to Workspace"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
               
               <div className="min-w-0">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={handleToggleProjectStatus}
                     className={cn(
-                      "w-7 h-7 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer hover:scale-105 active:scale-95",
+                      "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer hover:scale-105 active:scale-95",
                       project.status === 'completed'
                         ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                        : "border-neutral-300 dark:border-neutral-700 bg-white/50 dark:bg-neutral-900/50 hover:border-indigo-500"
+                        : "border-border bg-surface/60 hover:border-primary text-primary"
                     )}
                     title={project.status === 'completed' ? "Mark Project Active" : "Mark Project Completed"}
                   >
                     {project.status === 'completed' ? (
-                      <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <Check className="w-3 h-3 stroke-[2.5]" />
                     ) : (
-                      <FolderGit className="w-3.5 h-3.5 text-indigo-500 drop-shadow-[0_0_4px_rgba(99,102,241,0.2)]" />
+                      <FolderGit className="w-3 h-3" />
                     )}
                   </button>
-                  <h1 className={cn("text-base font-black tracking-tight truncate flex items-center gap-1.5", project.status === 'completed' ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-neutral-850 dark:text-neutral-100")}>
+                  <h1 className={cn("text-base font-bold tracking-tight truncate flex items-center gap-1.5", project.status === 'completed' ? "text-muted-foreground line-through decoration-primary/50" : "text-foreground")}>
                     <span>{project.name}</span>
                   </h1>
                 </div>
                 {project.description && (
-                  <p className="text-[11px] text-neutral-500 mt-1 max-w-2xl font-semibold leading-relaxed truncate">{project.description}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 max-w-2xl font-medium leading-relaxed truncate">{project.description}</p>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0 ml-auto">
+            <div className="flex items-center gap-2 shrink-0 ml-auto">
               {/* Chronological start and due parameters */}
-              <div className="flex flex-col gap-0.5 text-right font-mono text-[9px] text-neutral-450 dark:text-neutral-500 hidden sm:flex font-bold">
+              <div className="flex flex-col gap-0.5 text-right font-mono text-[9px] text-muted-foreground hidden sm:flex font-semibold">
                 {project.startDate && (
-                  <span>Start Date: {new Date(project.startDate instanceof Date ? project.startDate : (project.startDate as any).seconds * 1000).toLocaleDateString()}</span>
+                  <span>Start: {new Date(project.startDate instanceof Date ? project.startDate : (project.startDate as any).seconds * 1000).toLocaleDateString()}</span>
                 )}
                 {project.dueDate && (
-                  <span>Due Date: {new Date(project.dueDate instanceof Date ? project.dueDate : (project.dueDate as any).seconds * 1000).toLocaleDateString()}</span>
+                  <span>Due: {new Date(project.dueDate instanceof Date ? project.dueDate : (project.dueDate as any).seconds * 1000).toLocaleDateString()}</span>
                 )}
               </div>
-
 
               <button
                 onClick={() => setShowComments(!showComments)}
                 className={cn(
-                  "flex items-center justify-center gap-1.5 h-10 rounded-2xl border px-4 transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer text-xs font-bold shadow-sm",
+                  "flex items-center justify-center gap-1.5 h-8 rounded-xl border px-3 transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer text-xs font-semibold shadow-2xs",
                   showComments
-                    ? "border-indigo-555 bg-indigo-500/10 text-indigo-650 dark:text-indigo-400"
-                    : "border-neutral-200/70 dark:border-neutral-800 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-450"
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border/60 bg-surface/60 hover:bg-muted text-muted-foreground hover:text-foreground"
                 )}
                 title="Project Discussion"
               >
-                <MessageSquare className="h-4 w-4" />
+                <MessageSquare className="h-3.5 w-3.5" />
                 <span>Discussion ({comments.length})</span>
               </button>
 
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className={cn(
-                  "w-10 h-10 rounded-2xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer shadow-sm",
+                  "w-8 h-8 rounded-xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer shadow-2xs",
                   isEditing
-                    ? "border-indigo-555 bg-indigo-500/10 text-indigo-650 dark:text-indigo-400"
-                    : "border-neutral-200/70 dark:border-neutral-800 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-450"
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border/60 bg-surface/60 hover:bg-muted text-muted-foreground hover:text-foreground"
                 )}
                 title="Project Settings"
               >
-                <Settings className="h-4 w-4" />
+                <Settings className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
 
-          {/* Project Members popover control */}
-          <div className="flex items-center gap-3 py-3 px-6 bg-white/[0.01] border-t border-neutral-200/20 dark:border-neutral-800/30 relative">
-            <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-500">Members</span>
+          {/* Project Members Strip */}
+          <div className="flex items-center gap-2.5 pt-1.5 border-t border-border/30 relative">
+            <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">Members</span>
             <div className="flex items-center -space-x-1.5 overflow-hidden">
               {(project.memberIds || []).map((uid) => {
                 const photoURL = getMemberPhotoURL(uid);
@@ -458,13 +457,13 @@ export function ProjectDetailPage() {
                     key={uid}
                     src={photoURL}
                     alt={fullName}
-                    className="w-6 h-6 rounded-full object-cover shrink-0 ring-2 ring-white dark:ring-neutral-900 border border-neutral-150/40 hover:scale-110 transition-transform"
+                    className="w-5.5 h-5.5 rounded-full object-cover shrink-0 ring-2 ring-background border border-border hover:scale-110 transition-transform"
                     title={fullName}
                   />
                 ) : (
                   <div
                     key={uid}
-                    className="w-6 h-6 rounded-full border border-indigo-500/20 bg-indigo-500/10 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0 ring-2 ring-white dark:ring-neutral-900 hover:scale-110 transition-transform"
+                    className="w-5.5 h-5.5 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0 ring-2 ring-background hover:scale-110 transition-transform"
                     title={fullName}
                   >
                     {getInitials(uid)}
@@ -476,7 +475,7 @@ export function ProjectDetailPage() {
             <div>
               <button
                 onClick={() => setShowManageModal(true)}
-                className="w-6 h-6 rounded-full border border-dashed border-neutral-350 dark:border-neutral-700 hover:border-indigo-500 hover:text-indigo-500 bg-transparent text-neutral-400 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                className="w-5.5 h-5.5 rounded-full border border-dashed border-border hover:border-primary hover:text-primary bg-transparent text-muted-foreground flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
                 title="Manage Members & Teams"
               >
                 <Plus className="w-3 h-3" />
@@ -489,50 +488,50 @@ export function ProjectDetailPage() {
         <div className="flex-1 flex overflow-hidden min-h-0 relative">
           
           {/* Main Execution Column */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto scrollbar-thin p-4 sm:p-5 space-y-4">
             
             {/* KPI metric Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               
               {/* Project Progress */}
-              <div className="p-4.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/40 bg-gradient-to-br from-white/30 to-white/10 dark:from-neutral-900/30 dark:to-neutral-900/10 flex flex-col justify-between gap-3 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
-                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-450 dark:text-neutral-500">Project Progress</span>
+              <div className="p-3.5 rounded-xl border border-border/50 bg-surface/60 dark:bg-card/40 flex flex-col justify-between gap-2 shadow-2xs hover:border-border transition-all">
+                <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">Project Progress</span>
                 <div className="space-y-1.5">
                   <div className="flex items-end justify-between">
-                    <span className="text-lg font-black font-mono text-neutral-850 dark:text-neutral-100 leading-none">{progressRate}%</span>
-                    <span className="text-[10px] text-neutral-450 dark:text-neutral-400 font-bold">({completedTasks.length}/{allTasks.length} Completed)</span>
+                    <span className="text-base font-bold font-mono text-foreground leading-none">{progressRate}%</span>
+                    <span className="text-[10px] text-muted-foreground font-medium">({completedTasks.length}/{allTasks.length} Completed)</span>
                   </div>
-                  <div className="w-full bg-neutral-200/70 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_12px_rgba(99,102,241,0.3)]" style={{ width: `${progressRate}%` }} />
+                  <div className="w-full bg-secondary/80 dark:bg-secondary h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-primary h-full rounded-full transition-all duration-500 ease-out shadow-xs" style={{ width: `${progressRate}%` }} />
                   </div>
                 </div>
               </div>
 
               {/* Goals Complete */}
-              <div className="p-4.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/40 bg-gradient-to-br from-white/30 to-white/10 dark:from-neutral-900/30 dark:to-neutral-900/10 flex flex-col justify-between gap-3 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
-                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-450 dark:text-neutral-500">Goals Complete</span>
+              <div className="p-3.5 rounded-xl border border-border/50 bg-surface/60 dark:bg-card/40 flex flex-col justify-between gap-2 shadow-2xs hover:border-border transition-all">
+                <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">Goals Complete</span>
                 <div className="flex items-end justify-between">
                   <div className="flex flex-col">
-                    <span className="text-lg font-black font-mono text-neutral-850 dark:text-neutral-100 leading-none">
+                    <span className="text-base font-bold font-mono text-foreground leading-none">
                       {projectGoals.filter(g => g.status === 'completed').length}
                     </span>
-                    <span className="text-[9px] text-neutral-450 dark:text-neutral-400 mt-1.5 font-bold">Completed</span>
+                    <span className="text-[9px] text-muted-foreground mt-1 font-medium">Completed</span>
                   </div>
-                  <span className="text-[10px] text-neutral-450 dark:text-neutral-550 font-bold">Total: {projectGoals.length}</span>
+                  <span className="text-[10px] text-muted-foreground font-medium">Total: {projectGoals.length}</span>
                 </div>
               </div>
 
               {/* Tasks Left */}
-              <div className="p-4.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/40 bg-gradient-to-br from-white/30 to-white/10 dark:from-neutral-900/30 dark:to-neutral-900/10 flex flex-col justify-between gap-3 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
-                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-450 dark:text-neutral-500">Tasks Left</span>
+              <div className="p-3.5 rounded-xl border border-border/50 bg-surface/60 dark:bg-card/40 flex flex-col justify-between gap-2 shadow-2xs hover:border-border transition-all">
+                <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">Tasks Left</span>
                 <div className="flex items-end justify-between">
                   <div className="flex flex-col">
-                    <span className="text-lg font-black font-mono text-neutral-850 dark:text-neutral-100 leading-none">
+                    <span className="text-base font-bold font-mono text-foreground leading-none">
                       {activeTasks.length}
                     </span>
-                    <span className="text-[9px] text-neutral-450 dark:text-neutral-400 mt-1.5 font-bold">Active tasks</span>
+                    <span className="text-[9px] text-muted-foreground mt-1 font-medium">Active tasks</span>
                   </div>
-                  <span className="text-[10px] text-neutral-450 dark:text-neutral-550 font-bold">
+                  <span className="text-[10px] text-muted-foreground font-medium">
                     Total: {allTasks.length}
                   </span>
                 </div>
@@ -540,18 +539,18 @@ export function ProjectDetailPage() {
               
             </div>
 
-            {/* Segmented Tab Selector */}
-            <div className="flex border-b border-neutral-200/40 dark:border-neutral-800/40 gap-1 pb-1">
+            {/* Segmented Tab Selector - Tightened Apple Style */}
+            <div className="flex border-b border-border/40 gap-1 pb-1">
               {(['overview', 'tasks', 'goals'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setActiveTab(tab)}
                   className={cn(
-                    "px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer capitalize relative",
+                    "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer capitalize relative",
                     activeTab === tab
-                      ? "text-indigo-600 dark:text-indigo-400 bg-indigo-500/10"
-                      : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/40"
+                      ? "text-primary bg-primary/10 font-bold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
                   {tab}
@@ -562,19 +561,19 @@ export function ProjectDetailPage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.15 }}
-                className="space-y-6"
+                className="space-y-4"
               >
                 {activeTab === 'overview' && (
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {/* Project Description */}
                     {project.description && (
-                      <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10">
-                        <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-2">Description</h3>
-                        <p className="text-xs text-neutral-600 dark:text-neutral-350 leading-relaxed font-semibold">
+                      <div className="p-4 rounded-xl border border-border/40 bg-surface/40 dark:bg-card/30">
+                        <h3 className="text-xs font-bold text-foreground mb-1.5">Description</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                           {project.description}
                         </p>
                       </div>
@@ -599,17 +598,17 @@ export function ProjectDetailPage() {
                 )}
 
                 {activeTab === 'tasks' && (
-                  <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10 space-y-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between border-b border-neutral-200/20 dark:border-neutral-800/30 pb-2">
-                      <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                  <div className="p-4 rounded-xl border border-border/40 bg-surface/40 dark:bg-card/30 space-y-3">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border-b border-border/30 pb-2">
+                      <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-primary" />
                         <span>Tasks</span>
                       </h3>
                       <button
                         type="button"
                         onClick={() => setCreateOpen(true)}
-                        className="flex items-center justify-center gap-1 px-3 py-1.5 h-8 text-[10px] font-bold rounded-xl border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/15 text-indigo-650 dark:text-indigo-400 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                        className="flex items-center justify-center gap-1 px-2.5 py-1 h-7 text-xs font-semibold rounded-lg border border-primary/20 bg-primary/10 hover:bg-primary/15 text-primary transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
                       >
                         <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                         <span>Add Task</span>
@@ -617,48 +616,48 @@ export function ProjectDetailPage() {
                     </div>
 
                       {tasksLoading ? (
-                        <div className="flex py-12 justify-center">
+                        <div className="flex py-10 justify-center">
                           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                         </div>
                       ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           {/* Render active tasks checklist cards */}
                           {activeTasks.length > 0 ? (
                             activeTasks.map(task => (
                               <motion.div
                                 key={task.id}
                                 onClick={() => setSearchParams({ task: task.id })}
-                                whileHover={{ y: -1, scale: 1.002 }}
-                                className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group shadow-xs cursor-pointer"
+                                whileHover={{ y: -1 }}
+                                className="flex items-center justify-between p-2.5 rounded-lg bg-surface dark:bg-card border border-border/40 hover:border-border transition-all group shadow-2xs cursor-pointer"
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
                                   <button
                                     onClick={(e) => handleToggleTaskStatus(e, task)}
-                                    className="h-5 w-5 rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-indigo-500 bg-white/50 dark:bg-neutral-900/50 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                                    className="h-4.5 w-4.5 rounded-full border border-border hover:border-primary bg-surface/50 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
                                   >
-                                    <div className="h-2 w-2 rounded-full bg-transparent hover:bg-indigo-500/50 transition-colors" />
+                                    <div className="h-1.5 w-1.5 rounded-full bg-transparent hover:bg-primary/50 transition-colors" />
                                   </button>
                                   <div className="min-w-0">
-                                    <span className="text-xs font-bold block text-neutral-850 dark:text-neutral-200 group-hover:text-indigo-500 transition-colors truncate">{task.title}</span>
+                                    <span className="text-xs font-semibold block text-foreground group-hover:text-primary transition-colors truncate">{task.title}</span>
                                     {task.dueDate && (
-                                      <span className="text-[9px] font-semibold text-neutral-450 dark:text-neutral-500 mt-1 block">
+                                      <span className="text-[9px] font-medium text-muted-foreground mt-0.5 block">
                                         Due: {new Date(task.dueDate instanceof Date ? task.dueDate : (task.dueDate as any).seconds * 1000).toLocaleDateString()}
                                       </span>
                                     )}
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 shrink-0 ml-2">
+                                <div className="flex items-center gap-2 shrink-0 ml-2">
                                   {task.assigneeIds.length > 0 && (
                                     getMemberPhotoURL(task.assigneeIds[0]) ? (
                                       <img
                                         src={getMemberPhotoURL(task.assigneeIds[0])}
                                         alt={getMemberName(task.assigneeIds[0])}
-                                        className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
+                                        className="w-5 h-5 rounded-full object-cover shrink-0 border border-border"
                                         title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
                                       />
                                     ) : (
-                                      <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
+                                      <div className="w-5 h-5 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
                                         {getInitials(task.assigneeIds[0])}
                                       </div>
                                     )
@@ -667,21 +666,21 @@ export function ProjectDetailPage() {
                               </motion.div>
                             ))
                           ) : (
-                            <div className="py-12 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/10 dark:bg-neutral-850/5 flex flex-col items-center justify-center text-center">
-                              <p className="text-[10px] text-neutral-450 dark:text-neutral-500 italic">No active tasks.</p>
+                            <div className="py-10 rounded-xl border border-dashed border-border/60 bg-muted/20 flex flex-col items-center justify-center text-center">
+                              <p className="text-[10px] text-muted-foreground italic">No active tasks.</p>
                             </div>
                           )}
 
                           {/* Completed tasks accordion */}
                           {completedTasks.length > 0 && (
-                            <div className="space-y-2 pt-2">
+                            <div className="space-y-1.5 pt-1.5">
                               <button
                                 type="button"
                                 onClick={() => setShowCompleted(!showCompleted)}
-                                className="w-full border border-neutral-200/60 dark:border-neutral-800 bg-white/40 dark:bg-neutral-900/40 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl p-2.5 cursor-pointer flex items-center justify-between text-[10px] text-neutral-500 hover:text-neutral-700 dark:text-neutral-450 transition-all font-bold tracking-wide shadow-xs"
+                                className="w-full border border-border/50 bg-surface/40 dark:bg-card/30 hover:bg-muted/40 rounded-lg p-2 cursor-pointer flex items-center justify-between text-[10px] text-muted-foreground hover:text-foreground transition-all font-semibold shadow-2xs"
                               >
                                 <span>Completed Tasks ({completedTasks.length})</span>
-                                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform text-neutral-450", showCompleted ? "rotate-180" : "")} />
+                                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform text-muted-foreground", showCompleted ? "rotate-180" : "")} />
                               </button>
                               <AnimatePresence>
                                 {showCompleted && (
@@ -689,40 +688,22 @@ export function ProjectDetailPage() {
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: 'auto', opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden space-y-2"
+                                    className="overflow-hidden space-y-1.5"
                                   >
                                     {completedTasks.map(task => (
                                       <div
                                         key={task.id}
                                         onClick={() => setSearchParams({ task: task.id })}
-                                        className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50/15 dark:bg-neutral-850/5 border border-neutral-200/30 dark:border-neutral-800/20 opacity-60 hover:opacity-90 transition-all cursor-pointer shadow-xs"
+                                        className="flex items-center justify-between p-2 rounded-lg bg-muted/20 border border-border/30 opacity-60 hover:opacity-90 transition-all cursor-pointer shadow-2xs"
                                       >
-                                        <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className="flex items-center gap-2 min-w-0">
                                           <button
                                             onClick={(e) => handleToggleTaskStatus(e, task)}
-                                            className="h-5 w-5 rounded-full border border-emerald-500 bg-emerald-500/10 flex items-center justify-center shrink-0 cursor-pointer"
+                                            className="h-4 w-4 rounded-full border border-emerald-500 bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 cursor-pointer"
                                           >
-                                            <Check className="w-2.5 h-2.5 text-emerald-500 stroke-[3]" />
+                                            <Check className="h-2.5 w-2.5 stroke-[2.5]" />
                                           </button>
-                                          <span className="text-xs truncate font-semibold text-neutral-450 dark:text-neutral-500 line-through">
-                                            {task.title}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center gap-3 shrink-0 ml-2">
-                                          {task.assigneeIds.length > 0 && (
-                                            getMemberPhotoURL(task.assigneeIds[0]) ? (
-                                              <img
-                                                src={getMemberPhotoURL(task.assigneeIds[0])}
-                                                alt={getMemberName(task.assigneeIds[0])}
-                                                className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
-                                                title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}
-                                              />
-                                            ) : (
-                                              <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Assigned to ${getMemberName(task.assigneeIds[0])}`}>
-                                                {getInitials(task.assigneeIds[0])}
-                                              </div>
-                                            )
-                                          )}
+                                          <span className="text-xs font-medium line-through text-muted-foreground truncate">{task.title}</span>
                                         </div>
                                       </div>
                                     ))}
@@ -738,17 +719,17 @@ export function ProjectDetailPage() {
                 )}
 
                 {activeTab === 'goals' && (
-                  <div className="p-5 rounded-2xl border border-neutral-200/40 dark:border-neutral-800/30 bg-white/20 dark:bg-neutral-900/10 space-y-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between border-b border-neutral-200/20 dark:border-neutral-800/30 pb-2">
-                        <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
+                  <div className="p-4 rounded-xl border border-border/40 bg-surface/40 dark:bg-card/30 space-y-3">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border-b border-border/30 pb-2">
+                        <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                           <Target className="w-3.5 h-3.5 text-emerald-500" />
                           <span>Goals</span>
                         </h3>
                         <button
                           type="button"
                           onClick={() => setGoalCreateOpen(true)}
-                          className="flex items-center justify-center gap-1 px-3 py-1.5 h-8 text-[10px] font-bold rounded-xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-600 dark:text-emerald-450 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                          className="flex items-center justify-center gap-1 px-2.5 py-1 h-7 text-xs font-semibold rounded-lg border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
                         >
                           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                           <span>Add Goal</span>
@@ -761,16 +742,16 @@ export function ProjectDetailPage() {
                             <motion.div
                               key={goal.id}
                               onClick={() => setSearchParams((prev) => { prev.set('goal', goal.id); return prev; })}
-                              whileHover={{ y: -1, scale: 1.002 }}
-                              className="flex flex-col p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-150/40 dark:border-neutral-800/40 hover:border-neutral-250 dark:hover:border-neutral-700 transition-all group shadow-xs cursor-pointer gap-2"
+                              whileHover={{ y: -1 }}
+                              className="flex flex-col p-3 rounded-lg bg-surface dark:bg-card border border-border/40 hover:border-border transition-all group shadow-2xs cursor-pointer gap-2"
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">
-                                  <span className="text-xs font-bold block text-neutral-850 dark:text-neutral-205 group-hover:text-emerald-500 transition-colors truncate">
+                                  <span className="text-xs font-semibold block text-foreground group-hover:text-emerald-500 transition-colors truncate">
                                     {goal.title}
                                   </span>
                                   {goal.targetDate && (
-                                    <span className="text-[9px] font-semibold text-neutral-450 dark:text-neutral-500 mt-1 block">
+                                    <span className="text-[9px] font-medium text-muted-foreground mt-0.5 block">
                                       Due: {new Date(goal.targetDate instanceof Date ? goal.targetDate : (goal.targetDate as any).seconds * 1000).toLocaleDateString()}
                                     </span>
                                   )}
@@ -778,10 +759,10 @@ export function ProjectDetailPage() {
                                 
                                 <div className="flex items-center gap-2 shrink-0">
                                   <span className={cn(
-                                    "text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded leading-none border",
+                                    "text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded leading-none border",
                                     goal.status === 'completed'
-                                      ? "border-emerald-500/20 text-emerald-650 bg-emerald-500/5 dark:text-emerald-400"
-                                      : "border-indigo-500/20 text-indigo-650 bg-indigo-500/5 dark:text-indigo-400"
+                                      ? "border-emerald-500/20 text-emerald-600 bg-emerald-500/5 dark:text-emerald-400"
+                                      : "border-primary/20 text-primary bg-primary/5"
                                   )}>
                                     {goal.status}
                                   </span>
@@ -790,11 +771,11 @@ export function ProjectDetailPage() {
                                       <img
                                         src={getMemberPhotoURL(goal.ownerId)}
                                         alt={getMemberName(goal.ownerId)}
-                                        className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-neutral-200/50"
+                                        className="w-5 h-5 rounded-full object-cover shrink-0 border border-border"
                                         title={`Owner: ${getMemberName(goal.ownerId)}`}
                                       />
                                     ) : (
-                                      <div className="w-5.5 h-5.5 rounded-full border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 flex items-center justify-center font-bold text-[8px] text-indigo-650 dark:text-indigo-400 shrink-0" title={`Owner: ${getMemberName(goal.ownerId)}`}>
+                                      <div className="w-5 h-5 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center font-bold text-[8px] text-primary shrink-0" title={`Owner: ${getMemberName(goal.ownerId)}`}>
                                         {getInitials(goal.ownerId)}
                                       </div>
                                     )
@@ -803,13 +784,13 @@ export function ProjectDetailPage() {
                               </div>
 
                               <div className="space-y-1 mt-0.5">
-                                <div className="flex items-center justify-between text-[8px] font-bold text-neutral-450">
+                                <div className="flex items-center justify-between text-[8px] font-semibold text-muted-foreground">
                                   <span>Progress</span>
                                   <span className="font-mono">{goal.progressRollup ?? 0}%</span>
                                 </div>
-                                <div className="w-full bg-neutral-100 dark:bg-neutral-800 h-1 rounded-full overflow-hidden">
+                                <div className="w-full bg-secondary h-1 rounded-full overflow-hidden">
                                   <div 
-                                    className="bg-gradient-to-r from-emerald-555 to-teal-500 h-full rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(16,185,129,0.3)]" 
+                                    className="bg-emerald-500 h-full rounded-full transition-all duration-300" 
                                     style={{ width: `${goal.progressRollup ?? 0}%` }} 
                                   />
                                 </div>
@@ -817,8 +798,8 @@ export function ProjectDetailPage() {
                             </motion.div>
                           ))
                         ) : (
-                          <div className="py-12 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-850 bg-neutral-50/10 dark:bg-neutral-850/5 flex flex-col items-center justify-center text-center">
-                            <p className="text-[10px] text-neutral-450 dark:text-neutral-500 italic">No goals linked to this project.</p>
+                          <div className="py-10 rounded-xl border border-dashed border-border/60 bg-muted/20 flex flex-col items-center justify-center text-center">
+                            <p className="text-[10px] text-muted-foreground italic">No goals linked to this project.</p>
                           </div>
                         )}
                       </div>
@@ -837,60 +818,60 @@ export function ProjectDetailPage() {
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: 340, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="w-[340px] shrink-0 border-l border-neutral-200/40 dark:border-neutral-800/45 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl flex flex-col h-full overflow-hidden"
+                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                className="w-[340px] shrink-0 border-l border-border/50 bg-surface/90 dark:bg-card/85 backdrop-blur-xl flex flex-col h-full overflow-hidden shadow-xl"
               >
-                <div className="flex items-center justify-between p-4 border-b border-neutral-200/40 dark:border-neutral-800/45 flex-shrink-0">
-                  <span className="text-[10px] uppercase tracking-widest font-black text-neutral-450 dark:text-neutral-500 flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5 text-indigo-500" />
+                <div className="flex items-center justify-between p-3.5 border-b border-border/50 flex-shrink-0">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-primary" />
                     Discussion
                   </span>
                   <button
                     onClick={() => setShowComments(false)}
-                    className="p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-500 hover:text-neutral-855 flex items-center justify-center transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+                    className="p-1 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {/* Comments List */}
-                <div className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-thin">
+                <div className="flex-grow overflow-y-auto p-3.5 space-y-3 scrollbar-thin">
                   {comments.length > 0 ? (
                     comments.map((comment) => (
-                      <div key={comment.id} className="flex items-start gap-3 bg-white/60 dark:bg-neutral-950/40 border border-neutral-200/45 dark:border-neutral-800/40 p-3.5 rounded-2xl shadow-xs hover:shadow-sm hover:border-neutral-250 transition-all duration-300">
-                        <div className="h-7.5 w-7.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-650 dark:text-indigo-400 shrink-0 overflow-hidden shadow-xs">
+                      <div key={comment.id} className="flex items-start gap-2.5 bg-surface dark:bg-card/50 border border-border/50 p-3 rounded-xl shadow-2xs hover:border-border transition-all">
+                        <div className="h-6 w-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[9px] font-bold text-primary shrink-0 overflow-hidden shadow-2xs">
                           {getMemberPhotoURL(comment.authorId) ? (
                             <img src={getMemberPhotoURL(comment.authorId)} alt={comment.authorName} className="h-full w-full object-cover" />
                           ) : (
                             getMemberInitials(comment.authorId)
                           )}
                         </div>
-                        <div className="min-w-0 flex-1 space-y-1">
+                        <div className="min-w-0 flex-1 space-y-0.5">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-bold text-neutral-850 dark:text-neutral-200 truncate">
+                            <span className="text-[11px] font-semibold text-foreground truncate">
                               {comment.authorName}
                             </span>
-                            <span className="text-[8px] text-neutral-450 dark:text-neutral-550 font-mono">
+                            <span className="text-[8px] text-muted-foreground font-mono">
                               {formatTimestamp(comment.createdAt)}
                             </span>
                           </div>
-                          <p className="text-xs text-neutral-650 dark:text-neutral-350 font-semibold leading-relaxed break-words">
+                          <p className="text-xs text-foreground/80 font-medium leading-relaxed break-words">
                             {comment.body}
                           </p>
                           
                           {comment.files && comment.files.length > 0 && (
-                            <div className="mt-2 space-y-1 max-w-sm">
+                            <div className="mt-1.5 space-y-1 max-w-sm">
                               {comment.files.map((file, fIdx) => (
                                 <a
                                   key={fIdx}
                                   href={file.url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="flex items-center gap-2 p-2 rounded-xl border border-neutral-200/50 dark:border-neutral-800/60 bg-white/75 dark:bg-neutral-900/70 hover:bg-indigo-50/50 text-[10px] text-indigo-650 dark:text-indigo-400 font-bold truncate transition-colors shadow-sm"
+                                  className="flex items-center gap-1.5 p-1.5 rounded-lg border border-border/50 bg-surface hover:bg-muted/50 text-[10px] text-primary font-semibold truncate transition-colors shadow-2xs"
                                 >
-                                  <Paperclip className="w-3 h-3 text-indigo-555 shrink-0" />
+                                  <Paperclip className="w-3 h-3 text-primary shrink-0" />
                                   <span className="truncate flex-1">{file.name}</span>
-                                  <span className="text-[8px] text-neutral-450 font-semibold shrink-0">
+                                  <span className="text-[8px] text-muted-foreground font-mono shrink-0">
                                     {(file.size / 1024).toFixed(1)} KB
                                   </span>
                                 </a>
@@ -901,14 +882,14 @@ export function ProjectDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="py-12 text-center text-xs text-neutral-450 dark:text-neutral-500 italic">
+                    <div className="py-10 text-center text-xs text-muted-foreground italic">
                       No discussions yet. Start the conversation!
                     </div>
                   )}
                 </div>
 
                 {/* Comment Input */}
-                <div className="p-4 border-t border-neutral-200/40 dark:border-neutral-800/40 bg-white/40 dark:bg-neutral-950/20 flex-shrink-0 flex flex-col gap-2">
+                <div className="p-3 border-t border-border/50 bg-surface/50 dark:bg-card/40 flex-shrink-0 flex flex-col gap-2">
                   <AttachmentInput
                     selectedFiles={commentFiles}
                     onRemove={(idx) => setCommentFiles(prev => prev.filter((_, i) => i !== idx))}
@@ -921,7 +902,7 @@ export function ProjectDetailPage() {
                       value={commentBody}
                       disabled={uploadingCommentFiles}
                       onChange={(e) => setCommentBody(e.target.value)}
-                      className="flex-1 bg-white/60 dark:bg-neutral-950/60 border border-neutral-200/60 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-neutral-850 dark:text-neutral-200 placeholder:text-neutral-450 outline-none hover:border-neutral-350 dark:hover:border-neutral-750 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all font-semibold disabled:opacity-50 shadow-xs"
+                      className="flex-1 bg-surface dark:bg-background border border-border/60 rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all font-medium disabled:opacity-50 shadow-2xs"
                     />
                     <button
                       type="button"
@@ -936,20 +917,20 @@ export function ProjectDetailPage() {
                         };
                         input.click();
                       }}
-                      className="p-2.5 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 border border-neutral-200/60 dark:border-neutral-800/80 rounded-xl text-neutral-500 hover:text-neutral-700 dark:text-neutral-450 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0 shadow-sm"
+                      className="p-2 bg-surface hover:bg-muted border border-border/60 rounded-xl text-muted-foreground hover:text-foreground hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0 shadow-2xs"
                       title="Attach File"
                     >
-                      <Paperclip className="w-4 h-4" />
+                      <Paperclip className="w-3.5 h-3.5" />
                     </button>
                     <button
                       type="submit"
                       disabled={uploadingCommentFiles}
-                      className="p-2.5 bg-white/50 dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 border border-neutral-200/60 dark:border-neutral-800/80 rounded-xl text-neutral-600 hover:text-indigo-500 dark:text-neutral-350 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0 shadow-sm"
+                      className="p-2 bg-primary text-primary-foreground hover:bg-primary/90 border border-primary/20 rounded-xl hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0 shadow-2xs"
                     >
                       {uploadingCommentFiles ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
-                        <Send className="w-4 h-4" />
+                        <Send className="w-3.5 h-3.5" />
                       )}
                     </button>
                   </form>
@@ -1011,85 +992,85 @@ export function ProjectDetailPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6 rounded-3xl border border-neutral-200/50 dark:border-neutral-800/40 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl shadow-2xl z-[101] flex flex-col gap-4 max-h-[90vh] overflow-y-auto scrollbar-thin"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-5 rounded-2xl border border-border bg-surface dark:bg-card backdrop-blur-xl shadow-2xl z-[101] flex flex-col gap-4 max-h-[90vh] overflow-y-auto scrollbar-thin"
             >
-              <div className="flex items-center justify-between border-b border-neutral-200/40 dark:border-neutral-800/60 pb-3">
+              <div className="flex items-center justify-between border-b border-border/60 pb-3">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 shrink-0">
                     <Lock className="w-4 h-4 text-amber-500" />
                   </div>
-                  <h3 className="text-sm font-black text-neutral-850 dark:text-neutral-100">Project Details</h3>
+                  <h3 className="text-sm font-bold text-foreground">Project Details</h3>
                 </div>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="w-8 h-8 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-805 text-neutral-500 hover:text-neutral-850 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                  className="w-8 h-8 rounded-xl border border-border hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 {/* Security Active Notice */}
-                <div className="p-3.5 bg-amber-500/[0.03] border border-amber-500/15 rounded-xl space-y-1.5">
+                <div className="p-3 bg-amber-500/[0.04] border border-amber-500/20 rounded-xl space-y-1">
                   <div className="flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Private Project</span>
+                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Private Project</span>
                   </div>
-                  <p className="text-[10px] text-neutral-500 leading-relaxed font-semibold">
+                  <p className="text-[10px] text-muted-foreground leading-relaxed font-medium">
                     Only members invited to this project can view its tasks, goals, and discussions.
                   </p>
                 </div>
 
                 {/* Name */}
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Project Name</label>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Project Name</label>
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder:text-neutral-400 shadow-xs"
+                    className="w-full px-3 py-2 rounded-xl border border-border bg-surface dark:bg-background text-xs font-semibold text-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground shadow-2xs"
                     placeholder="Enter project name..."
                   />
                 </div>
 
                 {/* Description */}
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Project Description</label>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Project Description</label>
                   <textarea
                     value={editDesc}
                     onChange={(e) => setEditDesc(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all h-24 resize-none leading-relaxed placeholder:text-neutral-400 shadow-xs"
+                    className="w-full px-3 py-2 rounded-xl border border-border bg-surface dark:bg-background text-xs font-semibold text-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all h-20 resize-none leading-relaxed placeholder:text-muted-foreground shadow-2xs"
                     placeholder="Describe what this project entails..."
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   {/* Start Date */}
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Start Date</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Start Date</label>
                     <input
                       type="date"
                       value={editStartDate}
                       onChange={(e) => setEditStartDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-850 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-xs"
+                      className="w-full px-3 py-2 rounded-xl border border-border bg-surface dark:bg-background text-xs font-semibold text-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all shadow-2xs"
                     />
                   </div>
 
                   {/* Due Date */}
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Due Date</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Due Date</label>
                     <input
                       type="date"
                       value={editDueDate}
                       onChange={(e) => setEditDueDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-855 bg-white/50 dark:bg-neutral-955/40 text-xs font-semibold text-neutral-850 dark:text-neutral-200 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-xs"
+                      className="w-full px-3 py-2 rounded-xl border border-border bg-surface dark:bg-background text-xs font-semibold text-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all shadow-2xs"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Actions Footer */}
-              <div className="flex items-center justify-between gap-2.5 border-t border-neutral-200/40 dark:border-neutral-800/60 pt-4 mt-2">
+              <div className="flex items-center justify-between gap-2.5 border-t border-border/50 pt-3 mt-1">
                 {(project.ownerId === user?.uid || userProfile?.role === 'owner' || userProfile?.role === 'admin') ? (
                   <button
                     onClick={async () => {
@@ -1102,22 +1083,22 @@ export function ProjectDetailPage() {
                         }
                       }
                     }}
-                    className="px-3.5 py-2 border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                    className="px-3 py-1.5 border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-xs font-semibold transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Delete Project</span>
                   </button>
                 ) : <div />}
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="px-4 py-2 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-550 hover:text-neutral-850 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                    className="px-3.5 py-1.5 border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveProject}
-                    className="px-4 py-2 bg-indigo-650 dark:bg-indigo-500 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md shadow-indigo-600/10"
+                    className="px-4 py-1.5 bg-primary text-primary-foreground rounded-xl text-xs font-semibold hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
                   >
                     Save Changes
                   </button>

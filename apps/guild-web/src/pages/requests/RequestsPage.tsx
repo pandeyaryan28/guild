@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Plus, Search, CheckCircle2, XCircle, Clock,
-  ChevronDown, X, Loader2, FileText, Calendar,
+  ChevronDown, ChevronRight, X, Loader2, FileText, Calendar,
   Stethoscope, Home, Laptop, Receipt, ClipboardList,
   Inbox, Send, Trash2, Bell, Copy, Printer, Check,
   ArrowRight, User, Briefcase, Info, Sparkles,
@@ -428,7 +428,7 @@ function CreateRequestModal({
   return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }
 
-// ─── Executive Request Card ───────────────────────────────────────────────────
+// ─── High-Density Executive Request Row ───────────────────────────────────────
 
 function ExecutiveRequestCard({
   req,
@@ -509,183 +509,145 @@ function ExecutiveRequestCard({
     <motion.div
       layout="position"
       onClick={() => onSelect?.(req)}
-      whileHover={{ y: -1 }}
+      whileHover={{ scale: 1.002 }}
       transition={{ duration: 0.15 }}
       className={cn(
-        'group relative rounded-2xl p-4 sm:p-5 transition-all cursor-pointer',
-        'bg-surface/90 dark:bg-surface/50 border border-border/80 dark:border-border/60',
-        'shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:border-border'
+        'group relative rounded-xl py-2 px-3 sm:px-3.5 transition-all cursor-pointer',
+        'bg-surface/70 dark:bg-card/50 border border-border/40 hover:border-border hover:bg-surface dark:hover:bg-card',
+        'shadow-2xs hover:shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5'
       )}
     >
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-        {/* Left: Icon + Title + Metadata */}
-        <div className="flex items-start gap-3.5 min-w-0 flex-1">
-          <div className="w-10 h-10 rounded-2xl bg-secondary/80 border border-border flex items-center justify-center text-primary shrink-0 shadow-xs">
-            <RequestIcon name={REQUEST_TYPE_ICONS[req.type]} className="h-4.5 w-4.5" />
-          </div>
-
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
-                {REQUEST_TYPE_LABELS[req.type]}
-              </span>
-
-              {duration && (
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-secondary text-muted-foreground border border-border/60">
-                  {duration}
-                </span>
-              )}
-
-              {(req.startDate || req.endDate) && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
-                  <Calendar className="h-3 w-3 text-muted-foreground/60" />
-                  <span>
-                    {formatDate(req.startDate)}
-                    {req.endDate && req.endDate !== req.startDate ? ` → ${formatDate(req.endDate)}` : ''}
-                  </span>
-                </span>
-              )}
-            </div>
-
-            <h3 className="text-sm font-bold text-foreground leading-snug tracking-tight">
-              {req.title}
-            </h3>
-
-            {req.description && (
-              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-                {req.description}
-              </p>
-            )}
-
-            {/* Requester -> Approver trail */}
-            <div className="flex items-center gap-2 pt-1 text-[11px] text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <div
-                  className={cn(
-                    'w-4.5 h-4.5 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0',
-                    getAvatarColor(req.creatorId)
-                  )}
-                >
-                  {req.creatorName?.[0] || 'U'}
-                </div>
-                <span className="font-semibold text-foreground">
-                  @{req.creatorUsername || req.creatorName}
-                </span>
-              </div>
-
-              <ArrowRight className="w-3 h-3 text-muted-foreground/60" />
-
-              <div className="flex items-center gap-1.5">
-                <div
-                  className={cn(
-                    'w-4.5 h-4.5 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0',
-                    getAvatarColor(req.approverId)
-                  )}
-                >
-                  {req.approverName?.[0] || 'A'}
-                </div>
-                <span className="font-semibold text-foreground">
-                  @{req.approverUsername || req.approverName}
-                </span>
-              </div>
-
-              <span className="opacity-40">·</span>
-              <span className="font-mono text-[10px]">{timeAgo(req.createdAt)}</span>
-            </div>
-
-            {/* Approver Note Display if decided */}
-            {req.approverNote && (
-              <div className="mt-2 p-2.5 rounded-xl bg-secondary/50 border border-border/60 text-[11px] italic text-muted-foreground">
-                “{req.approverNote}”
-              </div>
-            )}
-          </div>
+      {/* Left: Icon + Type + Title + Requester + Time */}
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        {/* Compact Type Icon */}
+        <div className="w-7 h-7 rounded-lg bg-secondary/80 border border-border/50 flex items-center justify-center text-primary shrink-0">
+          <RequestIcon name={REQUEST_TYPE_ICONS[req.type]} className="h-3.5 w-3.5" />
         </div>
 
-        {/* Right: Status Pill & Rapid Decision Controls */}
-        <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-start gap-2.5 shrink-0 pt-2 sm:pt-0">
-          {/* Status Badge */}
-          <span
-            className={cn(
-              'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider',
-              isApproved && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 shadow-xs',
-              isRejected && 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 shadow-xs',
-              isPending && 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 shadow-xs'
-            )}
-          >
-            {isApproved ? (
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-            ) : isRejected ? (
-              <XCircle className="h-3.5 w-3.5 text-rose-500" />
-            ) : (
-              <Clock className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
-            )}
-            <span>{req.status}</span>
+        {/* Creator Avatar */}
+        <div
+          className={cn(
+            'w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0',
+            getAvatarColor(req.creatorId)
+          )}
+          title={`Requester: ${req.creatorName}`}
+        >
+          {req.creatorName?.[0] || 'U'}
+        </div>
+
+        {/* Title & Metadata */}
+        <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <span className="text-xs sm:text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+            {req.title}
           </span>
 
-          {/* 1-Click Approve / Reject for Approver */}
-          {canDecide && (
-            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                disabled={acting}
-                onClick={handleApprove}
-                className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all cursor-pointer flex items-center gap-1 active:scale-[0.97] shadow-xs disabled:opacity-50"
-              >
-                {acting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                <span>Approve</span>
-              </button>
+          <span className="px-1.5 py-0.2 rounded-md text-[9px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 shrink-0">
+            {REQUEST_TYPE_LABELS[req.type]}
+          </span>
 
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setRejectOpen(!rejectOpen)}
-                  className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-rose-500/15 text-rose-600 dark:text-rose-400 hover:bg-rose-500/25 border border-rose-500/30 transition-all cursor-pointer flex items-center gap-1 active:scale-[0.97] shadow-xs"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  <span>Reject</span>
-                </button>
-
-                {rejectOpen && (
-                  <div
-                    className="absolute right-0 top-full mt-2 w-64 p-3.5 bg-surface border border-border dark:border-border-strong rounded-2xl shadow-2xl z-50 backdrop-blur-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <p className="text-xs font-bold text-foreground mb-1.5">Reject this request?</p>
-                    <input
-                      type="text"
-                      value={rejectNote}
-                      onChange={(e) => setRejectNote(e.target.value)}
-                      placeholder="Reason for rejection (optional)..."
-                      className="w-full text-xs bg-secondary/60 rounded-xl px-2.5 py-1.5 outline-none text-foreground placeholder:text-muted-foreground mb-2.5 border border-border"
-                      autoFocus
-                    />
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRejectOpen(false);
-                          setRejectNote('');
-                        }}
-                        className="px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        disabled={acting}
-                        onClick={handleReject}
-                        className="px-3 py-1 text-xs font-semibold bg-rose-500 text-white rounded-xl hover:bg-rose-600 active:scale-[0.97] cursor-pointer shadow-xs disabled:opacity-50"
-                      >
-                        {acting ? 'Rejecting…' : 'Confirm'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+          {duration && (
+            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono text-muted-foreground bg-secondary/60 border border-border/40 shrink-0 hidden md:inline">
+              {duration}
+            </span>
           )}
+
+          <span className="text-[11px] text-muted-foreground truncate hidden lg:inline">
+            @{req.creatorUsername || req.creatorName} → @{req.approverUsername || req.approverName}
+          </span>
         </div>
+
+        <span className="font-mono text-[10px] text-muted-foreground/70 shrink-0 hidden sm:inline">
+          {timeAgo(req.createdAt)}
+        </span>
+      </div>
+
+      {/* Right: Status Pill & 1-Click Actions */}
+      <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+        {/* Status Pill */}
+        <span
+          className={cn(
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider',
+            isApproved && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+            isRejected && 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+            isPending && 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+          )}
+        >
+          {isApproved ? (
+            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+          ) : isRejected ? (
+            <XCircle className="h-3 w-3 text-rose-500" />
+          ) : (
+            <Clock className="h-3 w-3 text-amber-500 animate-pulse" />
+          )}
+          <span>{req.status}</span>
+        </span>
+
+        {/* 1-Click Approve / Reject for Approver */}
+        {canDecide && (
+          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              disabled={acting}
+              onClick={handleApprove}
+              className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all cursor-pointer flex items-center gap-1 active:scale-[0.97] disabled:opacity-50"
+            >
+              {acting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+              <span>Approve</span>
+            </motion.button>
+
+            <div className="relative">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={() => setRejectOpen(!rejectOpen)}
+                className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-rose-500/15 text-rose-600 dark:text-rose-400 hover:bg-rose-500/25 border border-rose-500/30 transition-all cursor-pointer flex items-center gap-1 active:scale-[0.97]"
+              >
+                <X className="w-3 h-3" />
+                <span>Reject</span>
+              </motion.button>
+
+              {rejectOpen && (
+                <div
+                  className="absolute right-0 top-full mt-1.5 w-60 p-3 bg-surface border border-border dark:border-border-strong rounded-xl shadow-xl z-50 backdrop-blur-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className="text-xs font-bold text-foreground mb-1">Reject this request?</p>
+                  <input
+                    type="text"
+                    value={rejectNote}
+                    onChange={(e) => setRejectNote(e.target.value)}
+                    placeholder="Reason (optional)..."
+                    className="w-full text-xs bg-secondary/60 rounded-lg px-2 py-1 outline-none text-foreground placeholder:text-muted-foreground mb-2 border border-border/60"
+                    autoFocus
+                  />
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRejectOpen(false);
+                        setRejectNote('');
+                      }}
+                      className="px-2 py-0.5 text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={acting}
+                      onClick={handleReject}
+                      className="px-2.5 py-0.5 text-xs font-semibold bg-rose-500 text-white rounded-lg hover:bg-rose-600 active:scale-[0.97] cursor-pointer shadow-xs disabled:opacity-50"
+                    >
+                      {acting ? 'Rejecting…' : 'Confirm'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
       </div>
     </motion.div>
   );
@@ -702,6 +664,7 @@ export function RequestsPage() {
 
   const [activeSection, setActiveSection] = React.useState<JourneySection>('pending_approvals');
   const [statusFilter, setStatusFilter] = React.useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [categoryFilter, setCategoryFilter] = React.useState<RequestType | 'all'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [modalOpen, setModalOpen] = React.useState(false);
   const [activeDetailRequest, setActiveDetailRequest] = React.useState<OrgRequest | null>(null);
@@ -756,10 +719,11 @@ export function RequestsPage() {
     return allRequests;
   }, [activeSection, received, sent, allRequests]);
 
-  // Filtered dataset by search & status
+  // Filtered dataset by search, status, and category
   const filteredList = React.useMemo(() => {
     return datasetForSection.filter((req) => {
       if (statusFilter !== 'all' && req.status !== statusFilter) return false;
+      if (categoryFilter !== 'all' && req.type !== categoryFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchTitle = (req.title || '').toLowerCase().includes(q);
@@ -771,266 +735,168 @@ export function RequestsPage() {
       }
       return true;
     });
-  }, [datasetForSection, statusFilter, searchQuery]);
+  }, [datasetForSection, statusFilter, categoryFilter, searchQuery]);
 
   return (
     <div className="min-h-full w-full bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
-      {/* ── Top Header: Apple SwiftUI Design ─────────────────────────────────── */}
-      <div className="pt-8 pb-4 px-4 sm:px-8 max-w-7xl mx-auto w-full print:hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5 shadow-xs">
-                <ShieldCheck className="w-3 h-3 text-primary" />
-                Executive Approval Stream
-              </span>
-              <span className="text-xs text-muted-foreground font-medium">
-                Workspace Governance
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              Requests & Executive Sign-offs
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Streamlined leaves, operational permissions, hardware, and expense approvals with verified audit trails.
-            </p>
-          </div>
+      {/* ── Single Compact Header Toolbar (h-12) ─────────────────────────── */}
+      <div className="h-12 border-b border-border/50 px-3 sm:px-4 flex items-center justify-between gap-2.5 bg-background/85 backdrop-blur-md sticky top-0 z-20 shrink-0">
+        {/* Left: Request tabs & status filters */}
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar min-w-0 py-1">
+          {(
+            [
+              { id: 'pending_approvals', label: 'Pending', count: overviewStats.pendingToDecide },
+              { id: 'approved_history', label: 'History', count: overviewStats.totalResolved },
+              { id: 'created_by_me', label: 'My Requests', count: sent.length },
+              { id: 'all', label: 'All', count: allRequests.length },
+            ] as const
+          ).map((tab) => {
+            const isActive = activeSection === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  setActiveSection(tab.id);
+                  setStatusFilter('all');
+                }}
+                className={cn(
+                  'px-2.5 py-1 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5',
+                  isActive
+                    ? 'bg-secondary text-foreground font-semibold shadow-2xs border border-border/60'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                )}
+              >
+                <span>{tab.label}</span>
+                {tab.count > 0 && (
+                  <span
+                    className={cn(
+                      'text-[10px] font-bold px-1.5 py-0.2 rounded-full',
+                      isActive
+                        ? 'bg-primary/15 text-primary'
+                        : 'bg-muted text-muted-foreground'
+                    )}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
 
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            className="px-4 py-2 rounded-2xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/95 transition-all active:scale-[0.98] cursor-pointer flex items-center gap-2 shadow-sm shadow-primary/20 self-start md:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            <span>New Request</span>
-          </button>
-        </div>
-
-        {/* ── Executive Journey Overview Deck (3 Metric Cards) ────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-6">
-          {/* Card 1: Action Required */}
-          <div
-            onClick={() => setActiveSection('pending_approvals')}
-            className={cn(
-              'p-4.5 rounded-3xl border transition-all cursor-pointer active:scale-[0.99] flex items-center justify-between shadow-xs',
-              activeSection === 'pending_approvals'
-                ? 'bg-amber-500/10 border-amber-500/40'
-                : 'bg-surface/80 dark:bg-surface/50 border-border/80 dark:border-border-strong hover:border-amber-500/30'
-            )}
-          >
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Action Required
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-foreground">
-                  {overviewStats.pendingToDecide}
-                </span>
-                <span className="text-xs text-amber-500 font-semibold">Pending Decisions</span>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Awaiting your executive sign-off</p>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/20 flex items-center justify-center text-amber-500">
-              <Clock className="w-5 h-5 animate-pulse" />
-            </div>
-          </div>
-
-          {/* Card 2: My In-Flight */}
-          <div
-            onClick={() => setActiveSection('created_by_me')}
-            className={cn(
-              'p-4.5 rounded-3xl border transition-all cursor-pointer active:scale-[0.99] flex items-center justify-between shadow-xs',
-              activeSection === 'created_by_me'
-                ? 'bg-primary/10 border-primary/40'
-                : 'bg-surface/80 dark:bg-surface/50 border-border/80 dark:border-border-strong hover:border-primary/30'
-            )}
-          >
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                My In-Flight
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-foreground">
-                  {overviewStats.myInFlight}
-                </span>
-                <span className="text-xs text-primary font-semibold">Submissions</span>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Actively under manager review</p>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center text-primary">
-              <Send className="w-5 h-5" />
-            </div>
-          </div>
-
-          {/* Card 3: Approval Rate & Turnaround */}
-          <div
-            onClick={() => setActiveSection('approved_history')}
-            className={cn(
-              'p-4.5 rounded-3xl border transition-all cursor-pointer active:scale-[0.99] flex items-center justify-between shadow-xs',
-              activeSection === 'approved_history'
-                ? 'bg-emerald-500/10 border-emerald-500/40'
-                : 'bg-surface/80 dark:bg-surface/50 border-border/80 dark:border-border-strong hover:border-emerald-500/30'
-            )}
-          >
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Audit & History
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-foreground">
-                  {overviewStats.totalResolved}
-                </span>
-                <span className="text-xs text-emerald-500 font-semibold">
-                  {overviewStats.approvalRate}% rate
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Resolved requests recorded</p>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* ── Segmented Journey Navigation Bar ───────────────────────────────── */}
-        <div className="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative inline-flex p-1 bg-secondary/70 dark:bg-secondary/40 backdrop-blur-xl border border-border rounded-2xl self-start overflow-x-auto max-w-full shadow-xs">
-            {(
-              [
-                { id: 'pending_approvals', label: 'Pending Approvals', count: overviewStats.pendingToDecide },
-                { id: 'approved_history', label: 'Approved History', count: overviewStats.totalResolved },
-                { id: 'created_by_me', label: 'Created by Me', count: sent.length },
-                { id: 'all', label: 'All Requests', count: allRequests.length },
-              ] as const
-            ).map((tab) => {
-              const isActive = activeSection === tab.id;
-              return (
+          {/* Status Filter if History or All */}
+          {(activeSection === 'approved_history' || activeSection === 'all') && (
+            <div className="hidden md:flex items-center gap-1 pl-2 ml-1 border-l border-border/40">
+              {(
+                [
+                  { id: 'all', label: 'All Status' },
+                  { id: 'approved', label: 'Approved' },
+                  { id: 'rejected', label: 'Rejected' },
+                ] as const
+              ).map((p) => (
                 <button
-                  key={tab.id}
+                  key={p.id}
                   type="button"
-                  onClick={() => {
-                    setActiveSection(tab.id);
-                    setStatusFilter('all');
-                  }}
+                  onClick={() => setStatusFilter(p.id)}
                   className={cn(
-                    'relative px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer z-10 flex items-center gap-2',
-                    isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    'px-2 py-0.5 rounded-md text-[11px] font-medium transition-all cursor-pointer',
+                    statusFilter === p.id
+                      ? 'bg-foreground text-background font-semibold shadow-2xs'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
                   )}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="requests-segment-pill"
-                      className="absolute inset-0 bg-surface rounded-xl shadow-xs border border-border/80 dark:border-white/10 -z-10"
-                      transition={{ type: 'spring', damping: 26, stiffness: 380 }}
-                    />
-                  )}
-                  <span>{tab.label}</span>
-                  {tab.count > 0 && (
-                    <span
-                      className={cn(
-                        'text-[10px] font-bold px-1.5 py-0.2 rounded-full transition-colors',
-                        isActive
-                          ? 'bg-primary/15 text-primary'
-                          : 'bg-muted/70 text-muted-foreground'
-                      )}
-                    >
-                      {tab.count}
-                    </span>
-                  )}
+                  {p.label}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-          {/* Quick Search */}
-          <div className="relative w-full md:w-72">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        {/* Right: Category filter, Search, and '+ New Request' */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Category Filter Dropdown */}
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value as any)}
+            className="hidden sm:inline-block h-8 px-2 rounded-lg bg-surface/80 dark:bg-card/60 border border-border/60 text-xs font-medium text-foreground outline-none focus:ring-1 focus:ring-primary/40 cursor-pointer"
+          >
+            <option value="all">All Categories</option>
+            {(Object.entries(REQUEST_TYPE_LABELS) as [RequestType, string][]).map(([k, label]) => (
+              <option key={k} value={k}>
+                {label}
+              </option>
+            ))}
+          </select>
+
+          {/* Search Box */}
+          <div className="relative w-36 sm:w-48 lg:w-56">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search title, requester, reason..."
-              className="w-full text-xs rounded-2xl bg-surface border border-border pl-8.5 pr-8 py-2 text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs"
+              placeholder="Search..."
+              className="w-full h-8 text-xs rounded-lg bg-surface/80 dark:bg-card/60 border border-border/60 pl-7.5 pr-7 text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-1 focus:ring-primary/40 focus:border-primary transition-all shadow-2xs"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3 h-3" />
               </button>
             )}
           </div>
-        </div>
 
-        {/* Status Filters if in History or All */}
-        {(activeSection === 'approved_history' || activeSection === 'all') && (
-          <div className="mt-3.5 flex items-center gap-1.5 pt-3 border-t border-border/40 text-xs">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mr-1">
-              Status:
-            </span>
-            {(
-              [
-                { id: 'all', label: 'All' },
-                { id: 'approved', label: 'Approved' },
-                { id: 'rejected', label: 'Rejected' },
-              ] as const
-            ).map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setStatusFilter(p.id)}
-                className={cn(
-                  'px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer',
-                  statusFilter === p.id
-                    ? 'bg-foreground text-background shadow-xs'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
-                )}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        )}
+          {/* '+ New Request' Button */}
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="h-8 px-3 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/95 transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-2xs shrink-0"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">New Request</span>
+          </button>
+        </div>
       </div>
 
       {/* ── Main Stream Content ─────────────────────────────────────────────── */}
-      <div className="flex-1 px-4 sm:px-8 pb-16 max-w-7xl mx-auto w-full print:hidden">
+      <div className="flex-1 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto p-3 sm:p-4 pb-12 print:hidden space-y-2">
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-3">
-            <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="w-7 h-7 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
             <p className="text-xs text-muted-foreground font-medium tracking-wide">
-              Loading approval streams…
+              Loading requests…
             </p>
           </div>
         ) : filteredList.length === 0 ? (
-          <div className="py-20 flex flex-col items-center justify-center text-center p-8 rounded-3xl bg-surface/60 border border-border/80 dark:border-border/40 shadow-xs">
-            <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-muted-foreground mb-3">
-              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+          <div className="py-16 flex flex-col items-center justify-center text-center p-6 rounded-2xl bg-surface/60 dark:bg-card/40 border border-border/50 shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground mb-2.5">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
             </div>
-            <h3 className="text-base font-bold text-foreground">
+            <h3 className="text-sm font-bold text-foreground">
               {activeSection === 'pending_approvals'
                 ? 'Zero Pending Approvals'
                 : 'No requests recorded'}
             </h3>
-            <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-5">
+            <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-4">
               {activeSection === 'pending_approvals'
-                ? 'You have addressed all pending items requiring your sign-off. Great velocity!'
+                ? 'All pending items requiring your sign-off have been addressed.'
                 : activeSection === 'created_by_me'
-                ? "You haven't submitted any requests yet. Tap New Request to start."
+                ? "You haven't submitted any requests yet."
                 : 'No requests match your current search and filter settings.'}
             </p>
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer"
             >
               New Request
             </button>
           </div>
         ) : (
-          <div className="space-y-3.5">
+          <div className="space-y-1.5">
             {filteredList.map((req) => (
               <ExecutiveRequestCard
                 key={req.id}

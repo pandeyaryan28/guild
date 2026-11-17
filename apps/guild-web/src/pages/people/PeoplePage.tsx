@@ -17,6 +17,7 @@ import { createTeam, updateTeam, deleteTeam } from '../../lib/teams';
 import { useTasks } from '../../hooks/useTasks';
 import { STATUS_CONFIG, PRIORITY_CONFIG, type Task } from '../../lib/tasks';
 import { MemberProfileDrawer } from '../../components/MemberProfileDrawer';
+import { cn } from '@/lib/utils';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -100,81 +101,66 @@ function MemberCard({ member, isSelf, onClick, hasAccess = false }: MemberCardPr
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={hasAccess ? { y: -2 } : undefined}
-      transition={{ duration: 0.18 }}
+      transition={{ duration: 0.16 }}
       onClick={onClick}
-      className={`group relative rounded-2xl border p-3.5 sm:p-5 flex flex-col gap-3.5 sm:gap-4 transition-all duration-200 ${
+      className={cn(
+        "group relative rounded-xl border p-3 flex flex-col justify-between gap-2.5 transition-all duration-150 bg-surface/50 dark:bg-card/40 backdrop-blur-sm",
         hasAccess
-          ? 'border-border-default hover:border-primary/40 hover:shadow-xl hover:shadow-black/10 cursor-pointer'
-          : 'border-border-default/60 cursor-default'
-      }`}
-    >
-      {/* Self indicator */}
-      {isSelf && (
-        <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-widest text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-          You
-        </span>
+          ? "border-border/60 hover:border-primary/40 hover:bg-surface/80 dark:hover:bg-card/70 hover:shadow-md cursor-pointer"
+          : "border-border/40 opacity-90 cursor-default"
       )}
-
-      {/* Avatar + name */}
-      <div className="flex items-center gap-3">
-        {member.photoURL ? (
-          <img
-            src={member.photoURL}
-            alt={member.fullName}
-            className="h-11 w-11 rounded-xl object-cover shrink-0 shadow-lg border border-white/10 dark:border-black/20"
-          />
-        ) : (
-          <div
-            className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-lg"
-            style={{ background: `hsl(${hue} 60% 45%)` }}
-          >
-            {initials}
+    >
+      {/* Top row: Avatar + Name + Role/Self */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          {member.photoURL ? (
+            <img
+              src={member.photoURL}
+              alt={member.fullName}
+              className="h-8 w-8 rounded-lg object-cover shrink-0 border border-border"
+            />
+          ) : (
+            <div
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm"
+              style={{ background: `hsl(${hue} 60% 45%)` }}
+            >
+              {initials}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-foreground truncate leading-tight group-hover:text-primary transition-colors">
+              {member.fullName}
+            </p>
+            <p className="text-[10px] text-muted-foreground truncate font-medium">
+              {member.designation || `@${member.username || member.email?.split('@')[0] || 'member'}`}
+            </p>
           </div>
-        )}
-        <div className="overflow-hidden">
-          <p className="text-sm font-semibold text-foreground truncate leading-tight">
-            {member.fullName}
-          </p>
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-            @{member.username || member.email?.split('@')[0] || 'member'}
-          </p>
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {isSelf && (
+            <span className="text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">
+              You
+            </span>
+          )}
+          <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold border", meta.bg, meta.color)}>
+            <RoleIcon className="h-2.5 w-2.5" />
+            {meta.label}
+          </span>
         </div>
       </div>
 
-      {/* Role badge */}
-      <div className="flex items-center gap-2">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${meta.bg} ${meta.color}`}>
-          <RoleIcon className="h-3 w-3" />
-          {meta.label}
-        </span>
-      </div>
-
-      {/* Details grid */}
-      <div className="space-y-2">
-        {member.designation && (
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Briefcase className="h-3 w-3 shrink-0 text-text-muted" />
-            <span className="truncate">{member.designation}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <Mail className="h-3 w-3 shrink-0 text-text-muted" />
+      {/* Meta Row: Email / Details */}
+      <div className="flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/40 pt-2 mt-0.5 gap-2">
+        <div className="flex items-center gap-1.5 truncate">
+          <Mail className="h-3 w-3 shrink-0 opacity-60" />
           <span className="truncate">{member.email}</span>
         </div>
-        {member.employeeId && (
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Hash className="h-3 w-3 shrink-0 text-text-muted" />
-            <span>ID: {member.employeeId}</span>
-          </div>
-        )}
         {timeAgo(member.createdAt) && (
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Calendar className="h-3 w-3 shrink-0 text-text-muted" />
-            <span>Joined {timeAgo(member.createdAt)}</span>
-          </div>
+          <span className="shrink-0 text-[9px] opacity-75 font-medium">{timeAgo(member.createdAt)}</span>
         )}
       </div>
     </motion.div>
@@ -266,23 +252,23 @@ function TeamFormModal({ isOpen, onClose, orgId, members, editingTeam }: TeamFor
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-lg overflow-hidden rounded-3xl border border-border-default/80 bg-surface shadow-2xl p-6 relative flex flex-col max-h-[90vh]"
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-2xl p-5 relative flex flex-col max-h-[90vh]"
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-border-default shrink-0">
-          <h2 className="text-base font-bold text-foreground">
+        <div className="flex items-center justify-between pb-3.5 border-b border-border/60 shrink-0">
+          <h2 className="text-sm font-bold text-foreground">
             {editingTeam ? 'Edit Team & Squad' : 'Create Team & Squad'}
           </h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent/45 hover:text-foreground transition-colors"
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 pt-4 pr-1 scrollbar-thin">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-3.5 pt-3.5 pr-1 scrollbar-thin">
           {error && (
             <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl flex items-center gap-2">
               <AlertCircle className="h-4 w-4 shrink-0" />
@@ -292,7 +278,7 @@ function TeamFormModal({ isOpen, onClose, orgId, members, editingTeam }: TeamFor
 
           {/* Name */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               Team Name
             </label>
             <input
@@ -300,27 +286,27 @@ function TeamFormModal({ isOpen, onClose, orgId, members, editingTeam }: TeamFor
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3.5 py-2 border border-border-default bg-bg-primary text-sm text-foreground rounded-xl outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-text-muted"
+              className="w-full px-3.5 py-2 border border-border bg-secondary/40 text-xs text-foreground rounded-xl outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
               placeholder="e.g. Engineering, Logistics Group, Marketing"
             />
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               Description (Optional)
             </label>
             <textarea
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
-              className="w-full px-3.5 py-2 border border-border-default bg-bg-primary text-sm text-foreground rounded-xl outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all min-h-[80px] placeholder:text-text-muted resize-none"
+              className="w-full px-3.5 py-2 border border-border bg-secondary/40 text-xs text-foreground rounded-xl outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all min-h-[70px] placeholder:text-muted-foreground resize-none"
               placeholder="What does this team focus on?"
             />
           </div>
 
           {/* Team Lead */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               Team Lead / Manager
             </label>
             <SearchableSelect
@@ -333,37 +319,37 @@ function TeamFormModal({ isOpen, onClose, orgId, members, editingTeam }: TeamFor
                 photoURL: m.photoURL,
               }))}
               placeholder="Select a Manager..."
-              triggerClassName="py-2.5 bg-bg-primary border-border-default hover:border-primary/50 text-sm focus:ring-1 focus:ring-primary/20 text-foreground"
+              triggerClassName="py-2 bg-secondary/40 border-border hover:border-primary/50 text-xs focus:ring-1 focus:ring-primary/20 text-foreground"
             />
           </div>
 
           {/* Members Checklist */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               Squad Members
             </label>
-            <div className="border border-border-default bg-bg-primary rounded-xl p-3 max-h-[160px] overflow-y-auto space-y-2.5">
+            <div className="border border-border/60 bg-muted/20 rounded-xl p-2.5 max-h-[160px] overflow-y-auto space-y-2">
               {members.map((m) => {
                 const initials = avatarInitials(m.fullName || m.username || '?');
                 const hue = avatarHue(m.uid);
                 return (
-                  <label key={m.uid} className="flex items-center justify-between cursor-pointer group">
-                    <div className="flex items-center gap-3">
+                  <label key={m.uid} className="flex items-center justify-between cursor-pointer group hover:bg-muted/40 p-1 rounded-lg">
+                    <div className="flex items-center gap-2.5">
                       <input
                         type="checkbox"
                         checked={memberIds.includes(m.uid)}
                         onChange={(e) => handleCheckboxChange(m.uid, e.target.checked)}
-                        className="rounded border-border-default bg-surface text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                        className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer"
                       />
                       {m.photoURL ? (
                         <img
                           src={m.photoURL}
                           alt={m.fullName}
-                          className="h-7 w-7 rounded-lg object-cover shrink-0 shadow-sm border border-white/10 dark:border-black/20"
+                          className="h-6 w-6 rounded-md object-cover shrink-0 border border-border"
                         />
                       ) : (
                         <div
-                          className="h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-sm"
+                          className="h-6 w-6 rounded-md flex items-center justify-center text-[9px] font-bold text-white shrink-0"
                           style={{ background: `hsl(${hue} 60% 45%)` }}
                         >
                           {initials}
@@ -377,7 +363,7 @@ function TeamFormModal({ isOpen, onClose, orgId, members, editingTeam }: TeamFor
                       </div>
                     </div>
                     {m.designation && (
-                      <span className="text-[9px] font-medium bg-accent/35 text-muted-foreground px-2 py-0.5 rounded border border-border-default/45">
+                      <span className="text-[9px] font-medium bg-muted text-muted-foreground px-2 py-0.5 rounded border border-border/50">
                         {m.designation}
                       </span>
                     )}
@@ -388,18 +374,18 @@ function TeamFormModal({ isOpen, onClose, orgId, members, editingTeam }: TeamFor
           </div>
 
           {/* Footer Actions */}
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-border-default shrink-0 font-medium">
+          <div className="flex justify-end gap-2 pt-3 border-t border-border/60 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-border-default hover:bg-accent/40 rounded-xl text-xs font-semibold text-foreground transition-colors"
+              className="px-3.5 py-1.5 border border-border hover:bg-muted rounded-xl text-xs font-semibold text-foreground transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-2"
+              className="px-3.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
             >
               {saving && <Loader2 className="h-3 w-3 animate-spin" />}
               {editingTeam ? 'Save Changes' : 'Create Squad'}
@@ -523,28 +509,28 @@ export function PeoplePage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="px-4 pt-4 sm:px-8 sm:pt-8 pb-3 border-b border-border-default shrink-0 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="px-5 py-3 border-b border-border/50 bg-surface/50 dark:bg-card/40 backdrop-blur-md shrink-0 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
-              <Users className="h-6 w-6 text-primary" />
+            <h1 className="text-base font-bold text-foreground tracking-tight flex items-center gap-2">
+              <Users className="h-4.5 w-4.5 text-primary" />
               People & Org
             </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground">
               {activeTab === 'people' 
-                ? `${members.length} members in ${orgName || 'your organization'}`
-                : `${teams.length} functional teams / squads configured`
+                ? `${members.length} members in ${orgName || 'organization'}`
+                : `${teams.length} functional teams / squads`
               }
             </p>
           </div>
 
           {/* Search & Actions (Dynamic based on tab) */}
           {activeTab === 'people' ? (
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-64 sm:flex-initial">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-60 sm:flex-initial">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <input
-                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-border-default bg-bg-primary text-sm text-foreground placeholder:text-text-muted outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-border bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all font-medium"
                   placeholder="Search directory…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -554,19 +540,19 @@ export function PeoplePage() {
               {canInvite && (
                 <button
                   onClick={() => setIsInviteModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm cursor-pointer shrink-0"
                 >
-                  <UserPlus className="h-4 w-4" />
+                  <UserPlus className="h-3.5 w-3.5" />
                   Invite
                 </button>
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-64 sm:flex-initial">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-60 sm:flex-initial">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <input
-                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-border-default bg-bg-primary text-sm text-foreground placeholder:text-text-muted outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-border bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all font-medium"
                   placeholder="Search squads…"
                   value={teamSearch}
                   onChange={(e) => setTeamSearch(e.target.value)}
@@ -579,9 +565,9 @@ export function PeoplePage() {
                     setEditingTeam(null);
                     setIsTeamModalOpen(true);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm cursor-pointer shrink-0"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3.5 w-3.5" />
                   Create Squad
                 </button>
               )}
@@ -590,10 +576,10 @@ export function PeoplePage() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex gap-4 text-sm font-semibold pt-1 border-t border-border-default/20">
+        <div className="flex gap-4 text-xs font-semibold pt-1 border-t border-border/40">
           <button
             onClick={() => setActiveTab('people')}
-            className={`pb-2.5 px-0.5 border-b-2 transition-all relative ${
+            className={`pb-2 px-0.5 border-b-2 transition-all relative cursor-pointer ${
               activeTab === 'people'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -603,15 +589,15 @@ export function PeoplePage() {
           </button>
           <button
             onClick={() => setActiveTab('teams')}
-            className={`pb-2.5 px-0.5 border-b-2 transition-all relative flex items-center gap-1.5 ${
+            className={`pb-2 px-0.5 border-b-2 transition-all relative flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'teams'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Teams & Squads
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none ${
-              activeTab === 'teams' ? 'bg-primary text-primary-foreground' : 'bg-accent/40 text-muted-foreground'
+            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold leading-none ${
+              activeTab === 'teams' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>
               {teams.length}
             </span>
@@ -620,14 +606,14 @@ export function PeoplePage() {
       </div>
 
       {/* Main Tab Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-8 sm:py-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-5">
         
         {/* TAB 1: MEMBERS DIRECTORY */}
         {activeTab === 'people' && (
-          <div className="space-y-5 h-full flex flex-col">
+          <div className="space-y-4 h-full flex flex-col">
             {/* Role Filter tabs inside Directory body */}
-            <div className="flex items-center gap-1 shrink-0">
-              <SlidersHorizontal className="h-3.5 w-3.5 text-text-muted mr-1" />
+            <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto pb-1 scrollbar-none">
+              <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground mr-1 shrink-0" />
               {([
                 { id: 'all', label: 'All' },
                 { id: 'owner', label: 'Owners' },
@@ -638,32 +624,32 @@ export function PeoplePage() {
                 <button
                   key={id}
                   onClick={() => setRoleFilter(id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap
                     ${roleFilter === id
-                      ? 'bg-primary/15 text-primary border border-primary/20'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-bg-tertiary border border-transparent'
+                      ? 'bg-primary/15 text-primary border border-primary/25'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent'
                     }`}
                 >
                   {label}
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold
-                    ${roleFilter === id ? 'bg-primary text-primary-foreground' : 'bg-bg-tertiary text-muted-foreground'}`}>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold
+                    ${roleFilter === id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                     {counts[id]}
                   </span>
                 </button>
               ))}
             </div>
 
-            <div className="flex-1 overflow-y-auto pt-2">
+            <div className="flex-1 overflow-y-auto pt-1">
               {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center">
-                  <Users className="h-12 w-12 text-text-muted mb-4" />
-                  <p className="text-base font-semibold text-foreground">No members found</p>
-                  <p className="text-sm text-muted-foreground mt-1">
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Users className="h-10 w-10 text-muted-foreground opacity-40 mb-3" />
+                  <p className="text-sm font-semibold text-foreground">No members found</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {search ? `No results for "${search}"` : 'No members match the selected filter.'}
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
                   {filtered.map((member) => {
                     const accessible = hasAccess(member.uid);
                     return (
@@ -686,15 +672,15 @@ export function PeoplePage() {
         {activeTab === 'teams' && (
           <div className="h-full">
             {teamsLoading ? (
-              <div className="flex items-center justify-center py-24 gap-2 text-muted-foreground">
+              <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <span className="text-sm font-semibold">Loading Teams...</span>
+                <span className="text-xs font-semibold">Loading Teams...</span>
               </div>
             ) : filteredTeams.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <Workflow className="h-12 w-12 text-text-muted mb-4" />
-                <p className="text-base font-semibold text-foreground">No squads found</p>
-                <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <Workflow className="h-10 w-10 text-muted-foreground opacity-40 mb-3" />
+                <p className="text-sm font-semibold text-foreground">No squads found</p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-sm">
                   {teamSearch 
                     ? `No squads matching "${teamSearch}"` 
                     : 'There are no functional teams configured. Let\'s create one to group members and assign managers.'
@@ -706,15 +692,15 @@ export function PeoplePage() {
                       setEditingTeam(null);
                       setIsTeamModalOpen(true);
                     }}
-                    className="mt-4 flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm"
+                    className="mt-4 flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm cursor-pointer"
                   >
-                    <Plus className="h-4.5 w-4.5" />
+                    <Plus className="h-4 w-4" />
                     Create First Squad
                   </button>
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredTeams.map((t) => {
                   const manager = members.find((m) => m.uid === t.managerId);
                   const squadMembers = members.filter((m) => t.memberIds?.includes(m.uid));
@@ -725,36 +711,36 @@ export function PeoplePage() {
                   return (
                     <motion.div
                       key={t.id}
-                      initial={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="group flex flex-col rounded-2xl border border-border-default/60 bg-surface shadow-sm overflow-hidden hover:shadow-xl hover:shadow-black/10 hover:border-border-default transition-all duration-200"
+                      className="group flex flex-col rounded-xl border border-border/60 bg-surface/50 dark:bg-card/40 shadow-sm overflow-hidden hover:border-border transition-all duration-200"
                     >
                       {/* Top Team Header */}
-                      <div className="p-4 sm:p-5 border-b border-border-default/40 bg-accent/10 flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="text-sm font-bold text-foreground tracking-wide">{t.name}</h3>
+                      <div className="p-3 sm:px-4 border-b border-border/40 bg-accent/5 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="text-xs font-bold text-foreground tracking-wide truncate">{t.name}</h3>
                           {t.description && (
-                            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
+                            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
                               {t.description}
                             </p>
                           )}
                         </div>
                         {isAdminOrOwner && (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 shrink-0">
                             <button
                               onClick={() => {
                                 setEditingTeam(t);
                                 setIsTeamModalOpen(true);
                               }}
                               title="Edit Squad"
-                              className="p-1 rounded-lg hover:bg-accent/40 text-muted-foreground hover:text-primary transition-all"
+                              className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-primary transition-all cursor-pointer"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteTeamClick(t.id, t.name)}
                               title="Delete Squad"
-                              className="p-1 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-all"
+                              className="p-1 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-all cursor-pointer"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -763,25 +749,25 @@ export function PeoplePage() {
                       </div>
 
                       {/* Content Card Body */}
-                      <div className="p-4 sm:p-5 flex-1 flex flex-col gap-4">
+                      <div className="p-3 sm:px-4 flex-1 flex flex-col gap-3">
                         
                         {/* Designated Manager */}
-                        <div className="space-y-1.5">
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                             <Shield className="h-3 w-3 text-amber-500" /> Team Lead / Manager
                           </span>
                           
                           {manager ? (
-                            <div className="flex items-center gap-3 p-2.5 rounded-xl border border-amber-500/15 bg-amber-500/5 shadow-sm">
+                            <div className="flex items-center gap-2.5 p-2 rounded-lg border border-amber-500/20 bg-amber-500/5">
                               {manager.photoURL ? (
                                 <img
                                   src={manager.photoURL}
                                   alt={manager.fullName}
-                                  className="h-9 w-9 rounded-lg object-cover shrink-0 shadow-md border border-white/10 dark:border-black/20"
+                                  className="h-7 w-7 rounded-md object-cover shrink-0 border border-border"
                                 />
                               ) : (
                                 <div
-                                  className="h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-md"
+                                  className="h-7 w-7 rounded-md flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-sm"
                                   style={{ background: `hsl(${managerHue} 60% 45%)` }}
                                 >
                                   {managerInitials}
@@ -789,28 +775,28 @@ export function PeoplePage() {
                               )}
                               <div className="overflow-hidden">
                                 <p className="text-xs font-bold text-foreground truncate">{manager.fullName}</p>
-                                <p className="text-[10px] text-muted-foreground truncate">
+                                <p className="text-[10px] text-muted-foreground truncate font-medium">
                                   {manager.designation || 'Squad Lead'} • @{manager.username}
                                 </p>
                               </div>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2 p-2.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-xs font-medium">
-                              <AlertCircle className="h-4 w-4 shrink-0" />
+                            <div className="flex items-center gap-2 p-2 rounded-lg border border-red-500/20 bg-red-500/5 text-red-500 text-xs font-medium">
+                              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                               <span>No manager assigned</span>
                             </div>
                           )}
                         </div>
 
                         {/* Members section */}
-                        <div className="space-y-2 flex-1 flex flex-col">
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1 shrink-0">
+                        <div className="space-y-1.5 flex-1 flex flex-col">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 shrink-0">
                             <Users className="h-3 w-3 text-sky-500" /> Squad Members ({squadMembers.length})
                           </span>
 
-                          <div className="flex-1 overflow-y-auto max-h-[140px] pr-1 space-y-1.5 scrollbar-thin">
+                          <div className="flex-1 overflow-y-auto max-h-[130px] pr-1 space-y-1 scrollbar-thin">
                             {squadMembers.length === 0 ? (
-                              <p className="text-[11px] text-muted-foreground italic py-3 text-center">
+                              <p className="text-[10px] text-muted-foreground italic py-2 text-center">
                                 No members assigned to this squad yet.
                               </p>
                             ) : (
@@ -822,21 +808,21 @@ export function PeoplePage() {
                                   <div
                                     key={m.uid}
                                     onClick={accessible ? () => setSelectedMember(m) : undefined}
-                                    className={`flex items-center gap-2.5 py-1 px-1.5 rounded-lg transition-all ${
+                                    className={`flex items-center gap-2 py-1 px-1.5 rounded-lg transition-all ${
                                       accessible
                                         ? 'hover:bg-primary/10 hover:text-primary cursor-pointer'
-                                        : 'hover:bg-accent/20 cursor-default'
+                                        : 'hover:bg-muted/40 cursor-default'
                                     }`}
                                   >
                                     {m.photoURL ? (
                                       <img
                                         src={m.photoURL}
                                         alt={m.fullName}
-                                        className="h-6 w-6 rounded-md object-cover shrink-0 shadow-sm border border-white/10 dark:border-black/20"
+                                        className="h-5 w-5 rounded object-cover shrink-0 border border-border"
                                       />
                                     ) : (
                                       <div
-                                        className="h-6 w-6 rounded-md flex items-center justify-center text-[9px] font-bold text-white shrink-0 shadow-sm"
+                                        className="h-5 w-5 rounded flex items-center justify-center text-[8px] font-bold text-white shrink-0"
                                         style={{ background: `hsl(${subHue} 60% 45%)` }}
                                       >
                                         {subInit}
@@ -847,7 +833,7 @@ export function PeoplePage() {
                                       <p className="text-[9px] text-muted-foreground truncate mt-0.5">@{m.username}</p>
                                     </div>
                                     {m.designation && (
-                                      <span className="text-[9px] text-muted-foreground shrink-0 truncate max-w-[100px] border border-border-default/45 px-1.5 py-0.5 rounded bg-accent/15">
+                                      <span className="text-[9px] text-muted-foreground shrink-0 truncate max-w-[90px] border border-border/50 px-1 py-0.2 rounded bg-muted/30">
                                         {m.designation}
                                       </span>
                                     )}

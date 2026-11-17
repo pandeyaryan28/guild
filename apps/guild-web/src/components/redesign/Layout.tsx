@@ -106,7 +106,7 @@ export function RedesignLayout({
         <main
           className={cn(
             'flex-1 w-full overflow-y-auto aether-scroll relative print:relative print:overflow-visible print:p-0 print:h-auto',
-            fullBleed ? 'p-0' : 'p-4 sm:p-6',
+            fullBleed ? 'p-0' : 'p-3 sm:p-4 lg:p-5',
           )}
         >
           {children}

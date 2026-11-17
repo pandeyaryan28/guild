@@ -175,9 +175,9 @@ function DocumentTreeItem({
     <div className="select-none">
       <div
         onClick={() => onSelect(node.id)}
-        style={{ paddingLeft: `${Math.min(depth * 12, 48) + 6}px` }}
+        style={{ paddingLeft: `${Math.min(depth * 10, 40) + 4}px` }}
         className={cn(
-          'group relative flex items-center justify-between gap-1 pr-2 py-1.5 rounded-xl text-xs font-medium cursor-pointer transition-all',
+          'group relative flex items-center justify-between gap-1 px-2 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all',
           isSelected
             ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
             : 'text-foreground/85 hover:bg-secondary/65 hover:text-foreground'
@@ -461,7 +461,9 @@ function SidePeekCanvasDrawer({
                 createSubCanvas={(params) =>
                   onCreateSubCanvas({
                     ...params,
-                    parentId: params?.parentId !== undefined ? params.parentId : peekDoc.id
+                    parentId: (params as { parentId?: string | null })?.parentId !== undefined
+                      ? (params as { parentId?: string | null }).parentId
+                      : peekDoc.id
                   })
                 }
                 onHeadingsChange={setPeekHeadings}
@@ -896,17 +898,17 @@ export function WorkspaceCanvasPage() {
   }, [activeDoc]);
 
   return (
-    <div className="flex flex-col h-screen w-full overflow-hidden bg-background select-text">
+    <div className="flex flex-col h-full w-full overflow-hidden bg-background select-text">
       {/* ─── Workspace Header Bar (Sub-navigation + Breadcrumbs + Access/Share + Controls) ─── */}
-      <header className="h-13 px-4 sm:px-5 border-b border-border/60 bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex items-center justify-between gap-3 shrink-0 z-30">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+      <header className="h-10 px-3 sm:px-4 border-b border-border/40 bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex items-center justify-between gap-2 shrink-0 z-30">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           {/* Sub-navigation switcher */}
-          <div className="inline-flex items-center p-0.5 rounded-xl bg-secondary/80 dark:bg-secondary/40 border border-border/60 shrink-0">
+          <div className="inline-flex items-center p-0.5 rounded-lg bg-secondary/80 dark:bg-secondary/40 border border-border/40 shrink-0">
             <button
               type="button"
               onClick={() => handleSwitchTab('canvas')}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer',
+                'flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer',
                 activeTab === 'canvas'
                   ? 'bg-surface text-foreground shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
@@ -919,7 +921,7 @@ export function WorkspaceCanvasPage() {
               type="button"
               onClick={() => handleSwitchTab('tasks')}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer',
+                'flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer',
                 activeTab === 'tasks'
                   ? 'bg-surface text-foreground shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
@@ -934,10 +936,10 @@ export function WorkspaceCanvasPage() {
             <button
               type="button"
               onClick={() => setRailCollapsed(false)}
-              className="p-1.5 rounded-xl border border-border bg-surface/80 hover:bg-secondary text-foreground shadow-xs transition-colors shrink-0 cursor-pointer"
+              className="p-1 rounded-lg border border-border/50 bg-surface/80 hover:bg-secondary text-foreground shadow-xs transition-colors shrink-0 cursor-pointer"
               title="Expand Document Rail (⌘\)"
             >
-              <SidebarOpen className="w-4 h-4" />
+              <SidebarOpen className="w-3.5 h-3.5" />
             </button>
           )}
 
@@ -956,7 +958,7 @@ export function WorkspaceCanvasPage() {
                       type="button"
                       onClick={() => handleSelectDoc(crumb.id)}
                       className={cn(
-                        'inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-lg transition-colors truncate max-w-[160px] cursor-pointer',
+                        'inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-md transition-colors truncate max-w-[160px] cursor-pointer',
                         isLast
                           ? 'text-foreground font-semibold bg-secondary/40'
                           : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
@@ -973,7 +975,7 @@ export function WorkspaceCanvasPage() {
         </div>
 
         {/* Right Controls: Share/Access Button + Presence + Save Status + Layout Controls */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           {activeTab === 'canvas' && activeDoc && (
             <>
               {/* Share & Granular Access Control Button */}
@@ -981,7 +983,7 @@ export function WorkspaceCanvasPage() {
                 type="button"
                 onClick={() => setShowAccessModal(true)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-xs',
+                  'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-xs',
                   activeVisibility === 'private'
                     ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/15'
                     : activeVisibility === 'shared'
@@ -992,17 +994,17 @@ export function WorkspaceCanvasPage() {
               >
                 {activeVisibility === 'private' ? (
                   <>
-                    <Lock className="w-3.5 h-3.5" />
+                    <Lock className="w-3 h-3" />
                     <span>Private</span>
                   </>
                 ) : activeVisibility === 'shared' ? (
                   <>
-                    <Users className="w-3.5 h-3.5" />
+                    <Users className="w-3 h-3" />
                     <span>Shared ({1 + collaboratorCount})</span>
                   </>
                 ) : (
                   <>
-                    <Globe className="w-3.5 h-3.5" />
+                    <Globe className="w-3 h-3" />
                     <span>Organization</span>
                   </>
                 )}
@@ -1010,13 +1012,13 @@ export function WorkspaceCanvasPage() {
 
               {/* Live Canvas Presence */}
               {presenceList.length > 0 && (
-                <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface/90 dark:bg-surface/50 border border-border text-xs shadow-xs select-none">
+                <div className="hidden lg:flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface/90 dark:bg-surface/50 border border-border/50 text-xs shadow-xs select-none">
                   <div className="flex items-center -space-x-1.5">
                     {presenceList.slice(0, 4).map((viewer) => (
                       <div
                         key={viewer.userId}
                         title={viewer.userName}
-                        className="w-5 h-5 rounded-full border border-surface bg-primary/10 text-primary font-bold text-[9px] flex items-center justify-center overflow-hidden ring-1 ring-border/50"
+                        className="w-4.5 h-4.5 rounded-full border border-surface bg-primary/10 text-primary font-bold text-[8px] flex items-center justify-center overflow-hidden ring-1 ring-border/50"
                       >
                         {viewer.avatarUrl ? (
                           <img src={viewer.avatarUrl} alt={viewer.userName} className="w-full h-full object-cover" />
@@ -1026,12 +1028,12 @@ export function WorkspaceCanvasPage() {
                       </div>
                     ))}
                   </div>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 </div>
               )}
 
               {/* Auto-save status indicator */}
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface/80 dark:bg-surface/50 border border-border text-[11px] font-medium text-muted-foreground shadow-xs select-none">
+              <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface/80 dark:bg-surface/50 border border-border/50 text-[11px] font-medium text-muted-foreground shadow-xs select-none">
                 {saveStatus === 'saving' ? (
                   <>
                     <Loader2 className="w-3 h-3 animate-spin text-primary" />
@@ -1039,7 +1041,7 @@ export function WorkspaceCanvasPage() {
                   </>
                 ) : (
                   <>
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     <span>Saved</span>
                   </>
                 )}
@@ -1050,7 +1052,7 @@ export function WorkspaceCanvasPage() {
                 <button
                   type="button"
                   onClick={() => setShowTemplatesModal(true)}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-border bg-surface/80 hover:bg-secondary text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border border-border/50 bg-surface/80 hover:bg-secondary text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   title="Apply Starter Template"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -1063,14 +1065,14 @@ export function WorkspaceCanvasPage() {
                 type="button"
                 onClick={toggleFullWidth}
                 className={cn(
-                  'p-1.5 rounded-xl border transition-colors cursor-pointer',
+                  'p-1 rounded-lg border transition-colors cursor-pointer',
                   isFullWidth
                     ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-border bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground'
+                    : 'border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground'
                 )}
-                title={isFullWidth ? 'Full Width Active (Click for Standard Width)' : 'Switch to Full Width'}
+                title={isFullWidth ? 'Standard Reading Width (max-w-4xl)' : 'Switch to Full Width Canvas'}
               >
-                {isFullWidth ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                {isFullWidth ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
               </button>
 
               {/* Right TOC Outline Toggle */}
@@ -1078,14 +1080,14 @@ export function WorkspaceCanvasPage() {
                 type="button"
                 onClick={toggleRightToc}
                 className={cn(
-                  'hidden xl:inline-flex p-1.5 rounded-xl border transition-colors cursor-pointer',
+                  'hidden xl:inline-flex p-1 rounded-lg border transition-colors cursor-pointer',
                   showRightToc
                     ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-border bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground'
+                    : 'border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground'
                 )}
                 title="Toggle Right Outline (Table of Contents)"
               >
-                <ListTree className="w-4 h-4" />
+                <ListTree className="w-3.5 h-3.5" />
               </button>
 
               {/* Favorite toggle */}
@@ -1093,12 +1095,12 @@ export function WorkspaceCanvasPage() {
                 type="button"
                 onClick={() => handleToggleFavorite(activeDoc)}
                 className={cn(
-                  'p-1.5 rounded-xl border border-border bg-surface/80 hover:bg-secondary text-muted-foreground transition-colors active:scale-95 cursor-pointer',
+                  'p-1 rounded-lg border border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground transition-colors active:scale-95 cursor-pointer',
                   activeDoc.isFavorite && 'text-amber-500 fill-amber-500 bg-amber-500/10 border-amber-500/30'
                 )}
                 title={activeDoc.isFavorite ? 'Remove Favorite' : 'Add to Favorites'}
               >
-                <Star className={cn('w-4 h-4', activeDoc.isFavorite && 'fill-current')} />
+                <Star className={cn('w-3.5 h-3.5', activeDoc.isFavorite && 'fill-current')} />
               </button>
 
               {/* More Actions & Display Settings Menu */}
@@ -1106,10 +1108,10 @@ export function WorkspaceCanvasPage() {
                 <button
                   type="button"
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
-                  className="p-1.5 rounded-xl border border-border bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  className="p-1 rounded-lg border border-border/50 bg-surface/80 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   title="Canvas Display & Export Options"
                 >
-                  <MoreHorizontal className="w-4 h-4" />
+                  <MoreHorizontal className="w-3.5 h-3.5" />
                 </button>
 
                 {showMoreMenu && (
@@ -1322,16 +1324,16 @@ export function WorkspaceCanvasPage() {
             {!railCollapsed && (
               <motion.aside
                 initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 268, opacity: 1 }}
+                animate={{ width: 240, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-                className="h-full border-r border-border dark:border-border-strong bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex flex-col shrink-0 overflow-hidden z-20"
+                className="h-full w-60 border-r border-border/40 dark:border-border-strong bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex flex-col shrink-0 overflow-hidden z-20"
               >
                 {/* Rail Header */}
-                <div className="p-3 flex items-center justify-between border-b border-border/60">
+                <div className="p-2.5 flex items-center justify-between border-b border-border/40">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center">
-                      <FolderOpen className="w-3.5 h-3.5" />
+                    <div className="w-5 h-5 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center">
+                      <FolderOpen className="w-3 h-3" />
                     </div>
                     <span className="text-xs font-bold text-foreground tracking-tight">
                       Workspace Pages
@@ -1359,11 +1361,11 @@ export function WorkspaceCanvasPage() {
                 </div>
 
                 {/* Quick Actions & Filter */}
-                <div className="p-2.5 space-y-2 border-b border-border/40">
+                <div className="p-2 space-y-1.5 border-b border-border/40">
                   <button
                     type="button"
                     onClick={() => handleCreateNewCanvas(null)}
-                    className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-xs cursor-pointer"
+                    className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-xs cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     New Private Canvas
@@ -1376,7 +1378,7 @@ export function WorkspaceCanvasPage() {
                       placeholder="Filter pages & sub-pages..."
                       value={docSearch}
                       onChange={(e) => setDocSearch(e.target.value)}
-                      className="w-full pl-8 pr-2.5 py-1.5 rounded-xl bg-secondary/60 dark:bg-secondary/30 border border-border text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
+                      className="w-full pl-8 pr-2.5 py-1 rounded-lg bg-secondary/60 dark:bg-secondary/30 border border-border/40 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
                     />
                   </div>
                 </div>
@@ -1404,7 +1406,7 @@ export function WorkspaceCanvasPage() {
                             type="button"
                             onClick={() => handleSelectDoc(doc.id)}
                             className={cn(
-                              'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer',
+                              'w-full flex items-center gap-2 px-2 py-1 rounded-lg text-xs font-medium transition-all text-left cursor-pointer',
                               selectedDocId === doc.id
                                 ? 'bg-primary text-primary-foreground font-semibold'
                                 : 'text-foreground/85 hover:bg-secondary/60'
@@ -1443,7 +1445,7 @@ export function WorkspaceCanvasPage() {
                                 type="button"
                                 onClick={() => handleSelectDoc(doc.id)}
                                 className={cn(
-                                  'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer',
+                                  'w-full flex items-center gap-2 px-2 py-1 rounded-lg text-xs font-medium transition-all text-left cursor-pointer',
                                   selectedDocId === doc.id
                                     ? 'bg-primary/10 text-primary font-bold'
                                     : 'text-foreground/80 hover:bg-secondary/60'
@@ -1630,8 +1632,8 @@ export function WorkspaceCanvasPage() {
                     className={cn(
                       'flex-1 min-w-0 py-6 space-y-5 pb-36 transition-all duration-300',
                       isFullWidth
-                        ? 'w-full max-w-none px-5 sm:px-8 lg:px-12'
-                        : 'max-w-5xl mx-auto px-5 sm:px-8'
+                        ? 'w-full px-6'
+                        : 'max-w-4xl mx-auto px-6'
                     )}
                   >
                     {/* Read-Only Notice Banner when user has View-Only permission */}

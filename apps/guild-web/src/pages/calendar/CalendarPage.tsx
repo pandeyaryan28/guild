@@ -347,70 +347,66 @@ export function CalendarPage() {
   return (
     <div className="flex-grow flex flex-col min-h-0 overflow-hidden w-full h-full bg-transparent">
       {/* ── Main Work Area ─────────────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col overflow-hidden px-4 py-4 md:px-8 md:py-6">
+      <div className="flex flex-1 flex-col overflow-hidden">
         
-        {/* ── Premium Glassmorphic Top Controls Banner ─────────────────────────────── */}
-        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-border bg-secondary/40 p-3.5 backdrop-blur-xl md:flex-row md:items-center md:justify-between shadow-xl">
+        {/* ── Docked Header Toolbar ─────────────────────────────── */}
+        <div className="px-4 py-2.5 border-b border-border/50 bg-surface/50 dark:bg-card/40 backdrop-blur-md flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between shrink-0">
           <div className="flex items-center gap-3">
-            {/* View Icon Container */}
-            <div className="hidden rounded-xl p-2.5 text-accent shadow-inner border border-border/60" style={{ background: 'oklch(from var(--accent) l c h / 8%)' }}>
-              <Calendar className="h-5 w-5 animate-pulse" />
-            </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+              <h1 className="text-base font-bold tracking-tight text-foreground flex items-center gap-2">
                 {activeView === 'month' && format(currentDate, 'MMMM yyyy')}
                 {activeView === 'week' && `Week of ${format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'MMM d, yyyy')}`}
                 {activeView === 'day' && format(currentDate, 'EEEE, MMMM d, yyyy')}
               </h1>
               <p className="text-[10px] font-medium text-muted-foreground">
-                Dynamic workload tracking & task allocation dashboard
+                Workload tracking & task scheduling
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {/* Navigation button deck */}
-            <div className="flex items-center rounded-xl border border-border bg-secondary/40 dark:bg-surface/60 p-1 shadow-inner backdrop-blur-md">
+            <div className="flex items-center rounded-lg border border-border/60 bg-surface/60 dark:bg-card/60 p-0.5 shadow-2xs backdrop-blur-md">
               <button 
                 onClick={handlePrev} 
-                className="rounded-lg p-1.5 text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all cursor-pointer"
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
                 title="Previous"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </button>
               <button 
                 onClick={handleToday} 
-                className="px-3 py-1 text-[11px] font-semibold text-foreground hover:bg-white/10 rounded-lg transition-all cursor-pointer"
+                className="px-2.5 py-0.5 text-xs font-semibold text-foreground hover:bg-muted rounded-md transition-all cursor-pointer"
               >
                 Today
               </button>
               <button 
                 onClick={handleNext} 
-                className="rounded-lg p-1.5 text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all cursor-pointer"
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
                 title="Next"
               >
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
 
-            {/* Premium Sliding View Switcher Deck */}
-            <div className="flex items-center rounded-xl border border-border bg-secondary/40 dark:bg-surface/60 p-1 shadow-inner relative backdrop-blur-md">
+            {/* Sliding View Switcher Deck */}
+            <div className="flex items-center rounded-lg border border-border/60 bg-surface/60 dark:bg-card/60 p-0.5 shadow-2xs relative backdrop-blur-md">
               {(['month', 'week', 'day'] as const).map((view) => (
                 <button
                   key={view}
                   onClick={() => setActiveView(view)}
                   className={cn(
-                    "relative rounded-lg px-3.5 py-1.5 text-[11px] font-bold capitalize transition-all duration-300 z-10 cursor-pointer",
+                    "relative rounded-md px-3 py-1 text-xs font-semibold capitalize transition-all duration-200 z-10 cursor-pointer",
                     activeView === view 
-                      ? "text-white"
+                      ? "text-primary-foreground font-bold"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {activeView === view && (
                     <motion.div
                       layoutId="activeViewPill"
-                      className="absolute inset-0 bg-accent rounded-lg shadow-lg"
-                      transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                      className="absolute inset-0 bg-primary rounded-md shadow-xs"
+                      transition={{ type: "spring", stiffness: 350, damping: 28 }}
                       style={{ zIndex: -1 }}
                     />
                   )}
@@ -423,10 +419,10 @@ export function CalendarPage() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
-                "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-inner",
+                "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs",
                 showFilters 
-                  ? "border-accent/40 text-accent bg-accent/[0.08]" 
-                  : "border-border bg-secondary/40 dark:bg-surface/60 text-muted-foreground hover:text-foreground"
+                  ? "border-primary/40 text-primary bg-primary/10 font-semibold" 
+                  : "border-border/60 bg-surface/60 dark:bg-card/60 text-muted-foreground hover:text-foreground"
               )}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -436,10 +432,7 @@ export function CalendarPage() {
             {/* Quick add task */}
             <button
               onClick={() => handleQuickAddClick(new Date())}
-              className="flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[11px] font-bold text-white hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-accent/20 cursor-pointer"
-              style={{
-                background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.12) c h) 100%)`,
-              }}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all shadow-xs cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Create Task</span>
@@ -551,15 +544,15 @@ export function CalendarPage() {
         </AnimatePresence>
 
         {/* ── Main Split Canvas Grid (Views + Insights Panel) ─────────────────── */}
-        <div className="flex-1 flex gap-5 overflow-hidden min-h-0 relative">
+        <div className="flex-1 flex overflow-hidden min-h-0 relative">
           
           {/* Main View Container */}
-          <div className="flex-1 min-h-0 aether-glass overflow-hidden shadow-2xl flex flex-col z-10">
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col z-10">
             {tasksLoading ? (
               <div className="flex h-full w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
-                  <div className="h-10 w-10 animate-spin rounded-full border-4" style={{ borderColor: 'oklch(from var(--accent) l c h / 10%)', borderTopColor: 'var(--accent)' }} />
-                  <p className="text-[11px] text-muted-foreground font-semibold tracking-wide animate-pulse">Synchronizing workspace tasks...</p>
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+                  <p className="text-[11px] text-muted-foreground font-medium tracking-wide animate-pulse">Synchronizing workspace tasks...</p>
                 </div>
               </div>
             ) : (
@@ -568,17 +561,17 @@ export function CalendarPage() {
                 {/* ── MONTH VIEW ── */}
                 {activeView === 'month' && (
                   <div className="h-full w-full flex flex-col overflow-hidden">
-                    {/* Grid Weekday Headers Overhaul */}
-                    <div className="grid grid-cols-7 border-b border-border/60 bg-surface/60 text-center py-4 px-1.5 backdrop-blur-md">
+                    {/* Grid Weekday Headers */}
+                    <div className="grid grid-cols-7 border-b border-border/40 bg-surface/70 dark:bg-card/50 text-center py-2 backdrop-blur-md shrink-0">
                       {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                        <span key={day} className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 font-heading">
+                        <span key={day} className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                           {day}
                         </span>
                       ))}
                     </div>
 
-                    {/* Days grid container - Overhauled to Floating Grid */}
-                    <div className="flex-1 grid grid-cols-7 gap-2 p-2.5 overflow-y-auto aether-scroll md:grid-rows-6">
+                    {/* Days grid container - Docked Edge-to-Edge with 1px hairline cell borders */}
+                    <div className="flex-1 grid grid-cols-7 border-b border-border/40 overflow-y-auto aether-scroll md:grid-rows-6">
                       {(() => {
                         const monthStartDay = startOfMonth(currentDate);
                         const monthEndDay = endOfMonth(monthStartDay);
@@ -604,31 +597,29 @@ export function CalendarPage() {
                           const dailyProgressPercent = dailyTotal > 0 ? (dailyCompleted / dailyTotal) * 100 : 0;
 
                           return (
-                            <motion.div
+                            <div
                               key={day.toString()}
-                              whileHover={isCurrentMonth ? { y: -3, scale: 1.01 } : undefined}
-                              transition={{ type: "spring", stiffness: 400, damping: 25 }}
                               onClick={() => {
                                 setMobileSelectedDate(day);
                                 setActiveDayFlyout(day);
                               }}
                               className={cn(
-                                "relative group p-2.5 md:p-3 flex flex-col rounded-2xl border transition-all duration-300 select-none overflow-hidden h-full",
+                                "relative group p-1.5 md:p-2 flex flex-col border-r border-b border-border/40 transition-colors select-none overflow-hidden h-full min-h-[90px] md:min-h-0",
                                 isCurrentMonth 
-                                  ? "border-border/60 bg-surface/60 hover:border-accent/30 dark:bg-white/[0.003] dark:hover:bg-white/[0.015] shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]" 
-                                  : "opacity-15 border-white/[0.02] bg-white/[0.005] hover:opacity-25",
-                                isMobileSelected && isCurrentMonth && "bg-white/[0.03] border-accent/40 shadow-[inset_0_0_0_1px_oklch(from_var(--accent)_l_c_h_/_20%)] backdrop-blur-sm",
-                                isDayToday && "border-accent/40 ring-1 ring-accent/20 bg-gradient-to-br from-accent/[0.06] to-indigo-500/[0.01]"
+                                  ? "bg-background hover:bg-secondary/30 dark:hover:bg-card/40" 
+                                  : "bg-muted/30 dark:bg-muted/10 opacity-30 hover:opacity-50",
+                                isMobileSelected && isCurrentMonth && "bg-primary/[0.04] dark:bg-primary/[0.08]",
+                                isDayToday && "bg-primary/[0.04] dark:bg-primary/[0.08]"
                               )}
                             >
                               {/* Day number cell header */}
-                              <div className="flex items-center justify-between mb-3 z-10">
+                              <div className="flex items-center justify-between mb-1 z-10">
                                 <span
                                   className={cn(
-                                    "text-[10px] font-bold tracking-tight flex items-center justify-center rounded-full h-5 w-5 shrink-0",
+                                    "text-[10px] font-semibold flex items-center justify-center rounded-full h-5 w-5 shrink-0",
                                     isDayToday 
-                                      ? "bg-accent text-white" 
-                                      : "text-foreground/80"
+                                      ? "bg-primary text-primary-foreground font-bold" 
+                                      : "text-foreground"
                                   )}
                                 >
                                   {format(day, 'd')}
@@ -640,7 +631,7 @@ export function CalendarPage() {
                                     e.stopPropagation();
                                     handleQuickAddClick(day);
                                   }}
-                                  className="opacity-0 group-hover:opacity-100 flex items-center justify-center h-5 w-5 rounded-lg border border-border/60 bg-white/5 hover:bg-white/10 hover:border-white/20 text-foreground hover:scale-105 active:scale-95 transition-all duration-200 shadow-sm"
+                                  className="opacity-0 group-hover:opacity-100 flex items-center justify-center h-4.5 w-4.5 rounded border border-border/60 bg-surface/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all shadow-2xs cursor-pointer"
                                   title="Schedule task"
                                 >
                                   <Plus className="h-3 w-3" />
@@ -648,14 +639,14 @@ export function CalendarPage() {
                               </div>
 
                               {/* Task item stack inside day cell */}
-                              <div className="flex-1 space-y-2 overflow-y-auto aether-scroll pr-0.5 z-10">
+                              <div className="flex-1 space-y-1 overflow-y-auto aether-scroll pr-0.5 z-10">
                                 {/* Mobile dots */}
-                                <div className="flex md:hidden flex-wrap gap-0.5 justify-center mt-1">
+                                <div className="flex md:hidden flex-wrap gap-0.5 justify-center mt-0.5">
                                   {dayTasks.slice(0, 3).map((t) => (
                                     <span 
                                       key={t.id} 
                                       className="h-1.5 w-1.5 rounded-full"
-                                      style={{ backgroundColor: STATUS_CONFIG[t.status]?.dot || '#a1a1aa' }} 
+                                      style={{ backgroundColor: STATUS_CONFIG[t.status]?.dot || 'var(--border)' }} 
                                     />
                                   ))}
                                   {dayTasks.length > 3 && (
@@ -663,8 +654,8 @@ export function CalendarPage() {
                                   )}
                                 </div>
 
-                                {/* Premium desktop capsule strips */}
-                                <div className="hidden md:block space-y-1.5">
+                                {/* Desktop capsule strips */}
+                                <div className="hidden md:block space-y-1">
                                   {dayTasks.slice(0, 3).map((task) => {
                                     const isDone = task.status === 'done';
                                     const priorityColor = PRIORITY_CONFIG[task.priority]?.color || '#52525b';
@@ -679,20 +670,19 @@ export function CalendarPage() {
                                           setSelectedTask(task);
                                         }}
                                         className={cn(
-                                          "group/task-strip flex items-center justify-between rounded-xl border p-2 text-[9px] transition-all duration-300 select-none cursor-pointer",
+                                          "group/task-strip flex items-center justify-between rounded-md border px-1.5 py-1 text-[9px] transition-all select-none cursor-pointer",
                                           isDone 
-                                            ? "border-border/60 bg-surface/60 opacity-35 line-through hover:opacity-50" 
-                                            : "hover:translate-x-0.5 bg-secondary/40 border-border/60 hover:border-accent/20 hover:bg-white/[0.05] hover:shadow-md"
+                                            ? "border-border/40 bg-surface/40 opacity-40 line-through hover:opacity-60" 
+                                            : "bg-surface dark:bg-card border-border/50 hover:border-border hover:shadow-2xs"
                                         )}
                                         style={!isDone ? {
-                                          borderLeft: `3px solid ${priorityColor}`,
-                                          boxShadow: `inset 0 1px 0 0 rgba(255,255,255,0.02)`
+                                          borderLeft: `2.5px solid ${priorityColor}`,
                                         } : {
-                                          borderLeft: `3px solid rgba(255, 255, 255, 0.1)`
+                                          borderLeft: `2.5px solid var(--border)`
                                         }}
                                         title={task.title}
                                       >
-                                        <div className="flex items-center gap-2 min-w-0 flex-grow">
+                                        <div className="flex items-center gap-1.5 min-w-0 flex-grow">
                                           {/* Direct check click toggle */}
                                           <div 
                                             onClick={async (e) => {
@@ -700,35 +690,31 @@ export function CalendarPage() {
                                               await handleToggleTaskStatus(e, task);
                                             }}
                                             className={cn(
-                                              "h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300 cursor-pointer",
+                                              "h-3 w-3 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer",
                                               isDone 
-                                                ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 animate-fluid-pop" 
-                                                : "border-white/20 bg-secondary/40 hover:border-accent/50 hover:bg-accent/5"
+                                                ? "border-emerald-500 bg-emerald-500/10 text-emerald-500" 
+                                                : "border-border hover:border-primary"
                                             )}
                                           >
                                             {isDone ? (
-                                              <Check className="h-2 w-2" />
+                                              <Check className="h-2 w-2 stroke-[2.5]" />
                                             ) : (
-                                              <div className="h-1 w-1 rounded-full bg-transparent group-hover/task-strip:bg-accent/40" />
+                                              <div className="h-1 w-1 rounded-full bg-transparent group-hover/task-strip:bg-primary/50" />
                                             )}
                                           </div>
 
                                           <span className={cn(
-                                            "truncate tracking-tight leading-none text-foreground/90 font-semibold transition-colors duration-200",
-                                            isDone && "text-muted-foreground/60"
+                                            "truncate tracking-tight leading-none text-foreground font-medium",
+                                            isDone && "text-muted-foreground"
                                           )}>
                                             {task.title}
                                           </span>
                                         </div>
 
-                                        <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
+                                        <div className="flex items-center gap-1 shrink-0 ml-1">
                                           {projInitials && (
                                             <span 
-                                              className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-border/60 bg-white/5"
-                                              style={{ 
-                                                color: 'oklch(from var(--accent) calc(l + 0.12) c h)',
-                                                lineHeight: '1'
-                                              }}
+                                              className="text-[7.5px] font-bold uppercase tracking-wider px-1 py-0.5 rounded border border-border/50 bg-muted/40 text-primary"
                                               title={`Project: ${projName}`}
                                             >
                                               {projInitials}
@@ -737,12 +723,8 @@ export function CalendarPage() {
 
                                           {task.assigneeIds.length > 0 && (
                                             <div 
-                                              className="flex h-3.5 w-3.5 items-center justify-center rounded-full text-[7px] font-black text-white shadow ring-1 ring-white/10 relative overflow-hidden shrink-0"
-                                              style={{
-                                                background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.1) c h) 100%)`,
-                                              }}
+                                              className="flex h-3.5 w-3.5 items-center justify-center rounded-full text-[7px] font-bold text-primary-foreground bg-primary shadow-2xs shrink-0"
                                             >
-                                              <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
                                               {(() => {
                                                 const aMem = memberMap.get(task.assigneeIds[0]);
                                                 return (aMem?.fullName || aMem?.username || '?')[0].toUpperCase();
@@ -760,10 +742,10 @@ export function CalendarPage() {
                                         setMobileSelectedDate(day);
                                         setActiveDayFlyout(day);
                                       }}
-                                      className="w-full flex items-center justify-center gap-1 py-1 rounded-xl border border-border/60 bg-white/5 hover:bg-white/10 text-[8px] font-bold text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-sm select-none backdrop-blur-md"
+                                      className="w-full flex items-center justify-center gap-1 py-0.5 rounded border border-border/40 bg-muted/30 hover:bg-muted text-[8px] font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer select-none"
                                     >
-                                      <span className="h-1.5 w-1.5 rounded-full bg-accent shrink-0 animate-pulse" />
-                                      <span>+{dayTasks.length - 3} more tasks</span>
+                                      <span className="h-1 w-1 rounded-full bg-primary shrink-0" />
+                                      <span>+{dayTasks.length - 3} more</span>
                                     </button>
                                   )}
                                 </div>
@@ -771,17 +753,14 @@ export function CalendarPage() {
 
                               {/* Daily Completion Progress Line */}
                               {dailyTotal > 0 && (
-                                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/5 pointer-events-none">
+                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-secondary pointer-events-none">
                                   <div 
-                                    className="h-full transition-all duration-500 ease-out"
-                                    style={{ 
-                                      width: `${dailyProgressPercent}%`,
-                                      background: `linear-gradient(90deg, var(--accent) 0%, oklch(from var(--accent) calc(l + 0.1) c h) 100%)`,
-                                    }}
+                                    className="h-full bg-primary transition-all duration-300"
+                                    style={{ width: `${dailyProgressPercent}%` }}
                                   />
                                 </div>
                               )}
-                            </motion.div>
+                            </div>
                           );
                         });
                       })()}
@@ -863,7 +842,7 @@ export function CalendarPage() {
 
                 {/* ── WEEK VIEW ── */}
                 {activeView === 'week' && (
-                  <div className="h-full w-full flex flex-col md:flex-row overflow-x-auto overflow-y-hidden custom-scrollbar divide-y md:divide-y-0 md:divide-x divide-white/5 bg-transparent">
+                  <div className="h-full w-full flex flex-col md:flex-row overflow-x-auto overflow-y-hidden custom-scrollbar divide-y md:divide-y-0 md:divide-x divide-border/40 bg-transparent">
                     {(() => {
                       const weekStartDay = startOfWeek(currentDate, { weekStartsOn: 1 });
                       const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStartDay, i));
@@ -881,16 +860,15 @@ export function CalendarPage() {
                         return (
                           <div 
                             key={day.toString()} 
-                            className="flex-1 min-w-[230px] flex flex-col min-h-[160px] md:h-full overflow-hidden bg-white/[0.005] hover:bg-white/[0.015] transition-colors duration-300"
+                            className="flex-1 min-w-[220px] flex flex-col min-h-[160px] md:h-full overflow-hidden bg-background hover:bg-secondary/20 transition-colors duration-150"
                           >
                             {/* Top Task Progress Density bar */}
-                            <div className="w-full h-1 bg-white/5 relative overflow-hidden flex-shrink-0">
+                            <div className="w-full h-1 bg-secondary relative overflow-hidden flex-shrink-0">
                               {totalTasks > 0 && (
                                 <div 
-                                  className="h-full transition-all duration-500 ease-out" 
+                                  className="h-full bg-primary transition-all duration-500 ease-out" 
                                   style={{ 
                                     width: `${percentComplete}%`, 
-                                    background: 'linear-gradient(90deg, var(--accent) 0%, oklch(from var(--accent) calc(l + 0.1) c h) 100%)',
                                   }} 
                                 />
                               )}
@@ -898,34 +876,34 @@ export function CalendarPage() {
 
                             {/* Column Header */}
                             <div className={cn(
-                              "p-3.5 border-b border-border/60 flex items-center justify-between flex-shrink-0 bg-surface/60",
-                              isDayToday && "bg-white/[0.03]"
+                              "p-2.5 border-b border-border/40 flex items-center justify-between flex-shrink-0 bg-surface/70 dark:bg-card/50",
+                              isDayToday && "bg-primary/[0.04] dark:bg-primary/[0.08]"
                             )}>
                               <div className="flex items-center gap-2">
                                 <span className={cn(
-                                  "text-[10px] font-bold tracking-tight flex items-center justify-center rounded-full h-5 w-5 shrink-0",
+                                  "text-[10px] font-semibold flex items-center justify-center rounded-full h-5 w-5 shrink-0",
                                   isDayToday 
-                                    ? "bg-accent text-white" 
-                                    : "text-foreground/80"
+                                    ? "bg-primary text-primary-foreground font-bold" 
+                                    : "text-foreground"
                                 )}>
                                   {format(day, 'd')}
                                 </span>
                                 <div className="flex flex-col">
                                   <span className="text-[11px] font-bold text-foreground leading-none">{format(day, 'EEEE')}</span>
-                                  <span className="text-[9px] text-muted-foreground font-bold leading-none mt-0.5">{format(day, 'MMM d')}</span>
+                                  <span className="text-[9px] text-muted-foreground font-medium leading-none mt-0.5">{format(day, 'MMM d')}</span>
                                 </div>
                               </div>
-                              <span className="text-[9px] font-extrabold rounded-md px-1.5 py-0.5 border border-border/60 bg-white/5 text-muted-foreground">
+                              <span className="text-[9px] font-semibold rounded px-1.5 py-0.5 border border-border/50 bg-muted/40 text-muted-foreground">
                                 {dayTasks.length}
                               </span>
                             </div>
 
                             {/* Cards Area */}
-                            <div className="flex-1 p-3.5 overflow-y-auto aether-scroll space-y-2.5">
+                            <div className="flex-1 p-2.5 overflow-y-auto aether-scroll space-y-2">
                               {dayTasks.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-12 opacity-30">
                                   <Check className="h-5 w-5 text-muted-foreground mb-1.5" />
-                                  <span className="text-[9px] text-muted-foreground font-bold">Clear Schedule</span>
+                                  <span className="text-[9px] text-muted-foreground font-medium">Clear Schedule</span>
                                 </div>
                               ) : (
                                 dayTasks.map((task) => {
@@ -938,25 +916,25 @@ export function CalendarPage() {
                                       key={task.id}
                                       onClick={() => setSelectedTask(task)}
                                       className={cn(
-                                        "group flex flex-col gap-2 rounded-xl border border-border/60 bg-secondary/40 hover:bg-white/[0.05] hover:border-border hover:shadow-lg hover:scale-[1.01] p-3 text-left transition-all duration-300 cursor-pointer",
+                                        "group flex flex-col gap-1.5 rounded-lg border border-border/50 bg-surface dark:bg-card hover:border-border hover:shadow-2xs p-2.5 text-left transition-all cursor-pointer",
                                         isDone && "opacity-50"
                                       )}
-                                      style={{ borderLeft: `3px solid ${priorityColor}` }}
+                                      style={{ borderLeft: `2.5px solid ${priorityColor}` }}
                                     >
                                       <div className="flex items-start justify-between gap-1">
                                         <div className="flex items-start gap-2">
                                           <button
                                             onClick={(e) => handleToggleTaskStatus(e, task)}
-                                            className="mt-0.5 text-muted-foreground hover:text-accent transition-colors flex-shrink-0 cursor-pointer"
+                                            className="mt-0.5 text-muted-foreground hover:text-primary transition-colors flex-shrink-0 cursor-pointer"
                                           >
                                             {isDone ? (
-                                              <CheckSquare className="h-4 w-4 text-emerald-400" />
+                                              <CheckSquare className="h-3.5 w-3.5 text-emerald-500" />
                                             ) : (
-                                              <Square className="h-4 w-4" />
+                                              <Square className="h-3.5 w-3.5" />
                                             )}
                                           </button>
                                           <span className={cn(
-                                            "text-[11px] font-bold leading-snug text-foreground tracking-tight",
+                                            "text-xs font-semibold leading-snug text-foreground tracking-tight",
                                             isDone && "line-through text-muted-foreground"
                                           )}>
                                             {task.title}
@@ -965,21 +943,16 @@ export function CalendarPage() {
                                       </div>
 
                                       {/* Card details */}
-                                      <div className="flex items-center justify-between mt-1 text-[9px] text-muted-foreground border-t border-border/60 pt-2">
+                                      <div className="flex items-center justify-between mt-0.5 text-[9px] text-muted-foreground border-t border-border/40 pt-1.5">
                                         <div className="flex items-center gap-1.5 truncate max-w-[130px]">
                                           {projName && (
                                             <span 
-                                              className="px-1.5 py-0.5 rounded border text-center font-bold truncate max-w-[85px]"
-                                              style={{
-                                                backgroundColor: 'oklch(from var(--accent) l c h / 10%)',
-                                                borderColor: 'oklch(from var(--accent) l c h / 15%)',
-                                                color: 'var(--accent)'
-                                              }}
+                                              className="px-1.5 py-0.5 rounded border border-primary/20 bg-primary/10 text-primary font-bold truncate max-w-[85px]"
                                             >
                                               {projName}
                                             </span>
                                           )}
-                                          <span className="capitalize font-bold text-[8px]">{task.priority}</span>
+                                          <span className="capitalize font-medium text-[8px]">{task.priority}</span>
                                         </div>
 
                                         {task.assigneeIds.length > 0 && (
@@ -990,10 +963,7 @@ export function CalendarPage() {
                                               return (
                                                 <div 
                                                   key={uid} 
-                                                  className="h-4 w-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white ring-1 ring-background"
-                                                  style={{
-                                                    background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.1) c h) 100%)`
-                                                  }}
+                                                  className="h-4 w-4 rounded-full flex items-center justify-center text-[7px] font-bold text-primary-foreground bg-primary ring-1 ring-background"
                                                   title={aMem?.fullName || aMem?.username}
                                                 >
                                                   {initials}
@@ -1010,12 +980,12 @@ export function CalendarPage() {
                             </div>
 
                             {/* Column action trigger */}
-                            <div className="p-3 border-t border-border/60 flex-shrink-0 bg-white/[0.005]">
+                            <div className="p-2.5 border-t border-border/40 flex-shrink-0 bg-surface/30">
                               <button
                                 onClick={() => handleQuickAddClick(day)}
-                                className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-border hover:border-white/20 hover:bg-white/5 rounded-xl text-[10px] font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                                className="w-full flex items-center justify-center gap-1.5 py-1.5 border border-dashed border-border/60 hover:border-primary/50 hover:bg-muted/40 rounded-lg text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                               >
-                                <Plus className="h-3.5 w-3.5" />
+                                <Plus className="h-3 w-3" />
                                 <span>Add Task</span>
                               </button>
                             </div>
@@ -1028,22 +998,17 @@ export function CalendarPage() {
 
                 {/* ── DAY VIEW & TIME BLOCKING AGENDA ── */}
                 {activeView === 'day' && (
-                  <div className="h-full w-full flex flex-col md:flex-row overflow-y-auto md:overflow-hidden custom-scrollbar bg-transparent">
+                  <div className="h-full w-full flex flex-col md:flex-row overflow-y-auto md:overflow-hidden custom-scrollbar bg-transparent divide-y md:divide-y-0 md:divide-x divide-border/40">
                     
                     {/* Left Column: Detailed Agenda List */}
-                    <div className="w-full md:w-1/2 flex flex-col h-[280px] md:h-full border-b md:border-b-0 md:border-r border-border/60 overflow-hidden bg-white/[0.005]">
-                      <div className="p-4 border-b border-border/60 bg-surface/60 flex-shrink-0 flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <ListTodo className="h-4 w-4 text-accent" />
-                          <h3 className="text-[11px] font-extrabold uppercase tracking-wider text-foreground">Tasks Due Today</h3>
+                    <div className="w-full md:w-1/2 flex flex-col h-[280px] md:h-full border-b md:border-b-0 border-border/40 overflow-hidden bg-background">
+                      <div className="p-3 border-b border-border/40 bg-surface/70 dark:bg-card/50 flex-shrink-0 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <ListTodo className="h-3.5 w-3.5 text-primary" />
+                          <h3 className="text-xs font-bold text-foreground">Tasks Due Today</h3>
                         </div>
                         <span 
-                          className="text-[10px] font-extrabold rounded-lg px-2.5 py-0.5 border"
-                          style={{
-                            backgroundColor: 'oklch(from var(--accent) l c h / 10%)',
-                            borderColor: 'oklch(from var(--accent) l c h / 20%)',
-                            color: 'var(--accent)'
-                          }}
+                          className="text-[10px] font-semibold rounded px-2 py-0.5 border border-primary/20 bg-primary/10 text-primary"
                         >
                           {(() => {
                             const todayTasks = filteredTasks.filter((t) => {
@@ -1055,7 +1020,7 @@ export function CalendarPage() {
                         </span>
                       </div>
 
-                      <div className="flex-1 p-4 overflow-y-auto aether-scroll space-y-3">
+                      <div className="flex-1 p-3 overflow-y-auto aether-scroll space-y-2">
                         {(() => {
                           const todayTasks = filteredTasks.filter((t) => {
                             const due = getTaskDate(t);
@@ -1065,9 +1030,9 @@ export function CalendarPage() {
                           if (todayTasks.length === 0) {
                             return (
                               <div className="flex flex-col items-center justify-center h-full py-12 opacity-35">
-                                <CheckSquare className="h-8 w-8 text-muted-foreground mb-2" />
-                                <h4 className="text-[11px] font-bold text-foreground">All Clear For Today</h4>
-                                <p className="text-[9px] text-muted-foreground text-center max-w-[200px] mt-1 leading-relaxed">
+                                <CheckSquare className="h-7 w-7 text-muted-foreground mb-1.5" />
+                                <h4 className="text-xs font-semibold text-foreground">All Clear For Today</h4>
+                                <p className="text-[10px] text-muted-foreground text-center max-w-[200px] mt-0.5 leading-relaxed">
                                   No workspace tasks are scheduled on this date
                                 </p>
                               </div>
@@ -1084,32 +1049,32 @@ export function CalendarPage() {
                                 key={task.id}
                                 onClick={() => setSelectedTask(task)}
                                 className={cn(
-                                  "flex flex-col gap-3 p-4 rounded-xl border border-border/60 bg-secondary/40 hover:bg-white/[0.05] hover:border-border hover:shadow-lg hover:scale-[1.01] transition-all duration-300 cursor-pointer",
+                                  "flex flex-col gap-2 p-2.5 rounded-lg border border-border/50 bg-surface dark:bg-card hover:border-border hover:shadow-2xs transition-all cursor-pointer",
                                   isDone && "opacity-55"
                                 )}
-                                style={{ borderLeft: `3px solid ${priorityColor}` }}
+                                style={{ borderLeft: `2.5px solid ${priorityColor}` }}
                               >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex items-start gap-3">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-start gap-2">
                                     <button
                                       onClick={(e) => handleToggleTaskStatus(e, task)}
-                                      className="mt-0.5 text-muted-foreground hover:text-accent transition-colors flex-shrink-0 cursor-pointer"
+                                      className="mt-0.5 text-muted-foreground hover:text-primary transition-colors flex-shrink-0 cursor-pointer"
                                     >
                                       {isDone ? (
-                                        <CheckSquare className="h-4.5 w-4.5 text-emerald-400" />
+                                        <CheckSquare className="h-3.5 w-3.5 text-emerald-500" />
                                       ) : (
-                                        <Square className="h-4.5 w-4.5" />
+                                        <Square className="h-3.5 w-3.5" />
                                       )}
                                     </button>
                                     <div className="text-left">
                                       <h4 className={cn(
-                                        "text-[11px] font-bold leading-snug text-foreground tracking-tight",
+                                        "text-xs font-semibold leading-snug text-foreground tracking-tight",
                                         isDone && "line-through text-muted-foreground"
                                       )}>
                                         {task.title}
                                       </h4>
                                       {task.description && (
-                                        <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
                                           {task.description}
                                         </p>
                                       )}
@@ -1118,25 +1083,20 @@ export function CalendarPage() {
                                 </div>
 
                                 {/* Footer details */}
-                                <div className="flex items-center justify-between border-t border-border/60 pt-2.5 mt-1 text-[9px] text-muted-foreground">
-                                  <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-between border-t border-border/40 pt-1.5 mt-0.5 text-[9px] text-muted-foreground">
+                                  <div className="flex items-center gap-1.5">
                                     {projName && (
                                       <span 
-                                        className="px-1.5 py-0.5 rounded border font-bold"
-                                        style={{
-                                          backgroundColor: 'oklch(from var(--accent) l c h / 10%)',
-                                          borderColor: 'oklch(from var(--accent) l c h / 15%)',
-                                          color: 'var(--accent)'
-                                        }}
+                                        className="px-1.5 py-0.5 rounded border border-primary/20 bg-primary/10 text-primary font-bold text-[8px]"
                                       >
                                         {projName}
                                       </span>
                                     )}
-                                    <span className="capitalize font-bold">{task.priority} Priority</span>
+                                    <span className="capitalize font-medium text-[8px]">{task.priority}</span>
                                   </div>
 
                                   <div className="flex items-center gap-2">
-                                    <span className="capitalize font-semibold">{task.status}</span>
+                                    <span className="capitalize font-medium text-[8px]">{task.status}</span>
                                     {task.assigneeIds.length > 0 && (
                                       <div className="flex gap-0.5">
                                         {task.assigneeIds.map((uid) => {
@@ -1144,11 +1104,7 @@ export function CalendarPage() {
                                           return (
                                             <div 
                                               key={uid}
-                                              className="h-4 w-4 rounded-full text-white text-[7px] font-bold flex items-center justify-center ring-1 ring-background shadow-sm"
-                                              style={{
-                                                background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.1) c h) 100%)`
-                                              }}
-                                              title={aMem?.fullName || aMem?.username}
+                                              className="h-4 w-4 rounded-full text-primary-foreground bg-primary text-[7px] font-bold flex items-center justify-center ring-1 ring-background"
                                             >
                                               {(aMem?.fullName || aMem?.username || '?')[0].toUpperCase()}
                                             </div>
@@ -1166,7 +1122,7 @@ export function CalendarPage() {
                     </div>
 
                     {/* Right Column: Time-Blocking Hourly Planner with Live Tracker Line */}
-                    <div className="w-full md:w-1/2 flex flex-col h-[400px] md:h-full overflow-hidden bg-white/[0.005]">
+                    <div className="w-full md:w-1/2 flex flex-col h-[400px] md:h-full overflow-hidden bg-surface/30 dark:bg-card/20">
                       <div className="p-4 border-b border-border/60 bg-surface/60 flex-shrink-0 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <Clock className="h-4 w-4 text-accent" />

@@ -197,20 +197,20 @@ export function SettingsPage() {
   }, [tabs, activeTab]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] min-h-0 md:min-h-[600px] overflow-hidden bg-transparent w-full">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-transparent w-full">
       {/* Header */}
-      <div className="px-4 md:px-8 pt-4 pb-3 border-b border-border/60 bg-transparent shrink-0">
-        <h1 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
+      <div className="px-5 py-3 border-b border-border/50 bg-surface/50 dark:bg-card/40 backdrop-blur-md shrink-0">
+        <h1 className="text-base font-bold text-foreground tracking-tight flex items-center gap-2">
           Settings
         </h1>
       </div>
 
       {/* Main Split Grid Workspace */}
-      <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-5 overflow-hidden px-4 md:px-8 py-3 min-h-0">
+      <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
         
-        {/* Navigation Sidebar (Apple SwiftUI Frosted Glass) */}
-        <div className="w-full md:w-64 shrink-0 rounded-3xl p-3 md:p-4 bg-surface/80 dark:bg-card/60 backdrop-blur-2xl border border-border dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] overflow-x-auto md:overflow-y-auto scrollbar-hide aether-scroll flex flex-row md:flex-col gap-1.5 md:gap-2 h-auto md:h-full">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-3 pb-1 select-none hidden md:block">
+        {/* Navigation Sidebar (compact left sidebar w-52) */}
+        <div className="w-full md:w-52 shrink-0 border-b md:border-b-0 md:border-r border-border/50 p-2.5 md:p-3 bg-surface/40 dark:bg-card/30 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-y-auto scrollbar-hide">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2.5 pb-1 select-none hidden md:block">
             Workspace Settings
           </p>
           <div className="flex flex-row md:flex-col gap-1 shrink-0 w-full">
@@ -223,30 +223,18 @@ export function SettingsPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex w-auto md:w-full items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all relative select-none cursor-pointer shrink-0 active:scale-[0.98]",
+                    "flex w-auto md:w-full items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all relative select-none cursor-pointer shrink-0 active:scale-[0.98]",
                     isActive
                       ? isDanger
-                        ? "text-destructive font-bold"
-                        : "text-primary dark:text-primary font-bold"
+                        ? "text-destructive font-bold bg-destructive/10"
+                        : "text-primary dark:text-primary font-bold bg-primary/10"
                       : isDanger
                         ? "text-muted-foreground hover:text-destructive hover:bg-destructive/5"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                   )}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeSettingsTabBG"
-                      className={cn(
-                        "absolute inset-0 border rounded-2xl z-0",
-                        isDanger
-                          ? "bg-destructive/10 border-destructive/20"
-                          : "bg-primary/10 border-primary/20"
-                      )}
-                      transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                    />
-                  )}
-                  <TabIcon className={cn("h-4 w-4 shrink-0 z-10 transition-colors", isActive ? (isDanger ? "text-destructive" : "text-primary") : "text-muted-foreground")} />
-                  <span className="truncate z-10">{tab.label}</span>
+                  <TabIcon className={cn("h-4 w-4 shrink-0 transition-colors", isActive ? (isDanger ? "text-destructive" : "text-primary") : "text-muted-foreground")} />
+                  <span className="truncate">{tab.label}</span>
                 </button>
               );
             })}
@@ -254,15 +242,15 @@ export function SettingsPage() {
 
           {/* Dynamic PWA Install CTA (Desktop only) */}
           {isInstallable && !isStandalone && (
-            <div className="hidden md:flex flex-col gap-2.5 p-3.5 mt-auto rounded-2xl bg-secondary/40 border border-border relative overflow-hidden shrink-0">
-              <div className="flex items-center gap-2 z-10">
+            <div className="hidden md:flex flex-col gap-2 p-3 mt-auto rounded-xl bg-surface/60 dark:bg-card/50 border border-border/50 shrink-0">
+              <div className="flex items-center gap-1.5">
                 <Download className="w-3.5 h-3.5 text-primary shrink-0" />
                 <span className="text-[10px] font-bold text-foreground">Desktop App</span>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-normal mt-0.5 z-10 font-medium">Run in a dedicated borderless workspace.</p>
+              <p className="text-[10px] text-muted-foreground leading-normal mt-0.5 font-medium">Run in a dedicated borderless workspace.</p>
               <button
                 onClick={install}
-                className="w-full py-2 rounded-xl bg-primary hover:opacity-95 text-primary-foreground text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shadow-xs z-10"
+                className="w-full py-1.5 rounded-lg bg-primary hover:opacity-95 text-primary-foreground text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shadow-2xs"
               >
                 Install App
               </button>
@@ -270,55 +258,53 @@ export function SettingsPage() {
           )}
         </div>
 
-        {/* Dynamic Tab Content Area (Frosted Canvas) */}
-        <div className="flex-1 overflow-hidden rounded-3xl bg-surface/90 dark:bg-card/75 backdrop-blur-2xl border border-border dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-4 md:p-6 flex flex-col h-full">
-          <div className="flex-grow overflow-y-auto aether-scroll pr-1">
-            <div className="max-w-3xl mx-auto w-full">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.15 }}
-                  className="space-y-6"
-                >
-                  {activeTab === 'general' && localProfile && (
-                    <GeneralSettingsView
-                      org={localOrg}
-                      profile={localProfile}
-                      logout={logout}
-                      themeId={themeId}
-                      setTheme={setTheme}
-                      loadingOrg={loadingOrg}
-                    />
-                  )}
+        {/* Dynamic Tab Content Area (Spacious right pane without restrictive max-w-3xl) */}
+        <div className="flex-1 overflow-y-auto aether-scroll p-4 md:p-6 min-h-0 bg-background">
+          <div className="w-full max-w-5xl space-y-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
+                className="space-y-6"
+              >
+                {activeTab === 'general' && localProfile && (
+                  <GeneralSettingsView
+                    org={localOrg}
+                    profile={localProfile}
+                    logout={logout}
+                    themeId={themeId}
+                    setTheme={setTheme}
+                    loadingOrg={loadingOrg}
+                  />
+                )}
 
-                  {activeTab === 'members' && localProfile && (
-                    <MembersRolesSettingsView
-                      profile={localProfile}
-                      members={members}
-                      inviteLinks={inviteLinks}
-                      invitesLoading={invitesLoading}
-                      onOpenInvite={() => setIsInviteModalOpen(true)}
-                    />
-                  )}
+                {activeTab === 'members' && localProfile && (
+                  <MembersRolesSettingsView
+                    profile={localProfile}
+                    members={members}
+                    inviteLinks={inviteLinks}
+                    invitesLoading={invitesLoading}
+                    onOpenInvite={() => setIsInviteModalOpen(true)}
+                  />
+                )}
 
-                  {activeTab === 'billing' && localProfile && (
-                    <BillingSettingsView profile={localProfile} org={localOrg} />
-                  )}
+                {activeTab === 'billing' && localProfile && (
+                  <BillingSettingsView profile={localProfile} org={localOrg} />
+                )}
 
-                  {activeTab === 'danger' && localProfile && (
-                    <DangerZoneSettingsView
-                      org={localOrg}
-                      profile={localProfile}
-                      logout={logout}
-                      onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
-                    />
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
+                {activeTab === 'danger' && localProfile && (
+                  <DangerZoneSettingsView
+                    org={localOrg}
+                    profile={localProfile}
+                    logout={logout}
+                    onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -596,7 +582,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingPhoto}
-              className="px-3 py-1.5 bg-secondary border border-border rounded-lg text-[10px] font-black uppercase tracking-wider text-foreground hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer disabled:opacity-50"
+              className="px-3 py-1.5 bg-secondary border border-border rounded-lg text-[10px] font-black uppercase tracking-wider text-foreground hover:bg-muted hover:border-border transition-all cursor-pointer disabled:opacity-50"
             >
               Choose Photo
             </button>
@@ -721,7 +707,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
               type="email"
               disabled
               value={profile.email}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border/60 bg-white/[0.005] text-xs text-muted-foreground cursor-not-allowed outline-none font-semibold"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border/60 bg-muted/30 text-xs text-muted-foreground cursor-not-allowed outline-none font-semibold"
             />
           </div>
 
@@ -736,7 +722,7 @@ function ProfileSettingsView({ profile, logout }: { profile: UserProfile; logout
                   type="button"
                   onClick={handleSendPasswordReset}
                   disabled={resetLoading || resetCooldown > 0}
-                  className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground text-[11px] font-bold hover:bg-white/10 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 h-10"
+                  className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground text-[11px] font-bold hover:bg-muted transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 h-10"
                 >
                   {resetLoading ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
@@ -873,32 +859,32 @@ function NotificationSettingsView({ profile }: { profile: UserProfile }) {
   ];
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-4 text-left">
       <div>
         <h2 className="text-sm font-bold text-foreground">Notification Preferences</h2>
+        <p className="text-xs text-muted-foreground mt-0.5 font-medium">Control what events trigger alerts and badge updates</p>
       </div>
 
-      <div className="space-y-3">
+      <div className="divide-y divide-border/40 rounded-xl border border-border/50 bg-surface/50 dark:bg-card/40 overflow-hidden">
         {notificationOptions.map((opt) => {
           const isChecked = settings[opt.key];
           const isToggling = saving === opt.key;
           const OptIcon = opt.icon;
 
           return (
-            <motion.div 
+            <div 
               key={opt.key} 
-              whileHover={{ x: 2 }}
-              className="p-4 flex items-center justify-between gap-6 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-border/60 hover:border-border rounded-2xl transition-all shadow-sm"
+              className="px-4 py-3 flex items-center justify-between gap-4 hover:bg-muted/20 transition-colors"
             >
-              <div className="flex items-start gap-3.5 overflow-hidden">
-                {/* Icon sphere */}
-                <div className={cn("h-8.5 w-8.5 rounded-xl border flex items-center justify-center shrink-0 shadow-sm", opt.colors)}>
-                  <OptIcon className="h-4 w-4" />
+              <div className="flex items-center gap-3 overflow-hidden">
+                {/* Icon badge */}
+                <div className={cn("h-7 w-7 rounded-lg border flex items-center justify-center shrink-0 shadow-2xs", opt.colors)}>
+                  <OptIcon className="h-3.5 w-3.5" />
                 </div>
                 
                 <div className="space-y-0.5 overflow-hidden">
-                  <span className="text-[11px] font-extrabold text-foreground tracking-wide leading-tight">{opt.label}</span>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed truncate max-w-[420px] font-medium">{opt.desc}</p>
+                  <span className="text-xs font-semibold text-foreground tracking-tight leading-tight">{opt.label}</span>
+                  <p className="text-[11px] text-muted-foreground leading-normal truncate max-w-[500px] font-medium">{opt.desc}</p>
                 </div>
               </div>
 
@@ -907,24 +893,23 @@ function NotificationSettingsView({ profile }: { profile: UserProfile }) {
                 onClick={() => handleToggle(opt.key)}
                 disabled={isToggling}
                 className={cn(
-                  "relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border border-transparent transition-all duration-300 ease-in-out outline-none shadow-md",
+                  "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-all duration-200 ease-in-out outline-none shadow-2xs",
                   isChecked 
-                    ? "bg-accent shadow-[0_0_12px_oklch(from_var(--accent)_l_c_h_/_30%)]" 
-                    : "bg-secondary hover:bg-white/10 border-border",
+                    ? "bg-primary shadow-xs" 
+                    : "bg-muted border-border",
                   isToggling && "opacity-50 cursor-not-allowed"
                 )}
-                style={isChecked ? { backgroundColor: 'var(--accent)' } : undefined}
               >
                 <span
                   className={cn(
-                    "pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow-sm transition-all duration-300 ease-in-out flex items-center justify-center mt-[1px]",
-                    isChecked ? "translate-x-4.5 bg-white" : "translate-x-0.5 bg-muted-foreground/60"
+                    "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition-all duration-200 ease-in-out flex items-center justify-center mt-[1px]",
+                    isChecked ? "translate-x-4 bg-white" : "translate-x-0.5 bg-muted-foreground/60"
                   )}
                 >
-                  {isToggling && <Loader2 className="h-2.5 w-2.5 animate-spin text-accent" />}
+                  {isToggling && <Loader2 className="h-2.5 w-2.5 animate-spin text-primary" />}
                 </span>
               </button>
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -967,7 +952,7 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
                 "flex flex-col text-left p-4 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 shadow-sm",
                 isActive
                   ? "border-accent/40 bg-accent/[0.04] shadow-[0_4px_24px_oklch(from_var(--accent)_l_c_h_/_12%),inset_0_1px_1px_rgba(255,255,255,0.05)]"
-                  : "border-border bg-surface/60 hover:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]"
+                  : "border-border bg-surface/60 hover:border-border-strong shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]"
               )}
               style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
             >
@@ -1010,7 +995,7 @@ function AppearanceSettingsView({ profile, themeId, setTheme }: AppearanceProps)
         })}
       </div>
 
-      <div className="h-[1px] bg-white/10 my-6" />
+      <div className="h-[1px] bg-border/60 my-6" />
 
       <div className="aether-glass border border-border dark:border-border/60 bg-surface/60 rounded-3xl p-6 text-left relative overflow-hidden">
         {/* Glow ambient light */}
@@ -1105,8 +1090,8 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
         </div>
       )}
 
-      {/* Redesigned Members Cards List */}
-      <div className="space-y-3">
+      {/* Clean macOS-style list rows with subtle dividers */}
+      <div className="divide-y divide-border/40 rounded-xl border border-border/50 bg-surface/50 dark:bg-card/40 overflow-hidden">
         {sorted.map((member) => {
           const isSelf = member.uid === profile.uid;
           const isOwner = member.role === 'owner';
@@ -1116,22 +1101,16 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
           const isProcessing = updatingId === member.uid;
 
           return (
-            <motion.div
+            <div
               key={member.uid}
-              whileHover={{ x: 3 }}
-              className="p-4 flex flex-wrap items-center justify-between gap-4 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-border/60 hover:border-border rounded-2xl transition-all shadow-sm"
+              className="px-4 py-2.5 flex items-center justify-between gap-4 hover:bg-muted/20 transition-colors"
             >
               {/* Left Column: Teammate profile */}
-              <div className="flex items-center gap-3.5 overflow-hidden min-w-[240px] flex-1">
-                {/* Teammate avatar initials badge */}
+              <div className="flex items-center gap-3 overflow-hidden min-w-[200px] flex-1">
                 <div className="shrink-0">
                   <div 
-                    className="h-9 w-9 rounded-xl flex items-center justify-center font-black text-white text-xs relative overflow-hidden shadow-sm"
-                    style={{
-                      background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
-                    }}
+                    className="h-8 w-8 rounded-lg flex items-center justify-center font-bold text-primary-foreground bg-primary text-xs relative overflow-hidden shadow-2xs"
                   >
-                    <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
                     {member.photoURL ? (
                       <img src={member.photoURL} alt={member.fullName} className="h-full w-full object-cover" />
                     ) : (
@@ -1141,11 +1120,11 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
                 </div>
 
                 <div className="overflow-hidden">
-                  <p className="text-xs font-black text-foreground truncate leading-tight flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-foreground truncate leading-tight flex items-center gap-1.5">
                     {member.fullName}
-                    {isSelf && <span className="text-[8px] font-black uppercase tracking-widest bg-accent/15 border border-accent/25 text-accent px-1.5 py-0.5 rounded">You</span>}
+                    {isSelf && <span className="text-[8px] font-bold uppercase tracking-wider bg-primary/10 border border-primary/20 text-primary px-1.5 py-0.2 rounded">You</span>}
                   </p>
-                  <p className="text-[10px] text-muted-foreground truncate mt-1.5 font-semibold">
+                  <p className="text-[10px] text-muted-foreground truncate font-medium mt-0.5">
                     @{member.username} · {member.designation || 'Teammate'}
                   </p>
                 </div>
@@ -1154,44 +1133,41 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
               {/* Middle Column: Role badging */}
               <div className="flex items-center shrink-0">
                 {isOwner ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-amber-500/20 bg-amber-500/10 text-[9px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-amber-500/20 bg-amber-500/10 text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                     <Crown className="h-3 w-3 shrink-0" /> Owner
                   </span>
                 ) : isAdmin ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-violet-500/20 bg-violet-500/10 text-[9px] font-extrabold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-violet-500/20 bg-violet-500/10 text-[9px] font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">
                     <ShieldCheck className="h-3 w-3 shrink-0" /> Admin
                   </span>
                 ) : member.role === 'manager' ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-[9px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                     <Users className="h-3 w-3 shrink-0" /> Manager
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded border border-sky-500/20 bg-sky-500/10 text-[9px] font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-sky-500/20 bg-sky-500/10 text-[9px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
                     <User className="h-3 w-3 shrink-0" /> Member
                   </span>
                 )}
               </div>
 
               {/* Right Column: Actions */}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1 shrink-0">
                 {isProcessing ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
                 ) : canManage ? (
-                  <div className="flex items-center gap-1.5">
-                    {/* Remove from workspace */}
-                    <button
-                      onClick={() => handleRemoveMember(member.uid)}
-                      className="p-2 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-500/20"
-                      title="Remove from Workspace"
-                    >
-                      <UserMinus className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleRemoveMember(member.uid)}
+                    className="p-1.5 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-colors cursor-pointer"
+                    title="Remove from Workspace"
+                  >
+                    <UserMinus className="h-3.5 w-3.5" />
+                  </button>
                 ) : (
                   <span className="text-[10px] text-muted-foreground italic select-none px-2">—</span>
                 )}
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -1258,7 +1234,7 @@ function InviteLinksSettingsView({ profile, inviteLinks, loading, members, onOpe
           <span className="text-xs font-bold">Synchronizing links…</span>
         </div>
       ) : inviteLinks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-border rounded-2xl bg-white/[0.01]">
+        <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-border rounded-xl bg-surface/30 dark:bg-card/20">
           <Link2 className="h-7 w-7 text-muted-foreground opacity-50 mb-2" />
           <p className="text-xs font-bold text-foreground">No active invite tokens</p>
           <p className="text-[10px] text-muted-foreground mt-1 max-w-[240px] leading-relaxed font-semibold mb-4">
@@ -1273,7 +1249,7 @@ function InviteLinksSettingsView({ profile, inviteLinks, loading, members, onOpe
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="divide-y divide-border/40 rounded-xl border border-border/50 bg-surface/50 dark:bg-card/40 overflow-hidden">
           {inviteLinks.map((link) => {
             const now = Date.now();
             const isExpired = link.expiresAt.toMillis() < now;
@@ -1282,77 +1258,65 @@ function InviteLinksSettingsView({ profile, inviteLinks, loading, members, onOpe
             const isRevoking = revoking === link.token;
 
             return (
-              <motion.div
+              <div
                 key={link.token}
-                whileHover={{ y: -2 }}
-                className="p-4 flex flex-col justify-between gap-4 aether-glass bg-gradient-to-br from-white/[0.015] to-transparent border-border/60 hover:border-border rounded-2xl transition-all shadow-sm relative overflow-hidden"
+                className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/20 transition-colors"
               >
-                <div className="space-y-3.5 z-10">
-                  <div className="flex items-center justify-between gap-2 w-full">
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
                     {/* Status Badge */}
                     {!link.isActive ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-border/60 bg-secondary text-[8px] font-black uppercase tracking-wider text-muted-foreground">Revoked</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-border/60 bg-muted text-[8px] font-bold uppercase tracking-wider text-muted-foreground">Revoked</span>
                     ) : isFullyUsed ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-border/60 bg-secondary text-[8px] font-black uppercase tracking-wider text-muted-foreground">Fully Used</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-border/60 bg-muted text-[8px] font-bold uppercase tracking-wider text-muted-foreground">Fully Used</span>
                     ) : isExpired ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-red-500/10 bg-red-500/10 text-[8px] font-black uppercase tracking-wider text-red-400">Expired</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-destructive/20 bg-destructive/10 text-[8px] font-bold uppercase tracking-wider text-destructive">Expired</span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded border border-emerald-500/15 bg-emerald-500/10 text-[8px] font-black uppercase tracking-wider text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.1)]">Active</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-[8px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Active</span>
                     )}
 
-                    {/* Actions */}
-                    {isRevoking ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-accent" />
-                    ) : (
-                      link.isActive && (
-                        <button
-                          onClick={() => handleRevoke(link.token)}
-                          className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 rounded-lg transition-all cursor-pointer border border-transparent hover:border-red-500/10"
-                          title="Revoke invite link"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )
-                    )}
+                    <span className="font-semibold text-xs text-foreground truncate">
+                      {link.email ? link.email : 'Shareable Link'}
+                    </span>
                   </div>
 
-                  {/* Details about email / role */}
-                  <div className="space-y-1 text-xs">
-                    {link.email ? (
-                      <div className="font-semibold text-foreground truncate">
-                        Email Invite: <span className="font-mono text-accent">{link.email}</span>
-                      </div>
-                    ) : (
-                      <div className="font-semibold text-foreground">
-                        Shareable Link
-                      </div>
-                    )}
-                    <div className="text-[10px] text-muted-foreground flex gap-3">
-                      <span>Uses: <strong className="text-foreground">{link.useCount} / {link.maxUses !== null ? link.maxUses : '∞'}</strong></span>
-                      <span>Expires: <strong className="text-foreground">{new Date(link.expiresAt.toMillis()).toLocaleDateString()}</strong></span>
-                    </div>
+                  <div className="text-[10px] text-muted-foreground flex items-center gap-3 font-medium">
+                    <span>Uses: <strong className="text-foreground">{link.useCount} / {link.maxUses !== null ? link.maxUses : '∞'}</strong></span>
+                    <span>Expires: <strong className="text-foreground">{new Date(link.expiresAt.toMillis()).toLocaleDateString()}</strong></span>
+                    <span>Created by <strong className="text-foreground">{getCreatorName(link.createdBy)}</strong></span>
                   </div>
+                </div>
 
-                  {/* Token link box */}
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-xl border border-border/60 bg-white/[0.01] shadow-inner w-full overflow-hidden">
-                    <span className="text-[11px] font-mono text-foreground font-semibold truncate flex-1">/join/{link.token}</span>
+                {/* Token link box & actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-border/60 bg-muted/30">
+                    <span className="text-[11px] font-mono text-foreground font-semibold">/join/{link.token}</span>
                     {isActive && (
                       <button
                         onClick={() => handleCopy(link.token)}
-                        className="p-1.5 hover:bg-white/10 text-accent rounded-lg transition-all"
+                        className="p-1 hover:bg-muted text-primary rounded transition-all cursor-pointer"
                         title="Copy link"
                       >
-                        {copiedId === link.token ? <Check className="h-3.5 w-3.5 text-emerald-400 animate-fluid-pop" /> : <Copy className="h-3.5 w-3.5 text-accent" />}
+                        {copiedId === link.token ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                       </button>
                     )}
                   </div>
-                </div>
 
-                <div className="flex justify-between items-center text-[9px] font-semibold text-muted-foreground border-t border-border/60 pt-3 z-10">
-                  <span>Created By</span>
-                  <span className="text-foreground font-bold">{getCreatorName(link.createdBy)}</span>
+                  {isRevoking ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  ) : (
+                    link.isActive && (
+                      <button
+                        onClick={() => handleRevoke(link.token)}
+                        className="p-1.5 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-colors cursor-pointer"
+                        title="Revoke invite link"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )
+                  )}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -2526,14 +2490,14 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
               {/* Members Selection List */}
               <div className="space-y-2">
                 <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Assign Members</label>
-                <div className="border border-border rounded-xl p-3 max-h-40 overflow-y-auto bg-white/[0.01] dark:bg-white/[0.005] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner custom-scrollbar">
+                <div className="border border-border/60 rounded-xl p-3 max-h-40 overflow-y-auto bg-muted/20 grid grid-cols-1 sm:grid-cols-2 gap-2 custom-scrollbar">
                   {members.map((m) => (
-                    <label key={m.uid} className="flex items-center gap-2 px-2 py-1.5 hover:bg-secondary rounded-lg cursor-pointer text-xs font-semibold">
+                    <label key={m.uid} className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted/50 rounded-lg cursor-pointer text-xs font-semibold">
                       <input
                         type="checkbox"
                         checked={teamMembers.includes(m.uid)}
                         onChange={(e) => handleMemberCheckboxChange(m.uid, e.target.checked, false)}
-                        className="rounded border-white/20 text-accent focus:ring-accent/15"
+                        className="rounded border-border text-accent focus:ring-accent/15"
                       />
                       <span className="truncate text-foreground font-semibold">{m.fullName}</span>
                       <span className="text-[10px] text-muted-foreground font-normal">@{m.username}</span>
@@ -2564,25 +2528,25 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
           ) : (
             <button
               onClick={() => setIsCreating(true)}
-              className="flex items-center justify-center gap-2 w-full p-4 border border-dashed border-white/15 hover:border-accent/30 hover:bg-accent/[0.02] rounded-2xl text-xs font-bold text-muted-foreground hover:text-accent transition-all duration-305 cursor-pointer shadow-sm"
+              className="flex items-center justify-center gap-2 w-full p-3 border border-dashed border-border/80 hover:border-accent/40 bg-surface/40 dark:bg-card/30 hover:bg-accent/5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-accent transition-all cursor-pointer"
             >
               <Plus className="h-4 w-4" /> Add Functional Team
             </button>
           )}
 
-          {/* Teams Grid */}
+          {/* Teams List */}
           {teamsLoading ? (
             <div className="flex justify-center items-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-accent" />
             </div>
           ) : teams.length === 0 ? (
-            <div className="text-center py-10 border border-dashed border-border rounded-2xl bg-white/[0.01]">
+            <div className="text-center py-10 border border-dashed border-border rounded-xl bg-surface/30 dark:bg-card/20">
               <Users className="h-7 w-7 mx-auto text-muted-foreground opacity-50 mb-2" />
               <h4 className="text-xs font-bold text-foreground">No Teams Defined</h4>
               <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Create your first functional squad above</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="divide-y divide-border/40 rounded-xl border border-border/50 bg-surface/50 dark:bg-card/40 overflow-hidden">
               {teams.map((t) => {
                 const isEditing = editingTeamId === t.id;
                 const lead = members.find((m) => m.uid === t.managerId);
@@ -2593,7 +2557,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                     <form
                       key={t.id}
                       onSubmit={handleUpdateTeam}
-                      className="p-5 border border-accent bg-accent/[0.02] rounded-2xl space-y-4 col-span-1 md:col-span-2 shadow-sm animate-fluid-pop"
+                      className="p-4 bg-accent/5 space-y-3 animate-fluid-pop"
                     >
                       <h3 className="text-xs font-black text-accent uppercase tracking-wider">Edit Functional Team: {t.name}</h3>
 
@@ -2646,14 +2610,14 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                       {/* Members Selection List */}
                       <div className="space-y-2">
                         <label className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest">Assign Members</label>
-                        <div className="border border-border rounded-xl p-3 max-h-40 overflow-y-auto bg-white/[0.01] dark:bg-white/[0.005] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner custom-scrollbar">
+                        <div className="border border-border/60 rounded-xl p-3 max-h-40 overflow-y-auto bg-muted/20 grid grid-cols-1 sm:grid-cols-2 gap-2 custom-scrollbar">
                           {members.map((m) => (
-                            <label key={m.uid} className="flex items-center gap-2 px-2 py-1.5 hover:bg-secondary rounded-lg cursor-pointer text-xs font-semibold">
+                            <label key={m.uid} className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted/50 rounded-lg cursor-pointer text-xs font-semibold">
                               <input
                                 type="checkbox"
                                 checked={editMembers.includes(m.uid)}
                                 onChange={(e) => handleMemberCheckboxChange(m.uid, e.target.checked, true)}
-                                className="rounded border-white/20 text-accent focus:ring-accent/15"
+                                className="rounded border-border text-accent focus:ring-accent/15"
                               />
                               <span className="truncate text-foreground font-semibold">{m.fullName}</span>
                               <span className="text-[10px] text-muted-foreground">@{m.username}</span>
@@ -2685,53 +2649,47 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                 }
 
                 return (
-                  <motion.div
+                  <div
                     key={t.id}
-                    whileHover={{ y: -3, scale: 1.01 }}
-                    className="p-5 border border-border bg-gradient-to-br from-white/[0.02] to-transparent rounded-2xl shadow-sm hover:shadow-[0_4px_20px_oklch(from_var(--accent)_l_c_h_/_8%)] hover:border-accent/30 transition-all duration-300 flex flex-col justify-between"
+                    className="p-3.5 sm:px-4 flex items-center justify-between gap-4 hover:bg-muted/30 transition-colors"
                   >
-                    <div>
-                      <div className="flex justify-between items-start gap-4 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2.5">
                         <h4 className="font-bold text-xs text-foreground truncate">{t.name}</h4>
-                        <div className="flex gap-1.5">
-                          <button
-                            onClick={() => {
-                              setEditingTeamId(t.id);
-                              setEditName(t.name);
-                              setEditDesc(t.description || '');
-                              setEditManager(t.managerId);
-                              setEditMembers(t.memberIds || []);
-                              setEditError(null);
-                            }}
-                            className="px-2.5 py-1.5 text-[9px] font-extrabold border border-border rounded-xl hover:bg-white/10 text-foreground transition-all cursor-pointer shadow-sm"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteTeam(t.id, t.name)}
-                            className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-500/10"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
+                        <span className="text-accent font-extrabold bg-accent/15 border border-accent/20 px-2 py-0.5 rounded-md text-[9px] shrink-0">
+                          {assignedCount} {assignedCount === 1 ? 'member' : 'members'}
+                        </span>
                       </div>
-
                       {t.description && (
-                        <p className="text-[11px] text-muted-foreground mb-4 line-clamp-2 leading-relaxed font-semibold">{t.description}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1 font-medium">{t.description}</p>
                       )}
-
-                      <div className="space-y-2 border-t border-border/60 pt-3.5 mt-3">
-                        <div className="flex justify-between items-center text-[10px] font-semibold">
-                          <span className="text-muted-foreground font-medium">Team Lead:</span>
-                          <span className="text-foreground font-bold">{lead?.fullName ?? 'Unassigned'}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[10px] font-semibold">
-                          <span className="text-muted-foreground font-medium">Members Count:</span>
-                          <span className="text-accent font-extrabold bg-accent/15 border border-accent/20 px-2 py-0.5 rounded-md text-[9px]">{assignedCount}</span>
-                        </div>
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
+                        <span>Lead: <strong className="text-foreground font-semibold">{lead?.fullName ?? 'Unassigned'}</strong></span>
                       </div>
                     </div>
-                  </motion.div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => {
+                          setEditingTeamId(t.id);
+                          setEditName(t.name);
+                          setEditDesc(t.description || '');
+                          setEditManager(t.managerId);
+                          setEditMembers(t.memberIds || []);
+                          setEditError(null);
+                        }}
+                        className="px-2.5 py-1 text-[10px] font-semibold border border-border/60 rounded-lg hover:bg-muted text-foreground transition-all cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTeam(t.id, t.name)}
+                        className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-500 rounded-lg transition-all cursor-pointer"
+                        title="Delete team"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -2750,65 +2708,63 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
           )}
 
           {/* Overhauled Hierarchy List */}
-          <div className="space-y-3">
+          <div className="divide-y divide-border/40 rounded-xl border border-border/50 bg-surface/50 dark:bg-card/40 overflow-hidden">
             {members.map((m) => {
               const isProcessing = updatingUserId === m.uid;
               const potentialManagers = members.filter((pm) => pm.uid !== m.uid);
 
               return (
-                <motion.div
+                <div
                   key={m.uid}
-                  whileHover={{ x: 2 }}
-                  className="p-4 flex flex-wrap items-center justify-between gap-4 aether-glass bg-gradient-to-r from-white/[0.015] to-transparent border-border/60 hover:border-border rounded-2xl transition-all shadow-sm"
+                  className="p-3 sm:px-4 flex flex-wrap items-center justify-between gap-3 hover:bg-muted/30 transition-colors"
                 >
                   {/* Member Details */}
-                  <div className="flex items-center gap-3.5 min-w-[200px] flex-1 overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-[180px] flex-1 overflow-hidden">
                     <div 
-                      className="h-8.5 w-8.5 rounded-xl flex items-center justify-center font-black text-white text-xs shrink-0 relative overflow-hidden"
+                      className="h-8 w-8 rounded-lg flex items-center justify-center font-bold text-white text-xs shrink-0"
                       style={{
                         background: `linear-gradient(135deg, var(--accent) 0%, oklch(from var(--accent) calc(l - 0.15) c h) 100%)`
                       }}
                     >
-                      <span className="absolute top-0 left-0 right-0 h-[45%] bg-white/10 rounded-t-full pointer-events-none" />
                       {m.fullName ? m.fullName[0].toUpperCase() : '?'}
                     </div>
                     <div className="overflow-hidden">
-                      <p className="text-xs font-black text-foreground truncate leading-tight">
+                      <p className="text-xs font-bold text-foreground truncate">
                         {m.fullName}
                       </p>
-                      <p className="text-[10px] text-muted-foreground truncate mt-1.5 font-semibold">@{m.username}</p>
+                      <p className="text-[10px] text-muted-foreground truncate font-medium">@{m.username}</p>
                     </div>
                   </div>
 
                   {/* Designation */}
-                  <div className="text-xs text-foreground font-semibold min-w-[130px] shrink-0">
+                  <div className="text-xs text-muted-foreground font-medium min-w-[110px] shrink-0">
                     {m.designation || 'Teammate'}
                   </div>
 
                   {/* Manager Privilege Toggle */}
-                  <div className="shrink-0 min-w-[130px] flex items-center">
+                  <div className="shrink-0 min-w-[100px] flex items-center">
                     {isProcessing ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
                     ) : (
                       <button
                         type="button"
                         onClick={() => handleManagerToggle(m.uid, !!m.isManager)}
                         className={cn(
-                          "px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-wider border cursor-pointer transition-all shadow-sm",
+                          "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border cursor-pointer transition-all",
                           m.isManager
                             ? "bg-accent/15 text-accent border-accent/25"
-                            : "bg-secondary text-muted-foreground border-border hover:bg-white/10"
+                            : "bg-secondary text-muted-foreground border-border hover:bg-muted"
                         )}
                         style={m.isManager ? { color: 'var(--accent)', borderColor: 'oklch(from var(--accent) l c h / 25%)' } : undefined}
                       >
-                        {m.isManager ? 'Is Manager' : 'Standard'}
+                        {m.isManager ? 'Manager' : 'Standard'}
                       </button>
                     )}
                   </div>
                   {/* Direct Line Manager Selector */}
                   <div className="shrink-0">
                     {isProcessing ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
                     ) : (
                       <SearchableSelect
                         value={m.managerId || 'none'}
@@ -2823,11 +2779,11 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                           })),
                         ]}
                         placeholder="No Manager"
-                        triggerClassName="bg-secondary/40 border border-border text-[11px] font-bold text-foreground rounded-lg px-2.5 py-1.5 hover:border-accent/40 max-w-[170px] truncate cursor-pointer shadow-inner"
+                        triggerClassName="bg-secondary/40 border border-border text-[11px] font-semibold text-foreground rounded-lg px-2.5 py-1.5 hover:border-accent/40 max-w-[170px] truncate cursor-pointer"
                       />
                     )}
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>

@@ -491,141 +491,134 @@ export function DashboardPage() {
   }, [userProfile]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-16">
-      {/* ─── Executive Top Header ────────────────────────────────────────────── */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-              <span>{getGreeting()}, {userFirstName}</span>
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1 flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 text-muted-foreground/70" />
-              <span>{getFormattedToday()}</span>
-              {org?.name && (
-                <>
-                  <span className="text-border">•</span>
-                  <span className="font-medium text-foreground">{org.name}</span>
-                </>
-              )}
-            </p>
-          </div>
+    <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto space-y-4 pb-8">
+      {/* ─── Streamlined Top Header ────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground truncate">
+            {getGreeting()}, {userFirstName}
+          </h1>
+          <span className="text-border/60 hidden sm:inline">•</span>
+          <p className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+            <Calendar className="w-3.5 h-3.5 text-muted-foreground/70 flex-shrink-0" />
+            <span>{getFormattedToday()}</span>
+            {org?.name && (
+              <>
+                <span className="text-border/60">•</span>
+                <span className="font-medium text-foreground">{org.name}</span>
+              </>
+            )}
+          </p>
+        </div>
 
-          {/* Quick Action Button */}
-          <div className="flex items-center gap-2.5">
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              type="button"
-              onClick={() => setCreateTaskOpen(true)}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground shadow-sm hover:opacity-95 transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>New Task</span>
-            </motion.button>
+        {/* Quick Action Button */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={() => setCreateTaskOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground shadow-xs hover:opacity-95 transition-all cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Task</span>
+          </motion.button>
+        </div>
+      </div>
+
+      {/* ─── Compact Stat Ribbon ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        {/* Chip 1: My Priorities */}
+        <div className="p-3 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/50 shadow-2xs flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+            <CheckSquare className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-base font-bold text-foreground tracking-tight leading-none">
+              {statsValues.activeTasksCount}
+            </div>
+            <div className="text-[11px] text-muted-foreground font-medium truncate mt-0.5">
+              {todaysPriorities.length > 0 ? "Today's Priorities" : 'Active Priorities'}
+            </div>
           </div>
         </div>
 
-        {/* ─── Apple SwiftUI Quick Stats Chips Bar ────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {/* Chip 1: My Priorities */}
-          <div className="p-3.5 rounded-2xl bg-surface/85 dark:bg-surface/55 backdrop-blur-xl border border-border dark:border-border-strong shadow-xs flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
-              <CheckSquare className="w-4 h-4" />
+        {/* Chip 2: Team Active */}
+        <div className="p-3 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/50 shadow-2xs flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+            <Users className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-base font-bold text-foreground tracking-tight leading-none">
+              {statsValues.activeMembersCount} / {members.length}
             </div>
-            <div className="min-w-0">
-              <div className="text-base font-bold text-foreground tracking-tight leading-tight">
-                {statsValues.activeTasksCount}
-              </div>
-              <div className="text-[11px] text-muted-foreground font-medium truncate">
-                {todaysPriorities.length > 0 ? "Today's Priorities" : 'Active Priorities'}
-              </div>
+            <div className="text-[11px] text-muted-foreground font-medium truncate mt-0.5">
+              Teammates Active
             </div>
           </div>
+        </div>
 
-          {/* Chip 2: Team Active */}
-          <div className="p-3.5 rounded-2xl bg-surface/85 dark:bg-surface/55 backdrop-blur-xl border border-border dark:border-border-strong shadow-xs flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-              <Users className="w-4 h-4" />
+        {/* Chip 3: Operational Approvals / Requests */}
+        <div className="p-3 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/50 shadow-2xs flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+            <FileCheck2 className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-base font-bold text-foreground tracking-tight leading-none">
+              {statsValues.operationalCount}
             </div>
-            <div className="min-w-0">
-              <div className="text-base font-bold text-foreground tracking-tight leading-tight">
-                {statsValues.activeMembersCount} / {members.length}
-              </div>
-              <div className="text-[11px] text-muted-foreground font-medium truncate">
-                Teammates Active
-              </div>
+            <div className="text-[11px] text-muted-foreground font-medium truncate mt-0.5">
+              {isManagerOrLead ? 'Pending Approvals' : 'Pending Requests'}
             </div>
           </div>
+        </div>
 
-          {/* Chip 3: Operational Approvals / Requests */}
-          <div className="p-3.5 rounded-2xl bg-surface/85 dark:bg-surface/55 backdrop-blur-xl border border-border dark:border-border-strong shadow-xs flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-              <FileCheck2 className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-base font-bold text-foreground tracking-tight leading-tight">
-                {statsValues.operationalCount}
-              </div>
-              <div className="text-[11px] text-muted-foreground font-medium truncate">
-                {isManagerOrLead ? 'Pending Approvals' : 'Pending Requests'}
-              </div>
-            </div>
+        {/* Chip 4: Sprint Velocity */}
+        <div className="p-3 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/50 shadow-2xs flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 flex items-center justify-center flex-shrink-0">
+            <Zap className="w-4 h-4" />
           </div>
-
-          {/* Chip 4: Sprint Velocity (Zero Dummy Data: only shows metrics when cycle exists) */}
-          <div className="p-3.5 rounded-2xl bg-surface/85 dark:bg-surface/55 backdrop-blur-xl border border-border dark:border-border-strong shadow-xs flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 flex items-center justify-center flex-shrink-0">
-              <Zap className="w-4 h-4" />
+          <div className="min-w-0">
+            <div className="text-base font-bold text-foreground tracking-tight leading-none">
+              {currentCycle ? `${percentVelocity}%` : '—'}
             </div>
-            <div className="min-w-0">
-              <div className="text-base font-bold text-foreground tracking-tight leading-tight">
-                {currentCycle ? `${percentVelocity}%` : '—'}
-              </div>
-              <div className="text-[11px] text-muted-foreground font-medium truncate">
-                {currentCycle ? `Sprint • ${daysRemaining}d left` : 'No Active Sprint'}
-              </div>
+            <div className="text-[11px] text-muted-foreground font-medium truncate mt-0.5">
+              {currentCycle ? `Sprint • ${daysRemaining}d left` : 'No Active Sprint'}
             </div>
           </div>
         </div>
       </div>
 
       {/* ─── Main Grid: Priorities & Focus Columns ──────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* ─── Primary Column: Priorities & Approvals (8 cols) ─────────────── */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* ─── Section 1: My Priorities ──────────────────────────────────── */}
-          <div className="rounded-3xl bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl border border-border dark:border-border-strong p-5 sm:p-6 shadow-xs space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shadow-inner">
-                  <CheckSquare className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
-                    My Priorities
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    {priorityTab === 'today'
-                      ? 'Urgent and scheduled priorities for today'
-                      : 'Upcoming tasks sorted by priority and schedule'}
-                  </p>
-                </div>
+        <div className="lg:col-span-8 space-y-5">
+          {/* ─── Section 1: My Priorities (De-containerized) ──────────────────── */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between gap-3 pb-2 border-b border-border/40">
+              <div className="flex items-center gap-2 min-w-0">
+                <CheckSquare className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                <h2 className="text-sm sm:text-base font-bold text-foreground tracking-tight">
+                  My Priorities
+                </h2>
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  — {priorityTab === 'today' ? "Today's schedule" : 'Upcoming tasks'}
+                </span>
               </div>
 
-              {/* Apple-style Segmented Control */}
-              <div className="flex items-center p-1 rounded-xl bg-secondary/60 dark:bg-secondary/40 border border-border dark:border-border-strong text-xs font-medium self-start sm:self-auto">
+              {/* Compact Segmented Control */}
+              <div className="flex items-center p-0.5 rounded-lg bg-secondary/60 dark:bg-secondary/40 border border-border/50 text-xs font-medium flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => setPriorityTab('today')}
                   className={cn(
-                    'px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5',
+                    'px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 text-xs',
                     priorityTab === 'today'
-                      ? 'bg-surface dark:bg-surface-elevated text-foreground font-semibold shadow-xs'
+                      ? 'bg-surface dark:bg-card text-foreground font-semibold shadow-2xs'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
                   <span>Today</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-secondary text-muted-foreground">
+                  <span className="text-[10px] px-1 py-0.1 rounded-full bg-secondary text-muted-foreground">
                     {todaysPriorities.length}
                   </span>
                 </button>
@@ -634,23 +627,23 @@ export function DashboardPage() {
                   type="button"
                   onClick={() => setPriorityTab('upcoming')}
                   className={cn(
-                    'px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5',
+                    'px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 text-xs',
                     priorityTab === 'upcoming'
-                      ? 'bg-surface dark:bg-surface-elevated text-foreground font-semibold shadow-xs'
+                      ? 'bg-surface dark:bg-card text-foreground font-semibold shadow-2xs'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
                   <span>Upcoming</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-secondary text-muted-foreground">
+                  <span className="text-[10px] px-1 py-0.1 rounded-full bg-secondary text-muted-foreground">
                     {upcomingPriorities.length}
                   </span>
                 </button>
               </div>
             </div>
 
-            {/* Priorities List */}
+            {/* Priorities List: Compact py-2 px-2.5 rows */}
             {activePriorities.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {activePriorities.map((item) => {
                   const isTask = item.kind === 'task';
                   const priorityConfig =
@@ -660,7 +653,7 @@ export function DashboardPage() {
                       ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
                       : item.priority === 'medium'
                       ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
-                      : 'bg-secondary text-muted-foreground border-border';
+                      : 'bg-secondary text-muted-foreground border-border/40';
 
                   return (
                     <motion.div
@@ -672,25 +665,25 @@ export function DashboardPage() {
                           setSelectedIssue(item.rawIssue);
                         }
                       }}
-                      whileHover={{ scale: 1.003 }}
-                      className="group flex items-center justify-between p-3.5 rounded-2xl bg-surface dark:bg-surface-elevated/40 border border-border/80 dark:border-border-strong hover:border-border-strong hover:shadow-sm transition-all cursor-pointer gap-3.5"
+                      whileHover={{ scale: 1.002 }}
+                      className="group flex items-center justify-between py-2 px-2.5 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/40 hover:border-border hover:bg-surface dark:hover:bg-card hover:shadow-2xs transition-all cursor-pointer gap-2.5"
                     >
                       {/* Left: 1-click tactile spring completion checkbox + Type Icon + Title */}
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <motion.button
                           whileTap={{ scale: 0.88 }}
                           transition={{ type: 'spring', stiffness: 450, damping: 24 }}
                           type="button"
                           onClick={(e) => handleToggleItemComplete(e, item)}
                           className={cn(
-                            'w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer flex-shrink-0',
+                            'w-4.5 h-4.5 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer flex-shrink-0',
                             item.isCompleted
-                              ? 'bg-primary border-primary text-primary-foreground shadow-xs'
+                              ? 'bg-primary border-primary text-primary-foreground shadow-2xs'
                               : 'border-border/80 hover:border-primary bg-surface/50'
                           )}
                           title={item.isCompleted ? 'Mark incomplete' : 'Mark complete'}
                         >
-                          {item.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                          {item.isCompleted && <Check className="w-3 h-3 stroke-[3]" />}
                         </motion.button>
 
                         {/* Clean Object Type Lucide Icon */}
@@ -699,31 +692,31 @@ export function DashboardPage() {
                           title={isTask ? 'General Task' : `Issue ${item.identifier || ''}`}
                         >
                           {isTask ? (
-                            <CheckSquare className="w-4 h-4 text-indigo-500" />
+                            <CheckSquare className="w-3.5 h-3.5 text-indigo-500" />
                           ) : (
-                            <Layers className="w-4 h-4 text-sky-500" />
+                            <Layers className="w-3.5 h-3.5 text-sky-500" />
                           )}
                         </div>
 
                         {/* Identifier for Linear-style Issues */}
                         {!isTask && item.identifier && (
-                          <span className="text-[11px] font-mono font-semibold px-1.5 py-0.5 rounded-md bg-secondary text-foreground border border-border dark:border-border-strong flex-shrink-0">
+                          <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-secondary text-foreground border border-border/50 flex-shrink-0">
                             {item.identifier}
                           </span>
                         )}
 
                         {/* Title */}
-                        <span className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                        <span className="text-xs sm:text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
                           {item.title}
                         </span>
                       </div>
 
                       {/* Right: Priority chip + Due date + Chevron */}
-                      <div className="flex items-center gap-2.5 flex-shrink-0">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         {item.priority && item.priority !== 'none' && (
                           <span
                             className={cn(
-                              'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border',
+                              'text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded-md border',
                               priorityConfig
                             )}
                           >
@@ -732,7 +725,7 @@ export function DashboardPage() {
                         )}
 
                         {item.dueDate && (
-                          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
+                          <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
                             <Clock className="w-3 h-3 text-muted-foreground/70" />
                             {new Date(parseTimestamp(item.dueDate)).toLocaleDateString(undefined, {
                               month: 'short',
@@ -741,7 +734,7 @@ export function DashboardPage() {
                           </span>
                         )}
 
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
+                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </motion.div>
                   );
@@ -749,15 +742,15 @@ export function DashboardPage() {
               </div>
             ) : priorityTab === 'today' ? (
               /* Apple Clean Empty State: No tasks due today */
-              <div className="text-center py-10 px-4 rounded-2xl bg-secondary/30 border border-border/60 dark:border-border-strong space-y-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-5 h-5" />
+              <div className="text-center py-6 px-4 rounded-xl bg-secondary/20 border border-border/40 space-y-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-4 h-4" />
                 </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-foreground">No tasks due today</h4>
-                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-bold text-foreground">No tasks due today</h4>
+                  <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
                     {upcomingPriorities.length > 0
-                      ? `You are completely caught up for today! You have ${upcomingPriorities.length} upcoming task${upcomingPriorities.length > 1 ? 's' : ''} scheduled.`
+                      ? `Caught up for today! You have ${upcomingPriorities.length} upcoming task${upcomingPriorities.length > 1 ? 's' : ''} scheduled.`
                       : 'You are completely caught up. No active tasks or issues currently assigned to you.'}
                   </p>
                 </div>
@@ -766,7 +759,7 @@ export function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => setPriorityTab('upcoming')}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-foreground bg-secondary hover:bg-secondary/80 border border-border dark:border-border-strong transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-foreground bg-secondary hover:bg-secondary/80 border border-border/50 transition-colors cursor-pointer"
                     >
                       <span>View upcoming ({upcomingPriorities.length})</span>
                     </button>
@@ -775,22 +768,22 @@ export function DashboardPage() {
                     whileTap={{ scale: 0.98 }}
                     type="button"
                     onClick={() => setCreateTaskOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-95 transition-opacity cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-95 transition-opacity cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Create a task</span>
+                    <Plus className="w-3 h-3" />
+                    <span>Create task</span>
                   </motion.button>
                 </div>
               </div>
             ) : (
               /* Apple Clean Empty State: No upcoming tasks */
-              <div className="text-center py-10 px-4 rounded-2xl bg-secondary/30 border border-border/60 dark:border-border-strong space-y-3">
-                <div className="w-10 h-10 rounded-2xl bg-secondary text-muted-foreground border border-border dark:border-border-strong flex items-center justify-center mx-auto">
-                  <CheckSquare className="w-5 h-5" />
+              <div className="text-center py-6 px-4 rounded-xl bg-secondary/20 border border-border/40 space-y-2">
+                <div className="w-8 h-8 rounded-lg bg-secondary text-muted-foreground border border-border/50 flex items-center justify-center mx-auto">
+                  <CheckSquare className="w-4 h-4" />
                 </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-foreground">No upcoming tasks</h4>
-                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-bold text-foreground">No upcoming tasks</h4>
+                  <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
                     No future tasks or issues currently scheduled.
                   </p>
                 </div>
@@ -798,40 +791,34 @@ export function DashboardPage() {
                   whileTap={{ scale: 0.98 }}
                   type="button"
                   onClick={() => setCreateTaskOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-95 transition-opacity cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-95 transition-opacity cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-3 h-3" />
                   <span>Create a task</span>
                 </motion.button>
               </div>
             )}
           </div>
 
-          {/* ─── Section 3: Operational Approvals & Requests ────────────────── */}
-          <div className="rounded-3xl bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl border border-border dark:border-border-strong p-5 sm:p-6 shadow-xs space-y-5">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-inner">
-                  <FileCheck2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
-                    {isManagerOrLead ? 'Pending Approvals' : 'My Requests'}
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    {isManagerOrLead
-                      ? 'Operational requisitions requiring your sign-off'
-                      : 'Status of your leave, expense, and equipment requisitions'}
-                  </p>
-                </div>
+          {/* ─── Section 3: Operational Approvals & Requests (De-containerized) ─ */}
+          <div className="space-y-2.5 pt-2">
+            <div className="flex items-center justify-between gap-3 pb-2 border-b border-border/40">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileCheck2 className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                <h2 className="text-sm sm:text-base font-bold text-foreground tracking-tight">
+                  {isManagerOrLead ? 'Pending Approvals' : 'My Requests'}
+                </h2>
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  — {isManagerOrLead ? 'Requisitions requiring review' : 'Status of your requisitions'}
+                </span>
               </div>
 
               {isManagerOrLead ? (
-                <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-secondary text-muted-foreground border border-border dark:border-border-strong">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border/50">
                   {pendingApprovals.length} pending
                 </span>
               ) : (
-                <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-secondary text-muted-foreground border border-border dark:border-border-strong">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border/50">
                   {sentRequests.length} submitted
                 </span>
               )}
@@ -840,65 +827,63 @@ export function DashboardPage() {
             {/* Manager View: Pending Approvals with 1-click Approve / Reject */}
             {isManagerOrLead ? (
               pendingApprovals.length > 0 ? (
-                <div className="space-y-2.5">
+                <div className="space-y-1.5">
                   {pendingApprovals.map((req) => (
                     <div
                       key={req.id}
-                      className="p-4 rounded-2xl bg-surface dark:bg-surface-elevated/40 border border-border/80 dark:border-border-strong space-y-3"
+                      className="p-3 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/50 hover:border-border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                              {REQUEST_TYPE_LABELS[req.type] || 'Requisition'}
-                            </span>
-                            <span className="text-xs text-muted-foreground font-medium">
-                              from @{req.creatorUsername || req.creatorName}
-                            </span>
-                          </div>
-                          <h4 className="text-sm font-bold text-foreground line-clamp-1">
-                            {req.title}
-                          </h4>
-                          {req.description && (
-                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                              {req.description}
-                            </p>
-                          )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            {REQUEST_TYPE_LABELS[req.type] || 'Requisition'}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground font-medium">
+                            from @{req.creatorUsername || req.creatorName}
+                          </span>
                         </div>
+                        <h4 className="text-xs sm:text-sm font-semibold text-foreground line-clamp-1">
+                          {req.title}
+                        </h4>
+                        {req.description && (
+                          <p className="text-[11px] text-muted-foreground line-clamp-1">
+                            {req.description}
+                          </p>
+                        )}
+                      </div>
 
-                        {/* 1-click Approve / Reject Actions with Note Modal */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
-                            type="button"
-                            onClick={() =>
-                              setApprovalModal({ isOpen: true, request: req, mode: 'approved' })
-                            }
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition-colors cursor-pointer"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                            <span>Approve</span>
-                          </motion.button>
+                      {/* 1-click Approve / Reject Actions with Note Modal */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0 self-end sm:self-auto">
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          type="button"
+                          onClick={() =>
+                            setApprovalModal({ isOpen: true, request: req, mode: 'approved' })
+                          }
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 shadow-2xs transition-colors cursor-pointer"
+                        >
+                          <Check className="w-3 h-3" />
+                          <span>Approve</span>
+                        </motion.button>
 
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
-                            type="button"
-                            onClick={() =>
-                              setApprovalModal({ isOpen: true, request: req, mode: 'rejected' })
-                            }
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors cursor-pointer"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                            <span>Reject</span>
-                          </motion.button>
-                        </div>
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          type="button"
+                          onClick={() =>
+                            setApprovalModal({ isOpen: true, request: req, mode: 'rejected' })
+                          }
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors cursor-pointer"
+                        >
+                          <X className="w-3 h-3" />
+                          <span>Reject</span>
+                        </motion.button>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 px-4 rounded-2xl bg-secondary/30 border border-border/60 dark:border-border-strong space-y-2">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
+                <div className="text-center py-6 px-4 rounded-xl bg-secondary/20 border border-border/40 space-y-1.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <h4 className="text-xs font-bold text-foreground">No pending approvals</h4>
@@ -910,7 +895,7 @@ export function DashboardPage() {
             ) : (
               /* Member View: My Requests */
               sentRequests.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {sentRequests.slice(0, 5).map((req) => {
                     const statusConfig =
                       req.status === 'approved'
@@ -923,15 +908,15 @@ export function DashboardPage() {
                       <div
                         key={req.id}
                         onClick={() => setSelectedRequest(req)}
-                        className="group flex items-center justify-between p-3.5 rounded-2xl bg-surface dark:bg-surface-elevated/40 border border-border/80 dark:border-border-strong hover:border-border-strong hover:shadow-sm transition-all cursor-pointer gap-3"
+                        className="group flex items-center justify-between py-2 px-2.5 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/40 hover:border-border hover:bg-surface dark:hover:bg-card transition-all cursor-pointer gap-2.5"
                       >
-                        <div className="min-w-0 flex items-center gap-2.5">
-                          <FileCheck2 className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                        <div className="min-w-0 flex items-center gap-2">
+                          <FileCheck2 className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                           <div className="min-w-0">
-                            <span className="text-sm font-semibold text-foreground truncate block group-hover:text-primary transition-colors">
+                            <span className="text-xs font-medium text-foreground truncate block group-hover:text-primary transition-colors">
                               {req.title}
                             </span>
-                            <span className="text-[11px] text-muted-foreground">
+                            <span className="text-[10px] text-muted-foreground">
                               {REQUEST_TYPE_LABELS[req.type] || 'Requisition'} • Submitted{' '}
                               {formatRelativeTime(req.createdAt)}
                             </span>
@@ -940,7 +925,7 @@ export function DashboardPage() {
 
                         <span
                           className={cn(
-                            'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border capitalize',
+                            'text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded-md border capitalize',
                             statusConfig
                           )}
                         >
@@ -951,8 +936,8 @@ export function DashboardPage() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 px-4 rounded-2xl bg-secondary/30 border border-border/60 dark:border-border-strong space-y-2">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center mx-auto">
+                <div className="text-center py-6 px-4 rounded-xl bg-secondary/20 border border-border/40 space-y-1.5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center mx-auto">
                     <FileCheck2 className="w-4 h-4" />
                   </div>
                   <h4 className="text-xs font-bold text-foreground">No active requests</h4>
@@ -966,40 +951,36 @@ export function DashboardPage() {
         </div>
 
         {/* ─── Secondary Column: Sprint & Team Focus (4 cols) ──────────────── */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* ─── Section 4: Active Cycle / Sprint Progress ──────────────────── */}
-          {/* Only rendered when a real active cycle exists in Firestore */}
+        <div className="lg:col-span-4 space-y-5">
+          {/* ─── Section 4: Active Cycle / Sprint Progress (De-containerized) ─ */}
           {currentCycle && (
-            <div className="rounded-3xl bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl border border-border dark:border-border-strong p-5 sm:p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 flex items-center justify-center shadow-inner">
-                    <Zap className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground tracking-tight">
-                      {currentCycle.title || 'Active Cycle'}
-                    </h3>
-                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} remaining
-                    </span>
-                  </div>
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between gap-3 pb-2 border-b border-border/40">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Zap className="w-4 h-4 text-sky-500 flex-shrink-0" />
+                  <h3 className="text-sm sm:text-base font-bold text-foreground tracking-tight truncate">
+                    {currentCycle.title || 'Active Cycle'}
+                  </h3>
                 </div>
-
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  type="button"
-                  onClick={() => navigate('/workspace')}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  title="View in Workspace"
-                >
-                  <ArrowUpRight className="w-4 h-4" />
-                </motion.button>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-mono">
+                    <Calendar className="w-3 h-3" />
+                    {daysRemaining}d left
+                  </span>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    type="button"
+                    onClick={() => navigate('/workspace')}
+                    className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                    title="View in Workspace"
+                  >
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </motion.button>
+                </div>
               </div>
 
               {/* Velocity Progress Bar */}
-              <div className="p-4 rounded-2xl bg-secondary/40 dark:bg-secondary/20 border border-border/60 dark:border-border-strong space-y-2.5">
+              <div className="p-3 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/50 space-y-2">
                 <div className="flex items-center justify-between text-xs font-semibold">
                   <span className="text-foreground flex items-center gap-1.5">
                     <TrendingUp className="w-3.5 h-3.5 text-primary" />
@@ -1009,7 +990,7 @@ export function DashboardPage() {
                 </div>
 
                 {/* Spring smooth track */}
-                <div className="w-full h-2 rounded-full bg-border/60 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-border/60 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-500 transition-all duration-700 ease-out shadow-xs"
                     style={{ width: `${percentVelocity}%` }}
@@ -1017,23 +998,23 @@ export function DashboardPage() {
                 </div>
 
                 {/* Burned vs Total Metric Details */}
-                <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-                  <div className="p-2 rounded-xl bg-surface/70 dark:bg-surface/40 border border-border/40 dark:border-border-strong">
-                    <div className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">
+                <div className="grid grid-cols-3 gap-1.5 pt-0.5 text-center">
+                  <div className="p-1.5 rounded-lg bg-secondary/50 border border-border/40">
+                    <div className="text-[8px] uppercase font-bold text-muted-foreground tracking-wider">
                       Done
                     </div>
                     <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
                       {completedPoints} pts
                     </div>
                   </div>
-                  <div className="p-2 rounded-xl bg-surface/70 dark:bg-surface/40 border border-border/40 dark:border-border-strong">
-                    <div className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">
+                  <div className="p-1.5 rounded-lg bg-secondary/50 border border-border/40">
+                    <div className="text-[8px] uppercase font-bold text-muted-foreground tracking-wider">
                       Scope
                     </div>
                     <div className="text-xs font-bold text-foreground">{totalPoints} pts</div>
                   </div>
-                  <div className="p-2 rounded-xl bg-surface/70 dark:bg-surface/40 border border-border/40 dark:border-border-strong">
-                    <div className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">
+                  <div className="p-1.5 rounded-lg bg-secondary/50 border border-border/40">
+                    <div className="text-[8px] uppercase font-bold text-muted-foreground tracking-wider">
                       Velocity
                     </div>
                     <div className="text-xs font-bold text-sky-600 dark:text-sky-400">
@@ -1045,34 +1026,29 @@ export function DashboardPage() {
             </div>
           )}
 
-          {/* ─── Section 2: Team Focus ──────────────────────────────────────── */}
-          <div className="rounded-3xl bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl border border-border dark:border-border-strong p-5 sm:p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shadow-inner">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground tracking-tight">Team Focus</h3>
-                  <p className="text-xs text-muted-foreground">Live availability & priorities</p>
-                </div>
+          {/* ─── Section 2: Team Focus (De-containerized High-Density Roster) ── */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3 pb-2 border-b border-border/40">
+              <div className="flex items-center gap-2 min-w-0">
+                <Users className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <h3 className="text-sm sm:text-base font-bold text-foreground tracking-tight">Team Focus</h3>
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  — Live status
+                </span>
               </div>
 
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border dark:border-border-strong">
-                {teamRoster.length}
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border/50">
+                {teamRoster.length} members
               </span>
             </div>
 
-            {/* Teammate Roster */}
+            {/* High-density roster grid (avatar, name, status dot, 1-click DM button) */}
             {teamRoster.length > 0 ? (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-1.5">
                 {teamRoster.map((teammate) => {
                   const availability = getAvailabilityConfig(teammate.availabilityStatus);
                   const focusText =
-                    teammate.focusStatus?.text || 'Available for collaboration';
-                  const focusTime = teammate.focusStatus?.updatedAt
-                    ? formatRelativeTime(teammate.focusStatus.updatedAt)
-                    : null;
+                    teammate.focusStatus?.text || '';
                   const initials = (teammate.fullName || teammate.username || 'U')
                     .split(' ')
                     .map((n) => n[0])
@@ -1084,38 +1060,46 @@ export function DashboardPage() {
                   return (
                     <div
                       key={teammate.uid}
-                      className="p-3 rounded-2xl bg-surface dark:bg-surface-elevated/40 border border-border/80 dark:border-border-strong hover:border-border-strong hover:shadow-xs transition-all space-y-2"
+                      className="py-2 px-2.5 rounded-xl bg-surface/70 dark:bg-card/50 border border-border/40 hover:border-border hover:bg-surface dark:hover:bg-card transition-all flex items-center justify-between gap-2.5 group"
                     >
-                      {/* Teammate Row */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          {/* Avatar with Live Dot */}
-                          <div className="relative flex-shrink-0">
-                            {teammate.photoURL ? (
-                              <img
-                                src={teammate.photoURL}
-                                alt={teammate.fullName}
-                                className="w-8 h-8 rounded-full object-cover border border-border"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-secondary text-foreground font-semibold flex items-center justify-center text-[10px] border border-border">
-                                {initials}
-                              </div>
-                            )}
-                            <span
-                              className={cn(
-                                'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full',
-                                availability.dotClass
-                              )}
-                              title={availability.label}
+                      {/* Left: Avatar with Live Status Dot + Name + Focus snippet */}
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="relative flex-shrink-0">
+                          {teammate.photoURL ? (
+                            <img
+                              src={teammate.photoURL}
+                              alt={teammate.fullName}
+                              className="w-7 h-7 rounded-full object-cover border border-border/60"
                             />
-                          </div>
-
-                          <div className="min-w-0">
-                            <div className="text-xs font-bold text-foreground truncate">
-                              {teammate.fullName || teammate.username}
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-secondary text-foreground font-semibold flex items-center justify-center text-[10px] border border-border/60">
+                              {initials}
                             </div>
-                            <div className="text-[10px] text-muted-foreground truncate">
+                          )}
+                          <span
+                            className={cn(
+                              'absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full',
+                              availability.dotClass
+                            )}
+                            title={availability.label}
+                          />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-semibold text-foreground truncate">
+                              {teammate.fullName || teammate.username}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground truncate hidden sm:inline">
+                              @{teammate.username}
+                            </span>
+                          </div>
+                          {focusText ? (
+                            <p className="text-[10px] text-muted-foreground truncate italic">
+                              "{focusText}"
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-muted-foreground truncate">
                               {teammate.designation ||
                                 (teammate.role === 'owner'
                                   ? 'Founder'
@@ -1124,53 +1108,43 @@ export function DashboardPage() {
                                   : teammate.role === 'manager'
                                   ? 'Team Lead'
                                   : 'Teammate')}
-                            </div>
-                          </div>
+                            </p>
+                          )}
                         </div>
-
-                        {/* 1-click Direct Message in Chat with Spring feedback and loading state */}
-                        <motion.button
-                          whileTap={{ scale: isStartingDM ? 1 : 0.94 }}
-                          type="button"
-                          disabled={!!loadingDmUid}
-                          onClick={() => handleStartDM(teammate.uid)}
-                          className={cn(
-                            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer',
-                            isStartingDM
-                              ? 'bg-primary/10 text-primary border border-primary/30 cursor-wait'
-                              : 'text-foreground bg-secondary/80 hover:bg-secondary border border-border dark:border-border-strong'
-                          )}
-                          title={`Message ${teammate.fullName || teammate.username}`}
-                        >
-                          {isStartingDM ? (
-                            <>
-                              <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                              <span>Opening...</span>
-                            </>
-                          ) : (
-                            <>
-                              <MessageSquare className="w-3 h-3 text-muted-foreground" />
-                              <span>DM</span>
-                            </>
-                          )}
-                        </motion.button>
                       </div>
 
-                      {/* Focus Status Text + Relative Time */}
-                      <div className="p-2 rounded-xl bg-secondary/30 dark:bg-secondary/15 border border-border/40 dark:border-border-strong text-[11px] text-foreground flex items-center justify-between gap-2">
-                        <span className="truncate italic font-medium">{focusText}</span>
-                        {focusTime && (
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">
-                            {focusTime}
-                          </span>
+                      {/* Right: 1-click DM button */}
+                      <motion.button
+                        whileTap={{ scale: isStartingDM ? 1 : 0.94 }}
+                        type="button"
+                        disabled={!!loadingDmUid}
+                        onClick={() => handleStartDM(teammate.uid)}
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all cursor-pointer flex-shrink-0',
+                          isStartingDM
+                            ? 'bg-primary/10 text-primary border border-primary/30 cursor-wait'
+                            : 'text-foreground bg-secondary/70 hover:bg-secondary border border-border/50 group-hover:border-border'
                         )}
-                      </div>
+                        title={`Message ${teammate.fullName || teammate.username}`}
+                      >
+                        {isStartingDM ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                            <span>Opening...</span>
+                          </>
+                        ) : (
+                          <>
+                            <MessageSquare className="w-3 h-3 text-muted-foreground" />
+                            <span>DM</span>
+                          </>
+                        )}
+                      </motion.button>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="text-center py-6 px-3 rounded-2xl bg-secondary/30 border border-border/60 dark:border-border-strong text-xs text-muted-foreground">
+              <div className="text-center py-6 px-3 rounded-xl bg-secondary/20 border border-border/40 text-xs text-muted-foreground">
                 No teammates registered in this organization yet.
               </div>
             )}

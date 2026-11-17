@@ -306,6 +306,10 @@ export function TasksFeedPage() {
   const [rejectTargetId, setRejectTargetId] = React.useState<string | null>(null);
   const [rejectNote, setRejectNote] = React.useState('');
   const rejectPopoverRef = React.useRef<HTMLDivElement>(null);
+  const [filterMenuOpen, setFilterMenuOpen] = React.useState(false);
+  const filterMenuRef = React.useRef<HTMLDivElement>(null);
+  const [newMenuOpen, setNewMenuOpen] = React.useState(false);
+  const newMenuRef = React.useRef<HTMLDivElement>(null);
 
   // Click-outside listener
   React.useEffect(() => {
@@ -321,6 +325,12 @@ export function TasksFeedPage() {
       }
       if (rejectPopoverRef.current && !rejectPopoverRef.current.contains(e.target as Node)) {
         setRejectTargetId(null);
+      }
+      if (filterMenuRef.current && !filterMenuRef.current.contains(e.target as Node)) {
+        setFilterMenuOpen(false);
+      }
+      if (newMenuRef.current && !newMenuRef.current.contains(e.target as Node)) {
+        setNewMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -906,629 +916,246 @@ export function TasksFeedPage() {
 
   return (
     <div className="min-h-full w-full bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
-      {/* ── Page Header: Apple SwiftUI Radical Minimalism ───────────────────── */}
-      <div className="pt-8 pb-4 px-4 sm:px-8 max-w-7xl mx-auto w-full">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5 shadow-xs">
-                <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-                Execution Journey
-              </span>
-              <span className="text-xs text-muted-foreground font-medium">
-                {org?.name || 'Workspace'}
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              Tasks & Execution Journey
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Personal focus, operational requests, and workspace issues integrated into an uncluttered journey.
-            </p>
-          </div>
-
-          {/* Header Controls: Progress Capsule & Quick Actions */}
-          <div className="flex items-center gap-3 shrink-0 flex-wrap">
-            {/* Journey Accomplishment Capsule */}
-            <div className="hidden lg:flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-surface/80 dark:bg-surface/50 border border-border dark:border-border-strong shadow-xs">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Accomplishment Rate
-                </span>
-                <span className="text-xs font-extrabold text-foreground">
-                  {journeyStats.completedCount} delivered · {journeyStats.inFlightCount} in flight
-                </span>
-              </div>
-              <div className="w-10 h-2 bg-secondary rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                  style={{ width: `${journeyStats.progressPercent}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <button
-              type="button"
-              onClick={() => {
-                quickInputRef.current?.focus();
-                quickInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }}
-              className="px-3.5 py-2 rounded-2xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/95 transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-sm shadow-primary/20"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Quick Capture</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCreateTaskOpen(true)}
-              className="px-3.5 py-2 rounded-2xl text-xs font-semibold bg-secondary/80 hover:bg-secondary text-foreground border border-border transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-xs"
-            >
-              <ListTodo className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Full Task</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCreateIssueOpen(true)}
-              className="px-3.5 py-2 rounded-2xl text-xs font-semibold bg-secondary/80 hover:bg-secondary text-foreground border border-border transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-xs"
-            >
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-              <span>Issue</span>
-            </button>
-          </div>
-        </div>
-
-        {/* ── Apple Minimalist Quick-Add Task & Request Bar ───────────────────── */}
-        <div className="mt-6 rounded-3xl bg-surface/90 dark:bg-surface/50 backdrop-blur-2xl border border-border dark:border-border-strong p-3.5 sm:p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.45)] transition-all">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-2xl bg-secondary/80 flex items-center justify-center shrink-0 text-muted-foreground">
-              {quickType === 'task' ? (
-                <ListTodo className="w-4 h-4 text-indigo-500" />
-              ) : (
-                <ClipboardList className="w-4 h-4 text-sky-500" />
-              )}
-            </div>
-
-            <input
-              ref={quickInputRef}
-              type="text"
-              value={quickTitle}
-              onChange={(e) => setQuickTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleQuickSubmit();
-                }
-              }}
-              placeholder={
-                quickType === 'task'
-                  ? 'Add a task or issue... (Press Enter to capture)'
-                  : 'Add an operational request (e.g. Work from home Friday)... (Press Enter)'
-              }
-              className="flex-1 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 bg-transparent outline-none font-medium"
-            />
-
-            <button
-              type="button"
-              disabled={!quickTitle.trim() || isSubmittingQuick}
-              onClick={handleQuickSubmit}
-              className={cn(
-                'px-4 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-[0.97] cursor-pointer flex items-center gap-1.5 shadow-sm shadow-primary/20 shrink-0',
-                quickTitle.trim() && !isSubmittingQuick
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/95'
-                  : 'bg-muted text-muted-foreground/60 cursor-not-allowed opacity-60'
-              )}
-            >
-              {isSubmittingQuick ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : quickSubmitSuccess ? (
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-              ) : (
-                <Plus className="w-3.5 h-3.5" />
-              )}
-              <span>{quickSubmitSuccess ? 'Captured!' : '+ Capture'}</span>
-            </button>
-          </div>
-
-          {/* Quick-Add Accessory Attributes */}
-          <div className="mt-3 pt-3 border-t border-border/40 flex flex-wrap items-center gap-2 text-xs">
-            {/* Quick Type switcher */}
-            <div className="inline-flex p-0.5 rounded-full bg-secondary/80 dark:bg-secondary/40 border border-border/60">
+      {/* ── Compact 40px Command Toolbar Row ──────────────────────────────────── */}
+      <div className="h-10 px-4 sm:px-6 border-b border-border/40 bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex items-center justify-between gap-2 shrink-0 z-20 select-none">
+        {/* Status Segments */}
+        <div className="inline-flex p-0.5 rounded-lg bg-secondary/80 dark:bg-secondary/40 border border-border/40 shrink-0">
+          {(
+            [
+              { id: 'assigned_to_me', label: 'My Focus', count: segmentCounts.assigned },
+              { id: 'all', label: 'All Work', count: segmentCounts.all },
+              { id: 'completed', label: 'Accomplished', count: segmentCounts.completed },
+            ] as const
+          ).map((tab) => {
+            const isActive = activeSegment === tab.id;
+            return (
               <button
+                key={tab.id}
                 type="button"
-                onClick={() => setQuickType('task')}
+                onClick={() => setActiveSegment(tab.id)}
                 className={cn(
-                  'px-3 py-1 rounded-full text-[11px] font-semibold transition-all active:scale-[0.98] cursor-pointer',
-                  quickType === 'task'
+                  'px-2.5 py-0.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5',
+                  isActive
                     ? 'bg-surface text-foreground shadow-xs'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                Task
-              </button>
-              <button
-                type="button"
-                onClick={() => setQuickType('request')}
-                className={cn(
-                  'px-3 py-1 rounded-full text-[11px] font-semibold transition-all active:scale-[0.98] cursor-pointer',
-                  quickType === 'request'
-                    ? 'bg-surface text-foreground shadow-xs'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                Request
-              </button>
-            </div>
-
-            {/* If Request: Category Picker */}
-            {quickType === 'request' && (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setRequestTypePickerOpen(!requestTypePickerOpen)}
-                  className="px-2.5 py-1 rounded-full text-[11px] font-medium border border-border/60 bg-secondary/60 hover:bg-secondary text-foreground flex items-center gap-1 active:scale-[0.98] cursor-pointer"
-                >
-                  <ClipboardList className="w-3 h-3 text-sky-500" />
-                  <span>{REQUEST_TYPE_LABELS[quickRequestType]}</span>
-                  <ChevronDown className="w-2.5 h-2.5 text-muted-foreground" />
-                </button>
-
-                {requestTypePickerOpen && (
-                  <div
-                    ref={requestTypeRef}
-                    className="absolute left-0 top-full mt-2 w-48 bg-surface/95 dark:bg-surface/90 border border-border dark:border-border-strong rounded-2xl shadow-xl p-1.5 z-50 backdrop-blur-2xl"
-                  >
-                    {(Object.keys(REQUEST_TYPE_LABELS) as RequestType[]).map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => {
-                          setQuickRequestType(t);
-                          setRequestTypePickerOpen(false);
-                        }}
-                        className={cn(
-                          'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between cursor-pointer transition-colors',
-                          quickRequestType === t ? 'bg-primary/10 text-primary font-bold' : 'text-foreground hover:bg-secondary'
-                        )}
-                      >
-                        <span>{REQUEST_TYPE_LABELS[t]}</span>
-                        {quickRequestType === t && <Check className="w-3 h-3 text-primary" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Priority Selector for Task */}
-            {quickType === 'task' && (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setPriorityPickerOpen(!priorityPickerOpen)}
+                <span>{tab.label}</span>
+                <span
                   className={cn(
-                    'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all flex items-center gap-1 active:scale-[0.98] cursor-pointer',
-                    quickPriority !== 'none'
-                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold'
-                      : 'bg-secondary/60 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground'
+                    'text-[10px] font-bold px-1 rounded-full',
+                    isActive
+                      ? 'bg-primary/15 text-primary'
+                      : 'bg-muted/70 text-muted-foreground'
                   )}
                 >
-                  <Flame className="w-3 h-3" />
-                  <span className="capitalize">{quickPriority !== 'none' ? quickPriority : 'Priority'}</span>
-                  <ChevronDown className="w-2.5 h-2.5 text-muted-foreground" />
-                </button>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-                {priorityPickerOpen && (
-                  <div
-                    ref={priorityPickerRef}
-                    className="absolute left-0 top-full mt-2 w-36 bg-surface/95 dark:bg-surface/90 border border-border dark:border-border-strong rounded-2xl shadow-xl p-1.5 z-50 backdrop-blur-2xl"
-                  >
-                    {(['none', 'low', 'medium', 'high', 'urgent'] as TaskPriority[]).map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => {
-                          setQuickPriority(p);
-                          setPriorityPickerOpen(false);
-                        }}
-                        className={cn(
-                          'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between cursor-pointer capitalize transition-colors',
-                          quickPriority === p ? 'bg-primary/10 text-primary font-bold' : 'text-foreground hover:bg-secondary'
-                        )}
-                      >
-                        <span>{p}</span>
-                        {quickPriority === p && <Check className="w-3 h-3 text-primary" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <span className="w-1 h-1 rounded-full bg-border" />
-
-            {/* Quick Assignee / Approver Selector */}
-            <div className="relative">
+        {/* Right Controls: Search + Filter + View Switcher + Single '+ New' Button */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Quick Search */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks..."
+              className="w-32 sm:w-44 lg:w-56 h-7 text-xs rounded-lg bg-secondary/50 dark:bg-secondary/30 border border-border/40 pl-7 pr-6 text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-primary transition-colors"
+            />
+            {searchQuery && (
               <button
                 type="button"
-                onClick={() => setAssigneePickerOpen(!assigneePickerOpen)}
-                className={cn(
-                  'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all flex items-center gap-1.5 active:scale-[0.98] cursor-pointer',
-                  quickAssignee
-                    ? 'bg-primary/10 border-primary/30 text-primary font-semibold'
-                    : 'bg-secondary/60 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground'
-                )}
+                onClick={() => setSearchQuery('')}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded cursor-pointer"
               >
-                <AtSign className="w-3 h-3" />
-                {quickAssignee ? (
-                  <>
-                    <span>@{quickAssignee.fullName.split(' ')[0]}</span>
-                    <span
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setQuickAssignee(null);
-                      }}
-                      className="p-0.5 hover:text-foreground cursor-pointer"
-                    >
-                      <X className="w-2.5 h-2.5" />
-                    </span>
-                  </>
-                ) : (
-                  <span>{quickType === 'request' ? 'Approver' : 'Assignee'}</span>
-                )}
+                <X className="w-3 h-3" />
               </button>
+            )}
+          </div>
 
-              {assigneePickerOpen && (
-                <div
-                  ref={assigneePickerRef}
-                  className="absolute left-0 top-full mt-2 w-64 bg-surface/95 dark:bg-surface/90 border border-border dark:border-border-strong rounded-2xl shadow-xl p-2 z-50 backdrop-blur-2xl"
-                >
-                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Select {quickType === 'request' ? 'Approver' : 'Assignee'}
+          {/* Filter Popover */}
+          <div className="relative" ref={filterMenuRef}>
+            <button
+              type="button"
+              onClick={() => setFilterMenuOpen(!filterMenuOpen)}
+              className={cn(
+                'h-7 px-2 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1.5 cursor-pointer',
+                objectFilter !== 'all' || priorityFilter !== 'all'
+                  ? 'border-primary/40 bg-primary/10 text-primary font-semibold'
+                  : 'border-border/50 bg-secondary/40 text-muted-foreground hover:text-foreground hover:bg-secondary'
+              )}
+              title="Filter items"
+            >
+              <SlidersHorizontal className="w-3 h-3" />
+              <span className="hidden sm:inline">Filter</span>
+              {(objectFilter !== 'all' || priorityFilter !== 'all') && (
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              )}
+            </button>
+
+            {filterMenuOpen && (
+              <div className="absolute right-0 top-full mt-1.5 w-60 bg-surface/95 dark:bg-surface/90 border border-border dark:border-border-strong rounded-xl shadow-xl p-2.5 z-50 backdrop-blur-2xl space-y-2.5 animate-in fade-in zoom-in-95 duration-100">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Type
                   </div>
-                  <div className="p-1 border-b border-border/40 mb-1">
-                    <input
-                      type="text"
-                      placeholder="Filter members..."
-                      value={memberSearch}
-                      onChange={(e) => setMemberSearch(e.target.value)}
-                      className="w-full text-xs bg-secondary/50 rounded-lg px-2 py-1 outline-none text-foreground placeholder:text-muted-foreground"
-                      autoFocus
-                    />
-                  </div>
-                  <div className="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setQuickAssignee(null);
-                        setAssigneePickerOpen(false);
-                      }}
-                      className="w-full text-left px-2.5 py-1.5 rounded-xl text-xs text-muted-foreground hover:bg-secondary flex items-center gap-2 cursor-pointer transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Unassigned</span>
-                    </button>
-                    {filteredMembers.map((m) => (
+                  <div className="flex flex-wrap gap-1">
+                    {(
+                      [
+                        { id: 'all', label: 'All' },
+                        { id: 'task', label: 'Tasks' },
+                        { id: 'request', label: 'Requests' },
+                        { id: 'issue', label: 'Issues' },
+                      ] as const
+                    ).map((t) => (
                       <button
-                        key={m.uid}
+                        key={t.id}
                         type="button"
-                        onClick={() => {
-                          setQuickAssignee(m);
-                          setAssigneePickerOpen(false);
-                        }}
-                        className="w-full text-left px-2.5 py-1.5 rounded-xl text-xs text-foreground hover:bg-secondary flex items-center justify-between cursor-pointer transition-colors"
+                        onClick={() => setObjectFilter(t.id)}
+                        className={cn(
+                          'px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer',
+                          objectFilter === t.id
+                            ? 'bg-primary text-primary-foreground shadow-xs'
+                            : 'bg-secondary/60 hover:bg-secondary text-foreground'
+                        )}
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div
-                            className={cn(
-                              'w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0',
-                              getAvatarColor(m.uid)
-                            )}
-                          >
-                            {m.fullName[0]}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-xs leading-none truncate">{m.fullName}</p>
-                            <p className="text-[10px] text-muted-foreground leading-tight">@{m.username}</p>
-                          </div>
-                        </div>
-                        {quickAssignee?.uid === m.uid && <Check className="w-3.5 h-3.5 text-primary" />}
+                        {t.label}
                       </button>
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
 
-            <span className="w-1 h-1 rounded-full bg-border" />
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Priority
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {(
+                      [
+                        { id: 'all', label: 'All' },
+                        { id: 'urgent', label: 'Urgent' },
+                        { id: 'high', label: 'High' },
+                        { id: 'medium', label: 'Med' },
+                        { id: 'low', label: 'Low' },
+                      ] as const
+                    ).map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setPriorityFilter(p.id)}
+                        className={cn(
+                          'px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer',
+                          priorityFilter === p.id
+                            ? 'bg-primary text-primary-foreground shadow-xs'
+                            : 'bg-secondary/60 hover:bg-secondary text-foreground'
+                        )}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Quick Deadline Pills */}
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  if (deadlineMode === 'today') {
-                    setDeadlineMode(null);
-                  } else {
-                    setDeadlineMode('today');
-                    setCustomDateStr('');
-                  }
-                }}
-                className={cn(
-                  'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all active:scale-[0.98] cursor-pointer',
-                  deadlineMode === 'today'
-                    ? 'bg-primary/10 border-primary/30 text-primary font-semibold'
-                    : 'bg-secondary/60 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground'
+                {(objectFilter !== 'all' || priorityFilter !== 'all' || searchQuery) && (
+                  <div className="pt-1.5 border-t border-border/40 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setObjectFilter('all');
+                        setPriorityFilter('all');
+                        setSearchQuery('');
+                      }}
+                      className="text-[10px] font-semibold text-primary hover:underline cursor-pointer"
+                    >
+                      Reset filters
+                    </button>
+                  </div>
                 )}
-              >
-                Today
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (deadlineMode === 'tomorrow') {
-                    setDeadlineMode(null);
-                  } else {
-                    setDeadlineMode('tomorrow');
-                    setCustomDateStr('');
-                  }
-                }}
-                className={cn(
-                  'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all active:scale-[0.98] cursor-pointer',
-                  deadlineMode === 'tomorrow'
-                    ? 'bg-primary/10 border-primary/30 text-primary font-semibold'
-                    : 'bg-secondary/60 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground'
-                )}
-              >
-                Tomorrow
-              </button>
-
-              <input
-                ref={dateInputRef}
-                type="date"
-                value={customDateStr}
-                onChange={(e) => {
-                  setCustomDateStr(e.target.value);
-                  setDeadlineMode(e.target.value ? 'custom' : null);
-                }}
-                className="sr-only"
-              />
-
-              <button
-                type="button"
-                onClick={() => {
-                  try {
-                    dateInputRef.current?.showPicker();
-                  } catch {
-                    dateInputRef.current?.focus();
-                  }
-                }}
-                className={cn(
-                  'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all flex items-center gap-1 active:scale-[0.98] cursor-pointer',
-                  deadlineMode === 'custom' && customDateStr
-                    ? 'bg-primary/10 border-primary/30 text-primary font-semibold'
-                    : 'bg-secondary/60 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <CalendarIcon className="w-3 h-3" />
-                <span>
-                  {deadlineMode === 'custom' && customDateStr
-                    ? new Date(customDateStr + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                    : 'Calendar'}
-                </span>
-                {deadlineMode === 'custom' && customDateStr && (
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCustomDateStr('');
-                      setDeadlineMode(null);
-                    }}
-                    className="p-0.5 hover:text-foreground cursor-pointer"
-                  >
-                    <X className="w-2.5 h-2.5" />
-                  </span>
-                )}
-              </button>
-            </div>
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* ── Apple Segmented Control Bar & Multi-View Switcher ─────────────────── */}
-        <div className="mt-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Segment Filter (My Focus / All / Completed) */}
-          <div className="relative inline-flex p-1 bg-secondary/70 dark:bg-secondary/40 backdrop-blur-xl border border-border rounded-2xl self-start overflow-x-auto max-w-full shadow-xs">
+          {/* View Switcher (Board / List / Journey) */}
+          <div className="inline-flex p-0.5 rounded-lg bg-secondary/80 dark:bg-secondary/40 border border-border/40 shrink-0">
             {(
               [
-                { id: 'assigned_to_me', label: 'My Focus', count: segmentCounts.assigned },
-                { id: 'all', label: 'All Work', count: segmentCounts.all },
-                { id: 'completed', label: 'Accomplished', count: segmentCounts.completed },
+                { id: 'board', label: 'Board', icon: LayoutGrid },
+                { id: 'list', label: 'List', icon: List },
+                { id: 'journey', label: 'Journey', icon: Route },
               ] as const
-            ).map((tab) => {
-              const isActive = activeSegment === tab.id;
+            ).map((v) => {
+              const isSelected = viewMode === v.id;
+              const IconComponent = v.icon;
               return (
                 <button
-                  key={tab.id}
+                  key={v.id}
                   type="button"
-                  onClick={() => setActiveSegment(tab.id)}
+                  onClick={() => handleSetViewMode(v.id)}
                   className={cn(
-                    'relative px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer z-10 flex items-center gap-2',
-                    isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    'px-2 py-0.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1',
+                    isSelected
+                      ? 'bg-surface text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
                   )}
+                  title={`${v.label} View`}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="segmented-filter-pill"
-                      className="absolute inset-0 bg-surface rounded-xl shadow-xs border border-border/80 dark:border-white/10 -z-10"
-                      transition={{ type: 'spring', damping: 26, stiffness: 380 }}
-                    />
-                  )}
-                  <span>{tab.label}</span>
-                  <span
-                    className={cn(
-                      'text-[10px] font-bold px-1.5 py-0.2 rounded-full transition-colors',
-                      isActive
-                        ? 'bg-primary/15 text-primary'
-                        : 'bg-muted/70 text-muted-foreground'
-                    )}
-                  >
-                    {tab.count}
-                  </span>
+                  <IconComponent className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">{v.label}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Right Controls: View Switcher (Board / List / Journey) + Search */}
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            {/* View Switcher Pills */}
-            <div className="relative inline-flex p-1 bg-secondary/70 dark:bg-secondary/40 backdrop-blur-xl border border-border rounded-2xl shrink-0 shadow-xs">
-              {(
-                [
-                  { id: 'board', label: 'Board', icon: LayoutGrid },
-                  { id: 'list', label: 'List', icon: List },
-                  { id: 'journey', label: 'Journey', icon: Route },
-                ] as const
-              ).map((v) => {
-                const isSelected = viewMode === v.id;
-                const IconComponent = v.icon;
-                return (
-                  <button
-                    key={v.id}
-                    type="button"
-                    onClick={() => handleSetViewMode(v.id)}
-                    className={cn(
-                      'relative px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer z-10 flex items-center gap-1.5',
-                      isSelected ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-                    )}
-                    title={`${v.label} View`}
-                  >
-                    {isSelected && (
-                      <motion.div
-                        layoutId="view-mode-pill"
-                        className="absolute inset-0 bg-surface rounded-xl shadow-xs border border-border/80 dark:border-white/10 -z-10"
-                        transition={{ type: 'spring', damping: 26, stiffness: 380 }}
-                      />
-                    )}
-                    <IconComponent className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">{v.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+          {/* Single '+ New' Button with Dropdown */}
+          <div className="relative" ref={newMenuRef}>
+            <button
+              type="button"
+              onClick={() => setNewMenuOpen(!newMenuOpen)}
+              className="h-7 px-2.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/95 transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1 shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New</span>
+              <ChevronDown className="w-3 h-3 opacity-70" />
+            </button>
 
-            {/* Quick Search Input */}
-            <div className="relative flex-1 md:w-64">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search journey..."
-                className="w-full text-xs rounded-2xl bg-surface border border-border pl-8.5 pr-8 py-2 text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs"
-              />
-              {searchQuery && (
+            {newMenuOpen && (
+              <div className="absolute right-0 top-full mt-1.5 w-40 bg-surface/95 dark:bg-surface/90 border border-border dark:border-border-strong rounded-xl shadow-xl p-1 z-50 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-100">
                 <button
                   type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full cursor-pointer"
+                  onClick={() => {
+                    setNewMenuOpen(false);
+                    setCreateTaskOpen(true);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-foreground hover:bg-secondary flex items-center gap-2 cursor-pointer transition-colors"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <ListTodo className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>New Task</span>
                 </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Sub-Filters: Object Type & Priority Filter Bar ───────────────────── */}
-        <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/40 text-xs">
-          {/* Object Type Pills */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mr-1">
-              Filter:
-            </span>
-            {(
-              [
-                { id: 'all', label: 'All', count: typeCounts.all },
-                { id: 'task', label: 'Tasks', count: typeCounts.task },
-                { id: 'request', label: 'Requests', count: typeCounts.request },
-                { id: 'issue', label: 'Issues', count: typeCounts.issue },
-              ] as const
-            ).map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setObjectFilter(t.id)}
-                className={cn(
-                  'px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5',
-                  objectFilter === t.id
-                    ? 'bg-foreground text-background shadow-xs'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
-                )}
-              >
-                <span>{t.label}</span>
-                <span
-                  className={cn(
-                    'text-[10px] font-bold px-1 rounded-full',
-                    objectFilter === t.id ? 'bg-background/20 text-background' : 'text-muted-foreground'
-                  )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewMenuOpen(false);
+                    setCreateIssueOpen(true);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-foreground hover:bg-secondary flex items-center gap-2 cursor-pointer transition-colors"
                 >
-                  {t.count}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Priority Pills */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mr-1">
-              Priority:
-            </span>
-            {(
-              [
-                { id: 'all', label: 'All' },
-                { id: 'urgent', label: 'Urgent' },
-                { id: 'high', label: 'High' },
-                { id: 'medium', label: 'Med' },
-                { id: 'low', label: 'Low' },
-              ] as const
-            ).map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setPriorityFilter(p.id)}
-                className={cn(
-                  'px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer',
-                  priorityFilter === p.id
-                    ? 'bg-foreground text-background shadow-xs'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
-                )}
-              >
-                {p.label}
-              </button>
-            ))}
-
-            {(objectFilter !== 'all' || priorityFilter !== 'all' || searchQuery) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setObjectFilter('all');
-                  setPriorityFilter('all');
-                  setSearchQuery('');
-                }}
-                className="ml-2 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
-              >
-                Reset filters
-              </button>
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span>New Issue</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
       </div>
 
       {/* ── Main Dynamic View Canvas ─────────────────────────────────────────── */}
-      <div className="flex-1 px-4 sm:px-8 pb-16 max-w-7xl mx-auto w-full">
+      <div className="flex-1 px-4 sm:px-6 py-4 pb-16 w-full overflow-y-auto">
         {isLoading && (
           <div className="py-20 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -1554,13 +1181,10 @@ export function TasksFeedPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  quickInputRef.current?.focus();
-                  quickInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer"
+                onClick={() => setCreateTaskOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer shadow-xs"
               >
-                Capture Item
+                New Task
               </button>
               <button
                 type="button"
@@ -1575,34 +1199,34 @@ export function TasksFeedPage() {
 
         {/* ── VIEW 1: KANBAN BOARD VIEW ───────────────────────────────────────── */}
         {!isLoading && filteredItems.length > 0 && viewMode === 'board' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
             {BOARD_COLUMNS.map((col) => {
               const colItems = boardGroupedItems[col.id];
               return (
                 <div
                   key={col.id}
-                  className="rounded-3xl bg-surface/50 dark:bg-surface/30 border border-border/80 dark:border-border-strong/70 p-3.5 flex flex-col min-h-[480px] shadow-xs"
+                  className="rounded-xl p-2 bg-secondary/35 border border-border/30 min-h-[420px] flex flex-col shadow-xs"
                 >
                   {/* Column Header */}
-                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-border/50">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between px-1.5 py-1 mb-1.5 border-b border-border/20">
+                    <div className="flex items-center gap-1.5">
                       <span
-                        className="w-2.5 h-2.5 rounded-full"
+                        className="w-2 h-2 rounded-full"
                         style={{ backgroundColor: col.accentColor }}
                       />
                       <h3 className="text-xs font-bold text-foreground tracking-tight">
                         {col.title}
                       </h3>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">
                       {colItems.length}
                     </span>
                   </div>
 
                   {/* Column Cards */}
-                  <div className="space-y-3 flex-1">
+                  <div className="space-y-2 flex-1">
                     {colItems.length === 0 ? (
-                      <div className="h-32 border border-dashed border-border/60 rounded-2xl flex items-center justify-center text-[11px] text-muted-foreground/60 font-medium">
+                      <div className="h-28 border border-dashed border-border/40 rounded-lg flex items-center justify-center text-[11px] text-muted-foreground/60 font-medium">
                         No {col.title.toLowerCase()} items
                       </div>
                     ) : (
@@ -1620,54 +1244,14 @@ export function TasksFeedPage() {
                             key={item.id}
                             layout="position"
                             onClick={() => handleCardClick(item)}
-                            whileHover={{ y: -2 }}
-                            transition={{ duration: 0.15 }}
+                            whileHover={{ y: -1 }}
+                            transition={{ duration: 0.12 }}
                             className={cn(
-                              'group relative rounded-2xl p-3.5 transition-all cursor-pointer',
-                              'bg-surface/90 dark:bg-surface/50 border border-border/80 dark:border-border/60',
-                              'shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:border-border',
+                              'group relative rounded-lg p-2.5 transition-all cursor-pointer',
+                              'bg-surface dark:bg-card border border-border/40 hover:border-border shadow-2xs',
                               item.isCompleted && 'opacity-65'
                             )}
                           >
-                            {/* Card Badges Row */}
-                            <div className="flex items-center justify-between gap-1.5 mb-2">
-                              <div className="flex items-center gap-1.5 truncate">
-                                {isIssue && (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                    <Zap className="w-2.5 h-2.5" />
-                                    {item.issueIdentifier || 'ISSUE'}
-                                  </span>
-                                )}
-                                {isRequest && (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
-                                    <ClipboardList className="w-2.5 h-2.5" />
-                                    {item.requestType ? REQUEST_TYPE_LABELS[item.requestType] : 'Request'}
-                                  </span>
-                                )}
-                                {isTask && (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                                    <ListTodo className="w-2.5 h-2.5" />
-                                    Task
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Priority Dot/Pill */}
-                              {item.priority !== 'none' && (
-                                <span
-                                  className={cn(
-                                    'px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider',
-                                    item.priority === 'urgent' && 'bg-rose-500/10 text-rose-500 border border-rose-500/20',
-                                    item.priority === 'high' && 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
-                                    item.priority === 'medium' && 'bg-sky-500/10 text-sky-500 border border-sky-500/20',
-                                    item.priority === 'low' && 'bg-secondary text-muted-foreground'
-                                  )}
-                                >
-                                  {item.priority}
-                                </span>
-                              )}
-                            </div>
-
                             {/* Card Title */}
                             <h4
                               className={cn(
@@ -1678,26 +1262,50 @@ export function TasksFeedPage() {
                               {item.title}
                             </h4>
 
-                            {/* Card Footer: Assignee & Due Date */}
-                            <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-2 border-t border-border/40">
-                              <div className="flex items-center gap-1.5">
-                                <div
-                                  className={cn(
-                                    'w-4.5 h-4.5 rounded-full border flex items-center justify-center font-bold text-[8px] shrink-0',
-                                    getAvatarColor(item.assigneeIds[0] || 'none')
-                                  )}
-                                >
-                                  {item.assigneeName ? item.assigneeName[0].toUpperCase() : '?'}
-                                </div>
-                                <span className="truncate max-w-[80px]">
-                                  {item.assigneeName ? item.assigneeName.split(' ')[0] : 'Unassigned'}
-                                </span>
+                            {/* Inline Flowing Metadata Row: mini-avatar (w-5 h-5), priority dot, due date text, identifier chip */}
+                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap">
+                              {/* Mini Avatar */}
+                              <div
+                                title={item.assigneeName || 'Unassigned'}
+                                className={cn(
+                                  'w-5 h-5 rounded-full border border-border/40 flex items-center justify-center font-bold text-[8px] shrink-0',
+                                  getAvatarColor(item.assigneeIds[0] || 'none')
+                                )}
+                              >
+                                {item.assigneeName ? item.assigneeName[0].toUpperCase() : '?'}
                               </div>
 
+                              {/* Priority Dot */}
+                              {item.priority !== 'none' && (
+                                <span
+                                  title={`Priority: ${item.priority}`}
+                                  className={cn(
+                                    'w-2 h-2 rounded-full shrink-0',
+                                    item.priority === 'urgent' && 'bg-rose-500 ring-2 ring-rose-500/20',
+                                    item.priority === 'high' && 'bg-amber-500 ring-2 ring-amber-500/20',
+                                    item.priority === 'medium' && 'bg-sky-500 ring-2 ring-sky-500/20',
+                                    item.priority === 'low' && 'bg-muted-foreground/50'
+                                  )}
+                                />
+                              )}
+
+                              {/* Identifier Chip */}
+                              {isIssue && (
+                                <span className="font-mono text-[9px] font-bold text-amber-600 dark:text-amber-400 px-1 py-0.2 rounded bg-amber-500/10 border border-amber-500/20">
+                                  {item.issueIdentifier || 'ISSUE'}
+                                </span>
+                              )}
+                              {isRequest && (
+                                <span className="text-[9px] font-semibold text-sky-600 dark:text-sky-400 px-1 py-0.2 rounded bg-sky-500/10 border border-sky-500/20">
+                                  {item.requestType ? REQUEST_TYPE_LABELS[item.requestType] : 'Req'}
+                                </span>
+                              )}
+
+                              {/* Due Date Text */}
                               {item.dueDate && (
                                 <span
                                   className={cn(
-                                    'font-mono text-[9px]',
+                                    'font-mono text-[9px] ml-auto shrink-0',
                                     isOverdue(item.dueDate) && !item.isCompleted ? 'text-rose-500 font-bold' : '',
                                     isToday(item.dueDate) && !item.isCompleted ? 'text-amber-500 font-bold' : ''
                                   )}
@@ -1708,7 +1316,7 @@ export function TasksFeedPage() {
                             </div>
 
                             {/* Fast Column Advance Actions on Hover */}
-                            <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between gap-1">
+                            <div className="mt-2 pt-1.5 border-t border-border/20 flex items-center justify-between gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               {/* 1-Click Complete */}
                               {!isRequest && (
                                 <button

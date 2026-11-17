@@ -977,10 +977,9 @@ export function DatabaseTableBlock({ node, updateAttributes, deleteNode }: NodeV
                                 <div className="flex items-center justify-between gap-1.5">
                                   <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                     {hasLinkedPage && (
-                                      <FileText
-                                        className="w-3.5 h-3.5 text-primary shrink-0"
-                                        title="Has nested sub-canvas page"
-                                      />
+                                      <span title="Has nested sub-canvas page" className="inline-flex items-center">
+                                        <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
+                                      </span>
                                     )}
                                     <input
                                       type="text"
