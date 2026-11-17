@@ -235,13 +235,6 @@ export function DashboardPage() {
   // Auto-surface upcoming tasks if today is empty and upcoming has tasks
   const [priorityTab, setPriorityTab] = React.useState<'today' | 'upcoming'>('today');
 
-  // Sync initial tab when priorities load if today is empty
-  React.useEffect(() => {
-    if (todaysPriorities.length === 0 && upcomingPriorities.length > 0 && priorityTab === 'today') {
-      setPriorityTab('upcoming');
-    }
-  }, [todaysPriorities.length, upcomingPriorities.length]);
-
   // Loading state for 1-click DM opening
   const [loadingDmUid, setLoadingDmUid] = React.useState<string | null>(null);
 
@@ -323,6 +316,13 @@ export function DashboardPage() {
       upcomingPriorities: upcomingList,
     };
   }, [myUnifiedItems]);
+
+  // Sync initial tab when priorities load if today is empty
+  React.useEffect(() => {
+    if (todaysPriorities.length === 0 && upcomingPriorities.length > 0 && priorityTab === 'today') {
+      setPriorityTab('upcoming');
+    }
+  }, [todaysPriorities.length, upcomingPriorities.length, priorityTab]);
 
   // Active priorities for currently selected tab
   const activePriorities = priorityTab === 'today' ? todaysPriorities : upcomingPriorities;

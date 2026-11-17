@@ -353,6 +353,7 @@ interface SidePeekDrawerProps {
     contentJson?: string;
   }) => Promise<string>;
   onUpdateMeta: (docId: string, patch: Partial<WorkspaceDocument>) => Promise<void>;
+  fontSize?: 'compact' | 'default' | 'large';
 }
 
 function SidePeekCanvasDrawer({
@@ -362,7 +363,8 @@ function SidePeekCanvasDrawer({
   onExpandFullPage,
   onSelectDoc,
   onCreateSubCanvas,
-  onUpdateMeta
+  onUpdateMeta,
+  fontSize = 'default'
 }: SidePeekDrawerProps) {
   const { document: peekDoc, loading, saveStatus, saveContent, canEdit } = useWorkspaceDocument(docId);
   const [peekTitle, setPeekTitle] = React.useState('');
@@ -485,7 +487,7 @@ function SidePeekCanvasDrawer({
                 key={peekDoc.id}
                 initialContent={peekDoc.contentJson}
                 readOnly={!canEdit}
-                fontSize={canvasFontSize}
+                fontSize={fontSize}
                 activeDoc={peekDoc}
                 documents={documents}
                 onSelectDoc={onSelectDoc}
@@ -1854,6 +1856,7 @@ export function WorkspaceCanvasPage() {
                 key={sidePeekDocId}
                 docId={sidePeekDocId}
                 documents={documents}
+                fontSize={canvasFontSize}
                 onClose={() => setSidePeekDocId(null)}
                 onExpandFullPage={(id) => {
                   setSidePeekDocId(null);
