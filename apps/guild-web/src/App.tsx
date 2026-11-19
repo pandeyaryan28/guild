@@ -21,12 +21,10 @@ const OnboardingRoot = React.lazy(() => import('./pages/onboarding/OnboardingRoo
 const JoinInvitePage = React.lazy(() => import('./pages/onboarding/JoinInvitePage').then(m => ({ default: m.JoinInvitePage })));
 
 // Layout
+import { WorkspaceRedirect } from './pages/workspace/WorkspaceRedirect';
 import { RedesignLayout } from './components/redesign/Layout';
 
 // Primary App Views
-const DashboardPage = React.lazy(() =>
-  import('./pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage || m.default }))
-);
 const WorkspaceCanvasPage = React.lazy(() =>
   import('./pages/workspace/WorkspaceCanvasPage').then(m => ({ default: m.WorkspaceCanvasPage || m.default }))
 );
@@ -35,7 +33,6 @@ const ChatLayout = React.lazy(() =>
 );
 
 // Secondary Views
-const RequestsPage = React.lazy(() => import('./pages/requests/RequestsPage').then(m => ({ default: m.RequestsPage })));
 const PeoplePage = React.lazy(() => import('./pages/people/PeoplePage').then(m => ({ default: m.PeoplePage })));
 const SettingsPage = React.lazy(() => import('./pages/workspace/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const CalendarPage = React.lazy(() => import('./pages/calendar/CalendarPage').then(m => ({ default: m.CalendarPage })));
@@ -57,19 +54,6 @@ const GlobalLoader = () => (
     </p>
   </div>
 );
-
-function TasksRedirect() {
-  const location = useLocation();
-  const search = location.search
-    ? (location.search.includes('tab=') ? location.search : `${location.search}&tab=tasks`)
-    : '?tab=tasks';
-  return <Navigate to={`/workspace${search}`} replace />;
-}
-
-function StudioRedirect() {
-  const location = useLocation();
-  return <Navigate to={`/workspace${location.search}`} replace />;
-}
 
 function AppContent() {
   const deviceType = useDeviceType();
@@ -117,24 +101,12 @@ function AppContent() {
       {/* Onboarding — requires auth, but not completed onboarding */}
       <Route path="/onboarding/*" element={<OnboardingRoot />} />
 
-      {/* ─── 1. Root: Dedicated Dashboard View ─────────────────────────────── */}
+      <Route path="/" element={<WorkspaceRedirect destination="home" />} />
       <Route
-        path="/"
+        path="/workspace/*"
         element={
           <ProtectedRoute>
-            <RedesignLayout>
-              <DashboardPage />
-            </RedesignLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ─── 2. Workspace Canvas (Linear + Notion Unified Canvas) ──────────── */}
-      <Route
-        path="/workspace"
-        element={
-          <ProtectedRoute>
-            <RedesignLayout fullBleed={true}>
+            <RedesignLayout fullBleed>
               <WorkspaceCanvasPage />
             </RedesignLayout>
           </ProtectedRoute>
@@ -168,12 +140,11 @@ function AppContent() {
       />
 
       {/* ─── Legacy Redirects ──────────────────────────────────────────────── */}
-      <Route path="/tasks" element={<TasksRedirect />} />
-      <Route path="/tasks/*" element={<TasksRedirect />} />
-      <Route path="/feed" element={<Navigate to="/" replace />} />
-      <Route path="/dashboard" element={<Navigate to="/" replace />} />
-      <Route path="/studio" element={<StudioRedirect />} />
-      <Route path="/canvas" element={<Navigate to="/workspace" replace />} />
+      <Route path="/tasks/*" element={<WorkspaceRedirect destination="tasks" />} />
+      <Route path="/feed" element={<WorkspaceRedirect destination="home" />} />
+      <Route path="/dashboard" element={<WorkspaceRedirect destination="home" />} />
+      <Route path="/studio" element={<WorkspaceRedirect destination="canvases" />} />
+      <Route path="/canvas" element={<WorkspaceRedirect destination="canvases" />} />
 
       {/* ─── Operational & Secondary Views ─────────────────────────────────── */}
       <Route
@@ -187,16 +158,7 @@ function AppContent() {
         }
       />
 
-      <Route
-        path="/requests"
-        element={
-          <ProtectedRoute>
-            <RedesignLayout>
-              <RequestsPage />
-            </RedesignLayout>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/requests" element={<WorkspaceRedirect destination="requests" />} />
 
       <Route
         path="/people"
@@ -247,7 +209,7 @@ function AppContent() {
       <Route path="/join/:token" element={<JoinInvitePage />} />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<WorkspaceRedirect destination="home" />} />
     </Routes>
   );
 }

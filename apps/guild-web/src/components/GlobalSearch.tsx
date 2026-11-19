@@ -199,10 +199,10 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 
   const quickActions = React.useMemo(
     () => [
-      { id: 'act-workspace', label: 'Open Execution Workspace', subtitle: 'Tasks, Kanban board, projects, and goals', icon: CheckSquare, action: () => navigate('/workspace') },
+      { id: 'act-workspace', label: 'Open Tasks', subtitle: 'Tasks, Kanban board, projects, and goals', icon: CheckSquare, action: () => navigate('/workspace/tasks') },
       { id: 'act-chat', label: 'Open Team Chat', subtitle: 'Channels and direct messages', icon: MessageSquare, action: () => navigate('/chat') },
-      { id: 'act-studio', label: 'Open Studio & Docs', subtitle: 'Cycles, issues, and workspace documents', icon: BookOpen, action: () => navigate('/studio') },
-      { id: 'act-requests', label: 'Open Operational Requests', subtitle: 'Review and submit approvals', icon: FileCheck, action: () => navigate('/requests') },
+      { id: 'act-studio', label: 'Open Studio & Docs', subtitle: 'Cycles, issues, and workspace documents', icon: BookOpen, action: () => navigate('/workspace/canvases') },
+      { id: 'act-requests', label: 'Open Operational Requests', subtitle: 'Review and submit approvals', icon: FileCheck, action: () => navigate('/workspace/tasks?view=requests') },
       { id: 'act-calendar', label: 'Open Schedule & Calendar', subtitle: 'Deadlines and milestones', icon: Calendar, action: () => navigate('/calendar') },
       { id: 'act-people', label: 'Open People & Directory', subtitle: 'Team members and workload', icon: User, action: () => navigate('/people') },
       { id: 'act-reports', label: 'Open Analytics & Reports', subtitle: 'Execution metrics and velocity', icon: BarChart3, action: () => navigate('/reports') },

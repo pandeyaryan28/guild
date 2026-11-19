@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Navigate, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FileText,
   Layers,
@@ -78,6 +78,11 @@ import {
   CANVAS_TEMPLATES,
   type CanvasTemplatePreset
 } from '../../components/canvas/CanvasTemplatesPool';
+import { DashboardPage } from '../dashboard/DashboardPage';
+import { RequestsPage } from '../requests/RequestsPage';
+import { StudioPage } from '../studio/StudioPage';
+import { MobileWorkspace } from '../../components/mobile/pages/MobileWorkspace';
+import { WorkspaceRedirect } from './WorkspaceRedirect';
 import { TasksFeedPage } from '../tasks/TasksFeedPage';
 import type { WorkspaceDocument, DocumentStatus } from '@guild/types';
 
@@ -513,7 +518,24 @@ function SidePeekCanvasDrawer({
 }
 
 // ─── Main WorkspaceCanvasPage ────────────────────────────────────────────────
-export function WorkspaceCanvasPage() {
+export function WorkspaceCanvasPage({ mobile = false }: { mobile?: boolean }) {
+  const { pathname } = useLocation();
+  const [params] = useSearchParams();
+  const path = pathname.replace(/\/$/, '');
+  if (path === '/workspace' && params.has('task')) {
+    return <WorkspaceRedirect destination="tasks" />;
+  }
+  if (path === '/workspace' && (params.has('tab') || params.has('docId'))) {
+    return <WorkspaceRedirect destination="canvases" />;
+  }
+  if (!['/workspace', '/workspace/tasks', '/workspace/canvases'].includes(path)) {
+    return <Navigate to="/workspace" replace />;
+  }
+  const section = path === '/workspace/tasks' ? 'tasks' : path === '/workspace/canvases' ? 'canvas' : 'home';
+  return <WorkspaceContent section={section} mobile={mobile} />;
+}
+
+function WorkspaceContent({ section, mobile }: { section: 'home' | 'canvas' | 'tasks'; mobile: boolean }) {
   const { user, userProfile } = useAuth();
   const orgId = userProfile?.organizationId;
   const currentUserId = user?.uid || userProfile?.uid || '';
@@ -524,30 +546,13 @@ export function WorkspaceCanvasPage() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Sub-navigation tab state: 'canvas' | 'tasks'
-  const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = React.useState<'canvas' | 'tasks'>(
-    tabParam === 'tasks' ? 'tasks' : 'canvas'
-  );
-
-  const handleSwitchTab = (tab: 'canvas' | 'tasks') => {
-    setActiveTab(tab);
-    const nextParams = new URLSearchParams(searchParams);
-    if (tab === 'tasks') {
-      nextParams.set('tab', 'tasks');
-    } else {
-      nextParams.delete('tab');
-    }
-    setSearchParams(nextParams, { replace: true });
-  };
-
-  React.useEffect(() => {
-    if (tabParam === 'tasks' && activeTab !== 'tasks') {
-      setActiveTab('tasks');
-    } else if (!tabParam && activeTab !== 'canvas') {
-      setActiveTab('canvas');
-    }
-  }, [tabParam]);
+  const navigate = useNavigate();
+  const isCanvas = section === 'canvas';
+  const tasksView = searchParams.get('view');
+  const docId = searchParams.get('docId');
+  const canvasPath = docId && isCanvas
+    ? `/workspace/canvases?${new URLSearchParams({ docId })}`
+    : '/workspace/canvases';
 
   // Document list, trees & access-scoped operations
   const {
@@ -568,26 +573,15 @@ export function WorkspaceCanvasPage() {
     getBacklinks
   } = useWorkspaceDocuments(orgId);
 
-  // Selected doc selection
-  const paramDocId = searchParams.get('docId');
-  const [selectedDocId, setSelectedDocId] = React.useState<string | null>(paramDocId);
-
-  // Auto-select first accessible root document when loaded if none selected
-  React.useEffect(() => {
-    if (!selectedDocId && documents.length > 0) {
-      const firstRoot = documents.find((d) => !d.parentId) || documents[0];
-      setSelectedDocId(firstRoot.id);
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.set('docId', firstRoot.id);
-      setSearchParams(nextParams, { replace: true });
-    }
-  }, [selectedDocId, documents, searchParams, setSearchParams]);
+  const selectedDocId = isCanvas ? docId : null;
 
   React.useEffect(() => {
-    if (paramDocId && paramDocId !== selectedDocId) {
-      setSelectedDocId(paramDocId);
-    }
-  }, [paramDocId]);
+    if (!isCanvas || selectedDocId || !documents.length) return;
+    const firstRoot = documents.find((doc) => !doc.parentId) || documents[0];
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('docId', firstRoot.id);
+    setSearchParams(nextParams, { replace: true });
+  }, [isCanvas, selectedDocId, documents, searchParams, setSearchParams]);
 
   // Current Active Document Hook
   const {
@@ -603,7 +597,7 @@ export function WorkspaceCanvasPage() {
   const { presenceList } = useWorkspaceDocumentPresence(selectedDocId || undefined);
 
   // Rail, Tree, Modals & Side Peek State
-  const [railCollapsed, setRailCollapsed] = React.useState(false);
+  const [railCollapsed, setRailCollapsed] = React.useState(mobile);
   const [docSearch, setDocSearch] = React.useState('');
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
   const [sidePeekDocId, setSidePeekDocId] = React.useState<string | null>(null);
@@ -729,6 +723,13 @@ export function WorkspaceCanvasPage() {
   }, []);
 
   // Title local edit state
+  React.useEffect(() => {
+    if (!isCanvas) {
+      setSidePeekDocId(null);
+      setShowAccessModal(false);
+    }
+  }, [isCanvas]);
+
   const [localTitle, setLocalTitle] = React.useState('');
 
   React.useEffect(() => {
@@ -754,15 +755,16 @@ export function WorkspaceCanvasPage() {
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  const handleSelectDoc = React.useCallback(
-    (docId: string) => {
-      setSelectedDocId(docId);
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.set('docId', docId);
-      setSearchParams(nextParams, { replace: true });
-    },
-    [searchParams, setSearchParams]
-  );
+  const handleSelectDoc = React.useCallback((id: string) => {
+    if (mobile) setRailCollapsed(true);
+    if (selectedDocId === id) return;
+    navigate({ pathname: '/workspace/canvases', search: new URLSearchParams({ docId: id }).toString() });
+  }, [mobile, navigate, selectedDocId]);
+
+  const handleDeleteDocument = async (id: string) => {
+    await deleteDocument(id);
+    if (selectedDocId === id) navigate('/workspace/canvases', { replace: true });
+  };
 
   const handleCreateNewCanvas = async (parentId?: string | null) => {
     try {
@@ -963,41 +965,13 @@ export function WorkspaceCanvasPage() {
       {/* ─── Workspace Header Bar (Sub-navigation + Breadcrumbs + Access/Share + Controls) ─── */}
       <header className="h-10 px-3 sm:px-4 border-b border-border/40 bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex items-center justify-between gap-2 shrink-0 z-30">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          {/* Sub-navigation switcher */}
-          <div className="inline-flex items-center p-0.5 rounded-lg bg-secondary/80 dark:bg-secondary/40 border border-border/40 shrink-0">
-            <button
-              type="button"
-              onClick={() => handleSwitchTab('canvas')}
-              className={cn(
-                'flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer',
-                activeTab === 'canvas'
-                  ? 'bg-surface text-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <Layers className="w-4 h-4 text-primary" />
-              <span>Canvas</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSwitchTab('tasks')}
-              className={cn(
-                'flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer',
-                activeTab === 'tasks'
-                  ? 'bg-surface text-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <CheckSquare className="w-4 h-4" />
-              <span>Tasks & Requests</span>
-            </button>
-          </div>
-
-          {activeTab === 'canvas' && railCollapsed && (
+          {!isCanvas && <span className="text-sm font-semibold">{section === 'home' ? 'Home' : 'Tasks'}</span>}
+          {railCollapsed && (
             <button
               type="button"
               onClick={() => setRailCollapsed(false)}
               className="p-1 rounded-lg border border-border/50 bg-surface/80 hover:bg-secondary text-foreground shadow-xs transition-colors shrink-0 cursor-pointer"
+              aria-label="Open Workspace sidebar"
               title="Expand Document Rail (⌘\)"
             >
               <SidebarOpen className="w-4 h-4" />
@@ -1005,7 +979,7 @@ export function WorkspaceCanvasPage() {
           )}
 
           {/* Ancestor Breadcrumbs Trail */}
-          {activeTab === 'canvas' && activeDoc && (
+          {isCanvas && activeDoc && (
             <nav
               aria-label="Canvas hierarchy breadcrumbs"
               className="hidden md:flex items-center gap-1 text-xs text-muted-foreground min-w-0 overflow-hidden"
@@ -1037,7 +1011,7 @@ export function WorkspaceCanvasPage() {
 
         {/* Right Controls: Presence + Save Status + Typography / Display Control */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {activeTab === 'canvas' && activeDoc && (
+          {isCanvas && activeDoc && (
             <>
               {/* Live Canvas Presence */}
               {presenceList.length > 0 && (
@@ -1287,8 +1261,7 @@ export function WorkspaceCanvasPage() {
       </AnimatePresence>
 
       {/* ─── Main Viewport: Canvas OR Tasks & Requests ─── */}
-      {activeTab === 'canvas' ? (
-        <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative">
           {/* ─── Collapsible Left Hierarchical Document Rail (Cmd+\) ─── */}
           <AnimatePresence initial={false}>
             {!railCollapsed && (
@@ -1297,17 +1270,36 @@ export function WorkspaceCanvasPage() {
                 animate={{ width: 240, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-                className="h-full w-60 border-r border-border/40 dark:border-border-strong bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex flex-col shrink-0 overflow-hidden z-20"
+                className={cn(mobile && 'absolute inset-y-0 left-0 shadow-lg', "h-full w-60 border-r border-border/40 dark:border-border-strong bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex flex-col shrink-0 overflow-hidden z-20")}
               >
+                <nav aria-label="Workspace" className="space-y-1 p-2 border-b border-border">
+                  {[
+                    { to: '/workspace', label: 'Home' },
+                    { to: '/workspace/tasks', label: 'Tasks' },
+                  ].map(({ to, label }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      end
+                      onClick={() => mobile && setRailCollapsed(true)}
+                      className={({ isActive }) => cn(
+                        'block rounded-md px-2 py-1.5 text-sm hover:bg-secondary',
+                        isActive && 'bg-secondary font-semibold text-foreground'
+                      )}
+                    >
+                      {label}
+                    </NavLink>
+                  ))}
+                </nav>
                 {/* Rail Header */}
                 <div className="p-2.5 flex items-center justify-between border-b border-border/40">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-md bg-primary/10 border border-primary/20 text-primary flex items-center justify-center">
                       <FolderOpen className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-xs font-bold text-foreground tracking-tight">
-                      Workspace Pages
-                    </span>
+                    <NavLink to={canvasPath} onClick={() => mobile && setRailCollapsed(true)} className="text-xs font-bold text-foreground">
+                      Canvases
+                    </NavLink>
                   </div>
 
                   <div className="flex items-center gap-1">
@@ -1450,15 +1442,15 @@ export function WorkspaceCanvasPage() {
                                 expandedIds={expandedIds}
                                 onToggleExpand={handleToggleExpand}
                                 onSelect={handleSelectDoc}
-                                onOpenSidePeek={(id) => setSidePeekDocId(id)}
+                                onOpenSidePeek={(id) => {
+                                  if (!isCanvas) handleSelectDoc(id);
+                                  setSidePeekDocId(id);
+                                }}
                                 onCreateChild={(parentId) => handleCreateNewCanvas(parentId)}
                                 onToggleFavorite={handleToggleFavorite}
-                                onDelete={(id) => {
-                                  deleteDocument(id);
-                                  if (selectedDocId === id) setSelectedDocId(null);
-                                }}
+                                onDelete={handleDeleteDocument}
                                 onOpenAccess={(doc) => {
-                                  setSelectedDocId(doc.id);
+                                  handleSelectDoc(doc.id);
                                   setShowAccessModal(true);
                                 }}
                               />
@@ -1488,15 +1480,15 @@ export function WorkspaceCanvasPage() {
                                 expandedIds={expandedIds}
                                 onToggleExpand={handleToggleExpand}
                                 onSelect={handleSelectDoc}
-                                onOpenSidePeek={(id) => setSidePeekDocId(id)}
+                                onOpenSidePeek={(id) => {
+                                  if (!isCanvas) handleSelectDoc(id);
+                                  setSidePeekDocId(id);
+                                }}
                                 onCreateChild={(parentId) => handleCreateNewCanvas(parentId)}
                                 onToggleFavorite={handleToggleFavorite}
-                                onDelete={(id) => {
-                                  deleteDocument(id);
-                                  if (selectedDocId === id) setSelectedDocId(null);
-                                }}
+                                onDelete={handleDeleteDocument}
                                 onOpenAccess={(doc) => {
-                                  setSelectedDocId(doc.id);
+                                  handleSelectDoc(doc.id);
                                   setShowAccessModal(true);
                                 }}
                               />
@@ -1526,15 +1518,15 @@ export function WorkspaceCanvasPage() {
                                 expandedIds={expandedIds}
                                 onToggleExpand={handleToggleExpand}
                                 onSelect={handleSelectDoc}
-                                onOpenSidePeek={(id) => setSidePeekDocId(id)}
+                                onOpenSidePeek={(id) => {
+                                  if (!isCanvas) handleSelectDoc(id);
+                                  setSidePeekDocId(id);
+                                }}
                                 onCreateChild={(parentId) => handleCreateNewCanvas(parentId)}
                                 onToggleFavorite={handleToggleFavorite}
-                                onDelete={(id) => {
-                                  deleteDocument(id);
-                                  if (selectedDocId === id) setSelectedDocId(null);
-                                }}
+                                onDelete={handleDeleteDocument}
                                 onOpenAccess={(doc) => {
-                                  setSelectedDocId(doc.id);
+                                  handleSelectDoc(doc.id);
                                   setShowAccessModal(true);
                                 }}
                               />
@@ -1560,6 +1552,53 @@ export function WorkspaceCanvasPage() {
             )}
           </AnimatePresence>
 
+          {!isCanvas ? (
+            <main className="flex-1 min-w-0 overflow-y-auto">
+              {section === 'home' ? (
+                <div className="p-3 sm:p-5">
+                  <DashboardPage />
+                  {documents.length > 0 && (
+                    <section className="mx-auto max-w-7xl space-y-2" aria-label="Recently updated canvases">
+                      <h2 className="text-sm font-semibold">Recent canvases</h2>
+                      <ul className="divide-y divide-border">
+                        {[...documents]
+                          .sort((a, b) => (b.updatedAt?.toMillis?.() ?? 0) - (a.updatedAt?.toMillis?.() ?? 0))
+                          .slice(0, 5)
+                          .map((doc) => (
+                            <li key={doc.id}>
+                              <NavLink className="block py-2 text-sm hover:text-primary" to={{
+                                pathname: '/workspace/canvases',
+                                search: new URLSearchParams({ docId: doc.id }).toString(),
+                              }}>
+                                {doc.title || 'Untitled Canvas'}
+                              </NavLink>
+                            </li>
+                          ))}
+                      </ul>
+                    </section>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <nav aria-label="Task views" className="flex flex-wrap gap-2 border-b border-border p-2 text-sm">
+                    <NavLink to="/workspace/tasks" className={cn('rounded-md px-2 py-1 hover:bg-secondary', !tasksView && 'bg-secondary font-semibold')}>Work queue</NavLink>
+                    <NavLink to="/workspace/tasks?view=requests" className={cn('rounded-md px-2 py-1 hover:bg-secondary', tasksView === 'requests' && 'bg-secondary font-semibold')}>Requests</NavLink>
+                    {mobile && (
+                      <>
+                        <NavLink to="/workspace/tasks?view=team-tools" className={cn('rounded-md px-2 py-1 hover:bg-secondary', tasksView === 'team-tools' && 'bg-secondary font-semibold')}>Team tools</NavLink>
+                        <NavLink to="/workspace/tasks?view=studio" className={cn('rounded-md px-2 py-1 hover:bg-secondary', tasksView === 'studio' && 'bg-secondary font-semibold')}>Studio</NavLink>
+                      </>
+                    )}
+                  </nav>
+                  {tasksView === 'studio' && mobile ? <StudioPage />
+                    : tasksView === 'requests' ? <RequestsPage />
+                    : tasksView === 'team-tools' && mobile ? <MobileWorkspace />
+                    : <TasksFeedPage />}
+                </>
+              )}
+            </main>
+          ) : (
+            <>
           {/* ─── Fluid Full-Width Document Canvas ─── */}
           <main className="flex-1 h-full overflow-y-auto relative flex flex-col custom-scrollbar">
             {docLoading && !activeDoc ? (
@@ -1804,7 +1843,10 @@ export function WorkspaceCanvasPage() {
                         activeDoc={activeDoc}
                         documents={documents}
                         onSelectDoc={handleSelectDoc}
-                        onOpenSidePeek={(id) => setSidePeekDocId(id)}
+                        onOpenSidePeek={(id) => {
+                                  if (!isCanvas) handleSelectDoc(id);
+                                  setSidePeekDocId(id);
+                                }}
                         createSubCanvas={handleCreateSubCanvasFromBlock}
                         onHeadingsChange={setHeadings}
                         onChange={(json, html) => {
@@ -1868,13 +1910,9 @@ export function WorkspaceCanvasPage() {
               />
             )}
           </AnimatePresence>
-        </div>
-      ) : (
-        /* ─── Execution Feed View (TasksFeedPage) ─── */
-        <div className="flex-1 overflow-y-auto">
-          <TasksFeedPage />
-        </div>
-      )}
+            </>
+          )}
+      </div>
     </div>
   );
 }

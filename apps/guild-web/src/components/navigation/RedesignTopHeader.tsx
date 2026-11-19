@@ -6,7 +6,6 @@ import {
   Bell,
   Command,
   ChevronDown,
-  LayoutDashboard,
   FileText,
   MessageSquare,
   User,
@@ -207,8 +206,6 @@ export function RedesignTopHeader({
     'U';
 
   // Navigation segment active calculation - exactly 3 destinations
-  const isDashboardActive =
-    location.pathname === '/' || location.pathname.startsWith('/dashboard');
   const isWorkspaceActive =
     location.pathname.startsWith('/workspace') ||
     location.pathname.startsWith('/tasks') ||
@@ -446,30 +443,6 @@ export function RedesignTopHeader({
         aria-label="Workspace Sections"
         className="relative inline-flex items-center p-0.5 rounded-full bg-secondary/70 dark:bg-secondary/40 border border-border/80 dark:border-border backdrop-blur-xl shadow-xs"
       >
-        {/* 1. Dashboard */}
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className={cn(
-            'relative px-3 py-1 text-xs font-medium rounded-full transition-colors active:scale-[0.98] cursor-pointer',
-            isDashboardActive
-              ? 'text-foreground font-semibold'
-              : 'text-muted-foreground hover:text-foreground',
-          )}
-        >
-          {isDashboardActive && (
-            <motion.div
-              layoutId="top-nav-active-pill"
-              className="absolute inset-0 rounded-full bg-surface dark:bg-card shadow-xs border border-border/60"
-              transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-            />
-          )}
-          <span className="relative z-10 flex items-center gap-1.5">
-            <LayoutDashboard className="h-4 w-4" />
-            <span>Dashboard</span>
-          </span>
-        </button>
-
         {/* 2. Workspace */}
         <button
           type="button"
