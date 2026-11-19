@@ -373,7 +373,7 @@ export function TaskDetailDrawer({
 
   // --- Redesign Helpers ---
   const handleCopyLink = () => {
-    const url = `${window.location.origin}${window.location.pathname}?task=${task.id}`;
+    const url = `${window.location.origin}/workspace/tasks?${new URLSearchParams({ task: task.id })}`;
     navigator.clipboard.writeText(url);
     setToastMessage("Task link copied!");
   };

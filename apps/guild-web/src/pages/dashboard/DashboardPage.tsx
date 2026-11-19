@@ -1,3 +1,4 @@
+import { getTeamWorkScope } from '../workspace/teamWork';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -38,7 +39,7 @@ import {
   Flame,
   Loader2,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useWorkspaceData } from '../../context/WorkspaceDataContext';
 import { useOrgMembers } from '../../hooks/useChat';
@@ -284,6 +285,11 @@ export function DashboardPage() {
     return items;
   }, [allTasks, issues, currentUserId]);
 
+  const teamScope = getTeamWorkScope(workspace?.teams || [], workspace?.projects || [], currentUserId);
+  const activeTeamItems =
+    allTasks.filter((task) => !task.parentTaskId && task.status !== 'done' && teamScope.includesTask(task)).length +
+    issues.filter((issue) => issue.status !== 'done' && issue.status !== 'canceled' && teamScope.includesIssue(issue)).length;
+
   // Priority categorization: Today's Priorities vs Upcoming Tasks
   const { todaysPriorities, upcomingPriorities } = React.useMemo(() => {
     const todayList: UnifiedPriorityItem[] = [];
@@ -500,6 +506,13 @@ export function DashboardPage() {
 
   return (
     <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto space-y-4 pb-8">
+      <nav aria-label="Home shortcuts" className="flex flex-wrap gap-2 text-sm">
+        <Link className="rounded-md bg-secondary px-2 py-1" to="/workspace/tasks">My Work</Link>
+        <Link className="rounded-md bg-secondary px-2 py-1" to="/workspace/tasks?scope=my_teams">
+          My Teams · {activeTeamItems} active
+        </Link>
+        <Link className="rounded-md bg-secondary px-2 py-1" to="/workspace/tasks?view=requests">Approvals</Link>
+      </nav>
       {/* ─── Streamlined Top Header ────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -958,9 +971,9 @@ export function DashboardPage() {
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     type="button"
-                    onClick={() => navigate('/workspace')}
+                    onClick={() => navigate('/workspace/tasks')}
                     className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                    title="View in Workspace"
+                    title="View Tasks"
                   >
                     <ArrowUpRight className="w-3.5 h-3.5" />
                   </motion.button>

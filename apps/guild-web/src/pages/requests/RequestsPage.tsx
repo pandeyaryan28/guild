@@ -669,14 +669,6 @@ export function RequestsPage() {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [activeDetailRequest, setActiveDetailRequest] = React.useState<OrgRequest | null>(null);
 
-  if (!userProfile || !orgId) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   // Combined unique requests for organizational oversight
   const allRequests = React.useMemo(() => {
     const map = new Map<string, OrgRequest>();
@@ -736,6 +728,14 @@ export function RequestsPage() {
       return true;
     });
   }, [datasetForSection, statusFilter, categoryFilter, searchQuery]);
+
+  if (!userProfile || !orgId) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full w-full bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">

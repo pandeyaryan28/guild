@@ -1,3 +1,5 @@
+import { getTeamWorkScope } from '../workspace/teamWork';
+import { useSearchParams } from 'react-router-dom';
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -32,7 +34,7 @@ import { cn } from '@/lib/utils';
 // ─── Filter & View Types ──────────────────────────────────────────────────────
 
 type ViewMode = 'board' | 'list' | 'journey';
-type SegmentFilter = 'assigned_to_me' | 'all' | 'completed';
+type SegmentFilter = 'assigned_to_me' | 'my_teams' | 'all' | 'completed';
 type ObjectTypeFilter = 'all' | 'task' | 'request' | 'issue';
 type PriorityFilter = 'all' | 'urgent' | 'high' | 'medium' | 'low';
 
@@ -275,7 +277,16 @@ export function TasksFeedPage() {
     } catch {}
   };
 
-  const [activeSegment, setActiveSegment] = React.useState<SegmentFilter>('assigned_to_me');
+  const [params, setParams] = useSearchParams();
+  const scope = params.get('scope');
+  const activeSegment: SegmentFilter = scope === 'my_teams' || scope === 'all' || scope === 'completed'
+    ? scope : 'assigned_to_me';
+  const setActiveSegment = (segment: SegmentFilter) => {
+    const next = new URLSearchParams(params);
+    if (segment === 'assigned_to_me') next.delete('scope');
+    else next.set('scope', segment);
+    setParams(next);
+  };
   const [objectFilter, setObjectFilter] = React.useState<ObjectTypeFilter>('all');
   const [priorityFilter, setPriorityFilter] = React.useState<PriorityFilter>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -338,7 +349,8 @@ export function TasksFeedPage() {
   }, []);
 
   // ─── Drawers & Modals State ──────────────────────────────────────────────────
-  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
+  const linkedTaskId = params.get('task');
+  const openTask = linkedTaskId ? allTasks.find((task) => task.id === linkedTaskId) : null;
   const [selectedRequest, setSelectedRequest] = React.useState<OrgRequest | null>(null);
   const [selectedIssue, setSelectedIssue] = React.useState<WorkspaceIssue | null>(null);
   const [createIssueOpen, setCreateIssueOpen] = React.useState(false);
@@ -493,85 +505,45 @@ export function TasksFeedPage() {
     };
   }, [unifiedItems, currentUserId]);
 
-  // ─── Segment Counts (Personalized Counters) ───────────────────────────────────
+  const teams = workspace?.teams;
+  const teamScope = React.useMemo(
+    () => getTeamWorkScope(teams || [], projects, currentUserId),
+    [teams, projects, currentUserId]
+  );
 
-  const segmentCounts = React.useMemo(() => {
-    let all = 0;
-    let assigned = 0;
-    let completed = 0;
-
-    for (const item of unifiedItems) {
-      if (item.isCompleted) {
-        completed++;
-        continue;
-      }
-
-      all++;
-
-      if (item.type === 'task' && item.assigneeIds.includes(currentUserId)) {
-        assigned++;
-      } else if (item.type === 'issue' && item.assigneeIds.includes(currentUserId)) {
-        assigned++;
-      } else if (item.type === 'request') {
-        if (item.approverId === currentUserId || item.creatorId === currentUserId) {
-          assigned++;
-        }
-      }
+  const matchesSegment = React.useCallback((item: UnifiedItem, segment: SegmentFilter) => {
+    if (segment === 'completed') return item.isCompleted;
+    if (item.isCompleted) return false;
+    if (segment === 'all') return true;
+    if (segment === 'assigned_to_me') {
+      return item.assigneeIds.includes(currentUserId) ||
+        (item.type === 'request' && item.creatorId === currentUserId);
     }
+    return teamScope.includesTask(item.rawTask) || teamScope.includesIssue(item.rawIssue);
+  }, [currentUserId, teamScope]);
 
-    return { all, assigned, completed };
-  }, [unifiedItems, currentUserId]);
-
-  // ─── Object Type Counts for Current Segment ───────────────────────────────────
+  const segmentCounts = React.useMemo(() => ({
+    assigned: unifiedItems.filter((item) => matchesSegment(item, 'assigned_to_me')).length,
+    teams: unifiedItems.filter((item) => matchesSegment(item, 'my_teams')).length,
+    all: unifiedItems.filter((item) => matchesSegment(item, 'all')).length,
+    completed: unifiedItems.filter((item) => matchesSegment(item, 'completed')).length,
+  }), [unifiedItems, matchesSegment]);
 
   const typeCounts = React.useMemo(() => {
-    let task = 0;
-    let request = 0;
-    let issue = 0;
-
+    const counts = { all: 0, task: 0, request: 0, issue: 0 };
     for (const item of unifiedItems) {
-      if (activeSegment === 'completed' && !item.isCompleted) continue;
-      if (activeSegment !== 'completed' && item.isCompleted) continue;
-      if (activeSegment === 'assigned_to_me') {
-        if (item.type === 'task' && !item.assigneeIds.includes(currentUserId)) continue;
-        if (item.type === 'issue' && !item.assigneeIds.includes(currentUserId)) continue;
-        if (item.type === 'request' && item.approverId !== currentUserId && item.creatorId !== currentUserId) continue;
-      }
-
-      if (item.type === 'task') task++;
-      else if (item.type === 'request') request++;
-      else if (item.type === 'issue') issue++;
+      if (!matchesSegment(item, activeSegment)) continue;
+      counts.all++;
+      counts[item.type]++;
     }
-
-    return {
-      all: task + request + issue,
-      task,
-      request,
-      issue
-    };
-  }, [unifiedItems, activeSegment, currentUserId]);
+    return counts;
+  }, [unifiedItems, activeSegment, matchesSegment]);
 
   // ─── Filtered Items ──────────────────────────────────────────────────────────
 
   const filteredItems = React.useMemo(() => {
     return unifiedItems.filter((item) => {
-      // 1. Segment filter
-      if (activeSegment === 'assigned_to_me') {
-        if (item.isCompleted) return false;
-        if (item.type === 'task' && !item.assigneeIds.includes(currentUserId)) return false;
-        if (item.type === 'issue' && !item.assigneeIds.includes(currentUserId)) return false;
-        if (
-          item.type === 'request' &&
-          item.approverId !== currentUserId &&
-          item.creatorId !== currentUserId
-        ) {
-          return false;
-        }
-      } else if (activeSegment === 'all') {
-        if (item.isCompleted) return false;
-      } else if (activeSegment === 'completed') {
-        if (!item.isCompleted) return false;
-      }
+      if (!matchesSegment(item, activeSegment)) return false;
 
       // 2. Object Type filter
       if (objectFilter !== 'all' && item.type !== objectFilter) {
@@ -589,7 +561,8 @@ export function TasksFeedPage() {
         const matchesTitle = item.title.toLowerCase().includes(q);
         const matchesDesc = item.description?.toLowerCase().includes(q);
         const matchesIdent = item.issueIdentifier?.toLowerCase().includes(q);
-        const matchesAssignee = item.assigneeName?.toLowerCase().includes(q);
+        const matchesAssignee = item.assigneeIds.some((id) => memberMap.get(id)?.fullName.toLowerCase().includes(q)) ||
+          item.assigneeName?.toLowerCase().includes(q);
         const matchesCreator = item.creatorName?.toLowerCase().includes(q);
         const matchesType = item.requestType ? REQUEST_TYPE_LABELS[item.requestType]?.toLowerCase().includes(q) : false;
 
@@ -620,7 +593,7 @@ export function TasksFeedPage() {
 
       return b.updatedAtMs - a.updatedAtMs;
     });
-  }, [unifiedItems, activeSegment, objectFilter, priorityFilter, searchQuery, currentUserId, isManagerOrAdmin]);
+  }, [unifiedItems, activeSegment, objectFilter, priorityFilter, searchQuery, currentUserId, isManagerOrAdmin, matchesSegment, memberMap]);
 
   // Grouped items for Kanban Board
   const boardGroupedItems = React.useMemo(() => {
@@ -904,7 +877,9 @@ export function TasksFeedPage() {
 
   const handleCardClick = (item: UnifiedItem) => {
     if (item.type === 'task' && item.rawTask) {
-      setSelectedTask(item.rawTask);
+      const next = new URLSearchParams(params);
+      next.set('task', item.rawTask.id);
+      setParams(next);
     } else if (item.type === 'request' && item.rawRequest) {
       setSelectedRequest(item.rawRequest);
     } else if (item.type === 'issue' && item.rawIssue) {
@@ -917,14 +892,15 @@ export function TasksFeedPage() {
   return (
     <div className="min-h-full w-full bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
       {/* ── Compact 40px Command Toolbar Row ──────────────────────────────────── */}
-      <div className="h-10 px-4 sm:px-6 border-b border-border/40 bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex items-center justify-between gap-2 shrink-0 z-20 select-none">
+      <div className="min-h-10 py-1 px-2 sm:px-6 border-b border-border/40 bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex flex-wrap items-center justify-between gap-2 shrink-0 z-20 select-none">
         {/* Status Segments */}
-        <div className="inline-flex p-0.5 rounded-lg bg-secondary/80 dark:bg-secondary/40 border border-border/40 shrink-0">
+        <div className="inline-flex max-w-full overflow-x-auto p-0.5 rounded-lg bg-secondary/80 dark:bg-secondary/40 border border-border/40 shrink-0">
           {(
             [
-              { id: 'assigned_to_me', label: 'My Focus', count: segmentCounts.assigned },
-              { id: 'all', label: 'All Work', count: segmentCounts.all },
-              { id: 'completed', label: 'Accomplished', count: segmentCounts.completed },
+              { id: 'assigned_to_me', label: 'My Work', count: segmentCounts.assigned },
+              { id: 'my_teams', label: 'My Teams', count: segmentCounts.teams },
+              { id: 'all', label: 'All Available', count: segmentCounts.all },
+              { id: 'completed', label: 'Completed', count: segmentCounts.completed },
             ] as const
           ).map((tab) => {
             const isActive = activeSegment === tab.id;
@@ -934,7 +910,7 @@ export function TasksFeedPage() {
                 type="button"
                 onClick={() => setActiveSegment(tab.id)}
                 className={cn(
-                  'px-2.5 py-0.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5',
+                  'whitespace-nowrap px-2.5 py-0.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5',
                   isActive
                     ? 'bg-surface text-foreground shadow-xs'
                     : 'text-muted-foreground hover:text-foreground'
@@ -957,7 +933,7 @@ export function TasksFeedPage() {
         </div>
 
         {/* Right Controls: Search + Filter + View Switcher + Single '+ New' Button */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           {/* Quick Search */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -965,7 +941,7 @@ export function TasksFeedPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tasks..."
+              placeholder="Search work…"
               className="w-32 sm:w-44 lg:w-56 h-7 text-xs rounded-lg bg-secondary/50 dark:bg-secondary/30 border border-border/40 pl-7 pr-6 text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-primary transition-colors"
             />
             {searchQuery && (
@@ -1778,8 +1754,12 @@ export function TasksFeedPage() {
 
       {/* 1. Task Detail Drawer */}
       <TaskDetailDrawer
-        task={selectedTask ? allTasks.find((t) => t.id === selectedTask.id) || selectedTask : null}
-        onClose={() => setSelectedTask(null)}
+        task={openTask ?? null}
+        onClose={() => {
+          const next = new URLSearchParams(params);
+          next.delete('task');
+          setParams(next, { replace: true });
+        }}
         orgId={orgId}
         actor={actor}
         members={members}

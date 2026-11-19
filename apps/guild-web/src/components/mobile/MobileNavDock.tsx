@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
   MessageSquare, 
   Trello, 
-  FileCheck, 
   Menu,
   X,
   Users,
@@ -16,7 +14,6 @@ import {
   Palette,
   Sun,
   Moon,
-  BookOpen
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
@@ -35,14 +32,11 @@ export function MobileNavDock() {
   const [showMobileMore, setShowMobileMore] = React.useState(false);
 
   const mainNavItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/chat', label: 'Chat', icon: MessageSquare, badge: unreadChatCount > 0 ? unreadChatCount : undefined },
     { path: '/workspace', label: 'Workspace', icon: Trello },
-    { path: '/requests', label: 'Approvals', icon: FileCheck },
   ];
 
   const secondaryNavLinks = [
-    { path: '/studio', label: 'Studio & Docs', icon: BookOpen },
     { path: '/people', label: 'People', icon: Users },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
     { path: '/reports', label: 'Reports', icon: BarChart3 },

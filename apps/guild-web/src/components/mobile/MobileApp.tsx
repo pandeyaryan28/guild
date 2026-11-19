@@ -1,10 +1,8 @@
-import * as React from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { WorkspaceCanvasPage } from '../../pages/workspace/WorkspaceCanvasPage';
+import { WorkspaceRedirect } from '../../pages/workspace/WorkspaceRedirect';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { MobileLayout } from './MobileLayout';
-import { MobileDashboard } from './pages/MobileDashboard';
 import { MobileChat } from './pages/MobileChat';
-import { MobileWorkspace } from './pages/MobileWorkspace';
-import { MobileRequests } from './pages/MobileRequests';
 import { MobileSettings } from './pages/MobileSettings';
 import { ProtectedRoute } from '../ProtectedRoute';
 
@@ -12,26 +10,12 @@ import { MobilePeople } from './pages/MobilePeople';
 import { MobileCalendar } from './pages/MobileCalendar';
 import { MobileReports } from './pages/MobileReports';
 import { MobileProjectDetail } from './pages/MobileProjectDetail';
-const StudioPage = React.lazy(() => import('../../pages/studio/StudioPage').then(m => ({ default: m.StudioPage })));
-
-function MobileTasksRedirect() {
-  const location = useLocation();
-  return <Navigate to={`/workspace${location.search}`} replace />;
-}
-
 export function MobileApp() {
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <MobileLayout>
-              <MobileDashboard />
-            </MobileLayout>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/" element={<WorkspaceRedirect destination="home" />} />
+      <Route path="/dashboard" element={<WorkspaceRedirect destination="home" />} />
+      <Route path="/feed" element={<WorkspaceRedirect destination="home" />} />
 
       <Route
         path="/chat"
@@ -63,33 +47,21 @@ export function MobileApp() {
         }
       />
 
+      <Route path="/studio" element={<WorkspaceRedirect destination="studio" />} />
+      <Route path="/canvas" element={<WorkspaceRedirect destination="canvases" />} />
+      <Route path="/tasks/*" element={<WorkspaceRedirect destination="tasks" />} />
+      <Route path="/requests" element={<WorkspaceRedirect destination="requests" />} />
+
       <Route
-        path="/studio"
+        path="/workspace/*"
         element={
           <ProtectedRoute>
             <MobileLayout>
-              <StudioPage />
+              <WorkspaceCanvasPage mobile />
             </MobileLayout>
           </ProtectedRoute>
         }
       />
-
-      <Route
-        path="/workspace"
-        element={
-          <ProtectedRoute>
-            <MobileLayout>
-              <MobileWorkspace />
-            </MobileLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/tasks"
-        element={<MobileTasksRedirect />}
-      />
-
 
       {/* Register Project detail view for mobile */}
       <Route
@@ -134,17 +106,6 @@ export function MobileApp() {
           <ProtectedRoute>
             <MobileLayout>
               <MobileReports />
-            </MobileLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/requests"
-        element={
-          <ProtectedRoute>
-            <MobileLayout>
-              <MobileRequests />
             </MobileLayout>
           </ProtectedRoute>
         }
