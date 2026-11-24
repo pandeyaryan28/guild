@@ -114,10 +114,10 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto w-full max-w-2xl rounded-2xl aether-glass-elevated shadow-2xl shadow-black/50 overflow-hidden"
+          className="pointer-events-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col rounded-2xl aether-glass-elevated shadow-2xl shadow-black/50 overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border-default px-6 py-5">
+          <div className="flex items-center justify-between shrink-0 gap-2 border-b border-border-default px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
                 <Palette className="h-4.5 w-4.5 text-primary" />
@@ -135,9 +135,9 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
             </button>
           </div>
 
-          <div className="flex gap-0 divide-x divide-border/30">
+          <div className="flex min-h-0 flex-col overflow-y-auto divide-y divide-border/30 sm:flex-row sm:divide-y-0 sm:divide-x">
             {/* Left — Theme Swatches */}
-            <div className="flex-1 p-6">
+            <div className="flex-1 min-w-0 p-4 sm:p-6">
               <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-text-muted">Themes & Modes</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {THEMES.map((theme) => {
@@ -194,15 +194,14 @@ export function ThemePickerModal({ onClose }: ThemePickerModalProps) {
             </div>
 
             {/* Right — Live Preview */}
-            <div className="w-[260px] shrink-0 p-6 flex flex-col gap-4">
+            <div className="w-full sm:w-[40%] shrink-0 p-4 sm:p-6 flex flex-col gap-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Preview</p>
               <motion.div
                 key={previewId}
                 initial={{ opacity: 0.6, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
-                className="flex-1 rounded-xl aether-glass overflow-hidden"
-                style={{ minHeight: '220px' }}
+                className="min-h-40 sm:min-h-55 flex-1 rounded-xl aether-glass overflow-hidden"
               >
                 <ThemePreview themeId={previewId} isLight={previewId === 'light'} />
               </motion.div>

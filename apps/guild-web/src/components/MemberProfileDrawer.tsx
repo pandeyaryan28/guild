@@ -99,7 +99,7 @@ export function MemberProfileDrawer({ isOpen, member, onClose, tasks, teams }: M
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-        className="relative w-full sm:w-[480px] bg-surface border-l border-border-default h-full shadow-2xl flex flex-col z-10"
+        className="relative w-full sm:w-[clamp(24rem,48%,32rem)] bg-surface border-l border-border-default h-full shadow-2xl flex flex-col z-10"
       >
         {/* Header */}
         <div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-border-default flex items-center justify-between">

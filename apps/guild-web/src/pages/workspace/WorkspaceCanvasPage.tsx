@@ -392,7 +392,7 @@ function SidePeekCanvasDrawer({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: '100%', opacity: 0 }}
       transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-      className="h-full w-full sm:w-[480px] lg:w-[580px] border-l border-border dark:border-border-strong bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl shadow-2xl flex flex-col shrink-0 z-30"
+      className="absolute inset-y-0 right-0 xl:relative h-full w-full sm:w-[min(100%,clamp(24rem,46%,36rem))] border-l border-border dark:border-border-strong bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl shadow-2xl flex flex-col shrink-0 z-30"
     >
       {/* Top Bar */}
       <div className="h-12 px-4 border-b border-border/60 flex items-center justify-between gap-2 shrink-0 select-none">
@@ -1267,10 +1267,10 @@ function WorkspaceContent({ section, mobile }: { section: 'home' | 'canvas' | 't
             {!railCollapsed && (
               <motion.aside
                 initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 240, opacity: 1 }}
+                animate={{ width: 'min(85%, clamp(11rem, 22%, 16rem))', opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-                className={cn(mobile && 'absolute inset-y-0 left-0 shadow-lg', "h-full w-60 border-r border-border/40 dark:border-border-strong bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex flex-col shrink-0 overflow-hidden z-20")}
+                className={cn(mobile && 'absolute inset-y-0 left-0 shadow-lg', "h-full border-r border-border/40 dark:border-border-strong bg-surface/85 dark:bg-surface/55 backdrop-blur-2xl flex flex-col shrink-0 overflow-hidden z-20")}
               >
                 <nav aria-label="Workspace" className="space-y-1 p-2 border-b border-border">
                   {[
@@ -1600,7 +1600,7 @@ function WorkspaceContent({ section, mobile }: { section: 'home' | 'canvas' | 't
           ) : (
             <>
           {/* ─── Fluid Full-Width Document Canvas ─── */}
-          <main className="flex-1 h-full overflow-y-auto relative flex flex-col custom-scrollbar">
+          <main className="flex-1 min-w-0 h-full overflow-y-auto relative flex flex-col custom-scrollbar">
             {docLoading && !activeDoc ? (
               <div className="flex-1 flex items-center justify-center text-muted-foreground gap-3">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />

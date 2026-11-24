@@ -488,10 +488,10 @@ export function ProjectDetailPage() {
         <div className="flex-1 flex overflow-hidden min-h-0 relative">
           
           {/* Main Execution Column */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin p-4 sm:p-5 space-y-4">
+          <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin p-4 sm:p-5 space-y-4">
             
             {/* KPI metric Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-3">
               
               {/* Project Progress */}
               <div className="p-3.5 rounded-xl border border-border/50 bg-surface/60 dark:bg-card/40 flex flex-col justify-between gap-2 shadow-2xs hover:border-border transition-all">
@@ -815,11 +815,11 @@ export function ProjectDetailPage() {
           <AnimatePresence>
             {showComments && (
               <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 340, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
+                initial={{ x: '100%', opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: '100%', opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                className="w-[340px] shrink-0 border-l border-border/50 bg-surface/90 dark:bg-card/85 backdrop-blur-xl flex flex-col h-full overflow-hidden shadow-xl"
+                className="absolute inset-y-0 right-0 z-20 xl:relative w-[min(100%,clamp(19rem,32%,26rem))] shrink-0 border-l border-border/50 bg-surface/90 dark:bg-card/85 backdrop-blur-xl flex flex-col h-full overflow-hidden shadow-xl"
               >
                 <div className="flex items-center justify-between p-3.5 border-b border-border/50 flex-shrink-0">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5">

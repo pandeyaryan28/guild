@@ -1049,8 +1049,8 @@ export function ChannelSettingsModal({
 
   if (inline) {
     return (
-      <div className="h-full border-l border-border bg-surface/95 dark:bg-surface/85 backdrop-blur-2xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[480px] lg:relative shadow-2xl lg:shadow-none shrink-0 animate-in slide-in-from-right duration-200">
-        <div className="w-full sm:w-[480px] h-full flex flex-col min-h-0">
+      <div className="h-full border-l border-border bg-surface/95 dark:bg-surface/85 backdrop-blur-2xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[min(100%,clamp(22rem,56%,30rem))] xl:relative shadow-2xl lg:shadow-none shrink-0 animate-in slide-in-from-right duration-200">
+        <div className="w-full h-full flex flex-col min-h-0">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
             <div>

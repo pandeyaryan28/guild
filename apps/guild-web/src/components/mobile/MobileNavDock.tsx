@@ -135,13 +135,13 @@ export function MobileNavDock() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-              className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md h-[72vh] min-h-[500px] max-h-[85vh] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border/80 px-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-2 z-[210] shadow-2xl flex flex-col pointer-events-auto overflow-hidden bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl"
+              className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md h-[clamp(min(31.25rem,85dvh),72dvh,85dvh)] aether-glass rounded-t-[32px] border-x-0 border-b-0 border-t border-border/80 px-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-2 z-[210] shadow-2xl flex flex-col pointer-events-auto overflow-hidden bg-surface/98 dark:bg-surface/95 backdrop-blur-3xl"
             >
               {/* Drag Handle Indicator */}
               <div className="aether-mobile-handle shrink-0 bg-muted-foreground/25 w-10 h-1.5 rounded-full mx-auto my-3" />
               
               {/* Scrollable Container */}
-              <div className="flex-1 overflow-y-auto aether-scroll space-y-6 pb-6 pr-1 animate-fluid-pop">
+              <div className="flex-1 min-h-0 overflow-y-auto aether-scroll space-y-6 pb-6 pr-1 animate-fluid-pop">
                 {/* User Profile Header Card */}
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-secondary/50 border border-border shadow-xs">
                   <div className="flex items-center gap-3.5 min-w-0">

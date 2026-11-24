@@ -128,7 +128,7 @@ function RedesignChatSidebar({
       className={cn(
         "flex h-full flex-col bg-surface/90 dark:bg-surface/75 backdrop-blur-2xl border-r border-border overflow-hidden transition-all duration-300 ease-in-out shrink-0 z-30 select-none",
         "fixed inset-y-0 left-0 lg:relative lg:inset-auto",
-        isCollapsed ? "-translate-x-full opacity-0 pointer-events-none w-0 lg:w-0" : "translate-x-0 opacity-100 w-[240px]"
+        isCollapsed ? "-translate-x-full opacity-0 pointer-events-none w-0 lg:w-0" : "translate-x-0 opacity-100 w-[min(85%,clamp(12rem,24%,16rem))]"
       )}
     >
       {/* Workspace Branding Header */}

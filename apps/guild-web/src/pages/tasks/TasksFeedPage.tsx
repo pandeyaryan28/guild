@@ -1175,7 +1175,7 @@ export function TasksFeedPage() {
 
         {/* ── VIEW 1: KANBAN BOARD VIEW ───────────────────────────────────────── */}
         {!isLoading && filteredItems.length > 0 && viewMode === 'board' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-3 items-start">
             {BOARD_COLUMNS.map((col) => {
               const colItems = boardGroupedItems[col.id];
               return (

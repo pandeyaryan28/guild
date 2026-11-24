@@ -1103,10 +1103,10 @@ function MembersSettingsView({ profile, members, onOpenInvite }: MembersViewProp
           return (
             <div
               key={member.uid}
-              className="px-4 py-2.5 flex items-center justify-between gap-4 hover:bg-muted/20 transition-colors"
+              className="px-3 py-2.5 flex items-center justify-between gap-2 sm:px-4 sm:gap-4 hover:bg-muted/20 transition-colors"
             >
               {/* Left Column: Teammate profile */}
-              <div className="flex items-center gap-3 overflow-hidden min-w-[200px] flex-1">
+              <div className="flex items-center gap-3 overflow-hidden min-w-0 flex-1">
                 <div className="shrink-0">
                   <div 
                     className="h-8 w-8 rounded-lg flex items-center justify-center font-bold text-primary-foreground bg-primary text-xs relative overflow-hidden shadow-2xs"
@@ -2719,7 +2719,7 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                   className="p-3 sm:px-4 flex flex-wrap items-center justify-between gap-3 hover:bg-muted/30 transition-colors"
                 >
                   {/* Member Details */}
-                  <div className="flex items-center gap-3 min-w-[180px] flex-1 overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-0 flex-[1_1_min(100%,12rem)] overflow-hidden">
                     <div 
                       className="h-8 w-8 rounded-lg flex items-center justify-center font-bold text-white text-xs shrink-0"
                       style={{
@@ -2737,12 +2737,12 @@ function TeamsSettingsView({ profile, members }: TeamsSettingsViewProps) {
                   </div>
 
                   {/* Designation */}
-                  <div className="text-xs text-muted-foreground font-medium min-w-[110px] shrink-0">
+                  <div className="text-xs text-muted-foreground font-medium min-w-0 flex-[1_1_min(100%,7rem)] wrap-anywhere">
                     {m.designation || 'Teammate'}
                   </div>
 
                   {/* Manager Privilege Toggle */}
-                  <div className="shrink-0 min-w-[100px] flex items-center">
+                  <div className="shrink-0 flex items-center">
                     {isProcessing ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
                     ) : (
