@@ -160,6 +160,7 @@ export function MobileLayout({ children, hideDock = false }: MobileLayoutProps) 
             </button>
 
             <NotificationPanel
+              className="-right-10 sm:-right-10.5"
               notifications={notifications}
               archivedNotifications={archivedNotifications}
               unreadCount={unreadCount}

@@ -371,7 +371,7 @@ export function BidirectionalCanvasDrawer({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: '100%', opacity: 0 }}
       transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-      className="absolute inset-y-0 right-0 z-30 w-full sm:w-[480px] lg:w-[540px] flex flex-col bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border-l border-border dark:border-border-strong shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.5)] overflow-hidden select-none"
+      className="absolute inset-y-0 right-0 z-30 w-full sm:w-[min(100%,clamp(26rem,60%,36rem))] flex flex-col bg-surface/95 dark:bg-surface/90 backdrop-blur-2xl border-l border-border dark:border-border-strong shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.5)] overflow-hidden select-none"
     >
       {/* ─── Top Segmented Control & Navigation Header ─────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface/80 dark:bg-surface/60 shrink-0 gap-3">

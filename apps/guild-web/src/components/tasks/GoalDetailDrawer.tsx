@@ -477,8 +477,8 @@ export function GoalDetailDrawer({
 
   if (inline) {
     return (
-      <div className="h-full border-l border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/60 backdrop-blur-xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[420px] lg:relative shadow-2xl lg:shadow-none shrink-0">
-        <div className="w-full sm:w-[420px] h-full flex flex-col min-h-0">
+      <div className="h-full border-l border-white/10 dark:border-white/5 bg-surface/95 dark:bg-zinc-950/60 backdrop-blur-xl flex flex-col z-30 overflow-hidden absolute inset-y-0 right-0 w-full sm:w-[min(100%,clamp(22rem,56%,30rem))] xl:relative shadow-2xl lg:shadow-none shrink-0">
+        <div className="w-full h-full flex flex-col min-h-0">
           
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4.5 border-b border-neutral-100 dark:border-neutral-850/60 flex-shrink-0 bg-neutral-50/30 dark:bg-neutral-900/30 backdrop-blur-sm">

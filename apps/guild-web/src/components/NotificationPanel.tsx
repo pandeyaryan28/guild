@@ -529,6 +529,7 @@ export function NotificationPanel({
   onMarkAllRead,
   open,
   onClose,
+  className,
 }: NotificationPanelProps) {
   const navigate = useNavigate();
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -592,8 +593,8 @@ export function NotificationPanel({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -6, scale: 0.97 }}
           transition={{ type: 'spring', stiffness: 480, damping: 32 }}
-          className="absolute top-[calc(100%+12px)] right-0 z-50 w-[calc(100vw-2rem)] sm:w-[400px] max-w-[calc(100vw-2rem)] origin-top-right flex flex-col rounded-2xl border border-border-default/70 bg-surface-elevated/96 shadow-[0_24px_60px_rgba(0,0,0,0.2)] backdrop-blur-3xl overflow-hidden"
-          style={{ maxHeight: 'min(580px, calc(100vh - 100px))' }}
+          className={cn("absolute top-[calc(100%+0.75rem)] right-0 z-50 w-[min(calc(100dvw-2rem),clamp(20rem,42dvw,30rem))] origin-top-right flex flex-col rounded-2xl border border-border-default/70 bg-surface-elevated/96 shadow-[0_24px_60px_rgba(0,0,0,0.2)] backdrop-blur-3xl overflow-hidden", className)}
+          style={{ maxHeight: 'min(36.25rem, calc(100dvh - 6.25rem))' }}
         >
           {/* ── Header ────────────────────────────────────────────────────────── */}
           <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0">
@@ -774,4 +775,5 @@ interface NotificationPanelProps {
   onMarkAllRead: () => Promise<void>;
   open: boolean;
   onClose: () => void;
+  className?: string;
 }

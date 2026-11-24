@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { X, Bell, AtSign, CheckSquare, MessageSquare, Hash, Layers, User, Zap } from 'lucide-react';
@@ -117,8 +118,8 @@ export function AetherToasts({ activeToasts, onDismiss, onMarkRead }: AetherToas
     navigate(toast.link);
   };
 
-  return (
-    <div className="fixed bottom-6 right-6 z-[999] flex flex-col gap-3.5 w-full max-w-[380px] pointer-events-none select-none">
+  return createPortal(
+    <div className="fixed bottom-6 inset-x-3 sm:left-auto sm:right-6 z-[999] flex flex-col gap-3.5 sm:w-[min(85%,23.75rem)] pointer-events-none select-none">
       <AnimatePresence mode="popLayout">
         {activeToasts.map((toast) => {
           const meta = META_MAP[toast.type] || {
@@ -220,6 +221,7 @@ export function AetherToasts({ activeToasts, onDismiss, onMarkRead }: AetherToas
           );
         })}
       </AnimatePresence>
-    </div>
+    </div>,
+    document.body,
   );
 }
